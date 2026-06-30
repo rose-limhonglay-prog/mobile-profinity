@@ -164,18 +164,41 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 .cmtsheet-foot .cmt-compose,.cmtsheet-foot form{margin-top:0 !important}
 
 /* ===== Native mobile mode (no device frame — real phone browser) ===== */
-.app:not(.device-stage) .cm-tabs {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  z-index: 100;
-}
-.app:not(.device-stage) .cm-scroll {
-  padding-bottom: 90px;
-}
 @media (max-width: 768px) {
-  html, body { background: var(--surface-card) !important; padding: 0 !important; }
+  html, body {
+    background: var(--surface-card) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100%;
+    overflow: hidden;
+    display: block !important;
+  }
   .app.device-stage { display: none !important; }
+  .app:not(.device-stage) {
+    height: 100dvh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .app:not(.device-stage) .cm-screen {
+    height: 100dvh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .app:not(.device-stage) .cm-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .app:not(.device-stage) .cm-tabs {
+    flex: none;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .app:not(.device-stage) .cm-top {
+    padding-top: max(54px, env(safe-area-inset-top));
+  }
 }

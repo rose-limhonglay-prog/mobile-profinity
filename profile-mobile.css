@@ -161,18 +161,41 @@ img{max-width:100%}
 .twk-panel{font-family:ui-sans-serif,system-ui,sans-serif}
 
 /* ===== Native mobile mode (no device frame — real phone browser) ===== */
-.app:not(.device-stage) .pm-tabs {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  z-index: 100;
-}
-.app:not(.device-stage) .pm-scroll {
-  padding-bottom: 90px;
-}
 @media (max-width: 768px) {
-  html, body { background: var(--surface-card) !important; padding: 0 !important; }
+  html, body {
+    background: var(--surface-card) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100%;
+    overflow: hidden;
+    display: block !important;
+  }
   .app.device-stage { display: none !important; }
+  .app:not(.device-stage) {
+    height: 100dvh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .app:not(.device-stage) .pm-screen {
+    height: 100dvh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .app:not(.device-stage) .pm-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .app:not(.device-stage) .pm-tabs {
+    flex: none;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .app:not(.device-stage) .pm-top {
+    padding-top: max(54px, env(safe-area-inset-top));
+  }
 }

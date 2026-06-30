@@ -304,28 +304,48 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
    Community page + reference): like / comment / share on the left, Save right. */
 
 /* ===== Native mobile mode (no device frame — real phone browser) ===== */
-.app:not(.device-stage) .m-tabs {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  width: 100%;
-  z-index: 100;
-}
-.app:not(.device-stage) .m-scroll {
-  padding-bottom: 90px;
-}
-.app:not(.device-stage) .m-fab {
-  position: fixed;
-  bottom: 96px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 101;
-}
-.app:not(.device-stage) .m-fab:active {
-  transform: translateX(-50%) scale(.96);
-}
 @media (max-width: 768px) {
-  html, body { background: var(--surface-page) !important; padding: 0 !important; }
+  html, body {
+    background: var(--surface-page) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    height: 100%;
+    overflow: hidden;
+    display: block !important;
+  }
   .app.device-stage { display: none !important; }
+  .app:not(.device-stage) {
+    height: 100dvh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .app:not(.device-stage) .m-screen {
+    height: 100dvh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .app:not(.device-stage) .m-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0;
+  }
+  .app:not(.device-stage) .m-tabs {
+    flex: none;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .app:not(.device-stage) .m-top {
+    padding-top: max(52px, env(safe-area-inset-top));
+  }
+  .app:not(.device-stage) .m-fab {
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+  .app:not(.device-stage) .m-fab:active {
+    transform: translateX(-50%) scale(.96);
+  }
 }
