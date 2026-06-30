@@ -184,6 +184,17 @@ function PMActivity() {
 
 }
 
+function useDeviceScalePM() {
+  const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
+  const [scale, setScale] = useStatePM(calc);
+  useEffectPM(() => {
+    const update = () => setScale(calc());
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return scale;
+}
+
 function useIsMobilePM() {
   const [mobile, setMobile] = useStatePM(() => window.matchMedia('(max-width:768px)').matches);
   useEffectPM(() => {
@@ -309,13 +320,16 @@ function PMScreen() {
 
 function ProfileMobileApp() {
   const mobile = useIsMobilePM();
+  const scale = useDeviceScalePM();
   const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
   if (mobile) {
     return <div className="app" style={{ ...vars, background: "var(--surface-card)" }}><PMScreen /></div>;
   }
   return (
     <div className="app device-stage" style={vars}>
-      <IOSDevice width={440} height={956}><PMScreen /></IOSDevice>
+      <div style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
+        <IOSDevice width={440} height={956}><PMScreen /></IOSDevice>
+      </div>
     </div>);
 }
 

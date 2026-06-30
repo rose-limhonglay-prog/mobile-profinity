@@ -391,6 +391,17 @@ function MobileHome() {
 
 }
 
+function useDeviceScaleM() {
+  const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
+  const [scale, setScale] = useStateM(calc);
+  useEffectM(() => {
+    const update = () => setScale(calc());
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return scale;
+}
+
 function useIsMobileM() {
   const [mobile, setMobile] = useStateM(() => window.matchMedia('(max-width:768px)').matches);
   useEffectM(() => {
@@ -404,13 +415,16 @@ function useIsMobileM() {
 
 function MobileApp() {
   const mobile = useIsMobileM();
+  const scale = useDeviceScaleM();
   const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
   if (mobile) {
     return <div className="app" style={{ ...vars, background: "var(--surface-page)" }}><MobileHome /></div>;
   }
   return (
     <div className="app device-stage" style={{ ...vars, backgroundColor: "rgb(217, 218, 225)" }}>
-      <IOSDevice width={440} height={956}><MobileHome /></IOSDevice>
+      <div style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
+        <IOSDevice width={440} height={956}><MobileHome /></IOSDevice>
+      </div>
     </div>);
 }
 

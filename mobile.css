@@ -7,7 +7,7 @@
 body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:32px 0}
 
 /* center the device on the gray backdrop */
-.device-stage{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.device-stage{display:flex;align-items:center;justify-content:center;min-height:100vh;height:100vh;overflow:hidden}
 
 /* the screen column inside the bezel — fills the device content area */
 .m-screen{height:100%;display:flex;flex-direction:column;background:var(--surface-page);position:relative}

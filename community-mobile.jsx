@@ -10,6 +10,17 @@ const PFACM = window.PFApp;
 
 function goCM(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
 
+function useDeviceScaleCM() {
+  const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
+  const [scale, setCMScale] = React.useState(calc);
+  React.useEffect(() => {
+    const update = () => setCMScale(calc());
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return scale;
+}
+
 function useIsMobileCM() {
   const [mobile, setCM] = React.useState(() => window.matchMedia('(max-width:768px)').matches);
   React.useEffect(() => {
@@ -146,6 +157,7 @@ function CommunityMobileApp() {
     if (s) s.scrollTo({ top: 0, behavior: "smooth" });
     setNewPosts(0);
   };
+  const scale = useDeviceScaleCM();
   const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
   const screen = <CMScreen scrollRef={scrollRef} newPosts={newPosts} dismiss={dismiss} />;
   if (mobile) {
@@ -153,7 +165,9 @@ function CommunityMobileApp() {
   }
   return (
     <div className="app device-stage" style={{ ...vars, backgroundColor: "rgb(216, 218, 226)" }}>
-      <IOSDevice width={440} height={956}>{screen}</IOSDevice>
+      <div style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
+        <IOSDevice width={440} height={956}>{screen}</IOSDevice>
+      </div>
     </div>);
 }
 
