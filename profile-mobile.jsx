@@ -2,7 +2,7 @@
    PROfinity — Profile (mobile) · iPhone 17 Pro Max
    Composed on the bound DS bundle. Suffixed -PM to avoid global-scope clashes.
    =========================================================================== */
-const { useState: useStatePM } = React;
+const { useState: useStatePM, useEffect: useEffectPM } = React;
 const DSPM = window.ProfinityDesignSystem_c2b5cc;
 
 function goPM(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
@@ -184,12 +184,21 @@ function PMActivity() {
 
 }
 
-function ProfileMobileApp() {
+function useIsMobilePM() {
+  const [mobile, setMobile] = useStatePM(() => window.matchMedia('(max-width:768px)').matches);
+  useEffectPM(() => {
+    const mq = window.matchMedia('(max-width:768px)');
+    const h = e => setMobile(e.matches);
+    mq.addEventListener('change', h);
+    return () => mq.removeEventListener('change', h);
+  }, []);
+  return mobile;
+}
+
+function PMScreen() {
   const m = PM_ME;
   return (
-    <div className="app device-stage" style={{ "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" }}>
-      <IOSDevice width={440} height={956}>
-        <div className="pm-screen" data-screen-label="Profile (mobile)">
+    <div className="pm-screen" data-screen-label="Profile (mobile)">
           <PMTopBar />
           <div className="pm-scroll">
             <div className="pm-ig">
@@ -294,10 +303,20 @@ function ProfileMobileApp() {
             </button>
           </div>
           <PMTabBar />
-        </div>
-      </IOSDevice>
-    </div>);
+        </div>);
 
+}
+
+function ProfileMobileApp() {
+  const mobile = useIsMobilePM();
+  const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
+  if (mobile) {
+    return <div className="app" style={{ ...vars, background: "var(--surface-card)" }}><PMScreen /></div>;
+  }
+  return (
+    <div className="app device-stage" style={vars}>
+      <IOSDevice width={440} height={956}><PMScreen /></IOSDevice>
+    </div>);
 }
 
 ReactDOM.createRoot(document.getElementById("pf-root")).render(<ProfileMobileApp />);
