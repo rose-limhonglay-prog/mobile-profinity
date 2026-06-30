@@ -1,0 +1,114 @@
+/* ============================================================
+   Profinity — Color tokens
+   Brand: navy + gold (PROfinity Academy). Product accent: AI purple.
+   Neutrals follow the Untitled-UI gray ramp used across the apps.
+   ============================================================ */
+:root {
+  /* ---- Brand ---- */
+  --brand-navy: #292569;        /* logo "P" mark + headings */
+  --brand-navy-700: #211e54;
+  --brand-navy-900: #002a47;    /* deep ink used in marketing */
+  --brand-gold: #ce9957;        /* logo tagline + accents */
+  --brand-gold-soft: #e7a769;
+  --brand-gold-100: #f7efe3;    /* gold wash background */
+
+  /* ---- Agent / AI accent (Coach, Lumina, Marketing agents) ---- */
+  --ai-purple: #6c63ff;         /* primary agent action color */
+  --ai-purple-600: #5b51f0;     /* hover */
+  --ai-purple-700: #4a40d6;     /* pressed */
+  --ai-purple-200: #ece6fd;     /* user message bubble / soft fill */
+  --ai-purple-100: #f5f5ff;     /* lightest agent wash */
+  --ai-violet: #5d15bc;         /* secondary agent gradient stop */
+  --ai-magenta: #d454bb;        /* agent gradient / spark accent */
+
+  /* ---- Assess Pro agent brand (clinical assessment surface) ---- */
+  --assess-teal: #25515c;
+  --assess-teal-700: #1c3f48;
+
+  /* ---- Neutral ramp ---- */
+  --gray-900: #101828;
+  --gray-800: #1f1f1f;          /* default body text */
+  --gray-600: #475467;
+  --gray-500: #667085;          /* secondary text */
+  --gray-450: #747474;          /* muted captions */
+  --gray-400: #98a2b3;
+  --gray-300: #d0d5dd;          /* strong border / placeholder img */
+  --gray-200: #eaecf0;          /* default border */
+  --gray-150: #e4e7ec;
+  --gray-100: #f2f4f7;
+  --gray-75:  #f5f5f5;          /* input + chip fill */
+  --gray-50:  #f9fafb;          /* app canvas background */
+  --white: #ffffff;
+  --black: #000000;
+
+  /* ---- Semantic status ---- */
+  --success: #2a9568;
+  --success-bg: #ecfdf3;
+  --info: #0088de;
+  --info-bg: #eff8ff;
+  --warning: #f9a60b;
+  --warning-bg: #fffaeb;
+  --error: #be1e2d;
+  --error-bg: #fef3f2;
+
+  /* ============================================================
+     Semantic aliases — reference these in components
+     ============================================================ */
+  --text-primary: var(--gray-800);
+  --text-secondary: var(--gray-500);
+  --text-muted: var(--gray-450);
+  --text-on-brand: var(--white);
+  --text-heading: var(--brand-navy);
+  --text-link: var(--ai-purple);
+
+  --surface-page: var(--gray-50);
+  --surface-card: var(--white);
+  --surface-sunken: var(--gray-75);
+  --surface-agent: var(--ai-purple-100);
+  --surface-brand: var(--brand-navy);
+
+  --border-default: var(--gray-200);
+  --border-strong: var(--gray-300);
+  --border-focus: var(--ai-purple);
+
+  --action-primary: var(--ai-purple);
+  --action-primary-hover: var(--ai-purple-600);
+  --action-primary-active: var(--ai-purple-700);
+  --action-brand: var(--brand-navy);
+  --action-brand-hover: var(--brand-navy-700);
+  --action-brand-active: var(--brand-navy-900);
+
+  --focus-ring: rgba(108, 99, 255, 0.28);
+
+  /* Course difficulty levels */
+  --level-beginner: #2a9568;
+  --level-beginner-bg: #e7f6ee;
+  --level-intermediate: #b07a1e;
+  --level-intermediate-bg: #f7efe3;
+  --level-advanced: #b4359e;
+  --level-advanced-bg: #fbe9f6;
+
+  /* Premium / membership */
+  --premium-orange: #db6905;
+  --premium-gold: #e9b01f;
+  --premium-gold-deep: #976a00;
+  --membership-gradient: linear-gradient(135deg, #f4ad3d 0%, #e7820a 100%);
+  --premium-badge: linear-gradient(180deg, #e09a3c 0%, #db6905 100%);
+
+  /* Agents hero */
+  --agent-hero-gradient: linear-gradient(105deg, #6c63ff 0%, #c44ec1 55%, #f4736e 100%);
+  --spark-gradient: linear-gradient(135deg, #6c63ff 0%, #5d15bc 45%, #d454bb 100%);
+
+  /* Feed reactions */
+  --reaction-like: #2e86ff;
+  --reaction-love: #f0425f;
+  --reaction-laugh: #f7b500;
+  --reaction-insightful: #f9a60b;
+
+  /* Verification / trust seals */
+  --verify-check: #1f8ddb;
+  --verify-crown: #be1e2d;
+  --verify-gold: #e2a300;
+
+  --surface-panel: var(--gray-100);
+}

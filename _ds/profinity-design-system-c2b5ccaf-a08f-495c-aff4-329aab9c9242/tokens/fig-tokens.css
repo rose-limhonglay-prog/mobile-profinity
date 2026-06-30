@@ -1,0 +1,33 @@
+/* Generated from Figma Variables. First mode = :root default. */
+
+:root {
+  --background-brand-default-2: var(--brand-800);
+  --background-brand-default: var(--brand-800);
+  --black-100: rgba(12,12,13,0.05);
+  --brand-100: rgb(245,245,245);
+  --brand-800: rgb(44,44,44);
+  --brand-b-800: rgb(119,0,0);
+  --depth-025: 1;
+  --depth-0: 0;
+  --depth-100: 4;
+  --gray-900-2: rgb(30,30,30);
+  --gray-900: rgb(30,30,30);
+  --icon-default-default-2: var(--gray-900);
+  --icon-default-default-3: var(--gray-900);
+  --icon-default-default: var(--gray-900);
+  --white-1000-2: rgb(255,255,255);
+  --white-1000: rgb(255,255,255);
+}
+
+:root[data-theme="dark"], .dark {
+  --background-brand-default-2: var(--brand-100);
+  --background-brand-default: var(--brand-100);
+  --icon-default-default-2: var(--white-1000);
+  --icon-default-default-3: var(--white-1000);
+  --icon-default-default: var(--white-1000);
+}
+
+:root[data-theme="light"], .light {
+  --background-brand-default: var(--brand-b-800);
+  --icon-default-default: var(--gray-900);
+}
