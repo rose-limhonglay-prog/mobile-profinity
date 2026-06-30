@@ -200,6 +200,13 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
   flex:0 0 auto !important;width:74% !important;height:240px !important;
   object-fit:cover !important;background:var(--gray-100);scroll-snap-align:start}
 
+/* single-image media → constrain to feed width, no overflow */
+.m-scroll .post-wrap [style*="grid-template-columns"]:not([style*="1fr 1fr"]){
+  width:100% !important;max-width:100% !important;overflow:hidden !important}
+.m-scroll .post-wrap [style*="grid-template-columns"]:not([style*="1fr 1fr"]) > img{
+  width:100% !important;height:240px !important;
+  object-fit:cover !important;display:block !important;background:var(--gray-100)}
+
 /* story / quick-filter strip under the bar */
 .m-chips{display:flex;gap:8px;overflow-x:auto;padding:12px 12px 2px;scrollbar-width:none}
 .m-chips::-webkit-scrollbar{display:none}
