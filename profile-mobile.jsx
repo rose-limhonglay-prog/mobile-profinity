@@ -98,22 +98,252 @@ function PMTabBar() {
 
 }
 
-function VerifyBanner() {
-  const [open, setOpen] = useStatePM(true);
-  if (!open) return null;
+const PM_STEPS_INIT = [
+  { ti: "Add a profile photo", su: "Priority action", state: "priority" },
+  { ti: "Write your bio", su: "Complete", state: "done" },
+  { ti: "Add your location", su: "Complete", state: "done" },
+  { ti: "Verify your credentials", su: "Incomplete", state: "todo" },
+  { ti: "Connect your social profiles", su: "Incomplete", state: "todo" },
+];
+
+/* ---- Step sheet: Photo ---- */
+function PhotoStep({ onComplete, isDone }) {
+  const [chosen, setChosen] = useStatePM(null);
   return (
-    <div className="pm-verify">
-      <button className="x" aria-label="Dismiss" onClick={() => setOpen(false)}><DSPM.IconifyIcon name="lucide:x" size={22} color="var(--gray-700)" /></button>
-      <div className="hd">
-        <DSPM.IconifyIcon name="fluent:shield-checkmark-16-filled" size={30} color="var(--verify-check,#1f8ddb)" />
-        <div>
-          <div className="t">Verify your medical credentials</div>
-          <div className="s">Adding more credentials helps people know you're the real deal.</div>
+    <div className="pm-sheet-step">
+      <div className="pm-sheet-av">
+        <DSPM.Avatar name="Katy Wilson" src="assets/avatar-katy.jpg" size={88} />
+        <span className="pm-sheet-av-edit"><DSPM.IconifyIcon name="lucide:camera" size={15} color="#fff" /></span>
+      </div>
+      {isDone && <p className="pm-sheet-note">Your profile photo is set. You can update it anytime.</p>}
+      <div className="pm-sheet-opts">
+        <button className={"pm-sheet-opt" + (chosen === "camera" ? " sel" : "")} onClick={() => setChosen("camera")}>
+          <DSPM.IconifyIcon name="lucide:camera" size={22} color="var(--brand-navy)" /><span>Take a photo</span>
+        </button>
+        <button className={"pm-sheet-opt" + (chosen === "library" ? " sel" : "")} onClick={() => setChosen("library")}>
+          <DSPM.IconifyIcon name="lucide:image" size={22} color="var(--brand-navy)" /><span>Choose from library</span>
+        </button>
+      </div>
+      {chosen && <button className="pm-sheet-cta" onClick={onComplete}>Upload & Save Photo</button>}
+    </div>
+  );
+}
+
+/* ---- Step sheet: Bio ---- */
+function BioStep({ onComplete }) {
+  const [bio, setBio] = useStatePM(PM_ME.bio);
+  const max = 300;
+  return (
+    <div className="pm-sheet-step">
+      <p className="pm-sheet-desc">Write a short bio that tells people about your professional background and specialisations.</p>
+      <div className="pm-sheet-field">
+        <textarea className="pm-sheet-ta" value={bio} maxLength={max} rows={5}
+          onChange={e => setBio(e.target.value)}
+          placeholder="e.g. Aesthetic nurse with 10+ years experience in botox and dermal fillers…" />
+        <span className="pm-sheet-count">{bio.length}/{max}</span>
+      </div>
+      <button className="pm-sheet-cta" onClick={onComplete} disabled={bio.trim().length < 10}>Save Bio</button>
+    </div>
+  );
+}
+
+/* ---- Step sheet: Location ---- */
+function LocationStep({ onComplete }) {
+  const [loc, setLoc] = useStatePM("London, United Kingdom");
+  const [detecting, setDetecting] = useStatePM(false);
+  function detect() {
+    setDetecting(true);
+    setTimeout(() => { setLoc("London, United Kingdom"); setDetecting(false); }, 1200);
+  }
+  return (
+    <div className="pm-sheet-step">
+      <p className="pm-sheet-desc">Add your location so patients and peers can find you.</p>
+      <div className="pm-sheet-field">
+        <input className="pm-sheet-inp" value={loc} onChange={e => setLoc(e.target.value)} placeholder="City, Country" />
+      </div>
+      <button className="pm-sheet-ghost" onClick={detect} disabled={detecting}>
+        <DSPM.IconifyIcon name="lucide:map-pin" size={18} color="var(--brand-navy)" />
+        {detecting ? "Detecting…" : "Use my current location"}
+      </button>
+      <button className="pm-sheet-cta" onClick={onComplete} disabled={loc.trim().length < 2}>Save Location</button>
+    </div>
+  );
+}
+
+/* ---- Step sheet: Credentials ---- */
+function CredentialsStep({ onComplete }) {
+  const [nmcNum, setNmcNum] = useStatePM("");
+  const [submitted, setSubmitted] = useStatePM(false);
+  if (submitted) {
+    return (
+      <div className="pm-sheet-step pm-sheet-center">
+        <div className="pm-sheet-icon-wrap success"><DSPM.IconifyIcon name="lucide:clock" size={32} color="var(--success)" /></div>
+        <h4>Verification Submitted</h4>
+        <p className="pm-sheet-desc">Your credentials are under review. We'll notify you within 1–2 business days.</p>
+        <button className="pm-sheet-cta" onClick={onComplete}>Got it</button>
+      </div>
+    );
+  }
+  return (
+    <div className="pm-sheet-step">
+      <p className="pm-sheet-desc">Enter your NMC or GMC registration number to verify your professional credentials.</p>
+      <div className="pm-sheet-field">
+        <label className="pm-sheet-label">NMC / GMC Number</label>
+        <input className="pm-sheet-inp" value={nmcNum} onChange={e => setNmcNum(e.target.value)} placeholder="e.g. 12A3456B" />
+      </div>
+      <button className="pm-sheet-ghost">
+        <DSPM.IconifyIcon name="lucide:upload" size={18} color="var(--brand-navy)" />Upload supporting documents
+      </button>
+      <button className="pm-sheet-cta" onClick={() => setSubmitted(true)} disabled={nmcNum.trim().length < 5}>Submit for Verification</button>
+    </div>
+  );
+}
+
+/* ---- Step sheet: Social profiles ---- */
+const PM_SOCIALS = [
+  { key: "linkedin", icon: "mdi:linkedin", color: "#0A66C2", label: "LinkedIn" },
+  { key: "instagram", icon: "mdi:instagram", color: "#E1306C", label: "Instagram" },
+  { key: "twitter", icon: "mdi:twitter", color: "#1DA1F2", label: "X / Twitter" },
+  { key: "facebook", icon: "mdi:facebook", color: "#1877F2", label: "Facebook" },
+];
+
+function SocialStep({ onComplete }) {
+  const [connected, setConnected] = useStatePM([]);
+  function toggle(key) {
+    setConnected(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+  }
+  return (
+    <div className="pm-sheet-step">
+      <p className="pm-sheet-desc">Link your social profiles to build trust and grow your network.</p>
+      <div className="pm-sheet-socials">
+        {PM_SOCIALS.map(s => {
+          const on = connected.includes(s.key);
+          return (
+            <div key={s.key} className="pm-sheet-social">
+              <DSPM.IconifyIcon name={s.icon} size={28} color={s.color} />
+              <span className="pm-sheet-social-nm">{s.label}</span>
+              <button className={"pm-sheet-social-btn" + (on ? " connected" : "")} onClick={() => toggle(s.key)}>
+                {on ? "Connected" : "Connect"}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      {connected.length > 0 && <button className="pm-sheet-cta" onClick={onComplete}>Save Connections</button>}
+    </div>
+  );
+}
+
+/* ---- Bottom sheet wrapper ---- */
+function StepSheet({ step, idx, onComplete, onClose }) {
+  return (
+    <div className="pm-sheet-overlay" onClick={onClose}>
+      <div className="pm-sheet" onClick={e => e.stopPropagation()}>
+        <div className="pm-sheet-drag" />
+        <div className="pm-sheet-hd">
+          <h3>{step.ti}</h3>
+          <button className="pm-sheet-close" onClick={onClose} aria-label="Close">
+            <DSPM.IconifyIcon name="lucide:x" size={20} color="var(--gray-600)" />
+          </button>
+        </div>
+        <div className="pm-sheet-body">
+          {idx === 0 && <PhotoStep onComplete={onComplete} isDone={step.state === "done"} />}
+          {idx === 1 && <BioStep onComplete={onComplete} isDone={step.state === "done"} />}
+          {idx === 2 && <LocationStep onComplete={onComplete} isDone={step.state === "done"} />}
+          {idx === 3 && <CredentialsStep onComplete={onComplete} isDone={step.state === "done"} />}
+          {idx === 4 && <SocialStep onComplete={onComplete} isDone={step.state === "done"} />}
         </div>
       </div>
-      <button className="full" type="button">Edit Page</button>
-    </div>);
+    </div>
+  );
+}
 
+/* ---- Profile complete success banner ---- */
+function ProfileCompleteCard({ onDismiss }) {
+  useEffectPM(() => {
+    const t = setTimeout(onDismiss, 4000);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div className="pm-steps-success" aria-live="polite">
+      <div className="pm-steps-success-icon">
+        <DSPM.IconifyIcon name="lucide:check" size={36} color="#fff" />
+      </div>
+      <h3 className="pm-steps-success-h">Profile Complete!</h3>
+      <p className="pm-steps-success-sub">Your profile is fully set up. You're ready to connect with the community.</p>
+      <button className="pm-steps-success-btn" onClick={onDismiss}>Got it</button>
+    </div>
+  );
+}
+
+/* ---- Profile steps card ---- */
+function ProfileSteps() {
+  const [steps, setSteps] = useStatePM(() => PM_STEPS_INIT.map(s => ({ ...s })));
+  const [activeIdx, setActiveIdx] = useStatePM(null);
+  const [dismissed, setDismissed] = useStatePM(false);
+  const [exiting, setExiting] = useStatePM(false);
+
+  const total = steps.length;
+  const done = steps.filter(s => s.state === "done").length;
+  const allDone = done === total;
+  const pct = Math.round((done / total) * 100);
+
+  function markDone(idx) {
+    setSteps(prev => prev.map((s, i) => i === idx ? { ...s, state: "done", su: "Complete" } : s));
+    setActiveIdx(null);
+  }
+
+  function handleDismiss() {
+    setExiting(true);
+    setTimeout(() => setDismissed(true), 400);
+  }
+
+  if (dismissed) return null;
+
+  if (allDone) {
+    return (
+      <div className={"pm-steps-wrap" + (exiting ? " pm-steps-exit" : "")}>
+        <ProfileCompleteCard onDismiss={handleDismiss} />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <section className="pm-steps" aria-label="Complete your profile">
+        <h3 className="pm-steps-h">Complete your profile</h3>
+        <p className="pm-steps-sub">{done} of {total} steps complete</p>
+        <div className="pm-steps-track" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+          <span className="pm-steps-fill" style={{ width: pct + "%" }}></span>
+        </div>
+        <p className="pm-steps-pct">{pct}% complete</p>
+        <div className="pm-steps-list">
+          {steps.map((s, i) => (
+            <button className={"pm-step " + s.state} key={i} onClick={() => setActiveIdx(i)}>
+              <span className="pm-step-mark" aria-hidden="true">
+                {s.state === "done"
+                  ? <DSPM.IconifyIcon name="lucide:check" size={18} color="#fff" />
+                  : <span className="dot"></span>}
+              </span>
+              <span className="pm-step-txt">
+                <span className="ti">{s.ti}</span>
+                <span className="su">{s.su}</span>
+              </span>
+              <DSPM.IconifyIcon name="lucide:chevron-right" size={18} color="var(--gray-400)" />
+            </button>
+          ))}
+        </div>
+      </section>
+      {activeIdx !== null && (
+        <StepSheet
+          step={steps[activeIdx]}
+          idx={activeIdx}
+          onComplete={() => markDone(activeIdx)}
+          onClose={() => setActiveIdx(null)}
+        />
+      )}
+    </>
+  );
 }
 
 function PMSection({ title, children }) {
@@ -248,11 +478,13 @@ function PMScreen() {
 
               <div className="pm-ig-actions">
                 <button className="pm-ig-btn" onClick={() => goPM("ProfileMobile.html")}>Edit Profile</button>
-                <button className="pm-ig-btn">Share Profile</button>
-                <button className="pm-ig-btn icon" aria-label="Add people"><DSPM.IconifyIcon name="lucide:user-plus" size={20} color="var(--brand-navy)" /></button>
+                <button className="pm-ig-btn navy">Share Profile</button>
+                <button className="pm-ig-btn icon" aria-label="Settings" onClick={() => goPM("AccountSettings.html")}>
+                  <DSPM.IconifyIcon name="lucide:settings" size={20} color="var(--text-heading)" />
+                </button>
               </div>
             </div>
-            <VerifyBanner />
+            <ProfileSteps />
             <PMMentor />
             <PMActivity />
 

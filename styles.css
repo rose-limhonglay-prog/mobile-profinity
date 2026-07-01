@@ -71,12 +71,12 @@ img{max-width:100%}
   border:1px solid var(--border-default);
   border-radius:var(--r-pill);
   box-shadow:0 8px 28px rgba(16,24,40,.22),0 2px 6px rgba(16,24,40,.12);
-  transform-origin:bottom left;
+  transform-origin:center bottom;
   animation:pf-bar-in .24s cubic-bezier(.34,1.56,.64,1) both;
 }
 @keyframes pf-bar-in{
-  from{opacity:0;transform:translateY(-100%) scale(.55)}
-  to{opacity:1;transform:translateY(-100%) scale(1)}
+  from{opacity:0;transform:scale(.55)}
+  to{opacity:1;transform:scale(1)}
 }
 .pf-react-opt{
   position:relative;background:none;border:none;cursor:pointer;padding:2px;
@@ -129,25 +129,20 @@ img{max-width:100%}
 .pf-react-opt[data-react="love"]:hover iconify-icon,
 .pf-react-opt[data-react="love"]:focus-visible iconify-icon{animation:pf-heartbeat .8s ease-in-out infinite}
 
-/* Care — a warm squeeze hug */
-@keyframes pf-care{0%,100%{transform:scale(1) rotate(0)}50%{transform:scale(1.16) rotate(-4deg)}}
-.pf-react-opt[data-react="care"]:hover iconify-icon,
-.pf-react-opt[data-react="care"]:focus-visible iconify-icon{animation:pf-care .7s ease-in-out infinite}
-
-/* Haha — a laughing wobble */
-@keyframes pf-haha{0%,100%{transform:rotate(0) translateY(0)}20%{transform:rotate(-9deg) translateY(1px)}40%{transform:rotate(8deg) translateY(-1px)}60%{transform:rotate(-6deg) translateY(1px)}80%{transform:rotate(4deg)}}
-.pf-react-opt[data-react="haha"]:hover iconify-icon,
-.pf-react-opt[data-react="haha"]:focus-visible iconify-icon{animation:pf-haha .55s ease-in-out infinite}
+/* Laugh — a laughing wobble */
+@keyframes pf-laugh{0%,100%{transform:rotate(0) translateY(0)}20%{transform:rotate(-9deg) translateY(1px)}40%{transform:rotate(8deg) translateY(-1px)}60%{transform:rotate(-6deg) translateY(1px)}80%{transform:rotate(4deg)}}
+.pf-react-opt[data-react="laugh"]:hover iconify-icon,
+.pf-react-opt[data-react="laugh"]:focus-visible iconify-icon{animation:pf-laugh .55s ease-in-out infinite}
 
 /* Wow — a surprised pop */
 @keyframes pf-wow{0%,100%{transform:scale(1)}45%{transform:scale(1.34)}}
 .pf-react-opt[data-react="wow"]:hover iconify-icon,
 .pf-react-opt[data-react="wow"]:focus-visible iconify-icon{animation:pf-wow .6s cubic-bezier(.34,1.56,.64,1) infinite}
 
-/* Sad — a slow downward bob */
-@keyframes pf-sad{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(4px) rotate(-3deg)}}
-.pf-react-opt[data-react="sad"]:hover iconify-icon,
-.pf-react-opt[data-react="sad"]:focus-visible iconify-icon{animation:pf-sad 1s ease-in-out infinite}
+/* Cry — a slow downward bob */
+@keyframes pf-cry{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(4px) rotate(-3deg)}}
+.pf-react-opt[data-react="cry"]:hover iconify-icon,
+.pf-react-opt[data-react="cry"]:focus-visible iconify-icon{animation:pf-cry 1s ease-in-out infinite}
 
 /* Angry — a tense tremble */
 @keyframes pf-angry{0%,100%{transform:translate(0,0) rotate(0)}20%{transform:translate(-2px,0) rotate(-4deg)}40%{transform:translate(2px,0) rotate(4deg)}60%{transform:translate(-2px,0) rotate(-3deg)}80%{transform:translate(2px,0) rotate(3deg)}}
@@ -170,44 +165,43 @@ img{max-width:100%}
 .pf-react-opt[data-react="angry"]:focus-visible::after{animation:pf-steam 1s ease-out .5s infinite}
 
 /* ----- particle flourishes shared base ----- */
-.pf-react-opt[data-react="sad"]::before,.pf-react-opt[data-react="sad"]::after,
-.pf-react-opt[data-react="haha"]::before,.pf-react-opt[data-react="haha"]::after,
+.pf-react-opt[data-react="cry"]::before,.pf-react-opt[data-react="cry"]::after,
+.pf-react-opt[data-react="laugh"]::before,.pf-react-opt[data-react="laugh"]::after,
 .pf-react-opt[data-react="love"]::before,.pf-react-opt[data-react="love"]::after,
 .pf-react-opt[data-react="wow"]::before,.pf-react-opt[data-react="wow"]::after,
-.pf-react-opt[data-react="like"]::before,
-.pf-react-opt[data-react="care"]::before,.pf-react-opt[data-react="care"]::after{
+.pf-react-opt[data-react="like"]::before{
   position:absolute;opacity:0;pointer-events:none;z-index:3;will-change:transform,opacity;
 }
 
-/* Sad — two teardrops fall from the eyes */
-.pf-react-opt[data-react="sad"]::before,
-.pf-react-opt[data-react="sad"]::after{
+/* Cry — two teardrops fall from the eyes */
+.pf-react-opt[data-react="cry"]::before,
+.pf-react-opt[data-react="cry"]::after{
   content:"";top:19px;width:6px;height:8px;
   background:radial-gradient(circle at 50% 30%, #bfe3ff, var(--reaction-like));
   border-radius:50% 50% 50% 50%/65% 65% 40% 40%;
 }
-.pf-react-opt[data-react="sad"]::before{left:12px}
-.pf-react-opt[data-react="sad"]::after{right:12px}
+.pf-react-opt[data-react="cry"]::before{left:12px}
+.pf-react-opt[data-react="cry"]::after{right:12px}
 @keyframes pf-tear{0%{opacity:0;transform:translateY(0) scale(.5)}25%{opacity:1}100%{opacity:0;transform:translateY(18px) scale(1)}}
-.pf-react-opt[data-react="sad"]:hover::before,
-.pf-react-opt[data-react="sad"]:focus-visible::before{animation:pf-tear 1.1s ease-in infinite}
-.pf-react-opt[data-react="sad"]:hover::after,
-.pf-react-opt[data-react="sad"]:focus-visible::after{animation:pf-tear 1.1s ease-in .55s infinite}
+.pf-react-opt[data-react="cry"]:hover::before,
+.pf-react-opt[data-react="cry"]:focus-visible::before{animation:pf-tear 1.1s ease-in infinite}
+.pf-react-opt[data-react="cry"]:hover::after,
+.pf-react-opt[data-react="cry"]:focus-visible::after{animation:pf-tear 1.1s ease-in .55s infinite}
 
-/* Haha — "ha!" giggles float up */
-.pf-react-opt[data-react="haha"]::before,
-.pf-react-opt[data-react="haha"]::after{
+/* Laugh — "ha!" giggles float up */
+.pf-react-opt[data-react="laugh"]::before,
+.pf-react-opt[data-react="laugh"]::after{
   content:"ha!";top:0;font-family:var(--font-sans);font-weight:700;font-size:11px;
   color:var(--premium-orange);text-shadow:0 1px 1px rgba(255,255,255,.7);
 }
-.pf-react-opt[data-react="haha"]::before{left:-7px}
-.pf-react-opt[data-react="haha"]::after{content:"ha";right:-7px}
+.pf-react-opt[data-react="laugh"]::before{left:-7px}
+.pf-react-opt[data-react="laugh"]::after{content:"ha";right:-7px}
 @keyframes pf-giggle-l{0%{opacity:0;transform:translate(0,6px) rotate(-6deg)}30%{opacity:1}100%{opacity:0;transform:translate(-8px,-16px) rotate(-16deg)}}
 @keyframes pf-giggle-r{0%{opacity:0;transform:translate(0,6px) rotate(6deg)}30%{opacity:1}100%{opacity:0;transform:translate(8px,-16px) rotate(16deg)}}
-.pf-react-opt[data-react="haha"]:hover::before,
-.pf-react-opt[data-react="haha"]:focus-visible::before{animation:pf-giggle-l .9s ease-out infinite}
-.pf-react-opt[data-react="haha"]:hover::after,
-.pf-react-opt[data-react="haha"]:focus-visible::after{animation:pf-giggle-r .9s ease-out .45s infinite}
+.pf-react-opt[data-react="laugh"]:hover::before,
+.pf-react-opt[data-react="laugh"]:focus-visible::before{animation:pf-giggle-l .9s ease-out infinite}
+.pf-react-opt[data-react="laugh"]:hover::after,
+.pf-react-opt[data-react="laugh"]:focus-visible::after{animation:pf-giggle-r .9s ease-out .45s infinite}
 
 /* Love — little hearts float up */
 .pf-react-opt[data-react="love"]::before,
@@ -244,17 +238,6 @@ img{max-width:100%}
 .pf-react-opt[data-react="like"]:hover::before,
 .pf-react-opt[data-react="like"]:focus-visible::before{animation:pf-plus1 .9s ease-out infinite}
 
-/* Care — warm sparkles drift up */
-.pf-react-opt[data-react="care"]::before,
-.pf-react-opt[data-react="care"]::after{
-  content:"✦";top:2px;font-size:9px;color:var(--premium-orange);
-}
-.pf-react-opt[data-react="care"]::before{left:0}
-.pf-react-opt[data-react="care"]::after{right:0;font-size:7px}
-.pf-react-opt[data-react="care"]:hover::before,
-.pf-react-opt[data-react="care"]:focus-visible::before{animation:pf-floatheart 1.1s ease-out infinite}
-.pf-react-opt[data-react="care"]:hover::after,
-.pf-react-opt[data-react="care"]:focus-visible::after{animation:pf-floatheart 1.1s ease-out .55s infinite}
 
 @media (prefers-reduced-motion:reduce){
   .pf-react-opt:hover iconify-icon,
@@ -303,7 +286,7 @@ img{max-width:100%}
 .post-wrap > div > div:nth-child(1) .avatar img{border-radius:0 !important}
 .post-wrap > div > div:nth-child(1) .avatar img{object-fit:contain !important;background:transparent !important}
 /* channel post: hide the redundant category (kind) chip */
-.post-wrap.has-chx > div:nth-child(2) > div:nth-child(3){display:none !important}
+.post-wrap.has-chx > div:nth-child(2) > div:nth-child(2){display:none !important}
 
 /* comment body text → black (preview CommentItem + comments sheet + bubbles) */
 .cmt-preview > div > div:nth-child(2) > div:nth-child(2),
@@ -311,7 +294,7 @@ img{max-width:100%}
 .bub-tx{ color:#000 !important; }
 
 /* kind label (e.g. "CASE STUDY:") rendered as a soft navy-on-lavender pill */
-.post-wrap > div > div:nth-child(3){
+.post-wrap > div > div:nth-child(2){
   display:inline-flex !important;
   align-self:flex-start;
   align-items:center;
@@ -321,9 +304,11 @@ img{max-width:100%}
   border-radius:var(--r-pill);
   margin:0 0 6px;
 }
-.post-wrap > div > div:nth-child(3) > span{font-size:13px !important;}
-.post-wrap > div > div:nth-child(3) iconify-icon{font-size:15px !important;}
-.post-wrap.has-chx > div > div:nth-child(3){display:none !important}
+.post-wrap > div > div:nth-child(2) > span{font-size:13px !important;}
+.post-wrap > div > div:nth-child(2) iconify-icon{font-size:15px !important;}
+.post-wrap.has-chx > div:nth-child(2) > div:nth-child(2){display:none !important}
+/* reset .chx-main — the broad pill rule above accidentally matches it */
+.post-wrap.has-chx .chx-main{display:flex !important;flex-direction:column;flex:1;padding:0;background:none;border-radius:0;margin:0;}
 
 /* sample media — video / vertical reel / 10-image gallery */
 .sm-video{position:relative;border-radius:var(--r-md);overflow:hidden;cursor:pointer;margin-bottom:12px;background:#000}
@@ -390,13 +375,30 @@ img{max-width:100%}
   padding:18px 20px max(28px,env(safe-area-inset-bottom));
   background:linear-gradient(180deg,transparent,rgba(0,0,0,.55))}
 
-.sm-gallery-wrap{position:relative;margin-bottom:12px}
+.sm-gallery-wrap{position:relative;margin-bottom:16px}
 .sm-gallery{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
   scrollbar-width:none;border-radius:var(--r-md)}
 .sm-gallery::-webkit-scrollbar{display:none}
 .sm-gallery img{flex:0 0 auto;width:82%;height:300px;object-fit:cover;border-radius:var(--r-md);scroll-snap-align:start}
 .sm-count{position:absolute;top:12px;right:12px;padding:5px 12px;border-radius:var(--r-pill);
   background:rgba(16,24,40,.72);color:var(--white);font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px}
+
+/* ===== MediaCarousel: swipeable strip + dot indicators + counter ===== */
+.mc-wrap{position:relative;margin-bottom:12px}
+.mc-scroll{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.mc-scroll::-webkit-scrollbar{display:none}
+.mc-scroll-single{overflow:hidden}
+.mc-img{flex:0 0 auto;width:74%;height:240px;object-fit:cover;
+  border-radius:var(--r-md);scroll-snap-align:start;background:var(--gray-100)}
+.mc-scroll-single .mc-img{width:100%}
+.mc-count{position:absolute;top:12px;right:8px;padding:4px 10px;border-radius:var(--r-pill);
+  background:rgba(16,24,40,.72);color:#fff;font-family:var(--font-sans);
+  font-weight:var(--fw-semibold);font-size:12px;pointer-events:none}
+.mc-dots{display:flex;justify-content:center;gap:6px;padding:8px 0 2px}
+.mc-dot{width:7px;height:7px;border-radius:50%;background:var(--gray-300);
+  transition:background .15s ease, transform .2s ease;flex:none}
+.mc-dot.on{background:var(--brand-navy)}
 
 /* post media fills its frame (no letterbox space) — any aspect is cropped to fill */
 .post-wrap img[style*="380"]{object-fit:cover !important;height:380px !important;width:100% !important;background:var(--gray-100)}
@@ -450,3 +452,27 @@ img{max-width:100%}
 .likes-body{overflow-y:auto;padding:8px 24px 24px}
 .likes-sec-label{font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--gray-500);padding:14px 0 4px}
 .likes-divider{height:1px;background:var(--border-default);margin:10px 0}
+
+/* saved modal — slides up from bottom */
+.saved-overlay{position:fixed;inset:0;z-index:9999;background:rgba(16,24,40,.45);display:flex;align-items:flex-end;justify-content:center;animation:saved-fade .2s ease}
+@keyframes saved-fade{from{opacity:0}to{opacity:1}}
+.saved-sheet{width:100%;max-width:500px;background:var(--surface-card);border-radius:24px 24px 0 0;
+  padding:0 28px 40px;display:flex;flex-direction:column;align-items:center;text-align:center;
+  animation:saved-rise .36s cubic-bezier(.22,1.06,.36,1) both}
+@keyframes saved-rise{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.saved-handle{width:44px;height:5px;border-radius:var(--r-pill);background:var(--gray-200);margin:14px auto 28px;flex:none}
+.saved-icon-wrap{width:80px;height:80px;border-radius:50%;background:var(--brand-gold-100);
+  display:flex;align-items:center;justify-content:center;margin-bottom:20px;flex:none}
+.saved-title{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:26px;color:var(--text-heading);margin-bottom:8px}
+.saved-desc{font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--gray-600);line-height:1.45;margin-bottom:22px}
+.saved-divider{width:100%;height:1px;background:var(--border-default);margin-bottom:20px}
+.saved-where{display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin-bottom:24px}
+.saved-where-av{width:50px;height:50px;border-radius:50%;background:var(--brand-gold-100);flex:none}
+.saved-where-path{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-body-lg);color:var(--text-heading);margin-bottom:3px}
+.saved-where-sub{font-family:var(--font-sans);font-size:var(--fs-body);color:var(--gray-500)}
+.saved-btn{width:100%;padding:16px;border:none;border-radius:var(--r-lg);cursor:pointer;
+  background:var(--brand-gold);color:var(--white);font-family:var(--font-sans);font-weight:var(--fw-bold);
+  font-size:var(--fs-body-lg);margin-bottom:16px;transition:opacity .15s ease}
+.saved-btn:hover{opacity:.88}
+.saved-skip{background:none;border:none;cursor:pointer;font-family:var(--font-sans);font-size:var(--fs-body-lg);
+  color:var(--gray-450);padding:4px}

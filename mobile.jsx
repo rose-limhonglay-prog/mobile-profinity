@@ -82,15 +82,21 @@ const SM_PROFILE = [
 { label: "Privacy & Security", icon: "lucide:book-open", href: null }];
 
 const NOTIFS = {
-  "New": [
-  { who: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png", action: "commented on your post", detail: "“This is a nice article Katy!”", t: "Just now", type: "comment" },
-  { who: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", action: "liked on your comment", detail: "“Full-Face Rejuvenation Increased Patient Satisfaction +64%”", t: "2h", type: "love" }],
-  "Yesterday": [
-  { who: "Jane Harries", avatar: null, action: "booked new appointment", detail: "February 12, 2026, 6:00 PM", t: "1d", rsvp: true, type: "appointment" }],
-  "Older": [
-  { who: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png", action: "commented on your post", detail: "“This is a nice article Katy!”", t: "3w", type: "comment" },
-  { who: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", action: "liked on your comment", detail: "“Full-Face Rejuvenation Increased Patient Satisfaction +64%”", t: "4w", type: "love" }]
+  “New”: [
+  { who: “Dr Tim Pearce”, avatar: “assets/avatar-drtim.png”, action: “commented on your post”, detail: ““This is a nice article Katy!””, t: “Just now”, type: “comment” },
+  { who: “Miranda Pearce”, avatar: “assets/avatar-miranda.jpg”, action: “liked on your comment”, detail: ““Full-Face Rejuvenation Increased Patient Satisfaction +64%””, t: “2h”, type: “love” }],
+  “Yesterday”: [
+  { who: “Jane Harries”, avatar: null, action: “booked new appointment”, detail: “February 12, 2026, 6:00 PM”, t: “1d”, rsvp: true, type: “appointment” }],
+  “Older”: [
+  { who: “Dr Tim Pearce”, avatar: “assets/avatar-drtim.png”, action: “commented on your post”, detail: ““This is a nice article Katy!””, t: “3w”, type: “comment” },
+  { who: “Miranda Pearce”, avatar: “assets/avatar-miranda.jpg”, action: “liked on your comment”, detail: ““Full-Face Rejuvenation Increased Patient Satisfaction +64%””, t: “4w”, type: “love” }]
 };
+
+const SUGGESTED_POSTS = [
+  { who: “Dr Tim Pearce”, avatar: “assets/avatar-drtim.png”, t: “1h”, text: “The 3 biggest mistakes injectors make with lip filler — and how to fix them fast.”, img: “assets/post1-img1.png”, likes: 142, comments: 38, tag: “Technique” },
+  { who: “Miranda Pearce”, avatar: “assets/avatar-miranda.jpg”, t: “3h”, text: “Patient confidence scores went up 64% after full-face rejuvenation. Here’s what changed.”, img: null, likes: 89, comments: 22, tag: “Case Study” },
+  { who: “Jane Harries”, avatar: null, t: “5h”, text: “Just finished the Advanced Botox Training module. The dosing charts are absolute game-changers.”, img: “assets/post2-img1.png”, likes: 54, comments: 11, tag: “Learning” }
+];
 
 const NT_BADGE = {
   comment: { icon: "fluent:chat-16-filled", bg: "var(--brand-navy)" },
@@ -154,6 +160,34 @@ function NotifRow({ n }) {
 
 }
 
+function SuggestedPostCard({ p }) {
+  return (
+    <div className="nt-sp-card">
+      {p.img &&
+      <div className="nt-sp-thumb">
+        <img src={p.img} alt="" />
+      </div>
+      }
+      <div className="nt-sp-body">
+        <div className="nt-sp-author">
+          <DSM.Avatar name={p.who} src={p.avatar} size={22} />
+          <span className="nt-sp-name">{p.who}</span>
+          <span className="nt-sp-time">{p.t}</span>
+        </div>
+        <p className="nt-sp-text">{p.text}</p>
+        <div className="nt-sp-meta">
+          <span className="nt-sp-tag">{p.tag}</span>
+          <span className="nt-sp-stats">
+            <DSM.IconifyIcon name="fluent:heart-16-filled" size={13} color="var(--reaction-love)" />
+            {p.likes}
+            <DSM.IconifyIcon name="fluent:chat-16-filled" size={13} color="var(--gray-400)" />
+            {p.comments}
+          </span>
+        </div>
+      </div>
+    </div>);
+}
+
 function NotificationsPanel({ open, onClose }) {
   return (
     <div className={"m-drawer-wrap" + (open ? " open" : "")} aria-hidden={!open}>
@@ -176,6 +210,15 @@ function NotificationsPanel({ open, onClose }) {
               {NOTIFS[sec].map((n, i) => <NotifRow key={i} n={n} />)}
             </div>
           )}
+          <div className="nt-suggested">
+            <div className="nt-suggested-head">
+              <span>SUGGESTED FOR YOU</span>
+              <button className="nt-suggested-see">See all</button>
+            </div>
+            <div className="nt-sp-scroll">
+              {SUGGESTED_POSTS.map((p, i) => <SuggestedPostCard key={i} p={p} />)}
+            </div>
+          </div>
         </div>
       </aside>
     </div>);
@@ -362,7 +405,11 @@ function SelectChannelModal({ open, onClose }) {
         </div>
         <footer className="sc-foot">
           <button className="sc-cancel" onClick={onClose}>Cancel</button>
-          <button className="sc-continue" disabled={!sel} onClick={() => {onClose();go("CommunityMobile.html");}}>Continue to Post</button>
+          <button className="sc-continue" disabled={!sel} onClick={() => {
+            try { sessionStorage.setItem("pf_post_channels", JSON.stringify(sel ? [sel] : [])); } catch (e) {}
+            onClose();
+            go("CreatePostMobile.html");
+          }}>Continue to Post</button>
         </footer>
       </div>
     </div>);

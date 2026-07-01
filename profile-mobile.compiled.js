@@ -168,33 +168,398 @@ function PMTabBar() {
     className: "dot"
   }, t.dot)), t.label)));
 }
-function VerifyBanner() {
-  const [open, setOpen] = useStatePM(true);
-  if (!open) return null;
+const PM_STEPS_INIT = [{
+  ti: "Add a profile photo",
+  su: "Priority action",
+  state: "priority"
+}, {
+  ti: "Write your bio",
+  su: "Complete",
+  state: "done"
+}, {
+  ti: "Add your location",
+  su: "Complete",
+  state: "done"
+}, {
+  ti: "Verify your credentials",
+  su: "Incomplete",
+  state: "todo"
+}, {
+  ti: "Connect your social profiles",
+  su: "Incomplete",
+  state: "todo"
+}];
+
+/* ---- Step sheet: Photo ---- */
+function PhotoStep({
+  onComplete,
+  isDone
+}) {
+  const [chosen, setChosen] = useStatePM(null);
   return /*#__PURE__*/React.createElement("div", {
-    className: "pm-verify"
+    className: "pm-sheet-step"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-av"
+  }, /*#__PURE__*/React.createElement(DSPM.Avatar, {
+    name: "Katy Wilson",
+    src: "assets/avatar-katy.jpg",
+    size: 88
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pm-sheet-av-edit"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:camera",
+    size: 15,
+    color: "#fff"
+  }))), isDone && /*#__PURE__*/React.createElement("p", {
+    className: "pm-sheet-note"
+  }, "Your profile photo is set. You can update it anytime."), /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-opts"
   }, /*#__PURE__*/React.createElement("button", {
-    className: "x",
-    "aria-label": "Dismiss",
-    onClick: () => setOpen(false)
+    className: "pm-sheet-opt" + (chosen === "camera" ? " sel" : ""),
+    onClick: () => setChosen("camera")
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:camera",
+    size: 22,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", null, "Take a photo")), /*#__PURE__*/React.createElement("button", {
+    className: "pm-sheet-opt" + (chosen === "library" ? " sel" : ""),
+    onClick: () => setChosen("library")
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:image",
+    size: 22,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", null, "Choose from library"))), chosen && /*#__PURE__*/React.createElement("button", {
+    className: "pm-sheet-cta",
+    onClick: onComplete
+  }, "Upload & Save Photo"));
+}
+
+/* ---- Step sheet: Bio ---- */
+function BioStep({
+  onComplete
+}) {
+  const [bio, setBio] = useStatePM(PM_ME.bio);
+  const max = 300;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-step"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "pm-sheet-desc"
+  }, "Write a short bio that tells people about your professional background and specialisations."), /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-field"
+  }, /*#__PURE__*/React.createElement("textarea", {
+    className: "pm-sheet-ta",
+    value: bio,
+    maxLength: max,
+    rows: 5,
+    onChange: e => setBio(e.target.value),
+    placeholder: "e.g. Aesthetic nurse with 10+ years experience in botox and dermal fillers…"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pm-sheet-count"
+  }, bio.length, "/", max)), /*#__PURE__*/React.createElement("button", {
+    className: "pm-sheet-cta",
+    onClick: onComplete,
+    disabled: bio.trim().length < 10
+  }, "Save Bio"));
+}
+
+/* ---- Step sheet: Location ---- */
+function LocationStep({
+  onComplete
+}) {
+  const [loc, setLoc] = useStatePM("London, United Kingdom");
+  const [detecting, setDetecting] = useStatePM(false);
+  function detect() {
+    setDetecting(true);
+    setTimeout(() => {
+      setLoc("London, United Kingdom");
+      setDetecting(false);
+    }, 1200);
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-step"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "pm-sheet-desc"
+  }, "Add your location so patients and peers can find you."), /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-field"
+  }, /*#__PURE__*/React.createElement("input", {
+    className: "pm-sheet-inp",
+    value: loc,
+    onChange: e => setLoc(e.target.value),
+    placeholder: "City, Country"
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "pm-sheet-ghost",
+    onClick: detect,
+    disabled: detecting
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:map-pin",
+    size: 18,
+    color: "var(--brand-navy)"
+  }), detecting ? "Detecting…" : "Use my current location"), /*#__PURE__*/React.createElement("button", {
+    className: "pm-sheet-cta",
+    onClick: onComplete,
+    disabled: loc.trim().length < 2
+  }, "Save Location"));
+}
+
+/* ---- Step sheet: Credentials ---- */
+function CredentialsStep({
+  onComplete
+}) {
+  const [nmcNum, setNmcNum] = useStatePM("");
+  const [submitted, setSubmitted] = useStatePM(false);
+  if (submitted) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "pm-sheet-step pm-sheet-center"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "pm-sheet-icon-wrap success"
+    }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+      name: "lucide:clock",
+      size: 32,
+      color: "var(--success)"
+    })), /*#__PURE__*/React.createElement("h4", null, "Verification Submitted"), /*#__PURE__*/React.createElement("p", {
+      className: "pm-sheet-desc"
+    }, "Your credentials are under review. We'll notify you within 1–2 business days."), /*#__PURE__*/React.createElement("button", {
+      className: "pm-sheet-cta",
+      onClick: onComplete
+    }, "Got it"));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-step"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "pm-sheet-desc"
+  }, "Enter your NMC or GMC registration number to verify your professional credentials."), /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-field"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "pm-sheet-label"
+  }, "NMC / GMC Number"), /*#__PURE__*/React.createElement("input", {
+    className: "pm-sheet-inp",
+    value: nmcNum,
+    onChange: e => setNmcNum(e.target.value),
+    placeholder: "e.g. 12A3456B"
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "pm-sheet-ghost"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:upload",
+    size: 18,
+    color: "var(--brand-navy)"
+  }), "Upload supporting documents"), /*#__PURE__*/React.createElement("button", {
+    className: "pm-sheet-cta",
+    onClick: () => setSubmitted(true),
+    disabled: nmcNum.trim().length < 5
+  }, "Submit for Verification"));
+}
+
+/* ---- Step sheet: Social profiles ---- */
+const PM_SOCIALS = [{
+  key: "linkedin",
+  icon: "mdi:linkedin",
+  color: "#0A66C2",
+  label: "LinkedIn"
+}, {
+  key: "instagram",
+  icon: "mdi:instagram",
+  color: "#E1306C",
+  label: "Instagram"
+}, {
+  key: "twitter",
+  icon: "mdi:twitter",
+  color: "#1DA1F2",
+  label: "X / Twitter"
+}, {
+  key: "facebook",
+  icon: "mdi:facebook",
+  color: "#1877F2",
+  label: "Facebook"
+}];
+function SocialStep({
+  onComplete
+}) {
+  const [connected, setConnected] = useStatePM([]);
+  function toggle(key) {
+    setConnected(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-step"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "pm-sheet-desc"
+  }, "Link your social profiles to build trust and grow your network."), /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-socials"
+  }, PM_SOCIALS.map(s => {
+    const on = connected.includes(s.key);
+    return /*#__PURE__*/React.createElement("div", {
+      key: s.key,
+      className: "pm-sheet-social"
+    }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+      name: s.icon,
+      size: 28,
+      color: s.color
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "pm-sheet-social-nm"
+    }, s.label), /*#__PURE__*/React.createElement("button", {
+      className: "pm-sheet-social-btn" + (on ? " connected" : ""),
+      onClick: () => toggle(s.key)
+    }, on ? "Connected" : "Connect"));
+  })), connected.length > 0 && /*#__PURE__*/React.createElement("button", {
+    className: "pm-sheet-cta",
+    onClick: onComplete
+  }, "Save Connections"));
+}
+
+/* ---- Bottom sheet wrapper ---- */
+function StepSheet({
+  step,
+  idx,
+  onComplete,
+  onClose
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-drag"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-hd"
+  }, /*#__PURE__*/React.createElement("h3", null, step.ti), /*#__PURE__*/React.createElement("button", {
+    className: "pm-sheet-close",
+    onClick: onClose,
+    "aria-label": "Close"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:x",
-    size: 22,
-    color: "var(--gray-700)"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "hd"
+    size: 20,
+    color: "var(--gray-600)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-body"
+  }, idx === 0 && /*#__PURE__*/React.createElement(PhotoStep, {
+    onComplete: onComplete,
+    isDone: step.state === "done"
+  }), idx === 1 && /*#__PURE__*/React.createElement(BioStep, {
+    onComplete: onComplete,
+    isDone: step.state === "done"
+  }), idx === 2 && /*#__PURE__*/React.createElement(LocationStep, {
+    onComplete: onComplete,
+    isDone: step.state === "done"
+  }), idx === 3 && /*#__PURE__*/React.createElement(CredentialsStep, {
+    onComplete: onComplete,
+    isDone: step.state === "done"
+  }), idx === 4 && /*#__PURE__*/React.createElement(SocialStep, {
+    onComplete: onComplete,
+    isDone: step.state === "done"
+  }))));
+}
+
+/* ---- Profile complete success banner ---- */
+function ProfileCompleteCard({
+  onDismiss
+}) {
+  useEffectPM(() => {
+    const t = setTimeout(onDismiss, 4000);
+    return () => clearTimeout(t);
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-steps-success",
+    "aria-live": "polite"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-steps-success-icon"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "fluent:shield-checkmark-16-filled",
-    size: 30,
-    color: "var(--verify-check,#1f8ddb)"
-  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "t"
-  }, "Verify your medical credentials"), /*#__PURE__*/React.createElement("div", {
-    className: "s"
-  }, "Adding more credentials helps people know you're the real deal."))), /*#__PURE__*/React.createElement("button", {
-    className: "full",
-    type: "button"
-  }, "Edit Page"));
+    name: "lucide:check",
+    size: 36,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("h3", {
+    className: "pm-steps-success-h"
+  }, "Profile Complete!"), /*#__PURE__*/React.createElement("p", {
+    className: "pm-steps-success-sub"
+  }, "Your profile is fully set up. You're ready to connect with the community."), /*#__PURE__*/React.createElement("button", {
+    className: "pm-steps-success-btn",
+    onClick: onDismiss
+  }, "Got it"));
+}
+
+/* ---- Profile steps card ---- */
+function ProfileSteps() {
+  const [steps, setSteps] = useStatePM(() => PM_STEPS_INIT.map(s => ({
+    ...s
+  })));
+  const [activeIdx, setActiveIdx] = useStatePM(null);
+  const [dismissed, setDismissed] = useStatePM(false);
+  const [exiting, setExiting] = useStatePM(false);
+  const total = steps.length;
+  const done = steps.filter(s => s.state === "done").length;
+  const allDone = done === total;
+  const pct = Math.round(done / total * 100);
+  function markDone(idx) {
+    setSteps(prev => prev.map((s, i) => i === idx ? {
+      ...s,
+      state: "done",
+      su: "Complete"
+    } : s));
+    setActiveIdx(null);
+  }
+  function handleDismiss() {
+    setExiting(true);
+    setTimeout(() => setDismissed(true), 400);
+  }
+  if (dismissed) return null;
+  if (allDone) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "pm-steps-wrap" + (exiting ? " pm-steps-exit" : "")
+    }, /*#__PURE__*/React.createElement(ProfileCompleteCard, {
+      onDismiss: handleDismiss
+    }));
+  }
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("section", {
+    className: "pm-steps",
+    "aria-label": "Complete your profile"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "pm-steps-h"
+  }, "Complete your profile"), /*#__PURE__*/React.createElement("p", {
+    className: "pm-steps-sub"
+  }, done, " of ", total, " steps complete"), /*#__PURE__*/React.createElement("div", {
+    className: "pm-steps-track",
+    role: "progressbar",
+    "aria-valuenow": pct,
+    "aria-valuemin": 0,
+    "aria-valuemax": 100
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-steps-fill",
+    style: {
+      width: pct + "%"
+    }
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "pm-steps-pct"
+  }, pct, "% complete"), /*#__PURE__*/React.createElement("div", {
+    className: "pm-steps-list"
+  }, steps.map((s, i) => /*#__PURE__*/React.createElement("button", {
+    className: "pm-step " + s.state,
+    key: i,
+    onClick: () => setActiveIdx(i)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-step-mark",
+    "aria-hidden": "true"
+  }, s.state === "done" ? /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:check",
+    size: 18,
+    color: "#fff"
+  }) : /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pm-step-txt"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ti"
+  }, s.ti), /*#__PURE__*/React.createElement("span", {
+    className: "su"
+  }, s.su)), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 18,
+    color: "var(--gray-400)"
+  }))))), activeIdx !== null && /*#__PURE__*/React.createElement(StepSheet, {
+    step: steps[activeIdx],
+    idx: activeIdx,
+    onComplete: () => markDone(activeIdx),
+    onClose: () => setActiveIdx(null)
+  }));
 }
 function PMSection({
   title,
@@ -402,9 +767,9 @@ function PMScreen() {
     className: "pm-ig-bio"
   }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
     className: "bi"
-  }, "\uD83C\uDDEC\uD83C\uDDE7"), " Aesthetic Nurse Practitioner"), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
+  }, "🇬🇧"), " Aesthetic Nurse Practitioner"), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
     className: "bi"
-  }, "\uD83D\uDC89"), " Botox \xB7 Fillers \xB7 Lip Enhancement"), /*#__PURE__*/React.createElement("p", null, m.bio)), /*#__PURE__*/React.createElement("a", {
+  }, "💉"), " Botox · Fillers · Lip Enhancement"), /*#__PURE__*/React.createElement("p", null, m.bio)), /*#__PURE__*/React.createElement("a", {
     className: "pm-ig-link",
     href: "#",
     onClick: e => e.preventDefault()
@@ -438,15 +803,16 @@ function PMScreen() {
     className: "pm-ig-btn",
     onClick: () => goPM("ProfileMobile.html")
   }, "Edit Profile"), /*#__PURE__*/React.createElement("button", {
-    className: "pm-ig-btn"
+    className: "pm-ig-btn navy"
   }, "Share Profile"), /*#__PURE__*/React.createElement("button", {
     className: "pm-ig-btn icon",
-    "aria-label": "Add people"
+    "aria-label": "Settings",
+    onClick: () => goPM("AccountSettings.html")
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:user-plus",
+    name: "lucide:settings",
     size: 20,
-    color: "var(--brand-navy)"
-  })))), /*#__PURE__*/React.createElement(VerifyBanner, null), /*#__PURE__*/React.createElement(PMMentor, null), /*#__PURE__*/React.createElement(PMActivity, null), /*#__PURE__*/React.createElement(PMSection, {
+    color: "var(--text-heading)"
+  })))), /*#__PURE__*/React.createElement(ProfileSteps, null), /*#__PURE__*/React.createElement(PMMentor, null), /*#__PURE__*/React.createElement(PMActivity, null), /*#__PURE__*/React.createElement(PMSection, {
     title: "Services"
   }, PM_SERVICES.map((s, i) => /*#__PURE__*/React.createElement("div", {
     className: "pm-lrow",
@@ -470,7 +836,7 @@ function PMScreen() {
     className: "su flag"
   }, /*#__PURE__*/React.createElement("span", {
     className: "fl"
-  }, "\uD83C\uDDEC\uD83C\uDDE7"), e.loc)))), /*#__PURE__*/React.createElement(PMSection, {
+  }, "🇬🇧"), e.loc)))), /*#__PURE__*/React.createElement(PMSection, {
     title: "Education"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-lrow media"
@@ -507,7 +873,7 @@ function PMScreen() {
     className: "pm-lang"
   }, /*#__PURE__*/React.createElement("span", {
     className: "fl"
-  }, "\uD83C\uDDEC\uD83C\uDDE7"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, "🇬🇧"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     className: "ti"
   }, "English (UK)"), /*#__PURE__*/React.createElement("div", {
     className: "su"
@@ -517,7 +883,7 @@ function PMScreen() {
     className: "pm-lang"
   }, /*#__PURE__*/React.createElement("span", {
     className: "fl"
-  }, "\uD83C\uDDEE\uD83C\uDDF9"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, "🇮🇹"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     className: "ti"
   }, "Italian"), /*#__PURE__*/React.createElement("div", {
     className: "su"

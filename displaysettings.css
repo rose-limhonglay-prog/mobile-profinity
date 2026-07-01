@@ -1,0 +1,85 @@
+/* ===========================================================================
+   PROfinity — Display Settings (mobile) · layout
+   Loaded after the DS tokens; styles the appearance + accessibility screen.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* center the device on the gray backdrop */
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.ds-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-card); position: relative; }
+
+/* top bar (clears status bar + Dynamic Island) */
+.ds-top { flex: none; display: flex; align-items: center; gap: 12px; position: relative;
+  padding: 60px 20px 16px; border-bottom: 1px solid var(--border-default); }
+.ds-back { flex: none; width: 40px; height: 40px; border: none; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; }
+.ds-top h1 { flex: 1; text-align: center; margin: 0; padding-right: 40px;
+  font-family: var(--font-sans); font-weight: 600; font-size: 20px; color: var(--text-heading); }
+
+.ds-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 18px 28px; }
+.ds-scroll::-webkit-scrollbar { width: 0; }
+
+.ds-sec-h { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 13px; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--gray-500); margin: 24px 4px 12px; }
+
+.ds-card { background: var(--surface-card); border: 1px solid var(--border-default); border-radius: 18px;
+  padding: 18px; box-shadow: 0 1px 3px rgba(12,12,13,.05); }
+
+/* theme cards */
+.ds-themes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.ds-themecard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 14px;
+  cursor: pointer; border-radius: 16px; padding: 14px 14px 18px; text-align: left;
+  border: 1.5px solid var(--border-default); background: var(--surface-card); transition: border-color .15s ease, box-shadow .15s ease; }
+.ds-dark { background: #1A1736; border-color: #1A1736; }
+.ds-themecard.on { box-shadow: 0 0 0 2px var(--premium-orange); }
+.ds-dark.on { border-color: var(--premium-orange); }
+.ds-preview { width: 100%; border-radius: 11px; padding: 14px; display: flex; flex-direction: column; gap: 9px; }
+.ds-dark .ds-preview { background: #0E0C24; }
+.ds-light .ds-preview { background: var(--surface-card); border: 1px solid var(--border-default); }
+.ds-prow { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  font-family: var(--font-sans); font-size: 14px; }
+.ds-prow b { font-weight: var(--fw-semibold); }
+.ds-prow i { font-style: normal; }
+.ds-dark .ds-prow b { color: #fff; }
+.ds-dark .ds-prow i { color: #9AA0B4; }
+.ds-light .ds-prow b { color: var(--text-heading); }
+.ds-light .ds-prow i { color: var(--gray-450); }
+.ds-themelabel { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 18px; }
+.ds-dark .ds-themelabel { color: #fff; }
+.ds-light .ds-themelabel { color: var(--text-heading); }
+.ds-themeradio { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--gray-300); }
+.ds-dark.on .ds-themeradio { background: var(--premium-orange); border-color: var(--premium-orange); }
+.ds-light.on .ds-themeradio { background: var(--brand-navy); border-color: var(--brand-navy); }
+
+/* font-size row */
+.ds-fontrow { display: flex; align-items: center; gap: 12px; width: 100%; cursor: pointer;
+  background: none; border: none; padding: 20px 2px 4px; margin-top: 8px; }
+.ds-fontlabel { flex: 1; text-align: left; font-family: var(--font-sans); font-weight: var(--fw-semibold);
+  font-size: 21px; color: var(--text-heading); }
+.ds-fontval { font-family: var(--font-sans); font-size: 19px; color: var(--gray-450); }
+
+/* accessibility toggle list */
+.ds-card-list { padding: 4px 18px; }
+.ds-toggle-row { display: flex; align-items: center; gap: 14px; width: 100%; cursor: pointer;
+  background: none; border: none; padding: 20px 0; }
+.ds-toggle-row + .ds-toggle-row { border-top: 1px solid var(--gray-150); }
+.ds-toggle-label { flex: 1; text-align: left; font-family: var(--font-sans); font-weight: var(--fw-semibold);
+  font-size: 21px; color: var(--text-heading); }
+.ds-switch { flex: none; width: 52px; height: 30px; border-radius: var(--r-pill); background: var(--gray-300);
+  position: relative; transition: background .18s ease; }
+.ds-knob { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 3px rgba(16,24,40,.3); transition: transform .18s ease; }
+.ds-toggle-row.on .ds-switch { background: var(--brand-navy); }
+.ds-toggle-row.on .ds-knob { transform: translateX(22px); }
+
+/* real-mobile fullscreen */
+@media (max-width: 768px) {
+  body { background: var(--surface-card); }
+  .app.device-stage { padding: 0; }
+  .ds-screen { min-height: 100vh; }
+}

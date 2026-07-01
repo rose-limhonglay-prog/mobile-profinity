@@ -60,10 +60,13 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 /* ===== composer pill ===== */
 .cm-compose{flex:none;display:flex;align-items:center;gap:12px;padding:4px 16px 14px;background:var(--surface-card)}
 .cm-compose .pill{flex:1;display:flex;align-items:center;height:44px;padding:0 16px;border-radius:var(--r-pill);
-  background:var(--surface-sunken);color:var(--gray-450);font-family:var(--font-sans);font-size:15px}
+  background:var(--surface-sunken);color:var(--gray-450);font-family:var(--font-sans);font-size:15px;
+  border:none;cursor:pointer;text-align:left}
+.cm-compose .pill:active{background:var(--gray-200)}
 .cm-compose .imgbtn{width:38px;height:38px;border-radius:10px;border:none;cursor:pointer;background:var(--surface-sunken);
   display:flex;align-items:center;justify-content:center;color:var(--brand-navy)}
 .cm-compose .imgbtn:active{background:var(--gray-200)}
+
 
 /* ===== scrollable feed ===== */
 .cm-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--surface-page)}

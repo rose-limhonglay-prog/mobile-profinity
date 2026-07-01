@@ -59,9 +59,8 @@ function CMTopBar() {
 
 const CM_CHANNELS = ["Confidence", "Clinical Chat", "Freedom Path", "Tech Team", "Business & Mindset"];
 
-function CMHeader() {
+function CMHeader({ channel, setChannel }) {
   const [following, setFollowing] = React.useState(false);
-  const [channel, setChannel] = React.useState("Confidence");
   const [open, setOpen] = React.useState(false);
   React.useEffect(() => {
     if (!open) return;
@@ -100,14 +99,19 @@ function CMHeader() {
 
 }
 
-function CMComposer() {
+function CMComposer({ channel }) {
+  const nav = () => {
+    try { sessionStorage.setItem("pf_post_channels", JSON.stringify([channel])); } catch (e) {}
+    goCM("CreatePostMobile.html");
+  };
   return (
     <div className="cm-compose">
       <DSCM.Avatar name={PFACM.ME.name} src={PFACM.ME.avatar} size={40} />
-      <div className="pill">Share something…</div>
-      <button className="imgbtn" aria-label="Add photo"><DSCM.IconifyIcon name="lucide:image" size={21} color="var(--brand-navy)" /></button>
+      <button className="pill" onClick={nav}>Share something…</button>
+      <button className="imgbtn" aria-label="Add photo" onClick={nav}>
+        <DSCM.IconifyIcon name="lucide:image" size={21} color="var(--brand-navy)" />
+      </button>
     </div>);
-
 }
 
 function CMTabBar() {
@@ -128,11 +132,12 @@ function CMTabBar() {
 }
 
 function CMScreen({ scrollRef, newPosts, dismiss }) {
+  const [channel, setChannel] = React.useState("Confidence");
   return (
     <div className="cm-screen" data-screen-label="Community (mobile)">
       <CMTopBar />
-      <CMHeader />
-      <CMComposer />
+      <CMHeader channel={channel} setChannel={setChannel} />
+      <CMComposer channel={channel} />
       <div className="cm-scroll" ref={scrollRef}>
         {newPosts > 0 &&
         <button type="button" className="cm-newposts" onClick={dismiss}

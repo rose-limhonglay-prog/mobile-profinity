@@ -101,9 +101,11 @@ function CMTopBar() {
   }, "12")));
 }
 const CM_CHANNELS = ["Confidence", "Clinical Chat", "Freedom Path", "Tech Team", "Business & Mindset"];
-function CMHeader() {
+function CMHeader({
+  channel,
+  setChannel
+}) {
   const [following, setFollowing] = React.useState(false);
-  const [channel, setChannel] = React.useState("Confidence");
   const [open, setOpen] = React.useState(false);
   React.useEffect(() => {
     if (!open) return;
@@ -156,18 +158,28 @@ function CMHeader() {
     color: "var(--gray-450)"
   })));
 }
-function CMComposer() {
+function CMComposer({
+  channel
+}) {
+  const nav = () => {
+    try {
+      sessionStorage.setItem("pf_post_channels", JSON.stringify([channel]));
+    } catch (e) {}
+    goCM("CreatePostMobile.html");
+  };
   return /*#__PURE__*/React.createElement("div", {
     className: "cm-compose"
   }, /*#__PURE__*/React.createElement(DSCM.Avatar, {
     name: PFACM.ME.name,
     src: PFACM.ME.avatar,
     size: 40
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "pill"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "pill",
+    onClick: nav
   }, "Share something\u2026"), /*#__PURE__*/React.createElement("button", {
     className: "imgbtn",
-    "aria-label": "Add photo"
+    "aria-label": "Add photo",
+    onClick: nav
   }, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
     name: "lucide:image",
     size: 21,
@@ -196,10 +208,16 @@ function CMScreen({
   newPosts,
   dismiss
 }) {
+  const [channel, setChannel] = React.useState("Confidence");
   return /*#__PURE__*/React.createElement("div", {
     className: "cm-screen",
     "data-screen-label": "Community (mobile)"
-  }, /*#__PURE__*/React.createElement(CMTopBar, null), /*#__PURE__*/React.createElement(CMHeader, null), /*#__PURE__*/React.createElement(CMComposer, null), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(CMTopBar, null), /*#__PURE__*/React.createElement(CMHeader, {
+    channel: channel,
+    setChannel: setChannel
+  }), /*#__PURE__*/React.createElement(CMComposer, {
+    channel: channel
+  }), /*#__PURE__*/React.createElement("div", {
     className: "cm-scroll",
     ref: scrollRef
   }, newPosts > 0 && /*#__PURE__*/React.createElement("button", {

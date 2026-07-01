@@ -1,0 +1,42 @@
+/* ===========================================================================
+   PROfinity Academy — Agents page · layout
+   AgentHero (full-bleed gradient) + a 3-column grid of DS AgentCards on a
+   faint lavender canvas. Colours are DS tokens.
+   =========================================================================== */
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:color-mix(in srgb, var(--ai-purple) 5%, var(--white));-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+img{max-width:100%}
+
+.app{font-family:var(--font-sans);color:var(--text-primary);min-height:100vh;
+  background:color-mix(in srgb, var(--ai-purple) 5%, var(--white))}
+
+/* full-bleed hero under the nav */
+.agent-hero-wrap{width:100%}
+
+/* centered card grid */
+.agents-grid{max-width:1240px;margin:0 auto;padding:48px 24px 72px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:24px;align-items:stretch}
+
+/* waitlisted CTA → secondary look (DS AgentCard renders a disabled primary button) */
+.agents-grid button:disabled{
+  background:var(--surface-sunken) !important;
+  color:var(--ai-purple) !important;
+  opacity:1 !important;
+  border:1px solid var(--border-default) !important;
+  cursor:default !important;
+}
+.agents-grid button:disabled iconify-icon{color:var(--ai-purple) !important}
+
+/* accessibility */
+#pf-root :focus-visible{outline:3px solid var(--ai-purple);outline-offset:2px;border-radius:6px}
+#pf-root :focus:not(:focus-visible){outline:none}
+@media (prefers-reduced-motion:reduce){
+  #pf-root *,#pf-root *::before,#pf-root *::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+
+@media (max-width:1040px){.agents-grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:680px){
+  .agents-grid{grid-template-columns:1fr;padding:28px 14px 48px}
+}

@@ -243,6 +243,34 @@ const NOTIFS = {
     type: "love"
   }]
 };
+const SUGGESTED_POSTS = [{
+  who: "Dr Tim Pearce",
+  avatar: "assets/avatar-drtim.png",
+  t: "1h",
+  text: "The 3 biggest mistakes injectors make with lip filler — and how to fix them fast.",
+  img: "assets/post1-img1.png",
+  likes: 142,
+  comments: 38,
+  tag: "Technique"
+}, {
+  who: "Miranda Pearce",
+  avatar: "assets/avatar-miranda.jpg",
+  t: "3h",
+  text: "Patient confidence scores went up 64% after full-face rejuvenation. Here's what changed.",
+  img: null,
+  likes: 89,
+  comments: 22,
+  tag: "Case Study"
+}, {
+  who: "Jane Harries",
+  avatar: null,
+  t: "5h",
+  text: "Just finished the Advanced Botox Training module. The dosing charts are absolute game-changers.",
+  img: "assets/post2-img1.png",
+  likes: 54,
+  comments: 11,
+  tag: "Learning"
+}];
 const NT_BADGE = {
   comment: {
     icon: "fluent:chat-16-filled",
@@ -355,6 +383,46 @@ function NotifRow({
     color: "var(--gray-700)"
   }), m.label)))));
 }
+function SuggestedPostCard({
+  p
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "nt-sp-card"
+  }, p.img && /*#__PURE__*/React.createElement("div", {
+    className: "nt-sp-thumb"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: p.img,
+    alt: ""
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "nt-sp-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "nt-sp-author"
+  }, /*#__PURE__*/React.createElement(DSM.Avatar, {
+    name: p.who,
+    src: p.avatar,
+    size: 22
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "nt-sp-name"
+  }, p.who), /*#__PURE__*/React.createElement("span", {
+    className: "nt-sp-time"
+  }, p.t)), /*#__PURE__*/React.createElement("p", {
+    className: "nt-sp-text"
+  }, p.text), /*#__PURE__*/React.createElement("div", {
+    className: "nt-sp-meta"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nt-sp-tag"
+  }, p.tag), /*#__PURE__*/React.createElement("span", {
+    className: "nt-sp-stats"
+  }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: "fluent:heart-16-filled",
+    size: 13,
+    color: "var(--reaction-love)"
+  }), p.likes, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: "fluent:chat-16-filled",
+    size: 13,
+    color: "var(--gray-400)"
+  }), p.comments))));
+}
 function NotificationsPanel({
   open,
   onClose
@@ -407,6 +475,17 @@ function NotificationsPanel({
   })), NOTIFS[sec].map((n, i) => /*#__PURE__*/React.createElement(NotifRow, {
     key: i,
     n: n
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "nt-suggested"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "nt-suggested-head"
+  }, /*#__PURE__*/React.createElement("span", null, "SUGGESTED FOR YOU"), /*#__PURE__*/React.createElement("button", {
+    className: "nt-suggested-see"
+  }, "See all")), /*#__PURE__*/React.createElement("div", {
+    className: "nt-sp-scroll"
+  }, SUGGESTED_POSTS.map((p, i) => /*#__PURE__*/React.createElement(SuggestedPostCard, {
+    key: i,
+    p: p
   })))))));
 }
 function SmSection({
@@ -724,8 +803,11 @@ function SelectChannelModal({
     className: "sc-continue",
     disabled: !sel,
     onClick: () => {
+      try {
+        sessionStorage.setItem("pf_post_channels", JSON.stringify(sel ? [sel] : []));
+      } catch (e) {}
       onClose();
-      go("CommunityMobile.html");
+      go("CreatePostMobile.html");
     }
   }, "Continue to Post"))));
 }

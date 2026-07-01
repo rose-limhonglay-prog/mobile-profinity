@@ -23,7 +23,31 @@ const IMG = {
   courseTemple: "assets/course-temple.png",
   artCodes: "assets/event-art-codes.png",
   techTuesday: "assets/event-technique-tuesday.png",
-  drTim: "assets/avatar-drtim.png"
+  drTim: "assets/avatar-drtim.png",
+  p1img1: "assets/post1-img1.png",
+  p1img2: "assets/post1-img2.png",
+  p1img3: "assets/post1-img3.png",
+  p1img4: "assets/post1-img4.png",
+  p2img1: "assets/post2-img1.png",
+  p2img2: "assets/post2-img2.png",
+  p2img3: "assets/post2-img3.png",
+  p3img1: "assets/post3-img1.png",
+  p3img2: "assets/post3-img2.png",
+  p3img3: "assets/post3-img3.png",
+  p4img1: "assets/post4-img1.png",
+  p4img2: "assets/post4-img2.png",
+  p4img3: "assets/post4-img3.png",
+  communityPoster: "assets/community-poster.png",
+  p5img1: "assets/post5-img1.png",
+  p5img2: "assets/post5-img2.png",
+  p5img3: "assets/post5-img3.png",
+  p5img4: "assets/post5-img4.png",
+  p5img5: "assets/post5-img5.png",
+  p5img6: "assets/post5-img6.png",
+  p5img7: "assets/post5-img7.png",
+  p5img8: "assets/post5-img8.png",
+  p5img9: "assets/post5-img9.png",
+  p5img10: "assets/post5-img10.png",
 };
 
 /* ============================ DATA ======================================= */
@@ -33,7 +57,7 @@ const MIRANDA = { name: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", s
 
 /* Official Profinity Academy account — the sole author when PF_OFFICIAL_ONLY
    is set (the Home / Newsfeed surfaces). */
-const PROFINITY = { name: "Profinity", avatar: "assets/profinity-diamond.png", seals: ["verified", "gold"] };
+const PROFINITY = { name: "Profinity", avatar: "assets/profinity-icon.jpg", seals: ["verified", "gold"] };
 function officialize(list) {
   return list.map((p) => p.channel ? p : { ...p, author: PROFINITY, withOthers: null });
 }
@@ -45,7 +69,7 @@ const CHANNEL_POST = {
   channel: { name: "#Confidence · Community", avatar: "assets/profinity-icon.jpg",
     by: "Dr. Sarah Collins", byAvatar: "assets/avatar-katy.jpg", time: "2d" },
   time: "2 Days Ago", kind: "COMMUNITY:", kindIcon: "lucide:users",
-  media: ["assets/clinic-lip-design.png"],
+  media: [IMG.communityPoster],
   body: "Just shared my first lip-correction case in the Confidence channel — the support here is unreal. If you're nervous about posting your work, this is the place to start. 💜",
   likes: "842", comments: "96", shares: "40", actioned: false,
   commentList: [
@@ -138,14 +162,14 @@ const POSTS = [
 {
   id: "p1", author: TIM, withOthers: "Miranda Pearce and 14 others", time: "1 Week Ago",
   kind: "CASE STUDY:", kindIcon: "lucide:chart-pie",
-  media: [IMG.collage, IMG.techTuesday],
+  media: [IMG.p1img1, IMG.p1img2, IMG.p1img3, IMG.p1img4],
   body: CASE_BODY, likes: "1.2K", comments: "150", shares: "150", actioned: true,
   commentList: thread()
 },
 {
   id: "p2", author: TIM, withOthers: "Miranda Pearce and 14 others", time: "1 Week Ago",
   kind: "PROTOCOL:", kindIcon: "lucide:clipboard-list",
-  media: [IMG.courseLip, IMG.lip],
+  media: [IMG.p2img1, IMG.p2img2, IMG.p2img3],
   body: "This protocol shows the exact steps for safely correcting migrated or uneven lip filler using a structured, repeatable framework you can apply chairside.",
   likes: "1.2K", comments: "150", shares: "150", actioned: true,
   commentList: thread("This is exactly what I was looking for. Thank you!")
@@ -153,7 +177,7 @@ const POSTS = [
 {
   id: "p3", author: MIRANDA, withOthers: "Dr Tim Pearce", time: "2 Weeks Ago",
   kind: "DISCUSSION:", kindIcon: "lucide:trending-up",
-  media: [IMG.artCodes],
+  media: [IMG.p3img1, IMG.p3img2, IMG.p3img3],
   body: "Growing your clinic revenue doesn't require discounts. Here are 5 strategies top clinicians use to build a premium, referral-led practice.",
   likes: "1.2K", comments: "150", shares: "150", actioned: false,
   commentList: thread("So easy to follow — even on a busy clinic day!")
@@ -161,7 +185,7 @@ const POSTS = [
 {
   id: "p4", author: MIRANDA, time: "2 Weeks Ago",
   kind: "COMMUNITY:", kindIcon: "lucide:users",
-  media: [IMG.courseProtox, IMG.toxin],
+  media: [IMG.p4img1, IMG.p4img2, IMG.p4img3],
   body: "I've been terrified for months, but after studying the Toxin Confidence Pathway, I finally did it! Thank you everyone for your support — this community keeps me moving.",
   likes: "1.2K", comments: "150", shares: "150", actioned: false,
   commentList: thread("So proud of you — the leap is always the hardest part!")
@@ -169,7 +193,7 @@ const POSTS = [
 {
   id: "p5", author: TIM, time: "3 Days Ago",
   kind: "MASTERCLASS:", kindIcon: "lucide:play",
-  sample: { type: "video", poster: IMG.drTim, duration: "12:40" },
+  sample: { type: "video", poster: IMG.p5img1, duration: "12:40" },
   body: "Watch the full walkthrough of the Golden Ratio full-face assessment — every landmark, every measurement, explained step by step.",
   likes: "3.4K", comments: "210", shares: "180", actioned: false,
   commentList: thread("Watched it twice already — incredibly clear teaching.")
@@ -177,7 +201,7 @@ const POSTS = [
 {
   id: "p6", author: MIRANDA, time: "4 Days Ago",
   kind: "REEL:", kindIcon: "lucide:smartphone",
-  sample: { type: "vertical", image: IMG.courseLip },
+  sample: { type: "vertical", image: IMG.p5img2 },
   body: "A 30-second vertical reel of a lip refinement — saving this format for sharing straight to socials.",
   likes: "2.1K", comments: "140", shares: "320", actioned: false,
   commentList: thread("Perfect for Reels — the vertical crop looks great.")
@@ -185,7 +209,7 @@ const POSTS = [
 {
   id: "p7", author: TIM, withOthers: "Miranda Pearce and 14 others", time: "5 Days Ago",
   kind: "CASE STUDY:", kindIcon: "lucide:images",
-  sample: { type: "gallery", images: [IMG.collage, IMG.courseTemple, IMG.lip, IMG.courseLip, IMG.toxin, IMG.courseProtox, IMG.gold, IMG.artCodes, IMG.techTuesday, IMG.drTim] },
+  sample: { type: "gallery", images: [IMG.p5img1, IMG.p5img2, IMG.p5img3, IMG.p5img4, IMG.p5img5, IMG.p5img6, IMG.p5img7, IMG.p5img8, IMG.p5img9, IMG.p5img10] },
   body: "Full 10-step before-and-after series from a complete facial rejuvenation — swipe through every stage of the treatment plan.",
   likes: "5.6K", comments: "430", shares: "390", actioned: false,
   commentList: thread("This step-by-step series is gold — thank you for sharing all 10!")
@@ -382,10 +406,9 @@ const SORTS = ["All", "Latest", "Top", "Following"];
 const REACTIONS = [
 { key: "like", label: "Like", icon: "fluent-emoji-flat:thumbs-up", flat: "fluent:thumb-like-16-filled", color: "--reaction-like" },
 { key: "love", label: "Love", icon: "fluent-emoji-flat:red-heart", flat: "fluent:heart-16-filled", color: "--reaction-love" },
-{ key: "care", label: "Care", icon: "fluent-emoji-flat:hugging-face", flat: "fluent:emoji-16-filled", color: "--premium-orange" },
-{ key: "haha", label: "Haha", icon: "fluent-emoji-flat:grinning-squinting-face", flat: "fluent:emoji-laugh-16-filled", color: "--premium-orange" },
+{ key: "laugh", label: "Laugh", icon: "fluent-emoji-flat:grinning-squinting-face", flat: "fluent:emoji-laugh-16-filled", color: "--premium-orange" },
 { key: "wow", label: "Wow", icon: "fluent-emoji-flat:face-with-open-mouth", flat: "fluent:emoji-16-filled", color: "--premium-orange" },
-{ key: "sad", label: "Sad", icon: "fluent-emoji-flat:crying-face", flat: "fluent:emoji-sad-16-filled", color: "--premium-orange" },
+{ key: "cry", label: "Cry", icon: "fluent-emoji-flat:crying-face", flat: "fluent:emoji-sad-16-filled", color: "--premium-orange" },
 { key: "angry", label: "Angry", icon: "fluent-emoji-flat:pouting-face", flat: "fluent:emoji-angry-16-filled", color: "--error" }];
 
 const REACTION_MAP = REACTIONS.reduce((m, r) => {m[r.key] = r;return m;}, {});
@@ -484,20 +507,23 @@ function burstFrom(btn, key) {
    hover lift + label tooltip. */
 function ReactionPicker({ at, onPick, onEnter, onLeave }) {
   if (!at) return null;
-  return (
-    <div onMouseEnter={onEnter} onMouseLeave={onLeave} className="pf-react-bar"
-    role="menu" aria-label="Pick a reaction"
-    style={{ position: "fixed", left: at.x, top: at.y - 10, transform: "translateY(-100%)", zIndex: 200 }}>
-      {REACTIONS.map((r, i) =>
-      <button key={r.key} type="button" role="menuitem" aria-label={r.label}
-      onClick={() => onPick(r.key)} className="pf-react-opt" data-react={r.key}
-      style={{ animationDelay: i * 35 + "ms" }}>
-          <span className="pf-react-label">{r.label}</span>
-          <IconifyIcon name={r.icon} size={40} />
-        </button>
-      )}
-    </div>);
-
+  return ReactDOM.createPortal(
+    <div style={{ position: "fixed", left: 0, right: 0, bottom: at.bottom, zIndex: 9999, display: "flex", justifyContent: "center", pointerEvents: "none" }}>
+      <div onMouseEnter={onEnter} onMouseLeave={onLeave} className="pf-react-bar"
+      role="menu" aria-label="Pick a reaction"
+      style={{ pointerEvents: "auto" }}>
+        {REACTIONS.map((r, i) =>
+        <button key={r.key} type="button" role="menuitem" aria-label={r.label}
+        onClick={() => onPick(r.key)} className="pf-react-opt" data-react={r.key}
+        style={{ animationDelay: i * 35 + "ms" }}>
+            <span className="pf-react-label">{r.label}</span>
+            <IconifyIcon name={r.icon} size={40} />
+          </button>
+        )}
+      </div>
+    </div>,
+    document.body
+  );
 }
 
 /* assigns stable ids to seeded comments so replies can target them */
@@ -515,7 +541,7 @@ function ReactTrigger() {
     clearTimeout(hideT.current);
     if (!btnRef.current) return;
     const rect = btnRef.current.getBoundingClientRect();
-    setAt({ x: rect.left - 6, y: rect.top });
+    setAt({ bottom: window.innerHeight - rect.top + 8 });
   };
   const scheduleHide = () => {clearTimeout(hideT.current);hideT.current = setTimeout(() => setAt(null), 240);};
   const pick = (key) => {setReaction(key);burstFrom(btnRef.current, key);setAt(null);};
@@ -815,6 +841,58 @@ function ClampText({ text, lines = 3, more = "See more" }) {
 
 }
 
+/* Compact sliding dot indicator — max 5 visible, edge dots scale down when count > 5.
+   For many-image posts the active dot is always centred; the 1/N counter tracks exact position. */
+function SlidingDots({ count, idx }) {
+  const MAX = 5;
+  if (count <= MAX) {
+    return (
+      <div className="mc-dots">
+        {Array.from({ length: count }, (_, i) => (
+          <span key={i} className={"mc-dot" + (i === idx ? " on" : "")} />
+        ))}
+      </div>
+    );
+  }
+  // >5 images: always 5 dots, center is always the active/coloured one.
+  const SCALES = [0.57, 0.78, 1, 0.78, 0.57];
+  return (
+    <div className="mc-dots">
+      {SCALES.map((scale, pos) => (
+        <span key={pos}
+          className={"mc-dot" + (pos === 2 ? " on" : "")}
+          style={{ transform: `scale(${scale})` }} />
+      ))}
+    </div>
+  );
+}
+
+/* Swipeable image carousel with dot indicators + counter for media posts. */
+function MediaCarousel({ images }) {
+  const [idx, setIdx] = useState(0);
+  const ref = useRef(null);
+  if (!images || images.length === 0) return null;
+  const single = images.length === 1;
+  const onScroll = () => {
+    const el = ref.current;
+    if (!el) return;
+    const first = el.firstElementChild;
+    const w = first ? first.offsetWidth + 8 : el.clientWidth * 0.74 + 8;
+    setIdx(Math.round(el.scrollLeft / w));
+  };
+  return (
+    <div className="mc-wrap">
+      <div className={"mc-scroll" + (single ? " mc-scroll-single" : "")} ref={ref} onScroll={onScroll}>
+        {images.map((src, i) =>
+          <img key={i} src={src} alt={"Image " + (i + 1) + " of " + images.length} className="mc-img" />
+        )}
+      </div>
+      {!single && <span className="mc-count">{idx + 1}/{images.length}</span>}
+      {!single && <SlidingDots count={images.length} idx={idx} />}
+    </div>
+  );
+}
+
 /* Sample media for demo posts: a video player, a vertical reel, and a 10-image
    swipeable gallery. Rendered inside the DS PostCard's body slot. */
 /* Floating avatars of people you follow who reacted — overlaid bottom-left on
@@ -1000,6 +1078,7 @@ function SampleMedia({ sample }) {
         )}
       </div>
       <span className="sm-count">{idx + 1}/{sample.images.length}</span>
+      <SlidingDots count={sample.images.length} idx={idx} />
     </div>);
 
 }
@@ -1096,6 +1175,38 @@ function LikedByRowInline() {
 
 }
 
+function SavedModal({ onClose }) {
+  const sheetRef = useRef(null);
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  return (
+    <div className="saved-overlay" onClick={onClose}>
+      <div className="saved-sheet" ref={sheetRef} onClick={(e) => e.stopPropagation()}
+        role="dialog" aria-modal="true" aria-label="Post saved">
+        <div className="saved-handle" />
+        <div className="saved-icon-wrap">
+          <IconifyIcon name="lucide:bookmark-check" size={30} color="var(--brand-gold)" />
+        </div>
+        <div className="saved-title">Saved!</div>
+        <div className="saved-desc">Your post has been saved to your collection.</div>
+        <div className="saved-divider" />
+        <div className="saved-where">
+          <span className="saved-where-av" />
+          <div className="saved-where-tx">
+            <div className="saved-where-path">Profile  →  Settings  →  My Saved</div>
+            <div className="saved-where-sub">Find all your saved posts here</div>
+          </div>
+        </div>
+        <button type="button" className="saved-btn" onClick={onClose}>View Saved</button>
+        <button type="button" className="saved-skip" onClick={onClose}>Maybe Later</button>
+      </div>
+    </div>
+  );
+}
+
 function FeedPost({ post, st, onToggleLike, onReact, onShare, onSave, onAddComment, onAddReply }) {
   const ref = useRef(null);
   const [picker, setPicker] = useState(null);
@@ -1103,6 +1214,7 @@ function FeedPost({ post, st, onToggleLike, onReact, onShare, onSave, onAddComme
   const [replyFor, setReplyFor] = useState(null);
   const [likesOpen, setLikesOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [savedSheetOpen, setSavedSheetOpen] = useState(false);
   const commentSheet = typeof window !== "undefined" && window.PF_COMMENT_SHEET;
   const hideT = useRef(null);
 
@@ -1117,7 +1229,7 @@ function FeedPost({ post, st, onToggleLike, onReact, onShare, onSave, onAddComme
     const btn = likeButtonOf(ref.current);
     if (!btn) return;
     const r = btn.getBoundingClientRect();
-    setPicker({ x: r.left - 6, y: r.top });
+    setPicker({ bottom: window.innerHeight - r.top + 8 });
   };
   const scheduleHide = () => {
     clearTimeout(hideT.current);
@@ -1178,6 +1290,12 @@ function FeedPost({ post, st, onToggleLike, onReact, onShare, onSave, onAddComme
     setComposerOpen((o) => !o);
     if (commentSheet) {setSheetOpen(true);setComposerOpen(false);}
   };
+  const handleSave = () => {
+    const willSave = !st.saved;
+    onSave();
+    if (willSave) setSavedSheetOpen(true);
+  };
+
   const handleShare = () => {
     onShare();
     const g = actionIcon(2);
@@ -1202,10 +1320,14 @@ function FeedPost({ post, st, onToggleLike, onReact, onShare, onSave, onAddComme
     <div className={"post-wrap" + (post.channel ? " has-chx" : "")} ref={ref}
     style={{ background: "var(--surface-card)", border: "1px solid var(--border-default)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-card)", overflow: "hidden", padding: "0px 16px" }}>
       {post.channel && <ChannelContext channel={post.channel} />}
-      <PostCard {...post} commentList={[]} media={post.sample ? [] : post.media}
-      body={post.sample ? <span className="pf-clampwrap"><SampleMedia sample={post.sample} /><ClampText text={post.body} /></span> : <ClampText text={post.body} more={post.channel ? "Learn More" : "See more"} />}
+      <PostCard {...post} commentList={[]} media={[]}
+      body={post.sample
+        ? <span className="pf-clampwrap"><SampleMedia sample={post.sample} /><ClampText text={post.body} /></span>
+        : (post.media && post.media.length > 0)
+          ? <span className="pf-clampwrap"><MediaCarousel images={post.media} /><ClampText text={post.body} more={post.channel ? "Learn More" : "See more"} /></span>
+          : <ClampText text={post.body} more={post.channel ? "Learn More" : "See more"} />}
       liked={st.liked} saved={st.saved} actioned={false} likes={st.likes} shares={st.shares} comments={st.commentsCount}
-      onLike={handleLike} onSave={onSave} onComment={handleComment} onShare={handleShare}
+      onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare}
       style={{ boxShadow: "none", border: "none", borderRadius: 0, background: "transparent" }} />
       {inlineBubbles && hasRegion &&
       <div className="comments-region" style={{ borderTop: "1px solid var(--border-default)", padding: "4px 16px 16px" }}>
@@ -1275,6 +1397,7 @@ function FeedPost({ post, st, onToggleLike, onReact, onShare, onSave, onAddComme
       <CommentsSheet post={post} comments={comments}
       onClose={() => setSheetOpen(false)} onAddComment={onAddComment} onAddReply={onAddReply} />
       }
+      {savedSheetOpen && <SavedModal onClose={() => setSavedSheetOpen(false)} />}
     </div>);
 
 }
