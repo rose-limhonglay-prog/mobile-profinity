@@ -10,16 +10,16 @@ const PFAEV = window.PFApp;
 function goEV(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
 
 const EVENTS_LIST = [
-  { id: "tt", title: "Technique Tuesday", host: "Dr Tim Pearce", banner: "assets/event-technique-tuesday.png",
+  { id: "tt", title: "Technique Tuesday", host: "Dr Tim Pearce", banner: "assets/event-thumbnail-1.png",
     date: "March 17, 2026", time: "20:00 GMT", primary: true },
-  { id: "ac", title: "Art Codes Live Webinar", host: "Dr Tim Pearce", banner: "assets/event-art-codes.png",
+  { id: "ac", title: "Art Codes Live Webinar", host: "Dr Tim Pearce", banner: "assets/event-thumbnail-2.png",
     date: "March 24, 2026", time: "19:00 GMT", primary: false },
-  { id: "ch", title: "Chew the FATPAD", host: "Dr Tim Pearce", banner: "assets/event-art-codes.png",
+  { id: "ch", title: "Chew the FATPAD", host: "Dr Tim Pearce", banner: "assets/event-thumbnail-1.png",
     date: "June 12, 2026", time: "21:00 BST", primary: false },
 ];
 
 const EV_DETAIL = {
-  title: "Chew the FATPAD", host: "Dr Tim Pearce", banner: "assets/event-technique-tuesday.png",
+  title: "Chew the FATPAD", host: "Dr Tim Pearce", banner: "assets/event-thumbnail-1.png",
   date: "June 12, 2026", time: "9:00 PM", attendees: "380",
   about: "Join Dr. Tim Pearce every week for Technique Tuesday, a live, interactive session where he shares his expert knowledge, answers your burning questions, and demonstrates the latest techniques in aesthetic medicine. Don't miss this opportunity to enhance your skills and stay ahead of the curve!",
   learn: ["Step-by-Step Technique demonstration", "Interactive Group Exercise", "Individual Feedback Sessions", "Real-world Case Studies", "Q&A Panel Discussion"],

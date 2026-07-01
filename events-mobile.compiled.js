@@ -18,7 +18,7 @@ const EVENTS_LIST = [{
   id: "tt",
   title: "Technique Tuesday",
   host: "Dr Tim Pearce",
-  banner: "assets/event-technique-tuesday.png",
+  banner: "assets/event-thumbnail-1.png",
   date: "March 17, 2026",
   time: "20:00 GMT",
   primary: true
@@ -26,7 +26,7 @@ const EVENTS_LIST = [{
   id: "ac",
   title: "Art Codes Live Webinar",
   host: "Dr Tim Pearce",
-  banner: "assets/event-art-codes.png",
+  banner: "assets/event-thumbnail-2.png",
   date: "March 24, 2026",
   time: "19:00 GMT",
   primary: false
@@ -34,7 +34,7 @@ const EVENTS_LIST = [{
   id: "ch",
   title: "Chew the FATPAD",
   host: "Dr Tim Pearce",
-  banner: "assets/event-art-codes.png",
+  banner: "assets/event-thumbnail-1.png",
   date: "June 12, 2026",
   time: "21:00 BST",
   primary: false
@@ -42,7 +42,7 @@ const EVENTS_LIST = [{
 const EV_DETAIL = {
   title: "Chew the FATPAD",
   host: "Dr Tim Pearce",
-  banner: "assets/event-technique-tuesday.png",
+  banner: "assets/event-thumbnail-1.png",
   date: "June 12, 2026",
   time: "9:00 PM",
   attendees: "380",
