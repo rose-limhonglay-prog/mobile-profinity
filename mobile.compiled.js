@@ -69,7 +69,8 @@ function MTopBar({
     className: "grow"
   }), /*#__PURE__*/React.createElement("button", {
     className: "m-iconbtn",
-    "aria-label": "Search"
+    "aria-label": "Search",
+    onClick: () => go("SearchMobile.html")
   }, /*#__PURE__*/React.createElement(DSM.Icon, {
     name: "search",
     size: 20,

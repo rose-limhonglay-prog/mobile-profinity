@@ -1,0 +1,127 @@
+/* ===========================================================================
+   PROfinity — Search · iPhone 17 Pro Max mobile
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* center the device frame on the gray backdrop */
+.app.device-stage {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary);
+}
+
+.sr-screen { height: 100%; display: flex; flex-direction: column; background: #fff; }
+
+/* ===== Header ===== */
+.sr-head {
+  flex: none; display: flex; align-items: center; gap: 10px;
+  padding: 52px 16px 12px; background: #fff;
+  border-bottom: 1px solid var(--border-default);
+}
+.sr-back {
+  background: none; border: none; cursor: pointer; padding: 4px;
+  display: flex; align-items: center; justify-content: center; flex: none;
+}
+.sr-search-pill {
+  flex: 1; display: flex; align-items: center; gap: 8px;
+  background: #f0f2f5; border-radius: 50px; padding: 8px 14px;
+}
+.sr-search-pill input {
+  flex: 1; border: none; background: transparent;
+  font-family: var(--font-sans); font-size: 16px; color: var(--text-body); outline: none;
+}
+.sr-search-pill input::placeholder { color: var(--gray-450); }
+
+/* ===== Scrollable body ===== */
+.sr-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.sr-scroll::-webkit-scrollbar { width: 0; }
+
+/* ===== Section headers ===== */
+.sr-sec {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 16px 8px;
+}
+.sr-sec-title {
+  font-family: var(--font-sans); font-weight: var(--fw-bold);
+  font-size: 18px; color: var(--text-heading);
+}
+.sr-sec-link {
+  font-family: var(--font-sans); font-size: 15px; color: #1877f2;
+  font-weight: var(--fw-semibold); background: none; border: none; cursor: pointer; padding: 0;
+}
+
+/* ===== Recent list rows ===== */
+.sr-list { display: flex; flex-direction: column; }
+.sr-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; background: none; border: none; cursor: pointer; width: 100%; text-align: left;
+}
+.sr-row:active { background: var(--surface-sunken); }
+
+/* Avatar wrap — ring variant */
+.sr-av-wrap { position: relative; flex: none; border-radius: 50%; }
+.sr-av-ring { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #1877f2; border-radius: 50%; }
+
+.sr-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.sr-row-name {
+  font-family: var(--font-sans); font-weight: var(--fw-semibold);
+  font-size: 16px; color: var(--text-heading);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sr-row-sub {
+  font-family: var(--font-sans); font-size: 13px; color: var(--gray-500);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.sr-dot-wrap { display: flex; align-items: center; gap: 5px; }
+.sr-live-dot { width: 8px; height: 8px; border-radius: 50%; background: #1877f2; flex: none; }
+.sr-dot-text { font-family: var(--font-sans); font-size: 13px; color: #1877f2; }
+
+.sr-more {
+  background: none; border: none; cursor: pointer; padding: 6px;
+  display: flex; align-items: center; justify-content: center; border-radius: 50%; flex: none;
+}
+.sr-more:active { background: var(--gray-100); }
+
+/* ===== People you may know grid ===== */
+.sr-people-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 4px 12px 24px;
+}
+.sr-person-card {
+  display: flex; flex-direction: column; border-radius: 10px;
+  border: 1px solid var(--border-default); background: #fff; overflow: hidden;
+}
+.sr-person-photo { width: 100%; aspect-ratio: 1/1; object-fit: cover; display: block; }
+.sr-person-photo-placeholder {
+  width: 100%; aspect-ratio: 1/1; background: var(--gray-150);
+  display: flex; align-items: center; justify-content: center;
+}
+.sr-person-body { display: flex; flex-direction: column; gap: 6px; padding: 10px; }
+.sr-person-name {
+  font-family: var(--font-sans); font-weight: var(--fw-bold);
+  font-size: 15px; color: var(--text-heading); line-height: 1.25;
+}
+.sr-mutual { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+.sr-mutual-avs { display: flex; }
+.sr-mutual-av {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 1.5px solid #fff; margin-left: -5px;
+  background: var(--gray-200); overflow: hidden; flex: none;
+}
+.sr-mutual-av:first-child { margin-left: 0; }
+.sr-mutual-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sr-mutual-text { font-family: var(--font-sans); font-size: 12px; color: var(--gray-500); }
+.sr-person-actions { display: flex; gap: 6px; margin-top: 2px; }
+.sr-btn-add {
+  flex: 1; background: #1877f2; color: #fff; border: none; border-radius: 7px;
+  padding: 8px 6px; font-family: var(--font-sans); font-weight: var(--fw-semibold);
+  font-size: 14px; cursor: pointer; white-space: nowrap;
+}
+.sr-btn-add:active, .sr-btn-requested { background: #145db5; }
+.sr-btn-remove {
+  flex: none; background: #e4e6eb; color: var(--text-body); border: none; border-radius: 7px;
+  padding: 8px 10px; font-family: var(--font-sans); font-weight: var(--fw-semibold);
+  font-size: 14px; cursor: pointer;
+}
+.sr-btn-remove:active { background: var(--gray-250); }

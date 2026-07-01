@@ -33,7 +33,7 @@ const AS_PROFILE_ITEMS = [
   { label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
   { label: "Account Settings",   icon: "lucide:graduation-cap",  href: null },
   { label: "Display Settings",   icon: "lucide:cpu",             href: "DisplaySettings.html" },
-  { label: "My Saved",           icon: "lucide:bookmark",        href: null },
+  { label: "My Saved",           icon: "lucide:bookmark",        href: "MySaved.html" },
   { label: "Notifications",      icon: "lucide:calendar",        href: null },
   { label: "Privacy & Security", icon: "lucide:shield",          href: null },
 ];

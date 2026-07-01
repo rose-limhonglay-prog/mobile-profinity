@@ -31,7 +31,7 @@ function MTopBar({ onMenu, onBell }) {
       <button className="m-burger" aria-label="Menu" onClick={onMenu}><DSM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
       <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
       <span className="grow" />
-      <button className="m-iconbtn" aria-label="Search"><DSM.Icon name="search" size={20} color="var(--brand-navy)" /></button>
+      <button className="m-iconbtn" aria-label="Search" onClick={() => go("SearchMobile.html")}><DSM.Icon name="search" size={20} color="var(--brand-navy)" /></button>
       <button className="m-iconbtn" aria-label="Notifications" onClick={() => {setShowNotif(false);onBell && onBell();}}>
         <DSM.IconifyIcon name="lucide:bell" size={20} color="var(--brand-navy)" />
         <span className="dot">12</span>

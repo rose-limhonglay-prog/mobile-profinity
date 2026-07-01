@@ -15,10 +15,10 @@ img{max-width:100%}
 
 /* ===== shared header ===== */
 .ev-head{flex:none;z-index:5;background:var(--surface-card);border-bottom:1px solid var(--border-default);
-  padding:54px 16px 12px;display:flex;align-items:center;gap:14px}
-.ev-back{width:34px;height:34px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--brand-navy)}
-.ev-title{flex:1;text-align:center;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:19px;color:var(--brand-navy)}
-.ev-head .spacer{width:34px}
+  padding:54px 16px 12px;display:flex;align-items:center;gap:14px;position:relative}
+.ev-back{width:34px;height:34px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--brand-navy);flex:none;position:relative;z-index:1}
+.ev-title{position:absolute;left:0;right:0;text-align:center;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:19px;color:var(--brand-navy);pointer-events:none}
+.ev-head .spacer{display:none}
 
 .ev-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .ev-scroll::-webkit-scrollbar{width:0}

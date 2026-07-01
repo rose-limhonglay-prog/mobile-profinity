@@ -1377,8 +1377,13 @@ function FeedPost({ post, st, onToggleLike, onReact, onShare, onSave, onAddComme
         )}
         </div>
       }
+      {commentSheet &&
+      <div style={{ borderTop: "1px solid var(--border-default)" }}>
+        <LikedByRow onOpen={() => setLikesOpen(true)} />
+      </div>
+      }
       {commentSheet && comments.length > 0 &&
-      <div className="comments-region cm-preview-region" style={{ padding: "0px", margin: "24px 0px 0px" }}>
+      <div className="comments-region cm-preview-region" style={{ padding: "0px", margin: "8px 0px 0px" }}>
           <div className="cmt-preview" role="button" tabIndex={0}
         onClick={() => setSheetOpen(true)}
         onKeyDown={(e) => {if (e.key === "Enter") setSheetOpen(true);}}>

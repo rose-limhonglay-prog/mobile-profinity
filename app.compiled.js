@@ -2545,11 +2545,17 @@ function FeedPost({
       onAddReply(c._id, t);
       setReplyFor(null);
     }
-  }))))), commentSheet && comments.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }))))), commentSheet && /*#__PURE__*/React.createElement("div", {
+    style: {
+      borderTop: "1px solid var(--border-default)"
+    }
+  }, /*#__PURE__*/React.createElement(LikedByRow, {
+    onOpen: () => setLikesOpen(true)
+  })), commentSheet && comments.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "comments-region cm-preview-region",
     style: {
       padding: "0px",
-      margin: "24px 0px 0px"
+      margin: "8px 0px 0px"
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "cmt-preview",

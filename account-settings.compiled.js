@@ -47,7 +47,7 @@ const AS_PROFILE_ITEMS = [{
 }, {
   label: "My Saved",
   icon: "lucide:bookmark",
-  href: null
+  href: "MySaved.html"
 }, {
   label: "Notifications",
   icon: "lucide:calendar",
