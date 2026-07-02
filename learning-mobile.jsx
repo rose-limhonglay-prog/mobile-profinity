@@ -52,14 +52,16 @@ function useIsMobileL() {
 function LMHeader() {
   return (
     <header className="lm-top">
-      <div className="lm-greet">
-        <div className="g">Good morning,</div>
-        <div className="nm">Katy!</div>
-      </div>
-      <DSL.Avatar name="Katy Wilson" src="assets/avatar-katy.jpg" size={50} className="lm-av" style={{ width: "48px", height: "48px" }} />
-      <button className="lm-bell" aria-label="Notifications">
-        <DSL.IconifyIcon name="lucide:bell" size={22} color="var(--brand-navy)" />
-        <span className="dot" />
+      <button className="lm-burger" aria-label="Menu"><DSL.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
+      <img className="m-logo-light" src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+      <img className="m-logo-dark" src="assets/profinity-academy-logo-dark.jpg" alt="PROfinity Academy" />
+      <span className="grow" />
+      <button className="lm-iconbtn" aria-label="Search" onClick={() => goL("SearchMobile.html")}><DSL.Icon name="search" size={20} color="var(--brand-navy)" /></button>
+      <button className="lm-iconbtn" aria-label="Notifications">
+        <DSL.IconifyIcon name="lucide:bell" size={20} color="var(--brand-navy)" /><span className="dot">12</span>
+      </button>
+      <button className="lm-iconbtn" aria-label="Messages">
+        <DSL.IconifyIcon name="lucide:message-circle" size={20} color="var(--brand-navy)" /><span className="dot">12</span>
       </button>
     </header>);
 

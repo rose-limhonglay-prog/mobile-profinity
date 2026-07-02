@@ -11,15 +11,16 @@ img { max-width: 100%; }
 .lm-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-card); position: relative; }
 
 /* header */
-.lm-top { flex: none; padding: 56px 20px 14px; display: flex; align-items: flex-start; gap: 14px; }
-.lm-greet { flex: 1; min-width: 0; }
-.lm-greet .g { font-family: var(--font-sans); font-size: 15px; color: var(--gray-500); font-weight: var(--fw-medium); }
-.lm-greet .nm { font-family: var(--font-sans); font-size: 28px; font-weight: var(--fw-bold); color: var(--text-heading); line-height: 1.1; margin-top: 2px; }
-.lm-top .lm-av { flex: none; border-radius: 50%; }
-.lm-bell { flex: none; position: relative; width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border-default);
-  background: var(--surface-card); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.lm-bell .dot { position: absolute; top: 9px; right: 10px; width: 11px; height: 11px; border-radius: 50%;
-  background: var(--premium-orange); border: 2px solid var(--surface-card); }
+.lm-top { flex: none; z-index: 5; background: var(--surface-card); border-bottom: 1px solid var(--border-default);
+  padding: 52px 16px 10px; display: flex; align-items: center; gap: 12px; }
+.lm-top img { height: 42px; width: auto; object-fit: contain; }
+.lm-top .grow { flex: 1; }
+.lm-burger { background: none; border: none; cursor: pointer; padding: 4px; display: flex; color: var(--gray-700); }
+.lm-iconbtn { position: relative; width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer;
+  background: transparent; display: flex; align-items: center; justify-content: center; }
+.lm-iconbtn:active { background: var(--gray-200); }
+.lm-iconbtn .dot { position: absolute; top: 6px; right: 7px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 9px;
+  background: var(--premium-orange); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 
 /* search */
 .lm-search { flex: none; margin: 4px 20px 16px; display: flex; align-items: center; gap: 12px;

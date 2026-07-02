@@ -67,7 +67,8 @@ function PMTopBar() {
   return (
     <header className="pm-top">
       <button className="pm-burger" aria-label="Menu"><DSPM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
-      <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+      <img className="m-logo-light" src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+      <img className="m-logo-dark" src="assets/profinity-academy-logo-dark.jpg" alt="PROfinity Academy" />
       <span className="grow" />
       <button className="pm-iconbtn" aria-label="Search"><DSPM.Icon name="search" size={21} color="var(--brand-navy)" /></button>
       <button className="pm-iconbtn" aria-label="Notifications">

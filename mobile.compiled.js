@@ -63,7 +63,12 @@ function MTopBar({
     size: 24,
     color: "var(--gray-700)"
   })), /*#__PURE__*/React.createElement("img", {
+    className: "m-logo-light",
     src: "assets/profinity-academy-logo-full.png",
+    alt: "PROfinity Academy"
+  }), /*#__PURE__*/React.createElement("img", {
+    className: "m-logo-dark",
+    src: "assets/profinity-academy-logo-dark.jpg",
     alt: "PROfinity Academy"
   }), /*#__PURE__*/React.createElement("span", {
     className: "grow"
@@ -182,7 +187,7 @@ const SM_EVENTS = [{
   label: "Business Growth Workshop",
   t: "7:00 PM"
 }];
-const SM_PROFILE = [{
+const SM_PROFILE_BEFORE = [{
   label: "Edit Profile",
   icon: "lucide:book-open",
   href: "ProfileMobile.html"
@@ -194,11 +199,8 @@ const SM_PROFILE = [{
   label: "Notifications",
   icon: "lucide:calendar",
   href: null
-}, {
-  label: "Display Settings",
-  icon: "lucide:cpu",
-  href: "DisplaySettings.html"
-}, {
+}];
+const SM_PROFILE_AFTER = [{
   label: "Privacy & Security",
   icon: "lucide:book-open",
   href: null
@@ -496,10 +498,64 @@ function SmSection({
     className: "sm-sec-h"
   }, title);
 }
+function useDarkModeM() {
+  const [dark, setDark] = useStateM(() => {
+    try {
+      return localStorage.getItem('pf-theme') === 'dark';
+    } catch (e) {
+      return false;
+    }
+  });
+  function toggle() {
+    const next = !dark;
+    setDark(next);
+    try {
+      localStorage.setItem('pf-theme', next ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    } catch (e) {}
+  }
+  return [dark, toggle];
+}
+function SmDarkSwitch({
+  on,
+  onToggle
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    className: "sm-switch" + (on ? " on" : ""),
+    onClick: onToggle,
+    role: "switch",
+    "aria-checked": on,
+    "aria-label": on ? "Switch to light mode" : "Switch to dark mode"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-knob"
+  }, on && /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: "lucide:moon",
+    size: 13,
+    color: "#1A1736"
+  })));
+}
+function SmDisplayCard({
+  dark,
+  onToggle
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "sm-display-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sm-display-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-display-label"
+  }, "Display"), /*#__PURE__*/React.createElement(SmDarkSwitch, {
+    on: dark,
+    onToggle: onToggle
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "sm-display-desc"
+  }, "Adjust the appearance of the app to reduce glare and give your eyes a break"));
+}
 function SideMenu({
   open,
   onClose
 }) {
+  const [dark, toggleDark] = useDarkModeM();
   return /*#__PURE__*/React.createElement("div", {
     className: "m-drawer-wrap" + (open ? " open" : ""),
     "aria-hidden": !open
@@ -544,17 +600,11 @@ function SideMenu({
   }, /*#__PURE__*/React.createElement("span", {
     className: "sm-tier-name"
   }, "Confidence Path"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-pill",
-    style: {
-      color: "rgb(206, 153, 87)"
-    }
+    className: "sm-tier-pill"
   }, "YOUR TIER")), /*#__PURE__*/React.createElement("span", {
     className: "sm-tier-sub"
   }, "Exclusive tier content"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-new",
-    style: {
-      color: "rgb(206, 153, 87)"
-    }
+    className: "sm-tier-new"
   }, "3 new posts")), /*#__PURE__*/React.createElement("nav", {
     className: "sm-list"
   }, SM_CHANNELS.map(c => /*#__PURE__*/React.createElement("button", {
@@ -566,10 +616,7 @@ function SideMenu({
     size: 23,
     color: "var(--gray-900)"
   }), /*#__PURE__*/React.createElement("span", {
-    className: "sm-row-label",
-    style: {
-      color: "rgb(0, 0, 0)"
-    }
+    className: "sm-row-label"
   }, c.label), /*#__PURE__*/React.createElement("span", {
     className: "sm-badge sm-badge-red"
   }, c.n)))), /*#__PURE__*/React.createElement(SmSection, {
@@ -585,10 +632,7 @@ function SideMenu({
     size: 23,
     color: "var(--gray-900)"
   }), /*#__PURE__*/React.createElement("span", {
-    className: "sm-row-label",
-    style: {
-      color: "rgb(0, 0, 0)"
-    }
+    className: "sm-row-label"
   }, c.label), /*#__PURE__*/React.createElement("span", {
     className: "sm-badge sm-badge-gray"
   }, c.n)))), /*#__PURE__*/React.createElement(SmSection, {
@@ -608,17 +652,13 @@ function SideMenu({
     size: 20,
     color: "var(--gray-400)"
   })), /*#__PURE__*/React.createElement("span", {
-    className: "sm-course-name",
-    style: {
-      color: "rgb(0, 0, 0)"
-    }
+    className: "sm-course-name"
   }, c.label)), /*#__PURE__*/React.createElement("span", {
     className: "sm-progress"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sm-progress-fill",
     style: {
-      width: c.pct + "%",
-      backgroundColor: "rgb(206, 153, 87)"
+      width: c.pct + "%"
     }
   })), /*#__PURE__*/React.createElement("span", {
     className: "sm-course-pct"
@@ -635,18 +675,11 @@ function SideMenu({
   }, /*#__PURE__*/React.createElement("b", null, e.d), /*#__PURE__*/React.createElement("i", null, e.m)), /*#__PURE__*/React.createElement("span", {
     className: "sm-event-main"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-event-name",
-    style: {
-      color: "rgb(0, 0, 0)"
-    }
+    className: "sm-event-name"
   }, e.label), /*#__PURE__*/React.createElement("span", {
     className: "sm-event-time"
   }, e.t)), e.tag && /*#__PURE__*/React.createElement("span", {
-    className: "sm-event-tag",
-    style: {
-      borderColor: "rgb(206, 153, 87)",
-      color: "rgb(206, 153, 87)"
-    }
+    className: "sm-event-tag"
   }, e.tag)))), /*#__PURE__*/React.createElement(SmSection, {
     title: "My Profile"
   }), /*#__PURE__*/React.createElement("button", {
@@ -659,16 +692,32 @@ function SideMenu({
   }), /*#__PURE__*/React.createElement("span", {
     className: "sm-row-label"
   }, "Verify Profile"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-verify-pill",
-    style: {
-      backgroundColor: "rgb(206, 153, 87)"
-    }
+    className: "sm-verify-pill"
   }, "Not Verified")), /*#__PURE__*/React.createElement("nav", {
     className: "sm-list"
-  }, SM_PROFILE.map(c => /*#__PURE__*/React.createElement("button", {
+  }, SM_PROFILE_BEFORE.map(c => /*#__PURE__*/React.createElement("button", {
     key: c.label,
     className: "sm-row",
-    onClick: () => go(c.href)
+    onClick: () => c.href && go(c.href)
+  }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: c.icon,
+    size: 23,
+    color: "var(--gray-900)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "sm-row-label"
+  }, c.label), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "var(--gray-450)"
+  })))), /*#__PURE__*/React.createElement(SmDisplayCard, {
+    dark: dark,
+    onToggle: toggleDark
+  }), /*#__PURE__*/React.createElement("nav", {
+    className: "sm-list"
+  }, SM_PROFILE_AFTER.map(c => /*#__PURE__*/React.createElement("button", {
+    key: c.label,
+    className: "sm-row",
+    onClick: () => c.href && go(c.href)
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: c.icon,
     size: 23,

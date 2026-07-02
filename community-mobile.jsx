@@ -44,7 +44,8 @@ function CMTopBar() {
   return (
     <header className="cm-top">
       <button className="cm-burger" aria-label="Menu"><DSCM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
-      <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+      <img className="m-logo-light" src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+      <img className="m-logo-dark" src="assets/profinity-academy-logo-dark.jpg" alt="PROfinity Academy" />
       <span className="grow" />
       <button className="cm-iconbtn" aria-label="Search"><DSCM.Icon name="search" size={21} color="var(--brand-navy)" /></button>
       <button className="cm-iconbtn" aria-label="Notifications">

@@ -95,31 +95,50 @@ function useIsMobileL() {
 function LMHeader() {
   return /*#__PURE__*/React.createElement("header", {
     className: "lm-top"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-greet"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "g"
-  }, "Good morning,"), /*#__PURE__*/React.createElement("div", {
-    className: "nm"
-  }, "Katy!")), /*#__PURE__*/React.createElement(DSL.Avatar, {
-    name: "Katy Wilson",
-    src: "assets/avatar-katy.jpg",
-    size: 50,
-    className: "lm-av",
-    style: {
-      width: "48px",
-      height: "48px"
-    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "lm-burger",
+    "aria-label": "Menu"
+  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "lucide:menu",
+    size: 24,
+    color: "var(--gray-700)"
+  })), /*#__PURE__*/React.createElement("img", {
+    className: "m-logo-light",
+    src: "assets/profinity-academy-logo-full.png",
+    alt: "PROfinity Academy"
+  }), /*#__PURE__*/React.createElement("img", {
+    className: "m-logo-dark",
+    src: "assets/profinity-academy-logo-dark.jpg",
+    alt: "PROfinity Academy"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "grow"
   }), /*#__PURE__*/React.createElement("button", {
-    className: "lm-bell",
+    className: "lm-iconbtn",
+    "aria-label": "Search",
+    onClick: () => goL("SearchMobile.html")
+  }, /*#__PURE__*/React.createElement(DSL.Icon, {
+    name: "search",
+    size: 20,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "lm-iconbtn",
     "aria-label": "Notifications"
   }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
     name: "lucide:bell",
-    size: 22,
+    size: 20,
     color: "var(--brand-navy)"
   }), /*#__PURE__*/React.createElement("span", {
     className: "dot"
-  })));
+  }, "12")), /*#__PURE__*/React.createElement("button", {
+    className: "lm-iconbtn",
+    "aria-label": "Messages"
+  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "lucide:message-circle",
+    size: 20,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  }, "12")));
 }
 function LMSearch() {
   return /*#__PURE__*/React.createElement("div", {

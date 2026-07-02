@@ -29,7 +29,8 @@ function MTopBar({ onMenu, onBell }) {
   return (
     <header className="m-top">
       <button className="m-burger" aria-label="Menu" onClick={onMenu}><DSM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
-      <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+      <img className="m-logo-light" src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+      <img className="m-logo-dark" src="assets/profinity-academy-logo-dark.jpg" alt="PROfinity Academy" />
       <span className="grow" />
       <button className="m-iconbtn" aria-label="Search" onClick={() => go("SearchMobile.html")}><DSM.Icon name="search" size={20} color="var(--brand-navy)" /></button>
       <button className="m-iconbtn" aria-label="Notifications" onClick={() => {setShowNotif(false);onBell && onBell();}}>
@@ -74,12 +75,13 @@ const SM_EVENTS = [
 { d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM" },
 { d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM" }];
 
-const SM_PROFILE = [
-{ label: "Edit Profile", icon: "lucide:book-open", href: "ProfileMobile.html" },
-{ label: "Account Settings", icon: "lucide:graduation-cap", href: null },
-{ label: "Notifications", icon: "lucide:calendar", href: null },
-{ label: "Display Settings", icon: "lucide:cpu", href: "DisplaySettings.html" },
-{ label: "Privacy & Security", icon: "lucide:book-open", href: null }];
+const SM_PROFILE_BEFORE = [
+{ label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
+{ label: "Account Settings",   icon: "lucide:graduation-cap",  href: null },
+{ label: "Notifications",      icon: "lucide:calendar",        href: null }];
+
+const SM_PROFILE_AFTER = [
+{ label: "Privacy & Security", icon: "lucide:book-open",       href: null }];
 
 const NOTIFS = {
   “New”: [
@@ -225,11 +227,57 @@ function NotificationsPanel({ open, onClose }) {
 
 }
 
+function useDarkModeM() {
+  const [dark, setDark] = useStateM(() => {
+    try { return localStorage.getItem('pf-theme') === 'dark'; } catch(e) { return false; }
+  });
+  function toggle() {
+    const next = !dark;
+    setDark(next);
+    try {
+      localStorage.setItem('pf-theme', next ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    } catch(e) {}
+  }
+  return [dark, toggle];
+}
+
+function SmDarkSwitch({ on, onToggle }) {
+  return (
+    <button
+      className={"sm-switch" + (on ? " on" : "")}
+      onClick={onToggle}
+      role="switch"
+      aria-checked={on}
+      aria-label={on ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      <span className="sm-knob">
+        {on && <DSM.IconifyIcon name="lucide:moon" size={13} color="#1A1736" />}
+      </span>
+    </button>
+  );
+}
+
+function SmDisplayCard({ dark, onToggle }) {
+  return (
+    <div className="sm-display-card">
+      <div className="sm-display-top">
+        <span className="sm-display-label">Display</span>
+        <SmDarkSwitch on={dark} onToggle={onToggle} />
+      </div>
+      <p className="sm-display-desc">
+        Adjust the appearance of the app to reduce glare and give your eyes a break
+      </p>
+    </div>
+  );
+}
+
 function SmSection({ title }) {
   return <div className="sm-sec-h">{title}</div>;
 }
 
 function SideMenu({ open, onClose }) {
+  const [dark, toggleDark] = useDarkModeM();
   return (
     <div className={"m-drawer-wrap" + (open ? " open" : "")} aria-hidden={!open}>
       <div className="m-drawer-scrim" onClick={onClose} />
@@ -250,16 +298,16 @@ function SideMenu({ open, onClose }) {
           <button className="sm-tier" onClick={() => go("CommunityMobile.html")}>
             <span className="sm-tier-top">
               <span className="sm-tier-name">Confidence Path</span>
-              <span className="sm-tier-pill" style={{ color: "rgb(206, 153, 87)" }}>YOUR TIER</span>
+              <span className="sm-tier-pill">YOUR TIER</span>
             </span>
             <span className="sm-tier-sub">Exclusive tier content</span>
-            <span className="sm-tier-new" style={{ color: "rgb(206, 153, 87)" }}>3 new posts</span>
+            <span className="sm-tier-new">3 new posts</span>
           </button>
           <nav className="sm-list">
             {SM_CHANNELS.map((c) =>
             <button key={c.label} className="sm-row" onClick={() => go("CommunityMobile.html")}>
                 <DSM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
-                <span className="sm-row-label" style={{ color: "rgb(0, 0, 0)" }}>{c.label}</span>
+                <span className="sm-row-label">{c.label}</span>
                 <span className="sm-badge sm-badge-red">{c.n}</span>
               </button>
             )}
@@ -270,7 +318,7 @@ function SideMenu({ open, onClose }) {
             {SM_RESOURCES.map((c) =>
             <button key={c.label} className="sm-row" onClick={() => go("MyLearning.html")}>
                 <DSM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
-                <span className="sm-row-label" style={{ color: "rgb(0, 0, 0)" }}>{c.label}</span>
+                <span className="sm-row-label">{c.label}</span>
                 <span className="sm-badge sm-badge-gray">{c.n}</span>
               </button>
             )}
@@ -284,9 +332,9 @@ function SideMenu({ open, onClose }) {
                   <span className="sm-course-thumb">
                     <DSM.IconifyIcon name="lucide:image" size={20} color="var(--gray-400)" />
                   </span>
-                  <span className="sm-course-name" style={{ color: "rgb(0, 0, 0)" }}>{c.label}</span>
+                  <span className="sm-course-name">{c.label}</span>
                 </span>
-                <span className="sm-progress"><span className="sm-progress-fill" style={{ width: c.pct + "%", backgroundColor: "rgb(206, 153, 87)" }} /></span>
+                <span className="sm-progress"><span className="sm-progress-fill" style={{ width: c.pct + "%" }} /></span>
                 <span className="sm-course-pct">{c.pct}% complete</span>
               </button>
             )}
@@ -298,10 +346,10 @@ function SideMenu({ open, onClose }) {
             <button key={e.label} className="sm-event" onClick={() => go("EventsMobile.html")}>
                 <span className="sm-date"><b>{e.d}</b><i>{e.m}</i></span>
                 <span className="sm-event-main">
-                  <span className="sm-event-name" style={{ color: "rgb(0, 0, 0)" }}>{e.label}</span>
+                  <span className="sm-event-name">{e.label}</span>
                   <span className="sm-event-time">{e.t}</span>
                 </span>
-                {e.tag && <span className="sm-event-tag" style={{ borderColor: "rgb(206, 153, 87)", color: "rgb(206, 153, 87)" }}>{e.tag}</span>}
+                {e.tag && <span className="sm-event-tag">{e.tag}</span>}
               </button>
             )}
           </div>
@@ -310,11 +358,23 @@ function SideMenu({ open, onClose }) {
           <button className="sm-row sm-verify" onClick={() => go("ProfileMobile.html")}>
             <DSM.IconifyIcon name="lucide:book-open" size={23} color="var(--premium-orange)" />
             <span className="sm-row-label">Verify Profile</span>
-            <span className="sm-verify-pill" style={{ backgroundColor: "rgb(206, 153, 87)" }}>Not Verified</span>
+            <span className="sm-verify-pill">Not Verified</span>
           </button>
           <nav className="sm-list">
-            {SM_PROFILE.map((c) =>
-            <button key={c.label} className="sm-row" onClick={() => go(c.href)}>
+            {SM_PROFILE_BEFORE.map((c) =>
+            <button key={c.label} className="sm-row" onClick={() => c.href && go(c.href)}>
+                <DSM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
+                <span className="sm-row-label">{c.label}</span>
+                <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+              </button>
+            )}
+          </nav>
+
+          <SmDisplayCard dark={dark} onToggle={toggleDark} />
+
+          <nav className="sm-list">
+            {SM_PROFILE_AFTER.map((c) =>
+            <button key={c.label} className="sm-row" onClick={() => c.href && go(c.href)}>
                 <DSM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
                 <span className="sm-row-label">{c.label}</span>
                 <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />

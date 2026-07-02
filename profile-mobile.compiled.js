@@ -118,7 +118,12 @@ function PMTopBar() {
     size: 24,
     color: "var(--gray-700)"
   })), /*#__PURE__*/React.createElement("img", {
+    className: "m-logo-light",
     src: "assets/profinity-academy-logo-full.png",
+    alt: "PROfinity Academy"
+  }), /*#__PURE__*/React.createElement("img", {
+    className: "m-logo-dark",
+    src: "assets/profinity-academy-logo-dark.jpg",
     alt: "PROfinity Academy"
   }), /*#__PURE__*/React.createElement("span", {
     className: "grow"

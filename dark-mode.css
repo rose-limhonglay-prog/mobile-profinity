@@ -1,0 +1,150 @@
+/* ============================================================
+   PROfinity — Dark mode token overrides
+   Applied via [data-theme="dark"] on <html>.
+   Palette sourced from displaysettings.css ds-dark card (#1A1736 / #0E0C24).
+   ============================================================ */
+
+[data-theme="dark"] {
+  /* ---- Surfaces ---- */
+  --surface-page:   #0d0c1d;
+  --surface-card:   #1a1736;
+  --surface-sunken: #131126;
+  --surface-agent:  #261a50;
+  --surface-brand:  #1a1736;
+  --surface-panel:  #1e1c38;
+
+  /* ---- Text ---- */
+  --text-primary:   #e4e7f0;
+  --text-secondary: #9aa0b4;
+  --text-muted:     #6b7590;
+  --text-heading:   #ffffff;
+  --text-on-brand:  #ffffff;
+  --text-link:      #CE9957;
+
+  /* ---- Borders ---- */
+  --border-default: #2a2850;
+  --border-strong:  #3a3762;
+  --border-focus:   var(--ai-purple);
+
+  /* ---- Brand navy — gold accent in dark mode ---- */
+  --brand-navy:     #CE9957;
+  --brand-navy-700: #b8874a;
+  --brand-navy-900: #a07640;
+
+  /* ---- Raw gray ramp (many components reference these directly) ---- */
+  --gray-900: #f0f4f8;
+  --gray-800: #dde1ef;
+  --gray-700: #b4bdd4;
+  --gray-600: #9aa0b4;
+  --gray-500: #7a8499;
+  --gray-450: #6b7590;
+  --gray-400: #4a556a;
+  --gray-300: #2d3050;
+  --gray-200: #222040;
+  --gray-150: #1e1c3a;
+  --gray-100: #1a1736;
+  --gray-75:  #131126;
+  --gray-50:  #0d0c1d;
+}
+
+/* ============================================================
+   Global body / backdrop
+   ============================================================ */
+[data-theme="dark"] body { background: #08071a; }
+
+/* ============================================================
+   Newsfeed mobile — hardcoded rgba(255,255,255,…) nav bars
+   ============================================================ */
+/* Logo swap */
+.m-logo-dark { display: none; }
+[data-theme="dark"] .m-logo-light { display: none; }
+[data-theme="dark"] .m-logo-dark  { display: block; }
+
+[data-theme="dark"] .m-top {
+  border-color: var(--border-default);
+}
+[data-theme="dark"] .m-tabs {
+  background: rgba(20, 18, 45, 0.95);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(180%);
+  border-color: var(--border-default);
+}
+[data-theme="dark"] .m-iconbtn { background: rgba(206, 153, 87, 0.12); }
+[data-theme="dark"] .m-iconbtn:active { background: rgba(206, 153, 87, 0.22); }
+[data-theme="dark"] .m-top .m-iconbtn svg,
+[data-theme="dark"] .pm-top .pm-iconbtn svg,
+[data-theme="dark"] .cm-top .cm-iconbtn svg,
+[data-theme="dark"] .lm-top .lm-iconbtn svg { color: #ffffff !important; fill: #ffffff !important; }
+
+/* Drawer */
+[data-theme="dark"] .m-drawer { background: var(--surface-card); box-shadow: 6px 0 40px rgba(0,0,0,.5); }
+
+/* ============================================================
+   Newsfeed mobile — hardcoded text + card colors
+   ============================================================ */
+[data-theme="dark"] .sm-row-label   { color: var(--text-primary); }
+[data-theme="dark"] .sm-event-name  { color: var(--text-primary); }
+[data-theme="dark"] .sm-course-name { color: var(--text-primary); }
+
+/* Tier card — warm cream → dark */
+[data-theme="dark"] .sm-tier {
+  background: #1e1c38;
+  border-color: var(--border-default);
+}
+
+/* Verify row in drawer — warm cream → dark */
+[data-theme="dark"] .sm-verify {
+  background: #1e1a35;
+  border-left-color: var(--premium-orange);
+}
+
+/* Community-channel lavender card → dark */
+[data-theme="dark"] .m-scroll .post-wrap.has-chx {
+  background: #1e1c38 !important;
+}
+
+/* Select-channel modal selected item */
+[data-theme="dark"] .sc-item.on {
+  background: rgba(206, 153, 87, 0.14);
+}
+
+/* Sidebar tier pill + new-posts text (color was previously inline style) */
+[data-theme="dark"] .sm-tier-pill { color: var(--brand-gold); }
+[data-theme="dark"] .sm-tier-new  { color: var(--brand-gold); }
+[data-theme="dark"] .sm-event-tag { color: var(--brand-gold); border-color: var(--brand-gold); }
+[data-theme="dark"] .sm-verify-pill { background: var(--premium-orange); }
+
+/* ============================================================
+   Account Settings — brand-navy text overrides
+   ============================================================ */
+[data-theme="dark"] .as-top h1      { color: var(--text-heading); }
+[data-theme="dark"] .as-logout      { border-color: var(--border-strong); color: var(--text-secondary); }
+[data-theme="dark"] .as-footer-link { color: var(--text-secondary); }
+[data-theme="dark"] .as-verify      { background: #1e1736; }
+
+/* ============================================================
+   Display Settings page
+   ============================================================ */
+[data-theme="dark"] .ds-top h1    { color: var(--text-heading); }
+[data-theme="dark"] .ds-fontlabel { color: var(--text-heading); }
+[data-theme="dark"] .ds-toggle-label { color: var(--text-heading); }
+[data-theme="dark"] .ds-card      { background: var(--surface-sunken); border-color: var(--border-default); }
+[data-theme="dark"] .ds-card-list { background: var(--surface-sunken); }
+
+/* ============================================================
+   Profile Mobile — brand-navy text/heading overrides
+   ============================================================ */
+[data-theme="dark"] .pm-ig-btn     { color: var(--text-heading); border-color: var(--border-strong); background: var(--surface-sunken); }
+[data-theme="dark"] .pm-ig-btn.navy { background: var(--brand-navy); color: #fff; border-color: transparent; }
+[data-theme="dark"] .pm-sec-h h2   { color: var(--text-heading); }
+[data-theme="dark"] .pm-tab.on     { color: var(--brand-navy); }
+[data-theme="dark"] .pm-tool       { background: rgba(206,153,87,.1); }
+[data-theme="dark"] .pm-tool:active { background: rgba(206,153,87,.2); }
+[data-theme="dark"] .pm-sheet-opt.sel { background: rgba(206,153,87,.1); }
+[data-theme="dark"] .pm-showall    { color: var(--brand-navy); }
+
+/* ============================================================
+   Learning — badge overlays on thumbnails stay readable
+   ============================================================ */
+[data-theme="dark"] .lm-mc-dur { background: rgba(20,18,45,.88); color: var(--text-heading); }
+[data-theme="dark"] .lm-rc-cat { background: rgba(20,18,45,.88); color: var(--text-heading); }
