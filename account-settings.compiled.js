@@ -32,7 +32,25 @@ function useIsMobileAS() {
   }, []);
   return mobile;
 }
-const AS_PROFILE_ITEMS = [{
+function useDarkModeAS() {
+  const [dark, setDark] = useStateAS(() => {
+    try {
+      return localStorage.getItem('pf-theme') === 'dark';
+    } catch (e) {
+      return false;
+    }
+  });
+  function toggle() {
+    const next = !dark;
+    setDark(next);
+    try {
+      localStorage.setItem('pf-theme', next ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    } catch (e) {}
+  }
+  return [dark, toggle];
+}
+const AS_PROFILE_ITEMS_BEFORE = [{
   label: "Edit Profile",
   icon: "lucide:book-open",
   href: "ProfileMobile.html"
@@ -41,10 +59,6 @@ const AS_PROFILE_ITEMS = [{
   icon: "lucide:graduation-cap",
   href: null
 }, {
-  label: "Display Settings",
-  icon: "lucide:cpu",
-  href: "DisplaySettings.html"
-}, {
   label: "My Saved",
   icon: "lucide:bookmark",
   href: "MySaved.html"
@@ -52,7 +66,8 @@ const AS_PROFILE_ITEMS = [{
   label: "Notifications",
   icon: "lucide:calendar",
   href: null
-}, {
+}];
+const AS_PROFILE_ITEMS_AFTER = [{
   label: "Privacy & Security",
   icon: "lucide:shield",
   href: null
@@ -77,38 +92,43 @@ function ASRow({
     color: "var(--gray-450)"
   }));
 }
-function ASDisplayToggle() {
-  const [on, setOn] = useStateAS(false);
+function DarkSwitch({
+  on,
+  onToggle
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    className: "as-switch" + (on ? " on" : ""),
+    onClick: onToggle,
+    role: "switch",
+    "aria-checked": on,
+    "aria-label": on ? "Switch to light mode" : "Switch to dark mode"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "as-knob"
+  }, on && /*#__PURE__*/React.createElement(DSAS.IconifyIcon, {
+    name: "lucide:moon",
+    size: 13,
+    color: "#1A1736"
+  })));
+}
+function DisplayCard({
+  dark,
+  onToggle
+}) {
   return /*#__PURE__*/React.createElement("div", {
     className: "as-display-card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "as-display-top"
   }, /*#__PURE__*/React.createElement("span", {
     className: "as-display-label"
-  }, "Display"), /*#__PURE__*/React.createElement("button", {
-    className: "as-switch" + (on ? " on" : ""),
-    role: "switch",
-    "aria-checked": on,
-    onClick: () => setOn(v => !v)
-  }, /*#__PURE__*/React.createElement(DSAS.IconifyIcon, {
-    name: on ? "lucide:moon" : "lucide:sun",
-    size: 14,
-    color: on ? "#fff" : "var(--premium-orange)",
-    style: {
-      position: "absolute",
-      left: on ? "auto" : "5px",
-      right: on ? "5px" : "auto",
-      top: "50%",
-      transform: "translateY(-50%)",
-      zIndex: 1
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "as-knob"
-  }))), /*#__PURE__*/React.createElement("p", {
+  }, "Display"), /*#__PURE__*/React.createElement(DarkSwitch, {
+    on: dark,
+    onToggle: onToggle
+  })), /*#__PURE__*/React.createElement("p", {
     className: "as-display-desc"
   }, "Adjust the appearance of the app to reduce glare and give your eyes a break"));
 }
 function AccountSettings() {
+  const [dark, toggleDark] = useDarkModeAS();
   return /*#__PURE__*/React.createElement("div", {
     className: "as-screen",
     "data-screen-label": "Account Settings (mobile)"
@@ -139,40 +159,28 @@ function AccountSettings() {
     className: "as-verify-pill"
   }, "Not Verified")), /*#__PURE__*/React.createElement("nav", {
     className: "as-list"
-  }, AS_PROFILE_ITEMS.map(item => /*#__PURE__*/React.createElement(ASRow, {
+  }, AS_PROFILE_ITEMS_BEFORE.map(item => /*#__PURE__*/React.createElement(ASRow, {
     key: item.label,
     icon: item.icon,
     label: item.label,
     href: item.href
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "as-sec-h"
-  }, "Account Settings"), /*#__PURE__*/React.createElement("nav", {
+  }))), /*#__PURE__*/React.createElement(DisplayCard, {
+    dark: dark,
+    onToggle: toggleDark
+  }), /*#__PURE__*/React.createElement("nav", {
     className: "as-list"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "as-row",
-    onClick: () => {}
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "as-row-label"
-  }, "Change Password"), /*#__PURE__*/React.createElement(DSAS.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 20,
-    color: "var(--gray-450)"
-  })), /*#__PURE__*/React.createElement("button", {
-    className: "as-row",
-    onClick: () => {}
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "as-row-label"
-  }, "Delete Account"), /*#__PURE__*/React.createElement(DSAS.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 20,
-    color: "var(--gray-450)"
-  }))), /*#__PURE__*/React.createElement(ASDisplayToggle, null), /*#__PURE__*/React.createElement("button", {
+  }, AS_PROFILE_ITEMS_AFTER.map(item => /*#__PURE__*/React.createElement(ASRow, {
+    key: item.label,
+    icon: item.icon,
+    label: item.label,
+    href: item.href
+  }))), /*#__PURE__*/React.createElement("button", {
     className: "as-logout",
     onClick: () => goAS("NewsfeedMobile.html")
   }, "Logout", /*#__PURE__*/React.createElement(DSAS.IconifyIcon, {
     name: "lucide:log-out",
     size: 20,
-    color: "var(--brand-navy)"
+    color: "var(--text-heading)"
   })), /*#__PURE__*/React.createElement("div", {
     className: "as-footer"
   }, /*#__PURE__*/React.createElement("a", {

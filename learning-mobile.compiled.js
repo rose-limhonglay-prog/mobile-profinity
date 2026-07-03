@@ -7,6 +7,8 @@ const {
   useEffect: useEffectL
 } = React;
 const DSL = window.ProfinityDesignSystem_c2b5cc;
+const MobileChromeC = window.MobileChromeC;
+const SurveyMobile = window.SurveyMobile;
 function goL(url) {
   (window.pfGo || function (u) {
     window.location.href = u;
@@ -44,6 +46,42 @@ const LM_REC = [{
   price: "£ 99",
   enrolled: "8.1k enrolled",
   grad: "linear-gradient(140deg,#a855f7 0%,#d946ef 100%)"
+}];
+const LM_FREE = [{
+  title: "13 Risky Injection Areas",
+  dur: "1h 20m",
+  instr: "Dr. Tim Pearce",
+  grad: "linear-gradient(140deg,#0fb6a3 0%,#28d3a0 100%)"
+}, {
+  title: "Bruising Checklist",
+  dur: "45m",
+  instr: "Dr. Tim Pearce",
+  grad: "linear-gradient(140deg,#f59e0b 0%,#f0617a 100%)"
+}];
+const LM_MEMBERSHIP = [{
+  icon: "lucide:graduation-cap",
+  iconBg: "#E8F5E9",
+  iconColor: "#2E7D32",
+  label: "Foundation Courses",
+  sub: "8 courses"
+}, {
+  icon: "lucide:play-circle",
+  iconBg: "#EDE7F6",
+  iconColor: "#7B1FA2",
+  label: "Live Masterclasses",
+  sub: "5 replays"
+}, {
+  icon: "lucide:file-text",
+  iconBg: "#FFF3E0",
+  iconColor: "#CE9957",
+  label: "Protocols & Guides",
+  sub: "12 files"
+}, {
+  icon: "lucide:users",
+  iconBg: "#E3F2FD",
+  iconColor: "#1565C0",
+  label: "Confidence Channel",
+  sub: "Community"
 }];
 const LM_TABS = [{
   key: "Home",
@@ -92,54 +130,6 @@ function useIsMobileL() {
   }, []);
   return mobile;
 }
-function LMHeader() {
-  return /*#__PURE__*/React.createElement("header", {
-    className: "lm-top"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "lm-burger",
-    "aria-label": "Menu"
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:menu",
-    size: 24,
-    color: "var(--gray-700)"
-  })), /*#__PURE__*/React.createElement("img", {
-    className: "m-logo-light",
-    src: "assets/profinity-academy-logo-full.png",
-    alt: "PROfinity Academy"
-  }), /*#__PURE__*/React.createElement("img", {
-    className: "m-logo-dark",
-    src: "assets/profinity-academy-logo-dark.jpg",
-    alt: "PROfinity Academy"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "grow"
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "lm-iconbtn",
-    "aria-label": "Search",
-    onClick: () => goL("SearchMobile.html")
-  }, /*#__PURE__*/React.createElement(DSL.Icon, {
-    name: "search",
-    size: 20,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("button", {
-    className: "lm-iconbtn",
-    "aria-label": "Notifications"
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:bell",
-    size: 20,
-    color: "var(--brand-navy)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "dot"
-  }, "12")), /*#__PURE__*/React.createElement("button", {
-    className: "lm-iconbtn",
-    "aria-label": "Messages"
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:message-circle",
-    size: 20,
-    color: "var(--brand-navy)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "dot"
-  }, "12")));
-}
 function LMSearch() {
   return /*#__PURE__*/React.createElement("div", {
     className: "lm-search"
@@ -149,7 +139,7 @@ function LMSearch() {
     color: "var(--gray-450)"
   }), /*#__PURE__*/React.createElement("input", {
     type: "text",
-    placeholder: "Search courses, topics, instructors\u2026",
+    placeholder: "Search courses, topics, instructors…",
     "aria-label": "Search courses"
   }), /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
     name: "lucide:sliders-horizontal",
@@ -208,7 +198,63 @@ function LMCats() {
     onClick: () => setActive(c)
   }, c))));
 }
-function MyCourses({loading}) {
+function YourMembership() {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "lm-mem-section"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-sec-h"
+  }, /*#__PURE__*/React.createElement("h2", null, "Your Membership"), /*#__PURE__*/React.createElement("a", {
+    href: "#",
+    onClick: e => e.preventDefault(),
+    style: {
+      color: "var(--ai-purple)"
+    }
+  }, "Manage")), /*#__PURE__*/React.createElement("div", {
+    className: "lm-mem-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-mem-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-mem-tier"
+  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "fluent:crown-16-filled",
+    size: 15,
+    color: "#fff"
+  }), "Confidence Path"), /*#__PURE__*/React.createElement("span", {
+    className: "lm-mem-active"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-mem-dot"
+  }), "Active")), /*#__PURE__*/React.createElement("p", {
+    className: "lm-mem-desc"
+  }, "Jump straight into everything included in your plan."), /*#__PURE__*/React.createElement("div", {
+    className: "lm-mem-rows"
+  }, LM_MEMBERSHIP.map((item, i) => /*#__PURE__*/React.createElement("button", {
+    key: i,
+    className: "lm-mem-row",
+    onClick: () => goL("MyLearning.html")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-mem-icon",
+    style: {
+      background: item.iconBg
+    }
+  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: item.icon,
+    size: 22,
+    color: item.iconColor
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lm-mem-info"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-mem-label"
+  }, item.label), /*#__PURE__*/React.createElement("span", {
+    className: "lm-mem-sub"
+  }, item.sub)), /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "var(--gray-400)"
+  }))))));
+}
+function MyCourses({
+  loading
+}) {
   return /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("div", {
     className: "lm-sec-h"
   }, /*#__PURE__*/React.createElement("h2", null, "My Courses"), /*#__PURE__*/React.createElement("a", {
@@ -222,7 +268,11 @@ function MyCourses({loading}) {
     }
   }, "View all")), /*#__PURE__*/React.createElement("div", {
     className: "lm-rail"
-  }, loading ? Array.from({length: 2}).map((_, i) => /*#__PURE__*/React.createElement(LMSkeletonCourse, {key: i})) : LM_MINE.map((c, i) => /*#__PURE__*/React.createElement("article", {
+  }, loading ? Array.from({
+    length: 2
+  }).map((_, i) => /*#__PURE__*/React.createElement(LMSkeletonCourse, {
+    key: i
+  })) : LM_MINE.map((c, i) => /*#__PURE__*/React.createElement("article", {
     className: "lm-mc",
     key: i
   }, /*#__PURE__*/React.createElement("div", {
@@ -256,7 +306,9 @@ function MyCourses({loading}) {
     className: "pct"
   }, c.pct, "% complete"))))));
 }
-function Recommended({loading}) {
+function Recommended({
+  loading
+}) {
   return /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("div", {
     className: "lm-sec-h"
   }, /*#__PURE__*/React.createElement("h2", null, "Recommended For You"), /*#__PURE__*/React.createElement("a", {
@@ -274,7 +326,11 @@ function Recommended({loading}) {
       padding: "0px 24px",
       justifyContent: "flex-start"
     }
-  }, loading ? Array.from({length: 2}).map((_, i) => /*#__PURE__*/React.createElement(LMSkeletonRec, {key: i})) : LM_REC.map((c, i) => /*#__PURE__*/React.createElement("article", {
+  }, loading ? Array.from({
+    length: 2
+  }).map((_, i) => /*#__PURE__*/React.createElement(LMSkeletonRec, {
+    key: i
+  })) : LM_REC.map((c, i) => /*#__PURE__*/React.createElement("article", {
     className: "lm-rc",
     key: i
   }, /*#__PURE__*/React.createElement("div", {
@@ -313,40 +369,47 @@ function Recommended({loading}) {
     color: "#fff"
   })))))));
 }
-function LMSkeletonCourse() {
-  return /*#__PURE__*/React.createElement("article", {className: "lm-mc"},
-    /*#__PURE__*/React.createElement("div", {className: "lm-skel", style: {height: 132}}),
-    /*#__PURE__*/React.createElement("div", {className: "lm-mc-body", style: {display: "flex", flexDirection: "column", gap: 10}},
-      /*#__PURE__*/React.createElement("div", {className: "lm-skel", style: {height: 20, width: "85%", borderRadius: "var(--r-sm)"}}),
-      /*#__PURE__*/React.createElement("div", {className: "lm-skel", style: {height: 14, width: "50%", borderRadius: "var(--r-sm)"}}),
-      /*#__PURE__*/React.createElement("div", {className: "lm-skel", style: {height: 13, width: "60%", borderRadius: "var(--r-sm)"}}),
-      /*#__PURE__*/React.createElement("div", {className: "lm-skel", style: {height: 8, width: "100%", borderRadius: "var(--r-pill)", marginTop: 6}}),
-      /*#__PURE__*/React.createElement("div", {className: "lm-skel", style: {height: 13, width: "40%", borderRadius: "var(--r-sm)"}})
-    )
-  );
-}
-function LMSkeletonRec() {
-  return /*#__PURE__*/React.createElement("article", {className: "lm-rc"},
-    /*#__PURE__*/React.createElement("div", {className: "lm-skel", style: {height: 188}}),
-    /*#__PURE__*/React.createElement("div", {className: "lm-rc-body", style: {display: "flex", flexDirection: "column", gap: 10}},
-      /*#__PURE__*/React.createElement("div", {className: "lm-skel", style: {height: 20, width: "85%", borderRadius: "var(--r-sm)"}}),
-      /*#__PURE__*/React.createElement("div", {style: {display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 4}},
-        /*#__PURE__*/React.createElement("div", {className: "lm-skel", style: {height: 16, width: 60, borderRadius: "var(--r-sm)"}}),
-        /*#__PURE__*/React.createElement("div", {className: "lm-skel", style: {height: 16, width: 60, borderRadius: "var(--r-sm)"}})
-      ),
-      /*#__PURE__*/React.createElement("div", {className: "lm-skel", style: {height: 14, width: "60%", borderRadius: "var(--r-sm)"}}),
-      /*#__PURE__*/React.createElement("div", {className: "lm-skel", style: {height: 42, width: 110, borderRadius: "var(--r-md)", marginTop: 4}})
-    )
-  );
-}
-function FreeCourses() {
+function FreeCourses({
+  onQuiz,
+  unlocked
+}) {
   return /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("div", {
     className: "lm-sec-h"
   }, /*#__PURE__*/React.createElement("h2", null, "Free Courses"), /*#__PURE__*/React.createElement("a", {
     className: "muted",
     href: "#",
     onClick: e => e.preventDefault()
-  }, "See all")), /*#__PURE__*/React.createElement("div", {
+  }, "See all")), unlocked ? /*#__PURE__*/React.createElement("div", {
+    className: "lm-rail"
+  }, LM_FREE.map((c, i) => /*#__PURE__*/React.createElement("article", {
+    className: "lm-mc",
+    key: i
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-mc-img",
+    style: {
+      background: c.grad
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-mc-dur"
+  }, c.dur), /*#__PURE__*/React.createElement("span", {
+    className: "lm-free-badge"
+  }, "Free")), /*#__PURE__*/React.createElement("div", {
+    className: "lm-mc-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-mc-ttl"
+  }, c.title), /*#__PURE__*/React.createElement("div", {
+    className: "ins"
+  }, c.instr), /*#__PURE__*/React.createElement("button", {
+    className: "lm-enroll",
+    style: {
+      marginTop: 14
+    },
+    onClick: () => goL("MyLearning.html")
+  }, "Start", /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "lucide:arrow-right",
+    size: 17,
+    color: "#fff"
+  })))))) : /*#__PURE__*/React.createElement("div", {
     className: "lm-free"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm-free-ghosts"
@@ -384,7 +447,7 @@ function FreeCourses() {
     }
   }, "Take a quick onboarding quiz to get free access to all courses")), /*#__PURE__*/React.createElement("button", {
     className: "lm-quiz",
-    onClick: () => goL("ProfileMobile.html"),
+    onClick: onQuiz,
     "aria-label": "Start Questionnaire",
     style: {
       width: "24px",
@@ -395,6 +458,119 @@ function FreeCourses() {
     size: 20,
     color: "#fff"
   })))));
+}
+function LMSkeletonCourse() {
+  return /*#__PURE__*/React.createElement("article", {
+    className: "lm-mc"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-skel",
+    style: {
+      height: 132
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm-mc-body",
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-skel",
+    style: {
+      height: 20,
+      width: "85%",
+      borderRadius: "var(--r-sm)"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm-skel",
+    style: {
+      height: 14,
+      width: "50%",
+      borderRadius: "var(--r-sm)"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm-skel",
+    style: {
+      height: 13,
+      width: "60%",
+      borderRadius: "var(--r-sm)"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm-skel",
+    style: {
+      height: 8,
+      width: "100%",
+      borderRadius: "var(--r-pill)",
+      marginTop: 6
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm-skel",
+    style: {
+      height: 13,
+      width: "40%",
+      borderRadius: "var(--r-sm)"
+    }
+  })));
+}
+function LMSkeletonRec() {
+  return /*#__PURE__*/React.createElement("article", {
+    className: "lm-rc"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-skel",
+    style: {
+      height: 188
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm-rc-body",
+    style: {
+      display: "flex",
+      flexDirection: "column",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-skel",
+    style: {
+      height: 20,
+      width: "85%",
+      borderRadius: "var(--r-sm)"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      marginTop: 4
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-skel",
+    style: {
+      height: 16,
+      width: 60,
+      borderRadius: "var(--r-sm)"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm-skel",
+    style: {
+      height: 16,
+      width: 60,
+      borderRadius: "var(--r-sm)"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "lm-skel",
+    style: {
+      height: 14,
+      width: "60%",
+      borderRadius: "var(--r-sm)"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm-skel",
+    style: {
+      height: 42,
+      width: 110,
+      borderRadius: "var(--r-md)",
+      marginTop: 4
+    }
+  })));
 }
 function LMTabBar() {
   return /*#__PURE__*/React.createElement("nav", {
@@ -417,20 +593,37 @@ function LMTabBar() {
 }
 function LearningHome() {
   const [loading, setLoading] = useStateL(true);
+  const [surveyOpen, setSurveyOpen] = useStateL(false);
+  const [coursesUnlocked, setCoursesUnlocked] = useStateL(false);
   useEffectL(() => {
     const t = setTimeout(() => setLoading(false), 1800);
     return () => clearTimeout(t);
   }, []);
+  function handleSurveyComplete() {
+    setCoursesUnlocked(true);
+    setSurveyOpen(false);
+  }
   return /*#__PURE__*/React.createElement("div", {
     className: "lm-screen",
     "data-screen-label": "My Learning (mobile)"
-  }, /*#__PURE__*/React.createElement(LMHeader, null), /*#__PURE__*/React.createElement(LMSearch, null), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement(LMSearch, null), /*#__PURE__*/React.createElement("div", {
     className: "lm-scroll"
-  }, /*#__PURE__*/React.createElement(LMCurrent, null), /*#__PURE__*/React.createElement(LMCats, null), /*#__PURE__*/React.createElement(MyCourses, {loading: loading}), /*#__PURE__*/React.createElement(Recommended, {loading: loading}), /*#__PURE__*/React.createElement(FreeCourses, null), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(LMCurrent, null), /*#__PURE__*/React.createElement(LMCats, null), /*#__PURE__*/React.createElement(YourMembership, null), /*#__PURE__*/React.createElement(MyCourses, {
+    loading: loading
+  }), /*#__PURE__*/React.createElement(Recommended, {
+    loading: loading
+  }), /*#__PURE__*/React.createElement(FreeCourses, {
+    onQuiz: () => setSurveyOpen(true),
+    unlocked: coursesUnlocked
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 20
     }
-  })), /*#__PURE__*/React.createElement(LMTabBar, null));
+  })), /*#__PURE__*/React.createElement(LMTabBar, null), /*#__PURE__*/React.createElement(SurveyMobile, {
+    open: surveyOpen,
+    onClose: () => setSurveyOpen(false),
+    onComplete: handleSurveyComplete
+  }));
 }
 function LearningMobileApp() {
   const mobile = useIsMobileL();

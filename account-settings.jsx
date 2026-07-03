@@ -29,12 +29,29 @@ function useIsMobileAS() {
   return mobile;
 }
 
-const AS_PROFILE_ITEMS = [
+function useDarkModeAS() {
+  const [dark, setDark] = useStateAS(() => {
+    try { return localStorage.getItem('pf-theme') === 'dark'; } catch(e) { return false; }
+  });
+  function toggle() {
+    const next = !dark;
+    setDark(next);
+    try {
+      localStorage.setItem('pf-theme', next ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    } catch(e) {}
+  }
+  return [dark, toggle];
+}
+
+const AS_PROFILE_ITEMS_BEFORE = [
   { label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
   { label: "Account Settings",   icon: "lucide:graduation-cap",  href: null },
-  { label: "Display Settings",   icon: "lucide:cpu",             href: "DisplaySettings.html" },
   { label: "My Saved",           icon: "lucide:bookmark",        href: "MySaved.html" },
   { label: "Notifications",      icon: "lucide:calendar",        href: null },
+];
+
+const AS_PROFILE_ITEMS_AFTER = [
   { label: "Privacy & Security", icon: "lucide:shield",          href: null },
 ];
 
@@ -48,33 +65,38 @@ function ASRow({ icon, label, href }) {
   );
 }
 
-function ASDisplayToggle() {
-  const [on, setOn] = useStateAS(false);
+function DarkSwitch({ on, onToggle }) {
+  return (
+    <button
+      className={"as-switch" + (on ? " on" : "")}
+      onClick={onToggle}
+      role="switch"
+      aria-checked={on}
+      aria-label={on ? "Switch to light mode" : "Switch to dark mode"}
+    >
+      <span className="as-knob">
+        {on && <DSAS.IconifyIcon name="lucide:moon" size={13} color="#1A1736" />}
+      </span>
+    </button>
+  );
+}
+
+function DisplayCard({ dark, onToggle }) {
   return (
     <div className="as-display-card">
       <div className="as-display-top">
         <span className="as-display-label">Display</span>
-        <button
-          className={"as-switch" + (on ? " on" : "")}
-          role="switch"
-          aria-checked={on}
-          onClick={() => setOn(v => !v)}
-        >
-          <DSAS.IconifyIcon
-            name={on ? "lucide:moon" : "lucide:sun"}
-            size={14}
-            color={on ? "#fff" : "var(--premium-orange)"}
-            style={{ position: "absolute", left: on ? "auto" : "5px", right: on ? "5px" : "auto", top: "50%", transform: "translateY(-50%)", zIndex: 1 }}
-          />
-          <span className="as-knob" />
-        </button>
+        <DarkSwitch on={dark} onToggle={onToggle} />
       </div>
-      <p className="as-display-desc">Adjust the appearance of the app to reduce glare and give your eyes a break</p>
+      <p className="as-display-desc">
+        Adjust the appearance of the app to reduce glare and give your eyes a break
+      </p>
     </div>
   );
 }
 
 function AccountSettings() {
+  const [dark, toggleDark] = useDarkModeAS();
   return (
     <div className="as-screen" data-screen-label="Account Settings (mobile)">
       <header className="as-top">
@@ -94,29 +116,22 @@ function AccountSettings() {
         </button>
 
         <nav className="as-list">
-          {AS_PROFILE_ITEMS.map(item =>
+          {AS_PROFILE_ITEMS_BEFORE.map(item =>
             <ASRow key={item.label} icon={item.icon} label={item.label} href={item.href} />
           )}
         </nav>
 
-        <div className="as-sec-h">Account Settings</div>
+        <DisplayCard dark={dark} onToggle={toggleDark} />
 
         <nav className="as-list">
-          <button className="as-row" onClick={() => {}}>
-            <span className="as-row-label">Change Password</span>
-            <DSAS.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
-          </button>
-          <button className="as-row" onClick={() => {}}>
-            <span className="as-row-label">Delete Account</span>
-            <DSAS.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
-          </button>
+          {AS_PROFILE_ITEMS_AFTER.map(item =>
+            <ASRow key={item.label} icon={item.icon} label={item.label} href={item.href} />
+          )}
         </nav>
-
-        <ASDisplayToggle />
 
         <button className="as-logout" onClick={() => goAS("NewsfeedMobile.html")}>
           Logout
-          <DSAS.IconifyIcon name="lucide:log-out" size={20} color="var(--brand-navy)" />
+          <DSAS.IconifyIcon name="lucide:log-out" size={20} color="var(--text-heading)" />
         </button>
 
         <div className="as-footer">

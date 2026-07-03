@@ -4,6 +4,8 @@
    =========================================================================== */
 const { useState: useStateL, useEffect: useEffectL } = React;
 const DSL = window.ProfinityDesignSystem_c2b5cc;
+const MobileChromeC = window.MobileChromeC;
+const SurveyMobile = window.SurveyMobile;
 
 function goL(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
 
@@ -18,6 +20,16 @@ const LM_REC = [
 { title: "Facial Anatomy for Artists", cat: "Design", rating: "4.9", price: "£ 129", enrolled: "12.4k enrolled", grad: "linear-gradient(140deg,#0fb6a3 0%,#28d3a0 100%)" },
 { title: "Marketing Strategy Foundations", cat: "Business", rating: "4.8", price: "£ 99", enrolled: "8.1k enrolled", grad: "linear-gradient(140deg,#a855f7 0%,#d946ef 100%)" }];
 
+
+const LM_FREE = [
+{ title: "13 Risky Injection Areas", dur: "1h 20m", instr: "Dr. Tim Pearce", grad: "linear-gradient(140deg,#0fb6a3 0%,#28d3a0 100%)" },
+{ title: "Bruising Checklist", dur: "45m", instr: "Dr. Tim Pearce", grad: "linear-gradient(140deg,#f59e0b 0%,#f0617a 100%)" }];
+
+const LM_MEMBERSHIP = [
+{ icon: "lucide:graduation-cap", iconBg: "#E8F5E9", iconColor: "#2E7D32", label: "Foundation Courses", sub: "8 courses" },
+{ icon: "lucide:play-circle",    iconBg: "#EDE7F6", iconColor: "#7B1FA2", label: "Live Masterclasses",  sub: "5 replays" },
+{ icon: "lucide:file-text",      iconBg: "#FFF3E0", iconColor: "#CE9957", label: "Protocols & Guides",  sub: "12 files" },
+{ icon: "lucide:users",          iconBg: "#E3F2FD", iconColor: "#1565C0", label: "Confidence Channel",  sub: "Community" }];
 
 const LM_TABS = [
 { key: "Home", label: "Home", icon: "lucide:home", href: "NewsfeedMobile.html" },
@@ -47,24 +59,6 @@ function useIsMobileL() {
     return () => mq.removeEventListener('change', h);
   }, []);
   return mobile;
-}
-
-function LMHeader() {
-  return (
-    <header className="lm-top">
-      <button className="lm-burger" aria-label="Menu"><DSL.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
-      <img className="m-logo-light" src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
-      <img className="m-logo-dark" src="assets/profinity-academy-logo-dark.jpg" alt="PROfinity Academy" />
-      <span className="grow" />
-      <button className="lm-iconbtn" aria-label="Search" onClick={() => goL("SearchMobile.html")}><DSL.Icon name="search" size={20} color="var(--brand-navy)" /></button>
-      <button className="lm-iconbtn" aria-label="Notifications">
-        <DSL.IconifyIcon name="lucide:bell" size={20} color="var(--brand-navy)" /><span className="dot">12</span>
-      </button>
-      <button className="lm-iconbtn" aria-label="Messages">
-        <DSL.IconifyIcon name="lucide:message-circle" size={20} color="var(--brand-navy)" /><span className="dot">12</span>
-      </button>
-    </header>);
-
 }
 
 function LMSearch() {
@@ -106,6 +100,43 @@ function LMCats() {
       </div>
     </div>);
 
+}
+
+function YourMembership() {
+  return (
+    <section className="lm-mem-section">
+      <div className="lm-sec-h">
+        <h2>Your Membership</h2>
+        <a href="#" onClick={(e) => e.preventDefault()} style={{ color: "var(--ai-purple)" }}>Manage</a>
+      </div>
+      <div className="lm-mem-card">
+        <div className="lm-mem-top">
+          <span className="lm-mem-tier">
+            <DSL.IconifyIcon name="fluent:crown-16-filled" size={15} color="#fff" />
+            Confidence Path
+          </span>
+          <span className="lm-mem-active">
+            <span className="lm-mem-dot" />
+            Active
+          </span>
+        </div>
+        <p className="lm-mem-desc">Jump straight into everything included in your plan.</p>
+        <div className="lm-mem-rows">
+          {LM_MEMBERSHIP.map((item, i) =>
+            <button key={i} className="lm-mem-row" onClick={() => goL("MyLearning.html")}>
+              <span className="lm-mem-icon" style={{ background: item.iconBg }}>
+                <DSL.IconifyIcon name={item.icon} size={22} color={item.iconColor} />
+              </span>
+              <span className="lm-mem-info">
+                <span className="lm-mem-label">{item.label}</span>
+                <span className="lm-mem-sub">{item.sub}</span>
+              </span>
+              <DSL.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
+            </button>
+          )}
+        </div>
+      </div>
+    </section>);
 }
 
 function MyCourses({ loading }) {
@@ -156,24 +187,44 @@ function Recommended({ loading }) {
     </section>);
 }
 
-function FreeCourses() {
+function FreeCourses({ onQuiz, unlocked }) {
   return (
     <section>
       <div className="lm-sec-h"><h2>Free Courses</h2><a className="muted" href="#" onClick={(e) => e.preventDefault()}>See all</a></div>
-      <div className="lm-free">
-        <div className="lm-free-ghosts">
-          <div className="lm-ghost a"><span className="free">Free</span></div>
-          <div className="lm-ghost b"><span className="free">Free</span></div>
+      {unlocked ? (
+        <div className="lm-rail">
+          {LM_FREE.map((c, i) =>
+            <article className="lm-mc" key={i}>
+              <div className="lm-mc-img" style={{ background: c.grad }}>
+                <span className="lm-mc-dur">{c.dur}</span>
+                <span className="lm-free-badge">Free</span>
+              </div>
+              <div className="lm-mc-body">
+                <div className="lm-mc-ttl">{c.title}</div>
+                <div className="ins">{c.instr}</div>
+                <button className="lm-enroll" style={{ marginTop: 14 }} onClick={() => goL("MyLearning.html")}>
+                  Start<DSL.IconifyIcon name="lucide:arrow-right" size={17} color="#fff" />
+                </button>
+              </div>
+            </article>
+          )}
         </div>
-        <div className="lm-unlock" style={{ padding: "12px" }}>
-          <span className="lock"><DSL.IconifyIcon name="lucide:lock" size={22} color="var(--brand-navy)" /></span>
-          <div className="uc">
-            <div className="ut" style={{ fontSize: "14px", fontWeight: "600" }}>Complete your profile to unlock</div>
-            <div className="us" style={{ fontSize: "12px" }}>Take a quick onboarding quiz to get free access to all courses</div>
+      ) : (
+        <div className="lm-free">
+          <div className="lm-free-ghosts">
+            <div className="lm-ghost a"><span className="free">Free</span></div>
+            <div className="lm-ghost b"><span className="free">Free</span></div>
           </div>
-          <button className="lm-quiz" onClick={() => goL("ProfileMobile.html")} aria-label="Start Questionnaire" style={{ width: "24px", height: "24px" }}><DSL.IconifyIcon name="lucide:arrow-right" size={20} color="#fff" /></button>
+          <div className="lm-unlock" style={{ padding: "12px" }}>
+            <span className="lock"><DSL.IconifyIcon name="lucide:lock" size={22} color="var(--brand-navy)" /></span>
+            <div className="uc">
+              <div className="ut" style={{ fontSize: "14px", fontWeight: "600" }}>Complete your profile to unlock</div>
+              <div className="us" style={{ fontSize: "12px" }}>Take a quick onboarding quiz to get free access to all courses</div>
+            </div>
+            <button className="lm-quiz" onClick={onQuiz} aria-label="Start Questionnaire" style={{ width: "24px", height: "24px" }}><DSL.IconifyIcon name="lucide:arrow-right" size={20} color="#fff" /></button>
+          </div>
         </div>
-      </div>
+      )}
     </section>);
 
 }
@@ -227,21 +278,30 @@ function LMTabBar() {
 
 function LearningHome() {
   const [loading, setLoading] = useStateL(true);
+  const [surveyOpen, setSurveyOpen] = useStateL(false);
+  const [coursesUnlocked, setCoursesUnlocked] = useStateL(false);
   useEffectL(() => { const t = setTimeout(() => setLoading(false), 1800); return () => clearTimeout(t); }, []);
+
+  function handleSurveyComplete() {
+    setCoursesUnlocked(true);
+    setSurveyOpen(false);
+  }
 
   return (
     <div className="lm-screen" data-screen-label="My Learning (mobile)">
-      <LMHeader />
+      <MobileChromeC />
       <LMSearch />
       <div className="lm-scroll">
         <LMCurrent />
         <LMCats />
+        <YourMembership />
         <MyCourses loading={loading} />
         <Recommended loading={loading} />
-        <FreeCourses />
+        <FreeCourses onQuiz={() => setSurveyOpen(true)} unlocked={coursesUnlocked} />
         <div style={{ height: 20 }} />
       </div>
       <LMTabBar />
+      <SurveyMobile open={surveyOpen} onClose={() => setSurveyOpen(false)} onComplete={handleSurveyComplete} />
     </div>);
 }
 

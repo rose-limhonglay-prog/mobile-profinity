@@ -829,7 +829,7 @@ function ClampText({ text, lines = 3, more = "See more" }) {
   return (
     <span className="pf-clampwrap">
       <span ref={ref} className={"pf-clamp" + (expanded ? " open" : "")}
-      style={{ ...(expanded ? null : { WebkitLineClamp: lines }), color: "rgb(0, 0, 0)" }}>
+      style={{ ...(expanded ? null : { WebkitLineClamp: lines }), color: "var(--text-primary)" }}>
         {text}
       </span>
       {(overflowing || expanded) &&
@@ -1514,9 +1514,9 @@ function App() {
       "--r-md": t.radius + "px",
       "--feed-w": t.feedWidth + "px"
     }}>
-      <TopNav active="Home" user={ME} logoSrc="assets/profinity-academy-logo-full.png"
+      {!window.PF_EMBED && <TopNav active="Home" user={ME} logoSrc="assets/profinity-academy-logo-full.png"
       onNavigate={(label) => {var u = { Profile: "Profile.html", "My Learning": "MyLearning.html", Community: "Community.html", Agent: "Agent.html" }[label];if (u) (window.pfGo || function (x) {window.location.href = x;})(u);}}
-      style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />
+      style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />}
       <div className="page">
         <LeftRail />
         <Feed />

@@ -150,6 +150,11 @@ function CMScreen({ scrollRef, newPosts, dismiss }) {
         <PFACM.Feed />
         <div className="cm-end">End of newsfeed</div>
       </div>
+      <button type="button" className="cm-clindir-fab" aria-label="Clinician Directory"
+        onClick={() => goCM("ClinicianDirectory.html")}>
+        <DSCM.IconifyIcon name="lucide:book-open" size={18} color="var(--white)" />
+        Clinician Directory
+      </button>
       <CMTabBar />
     </div>);
 }

@@ -1683,7 +1683,7 @@ function ClampText({
       ...(expanded ? null : {
         WebkitLineClamp: lines
       }),
-      color: "rgb(0, 0, 0)"
+      color: "var(--text-primary)"
     }
   }, text), (overflowing || expanded) && /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -2787,7 +2787,7 @@ function App() {
       "--r-md": t.radius + "px",
       "--feed-w": t.feedWidth + "px"
     }
-  }, /*#__PURE__*/React.createElement(TopNav, {
+  }, !window.PF_EMBED && /*#__PURE__*/React.createElement(TopNav, {
     active: "Home",
     user: ME,
     logoSrc: "assets/profinity-academy-logo-full.png",

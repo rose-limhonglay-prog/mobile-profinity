@@ -181,7 +181,7 @@ function CMComposer({
   }), /*#__PURE__*/React.createElement("button", {
     className: "pill",
     onClick: nav
-  }, "Share something\u2026"), /*#__PURE__*/React.createElement("button", {
+  }, "Share something…"), /*#__PURE__*/React.createElement("button", {
     className: "imgbtn",
     "aria-label": "Add photo",
     onClick: nav
@@ -236,7 +236,16 @@ function CMScreen({
     color: "var(--white)"
   }), newPosts, " New Posts"), /*#__PURE__*/React.createElement(PFACM.Feed, null), /*#__PURE__*/React.createElement("div", {
     className: "cm-end"
-  }, "End of newsfeed")), /*#__PURE__*/React.createElement(CMTabBar, null));
+  }, "End of newsfeed")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cm-clindir-fab",
+    "aria-label": "Clinician Directory",
+    onClick: () => goCM("ClinicianDirectory.html")
+  }, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
+    name: "lucide:book-open",
+    size: 18,
+    color: "var(--white)"
+  }), "Clinician Directory"), /*#__PURE__*/React.createElement(CMTabBar, null));
 }
 function CommunityMobileApp() {
   const mobile = useIsMobileCM();

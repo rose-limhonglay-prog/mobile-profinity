@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "dev": "npx http-server . -p 3000 -c-1 -o /NewsfeedMobile.html",
+    "dev:mobile": "npx http-server . -p 3000 -c-1 -o /NewsfeedMobile.html",
+    "dev:web": "npx http-server . -p 3001 -c-1 -o /web-index.html"
+  },
+  "dependencies": {
+    "@babel/preset-react": "^8.0.1"
+  }
+}

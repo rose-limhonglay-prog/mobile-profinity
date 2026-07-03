@@ -291,7 +291,7 @@ img{max-width:100%}
 /* comment body text → black (preview CommentItem + comments sheet + bubbles) */
 .cmt-preview > div > div:nth-child(2) > div:nth-child(2),
 .cmtsheet .tx,
-.bub-tx{ color:#000 !important; }
+.bub-tx{ color:var(--text-primary) !important; }
 
 /* kind label (e.g. "CASE STUDY:") rendered as a soft navy-on-lavender pill */
 .post-wrap > div > div:nth-child(2){
