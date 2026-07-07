@@ -1,0 +1,53 @@
+/* ===========================================================================
+   PROfinity — pagefx.css
+   Page-level visual polish for NewsfeedWeb.html.
+   Layout + component styles live in styles.css; this file adds the
+   tweaks-panel chrome and any web-only overrides.
+   =========================================================================== */
+
+/* ===== Tweaks panel ===== */
+.twk-panel {
+  font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/* range input track */
+.twk-panel input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.15);
+  outline: none;
+}
+.twk-panel input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ce9957;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  transition: transform 0.12s ease;
+}
+.twk-panel input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+.twk-panel input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: none;
+  border-radius: 50%;
+  background: #ce9957;
+  cursor: pointer;
+}
+
+/* color swatch hover */
+.twk-panel button[data-swatch]:hover {
+  transform: scale(1.25) !important;
+}
+
+/* ===== Scrollbar polish (WebKit) ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--gray-200, #e0e0e0); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gray-300, #c8c8c8); }

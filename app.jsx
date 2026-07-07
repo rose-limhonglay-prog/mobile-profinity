@@ -62,13 +62,17 @@ function officialize(list) {
   return list.map((p) => p.channel ? p : { ...p, author: PROFINITY, withOthers: null });
 }
 
-/* A member you follow posted in the Confidence channel — surfaced in Home. */
+/* Every item below carries a bucket + access:"gated" — the same routing
+   model as the architecture guide: a free viewer only ever sees the
+   editorial POSTS in full; everything here resolves against the current
+   preview persona + their bucket toggles (see resolveBucketFeed). */
 const CHANNEL_POST = {
   id: "ch1",
+  access: "gated", bucket: "confidence",
   author: { name: "Dr. Sarah Collins", avatar: "assets/avatar-katy.jpg", seals: ["gb", "verified"] },
   channel: { name: "#Confidence · Community", avatar: "assets/profinity-icon.jpg",
     by: "Dr. Sarah Collins", byAvatar: "assets/avatar-katy.jpg", time: "2d" },
-  time: "2 Days Ago", kind: "COMMUNITY:", kindIcon: "lucide:users",
+  time: "2 Days Ago", kind: "CONFIDENCE:", kindIcon: "lucide:users",
   media: [IMG.communityPoster],
   body: "Just shared my first lip-correction case in the Confidence channel — the support here is unreal. If you're nervous about posting your work, this is the place to start. 💜",
   likes: "842", comments: "96", shares: "40", actioned: false,
@@ -79,6 +83,146 @@ const CHANNEL_POST = {
     likes: "64", comments: "3", time: "1d", pills: [{ k: "like", n: "9" }], reactions: ["like"], reactionCount: "64" }]
 
 };
+
+const MASTERY_POST = {
+  id: "ch2", access: "gated", bucket: "mastery",
+  author: { name: "Priya Shah", avatar: "assets/avatar-katy.jpg", seals: ["gb"] },
+  channel: { name: "#Mastery · Community", avatar: "assets/profinity-icon.jpg",
+    by: "Priya Shah", byAvatar: "assets/avatar-katy.jpg", time: "5h" },
+  time: "5 Hours Ago", kind: "MASTERY:", kindIcon: "lucide:award",
+  body: "Cannula vs needle for the tear trough — here's the decision tree I actually use chairside.",
+  likes: "64", comments: "12", shares: "4", actioned: false, commentList: []
+};
+
+const FREEDOM_POST = {
+  id: "ch3", access: "gated", bucket: "freedom",
+  author: { name: "Dr Amir Khan", avatar: "assets/avatar-drtim.png", seals: ["gb", "verified"] },
+  channel: { name: "#Freedom · Community", avatar: "assets/profinity-icon.jpg",
+    by: "Dr Amir Khan", byAvatar: "assets/avatar-drtim.png", time: "1d" },
+  time: "1 Day Ago", kind: "FREEDOM:", kindIcon: "lucide:trending-up",
+  body: "How I went from one chair to three clinics in 18 months — the hiring order that mattered.",
+  likes: "110", comments: "18", shares: "9", actioned: false, commentList: []
+};
+
+const INNER_POST = {
+  id: "ch4", access: "gated", bucket: "inner",
+  author: { name: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png", seals: ["gb", "gold", "verified", "crown"] },
+  channel: { name: "#Inner Circle · Community", avatar: "assets/profinity-icon.jpg",
+    by: "Dr Tim Pearce", byAvatar: "assets/avatar-drtim.png", time: "3d" },
+  time: "3 Days Ago", kind: "INNER CIRCLE:", kindIcon: "lucide:gem",
+  body: "Inner Circle only: the exact deal structure behind my last clinic acquisition.",
+  likes: "212", comments: "31", shares: "14", actioned: false, commentList: []
+};
+
+const COURSE_POST = {
+  id: "crs1", access: "gated", bucket: "course", course: "protox",
+  author: { name: "PROTOX", avatar: "assets/course-protox.png" },
+  time: "Just now", kind: "PROTOX COURSE:", kindIcon: "lucide:graduation-cap",
+  body: "New in your PROTOX course — Module 3: Advanced cannula control for the mid-face.",
+  likes: "38", comments: "6", shares: "2", actioned: false, commentList: []
+};
+
+const COURSE_COMMENT = {
+  id: "crs2", access: "gated", bucket: "coursecomment", course: "protox",
+  author: { name: "Nurse Beth", avatar: "assets/avatar-katy.jpg" },
+  time: "2 Hours Ago", kind: "PROTOX · DISCUSSION:", kindIcon: "lucide:message-circle",
+  body: "This finally made cannula depth click for me — thank you!",
+  likes: "22", comments: "3", shares: "0", actioned: false, commentList: []
+};
+
+const MYLEARNING_POST = {
+  id: "ml1", access: "gated", bucket: "mylearning",
+  author: { name: "You", avatar: ME.avatar },
+  time: "Just now", kind: "MY LEARNING:", kindIcon: "lucide:bookmark",
+  body: "You saved: “The 7-point liquid facelift, explained”.",
+  likes: "0", comments: "0", shares: "0", actioned: false, commentList: []
+};
+
+const GENERAL_MARK_POST = {
+  id: "gm1", access: "gated", bucket: "general", from: "mark",
+  author: { name: "Mark Ellis", avatar: "assets/avatar-katy.jpg" },
+  time: "6 Hours Ago", kind: "GENERAL:", kindIcon: "lucide:message-circle",
+  body: "Anyone else get butterflies before a big case day? How do you settle the nerves?",
+  likes: "56", comments: "14", shares: "1", actioned: false, commentList: []
+};
+
+const FOLLOWSAVE_AMIR_POST = {
+  id: "fs1", access: "gated", bucket: "followsave", from: "amir",
+  author: { name: "Dr Amir Khan", avatar: "assets/avatar-drtim.png", seals: ["gb", "verified"] },
+  time: "4 Hours Ago", kind: "AMIR SAVED:", kindIcon: "lucide:bookmark",
+  body: "saved “Managing vascular occlusion, step by step” to their learning.",
+  likes: "9", comments: "0", shares: "0", actioned: false, commentList: []
+};
+
+/* The full pool of gated bucket content the preview panel routes between —
+   order here is the order it appears once resolved into the feed. */
+const BUCKET_POSTS = [
+CHANNEL_POST, MASTERY_POST, FREEDOM_POST, INNER_POST,
+COURSE_POST, COURSE_COMMENT, GENERAL_MARK_POST, FOLLOWSAVE_AMIR_POST, MYLEARNING_POST];
+
+
+/* Bucket types a free viewer is shown as a marketing teaser (see
+   resolveBucketFeed). Discussion/activity buckets (coursecomment,
+   followsave) and a viewer's own saves (mylearning) are simply omitted —
+   they don't make a useful upsell tease. */
+const TEASABLE_BUCKETS = new Set(["confidence", "mastery", "freedom", "inner", "course", "general"]);
+
+/* Human label + accent used on a locked teaser's badge. */
+const BUCKET_META = {
+  confidence: { label: "Confidence", color: "var(--info)" },
+  mastery: { label: "Mastery", color: "var(--level-intermediate)" },
+  freedom: { label: "Freedom", color: "var(--ai-purple)" },
+  inner: { label: "Inner Circle", color: "var(--premium-gold-deep)" },
+  course: { label: "PROTOX Course", color: "var(--assess-teal)" },
+  coursecomment: { label: "PROTOX Course", color: "var(--assess-teal)" },
+  general: { label: "General", color: "var(--gray-500)" },
+  followsave: { label: "Activity", color: "var(--gray-500)" },
+  mylearning: { label: "My Learning", color: "var(--premium-orange)" }
+};
+
+/* Preview personas — the same ladder as the architecture guide's simulator.
+   channels lists every channel bucket that persona holds (each higher tier
+   includes every tier below it); paid/admin gate the free-tier teaser path. */
+const PERSONAS = [
+{ key: "free", name: "Free user", desc: "Editorial + teasers only.", channels: [], paid: false, admin: false },
+{ key: "confidence", name: "Paid · Confidence", desc: "Every paid user starts here.", channels: ["confidence"], paid: true, admin: false },
+{ key: "mastery", name: "Mastery member", desc: "Confidence + Mastery.", channels: ["confidence", "mastery"], paid: true, admin: false },
+{ key: "freedom", name: "Freedom member", desc: "Confidence + Mastery + Freedom.", channels: ["confidence", "mastery", "freedom"], paid: true, admin: false },
+{ key: "inner", name: "Inner Circle", desc: "All four channels.", channels: ["confidence", "mastery", "freedom", "inner"], paid: true, admin: false },
+{ key: "admin", name: "Admin", desc: "Sees everything.", channels: ["confidence", "mastery", "freedom", "inner"], paid: true, admin: true }];
+
+const PERSONA_MAP = PERSONAS.reduce((m, p) => {m[p.key] = p;return m;}, {});
+
+/* The actual routing logic: given who's looking + their bucket toggles,
+   resolve which BUCKET_POSTS are visible, and in what mode. Mirrors the
+   architecture guide's resolveFeed() 1:1. */
+function resolveBucketFeed(personaKey, toggles) {
+  const persona = PERSONA_MAP[personaKey] || PERSONA_MAP.confidence;
+  if (!persona.paid && !persona.admin) {
+    return BUCKET_POSTS.
+    filter((x) => TEASABLE_BUCKETS.has(x.bucket)).
+    map((item) => ({ item, mode: "teaser" }));
+  }
+  const out = [];
+  BUCKET_POSTS.forEach((x) => {
+    switch (x.bucket) {
+      case "confidence":case "mastery":case "freedom":case "inner":
+        if (persona.admin || persona.channels.includes(x.bucket)) out.push({ item: x, mode: "full" });
+        break;
+      case "course":case "coursecomment":
+        if (persona.admin || x.course === "protox" && toggles.course) out.push({ item: x, mode: "full" });
+        break;
+      case "mylearning":
+        if (persona.admin || toggles.save) out.push({ item: x, mode: "full" });
+        break;
+      case "general":case "followsave":
+        if (x.from === "mark" && toggles.mute && !persona.admin) return;
+        out.push({ item: x, mode: "full" });
+        break;
+    }
+  });
+  return out;
+}
 
 const PROFILE = {
   name: "Katy Wilson", role: "Registered Nurse", avatar: "assets/avatar-katy.jpg", seals: ["gb", "verified", "gold"],
@@ -1407,18 +1551,142 @@ function FeedPost({ post, st, onToggleLike, onReact, onShare, onSave, onAddComme
 
 }
 
+/* Short, pre-truncated preview text for locked content — a free viewer only
+   ever gets this snippet, never the full body (the real body sits unused
+   below it, exactly as a real free-tier API response would omit it). */
+function snippetOf(text, max) {
+  if (!text) return text;
+  // always cut to ~60% of the source length (capped at `max`) so a short
+  // post never slips through whole just because it's under the char cap.
+  const limit = Math.min(max, Math.max(20, Math.floor(text.length * 0.6)));
+  if (text.length <= limit) return text;
+  return text.slice(0, limit).replace(/\s+\S*$/, "") + "…";
+}
+
+/* Locked teaser card for gated content shown to a free-tier viewer: it
+   advertises that the post exists (channel strip, snippet) but carries no
+   interaction — the only action is "Upgrade". */
+function TeaserPost({ post, onUpgrade }) {
+  const meta = BUCKET_META[post.bucket] || { label: "Members only", color: "var(--premium-orange)" };
+  return (
+    <div className={"post-wrap pf-teaser" + (post.channel ? " has-chx" : "")}
+    style={{ background: "var(--surface-card)", border: "1px solid var(--border-default)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-card)", overflow: "hidden", padding: "0px 16px" }}>
+      {post.channel && <ChannelContext channel={post.channel} />}
+      <div className="pf-teaser-body">
+        <span className="pf-teaser-badge" style={{ color: meta.color, borderColor: meta.color }}>
+          <IconifyIcon name="lucide:lock" size={12} color={meta.color} />
+          {meta.label} · Members only
+        </span>
+        <p className="pf-teaser-snippet">{snippetOf(post.body, 90)}</p>
+        <button type="button" className="pf-teaser-cta" onClick={onUpgrade}>
+          <IconifyIcon name="lucide:lock" size={15} color="#fff" />
+          Upgrade to unlock this post
+        </button>
+      </div>
+    </div>);
+
+}
+
+/* "Only action is Upgrade" — no purchase flow exists in this prototype yet,
+   so this is a stub confirmation reusing the SavedModal sheet pattern. */
+function UpgradeModal({ label, onClose }) {
+  const sheetRef = useRef(null);
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  return (
+    <div className="saved-overlay" onClick={onClose}>
+      <div className="saved-sheet" ref={sheetRef} onClick={(e) => e.stopPropagation()}
+        role="dialog" aria-modal="true" aria-label="Upgrade to unlock">
+        <div className="saved-handle" />
+        <div className="saved-icon-wrap">
+          <IconifyIcon name="lucide:lock" size={30} color="var(--premium-orange)" />
+        </div>
+        <div className="saved-title">Unlock {label || "this content"}</div>
+        <div className="saved-desc">Upgrade your membership to read this post in full, react, comment and post here yourself.</div>
+        <div className="saved-divider" />
+        <button type="button" className="saved-btn" style={{ background: "var(--premium-badge)" }} onClick={onClose}>See Membership Plans</button>
+        <button type="button" className="saved-skip" onClick={onClose}>Maybe Later</button>
+      </div>
+    </div>
+  );
+}
+
+/* One bucket toggle row inside the preview panel — a switch that's forced
+   off + disabled for a free persona (they hold no buckets to toggle). */
+function PreviewToggle({ label, sub, checked, disabled, onChange }) {
+  return (
+    <label className={"pf-pt-row" + (disabled ? " disabled" : "")}>
+      <span className="pf-pt-text">
+        <span className="pf-pt-label">{label}</span>
+        <span className="pf-pt-sub">{sub}</span>
+      </span>
+      <span className={"pf-pt-switch" + (checked && !disabled ? " on" : "")}>
+        <input type="checkbox" checked={!!checked && !disabled} disabled={disabled}
+        onChange={(e) => onChange(e.target.checked)} />
+        <span className="pf-pt-knob" />
+      </span>
+    </label>);
+
+}
+
+/* Dev-facing preview panel — lets the team see any persona's actual feed
+   (bucket-merged, tier-gated, free-tier teasers) without a real auth/paywall
+   backend. Collapsed by default and defaults to Paid · Confidence, so
+   nothing changes for the normal signed-in view. */
+function FeedPreviewPanel({ persona, onPersona, toggles, onToggle }) {
+  const [open, setOpen] = useState(false);
+  const current = PERSONA_MAP[persona] || PERSONA_MAP.confidence;
+  const isFree = !current.paid && !current.admin;
+  return (
+    <div className="pf-preview">
+      <button type="button" className="pf-preview-bar" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
+        <span className="pf-preview-label">Previewing as</span>
+        <span className="pf-preview-current">{current.name}</span>
+        <IconifyIcon name={open ? "lucide:chevron-up" : "lucide:chevron-down"} size={16} color="var(--gray-500)" />
+      </button>
+      {open &&
+      <div className="pf-preview-panel">
+          <p className="pf-preview-sec">Who's looking?</p>
+          <div className="pf-preview-personas">
+            {PERSONAS.map((p) =>
+          <button key={p.key} type="button" className={"pf-preview-persona" + (p.key === persona ? " on" : "")}
+          onClick={() => onPersona(p.key)}>
+                <span className="pf-pp-name">{p.name}</span>
+                <span className="pf-pp-desc">{p.desc}</span>
+              </button>
+          )}
+          </div>
+          <p className="pf-preview-sec">Their buckets</p>
+          <PreviewToggle label="Bought the PROTOX course" sub="Unlocks its lessons + other buyers' comments."
+        checked={toggles.course} disabled={isFree} onChange={(v) => onToggle("course", v)} />
+          <PreviewToggle label="Saved an article to My Learning" sub="Resurfaces it in the feed."
+        checked={toggles.save} disabled={isFree} onChange={(v) => onToggle("save", v)} />
+          <PreviewToggle label={"Unfollowed “Mark”"} sub="Removes his posts and his saves — nothing else."
+        checked={toggles.mute} disabled={isFree} onChange={(v) => onToggle("mute", v)} />
+        </div>
+      }
+    </div>);
+
+}
+
 function Feed() {
   const [posts, setPosts] = useState(
     typeof window !== "undefined" && window.PF_OFFICIAL_ONLY ?
-    [officialize(POSTS)[0], CHANNEL_POST, ...officialize(POSTS).slice(1)] :
+    officialize(POSTS) :
     POSTS
   );
   const [state, setState] = useState(() => {
     const m = {};
-    [...POSTS, CHANNEL_POST].forEach((p) => {m[p.id] = { liked: false, saved: false, actioned: p.actioned, likes: p.likes, base: p.likes, reaction: null, shares: p.shares, sharesBase: p.shares, comments: withIds(p.commentList), commentsCount: p.comments };});
+    [...POSTS, ...BUCKET_POSTS].forEach((p) => {m[p.id] = { liked: false, saved: false, actioned: p.actioned, likes: p.likes, base: p.likes, reaction: null, shares: p.shares, sharesBase: p.shares, comments: withIds(p.commentList), commentsCount: p.comments };});
     return m;
   });
   const [sort, setSort] = useState("All");
+  const [viewerPersona, setViewerPersona] = useState("confidence");
+  const [bucketToggles, setBucketToggles] = useState({ course: false, save: false, mute: false });
+  const [upgradeFor, setUpgradeFor] = useState(null);
 
   const toggle = (id, key) => setState((s) => ({ ...s, [id]: { ...s[id], [key]: !s[id][key] } }));
 
@@ -1432,10 +1700,30 @@ function Feed() {
     setState((s) => ({ ...s, [id]: { liked: false, saved: false, actioned: false, likes: "0", base: "0", reaction: null, shares: "0", sharesBase: "0", comments: [], commentsCount: "0" } }));
   };
 
+  /* the bucket-merged block (channel ladder / course / My Learning / general)
+     is spliced in right after the first editorial post, exactly where the
+     single hard-coded CHANNEL_POST used to sit — everything else about the
+     editorial list is untouched. */
+  const bucketResolved = resolveBucketFeed(viewerPersona, bucketToggles);
+  const feedItems = posts.length ?
+  [
+  { item: posts[0], mode: "full" },
+  ...bucketResolved,
+  ...posts.slice(1).map((p) => ({ item: p, mode: "full" }))] :
+
+  bucketResolved;
+
   return (
     <main className="feed" data-screen-label="Home feed">
-      <SortBar value={sort} onCycle={() => setSort(SORTS[(SORTS.indexOf(sort) + 1) % SORTS.length])} />
-      {posts.map((p) => {
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+        <FeedPreviewPanel persona={viewerPersona} onPersona={setViewerPersona}
+        toggles={bucketToggles} onToggle={(k, v) => setBucketToggles((t) => ({ ...t, [k]: v }))} />
+        <SortBar value={sort} onCycle={() => setSort(SORTS[(SORTS.indexOf(sort) + 1) % SORTS.length])} />
+      </div>
+      {feedItems.map(({ item: p, mode }) => {
+        if (mode === "teaser") {
+          return <TeaserPost key={p.id} post={p} onUpgrade={() => setUpgradeFor(p)} />;
+        }
         const st = state[p.id] || {};
         const setReaction = (key) => setState((s) => {
           const cur = s[p.id];
@@ -1470,6 +1758,10 @@ function Feed() {
 
 
       })}
+      {upgradeFor &&
+      <UpgradeModal label={(BUCKET_META[upgradeFor.bucket] || {}).label}
+      onClose={() => setUpgradeFor(null)} />
+      }
     </main>);
 
 }

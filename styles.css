@@ -338,6 +338,56 @@ img{max-width:100%}
 @keyframes sm-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
 @media (prefers-reduced-motion:reduce){.sm-reactor{animation:none}}
 
+/* feed preview panel (dev/team control — pick a persona + their buckets) */
+.pf-preview{position:relative;width:100%}
+.pf-preview-bar{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;margin-bottom:2px;
+  background:var(--surface-sunken);border:1px solid var(--border-default);border-radius:var(--r-pill);
+  cursor:pointer;font-family:var(--font-sans)}
+.pf-preview-label{font-size:12px;font-weight:var(--fw-semibold);color:var(--gray-500)}
+.pf-preview-current{font-size:13px;font-weight:var(--fw-bold);color:var(--text-heading)}
+.pf-preview-panel{margin:8px 0 4px;padding:16px;background:var(--surface-card);
+  border:1px solid var(--border-default);border-radius:var(--r-md);box-shadow:var(--shadow-card)}
+.pf-preview-sec{font-family:var(--font-sans);font-size:11px;font-weight:var(--fw-bold);letter-spacing:.06em;
+  text-transform:uppercase;color:var(--gray-400);margin:0 0 10px}
+.pf-preview-sec:not(:first-child){margin-top:18px;padding-top:16px;border-top:1px dashed var(--border-default)}
+.pf-preview-personas{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pf-preview-persona{text-align:left;cursor:pointer;background:var(--surface-page);
+  border:1.5px solid var(--border-default);border-radius:12px;padding:10px 12px;font:inherit}
+.pf-preview-persona:hover{border-color:var(--brand-navy)}
+.pf-preview-persona.on{border-color:var(--brand-navy);background:var(--brand-navy);box-shadow:0 0 0 3px rgba(41,37,105,.14)}
+.pf-pp-name{display:block;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:13.5px;color:var(--text-heading)}
+.pf-preview-persona.on .pf-pp-name{color:#fff}
+.pf-pp-desc{display:block;font-family:var(--font-sans);font-size:11.5px;color:var(--gray-500);margin-top:2px;line-height:1.35}
+.pf-preview-persona.on .pf-pp-desc{color:rgba(255,255,255,.72)}
+.pf-pt-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;
+  border-top:1px dashed var(--border-default);cursor:pointer}
+.pf-pt-row:first-of-type{border-top:none}
+.pf-pt-row.disabled{opacity:.5;cursor:not-allowed}
+.pf-pt-text{display:flex;flex-direction:column;gap:2px}
+.pf-pt-label{font-family:var(--font-sans);font-size:13.5px;font-weight:var(--fw-semibold);color:var(--text-primary)}
+.pf-pt-sub{font-family:var(--font-sans);font-size:11.5px;color:var(--gray-500)}
+.pf-pt-switch{position:relative;width:40px;height:23px;flex:none}
+.pf-pt-switch input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.pf-pt-knob{position:absolute;inset:0;background:var(--gray-300);border-radius:999px;transition:.18s}
+.pf-pt-knob::before{content:"";position:absolute;height:17px;width:17px;left:3px;top:3px;background:#fff;
+  border-radius:50%;transition:.18s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.pf-pt-switch.on .pf-pt-knob{background:var(--brand-navy)}
+.pf-pt-switch.on .pf-pt-knob::before{transform:translateX(17px)}
+
+/* locked teaser card — gated content shown to a free-tier viewer */
+.pf-teaser-body{padding:14px 0 18px}
+.pf-teaser-badge{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-sans);
+  font-weight:var(--fw-semibold);font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--premium-orange);border:1.5px solid var(--premium-orange);border-radius:var(--r-pill);
+  padding:4px 10px;margin-bottom:10px}
+.pf-teaser-snippet{font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--text-secondary);
+  line-height:1.5;filter:blur(3.5px);user-select:none;margin:0 0 14px}
+.pf-teaser-cta{display:inline-flex;align-items:center;gap:8px;width:100%;justify-content:center;
+  background:var(--premium-badge);color:#fff;border:none;border-radius:var(--r-pill);
+  padding:13px 18px;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px;cursor:pointer}
+.pf-teaser-cta:hover{filter:brightness(1.06)}
+.post-wrap.pf-teaser.has-chx .chx{padding-bottom:0}
+
 .sm-vertical{position:relative;display:flex;justify-content:center;background:var(--gray-100);
   border-radius:var(--r-md);overflow:hidden;margin-bottom:12px}
 .sm-vertical img{width:auto;height:440px;max-width:100%;aspect-ratio:9/16;object-fit:cover;display:block}

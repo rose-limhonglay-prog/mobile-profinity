@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PROfinity — Home</title>
+
+  <!-- Profinity Design System tokens (load before component styles) -->
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fonts.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/colors.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/typography.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/spacing.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fig-tokens.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/styles.css" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="pagefx.css" />
+</head>
+<body>
+  <div id="pf-root"></div>
+  <script src="pagefx.js"></script>
+
+  <!-- React + Babel (pinned) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Iconify runtime (reaction faces, trust seals, premium crown) -->
+  <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" data-iconify></script>
+
+  <!-- Profinity Design System bundle (plain JS — needs window.React first) -->
+  <script src="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/_ds_bundle.js"></script>
+
+  <!-- app -->
+  <script type="text/babel" data-presets="react" src="tweaks-panel.jsx"></script>
+  <script>window.PF_OFFICIAL_ONLY = true;</script>
+  <script type="text/babel" data-presets="react" src="app.jsx"></script>
+
+  <!-- bundler splash -->
+  <template id="__bundler_thumbnail">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+      <rect width="100" height="100" rx="20" fill="#292569" />
+      <text x="50" y="68" font-family="Poppins,sans-serif" font-size="52" font-weight="800" text-anchor="middle" fill="#ce9957">P</text>
+    </svg>
+  </template>
+
+  <style id="__om-edit-overrides"></style>
+</body>
+</html>
