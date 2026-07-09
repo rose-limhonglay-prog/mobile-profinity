@@ -20,6 +20,46 @@ const M_TABS = [
 { key: "Agent", label: "Agent", icon: "lucide:sparkles", href: "Agent.html" }];
 
 
+const PUSH_NOTIF = {
+  app: "PROfinity Academy",
+  icon: "assets/profinity-icon.jpg",
+  title: "Weekly Rewards are here!",
+  body: "Your weekly rewards have been calculated. Open the app to claim your bonuses before they expire this Sunday.",
+  cta: "Claim Rewards"
+};
+
+function PushNotifBanner() {
+  const [open, setOpen] = useStateM(true);
+  const [expanded, setExpanded] = useStateM(false);
+  useEffectM(() => {
+    if (expanded) return;
+    const t = setTimeout(() => setOpen(false), 7000);
+    return () => clearTimeout(t);
+  }, [expanded]);
+  if (!open) return null;
+  return (
+    <div className={"m-push" + (expanded ? " expanded" : "")} role="alert"
+      aria-label={PUSH_NOTIF.title} onClick={() => setExpanded((e) => !e)}>
+      <div className="m-push-row">
+        <img className="m-push-icon" src={PUSH_NOTIF.icon} alt="" />
+        <span className="m-push-app">{PUSH_NOTIF.app}</span>
+        <span style={{ flex: 1 }} />
+        <span className="m-push-time">now</span>
+      </div>
+      <div className="m-push-title">{PUSH_NOTIF.title}</div>
+      <p className="m-push-body">{PUSH_NOTIF.body}</p>
+      {expanded &&
+      <div className="m-push-actions">
+          <button className="m-push-cta" onClick={(e) => { e.stopPropagation(); setOpen(false); }}>{PUSH_NOTIF.cta}</button>
+          <button className="m-push-dismiss" onClick={(e) => { e.stopPropagation(); setOpen(false); }}>Dismiss</button>
+        </div>
+      }
+      <span className="m-push-handle" role="button" aria-label="Dismiss notification"
+        onClick={(e) => { e.stopPropagation(); setOpen(false); }} />
+    </div>);
+
+}
+
 function MTopBar({ onMenu, onBell }) {
   const [showNotif, setShowNotif] = useStateM(true);
   useEffectM(() => {
@@ -84,20 +124,20 @@ const SM_PROFILE_AFTER = [
 { label: "Privacy & Security", icon: "lucide:book-open",       href: null }];
 
 const NOTIFS = {
-  “New”: [
-  { who: “Dr Tim Pearce”, avatar: “assets/avatar-drtim.png”, action: “commented on your post”, detail: ““This is a nice article Katy!””, t: “Just now”, type: “comment” },
-  { who: “Miranda Pearce”, avatar: “assets/avatar-miranda.jpg”, action: “liked on your comment”, detail: ““Full-Face Rejuvenation Increased Patient Satisfaction +64%””, t: “2h”, type: “love” }],
-  “Yesterday”: [
-  { who: “Jane Harries”, avatar: null, action: “booked new appointment”, detail: “February 12, 2026, 6:00 PM”, t: “1d”, rsvp: true, type: “appointment” }],
-  “Older”: [
-  { who: “Dr Tim Pearce”, avatar: “assets/avatar-drtim.png”, action: “commented on your post”, detail: ““This is a nice article Katy!””, t: “3w”, type: “comment” },
-  { who: “Miranda Pearce”, avatar: “assets/avatar-miranda.jpg”, action: “liked on your comment”, detail: ““Full-Face Rejuvenation Increased Patient Satisfaction +64%””, t: “4w”, type: “love” }]
+  "New": [
+  { who: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png", action: "commented on your post", detail: "\"This is a nice article Katy!\"", t: "Just now", type: "comment" },
+  { who: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", action: "liked on your comment", detail: "\"Full-Face Rejuvenation Increased Patient Satisfaction +64%\"", t: "2h", type: "love" }],
+  "Yesterday": [
+  { who: "Jane Harries", avatar: null, action: "booked new appointment", detail: "February 12, 2026, 6:00 PM", t: "1d", rsvp: true, type: "appointment" }],
+  "Older": [
+  { who: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png", action: "commented on your post", detail: "\"This is a nice article Katy!\"", t: "3w", type: "comment" },
+  { who: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", action: "liked on your comment", detail: "\"Full-Face Rejuvenation Increased Patient Satisfaction +64%\"", t: "4w", type: "love" }]
 };
 
 const SUGGESTED_POSTS = [
-  { who: “Dr Tim Pearce”, avatar: “assets/avatar-drtim.png”, t: “1h”, text: “The 3 biggest mistakes injectors make with lip filler — and how to fix them fast.”, img: “assets/post1-img1.png”, likes: 142, comments: 38, tag: “Technique” },
-  { who: “Miranda Pearce”, avatar: “assets/avatar-miranda.jpg”, t: “3h”, text: “Patient confidence scores went up 64% after full-face rejuvenation. Here’s what changed.”, img: null, likes: 89, comments: 22, tag: “Case Study” },
-  { who: “Jane Harries”, avatar: null, t: “5h”, text: “Just finished the Advanced Botox Training module. The dosing charts are absolute game-changers.”, img: “assets/post2-img1.png”, likes: 54, comments: 11, tag: “Learning” }
+  { who: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png", t: "1h", text: "The 3 biggest mistakes injectors make with lip filler — and how to fix them fast.", img: "assets/post1-img1.png", likes: 142, comments: 38, tag: "Technique" },
+  { who: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", t: "3h", text: "Patient confidence scores went up 64% after full-face rejuvenation. Here's what changed.", img: null, likes: 89, comments: 22, tag: "Case Study" },
+  { who: "Jane Harries", avatar: null, t: "5h", text: "Just finished the Advanced Botox Training module. The dosing charts are absolute game-changers.", img: "assets/post2-img1.png", likes: 54, comments: 11, tag: "Learning" }
 ];
 
 const NT_BADGE = {
@@ -482,6 +522,7 @@ function MobileHome() {
   const [shareOpen, setShareOpen] = useStateM(false);
   return (
     <div className="m-screen" data-screen-label="Home (mobile)">
+      <PushNotifBanner />
       <MTopBar onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} />
       <div className="m-scroll">
         <PFAM.Feed />

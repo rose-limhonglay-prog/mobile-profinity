@@ -79,6 +79,10 @@
 /* Drawer */
 [data-theme="dark"] .m-drawer { background: var(--surface-card); box-shadow: 6px 0 40px rgba(0,0,0,.5); }
 
+/* Push notification banner */
+[data-theme="dark"] .m-push { background: rgba(28, 26, 58, 0.92); box-shadow: 0 20px 40px rgba(0,0,0,.5); }
+[data-theme="dark"] .m-push-title { color: #ffffff; }
+
 /* ============================================================
    Newsfeed mobile — hardcoded text + card colors
    ============================================================ */

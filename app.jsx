@@ -69,7 +69,7 @@ function officialize(list) {
 const CHANNEL_POST = {
   id: "ch1",
   access: "gated", bucket: "confidence",
-  author: { name: "Dr. Sarah Collins", avatar: "assets/avatar-katy.jpg", seals: ["gb", "verified"] },
+  author: { name: "Dr. Sarah Collins", avatar: "assets/avatar-katy.jpg", seals: ["gb", "verified", "skinfluencer"] },
   channel: { name: "#Confidence · Community", avatar: "assets/profinity-icon.jpg",
     by: "Dr. Sarah Collins", byAvatar: "assets/avatar-katy.jpg", time: "2d" },
   time: "2 Days Ago", kind: "CONFIDENCE:", kindIcon: "lucide:users",
@@ -140,7 +140,7 @@ const MYLEARNING_POST = {
 
 const GENERAL_MARK_POST = {
   id: "gm1", access: "gated", bucket: "general", from: "mark",
-  author: { name: "Mark Ellis", avatar: "assets/avatar-katy.jpg" },
+  author: { name: "Mark Ellis", avatar: "assets/avatar-katy.jpg", seals: ["skinfluencer"] },
   time: "6 Hours Ago", kind: "GENERAL:", kindIcon: "lucide:message-circle",
   body: "Anyone else get butterflies before a big case day? How do you settle the nerves?",
   likes: "56", comments: "14", shares: "1", actioned: false, commentList: []
@@ -148,7 +148,7 @@ const GENERAL_MARK_POST = {
 
 const FOLLOWSAVE_AMIR_POST = {
   id: "fs1", access: "gated", bucket: "followsave", from: "amir",
-  author: { name: "Dr Amir Khan", avatar: "assets/avatar-drtim.png", seals: ["gb", "verified"] },
+  author: { name: "Dr Amir Khan", avatar: "assets/avatar-drtim.png", seals: ["gb", "verified", "skinfluencer"] },
   time: "4 Hours Ago", kind: "AMIR SAVED:", kindIcon: "lucide:bookmark",
   body: "saved “Managing vascular occlusion, step by step” to their learning.",
   likes: "9", comments: "0", shares: "0", actioned: false, commentList: []
@@ -287,7 +287,7 @@ const REPLY_A = {
 function thread(extra) {
   return [
   {
-    author: { name: "Phoenix Baker", seals: ["gb", "verified"] },
+    author: { name: "Phoenix Baker", seals: ["gb", "verified", "skinfluencer"] },
     text: "This is an amazing protocol! It has helped us a lot in our research.",
     likes: "1.1K", comments: "300", time: "1w", pills: [{ k: "like", n: "12" }, { k: "love", n: "5" }],
     reactions: ["like", "love", "laugh"], reactionCount: "1.2K",
@@ -913,7 +913,10 @@ function CommentsSheet({ post, comments, onClose, onAddComment, onAddReply }) {
         <div className="cmtsheet-post">
           <Avatar name={post.author.name} src={post.author.avatar} size={40} />
           <div className="cmtsheet-post-tx">
-            <div className="nm">{post.author.name}</div>
+            <div className="nm">
+              {post.author.name}
+              {post.author.seals && <VerificationSeals seals={post.author.seals} size={14} gap={3} />}
+            </div>
             <div className="sn">{post.body}</div>
           </div>
         </div>
@@ -924,7 +927,10 @@ function CommentsSheet({ post, comments, onClose, onAddComment, onAddReply }) {
               <div className="cmtsheet-main">
                 <div className="cmtsheet-bubble">
                   <div className="row">
-                    <span className="nm">{c.author.name}</span>
+                    <span className="nm">
+                      {c.author.name}
+                      {c.author.seals && <VerificationSeals seals={c.author.seals} size={14} gap={3} />}
+                    </span>
                     <span className="tm">{c.time || PF_CMT_TIMES[i % PF_CMT_TIMES.length]}</span>
                   </div>
                   <div className="tx">{c.text}</div>
@@ -938,7 +944,12 @@ function CommentsSheet({ post, comments, onClose, onAddComment, onAddReply }) {
                     <Avatar name={rep.author.name} src={rep.author.avatar} size={30} />
                     <div className="cmtsheet-main">
                       <div className="cmtsheet-bubble">
-                        <div className="row"><span className="nm">{rep.author.name}</span></div>
+                        <div className="row">
+                          <span className="nm">
+                            {rep.author.name}
+                            {rep.author.seals && <VerificationSeals seals={rep.author.seals} size={14} gap={3} />}
+                          </span>
+                        </div>
                         <div className="tx">{rep.text}</div>
                       </div>
                     </div>

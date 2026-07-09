@@ -7,6 +7,30 @@ const DSPM = window.ProfinityDesignSystem_c2b5cc;
 
 function goPM(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
 
+/* Standalone badge image with a hover/tap tooltip explaining what it means
+   (mastery + skinfluencer badges aren't part of DSPM.VerificationSeals). */
+function PMSealBadge({ src, alt, label, width, height, style }) {
+  const [hover, setHover] = useStatePM(false);
+  const [pinned, setPinned] = useStatePM(false);
+  useEffectPM(() => {
+    if (!pinned) return;
+    const close = () => { setPinned(false); setHover(false); };
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [pinned]);
+  const open = hover || pinned;
+  return (
+    <span className={"pm-seal-badge" + (open ? " is-open" : "")} tabIndex={0} role="button" aria-label={label}
+      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+      onClick={(e) => { e.stopPropagation(); setPinned((p) => !p); }}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPinned((p) => !p); } }}
+      style={style}>
+      <img src={src} alt={alt} width={width} height={height} style={{ display: "block" }} />
+      <span className="pm-seal-tip">{label}</span>
+    </span>
+  );
+}
+
 const PM_ME = {
   name: "Katy Wilson", role: "Registered Nurse", avatar: "assets/avatar-katy.jpg",
   seals: ["gb", "verified", "crown", "gold"],
@@ -459,7 +483,8 @@ function PMScreen() {
                 <span className="nm">{m.name}</span>
                 <span className="pn">{m.role}</span>
                 <DSPM.VerificationSeals seals={["verified", "crown", "gold"]} size={20} />
-                <img src="assets/badge-m.svg" alt="Member badge" width="20" height="20" style={{ marginLeft: -5 }} />
+                <PMSealBadge src="assets/badge-m.svg" alt="Mastery badge" label="Mastery Badge" width={20} height={20} style={{ marginLeft: -5 }} />
+                <PMSealBadge src="assets/badge-skinfluencer.png" alt="PROfinity Skinfluencer badge" label="Skinfluencer" width={20} height={22} style={{ marginLeft: -5 }} />
               </div>
 
               <div className="pm-ig-bio">

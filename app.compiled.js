@@ -109,7 +109,7 @@ const CHANNEL_POST = {
   author: {
     name: "Dr. Sarah Collins",
     avatar: "assets/avatar-katy.jpg",
-    seals: ["gb", "verified"]
+    seals: ["gb", "verified", "skinfluencer"]
   },
   channel: {
     name: "#Confidence · Community",
@@ -302,7 +302,8 @@ const GENERAL_MARK_POST = {
   from: "mark",
   author: {
     name: "Mark Ellis",
-    avatar: "assets/avatar-katy.jpg"
+    avatar: "assets/avatar-katy.jpg",
+    seals: ["skinfluencer"]
   },
   time: "6 Hours Ago",
   kind: "GENERAL:",
@@ -322,7 +323,7 @@ const FOLLOWSAVE_AMIR_POST = {
   author: {
     name: "Dr Amir Khan",
     avatar: "assets/avatar-drtim.png",
-    seals: ["gb", "verified"]
+    seals: ["gb", "verified", "skinfluencer"]
   },
   time: "4 Hours Ago",
   kind: "AMIR SAVED:",
@@ -594,7 +595,7 @@ function thread(extra) {
   return [{
     author: {
       name: "Phoenix Baker",
-      seals: ["gb", "verified"]
+      seals: ["gb", "verified", "skinfluencer"]
     },
     text: "This is an amazing protocol! It has helped us a lot in our research.",
     likes: "1.1K",
@@ -1926,7 +1927,11 @@ function CommentsSheet({
     className: "cmtsheet-post-tx"
   }, /*#__PURE__*/React.createElement("div", {
     className: "nm"
-  }, post.author.name), /*#__PURE__*/React.createElement("div", {
+  }, post.author.name, post.author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+    seals: post.author.seals,
+    size: 14,
+    gap: 3
+  })), /*#__PURE__*/React.createElement("div", {
     className: "sn"
   }, post.body))), /*#__PURE__*/React.createElement("div", {
     className: "cmtsheet-body"
@@ -1945,7 +1950,11 @@ function CommentsSheet({
     className: "row"
   }, /*#__PURE__*/React.createElement("span", {
     className: "nm"
-  }, c.author.name), /*#__PURE__*/React.createElement("span", {
+  }, c.author.name, c.author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+    seals: c.author.seals,
+    size: 14,
+    gap: 3
+  })), /*#__PURE__*/React.createElement("span", {
     className: "tm"
   }, c.time || PF_CMT_TIMES[i % PF_CMT_TIMES.length])), /*#__PURE__*/React.createElement("div", {
     className: "tx"
@@ -1970,7 +1979,11 @@ function CommentsSheet({
     className: "row"
   }, /*#__PURE__*/React.createElement("span", {
     className: "nm"
-  }, rep.author.name)), /*#__PURE__*/React.createElement("div", {
+  }, rep.author.name, rep.author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+    seals: rep.author.seals,
+    size: 14,
+    gap: 3
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "tx"
   }, rep.text))))), replyFor === c._id && /*#__PURE__*/React.createElement(CommentComposer, {
     small: true,

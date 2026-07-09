@@ -46,6 +46,15 @@ img{max-width:100%}
 .pm-ig-name .nm{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--text-heading)}
 .pm-ig-name .pn{font-family:var(--font-sans);font-size:16px;color:var(--gray-450)}
 
+.pm-seal-badge{position:relative;display:inline-flex;cursor:pointer}
+.pm-seal-tip{position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%) scale(.7);transform-origin:bottom center;
+  background:#262a38;color:#fff;font-family:var(--font-sans);font-weight:var(--fw-semibold);
+  font-size:11px;line-height:1.2;letter-spacing:.01em;padding:5px 9px;border-radius:var(--r-pill);
+  white-space:nowrap;opacity:0;pointer-events:none;z-index:20;
+  transition:opacity .12s ease,transform .12s cubic-bezier(.34,1.56,.64,1)}
+.pm-seal-badge.is-open .pm-seal-tip{opacity:1;transform:translateX(-50%) scale(1)}
+
 .pm-ig-bio{margin-top:8px}
 .pm-ig-bio p{margin:0 0 3px;font-family:var(--font-sans);font-size:15px;line-height:1.5;color:var(--text-primary)}
 .pm-ig-bio .bi{display:inline-block;width:20px}

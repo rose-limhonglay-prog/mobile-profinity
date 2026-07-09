@@ -2579,25 +2579,67 @@ const SEALS = {
   },
   verified: {
     bg: "var(--verify-check)",
-    icon: "fluent:checkmark-12-filled"
+    icon: "fluent:checkmark-12-filled",
+    label: "Verified Clinician"
   },
   crown: {
     bg: "var(--verify-crown)",
-    iconify: "fluent:crown-16-filled"
+    iconify: "fluent:crown-16-filled",
+    label: "Membership Plan Subscriber"
   },
   gold: {
     bg: "var(--verify-gold)",
-    iconify: "fluent:star-16-filled"
+    iconify: "fluent:star-16-filled",
+    label: "Founding Members"
   },
   expert: {
     bg: "var(--brand-navy)",
     iconify: "fluent:ribbon-16-filled"
+  },
+  mastery: {
+    img: "assets/badge-m.svg",
+    ratio: 1,
+    label: "Mastery Badge"
+  },
+  skinfluencer: {
+    img: "assets/badge-skinfluencer.png",
+    ratio: 112 / 101,
+    label: "Skinfluencer"
   }
 };
 
+/** Small dark bubble tooltip, positioned above the badge it's attached to. */
+function SealTip({ label, visible }) {
+  return /*#__PURE__*/React.createElement("span", {
+    style: {
+      position: "absolute",
+      bottom: "calc(100% + 8px)",
+      left: "50%",
+      transform: "translateX(-50%) scale(" + (visible ? 1 : 0.7) + ")",
+      transformOrigin: "bottom center",
+      background: "#262a38",
+      color: "var(--white)",
+      fontFamily: "var(--font-sans)",
+      fontWeight: "var(--fw-semibold)",
+      fontSize: 11,
+      lineHeight: 1.2,
+      letterSpacing: ".01em",
+      padding: "5px 9px",
+      borderRadius: "var(--r-pill)",
+      whiteSpace: "nowrap",
+      opacity: visible ? 1 : 0,
+      pointerEvents: "none",
+      zIndex: 20,
+      transition: "opacity .12s ease, transform .12s cubic-bezier(.34,1.56,.64,1)"
+    }
+  }, label);
+}
+
 /**
  * Row of small circular trust seals shown beside a member's name — UK flag,
- * verified tick, gold star, premium crown, expert ribbon.
+ * verified tick, gold star, premium crown, expert ribbon, mastery + skinfluencer
+ * badges. Hovering (desktop) or tapping (touch) a labelled seal reveals what
+ * it means; tapping elsewhere closes it again.
  */
 function VerificationSeals({
   seals = ["gb", "gold", "verified", "crown"],
@@ -2606,6 +2648,15 @@ function VerificationSeals({
   style = {},
   ...rest
 }) {
+  const [hoverIdx, setHoverIdx] = React.useState(null);
+  const [pinnedIdx, setPinnedIdx] = React.useState(null);
+  React.useEffect(() => {
+    if (pinnedIdx === null) return;
+    const close = () => { setPinnedIdx(null); setHoverIdx(null); };
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [pinnedIdx]);
+
   return /*#__PURE__*/React.createElement("span", _extends({
     style: {
       display: "inline-flex",
@@ -2616,32 +2667,61 @@ function VerificationSeals({
   }, rest), seals.map((kind, i) => {
     const s = SEALS[kind];
     if (!s) return null;
+    let inner;
     if (s.flag) {
-      return /*#__PURE__*/React.createElement(__ds_scope.IconifyIcon, {
-        key: i,
+      inner = /*#__PURE__*/React.createElement(__ds_scope.IconifyIcon, {
         name: s.flag,
         size: size,
         style: {
           borderRadius: "50%"
         }
       });
+    } else if (s.img) {
+      inner = /*#__PURE__*/React.createElement("img", {
+        src: s.img,
+        alt: s.label || "Badge",
+        width: size,
+        height: Math.round(size * (s.ratio || 1)),
+        style: {
+          display: "block"
+        }
+      });
+    } else {
+      inner = /*#__PURE__*/React.createElement("span", {
+        style: {
+          width: size,
+          height: size,
+          borderRadius: "50%",
+          background: s.bg,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center"
+        }
+      }, /*#__PURE__*/React.createElement(__ds_scope.IconifyIcon, {
+        name: s.iconify || s.icon,
+        size: Math.round(size * 0.62),
+        color: "var(--white)"
+      }));
     }
+    if (!s.label) {
+      return /*#__PURE__*/React.createElement("span", { key: i, style: { display: "inline-flex" } }, inner);
+    }
+    const open = hoverIdx === i || pinnedIdx === i;
     return /*#__PURE__*/React.createElement("span", {
       key: i,
+      tabIndex: 0,
+      role: "button",
+      "aria-label": s.label,
+      onMouseEnter: () => setHoverIdx(i),
+      onMouseLeave: () => setHoverIdx((cur) => cur === i ? null : cur),
+      onClick: (e) => { e.stopPropagation(); setPinnedIdx((cur) => cur === i ? null : i); },
+      onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPinnedIdx((cur) => cur === i ? null : i); } },
       style: {
-        width: size,
-        height: size,
-        borderRadius: "50%",
-        background: s.bg,
+        position: "relative",
         display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center"
+        cursor: "pointer"
       }
-    }, /*#__PURE__*/React.createElement(__ds_scope.IconifyIcon, {
-      name: s.iconify || s.icon,
-      size: Math.round(size * 0.62),
-      color: "var(--white)"
-    }));
+    }, inner, /*#__PURE__*/React.createElement(SealTip, { label: s.label, visible: open }));
   }));
 }
 Object.assign(__ds_scope, { VerificationSeals });

@@ -43,6 +43,69 @@ const M_TABS = [{
   icon: "lucide:sparkles",
   href: "Agent.html"
 }];
+const PUSH_NOTIF = {
+  app: "PROfinity Academy",
+  icon: "assets/profinity-icon.jpg",
+  title: "Weekly Rewards are here!",
+  body: "Your weekly rewards have been calculated. Open the app to claim your bonuses before they expire this Sunday.",
+  cta: "Claim Rewards"
+};
+function PushNotifBanner() {
+  const [open, setOpen] = useStateM(true);
+  const [expanded, setExpanded] = useStateM(false);
+  useEffectM(() => {
+    if (expanded) return;
+    const t = setTimeout(() => setOpen(false), 7000);
+    return () => clearTimeout(t);
+  }, [expanded]);
+  if (!open) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "m-push" + (expanded ? " expanded" : ""),
+    role: "alert",
+    "aria-label": PUSH_NOTIF.title,
+    onClick: () => setExpanded(e => !e)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "m-push-row"
+  }, /*#__PURE__*/React.createElement("img", {
+    className: "m-push-icon",
+    src: PUSH_NOTIF.icon,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "m-push-app"
+  }, PUSH_NOTIF.app), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "m-push-time"
+  }, "now")), /*#__PURE__*/React.createElement("div", {
+    className: "m-push-title"
+  }, PUSH_NOTIF.title), /*#__PURE__*/React.createElement("p", {
+    className: "m-push-body"
+  }, PUSH_NOTIF.body), expanded && /*#__PURE__*/React.createElement("div", {
+    className: "m-push-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "m-push-cta",
+    onClick: e => {
+      e.stopPropagation();
+      setOpen(false);
+    }
+  }, PUSH_NOTIF.cta), /*#__PURE__*/React.createElement("button", {
+    className: "m-push-dismiss",
+    onClick: e => {
+      e.stopPropagation();
+      setOpen(false);
+    }
+  }, "Dismiss")), /*#__PURE__*/React.createElement("span", {
+    className: "m-push-handle",
+    role: "button",
+    "aria-label": "Dismiss notification",
+    onClick: e => {
+      e.stopPropagation();
+      setOpen(false);
+    }
+  }));
+}
 function MTopBar({
   onMenu,
   onBell
@@ -210,14 +273,14 @@ const NOTIFS = {
     who: "Dr Tim Pearce",
     avatar: "assets/avatar-drtim.png",
     action: "commented on your post",
-    detail: "“This is a nice article Katy!”",
+    detail: "\"This is a nice article Katy!\"",
     t: "Just now",
     type: "comment"
   }, {
     who: "Miranda Pearce",
     avatar: "assets/avatar-miranda.jpg",
     action: "liked on your comment",
-    detail: "“Full-Face Rejuvenation Increased Patient Satisfaction +64%”",
+    detail: "\"Full-Face Rejuvenation Increased Patient Satisfaction +64%\"",
     t: "2h",
     type: "love"
   }],
@@ -234,14 +297,14 @@ const NOTIFS = {
     who: "Dr Tim Pearce",
     avatar: "assets/avatar-drtim.png",
     action: "commented on your post",
-    detail: "“This is a nice article Katy!”",
+    detail: "\"This is a nice article Katy!\"",
     t: "3w",
     type: "comment"
   }, {
     who: "Miranda Pearce",
     avatar: "assets/avatar-miranda.jpg",
     action: "liked on your comment",
-    detail: "“Full-Face Rejuvenation Increased Patient Satisfaction +64%”",
+    detail: "\"Full-Face Rejuvenation Increased Patient Satisfaction +64%\"",
     t: "4w",
     type: "love"
   }]
@@ -491,13 +554,6 @@ function NotificationsPanel({
     p: p
   })))))));
 }
-function SmSection({
-  title
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "sm-sec-h"
-  }, title);
-}
 function useDarkModeM() {
   const [dark, setDark] = useStateM(() => {
     try {
@@ -550,6 +606,13 @@ function SmDisplayCard({
   })), /*#__PURE__*/React.createElement("p", {
     className: "sm-display-desc"
   }, "Adjust the appearance of the app to reduce glare and give your eyes a break"));
+}
+function SmSection({
+  title
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "sm-sec-h"
+  }, title);
 }
 function SideMenu({
   open,
@@ -868,7 +931,7 @@ function MobileHome() {
   return /*#__PURE__*/React.createElement("div", {
     className: "m-screen",
     "data-screen-label": "Home (mobile)"
-  }, /*#__PURE__*/React.createElement(MTopBar, {
+  }, /*#__PURE__*/React.createElement(PushNotifBanner, null), /*#__PURE__*/React.createElement(MTopBar, {
     onMenu: () => setMenuOpen(true),
     onBell: () => setNotifOpen(true)
   }), /*#__PURE__*/React.createElement("div", {
