@@ -217,7 +217,7 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
 
 /* ===== scrollable content ===== */
 .m-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  transition:padding-top .28s cubic-bezier(.22,.61,.36,1)}
+  transition:padding-top .28s cubic-bezier(.22,.61,.36,1),padding-bottom .28s cubic-bezier(.22,.61,.36,1)}
 .m-scroll::-webkit-scrollbar{width:0}
 
 /* single-column feed sizing (override desktop .page grid) — flat full-width
@@ -288,9 +288,11 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
 .sm-switch.on .sm-knob{transform:translateX(22px)}
 
 /* ===== bottom tab bar ===== */
-.m-tabs{flex:none;z-index:30;display:flex;align-items:stretch;
+.m-tabs{position:absolute;bottom:0;left:0;right:0;z-index:30;display:flex;align-items:stretch;
   background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);
-  border-top:1px solid var(--border-default);padding:8px 6px 30px}
+  border-top:1px solid var(--border-default);padding:8px 6px 30px;
+  transition:transform .28s cubic-bezier(.22,.61,.36,1)}
+.m-tabs.m-tabs-hidden{transform:translateY(100%)}
 .m-tab{flex:1;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;
   padding:5px 0;color:var(--gray-450);font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:10px}
 .m-tab .ic{position:relative;width:26px;height:26px;display:flex;align-items:center;justify-content:center}
@@ -304,8 +306,10 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
   display:inline-flex;align-items:center;gap:9px;padding:15px 30px;border:none;cursor:pointer;
   background:var(--brand-navy);color:#fff;border-radius:var(--r-pill);
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:18px;
-  box-shadow:0 10px 26px rgba(41,37,105,.38)}
+  box-shadow:0 10px 26px rgba(41,37,105,.38);
+  transition:transform .28s cubic-bezier(.22,.61,.36,1),opacity .28s cubic-bezier(.22,.61,.36,1)}
 .m-fab:active{transform:translateX(-50%) scale(.96)}
+.m-fab.m-fab-hidden{transform:translateX(-50%) translateY(160%);opacity:0;pointer-events:none}
 
 /* ===== select-a-channel modal (Share a Post) ===== */
 .sc-overlay{position:absolute;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;

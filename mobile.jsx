@@ -451,9 +451,9 @@ function MChips() {
 
 }
 
-function MTabBar() {
+const MTabBar = forwardRefM(function MTabBar({ hidden }, ref) {
   return (
-    <nav className="m-tabs" aria-label="Primary">
+    <nav ref={ref} className={"m-tabs" + (hidden ? " m-tabs-hidden" : "")} aria-label="Primary">
       {M_TABS.map((t) =>
       <button key={t.key} className={"m-tab" + (t.key === "Home" ? " on" : "")}
       aria-current={t.key === "Home" ? "page" : undefined}
@@ -467,7 +467,7 @@ function MTabBar() {
       )}
     </nav>);
 
-}
+});
 
 const SHARE_CHANNELS = [
 { name: "Confidence", desc: "Share your success stories and find inspiration from others' journeys." },
@@ -549,8 +549,10 @@ function MobileHome() {
   const [shareOpen, setShareOpen] = useStateM(false);
   const scrollRefM = useRefM(null);
   const headerRefM = useRefM(null);
+  const tabsRefM = useRefM(null);
   const [headerH, setHeaderH] = useStateM(0);
-  const headerHidden = useHeaderHideM(scrollRefM);
+  const [tabsH, setTabsH] = useStateM(0);
+  const chromeHidden = useHeaderHideM(scrollRefM);
   useLayoutEffectM(() => {
     const el = headerRefM.current;
     if (!el) return;
@@ -560,15 +562,24 @@ function MobileHome() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+  useLayoutEffectM(() => {
+    const el = tabsRefM.current;
+    if (!el) return;
+    const measure = () => setTabsH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   return (
     <div className="m-screen" data-screen-label="Home (mobile)">
       <PushNotifBanner />
-      <MTopBar ref={headerRefM} hidden={headerHidden} onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} />
-      <div className="m-scroll" ref={scrollRefM} style={{ paddingTop: headerHidden ? 0 : headerH }}>
+      <MTopBar ref={headerRefM} hidden={chromeHidden} onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} />
+      <div className="m-scroll" ref={scrollRefM} style={{ paddingTop: chromeHidden ? 0 : headerH, paddingBottom: chromeHidden ? 0 : tabsH }}>
         <PFAM.Feed />
       </div>
-      <MTabBar />
-      <button className="m-fab" aria-label="Share a Post" onClick={() => setShareOpen(true)}>
+      <MTabBar ref={tabsRefM} hidden={chromeHidden} />
+      <button className={"m-fab" + (chromeHidden ? " m-fab-hidden" : "")} aria-label="Share a Post" onClick={() => setShareOpen(true)}>
         <DSM.IconifyIcon name="lucide:plus" size={22} color="#fff" />
         Share a Post
       </button>

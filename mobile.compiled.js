@@ -835,9 +835,12 @@ function MChips() {
     onClick: () => setActive(c)
   }, c)));
 }
-function MTabBar() {
+const MTabBar = forwardRefM(function MTabBar({
+  hidden
+}, ref) {
   return /*#__PURE__*/React.createElement("nav", {
-    className: "m-tabs",
+    ref: ref,
+    className: "m-tabs" + (hidden ? " m-tabs-hidden" : ""),
     "aria-label": "Primary"
   }, M_TABS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
@@ -853,7 +856,7 @@ function MTabBar() {
   }), t.dot && /*#__PURE__*/React.createElement("span", {
     className: "dot"
   }, t.dot)), t.label)));
-}
+});
 const SHARE_CHANNELS = [{
   name: "Confidence",
   desc: "Share your success stories and find inspiration from others' journeys."
@@ -970,12 +973,23 @@ function MobileHome() {
   const [shareOpen, setShareOpen] = useStateM(false);
   const scrollRefM = useRefM(null);
   const headerRefM = useRefM(null);
+  const tabsRefM = useRefM(null);
   const [headerH, setHeaderH] = useStateM(0);
-  const headerHidden = useHeaderHideM(scrollRefM);
+  const [tabsH, setTabsH] = useStateM(0);
+  const chromeHidden = useHeaderHideM(scrollRefM);
   useLayoutEffectM(() => {
     const el = headerRefM.current;
     if (!el) return;
     const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  useLayoutEffectM(() => {
+    const el = tabsRefM.current;
+    if (!el) return;
+    const measure = () => setTabsH(el.offsetHeight);
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -986,17 +1000,21 @@ function MobileHome() {
     "data-screen-label": "Home (mobile)"
   }, /*#__PURE__*/React.createElement(PushNotifBanner, null), /*#__PURE__*/React.createElement(MTopBar, {
     ref: headerRefM,
-    hidden: headerHidden,
+    hidden: chromeHidden,
     onMenu: () => setMenuOpen(true),
     onBell: () => setNotifOpen(true)
   }), /*#__PURE__*/React.createElement("div", {
     className: "m-scroll",
     ref: scrollRefM,
     style: {
-      paddingTop: headerHidden ? 0 : headerH
+      paddingTop: chromeHidden ? 0 : headerH,
+      paddingBottom: chromeHidden ? 0 : tabsH
     }
-  }, /*#__PURE__*/React.createElement(PFAM.Feed, null)), /*#__PURE__*/React.createElement(MTabBar, null), /*#__PURE__*/React.createElement("button", {
-    className: "m-fab",
+  }, /*#__PURE__*/React.createElement(PFAM.Feed, null)), /*#__PURE__*/React.createElement(MTabBar, {
+    ref: tabsRefM,
+    hidden: chromeHidden
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "m-fab" + (chromeHidden ? " m-fab-hidden" : ""),
     "aria-label": "Share a Post",
     onClick: () => setShareOpen(true)
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
