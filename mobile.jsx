@@ -4,7 +4,7 @@
    stack) inside the IOSDevice frame, with a mobile top bar + bottom tab bar.
    Shares one global scope with app.jsx, so names here are suffixed -M.
    =========================================================================== */
-const { useState: useStateM, useEffect: useEffectM } = React;
+const { useState: useStateM, useEffect: useEffectM, useRef: useRefM, useLayoutEffect: useLayoutEffectM, forwardRef: forwardRefM } = React;
 const DSM = window.ProfinityDesignSystem_c2b5cc;
 const PFAM = window.PFApp;
 
@@ -60,14 +60,14 @@ function PushNotifBanner() {
 
 }
 
-function MTopBar({ onMenu, onBell }) {
+const MTopBar = forwardRefM(function MTopBar({ onMenu, onBell, hidden }, ref) {
   const [showNotif, setShowNotif] = useStateM(true);
   useEffectM(() => {
     const t = setTimeout(() => setShowNotif(false), 5000);
     return () => clearTimeout(t);
   }, []);
   return (
-    <header className="m-top">
+    <header ref={ref} className={"m-top" + (hidden ? " m-top-hidden" : "")}>
       <button className="m-burger" aria-label="Menu" onClick={onMenu}><DSM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
       <img className="m-logo-light" src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
       <img className="m-logo-dark" src="assets/profinity-academy-logo-dark.jpg" alt="PROfinity Academy" />
@@ -92,7 +92,7 @@ function MTopBar({ onMenu, onBell }) {
       }
     </header>);
 
-}
+});
 
 const SM_CHANNELS = [
 { label: "Clinical Chat", icon: "lucide:stethoscope", n: 10 },
@@ -125,6 +125,7 @@ const SM_PROFILE_AFTER = [
 
 const NOTIFS = {
   "New": [
+  { who: "PROfinity Academy", avatar: "assets/profinity-icon.jpg", action: "Weekly Rewards are here! 🎉", detail: "Your weekly rewards have been calculated — claim your bonuses before they expire this Sunday.", t: "Just now", type: "reward", cta: "Claim Rewards" },
   { who: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png", action: "commented on your post", detail: "\"This is a nice article Katy!\"", t: "Just now", type: "comment" },
   { who: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", action: "liked on your comment", detail: "\"Full-Face Rejuvenation Increased Patient Satisfaction +64%\"", t: "2h", type: "love" }],
   "Yesterday": [
@@ -145,7 +146,8 @@ const NT_BADGE = {
   love: { icon: "fluent:heart-16-filled", bg: "var(--reaction-love)" },
   like: { icon: "fluent:thumb-like-16-filled", bg: "var(--reaction-like)" },
   follow: { icon: "fluent:person-add-16-filled", bg: "var(--ai-purple)" },
-  appointment: { icon: "fluent:calendar-checkmark-16-filled", bg: "var(--success)" }
+  appointment: { icon: "fluent:calendar-checkmark-16-filled", bg: "var(--success)" },
+  reward: { icon: "fluent:gift-16-filled", bg: "var(--premium-orange)" }
 };
 
 const NT_MENU = [
@@ -179,6 +181,11 @@ function NotifRow({ n }) {
         <div className="nt-rsvp">
             <button className="nt-reject">Reject</button>
             <button className="nt-accept">Accept</button>
+          </div>
+        }
+        {n.cta &&
+        <div className="nt-rsvp">
+            <button className="nt-accept">{n.cta}</button>
           </div>
         }
       </div>
@@ -516,15 +523,48 @@ function SelectChannelModal({ open, onClose }) {
 
 }
 
+function useHeaderHideM(scrollRef) {
+  const [hidden, setHidden] = useStateM(false);
+  useEffectM(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let lastY = el.scrollTop;
+    const onScroll = () => {
+      const y = el.scrollTop;
+      const delta = y - lastY;
+      if (y < 24) setHidden(false);
+      else if (delta > 6) setHidden(true);
+      else if (delta < -6) setHidden(false);
+      lastY = y;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+  return hidden;
+}
+
 function MobileHome() {
   const [menuOpen, setMenuOpen] = useStateM(false);
   const [notifOpen, setNotifOpen] = useStateM(false);
   const [shareOpen, setShareOpen] = useStateM(false);
+  const scrollRefM = useRefM(null);
+  const headerRefM = useRefM(null);
+  const [headerH, setHeaderH] = useStateM(0);
+  const headerHidden = useHeaderHideM(scrollRefM);
+  useLayoutEffectM(() => {
+    const el = headerRefM.current;
+    if (!el) return;
+    const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   return (
     <div className="m-screen" data-screen-label="Home (mobile)">
       <PushNotifBanner />
-      <MTopBar onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} />
-      <div className="m-scroll">
+      <MTopBar ref={headerRefM} hidden={headerHidden} onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} />
+      <div className="m-scroll" ref={scrollRefM} style={{ paddingTop: headerHidden ? 0 : headerH }}>
         <PFAM.Feed />
       </div>
       <MTabBar />

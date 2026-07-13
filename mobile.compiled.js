@@ -6,7 +6,10 @@
    =========================================================================== */
 const {
   useState: useStateM,
-  useEffect: useEffectM
+  useEffect: useEffectM,
+  useRef: useRefM,
+  useLayoutEffect: useLayoutEffectM,
+  forwardRef: forwardRefM
 } = React;
 const DSM = window.ProfinityDesignSystem_c2b5cc;
 const PFAM = window.PFApp;
@@ -106,17 +109,19 @@ function PushNotifBanner() {
     }
   }));
 }
-function MTopBar({
+const MTopBar = forwardRefM(function MTopBar({
   onMenu,
-  onBell
-}) {
+  onBell,
+  hidden
+}, ref) {
   const [showNotif, setShowNotif] = useStateM(true);
   useEffectM(() => {
     const t = setTimeout(() => setShowNotif(false), 5000);
     return () => clearTimeout(t);
   }, []);
   return /*#__PURE__*/React.createElement("header", {
-    className: "m-top"
+    ref: ref,
+    className: "m-top" + (hidden ? " m-top-hidden" : "")
   }, /*#__PURE__*/React.createElement("button", {
     className: "m-burger",
     "aria-label": "Menu",
@@ -192,7 +197,7 @@ function MTopBar({
     size: 17,
     color: "var(--white)"
   }), "48")));
-}
+});
 const SM_CHANNELS = [{
   label: "Clinical Chat",
   icon: "lucide:stethoscope",
@@ -270,6 +275,14 @@ const SM_PROFILE_AFTER = [{
 }];
 const NOTIFS = {
   "New": [{
+    who: "PROfinity Academy",
+    avatar: "assets/profinity-icon.jpg",
+    action: "Weekly Rewards are here! 🎉",
+    detail: "Your weekly rewards have been calculated — claim your bonuses before they expire this Sunday.",
+    t: "Just now",
+    type: "reward",
+    cta: "Claim Rewards"
+  }, {
     who: "Dr Tim Pearce",
     avatar: "assets/avatar-drtim.png",
     action: "commented on your post",
@@ -357,6 +370,10 @@ const NT_BADGE = {
   appointment: {
     icon: "fluent:calendar-checkmark-16-filled",
     bg: "var(--success)"
+  },
+  reward: {
+    icon: "fluent:gift-16-filled",
+    bg: "var(--premium-orange)"
   }
 };
 const NT_MENU = [{
@@ -419,7 +436,11 @@ function NotifRow({
     className: "nt-reject"
   }, "Reject"), /*#__PURE__*/React.createElement("button", {
     className: "nt-accept"
-  }, "Accept"))), /*#__PURE__*/React.createElement("div", {
+  }, "Accept")), n.cta && /*#__PURE__*/React.createElement("div", {
+    className: "nt-rsvp"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "nt-accept"
+  }, n.cta))), /*#__PURE__*/React.createElement("div", {
     className: "nt-more-wrap"
   }, /*#__PURE__*/React.createElement("button", {
     className: "nt-more",
@@ -924,18 +945,56 @@ function SelectChannelModal({
     }
   }, "Continue to Post"))));
 }
+function useHeaderHideM(scrollRef) {
+  const [hidden, setHidden] = useStateM(false);
+  useEffectM(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let lastY = el.scrollTop;
+    const onScroll = () => {
+      const y = el.scrollTop;
+      const delta = y - lastY;
+      if (y < 24) setHidden(false);else if (delta > 6) setHidden(true);else if (delta < -6) setHidden(false);
+      lastY = y;
+    };
+    el.addEventListener("scroll", onScroll, {
+      passive: true
+    });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+  return hidden;
+}
 function MobileHome() {
   const [menuOpen, setMenuOpen] = useStateM(false);
   const [notifOpen, setNotifOpen] = useStateM(false);
   const [shareOpen, setShareOpen] = useStateM(false);
+  const scrollRefM = useRefM(null);
+  const headerRefM = useRefM(null);
+  const [headerH, setHeaderH] = useStateM(0);
+  const headerHidden = useHeaderHideM(scrollRefM);
+  useLayoutEffectM(() => {
+    const el = headerRefM.current;
+    if (!el) return;
+    const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   return /*#__PURE__*/React.createElement("div", {
     className: "m-screen",
     "data-screen-label": "Home (mobile)"
   }, /*#__PURE__*/React.createElement(PushNotifBanner, null), /*#__PURE__*/React.createElement(MTopBar, {
+    ref: headerRefM,
+    hidden: headerHidden,
     onMenu: () => setMenuOpen(true),
     onBell: () => setNotifOpen(true)
   }), /*#__PURE__*/React.createElement("div", {
-    className: "m-scroll"
+    className: "m-scroll",
+    ref: scrollRefM,
+    style: {
+      paddingTop: headerHidden ? 0 : headerH
+    }
   }, /*#__PURE__*/React.createElement(PFAM.Feed, null)), /*#__PURE__*/React.createElement(MTabBar, null), /*#__PURE__*/React.createElement("button", {
     className: "m-fab",
     "aria-label": "Share a Post",

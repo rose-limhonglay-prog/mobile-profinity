@@ -270,15 +270,15 @@ img{max-width:100%}
   }
   .app.device-stage { display: none !important; }
   .app:not(.device-stage) {
-    height: 100dvh;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
   }
   .app:not(.device-stage) .pm-screen {
-    height: 100dvh;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
