@@ -1,0 +1,57 @@
+/* ===========================================================================
+   PROfinity — Admin Panel (mobile) · layout
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden;
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.ap-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-card); }
+
+.ap-top { flex: none; display: flex; align-items: center; gap: 12px; position: relative;
+  padding: 60px 20px 16px; border-bottom: 1px solid var(--border-default); }
+.ap-back { flex: none; width: 40px; height: 40px; border: none; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; }
+.ap-top h1 { flex: 1; text-align: center; margin: 0; padding-right: 40px;
+  font-family: var(--font-sans); font-weight: 600; font-size: 20px; color: var(--brand-navy); }
+
+.ap-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0 20px 32px; }
+.ap-scroll::-webkit-scrollbar { width: 0; }
+
+.ap-sec-h { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 11px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--gray-500); margin: 22px 0 6px; }
+.ap-sec-desc { margin: 0 0 16px; font-family: var(--font-sans); font-size: 13.5px; color: var(--gray-500); line-height: 1.5; }
+
+/* add-new row */
+.ap-add-row { display: flex; gap: 8px; }
+.ap-add-input { flex: 1; min-width: 0; padding: 12px 14px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--border-default); background: var(--surface-sunken);
+  font-family: var(--font-sans); font-size: 15px; color: var(--text-primary); }
+.ap-add-input:focus { outline: none; border-color: var(--brand-navy); }
+.ap-add-btn { flex: none; padding: 0 20px; border-radius: var(--r-sm); border: none; cursor: pointer;
+  background: var(--brand-navy); color: #fff; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; }
+.ap-add-btn:disabled { background: var(--gray-200); color: var(--gray-450); cursor: default; }
+.ap-add-warn { margin: 6px 2px 0; font-family: var(--font-sans); font-size: 12.5px; color: var(--error); }
+
+/* hashtag list */
+.ap-list { display: flex; flex-direction: column; margin-top: 18px; }
+.ap-row { display: flex; align-items: center; gap: 12px; padding: 13px 4px; border-bottom: 1px solid var(--border-default); }
+.ap-row:last-child { border-bottom: none; }
+.ap-row-icon { flex: none; width: 34px; height: 34px; border-radius: 10px; background: var(--brand-gold-100);
+  display: flex; align-items: center; justify-content: center; }
+.ap-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ap-row-label { font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15.5px; color: var(--text-heading); }
+.ap-row-slug { font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); }
+.ap-row-del { flex: none; width: 34px; height: 34px; border: none; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; border-radius: 8px; }
+.ap-row-del:active { background: var(--surface-sunken); }
+
+.ap-empty { padding: 16px 4px; font-family: var(--font-sans); font-size: 14px; color: var(--gray-500); }
+
+@media (max-width: 768px) {
+  body { background: var(--surface-card); }
+  .app.device-stage { padding: 0; }
+  .ap-screen { min-height: 100vh; }
+}
