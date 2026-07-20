@@ -11,7 +11,7 @@
 
   const ME_C = { name: "Katy Wilson", avatar: "assets/avatar-katy.jpg" };
 
-  function MTopBarC({ onMenu, onBell, dark }) {
+  function MTopBarC({ onMenu, onBell, onMessages, dark }) {
     return (
       <header className="m-top">
         <button className="m-burger" aria-label="Menu" onClick={onMenu}><DSC.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
@@ -22,7 +22,7 @@
           <DSC.IconifyIcon name="lucide:bell" size={20} color="var(--brand-navy)" />
           <span className="dot">12</span>
         </button>
-        <button className="m-iconbtn" aria-label="Messages">
+        <button className="m-iconbtn" aria-label="Messages" onClick={() => onMessages && onMessages()}>
           <DSC.IconifyIcon name="lucide:message-circle" size={20} color="var(--brand-navy)" />
           <span className="dot">12</span>
         </button>
@@ -49,12 +49,13 @@
   const SM_PROFILE_C = [
     { label: "Edit Profile", icon: "lucide:book-open", href: "ProfileMobile.html" },
     { label: "Account Settings", icon: "lucide:graduation-cap", href: null },
-    { label: "Notifications", icon: "lucide:calendar", href: null },
+    { label: "Notifications", icon: "lucide:calendar", href: "NotificationSettings.html" },
     { label: "Display Settings", icon: "lucide:cpu", href: "DisplaySettings.html" },
     { label: "Privacy & Security", icon: "lucide:book-open", href: null }];
 
   const NOTIFS_C = {
     "New": [
+      { who: "PROfinity Academy", avatar: "assets/profinity-icon.jpg", action: "Weekly Rewards are here! 🎉", detail: "Your weekly rewards have been calculated — claim your bonuses before they expire this Sunday.", t: "Just now", type: "reward", cta: "Claim Rewards" },
       { who: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png", action: "commented on your post", detail: "“This is a nice article Katy!”", t: "Just now", type: "comment" },
       { who: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", action: "liked on your comment", detail: "“Full-Face Rejuvenation Increased Patient Satisfaction +64%”", t: "2h", type: "love" }],
     "Yesterday": [
@@ -68,7 +69,8 @@
     love: { icon: "fluent:heart-16-filled", bg: "var(--reaction-love)" },
     like: { icon: "fluent:thumb-like-16-filled", bg: "var(--reaction-like)" },
     follow: { icon: "fluent:person-add-16-filled", bg: "var(--ai-purple)" },
-    appointment: { icon: "fluent:calendar-checkmark-16-filled", bg: "var(--success)" }
+    appointment: { icon: "fluent:calendar-checkmark-16-filled", bg: "var(--success)" },
+    reward: { icon: "fluent:gift-16-filled", bg: "var(--premium-orange)" }
   };
   const NT_MENU_C = [
     { label: "Turn off notifications like this", icon: "lucide:bell-off" },
@@ -101,6 +103,11 @@
             <div className="nt-rsvp">
               <button className="nt-reject">Reject</button>
               <button className="nt-accept">Accept</button>
+            </div>
+          }
+          {n.cta &&
+            <div className="nt-rsvp">
+              <button className="nt-accept">{n.cta}</button>
             </div>
           }
         </div>
@@ -145,6 +152,251 @@
                 {NOTIFS_C[sec].map((n, i) => <NotifRowC key={i} n={n} />)}
               </div>
             )}
+          </div>
+        </aside>
+      </div>);
+  }
+
+  const DM_THREADS_SEED_C = [
+    { id: "tim", name: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png", online: true, unread: 2,
+      messages: [
+        { me: false, text: "Hey Katy! I saw your post about the full-face rejuvenation case.", t: "10:12 AM" },
+        { me: true, text: "Thank you! It was a great result, patient was thrilled.", t: "10:20 AM" },
+        { me: false, text: "Do you mind if I share it with my team as a reference?", t: "10:25 AM" },
+        { me: true, text: "Of course, go ahead — sharing the write-up now.", t: "10:28 AM" },
+        { me: false, text: "Thanks for sharing the case study. Really helpful!", t: "10:30 AM" }] },
+    { id: "sarah", name: "Dr Sarah Kim", avatar: null, online: true, unread: 1,
+      messages: [
+        { me: false, text: "Are you free to go over the Q3 protocol updates this week?", t: "9:40 AM" },
+        { me: true, text: "Yes, Thursday afternoon works for me.", t: "9:52 AM" },
+        { me: false, text: "Looking forward to our next meeting!", t: "11:00 AM" }] },
+    { id: "emily", name: "Dr Emily Tran", avatar: null, online: false, unread: 3,
+      messages: [
+        { me: false, text: "Just finished reviewing the patient satisfaction data.", t: "10:50 AM" },
+        { me: false, text: "There's a trend worth flagging in the 45+ age group.", t: "11:05 AM" },
+        { me: false, text: "I have some additional insights to share.", t: "11:15 AM" }] },
+    { id: "james", name: "Dr James Brown", avatar: null, online: false, unread: 0, muted: true,
+      messages: [
+        { me: true, text: "Sent over the full results deck this morning.", t: "11:05 AM" },
+        { me: false, text: "Can we discuss the implications of the results?", t: "11:30 AM" }] },
+    { id: "alex", name: "Dr Alex Chen", avatar: null, online: true, unread: 0,
+      messages: [
+        { me: false, text: "The dosing charts you put together are excellent.", t: "11:40 AM" },
+        { me: false, text: "Great work on the data analysis!", t: "11:45 AM" }] },
+    { id: "miranda", name: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", online: false, unread: 0,
+      messages: [
+        { me: true, text: "Sharing the confidence-score writeup with you now.", t: "11:50 AM" },
+        { me: false, text: "Perfect, thank you — this is exactly what I needed.", t: "12:00 PM" }] }];
+
+  const VOICE_CONFS_SEED_C = [
+    { id: "vc1", name: "Clinical Case Review", who: "Dr Tim Pearce, Dr Sarah Kim +3", t: "Today, 4:00 PM", live: true },
+    { id: "vc2", name: "Business Growth Sync", who: "Miranda Pearce, Dr Alex Chen", t: "Tomorrow, 10:00 AM", live: false }];
+
+  const PF_GROUPS_KEY = "pf-dm-groups";
+
+  function readDmGroupsC() {
+    try { return JSON.parse(localStorage.getItem(PF_GROUPS_KEY)) || []; } catch (e) { return []; }
+  }
+
+  function groupDisplayNameC(members) {
+    const names = members.map((m) => m.name.replace(/^Dr\s+/, ""));
+    return names.length > 2 ? names.slice(0, 2).join(", ") + " +" + (names.length - 2) : names.join(", ");
+  }
+
+  function createDmGroupC(members, customName) {
+    const hasCustomName = !!(customName || "").trim();
+    const group = { id: "group-" + Date.now(), isGroup: true, customName: hasCustomName,
+      name: hasCustomName ? customName.trim() : groupDisplayNameC(members), members, messages: [] };
+    const groups = readDmGroupsC();
+    groups.unshift(group);
+    try { localStorage.setItem(PF_GROUPS_KEY, JSON.stringify(groups)); } catch (e) {}
+    return group;
+  }
+
+  function GroupAvatarStackC({ members, size }) {
+    const s = size || 52;
+    return (
+      <span className="mp-group-av" style={{ width: s, height: s }}>
+        {members.slice(0, 2).map((m, i) =>
+          <span className="mp-group-av-item" key={m.id || i}>
+            <DSC.Avatar name={m.name} src={m.avatar} size={Math.round(s * 0.68)} />
+          </span>
+        )}
+      </span>);
+  }
+
+  function MessagesRowC({ c, onOpen }) {
+    const last = c.messages && c.messages.length ? c.messages[c.messages.length - 1] : null;
+    return (
+      <button className="mp-row" onClick={onOpen}>
+        <span className="mp-av">
+          {c.isGroup ?
+            <GroupAvatarStackC members={c.members} /> :
+            <>
+              <DSC.Avatar name={c.name} src={c.avatar} size={52} />
+              {c.online && <span className="dm-online-dot" />}
+            </>
+          }
+        </span>
+        <span className="mp-main">
+          <span className="mp-row-top">
+            <span className="mp-name">{c.name}</span>
+            <span className="mp-time">{last ? last.t : ""}</span>
+          </span>
+          <span className="mp-row-bottom">
+            <span className="mp-preview">{last ? last.text : c.isGroup ? c.members.length + " members" : ""}</span>
+            {c.muted ?
+              <DSC.IconifyIcon name="lucide:bell-off" size={16} color="var(--gray-450)" /> :
+              c.unread > 0 &&
+              <span className="mp-badge">{c.unread}</span>
+            }
+          </span>
+        </span>
+      </button>);
+  }
+
+  function NewConversationScreenC({ contacts, picked, onToggle, query, onQuery, groupName, onGroupName, onBack, onCreate }) {
+    const filtered = contacts.filter((c) => c.name.toLowerCase().includes(query.toLowerCase()));
+    const count = picked.length;
+    return (
+      <div className="mp-new" data-screen-label="New Conversation">
+        <header className="nt-head">
+          <button className="nt-back" aria-label="Back to messages" onClick={onBack}>
+            <DSC.IconifyIcon name="lucide:arrow-left" size={24} color="var(--gray-900)" />
+          </button>
+          <h2 style={{ fontSize: "20px", fontWeight: "700" }}>New Conversation</h2>
+        </header>
+        <div className="nt-search mp-search">
+          <DSC.Icon name="search" size={20} color="var(--gray-450)" />
+          <input type="text" placeholder="Search people" aria-label="Search people" value={query} onChange={(e) => onQuery(e.target.value)} />
+        </div>
+        {count > 1 &&
+          <div className="mp-new-namewrap">
+            <input type="text" className="mp-new-nameinput" placeholder="Name this group (optional)"
+              aria-label="Group name" value={groupName} onChange={(e) => onGroupName(e.target.value)} />
+          </div>}
+        <div className="mp-new-list">
+          {filtered.map((c) => {
+            const on = picked.includes(c.id);
+            return (
+              <button key={c.id} className={"mp-new-row" + (on ? " on" : "")} onClick={() => onToggle(c.id)}>
+                <span className="mp-av"><DSC.Avatar name={c.name} src={c.avatar} size={44} /></span>
+                <span className="mp-new-name">{c.name}</span>
+                <span className={"mp-new-check" + (on ? " on" : "")}>
+                  {on && <DSC.IconifyIcon name="lucide:check" size={13} color="#fff" />}
+                </span>
+              </button>);
+          })}
+          {filtered.length === 0 && <div className="mp-new-empty">No people found.</div>}
+        </div>
+        <div className="mp-new-footer">
+          <span className="mp-new-count">{count} selected</span>
+          <button className="mp-new-create" disabled={count === 0} onClick={onCreate}>
+            {count > 1 ? "Create Group" : "Start Chat"}
+          </button>
+        </div>
+      </div>);
+  }
+
+  function VoiceConfRowC({ v }) {
+    return (
+      <div className="mp-row mp-vc-row">
+        <span className="mp-av mp-vc-icon">
+          <DSC.IconifyIcon name="lucide:phone-call" size={22} color="var(--brand-navy)" />
+        </span>
+        <span className="mp-main">
+          <span className="mp-row-top">
+            <span className="mp-name">{v.name}</span>
+            {v.live && <span className="mp-vc-live">LIVE</span>}
+          </span>
+          <span className="mp-row-bottom">
+            <span className="mp-preview">{v.who}</span>
+          </span>
+          <span className="mp-vc-time">{v.t}</span>
+        </span>
+      </div>);
+  }
+
+  function MessagesPanelC({ open, onClose }) {
+    const [tab, setTab] = useStateC("messages");
+    const [query, setQuery] = useStateC("");
+    const [screen, setScreen] = useStateC("list");
+    const [groups, setGroups] = useStateC([]);
+    const [picked, setPicked] = useStateC([]);
+    const [ncQuery, setNcQuery] = useStateC("");
+    const [groupName, setGroupName] = useStateC("");
+    useEffectC(() => {
+      if (!open) { setQuery(""); setScreen("list"); setPicked([]); setNcQuery(""); setGroupName(""); }
+      else { setGroups(readDmGroupsC()); }
+    }, [open]);
+    const allThreads = [...groups, ...DM_THREADS_SEED_C];
+    const filtered = allThreads.filter((t) => t.name.toLowerCase().includes(query.toLowerCase()));
+    const unreadTotal = DM_THREADS_SEED_C.reduce((n, t) => n + (t.unread || 0), 0);
+
+    function openThread(id) {
+      goC("DirectMessage.html?id=" + id + "&from=LearningMobile.html");
+    }
+
+    function togglePick(id) {
+      setPicked((all) => all.includes(id) ? all.filter((x) => x !== id) : [...all, id]);
+    }
+
+    function handleCreate() {
+      if (picked.length === 0) return;
+      if (picked.length === 1) { openThread(picked[0]); return; }
+      const members = DM_THREADS_SEED_C
+        .filter((c) => picked.includes(c.id))
+        .map((c) => ({ id: c.id, name: c.name, avatar: c.avatar }));
+      const group = createDmGroupC(members, groupName);
+      openThread(group.id);
+    }
+
+    if (screen === "new") {
+      return (
+        <div className={"m-drawer-wrap" + (open ? " open" : "")} aria-hidden={!open}>
+          <div className="m-drawer-scrim" onClick={onClose} />
+          <aside className="m-drawer nt-panel mp-panel" role="dialog" aria-modal="true" aria-label="New Conversation">
+            <NewConversationScreenC contacts={DM_THREADS_SEED_C} picked={picked} onToggle={togglePick}
+              query={ncQuery} onQuery={setNcQuery} groupName={groupName} onGroupName={setGroupName}
+              onBack={() => setScreen("list")} onCreate={handleCreate} />
+          </aside>
+        </div>);
+    }
+
+    return (
+      <div className={"m-drawer-wrap" + (open ? " open" : "")} aria-hidden={!open}>
+        <div className="m-drawer-scrim" onClick={onClose} />
+        <aside className="m-drawer nt-panel mp-panel" role="dialog" aria-modal="true" aria-label="Messages">
+          <header className="nt-head">
+            <button className="nt-back" aria-label="Close" onClick={onClose}>
+              <DSC.IconifyIcon name="lucide:arrow-left" size={24} color="var(--gray-900)" />
+            </button>
+            <h2 style={{ fontSize: "26px", fontWeight: "700" }}>Messages</h2>
+            <button className="mp-compose" aria-label="New message" onClick={() => setScreen("new")}>
+              <DSC.IconifyIcon name="lucide:square-pen" size={20} color="var(--gray-900)" />
+            </button>
+          </header>
+          <div className="mp-tabs" role="tablist" aria-label="Messages or voice conference">
+            <button role="tab" aria-selected={tab === "messages"} className={"mp-tab" + (tab === "messages" ? " on" : "")} onClick={() => setTab("messages")}>
+              <DSC.IconifyIcon name="lucide:message-circle" size={16} color={tab === "messages" ? "var(--brand-navy)" : "var(--gray-450)"} />
+              Messages
+              {unreadTotal > 0 && <span className="mp-tab-badge">{unreadTotal}</span>}
+            </button>
+            <button role="tab" aria-selected={tab === "voice"} className={"mp-tab" + (tab === "voice" ? " on" : "")} onClick={() => setTab("voice")}>
+              <DSC.IconifyIcon name="lucide:phone" size={16} color={tab === "voice" ? "var(--brand-navy)" : "var(--gray-450)"} />
+              Voice Conference
+              <span className="mp-tab-badge">{VOICE_CONFS_SEED_C.length}</span>
+            </button>
+          </div>
+          <div className="nt-search mp-search">
+            <DSC.Icon name="search" size={20} color="var(--gray-450)" />
+            <input type="text" placeholder="Search messages" aria-label="Search messages" value={query} onChange={(e) => setQuery(e.target.value)} />
+          </div>
+          <div className="nt-body mp-body">
+            {tab === "messages" ?
+              filtered.map((c) => <MessagesRowC key={c.id} c={c} onOpen={() => openThread(c.id)} />) :
+              VOICE_CONFS_SEED_C.map((v) => <VoiceConfRowC key={v.id} v={v} />)
+            }
           </div>
         </aside>
       </div>);
@@ -265,6 +517,7 @@
   function MobileChromeC() {
     const [menuOpen, setMenuOpen] = useStateC(false);
     const [notifOpen, setNotifOpen] = useStateC(false);
+    const [msgOpen, setMsgOpen] = useStateC(false);
     const [dark, setDark] = useStateC(() => {
       try { return localStorage.getItem("pf-mobile-dark") === "1"; } catch (e) { return false; }
     });
@@ -273,9 +526,10 @@
     }, [dark]);
     return (
       <React.Fragment>
-        <MTopBarC onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} dark={dark} />
+        <MTopBarC onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} onMessages={() => setMsgOpen(true)} dark={dark} />
         <SideMenuC open={menuOpen} onClose={() => setMenuOpen(false)} dark={dark} onToggleDark={() => setDark((v) => !v)} />
         <NotificationsPanelC open={notifOpen} onClose={() => setNotifOpen(false)} />
+        <MessagesPanelC open={msgOpen} onClose={() => setMsgOpen(false)} />
       </React.Fragment>);
   }
 

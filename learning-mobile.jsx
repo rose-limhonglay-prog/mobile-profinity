@@ -36,7 +36,7 @@ const LM_TABS = [
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
 { key: "Learning", label: "My Learning", icon: "lucide:book-open", href: null },
 { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
-{ key: "Agent", label: "Agent", icon: "lucide:sparkles", href: "Agent.html" }];
+{ key: "Agent", label: "Agent", icon: "lucide:sparkles", href: "AgentMobile.html" }];
 
 
 function useDeviceScaleL() {

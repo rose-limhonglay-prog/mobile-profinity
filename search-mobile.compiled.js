@@ -117,6 +117,29 @@ function SRRecentRow({
     color: "var(--gray-500)"
   })));
 }
+function SRPostRow({
+  post,
+  tag
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    className: "sr-post-row",
+    onClick: () => {}
+  }, /*#__PURE__*/React.createElement(DSSR.Avatar, {
+    name: post.author?.name,
+    src: post.author?.avatar,
+    size: 40
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "sr-post-main"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sr-post-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sr-post-name"
+  }, post.author?.name), tag && ["confidence", "mastery", "freedom", "inner-circle"].includes(tag.slug) && /*#__PURE__*/React.createElement("span", {
+    className: "pf-hashtag-badge"
+  }, "#", tag.label)), /*#__PURE__*/React.createElement("span", {
+    className: "sr-post-body"
+  }, post.body)));
+}
 function SRPersonCard({
   p
 }) {
@@ -159,6 +182,10 @@ function SRPersonCard({
 }
 function SearchPage() {
   const [query, setQuery] = useStateSR("");
+  const [allTags] = useStateSR(() => window.PFHashtags ? window.PFHashtags.getAll() : []);
+  const q = query.trim().toLowerCase().replace(/^#/, "");
+  const matchedTag = q ? allTags.find(t => t.slug === t.slug && (t.label.toLowerCase() === q || t.slug === q || t.label.toLowerCase().includes(q))) : null;
+  const matchedPosts = matchedTag && window.PFApp ? window.PFApp.getAllPosts().filter(p => (p.hashtags || []).includes(matchedTag.slug)).slice(0, 8) : [];
   return /*#__PURE__*/React.createElement("div", {
     className: "sr-screen",
     "data-screen-label": "Search (mobile)"
@@ -191,6 +218,32 @@ function SearchPage() {
     className: "sr-sec"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sr-sec-title"
+  }, "Browse hashtags")), /*#__PURE__*/React.createElement("div", {
+    className: "pf-tagbar",
+    style: {
+      padding: "0 20px 4px"
+    }
+  }, allTags.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.slug,
+    type: "button",
+    className: "pf-tagchip" + (matchedTag && matchedTag.slug === t.slug ? " on" : ""),
+    onClick: () => setQuery(t.label)
+  }, "#", t.label))), matchedTag ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "sr-sec"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sr-sec-title"
+  }, "Posts tagged #", matchedTag.label)), /*#__PURE__*/React.createElement("div", {
+    className: "sr-list"
+  }, matchedPosts.length > 0 ? matchedPosts.map(p => /*#__PURE__*/React.createElement(SRPostRow, {
+    key: p.id,
+    post: p,
+    tag: matchedTag
+  })) : /*#__PURE__*/React.createElement("div", {
+    className: "sr-empty"
+  }, "No posts tagged #", matchedTag.label, " yet."))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "sr-sec"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sr-sec-title"
   }, "Recent"), /*#__PURE__*/React.createElement("button", {
     className: "sr-sec-link"
   }, "See all")), /*#__PURE__*/React.createElement("div", {
@@ -209,7 +262,7 @@ function SearchPage() {
   }, SR_PEOPLE.map(p => /*#__PURE__*/React.createElement(SRPersonCard, {
     key: p.id,
     p: p
-  })))));
+  }))))));
 }
 function SearchApp() {
   const mobile = useIsMobileSR();

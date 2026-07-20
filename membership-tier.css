@@ -1,0 +1,154 @@
+/* ===========================================================================
+   PROfinity — Membership Tier (mobile) · layout
+   Loaded after the DS tokens; styles the subscription / pricing screen.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.mt-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-page); position: relative; }
+
+/* top bar — sits over the dark hero, so it stays navy regardless of scroll */
+.mt-top { flex: none; display: flex; align-items: center; gap: 12px; position: relative;
+  padding: 60px 20px 16px; background: var(--brand-navy-900); }
+.mt-back { flex: none; width: 40px; height: 40px; border: none; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; }
+.mt-top h1 { flex: 1; text-align: center; margin: 0; padding-right: 40px;
+  font-family: var(--font-sans); font-weight: 600; font-size: 18px; color: #fff; }
+
+.mt-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.mt-scroll::-webkit-scrollbar { width: 0; }
+
+/* ---------- shared type ---------- */
+.mt-eyebrow { display: block; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 12px;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--brand-gold-soft); margin-bottom: 10px; }
+.mt-eyebrow.dark { color: var(--premium-orange); }
+.mt-eyebrow.gold { color: var(--brand-gold-soft); }
+
+.mt-btn-fill, .mt-btn-outline { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px;
+  border-radius: var(--r-pill); padding: 14px 20px; cursor: pointer; display: flex; align-items: center;
+  justify-content: center; gap: 6px; flex: 1; border: none; }
+.mt-btn-fill { background: var(--premium-badge); color: #fff; }
+.mt-btn-outline { background: transparent; border: 1.5px solid rgba(255,255,255,.5); color: #fff; }
+
+.mt-hero-ctas { display: flex; gap: 10px; margin: 18px 0 22px; }
+
+/* ---------- hero ---------- */
+.mt-hero { background: var(--brand-navy-900); padding: 28px 22px 22px; color: #fff; }
+.mt-hero-title { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 30px; line-height: 1.15;
+  margin: 0 0 12px; color: #fff; }
+.mt-hero-title span { color: var(--brand-gold-soft); }
+.mt-hero-sub { font-family: var(--font-sans); font-size: 15px; line-height: 1.5; color: rgba(255,255,255,.72); margin: 0; }
+
+.mt-stats { display: flex; justify-content: space-between; gap: 10px; padding-top: 4px; }
+.mt-stat { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.mt-stat-value { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 22px; color: #fff; }
+.mt-stat-label { font-family: var(--font-sans); font-size: 12px; color: rgba(255,255,255,.6); }
+
+.mt-trial-banner { display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: var(--brand-gold-soft); color: var(--brand-navy-900); font-family: var(--font-sans);
+  font-weight: var(--fw-bold); font-size: 13px; letter-spacing: .03em; text-transform: uppercase;
+  padding: 12px 16px; }
+
+/* ---------- light programme section ---------- */
+.mt-section { padding: 32px 20px 8px; }
+.mt-section-title { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 24px;
+  color: var(--brand-navy); margin: 0 0 8px; }
+.mt-section-sub { font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--gray-500);
+  margin: 0 0 22px; }
+
+/* ---------- freedom path (dark) ---------- */
+.mt-freedom { background: var(--brand-navy-900); padding: 32px 20px 8px; }
+.mt-freedom-sub { font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: rgba(255,255,255,.7);
+  margin: 0 0 22px; }
+
+/* ---------- tier cards ---------- */
+.mt-tier { position: relative; background: var(--surface-card); border: 1px solid var(--border-default);
+  border-radius: var(--r-lg); padding: 22px 20px; margin-bottom: 20px; box-shadow: var(--shadow-card); }
+.mt-tier.highlight { border-color: var(--brand-gold-soft); border-width: 2px; box-shadow: 0 4px 16px rgba(206,153,87,.18); }
+.mt-tier.dark { background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.14); }
+
+.mt-tier-badge { position: absolute; top: -12px; left: 20px; display: inline-flex; align-items: center; gap: 5px;
+  background: var(--premium-badge); color: #fff; font-family: var(--font-sans); font-weight: var(--fw-bold);
+  font-size: 11px; letter-spacing: .04em; text-transform: uppercase; padding: 5px 12px; border-radius: var(--r-pill); }
+
+.mt-tier-head { display: flex; align-items: center; gap: 8px; }
+.mt-tier-head h3 { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 20px; margin: 0;
+  color: var(--brand-navy); }
+.mt-tier.dark .mt-tier-head h3 { color: #fff; }
+.mt-tier-icon { display: flex; }
+
+.mt-tier-tagline { font-family: var(--font-sans); font-size: 13px; color: var(--gray-500); margin: 4px 0 0; }
+.mt-tier.dark .mt-tier-tagline { color: rgba(255,255,255,.6); }
+
+.mt-tier-price { display: flex; align-items: baseline; gap: 4px; margin-top: 14px; }
+.mt-tier-amount { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 30px; color: var(--brand-navy); }
+.mt-tier.dark .mt-tier-amount { color: #fff; }
+.mt-tier-period { font-family: var(--font-sans); font-size: 13px; color: var(--gray-500); }
+.mt-tier.dark .mt-tier-period { color: rgba(255,255,255,.6); }
+
+.mt-tier-sub { font-family: var(--font-sans); font-size: 12px; color: var(--gray-500); margin: 6px 0 0;
+  display: flex; align-items: center; gap: 8px; }
+.mt-tier.dark .mt-tier-sub { color: rgba(255,255,255,.55); }
+.mt-tier-sub-muted { font-weight: var(--fw-bold); color: var(--gray-600); }
+.mt-tier.dark .mt-tier-sub-muted { color: rgba(255,255,255,.85); }
+.mt-tier-free { background: var(--brand-gold-100); color: var(--premium-orange); font-weight: var(--fw-bold);
+  font-size: 10px; letter-spacing: .03em; text-transform: uppercase; padding: 3px 8px; border-radius: var(--r-pill); }
+
+.mt-tier-features { list-style: none; margin: 16px 0 18px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.mt-tier-features li { display: flex; align-items: flex-start; gap: 8px; font-family: var(--font-sans);
+  font-size: 14px; color: var(--gray-600); line-height: 1.4; }
+.mt-tier.dark .mt-tier-features li { color: rgba(255,255,255,.85); }
+.mt-tier-features li svg, .mt-tier-features li iconify-icon { flex: none; margin-top: 2px; }
+
+.mt-tier-cta { width: 100%; border: none; border-radius: var(--r-pill); background: var(--brand-navy);
+  color: #fff; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; padding: 13px 16px;
+  display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; }
+.mt-tier-cta.on-dark { background: var(--brand-gold-soft); color: var(--brand-navy-900); }
+
+/* ---------- comparison table ---------- */
+.mt-compare { background: var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--r-lg);
+  overflow: hidden; }
+.mt-compare-group + .mt-compare-group { border-top: 1px solid var(--border-default); }
+.mt-compare-group-h { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 11px;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--premium-orange); background: var(--brand-gold-100);
+  padding: 10px 16px; }
+.mt-compare-row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px; border-top: 1px solid var(--gray-100); }
+.mt-compare-group-h + .mt-compare-row { border-top: none; }
+.mt-compare-label { font-family: var(--font-sans); font-size: 13px; color: var(--gray-600); line-height: 1.35; flex: 1; }
+.mt-compare-stars { flex: none; display: flex; gap: 2px; }
+
+/* ---------- existing course owners ---------- */
+.mt-owners { background: var(--brand-navy-900); padding: 32px 20px; color: #fff; }
+.mt-owners h2 { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 22px; margin: 0 0 8px; }
+.mt-owners p { font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: rgba(255,255,255,.72);
+  margin: 0 0 20px; }
+.mt-owners-list { display: flex; flex-direction: column; gap: 12px; }
+.mt-owners-row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: var(--r-md);
+  padding: 14px 16px; }
+.mt-owners-label { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 14px; color: #fff; }
+.mt-owners-desc { font-family: var(--font-sans); font-size: 12px; color: rgba(255,255,255,.6); margin-top: 2px; }
+.mt-owners-price { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 18px; color: var(--brand-gold-soft); }
+
+/* ---------- footer ---------- */
+.mt-footer { background: var(--brand-navy-900); padding: 6px 20px 40px; color: #fff; text-align: center; }
+.mt-footer h2 { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 24px; margin: 0 0 8px; }
+.mt-footer p { font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: rgba(255,255,255,.72); margin: 0; }
+.mt-footer-note { font-size: 12px !important; color: rgba(255,255,255,.5) !important; margin-top: 14px !important; }
+.mt-footer-brand { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 26px;
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 14px; color: #fff; }
+.mt-footer-logo { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px;
+  border-radius: 6px; background: var(--brand-gold-soft); color: var(--brand-navy-900); font-size: 13px; }
+.mt-footer-copy { font-size: 11px !important; color: rgba(255,255,255,.4) !important; margin-top: 10px !important; }
+
+/* real-mobile fullscreen */
+@media (max-width: 768px) {
+  body { background: var(--brand-navy-900); }
+  .app.device-stage { padding: 0; }
+  .mt-screen { min-height: 100vh; }
+}

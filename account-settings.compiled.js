@@ -65,7 +65,7 @@ const AS_PROFILE_ITEMS_BEFORE = [{
 }, {
   label: "Notifications",
   icon: "lucide:calendar",
-  href: null
+  href: "NotificationSettings.html"
 }];
 const AS_PROFILE_ITEMS_AFTER = [{
   label: "Privacy & Security",

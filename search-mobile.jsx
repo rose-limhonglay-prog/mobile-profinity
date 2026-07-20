@@ -66,6 +66,22 @@ function SRRecentRow({ r }) {
   );
 }
 
+function SRPostRow({ post, tag }) {
+  return (
+    <button className="sr-post-row" onClick={() => {}}>
+      <DSSR.Avatar name={post.author?.name} src={post.author?.avatar} size={40} />
+      <span className="sr-post-main">
+        <span className="sr-post-top">
+          <span className="sr-post-name">{post.author?.name}</span>
+          {tag && ["confidence", "mastery", "freedom", "inner-circle"].includes(tag.slug) &&
+            <span className="pf-hashtag-badge">#{tag.label}</span>}
+        </span>
+        <span className="sr-post-body">{post.body}</span>
+      </span>
+    </button>
+  );
+}
+
 function SRPersonCard({ p }) {
   const [added, setAdded] = useStateSR(false);
   return (
@@ -101,6 +117,14 @@ function SRPersonCard({ p }) {
 
 function SearchPage() {
   const [query, setQuery] = useStateSR("");
+  const [allTags] = useStateSR(() => (window.PFHashtags ? window.PFHashtags.getAll() : []));
+
+  const q = query.trim().toLowerCase().replace(/^#/, "");
+  const matchedTag = q ? allTags.find((t) => t.slug === t.slug && (t.label.toLowerCase() === q || t.slug === q || t.label.toLowerCase().includes(q))) : null;
+  const matchedPosts = matchedTag && window.PFApp
+    ? window.PFApp.getAllPosts().filter((p) => (p.hashtags || []).includes(matchedTag.slug)).slice(0, 8)
+    : [];
+
   return (
     <div className="sr-screen" data-screen-label="Search (mobile)">
       <header className="sr-head">
@@ -122,20 +146,48 @@ function SearchPage() {
 
       <div className="sr-scroll">
         <div className="sr-sec">
-          <span className="sr-sec-title">Recent</span>
-          <button className="sr-sec-link">See all</button>
+          <span className="sr-sec-title">Browse hashtags</span>
         </div>
-        <div className="sr-list">
-          {SR_RECENT.map((r) => <SRRecentRow key={r.id} r={r} />)}
+        <div className="pf-tagbar" style={{ padding: "0 20px 4px" }}>
+          {allTags.map((t) => (
+            <button key={t.slug} type="button"
+              className={"pf-tagchip" + (matchedTag && matchedTag.slug === t.slug ? " on" : "")}
+              onClick={() => setQuery(t.label)}>
+              #{t.label}
+            </button>
+          ))}
         </div>
 
-        <div className="sr-sec">
-          <span className="sr-sec-title">People you may know</span>
-          <button className="sr-sec-link">See all</button>
-        </div>
-        <div className="sr-people-grid">
-          {SR_PEOPLE.map((p) => <SRPersonCard key={p.id} p={p} />)}
-        </div>
+        {matchedTag ? (
+          <React.Fragment>
+            <div className="sr-sec">
+              <span className="sr-sec-title">Posts tagged #{matchedTag.label}</span>
+            </div>
+            <div className="sr-list">
+              {matchedPosts.length > 0
+                ? matchedPosts.map((p) => <SRPostRow key={p.id} post={p} tag={matchedTag} />)
+                : <div className="sr-empty">No posts tagged #{matchedTag.label} yet.</div>}
+            </div>
+          </React.Fragment>
+        ) : (
+          <React.Fragment>
+            <div className="sr-sec">
+              <span className="sr-sec-title">Recent</span>
+              <button className="sr-sec-link">See all</button>
+            </div>
+            <div className="sr-list">
+              {SR_RECENT.map((r) => <SRRecentRow key={r.id} r={r} />)}
+            </div>
+
+            <div className="sr-sec">
+              <span className="sr-sec-title">People you may know</span>
+              <button className="sr-sec-link">See all</button>
+            </div>
+            <div className="sr-people-grid">
+              {SR_PEOPLE.map((p) => <SRPersonCard key={p.id} p={p} />)}
+            </div>
+          </React.Fragment>
+        )}
       </div>
     </div>
   );

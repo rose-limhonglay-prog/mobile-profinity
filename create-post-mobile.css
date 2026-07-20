@@ -76,6 +76,11 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 .cp-img-rm{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:none;cursor:pointer;
   background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center}
 
+/* ===== hashtag picker ===== */
+.cp-tags{padding:0 16px 12px;display:flex;flex-direction:column;gap:6px}
+.cp-tags .cp-attach-label{margin-bottom:0}
+.cp-tags .pf-tagbar{padding:0}
+
 /* ===== attachment toolbar ===== */
 .cp-attach-bar{flex:none;border-top:1px solid var(--border-default);
   padding:12px 16px 34px;background:var(--surface-card);display:flex;flex-direction:column;gap:8px}

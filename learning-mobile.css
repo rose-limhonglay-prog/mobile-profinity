@@ -157,7 +157,7 @@ img { max-width: 100%; }
 @media (max-width: 768px) {
   body { background: var(--surface-card); }
   .app.device-stage { padding: 0; }
-  .lm-screen { min-height: 100vh; }
+  .lm-screen { min-height: 100vh; overflow: hidden; overflow: clip; }
 }
 
 /* ===== Survey overlay ===== */

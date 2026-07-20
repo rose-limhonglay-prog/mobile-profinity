@@ -1,0 +1,65 @@
+/* ===========================================================================
+   PROfinity — Notification Settings (mobile) · layout
+   Loaded after the DS tokens; styles the notification preferences screen.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* center the device on the gray backdrop */
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.ns-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-page); position: relative; }
+
+/* top bar (clears status bar + Dynamic Island) */
+.ns-top { flex: none; display: flex; align-items: center; gap: 12px; position: relative;
+  padding: 60px 20px 16px; background: var(--surface-card); border-bottom: 1px solid var(--border-default); }
+.ns-back { flex: none; width: 40px; height: 40px; border: none; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; }
+.ns-top h1 { flex: 1; text-align: center; margin: 0; padding-right: 40px;
+  font-family: var(--font-sans); font-weight: 600; font-size: 20px; color: var(--text-heading); }
+
+.ns-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 24px 18px 28px; }
+.ns-scroll::-webkit-scrollbar { width: 0; }
+
+.ns-sec-h { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 24px;
+  color: var(--brand-navy); margin: 0 4px 8px; }
+.ns-sec-desc { font-family: var(--font-sans); font-size: 15px; line-height: 1.4; color: var(--gray-500);
+  margin: 0 4px 20px; }
+
+.ns-card { background: var(--surface-card); border-radius: 18px; padding: 20px;
+  box-shadow: 0 1px 3px rgba(12,12,13,.05); margin-bottom: 20px; }
+.ns-card-h { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 19px; color: var(--brand-navy); }
+.ns-card-desc { font-family: var(--font-sans); font-size: 14px; line-height: 1.4; color: var(--gray-500);
+  margin: 4px 0 16px; }
+
+.ns-divider { height: 1px; background: var(--gray-150); margin: 14px 0; }
+
+/* toggle rows */
+.ns-toggle-row { display: flex; align-items: center; gap: 14px; }
+.ns-toggle-copy { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ns-toggle-label { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 17px; color: var(--brand-navy); }
+.ns-toggle-desc { font-family: var(--font-sans); font-size: 14px; line-height: 1.4; color: var(--gray-500); }
+
+.ns-switch { flex: none; width: 52px; height: 30px; border-radius: var(--r-pill); background: var(--gray-300);
+  border: none; position: relative; cursor: pointer; padding: 0; transition: background .18s ease; }
+.ns-knob { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 3px rgba(16,24,40,.3); transition: transform .18s ease; }
+.ns-switch.on { background: var(--brand-navy); }
+.ns-switch.on .ns-knob { transform: translateX(22px); }
+
+/* notification tone slider */
+.ns-tone-row { display: flex; flex-direction: column; gap: 12px; }
+.ns-slider { position: relative; width: 100%; height: 6px; border-radius: var(--r-pill); background: var(--gray-200);
+  cursor: pointer; }
+.ns-slider-fill { position: absolute; top: 0; left: 0; height: 100%; border-radius: var(--r-pill); background: var(--brand-navy); }
+.ns-slider-thumb { position: absolute; top: 50%; width: 20px; height: 20px; border-radius: 50%; background: #fff;
+  border: 2px solid var(--brand-navy); box-shadow: 0 1px 3px rgba(16,24,40,.3); transform: translate(-50%, -50%); }
+
+/* real-mobile fullscreen */
+@media (max-width: 768px) {
+  body { background: var(--surface-page); }
+  .app.device-stage { padding: 0; }
+  .ns-screen { min-height: 100vh; }
+}

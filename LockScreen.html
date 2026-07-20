@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>PROfinity — Lock Screen</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:#d8dae2;
+    font-family:-apple-system,"SF Pro",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .stage{
+    height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  }
+
+  .device{
+    width:402px;height:874px;border-radius:48px;overflow:hidden;position:relative;
+    background:#000;
+    box-shadow:0 40px 80px rgba(0,0,0,.18),0 0 0 1px rgba(0,0,0,.12);
+    touch-action:none;user-select:none;
+  }
+
+  .dynamic-island{
+    position:absolute;top:11px;left:50%;transform:translateX(-50%);
+    width:126px;height:37px;border-radius:24px;background:#000;z-index:50;
+  }
+
+  /* everything that slides up when the lock screen is swiped away */
+  .lock-screen{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(circle at 50% 10%, #8577a8 0%, #6a5a94 18%, #4c4179 42%, #2c2456 70%, #171338 100%);
+    display:flex;flex-direction:column;
+  }
+
+  /* ===== status bar ===== */
+  .status-bar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:21px 26px 0;position:relative;z-index:20;
+  }
+  .sb-time{font-size:17px;font-weight:590;color:#fff;letter-spacing:-.2px}
+  .sb-icons{display:flex;align-items:center;gap:7px}
+
+  /* ===== lock icon + date/time ===== */
+  .lock-mid{display:flex;flex-direction:column;align-items:center;padding-top:26px}
+  .lock-icon{
+    width:36px;height:36px;border-radius:50%;
+    background:rgba(255,255,255,.16);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;margin-bottom:18px;
+  }
+  .lock-date{color:rgba(255,255,255,.92);font-size:18px;font-weight:590;letter-spacing:-.2px;margin-bottom:2px}
+  .lock-time{color:#fff;font-size:92px;font-weight:600;letter-spacing:-2px;line-height:1;margin-top:2px}
+
+  /* ===== notifications ===== */
+  .notif-stack{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:0 16px 12px;gap:9px}
+  .notif-card{
+    border-radius:20px;padding:12px 14px 14px;
+    background:rgba(90,80,130,.42);
+    backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 8px 24px rgba(0,0,0,.18);
+    cursor:pointer;transition:transform .12s ease;
+  }
+  .notif-card:active{transform:scale(.98)}
+  .notif-card.secondary{background:rgba(80,70,118,.34)}
+  .notif-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .notif-icon{
+    width:22px;height:22px;border-radius:6px;object-fit:cover;
+    background:#fff;flex:none;
+  }
+  .notif-app{
+    color:rgba(255,255,255,.85);font-size:12px;font-weight:700;
+    letter-spacing:.03em;text-transform:uppercase;flex:1;
+  }
+  .notif-time{color:rgba(255,255,255,.6);font-size:13px;font-weight:500}
+  .notif-title{color:#fff;font-size:15px;font-weight:700;line-height:1.35;margin-bottom:2px}
+  .notif-body{color:rgba(255,255,255,.88);font-size:14.5px;line-height:1.4}
+
+  .notif-grip{width:36px;height:5px;border-radius:100px;background:rgba(255,255,255,.35);margin:4px auto 0}
+
+  /* ===== bottom fabs ===== */
+  .lock-bottom{display:flex;align-items:center;justify-content:space-between;padding:14px 24px 26px}
+  .lock-fab{
+    width:50px;height:50px;border-radius:50%;border:none;
+    background:rgba(255,255,255,.16);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    box-shadow:inset 1px 1px 1px rgba(255,255,255,.15);
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  .home-indicator{
+    position:absolute;bottom:0;left:0;right:0;z-index:60;
+    height:34px;display:flex;justify-content:center;align-items:flex-end;
+    padding-bottom:8px;pointer-events:none;
+  }
+  .home-indicator span{width:139px;height:5px;border-radius:100px;background:rgba(255,255,255,.85)}
+</style>
+</head>
+<body>
+
+  <div class="stage" id="stage">
+  <div class="device" id="device">
+    <div class="dynamic-island"></div>
+
+    <div class="lock-screen" id="lockScreen">
+      <div class="status-bar">
+        <span class="sb-time">9:41</span>
+        <div class="sb-icons">
+          <svg width="19" height="12" viewBox="0 0 19 12"><rect x="0" y="7.5" width="3.2" height="4.5" rx="0.7" fill="#fff"/><rect x="4.8" y="5" width="3.2" height="7" rx="0.7" fill="#fff"/><rect x="9.6" y="2.5" width="3.2" height="9.5" rx="0.7" fill="#fff"/><rect x="14.4" y="0" width="3.2" height="12" rx="0.7" fill="#fff"/></svg>
+          <svg width="17" height="12" viewBox="0 0 17 12"><path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z" fill="#fff"/><path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z" fill="#fff"/><circle cx="8.5" cy="10.5" r="1.5" fill="#fff"/></svg>
+          <svg width="27" height="13" viewBox="0 0 27 13"><rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke="#fff" stroke-opacity="0.4" fill="none"/><rect x="2" y="2" width="20" height="9" rx="2" fill="#fff"/><path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill="#fff" fill-opacity="0.4"/></svg>
+        </div>
+      </div>
+
+      <div class="lock-mid">
+        <div class="lock-icon">
+          <svg width="15" height="18" viewBox="0 0 15 18" fill="none"><path d="M3.5 7.5V5.25C3.5 3.18 5.18 1.5 7.5 1.5C9.82 1.5 11.5 3.18 11.5 5.25V7.5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><rect x="1.5" y="7.5" width="12" height="9" rx="2.2" fill="#fff"/></svg>
+        </div>
+        <div class="lock-date">Thursday, 9 July</div>
+        <div class="lock-time">9:41</div>
+      </div>
+
+      <div class="notif-stack">
+        <div class="notif-card" data-notif>
+          <div class="notif-head">
+            <img class="notif-icon" src="assets/profinity-icon.jpg" alt="" />
+            <span class="notif-app">Profinity</span>
+            <span class="notif-time">now</span>
+          </div>
+          <div class="notif-title">Weekly Rewards are here! 🎉</div>
+          <div class="notif-body">Your weekly rewards have been calculated. Open the app to claim your bonuses before they expire this Sunday.</div>
+        </div>
+        <div class="notif-card secondary" data-notif>
+          <div class="notif-head">
+            <img class="notif-icon" src="assets/profinity-icon.jpg" alt="" />
+            <span class="notif-app">Profinity</span>
+            <span class="notif-time">8m ago</span>
+          </div>
+          <div class="notif-title">Dr Tim Pearce commented on your post</div>
+          <div class="notif-body">"Beautiful correction — the symmetry is spot on."</div>
+        </div>
+        <div class="notif-grip"></div>
+      </div>
+
+      <div class="lock-bottom">
+        <button class="lock-fab" data-no-swipe aria-label="Flashlight">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5.5 1.5H12.5L11 6.5H13.5L6.5 16.5L7.8 10H5L5.5 1.5Z" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="lock-fab" data-no-swipe aria-label="Camera">
+          <svg width="19" height="16" viewBox="0 0 19 16" fill="none"><rect x="0.7" y="3" width="17.6" height="12.3" rx="2.4" stroke="#fff" stroke-width="1.4"/><path d="M6 3L7.3 0.7H11.7L13 3" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/><circle cx="9.5" cy="9.1" r="3.4" stroke="#fff" stroke-width="1.4"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="home-indicator"><span></span></div>
+  </div>
+  </div>
+
+  <script>
+    (function(){
+      var stage = document.getElementById('stage');
+      function fit(){
+        var scale = Math.min(1, (window.innerHeight - 40) / 874, (window.innerWidth - 40) / 402);
+        stage.querySelector('.device').style.transform = 'scale(' + scale + ')';
+      }
+      fit();
+      window.addEventListener('resize', fit);
+    })();
+  </script>
+
+  <script>
+    (function(){
+      var device = document.getElementById('device');
+      var screen = document.getElementById('lockScreen');
+      var dragging = false, startY = 0, currentY = 0, startTime = 0;
+      var THRESHOLD = 110;
+
+      function goToApp(){
+        screen.style.transition = 'transform .38s cubic-bezier(.22,.61,.36,1), opacity .38s ease';
+        screen.style.transform = 'translateY(-100%)';
+        screen.style.opacity = '0';
+        setTimeout(function(){ window.location.href = 'NewsfeedMobile.html'; }, 360);
+      }
+      function springBack(){
+        screen.style.transition = 'transform .32s cubic-bezier(.22,.61,.36,1)';
+        screen.style.transform = 'translateY(0)';
+      }
+      function onDown(e){
+        dragging = true; currentY = 0;
+        startY = e.touches ? e.touches[0].clientY : e.clientY;
+        startTime = Date.now();
+        screen.style.transition = 'none';
+      }
+      function onMove(e){
+        if(!dragging) return;
+        var y = e.touches ? e.touches[0].clientY : e.clientY;
+        currentY = Math.min(0, y - startY);
+        screen.style.transform = 'translateY(' + currentY + 'px)';
+      }
+      function onUp(){
+        if(!dragging) return;
+        dragging = false;
+        var dt = Math.max(Date.now() - startTime, 1);
+        var velocity = Math.abs(currentY) / dt;
+        if (Math.abs(currentY) > THRESHOLD || velocity > 0.6) {
+          goToApp();
+        } else {
+          springBack();
+        }
+      }
+
+      device.addEventListener('mousedown', onDown);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+      device.addEventListener('touchstart', onDown, {passive:true});
+      device.addEventListener('touchmove', onMove, {passive:true});
+      device.addEventListener('touchend', onUp);
+
+      // tapping a notification opens the app directly, same as real iOS
+      document.querySelectorAll('[data-notif]').forEach(function(el){
+        el.addEventListener('click', function(e){ e.stopPropagation(); goToApp(); });
+        el.addEventListener('mousedown', function(e){ e.stopPropagation(); });
+        el.addEventListener('touchstart', function(e){ e.stopPropagation(); }, {passive:true});
+      });
+      // fab buttons shouldn't trigger a swipe-drag
+      document.querySelectorAll('[data-no-swipe]').forEach(function(el){
+        el.addEventListener('mousedown', function(e){ e.stopPropagation(); });
+        el.addEventListener('touchstart', function(e){ e.stopPropagation(); }, {passive:true});
+      });
+    })();
+  </script>
+
+</body>
+</html>

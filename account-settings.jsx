@@ -48,7 +48,7 @@ const AS_PROFILE_ITEMS_BEFORE = [
   { label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
   { label: "Account Settings",   icon: "lucide:graduation-cap",  href: null },
   { label: "My Saved",           icon: "lucide:bookmark",        href: "MySaved.html" },
-  { label: "Notifications",      icon: "lucide:calendar",        href: null },
+  { label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" },
 ];
 
 const AS_PROFILE_ITEMS_AFTER = [

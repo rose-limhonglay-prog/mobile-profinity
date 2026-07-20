@@ -108,7 +108,7 @@ const LM_TABS = [{
   key: "Agent",
   label: "Agent",
   icon: "lucide:sparkles",
-  href: "Agent.html"
+  href: "AgentMobile.html"
 }];
 function useDeviceScaleL() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);

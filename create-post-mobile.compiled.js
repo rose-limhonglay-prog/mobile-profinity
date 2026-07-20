@@ -132,13 +132,14 @@ const CP_ATTACH = [{
 }];
 function CPTopBar({
   canPost,
-  onPost
+  onPost,
+  onCancel
 }) {
   return /*#__PURE__*/React.createElement("header", {
     className: "cp-top"
   }, /*#__PURE__*/React.createElement("button", {
     className: "cp-cancel",
-    onClick: () => goCP("CommunityMobile.html")
+    onClick: onCancel
   }, "Cancel"), /*#__PURE__*/React.createElement("span", {
     className: "cp-title"
   }, "Create Post"), /*#__PURE__*/React.createElement("button", {
@@ -147,24 +148,75 @@ function CPTopBar({
     onClick: onPost
   }, "Post"));
 }
+function CPTagPicker({
+  tags,
+  selected,
+  onToggle
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cp-tags"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-attach-label"
+  }, "Add hashtags"), /*#__PURE__*/React.createElement("div", {
+    className: "pf-tagbar"
+  }, tags.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.slug,
+    type: "button",
+    className: "pf-tagchip" + (selected.includes(t.slug) ? " on" : ""),
+    onClick: () => onToggle(t.slug)
+  }, "#", t.label))));
+}
 function CPScreen() {
   const [text, setText] = React.useState("");
-  const [channels, setChannels] = React.useState([]);
-  const [images, setImages] = React.useState([]);
-  const [audience, setAudience] = React.useState("Everyone");
-  const textareaRef = React.useRef(null);
-  React.useEffect(() => {
+  const [channels, setChannels] = React.useState(() => {
     try {
       const raw = sessionStorage.getItem("pf_post_channels");
-      if (raw) setChannels(JSON.parse(raw));
-    } catch (e) {}
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [images, setImages] = React.useState([]);
+  const [audience, setAudience] = React.useState("Everyone");
+  const [allTags] = React.useState(() => window.PFHashtags ? window.PFHashtags.getAll() : []);
+  const [selectedTags, setSelectedTags] = React.useState(["update"]);
+  const textareaRef = React.useRef(null);
+  const backTo = channels.length > 0 ? "CommunityMobile.html" : "NewsfeedMobile.html";
+  const toggleTag = slug => {
+    setSelectedTags(prev => prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]);
+  };
+  React.useEffect(() => {
     if (textareaRef.current) textareaRef.current.focus();
   }, []);
   const handlePost = () => {
+    const body = text.trim();
+    if (!body) return;
+    if (channels.length === 0) {
+      const post = {
+        id: "u" + Date.now(),
+        author: {
+          name: PFACP.ME.name,
+          avatar: PFACP.ME.avatar,
+          seals: ["gb", "verified"]
+        },
+        time: "Just now",
+        hashtags: selectedTags,
+        media: images,
+        body,
+        likes: "0",
+        comments: "0",
+        shares: "0",
+        commentList: []
+      };
+      try {
+        const existing = JSON.parse(localStorage.getItem("pf-newsfeed-user-posts")) || [];
+        localStorage.setItem("pf-newsfeed-user-posts", JSON.stringify([post, ...existing]));
+      } catch (e) {}
+    }
     try {
       sessionStorage.removeItem("pf_post_channels");
     } catch (e) {}
-    goCP("CommunityMobile.html");
+    goCP(backTo);
   };
   const handleImagePick = () => {
     const input = document.createElement("input");
@@ -172,9 +224,12 @@ function CPScreen() {
     input.accept = "image/*";
     input.multiple = true;
     input.onchange = e => {
-      const files = Array.from(e.target.files || []);
-      const urls = files.map(f => URL.createObjectURL(f));
-      setImages(prev => [...prev, ...urls].slice(0, 4));
+      const files = Array.from(e.target.files || []).slice(0, Math.max(0, 4 - images.length));
+      files.forEach(f => {
+        const reader = new FileReader();
+        reader.onload = () => setImages(prev => [...prev, reader.result].slice(0, 4));
+        reader.readAsDataURL(f);
+      });
     };
     input.click();
   };
@@ -183,7 +238,8 @@ function CPScreen() {
     "data-screen-label": "Create Post (mobile)"
   }, /*#__PURE__*/React.createElement(CPTopBar, {
     canPost: text.trim().length > 0,
-    onPost: handlePost
+    onPost: handlePost,
+    onCancel: () => goCP(backTo)
   }), /*#__PURE__*/React.createElement("div", {
     className: "cp-scroll"
   }, /*#__PURE__*/React.createElement("div", {
@@ -233,7 +289,11 @@ function CPScreen() {
     name: "lucide:x",
     size: 14,
     color: "var(--white)"
-  })))))), /*#__PURE__*/React.createElement("div", {
+  }))))), /*#__PURE__*/React.createElement(CPTagPicker, {
+    tags: allTags,
+    selected: selectedTags,
+    onToggle: toggleTag
+  })), /*#__PURE__*/React.createElement("div", {
     className: "cp-attach-bar"
   }, /*#__PURE__*/React.createElement("span", {
     className: "cp-attach-label"

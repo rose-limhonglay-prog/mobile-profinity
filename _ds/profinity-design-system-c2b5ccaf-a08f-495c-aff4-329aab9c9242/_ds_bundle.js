@@ -2772,7 +2772,7 @@ function CommentItem({
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: "var(--font-sans)",
-      fontWeight: "var(--fw-semibold)",
+      fontWeight: "var(--fw-regular)",
       fontSize: "var(--fs-body)",
       color: "var(--text-primary)"
     }
@@ -2891,8 +2891,7 @@ function PostCard({
   withOthers,
   time,
   media,
-  kind,
-  kindIcon = "lucide:chart-pie",
+  hashtags = [],
   title,
   body,
   likes,
@@ -2945,7 +2944,7 @@ function PostCard({
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: "var(--font-sans)",
-      fontWeight: "var(--fw-semibold)",
+      fontWeight: "var(--fw-regular)",
       fontSize: "var(--fs-body-lg)",
       color: "var(--text-primary)"
     }
@@ -2961,7 +2960,7 @@ function PostCard({
   }, "with ", /*#__PURE__*/React.createElement("span", {
     style: {
       color: "var(--text-primary)",
-      fontWeight: "var(--fw-medium)"
+      fontWeight: "var(--fw-regular)"
     }
   }, withOthers))), time && /*#__PURE__*/React.createElement("div", {
     style: {
@@ -2977,41 +2976,31 @@ function PostCard({
     style: {
       transform: "rotate(90deg)"
     }
-  })), /*#__PURE__*/React.createElement(Media, {
-    media: media
-  }), (kind || title) && /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 10,
-      flexWrap: "wrap"
-    }
-  }, /*#__PURE__*/React.createElement(__ds_scope.IconifyIcon, {
-    name: kindIcon,
-    size: 22,
-    color: "var(--brand-navy)"
-  }), kind && /*#__PURE__*/React.createElement("span", {
+  })), hashtags.length > 0 && ["confidence", "mastery", "freedom", "inner-circle"].includes(hashtags[0].slug) && /*#__PURE__*/React.createElement("span", {
+    className: "pf-hashtag-badge"
+  }, hashtags[0].label), title && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "var(--font-sans)",
-      fontWeight: "var(--fw-semibold)",
-      fontSize: "var(--fs-h3)",
-      color: "var(--brand-navy)"
+      fontWeight: "var(--fw-regular)",
+      fontSize: "var(--fs-body-lg)",
+      lineHeight: "var(--lh-relaxed)",
+      color: "var(--gray-600)"
     }
-  }, kind), title && /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "var(--font-sans)",
-      fontWeight: "var(--fw-semibold)",
-      fontSize: "var(--fs-h3)",
-      color: "var(--text-primary)"
-    }
-  }, title)), body && /*#__PURE__*/React.createElement("div", {
+  }, title), body && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "var(--font-sans)",
       fontSize: "var(--fs-body-lg)",
       lineHeight: "var(--lh-relaxed)",
       color: "var(--gray-600)"
     }
-  }, body), /*#__PURE__*/React.createElement(__ds_scope.PostActions, {
+  }, body), hashtags.length > 1 && /*#__PURE__*/React.createElement("div", {
+    className: "pf-hashtag-row"
+  }, hashtags.slice(1, 6).map((t, i) => /*#__PURE__*/React.createElement("span", {
+    key: t.slug || i,
+    className: "pf-hashtag-chip"
+  }, "#" + t.label.replace(/\s+/g, "").toLowerCase())), hashtags.length > 6 && /*#__PURE__*/React.createElement("span", {
+    className: "pf-hashtag-more"
+  }, "+" + (hashtags.length - 6) + " more")), media, /*#__PURE__*/React.createElement(__ds_scope.PostActions, {
     likes: likes,
     comments: comments,
     shares: shares,
