@@ -13,6 +13,47 @@ function goAP(url) {
     window.location.href = u;
   })(url);
 }
+const AP_SUB_STORAGE_KEY = "pf-admin-subscriber-post";
+const AP_TIERS = [{
+  key: "confidence",
+  name: "Confidence"
+}, {
+  key: "mastery",
+  name: "Mastery"
+}, {
+  key: "builder",
+  name: "Builder"
+}, {
+  key: "sovereign",
+  name: "Sovereign"
+}];
+const AP_SUB_DEFAULTS = {
+  confidence: true,
+  mastery: true,
+  builder: true,
+  sovereign: true
+};
+function apReadSubscriberSettings() {
+  try {
+    const raw = localStorage.getItem(AP_SUB_STORAGE_KEY);
+    if (!raw) return {
+      ...AP_SUB_DEFAULTS
+    };
+    return {
+      ...AP_SUB_DEFAULTS,
+      ...JSON.parse(raw)
+    };
+  } catch (e) {
+    return {
+      ...AP_SUB_DEFAULTS
+    };
+  }
+}
+function apWriteSubscriberSettings(settings) {
+  try {
+    localStorage.setItem(AP_SUB_STORAGE_KEY, JSON.stringify(settings));
+  } catch (e) {}
+}
 function useDeviceScaleAP() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
   const [scale, setScale] = useStateAP(calc);
@@ -61,9 +102,35 @@ function APRow({
     color: "var(--error)"
   })));
 }
+function APToggle({
+  label,
+  on,
+  onToggle
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    className: "ap-switch" + (on ? " on" : ""),
+    onClick: onToggle,
+    role: "switch",
+    "aria-checked": on,
+    "aria-label": label
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ap-knob"
+  }));
+}
 function AdminPanel() {
   const [tags, setTags] = useStateAP(() => window.PFHashtags.getAll());
   const [label, setLabel] = useStateAP("");
+  const [subSettings, setSubSettings] = useStateAP(() => apReadSubscriberSettings());
+  const toggleCanPost = tierKey => {
+    setSubSettings(prev => {
+      const next = {
+        ...prev,
+        [tierKey]: !prev[tierKey]
+      };
+      apWriteSubscriberSettings(next);
+      return next;
+    });
+  };
   const slug = window.PFHashtags.slugify(label);
   const isDuplicate = slug && tags.some(t => t.slug === slug);
   const canAdd = slug.length > 0 && !isDuplicate;
@@ -122,7 +189,26 @@ function AdminPanel() {
     onRemove: handleRemove
   })), tags.length === 0 && /*#__PURE__*/React.createElement("p", {
     className: "ap-empty"
-  }, "No hashtags yet — add one above."))));
+  }, "No hashtags yet — add one above.")), /*#__PURE__*/React.createElement("div", {
+    className: "ap-sec-h"
+  }, "Subscriber Permissions"), /*#__PURE__*/React.createElement("p", {
+    className: "ap-sec-desc"
+  }, "Control which membership tiers can create posts in the community. Mastery is set up the same way as Confidence."), /*#__PURE__*/React.createElement("div", {
+    className: "ap-list"
+  }, AP_TIERS.map(tier => /*#__PURE__*/React.createElement("div", {
+    className: "ap-row",
+    key: tier.key
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ap-row-main"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ap-row-label"
+  }, tier.name), /*#__PURE__*/React.createElement("span", {
+    className: "ap-row-slug"
+  }, "Can post in community")), /*#__PURE__*/React.createElement(APToggle, {
+    label: tier.name + " can post",
+    on: !!subSettings[tier.key],
+    onToggle: () => toggleCanPost(tier.key)
+  }))))));
 }
 function AdminPanelApp() {
   const mobile = useIsMobileAP();

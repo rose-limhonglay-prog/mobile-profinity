@@ -9,6 +9,29 @@ const DSAP = window.ProfinityDesignSystem_c2b5cc;
 
 function goAP(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
 
+const AP_SUB_STORAGE_KEY = "pf-admin-subscriber-post";
+const AP_TIERS = [
+  { key: "confidence", name: "Confidence" },
+  { key: "mastery", name: "Mastery" },
+  { key: "builder", name: "Builder" },
+  { key: "sovereign", name: "Sovereign" },
+];
+const AP_SUB_DEFAULTS = { confidence: true, mastery: true, builder: true, sovereign: true };
+
+function apReadSubscriberSettings() {
+  try {
+    const raw = localStorage.getItem(AP_SUB_STORAGE_KEY);
+    if (!raw) return { ...AP_SUB_DEFAULTS };
+    return { ...AP_SUB_DEFAULTS, ...JSON.parse(raw) };
+  } catch (e) {
+    return { ...AP_SUB_DEFAULTS };
+  }
+}
+
+function apWriteSubscriberSettings(settings) {
+  try { localStorage.setItem(AP_SUB_STORAGE_KEY, JSON.stringify(settings)); } catch (e) {}
+}
+
 function useDeviceScaleAP() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
   const [scale, setScale] = useStateAP(calc);
@@ -48,9 +71,26 @@ function APRow({ tag, onRemove }) {
   );
 }
 
+function APToggle({ label, on, onToggle }) {
+  return (
+    <button className={"ap-switch" + (on ? " on" : "")} onClick={onToggle}
+    role="switch" aria-checked={on} aria-label={label}>
+      <span className="ap-knob" />
+    </button>);
+}
+
 function AdminPanel() {
   const [tags, setTags] = useStateAP(() => window.PFHashtags.getAll());
   const [label, setLabel] = useStateAP("");
+  const [subSettings, setSubSettings] = useStateAP(() => apReadSubscriberSettings());
+
+  const toggleCanPost = (tierKey) => {
+    setSubSettings((prev) => {
+      const next = { ...prev, [tierKey]: !prev[tierKey] };
+      apWriteSubscriberSettings(next);
+      return next;
+    });
+  };
 
   const slug = window.PFHashtags.slugify(label);
   const isDuplicate = slug && tags.some((t) => t.slug === slug);
@@ -100,6 +140,27 @@ function AdminPanel() {
         <div className="ap-list">
           {tags.map((t) => <APRow key={t.slug} tag={t} onRemove={handleRemove} />)}
           {tags.length === 0 && <p className="ap-empty">No hashtags yet — add one above.</p>}
+        </div>
+
+        <div className="ap-sec-h">Subscriber Permissions</div>
+        <p className="ap-sec-desc">
+          Control which membership tiers can create posts in the community. Mastery is set up the
+          same way as Confidence.
+        </p>
+        <div className="ap-list">
+          {AP_TIERS.map((tier) =>
+            <div className="ap-row" key={tier.key}>
+              <span className="ap-row-main">
+                <span className="ap-row-label">{tier.name}</span>
+                <span className="ap-row-slug">Can post in community</span>
+              </span>
+              <APToggle
+                label={tier.name + " can post"}
+                on={!!subSettings[tier.key]}
+                onToggle={() => toggleCanPost(tier.key)}
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
