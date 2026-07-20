@@ -322,10 +322,17 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
 .apn-form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .apn-charcount { font-size: 13px; color: var(--gray-400); }
 .apn-field-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.apn-imgslot { height: 180px; border-radius: 12px; overflow: hidden; }
-.apn-remove-img { display: inline-flex; align-items: center; gap: 7px; margin: 10px 0 22px; background: none;
-  border: none; padding: 0; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--error); }
-.apn-remove-img iconify-icon { font-size: 16px; }
+.apn-icon-locked { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 12px;
+  border: 1px solid var(--border-default); background: var(--gray-50); }
+.apn-icon-locked-thumb { width: 44px; height: 44px; border-radius: 10px; background: var(--brand-navy);
+  overflow: hidden; flex-shrink: 0; }
+.apn-icon-locked-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.apn-icon-locked-body { flex: 1; min-width: 0; }
+.apn-icon-locked-title { font-size: 15px; font-weight: 700; color: var(--gray-900); }
+.apn-icon-locked-sub { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+.apn-icon-locked-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700;
+  color: var(--success); background: var(--success-bg); padding: 6px 14px; border-radius: 999px; flex-shrink: 0; white-space: nowrap; }
+.apn-icon-locked-badge iconify-icon { font-size: 14px; }
 
 .apn-platform-row { display: flex; gap: 30px; align-items: center; flex-wrap: wrap; }
 .apn-platform-opt { display: flex; align-items: center; gap: 10px; background: none; border: none; padding: 0;
@@ -370,7 +377,6 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
 .apn-phone-notif-now { font-size: 11px; color: var(--gray-400); }
 .apn-phone-notif-title { font-size: 14px; font-weight: 700; color: var(--gray-900); margin-bottom: 2px; }
 .apn-phone-notif-body { font-size: 12px; color: var(--gray-600); line-height: 1.4; }
-.apn-phone-notif-img { height: 96px; border-radius: 12px; overflow: hidden; margin-top: 10px; }
 .apn-phone-home { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); width: 110px;
   height: 5px; border-radius: 3px; background: rgba(255, 255, 255, .85); z-index: 3; }
 
@@ -403,7 +409,6 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
   overflow: hidden; text-overflow: ellipsis; }
 .apn-web-toast-body { font-size: 12px; color: var(--gray-500); margin-top: 2px; line-height: 1.4;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.apn-web-toast-img { height: 92px; border-radius: 10px; overflow: hidden; margin-top: 9px; }
 
 /* --------------------------------------------------------------- schedule */
 .apn-summary-banner { background: var(--brand-gold-100); border: 1.5px solid #e6cba3; border-radius: 16px; padding: 22px 24px; }

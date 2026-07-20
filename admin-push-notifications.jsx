@@ -4,7 +4,7 @@
    dispatch tracking / scheduled·draft·completed detail / resend modal.
    Suffixed -APN to avoid global-scope clashes.
    =========================================================================== */
-const { useState: useStateAPN, useRef: useRefAPN, useMemo: useMemoAPN } = React;
+const { useState: useStateAPN, useMemo: useMemoAPN } = React;
 
 const APN_IOS = "mdi:apple", APN_ANDROID = "mdi:android", APN_WEB = "mdi:web";
 
@@ -147,7 +147,7 @@ function APNHeader() {
 }
 
 /* ------------------------------------------------------------ previews */
-function APNPhoneMock({ title, body, imgSrc }) {
+function APNPhoneMock({ title, body }) {
   return (
     <div className="apn-phone">
       <div className="apn-phone-shell">
@@ -172,7 +172,6 @@ function APNPhoneMock({ title, body, imgSrc }) {
               </div>
               <div className="apn-phone-notif-title">{title}</div>
               <div className="apn-phone-notif-body">{body}</div>
-              {imgSrc && <div className="apn-phone-notif-img"><img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>}
             </div>
           </div>
           <div className="apn-phone-home" />
@@ -182,7 +181,7 @@ function APNPhoneMock({ title, body, imgSrc }) {
   );
 }
 
-function APNWebMock({ title, body, imgSrc }) {
+function APNWebMock({ title, body }) {
   return (
     <div className="apn-web">
       <div className="apn-web-bar">
@@ -204,21 +203,20 @@ function APNWebMock({ title, body, imgSrc }) {
           </div>
           <div className="apn-web-toast-title">{title}</div>
           <div className="apn-web-toast-body">{body}</div>
-          {imgSrc && <div className="apn-web-toast-img"><img src={imgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /></div>}
         </div>
       </div>
     </div>
   );
 }
 
-function APNLivePreviewCard({ title, body, imgSrc }) {
+function APNLivePreviewCard({ title, body }) {
   return (
     <div className="apn-card">
       <div className="apn-card-title" style={{ marginBottom: 20 }}>Live Preview</div>
       <div className="apn-preview-label">Mobile Preview</div>
-      <APNPhoneMock title={title} body={body} imgSrc={imgSrc} />
+      <APNPhoneMock title={title} body={body} />
       <div className="apn-preview-label" style={{ margin: "20px 0 12px" }}>Web Preview</div>
-      <APNWebMock title={title} body={body} imgSrc={imgSrc} />
+      <APNWebMock title={title} body={body} />
     </div>
   );
 }
@@ -257,40 +255,17 @@ function APNToggle({ on, onClick }) {
   );
 }
 
-function APNImageDrop({ src, onFile, onRemove, height }) {
-  const inputRef = useRefAPN(null);
-  const pick = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => onFile(reader.result);
-    reader.readAsDataURL(file);
-  };
+function APNIconLocked() {
   return (
-    <div>
-      <div
-        className="apn-imgslot"
-        style={{
-          height: height || 180, cursor: "pointer", display: "flex", alignItems: "center",
-          justifyContent: "center", textAlign: "center", border: "1.5px dashed var(--border-strong)",
-          background: "var(--gray-50)", position: "relative",
-        }}
-        onClick={() => inputRef.current && inputRef.current.click()}
-      >
-        {src ? (
-          <img src={src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-        ) : (
-          <span style={{ fontSize: 14, color: "var(--gray-500)", padding: "0 24px", lineHeight: 1.5 }}>
-            Click to upload or drag and drop (PNG, JPG up to 2MB)
-          </span>
-        )}
-        <input ref={inputRef} type="file" accept="image/png,image/jpeg" onChange={pick} style={{ display: "none" }} />
+    <div className="apn-icon-locked">
+      <div className="apn-icon-locked-thumb">
+        <img src="assets/profinity-icon-twist.png" alt="Profinity app icon" />
       </div>
-      {src && (
-        <button type="button" className="apn-remove-img" onClick={onRemove}>
-          <iconify-icon icon="lucide:trash-2"></iconify-icon>Remove image
-        </button>
-      )}
+      <div className="apn-icon-locked-body">
+        <div className="apn-icon-locked-title">Profinity app icon</div>
+        <div className="apn-icon-locked-sub">Used as the notification icon on all platforms (default).</div>
+      </div>
+      <span className="apn-icon-locked-badge"><iconify-icon icon="lucide:check"></iconify-icon>Default</span>
     </div>
   );
 }
@@ -683,7 +658,7 @@ function APNStepAudience({ audience, setAudience, goList, next }) {
 }
 
 function APNStepDetails({ draft, setDraft, back, next }) {
-  const { title, body, imgSrc, deepLink, btnLabel, btnUrl, platforms, sendNow, schedDate, schedTime } = draft;
+  const { title, body, deepLink, btnLabel, btnUrl, platforms, sendNow, schedDate, schedTime } = draft;
   const set = (patch) => setDraft((st) => ({ ...st, ...patch }));
   const togglePlatform = (key) => setDraft((st) => ({ ...st, platforms: { ...st.platforms, [key]: !st.platforms[key] } }));
 
@@ -712,8 +687,8 @@ function APNStepDetails({ draft, setDraft, back, next }) {
           </div>
           <textarea className="apn-textarea" style={{ marginBottom: 22 }} maxLength={160} value={body} onChange={(e) => set({ body: e.target.value })} />
 
-          <label className="apn-field-label">Notification Icon / Image</label>
-          <APNImageDrop src={imgSrc} onFile={(src) => set({ imgSrc: src })} onRemove={() => set({ imgSrc: null })} height={180} />
+          <label className="apn-field-label">Notification Icon</label>
+          <APNIconLocked />
 
           <label className="apn-field-label" style={{ marginTop: 22 }}>Deep Link URL</label>
           <input className="apn-input" style={{ marginBottom: 22 }} value={deepLink} onChange={(e) => set({ deepLink: e.target.value })} />
@@ -777,7 +752,7 @@ function APNStepDetails({ draft, setDraft, back, next }) {
       </div>
 
       <div className="apn-wizard-col apn-wizard-col-sticky">
-        <APNLivePreviewCard title={previewTitle} body={previewBody} imgSrc={imgSrc} />
+        <APNLivePreviewCard title={previewTitle} body={previewBody} />
       </div>
 
       <div className="apn-wizard-nav" style={{ gridColumn: "1 / -1" }}>
@@ -861,7 +836,7 @@ function APNStepReview({ draft, audience, back, send }) {
       </div>
 
       <div className="apn-wizard-col apn-wizard-col-sticky">
-        <APNLivePreviewCard title={previewTitle} body={previewBody} imgSrc={draft.imgSrc} />
+        <APNLivePreviewCard title={previewTitle} body={previewBody} />
       </div>
     </div>
   );
@@ -870,7 +845,6 @@ function APNStepReview({ draft, audience, back, send }) {
 const APN_EMPTY_DRAFT = () => ({
   title: "Weekly Rewards are here!",
   body: "Your weekly rewards have been calculated. Open the app to claim your bonuses before they expire.",
-  imgSrc: null,
   deepLink: "profinity://rewards/claim",
   btnLabel: "Claim Now",
   btnUrl: "profinity://rewards/claim",

@@ -6,7 +6,6 @@
    =========================================================================== */
 const {
   useState: useStateAPN,
-  useRef: useRefAPN,
   useMemo: useMemoAPN
 } = React;
 const APN_IOS = "mdi:apple",
@@ -364,8 +363,7 @@ function APNHeader() {
 /* ------------------------------------------------------------ previews */
 function APNPhoneMock({
   title,
-  body,
-  imgSrc
+  body
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "apn-phone"
@@ -409,24 +407,13 @@ function APNPhoneMock({
     className: "apn-phone-notif-title"
   }, title), /*#__PURE__*/React.createElement("div", {
     className: "apn-phone-notif-body"
-  }, body), imgSrc && /*#__PURE__*/React.createElement("div", {
-    className: "apn-phone-notif-img"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: imgSrc,
-    alt: "",
-    style: {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover"
-    }
-  })))), /*#__PURE__*/React.createElement("div", {
+  }, body))), /*#__PURE__*/React.createElement("div", {
     className: "apn-phone-home"
   }))));
 }
 function APNWebMock({
   title,
-  body,
-  imgSrc
+  body
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "apn-web"
@@ -478,22 +465,11 @@ function APNWebMock({
     className: "apn-web-toast-title"
   }, title), /*#__PURE__*/React.createElement("div", {
     className: "apn-web-toast-body"
-  }, body), imgSrc && /*#__PURE__*/React.createElement("div", {
-    className: "apn-web-toast-img"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: imgSrc,
-    alt: "",
-    style: {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover"
-    }
-  })))));
+  }, body))));
 }
 function APNLivePreviewCard({
   title,
-  body,
-  imgSrc
+  body
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "apn-card"
@@ -506,8 +482,7 @@ function APNLivePreviewCard({
     className: "apn-preview-label"
   }, "Mobile Preview"), /*#__PURE__*/React.createElement(APNPhoneMock, {
     title: title,
-    body: body,
-    imgSrc: imgSrc
+    body: body
   }), /*#__PURE__*/React.createElement("div", {
     className: "apn-preview-label",
     style: {
@@ -515,8 +490,7 @@ function APNLivePreviewCard({
     }
   }, "Web Preview"), /*#__PURE__*/React.createElement(APNWebMock, {
     title: title,
-    body: body,
-    imgSrc: imgSrc
+    body: body
   }));
 }
 function APNSimplePreviewCard({
@@ -580,64 +554,25 @@ function APNToggle({
     className: "apn-toggle-knob"
   }));
 }
-function APNImageDrop({
-  src,
-  onFile,
-  onRemove,
-  height
-}) {
-  const inputRef = useRefAPN(null);
-  const pick = e => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => onFile(reader.result);
-    reader.readAsDataURL(file);
-  };
-  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "apn-imgslot",
-    style: {
-      height: height || 180,
-      cursor: "pointer",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      textAlign: "center",
-      border: "1.5px dashed var(--border-strong)",
-      background: "var(--gray-50)",
-      position: "relative"
-    },
-    onClick: () => inputRef.current && inputRef.current.click()
-  }, src ? /*#__PURE__*/React.createElement("img", {
-    src: src,
-    alt: "",
-    style: {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover"
-    }
-  }) : /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: 14,
-      color: "var(--gray-500)",
-      padding: "0 24px",
-      lineHeight: 1.5
-    }
-  }, "Click to upload or drag and drop (PNG, JPG up to 2MB)"), /*#__PURE__*/React.createElement("input", {
-    ref: inputRef,
-    type: "file",
-    accept: "image/png,image/jpeg",
-    onChange: pick,
-    style: {
-      display: "none"
-    }
-  })), src && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "apn-remove-img",
-    onClick: onRemove
+function APNIconLocked() {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "apn-icon-locked"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "apn-icon-locked-thumb"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: "assets/profinity-icon-twist.png",
+    alt: "Profinity app icon"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "apn-icon-locked-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "apn-icon-locked-title"
+  }, "Profinity app icon"), /*#__PURE__*/React.createElement("div", {
+    className: "apn-icon-locked-sub"
+  }, "Used as the notification icon on all platforms (default).")), /*#__PURE__*/React.createElement("span", {
+    className: "apn-icon-locked-badge"
   }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:trash-2"
-  }), "Remove image"));
+    icon: "lucide:check"
+  }), "Default"));
 }
 
 /* ------------------------------------------------------ automated rules */
@@ -1362,7 +1297,6 @@ function APNStepDetails({
   const {
     title,
     body,
-    imgSrc,
     deepLink,
     btnLabel,
     btnUrl,
@@ -1438,16 +1372,7 @@ function APNStepDetails({
     })
   }), /*#__PURE__*/React.createElement("label", {
     className: "apn-field-label"
-  }, "Notification Icon / Image"), /*#__PURE__*/React.createElement(APNImageDrop, {
-    src: imgSrc,
-    onFile: src => set({
-      imgSrc: src
-    }),
-    onRemove: () => set({
-      imgSrc: null
-    }),
-    height: 180
-  }), /*#__PURE__*/React.createElement("label", {
+  }, "Notification Icon"), /*#__PURE__*/React.createElement(APNIconLocked, null), /*#__PURE__*/React.createElement("label", {
     className: "apn-field-label",
     style: {
       marginTop: 22
@@ -1568,8 +1493,7 @@ function APNStepDetails({
     className: "apn-wizard-col apn-wizard-col-sticky"
   }, /*#__PURE__*/React.createElement(APNLivePreviewCard, {
     title: previewTitle,
-    body: previewBody,
-    imgSrc: imgSrc
+    body: previewBody
   })), /*#__PURE__*/React.createElement("div", {
     className: "apn-wizard-nav",
     style: {
@@ -1757,14 +1681,12 @@ function APNStepReview({
     className: "apn-wizard-col apn-wizard-col-sticky"
   }, /*#__PURE__*/React.createElement(APNLivePreviewCard, {
     title: previewTitle,
-    body: previewBody,
-    imgSrc: draft.imgSrc
+    body: previewBody
   })));
 }
 const APN_EMPTY_DRAFT = () => ({
   title: "Weekly Rewards are here!",
   body: "Your weekly rewards have been calculated. Open the app to claim your bonuses before they expire.",
-  imgSrc: null,
   deepLink: "profinity://rewards/claim",
   btnLabel: "Claim Now",
   btnUrl: "profinity://rewards/claim",
