@@ -29,11 +29,6 @@
       </header>);
   }
 
-  const SM_CHANNELS_C = [
-    { label: "Clinical Chat", icon: "lucide:stethoscope", n: 10 },
-    { label: "Freedom Path", icon: "lucide:feather", n: 2 },
-    { label: "Tech Team", icon: "lucide:cpu", n: 1 },
-    { label: "Business & Mindset", icon: "lucide:briefcase", n: 5 }];
   const SM_RESOURCES_C = [
     { label: "Videos", icon: "lucide:square-play", n: 8 },
     { label: "Articles", icon: "lucide:feather", n: 4 },
@@ -434,6 +429,17 @@
             <DSC.IconifyIcon name="lucide:chevron-right" size={22} color="var(--gray-800)" />
           </button>
           <div className="sm-body">
+            <button className="sm-upgrade" onClick={() => goC("MembershipTier.html")}>
+              <span className="sm-upgrade-icon">
+                <DSC.IconifyIcon name="lucide:gem" size={20} color="#fff" />
+              </span>
+              <span className="sm-upgrade-main">
+                <span className="sm-upgrade-title">Upgrade to Confidence</span>
+                <span className="sm-upgrade-sub">Unlock premium channels &amp; courses</span>
+              </span>
+              <DSC.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
+            </button>
+
             <SmSectionC title="Communities" />
             <button className="sm-tier" onClick={() => goC("CommunityMobile.html")}>
               <span className="sm-tier-top">
@@ -443,22 +449,12 @@
               <span className="sm-tier-sub">Exclusive tier content</span>
               <span className="sm-tier-new" style={{ color: "rgb(206, 153, 87)" }}>3 new posts</span>
             </button>
-            <nav className="sm-list">
-              {SM_CHANNELS_C.map((c) =>
-                <button key={c.label} className="sm-row" onClick={() => goC("CommunityMobile.html")}>
-                  <DSC.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
-                  <span className="sm-row-label" style={{ color: "rgb(0, 0, 0)" }}>{c.label}</span>
-                  <span className="sm-badge sm-badge-red">{c.n}</span>
-                </button>
-              )}
-            </nav>
             <SmSectionC title="Membership Resources" />
             <nav className="sm-list">
               {SM_RESOURCES_C.map((c) =>
                 <button key={c.label} className="sm-row" onClick={() => goC("LearningMobile.html")}>
                   <DSC.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
                   <span className="sm-row-label" style={{ color: "rgb(0, 0, 0)" }}>{c.label}</span>
-                  {c.n != null && <span className="sm-badge sm-badge-gray">{c.n}</span>}
                 </button>
               )}
             </nav>

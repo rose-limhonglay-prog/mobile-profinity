@@ -1,0 +1,136 @@
+/* ===========================================================================
+   PROfinity — Course Detail (mobile) · layout
+   Loaded after the DS tokens; styles the course detail screen reached from
+   any course card on LearningMobile.html.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.cd-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-page); position: relative; }
+
+/* ---------- top bar ---------- */
+.cd-top { flex: none; display: flex; align-items: center; gap: 12px; position: relative;
+  padding: 60px 20px 16px; background: var(--surface-card); border-bottom: 1px solid var(--border-default); }
+.cd-back { flex: none; width: 40px; height: 40px; border: none; background: var(--gray-100); border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; }
+.cd-top-titles { flex: 1; min-width: 0; text-align: center; }
+.cd-top-titles h1 { margin: 0; font-family: var(--font-sans); font-weight: 600; font-size: 18px; color: var(--brand-navy); }
+.cd-top-sub { margin-top: 2px; font-family: var(--font-sans); font-size: 12px; color: var(--gray-500);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.cd-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 24px; }
+.cd-scroll::-webkit-scrollbar { width: 0; }
+
+/* ---------- hero ---------- */
+.cd-hero { position: relative; margin: 20px 20px 0; height: 220px; border-radius: var(--r-lg); overflow: hidden;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 16px;
+  background: linear-gradient(150deg,#1a1550 0%,#292569 45%,#7c2d3f 100%); }
+
+.cd-hero-battle { position: absolute; top: 26px; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 14px; }
+.cd-hero-flag { font-size: 26px; filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
+.cd-hero-vs { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; line-height: 1.15; text-align: center;
+  color: #fff; letter-spacing: .04em; text-transform: uppercase; }
+
+.cd-hero-tag { position: absolute; top: 92px; left: 0; right: 0; text-align: center;
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--brand-gold-soft); }
+
+.cd-hero-faces { display: flex; align-items: center; margin-bottom: 8px; }
+.cd-hero-face { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2.5px solid #fff; margin-left: -14px; }
+.cd-hero-face:first-child { margin-left: 0; }
+
+.cd-replay { border: none; border-radius: var(--r-pill); background: #fff; color: var(--brand-navy); cursor: pointer;
+  display: flex; align-items: center; gap: 6px; padding: 10px 20px;
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 13px; letter-spacing: .06em; }
+
+/* ---------- body ---------- */
+.cd-body { padding: 20px 20px 4px; }
+.cd-headline { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 21px; line-height: 1.3;
+  margin: 0 0 12px; color: var(--brand-navy); }
+.cd-tagline { font-family: var(--font-sans); font-size: 14px; line-height: 1.55; color: var(--gray-600); margin: 0 0 12px; }
+.cd-longdesc { font-family: var(--font-sans); font-size: 14px; line-height: 1.55; color: var(--gray-500); margin: 0 0 18px; }
+
+.cd-progress-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.cd-progress-label { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 11px; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--gray-450); }
+.cd-progress-pct { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 12px; color: var(--gray-500); }
+.cd-bar { height: 6px; border-radius: var(--r-pill); background: var(--gray-150); overflow: hidden; margin-bottom: 20px; }
+.cd-bar span { display: block; height: 100%; background: var(--brand-gold-soft); border-radius: var(--r-pill); }
+
+/* ---------- meta row ---------- */
+.cd-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+.cd-meta-item { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.cd-meta-label { font-family: var(--font-sans); font-size: 11px; color: var(--gray-450); }
+.cd-meta-value { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 12px; color: var(--brand-navy); }
+
+.cd-start { width: 100%; border: none; border-radius: var(--r-md); background: var(--brand-navy); color: #fff; cursor: pointer;
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; padding: 15px 16px; margin-bottom: 8px; }
+
+.cd-divider { height: 1px; background: var(--border-default); margin: 20px 0; }
+
+/* ---------- about / learn ---------- */
+.cd-about h2, .cd-learn h2, .cd-modules-section h2, .cd-instructor h2 {
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 18px; color: var(--brand-navy); margin: 0 0 12px; }
+.cd-about p { font-family: var(--font-sans); font-size: 14px; line-height: 1.6; color: var(--gray-600); margin: 0 0 12px; }
+.cd-learn ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 12px; }
+.cd-learn li { position: relative; padding-left: 26px; font-family: var(--font-sans); font-size: 14px; line-height: 1.55; color: var(--gray-600); }
+.cd-learn li::before { content: ""; position: absolute; left: 0; top: 5px; width: 16px; height: 16px; border-radius: 50%;
+  background: var(--brand-gold-100); border: 1.5px solid var(--brand-gold-soft); }
+.cd-learn li::after { content: "✓"; position: absolute; left: 3px; top: 3px; font-size: 11px; font-weight: 700; color: var(--brand-gold); }
+
+/* ---------- modules ---------- */
+.cd-sec-head { display: flex; align-items: center; justify-content: space-between; }
+.cd-search { display: flex; align-items: center; gap: 8px; background: var(--gray-75); border-radius: var(--r-md); padding: 10px 14px; margin: 14px 0 10px; }
+.cd-search input { flex: 1; border: none; outline: none; background: transparent; font-family: var(--font-sans); font-size: 14px; color: var(--text-primary); }
+.cd-search input::placeholder { color: var(--gray-400); }
+.cd-modules-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.cd-modules-meta span { font-family: var(--font-sans); font-size: 12px; color: var(--gray-500); }
+.cd-expand-all { border: none; background: none; padding: 0; cursor: pointer; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 12px; color: var(--brand-navy); }
+
+.cd-levels { display: flex; flex-direction: column; gap: 10px; }
+.cd-level { border-radius: var(--r-md); overflow: hidden; }
+.cd-level-head { width: 100%; border: none; cursor: pointer; background: var(--brand-navy); color: #fff;
+  display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 14px; }
+.cd-level-right { display: flex; align-items: center; gap: 10px; }
+.cd-level-pct { font-size: 12px; font-weight: 500; opacity: .85; }
+.cd-level-body { background: var(--surface-card); border: 1px solid var(--border-default); border-top: none;
+  padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+
+.cd-module { background: var(--gray-50); border: 1px solid var(--border-default); border-radius: var(--r-md); padding: 14px; }
+.cd-module-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.cd-module-title { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--brand-navy); }
+.cd-module-free { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 10px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--success); background: var(--success-bg); border-radius: var(--r-pill); padding: 3px 8px; }
+.cd-module-heading { font-family: var(--font-sans); font-size: 13px; line-height: 1.5; color: var(--gray-600); margin-bottom: 10px; }
+.cd-module-bullets { margin: 0 0 12px; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.cd-module-bullets li { font-family: var(--font-sans); font-size: 12.5px; line-height: 1.5; color: var(--gray-500); }
+.cd-module-lessons { display: flex; flex-direction: column; gap: 10px; }
+.cd-lesson { display: flex; align-items: center; gap: 10px; }
+.cd-lesson-name { flex: 1; min-width: 0; font-family: var(--font-sans); font-size: 13px; color: var(--brand-navy);
+  text-decoration: underline; text-underline-offset: 2px; }
+.cd-lesson-dur { flex: none; font-family: var(--font-sans); font-size: 12px; color: var(--gray-450); }
+
+/* ---------- instructor ---------- */
+.cd-instructor-row { display: flex; align-items: center; gap: 14px; }
+.cd-instructor-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex: none; }
+.cd-instructor-info { min-width: 0; }
+.cd-instructor-name { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--brand-navy); margin-bottom: 3px; }
+.cd-instructor-role { font-family: var(--font-sans); font-size: 12.5px; line-height: 1.4; color: var(--gray-500); }
+
+/* ---------- sticky cta ---------- */
+.cd-cta { flex: none; padding: 12px 20px calc(env(safe-area-inset-bottom, 0px) + 14px); background: var(--surface-card);
+  border-top: 1px solid var(--border-default); }
+.cd-cta-btn { width: 100%; border: none; border-radius: var(--r-md); background: var(--brand-navy); color: #fff; cursor: pointer;
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; padding: 15px 16px; }
+
+/* real-mobile fullscreen */
+@media (max-width: 768px) {
+  body { background: var(--surface-page); }
+  .app.device-stage { padding: 0; }
+  .cd-screen { min-height: 100vh; }
+}

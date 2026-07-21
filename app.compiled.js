@@ -175,7 +175,8 @@ const {
   IconifyIcon,
   VerificationSeals,
   StatGroup,
-  CommentItem
+  CommentItem,
+  PostActions
 } = DS;
 
 /* ---- real on-brand imagery (from the Profinity Design System assets) ----- */
@@ -258,14 +259,14 @@ const CHANNEL_POST = {
   bucket: "confidence",
   author: {
     name: "Dr. Sarah Collins",
-    avatar: "assets/avatar-katy.jpg",
+    avatar: "assets/avatar-sarah-collins.jpg",
     seals: ["gb", "verified", "skinfluencer"]
   },
   channel: {
     name: "#Confidence · Community",
     avatar: "assets/profinity-icon.jpg",
     by: "Dr. Sarah Collins",
-    byAvatar: "assets/avatar-katy.jpg",
+    byAvatar: "assets/avatar-sarah-collins.jpg",
     time: "2d"
   },
   time: "2 Days Ago",
@@ -316,14 +317,14 @@ const MASTERY_POST = {
   bucket: "mastery",
   author: {
     name: "Priya Shah",
-    avatar: "assets/avatar-katy.jpg",
+    avatar: "assets/avatar-priya-shah.jpg",
     seals: ["gb"]
   },
   channel: {
     name: "#Mastery · Community",
     avatar: "assets/profinity-icon.jpg",
     by: "Priya Shah",
-    byAvatar: "assets/avatar-katy.jpg",
+    byAvatar: "assets/avatar-priya-shah.jpg",
     time: "5h"
   },
   time: "5 Hours Ago",
@@ -341,14 +342,14 @@ const FREEDOM_POST = {
   bucket: "freedom",
   author: {
     name: "Dr Amir Khan",
-    avatar: "assets/avatar-drtim.png",
+    avatar: "assets/avatar-amir-khan.jpg",
     seals: ["gb", "verified"]
   },
   channel: {
     name: "#Freedom · Community",
     avatar: "assets/profinity-icon.jpg",
     by: "Dr Amir Khan",
-    byAvatar: "assets/avatar-drtim.png",
+    byAvatar: "assets/avatar-amir-khan.jpg",
     time: "1d"
   },
   time: "1 Day Ago",
@@ -385,14 +386,397 @@ const INNER_POST = {
   actioned: false,
   commentList: []
 };
+
+/* Extra channel posts — four more per bucket so each of the four paid
+   channels (Confidence/Mastery/Freedom/Inner Circle) shows five posts. */
+const CONFIDENCE_POST_2 = {
+  id: "ch5",
+  access: "gated",
+  bucket: "confidence",
+  author: {
+    name: "Nurse Beth",
+    avatar: "assets/avatar-nurse-beth.jpg"
+  },
+  channel: {
+    name: "#Confidence · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Nurse Beth",
+    byAvatar: "assets/avatar-nurse-beth.jpg",
+    time: "6h"
+  },
+  time: "6 Hours Ago",
+  hashtags: ["confidence", "firstcase"],
+  body: "Posted my first toxin case here last week and the feedback genuinely changed how I show up with patients. Do it scared. 💪",
+  likes: "301",
+  comments: "44",
+  shares: "12",
+  actioned: false,
+  commentList: []
+};
+const CONFIDENCE_POST_3 = {
+  id: "ch6",
+  access: "gated",
+  bucket: "confidence",
+  author: {
+    name: "Mark Ellis",
+    avatar: "assets/avatar-mark-ellis.jpg",
+    seals: ["skinfluencer"]
+  },
+  channel: {
+    name: "#Confidence · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Mark Ellis",
+    byAvatar: "assets/avatar-mark-ellis.jpg",
+    time: "9h"
+  },
+  time: "9 Hours Ago",
+  hashtags: ["confidence", "mindset"],
+  body: "Anyone else get more nervous posting in here than actually doing the treatment? Curious how long that takes to fade.",
+  likes: "88",
+  comments: "27",
+  shares: "3",
+  actioned: false,
+  commentList: []
+};
+const CONFIDENCE_POST_4 = {
+  id: "ch7",
+  access: "gated",
+  bucket: "confidence",
+  author: {
+    name: "Jade Osei"
+  },
+  channel: {
+    name: "#Confidence · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Jade Osei",
+    time: "1d"
+  },
+  time: "1 Day Ago",
+  hashtags: ["confidence", "imposter-syndrome"],
+  body: "Two years qualified and still feel like I'm winging it half the time. This channel is the only place I say that out loud.",
+  likes: "156",
+  comments: "38",
+  shares: "6",
+  actioned: false,
+  commentList: []
+};
+const CONFIDENCE_POST_5 = {
+  id: "ch8",
+  access: "gated",
+  bucket: "confidence",
+  author: {
+    name: "Dr. Sarah Collins",
+    avatar: "assets/avatar-sarah-collins.jpg",
+    seals: ["gb", "verified", "skinfluencer"]
+  },
+  channel: {
+    name: "#Confidence · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Dr. Sarah Collins",
+    byAvatar: "assets/avatar-sarah-collins.jpg",
+    time: "2d"
+  },
+  time: "2 Days Ago",
+  hashtags: ["confidence", "wins"],
+  body: "Small win: a nervous first-time patient today told me she picked me because my page felt honest, not perfect. That's the whole point of showing the real work.",
+  likes: "204",
+  comments: "19",
+  shares: "8",
+  actioned: false,
+  commentList: []
+};
+const MASTERY_POST_2 = {
+  id: "ch9",
+  access: "gated",
+  bucket: "mastery",
+  author: {
+    name: "Dr Amir Khan",
+    avatar: "assets/avatar-amir-khan.jpg",
+    seals: ["gb", "verified"]
+  },
+  channel: {
+    name: "#Mastery · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Dr Amir Khan",
+    byAvatar: "assets/avatar-amir-khan.jpg",
+    time: "8h"
+  },
+  time: "8 Hours Ago",
+  hashtags: ["mastery", "toxin"],
+  body: "Masseter dosing chart I actually use — split by facial width and bite strength, not just weight. Posting the table below.",
+  likes: "97",
+  comments: "21",
+  shares: "11",
+  actioned: false,
+  commentList: []
+};
+const MASTERY_POST_3 = {
+  id: "ch10",
+  access: "gated",
+  bucket: "mastery",
+  author: {
+    name: "Dr Owen Clarke"
+  },
+  channel: {
+    name: "#Mastery · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Dr Owen Clarke",
+    time: "1d"
+  },
+  time: "1 Day Ago",
+  hashtags: ["mastery", "anatomy"],
+  body: "Reminder from this week's cadaver lab: the danger zone for the temporal artery is closer to the brow than most training courses show.",
+  likes: "142",
+  comments: "26",
+  shares: "19",
+  actioned: false,
+  commentList: []
+};
+const MASTERY_POST_4 = {
+  id: "ch11",
+  access: "gated",
+  bucket: "mastery",
+  author: {
+    name: "Priya Shah",
+    avatar: "assets/avatar-priya-shah.jpg",
+    seals: ["gb"]
+  },
+  channel: {
+    name: "#Mastery · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Priya Shah",
+    byAvatar: "assets/avatar-priya-shah.jpg",
+    time: "2d"
+  },
+  time: "2 Days Ago",
+  hashtags: ["mastery", "filler"],
+  body: "Jawline filler placement question for the group: how many of you are going supraperiosteal along the mandible versus subcutaneous for definition?",
+  likes: "76",
+  comments: "33",
+  shares: "5",
+  actioned: false,
+  commentList: []
+};
+const MASTERY_POST_5 = {
+  id: "ch12",
+  access: "gated",
+  bucket: "mastery",
+  author: {
+    name: "Nurse Beth",
+    avatar: "assets/avatar-nurse-beth.jpg"
+  },
+  channel: {
+    name: "#Mastery · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Nurse Beth",
+    byAvatar: "assets/avatar-nurse-beth.jpg",
+    time: "3d"
+  },
+  time: "3 Days Ago",
+  hashtags: ["mastery", "technique"],
+  body: "Switched to cannula for the whole tear trough after last month's discussion here — zero bruising on all six patients since. Thank you all.",
+  likes: "189",
+  comments: "24",
+  shares: "15",
+  actioned: false,
+  commentList: []
+};
+const FREEDOM_POST_2 = {
+  id: "ch13",
+  access: "gated",
+  bucket: "freedom",
+  author: {
+    name: "Dr Rachel Voss"
+  },
+  channel: {
+    name: "#Freedom · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Dr Rachel Voss",
+    time: "5h"
+  },
+  time: "5 Hours Ago",
+  hashtags: ["freedom", "hiring"],
+  body: "Hired my first associate injector this month. The interview question that told me the most: \"walk me through a complication you caused.\"",
+  likes: "134",
+  comments: "22",
+  shares: "9",
+  actioned: false,
+  commentList: []
+};
+const FREEDOM_POST_3 = {
+  id: "ch14",
+  access: "gated",
+  bucket: "freedom",
+  author: {
+    name: "Mark Ellis",
+    avatar: "assets/avatar-mark-ellis.jpg",
+    seals: ["skinfluencer"]
+  },
+  channel: {
+    name: "#Freedom · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Mark Ellis",
+    byAvatar: "assets/avatar-mark-ellis.jpg",
+    time: "1d"
+  },
+  time: "1 Day Ago",
+  hashtags: ["freedom", "marketing"],
+  body: "Rebuilt my booking funnel around a single lead magnet — consult bookings up 40% in three weeks. Happy to share the exact sequence.",
+  likes: "167",
+  comments: "29",
+  shares: "21",
+  actioned: false,
+  commentList: []
+};
+const FREEDOM_POST_4 = {
+  id: "ch15",
+  access: "gated",
+  bucket: "freedom",
+  author: {
+    name: "Leo Martins"
+  },
+  channel: {
+    name: "#Freedom · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Leo Martins",
+    time: "2d"
+  },
+  time: "2 Days Ago",
+  hashtags: ["freedom", "clinic"],
+  body: "Just signed a second lease. The break clause negotiation alone saved me more than a year's rent if things go sideways — ask for it every time.",
+  likes: "92",
+  comments: "16",
+  shares: "7",
+  actioned: false,
+  commentList: []
+};
+const FREEDOM_POST_5 = {
+  id: "ch16",
+  access: "gated",
+  bucket: "freedom",
+  author: {
+    name: "Dr Amir Khan",
+    avatar: "assets/avatar-amir-khan.jpg",
+    seals: ["gb", "verified"]
+  },
+  channel: {
+    name: "#Freedom · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Dr Amir Khan",
+    byAvatar: "assets/avatar-amir-khan.jpg",
+    time: "3d"
+  },
+  time: "3 Days Ago",
+  hashtags: ["freedom", "pricing"],
+  body: "Raised prices 15% across the board this quarter with zero cancellations. The scripts I gave reception for handling the conversation made the difference.",
+  likes: "148",
+  comments: "25",
+  shares: "13",
+  actioned: false,
+  commentList: []
+};
+const INNER_POST_2 = {
+  id: "ch17",
+  access: "gated",
+  bucket: "inner",
+  author: {
+    name: "Dr Tim Pearce",
+    avatar: "assets/avatar-drtim.png",
+    seals: ["gb", "gold", "verified", "crown"]
+  },
+  channel: {
+    name: "#Inner Circle · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Dr Tim Pearce",
+    byAvatar: "assets/avatar-drtim.png",
+    time: "7h"
+  },
+  time: "7 Hours Ago",
+  hashtags: ["inner-circle", "mentorship"],
+  body: "Opened up two more seats in this quarter's mentorship cohort for Inner Circle members only. Comment below if you want the details.",
+  likes: "176",
+  comments: "40",
+  shares: "10",
+  actioned: false,
+  commentList: []
+};
+const INNER_POST_3 = {
+  id: "ch18",
+  access: "gated",
+  bucket: "inner",
+  author: {
+    name: "Dr Naomi Reyes"
+  },
+  channel: {
+    name: "#Inner Circle · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Dr Naomi Reyes",
+    time: "1d"
+  },
+  time: "1 Day Ago",
+  hashtags: ["inner-circle", "exit"],
+  body: "Closed the exit on my four-clinic group last month. Happy to break down the valuation multiple we actually landed on versus what the broker first quoted.",
+  likes: "263",
+  comments: "52",
+  shares: "22",
+  actioned: false,
+  commentList: []
+};
+const INNER_POST_4 = {
+  id: "ch19",
+  access: "gated",
+  bucket: "inner",
+  author: {
+    name: "James Whitfield"
+  },
+  channel: {
+    name: "#Inner Circle · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "James Whitfield",
+    time: "2d"
+  },
+  time: "2 Days Ago",
+  hashtags: ["inner-circle", "investment"],
+  body: "Notes from the private roundtable last week: two of the PE-backed groups in the room are already pausing new-site acquisitions for next year.",
+  likes: "198",
+  comments: "34",
+  shares: "17",
+  actioned: false,
+  commentList: []
+};
+const INNER_POST_5 = {
+  id: "ch20",
+  access: "gated",
+  bucket: "inner",
+  author: {
+    name: "Dr Tim Pearce",
+    avatar: "assets/avatar-drtim.png",
+    seals: ["gb", "gold", "verified", "crown"]
+  },
+  channel: {
+    name: "#Inner Circle · Community",
+    avatar: "assets/profinity-icon.jpg",
+    by: "Dr Tim Pearce",
+    byAvatar: "assets/avatar-drtim.png",
+    time: "4d"
+  },
+  time: "4 Days Ago",
+  hashtags: ["inner-circle", "business"],
+  body: "The real reason most acquisitions fail isn't the price — it's the 90 days after completion. Breaking down our integration checklist at next month's roundtable.",
+  likes: "231",
+  comments: "29",
+  shares: "18",
+  actioned: false,
+  commentList: []
+};
 const COURSE_POST = {
   id: "crs1",
   access: "gated",
   bucket: "course",
   course: "protox",
   author: {
-    name: "PROTOX",
-    avatar: "assets/course-protox.png"
+    name: "Profinity",
+    avatar: "assets/profinity-icon.jpg"
   },
   time: "Just now",
   hashtags: ["course", "protocol"],
@@ -410,13 +794,41 @@ const COURSE_COMMENT = {
   course: "protox",
   author: {
     name: "Nurse Beth",
-    avatar: "assets/avatar-katy.jpg"
+    avatar: "assets/avatar-nurse-beth.jpg"
   },
   time: "2 Hours Ago",
   hashtags: ["course", "discussion"],
   body: "This finally made cannula depth click for me — thank you!",
   likes: "22",
   comments: "3",
+  shares: "0",
+  actioned: false,
+  commentList: []
+};
+
+/* Social-proof upsell: another buyer's real-sounding lesson comment paired
+   with a lesson-promo strip, so it reads as course activity while also
+   nudging viewers who haven't bought/finished the course toward it. */
+const COURSE_COMMENT_2 = {
+  id: "crs3",
+  access: "gated",
+  bucket: "coursecomment",
+  course: "protox",
+  author: {
+    name: "Jeniffer R",
+    avatar: "assets/avatar-miranda.jpg",
+    seals: ["gb", "verified", "crown", "gold"]
+  },
+  time: "1 Hour Ago",
+  hashtags: ["course", "discussion"],
+  body: "This finally made cannula depth and layering click for me — I tried the tear trough, cheekbone and jawline sequence chairside today and saw a real jump in patient satisfaction. Thank you Dr. Tim!",
+  lesson: {
+    title: "Full-Face Rejuvenation Protocol",
+    sub: "PROTOX Course · Module 4 · Lesson 2",
+    image: IMG.p1img1
+  },
+  likes: "31",
+  comments: "5",
   shares: "0",
   actioned: false,
   commentList: []
@@ -445,7 +857,7 @@ const GENERAL_MARK_POST = {
   from: "mark",
   author: {
     name: "Mark Ellis",
-    avatar: "assets/avatar-katy.jpg",
+    avatar: "assets/avatar-mark-ellis.jpg",
     seals: ["skinfluencer"]
   },
   time: "6 Hours Ago",
@@ -464,7 +876,7 @@ const FOLLOWSAVE_AMIR_POST = {
   from: "amir",
   author: {
     name: "Dr Amir Khan",
-    avatar: "assets/avatar-drtim.png",
+    avatar: "assets/avatar-amir-khan.jpg",
     seals: ["gb", "verified", "skinfluencer"]
   },
   time: "4 Hours Ago",
@@ -479,7 +891,7 @@ const FOLLOWSAVE_AMIR_POST = {
 
 /* The full pool of gated bucket content the preview panel routes between —
    order here is the order it appears once resolved into the feed. */
-const BUCKET_POSTS = [CHANNEL_POST, MASTERY_POST, FREEDOM_POST, INNER_POST, COURSE_POST, COURSE_COMMENT, GENERAL_MARK_POST, FOLLOWSAVE_AMIR_POST, MYLEARNING_POST];
+const BUCKET_POSTS = [CHANNEL_POST, CONFIDENCE_POST_2, CONFIDENCE_POST_3, CONFIDENCE_POST_4, CONFIDENCE_POST_5, MASTERY_POST, MASTERY_POST_2, MASTERY_POST_3, MASTERY_POST_4, MASTERY_POST_5, FREEDOM_POST, FREEDOM_POST_2, FREEDOM_POST_3, FREEDOM_POST_4, FREEDOM_POST_5, INNER_POST, INNER_POST_2, INNER_POST_3, INNER_POST_4, INNER_POST_5, COURSE_POST, COURSE_COMMENT, COURSE_COMMENT_2, GENERAL_MARK_POST, FOLLOWSAVE_AMIR_POST, MYLEARNING_POST];
 
 /* Bucket types a free viewer is shown as a locked teaser (see
    resolveBucketFeed) — every paid channel plus course discussion
@@ -573,6 +985,39 @@ const TEASER_CTA = {
     sub: "Join the expert network"
   }
 };
+
+/* The channel ladder in order — each tier includes everything below it.
+   Used by UpgradeModal to show a "your plan vs. this tier" comparison when
+   the viewer already holds a paid tier lower than the one gating a post,
+   instead of the generic first-time-paywall copy. */
+const TIER_LADDER = [{
+  key: "confidence",
+  name: "Confidence",
+  color: "var(--info)",
+  perks: ["Expert network & community feed", "Confidence channel discussions"]
+}, {
+  key: "mastery",
+  name: "Mastery",
+  color: "var(--level-intermediate)",
+  perks: ["Elite mentorship & networking", "Mastery channel discussions"]
+}, {
+  key: "freedom",
+  name: "Freedom",
+  color: "var(--ai-purple)",
+  perks: ["Build a business, not just a skill set", "Freedom channel discussions"]
+}, {
+  key: "inner",
+  name: "Inner Circle",
+  color: "var(--premium-gold-deep)",
+  perks: ["Top-tier roundtable & mentorship", "Inner Circle channel discussions"]
+}];
+const TIER_LADDER_MAP = TIER_LADDER.reduce((m, t, i) => {
+  m[t.key] = {
+    ...t,
+    rank: i
+  };
+  return m;
+}, {});
 const COURSE_NAMES = {
   protox: "PROTOX"
 };
@@ -2805,6 +3250,16 @@ function resolveHashtags(slugs) {
   }, {});
   return slugs.map(s => map[s]).filter(Boolean);
 }
+
+/* Clicking a hashtag on a post (Newsfeed or Community) jumps to the Search
+   page pre-filtered to every other post sharing that same tag. */
+function goToHashtag(tag) {
+  if (!tag || !tag.slug) return;
+  const url = "SearchMobile.html?tag=" + encodeURIComponent(tag.slug);
+  (window.pfGo || function (u) {
+    window.location.href = u;
+  })(url);
+}
 function FeedPost({
   post,
   st,
@@ -2991,6 +3446,7 @@ function FeedPost({
     onSave: handleSave,
     onComment: handleComment,
     onShare: handleShare,
+    onHashtagClick: goToHashtag,
     style: {
       boxShadow: "none",
       border: "none",
@@ -3244,6 +3700,7 @@ function ChannelFeedCard({
   st,
   onToggleLike,
   onSave,
+  onShare,
   onAddComment
 }) {
   const meta = BUCKET_META[post.bucket] || {
@@ -3287,33 +3744,22 @@ function ChannelFeedCard({
   }, /*#__PURE__*/React.createElement("img", {
     src: post.media[0],
     alt: ""
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "pf-chcard-actions"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pf-chcard-action" + (liked ? " on" : ""),
-    onClick: onToggleLike
-  }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: liked ? "fluent:heart-16-filled" : "lucide:heart",
-    size: 17,
-    color: liked ? "var(--reaction-love)" : "var(--gray-500)"
-  }), "React"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pf-chcard-action" + (replying ? " on" : ""),
-    onClick: () => setReplying(r => !r)
-  }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:message-circle",
-    size: 17,
-    color: replying ? "var(--brand-navy)" : "var(--gray-500)"
-  }), "Reply"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pf-chcard-action" + (st.saved ? " on" : ""),
-    onClick: onSave
-  }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: st.saved ? "lucide:bookmark-check" : "lucide:bookmark",
-    size: 17,
-    color: st.saved ? "var(--premium-orange)" : "var(--gray-500)"
-  }), "Save")), replying && /*#__PURE__*/React.createElement(CommentComposer, {
+  })), /*#__PURE__*/React.createElement(PostActions, {
+    likes: st.likes,
+    comments: st.commentsCount,
+    shares: st.shares,
+    liked: liked,
+    saved: st.saved,
+    actioned: false,
+    onLike: onToggleLike,
+    onComment: () => setReplying(r => !r),
+    onShare: onShare,
+    onSave: onSave,
+    style: {
+      borderTop: "1px solid var(--border-default)",
+      paddingTop: 14
+    }
+  }), replying && /*#__PURE__*/React.createElement(CommentComposer, {
     placeholder: "Write a reply…",
     autoFocus: true,
     small: true,
@@ -3324,10 +3770,122 @@ function ChannelFeedCard({
   }));
 }
 
-/* "Only action is Upgrade" — no purchase flow exists in this prototype yet,
-   so this is a stub confirmation reusing the SavedModal sheet pattern. */
+/* Full (unlocked) view of a coursecomment-bucket post: another member's
+   comment left on a course lesson, shown with the same "commented in
+   course X" header as the locked teaser, plus a lesson-promo strip below
+   the comment — doubles as a soft upsell into that lesson for anyone who
+   hasn't taken it yet, or a refresher link for those who have. */
+function CourseCommentCard({
+  post,
+  st,
+  onToggleLike,
+  onSave,
+  onAddComment,
+  onShare
+}) {
+  const [replying, setReplying] = useState(false);
+  const liked = !!st.reaction;
+  const lesson = post.lesson;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "post-wrap pf-ccard",
+    style: {
+      background: "var(--surface-card)",
+      border: "1px solid var(--border-default)",
+      borderRadius: "var(--r-md)",
+      boxShadow: "var(--shadow-card)",
+      overflow: "hidden",
+      padding: "0px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-teaser-activity"
+  }, /*#__PURE__*/React.createElement("strong", null, post.author.name), " commented in course ", /*#__PURE__*/React.createElement("strong", null, COURSE_NAMES[post.course] || "the course")), /*#__PURE__*/React.createElement("div", {
+    className: "pf-ccard-head"
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: post.author.name,
+    src: post.author.avatar,
+    size: 44
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pf-ccard-head-main"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-ccard-head-name"
+  }, /*#__PURE__*/React.createElement("span", null, post.author.name), post.author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+    seals: post.author.seals,
+    size: 16
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pf-ccard-head-time"
+  }, post.time))), /*#__PURE__*/React.createElement("div", {
+    className: "pf-ccard-body"
+  }, /*#__PURE__*/React.createElement(ClampText, {
+    text: post.body,
+    lines: 4
+  })), lesson && /*#__PURE__*/React.createElement("a", {
+    className: "pf-ccard-lesson",
+    href: "MyLearning.html",
+    onClick: e => {
+      if (!window.pfGo) return;
+      e.preventDefault();
+      window.pfGo("MyLearning.html");
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-ccard-lesson-media"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: lesson.image,
+    alt: ""
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pf-ccard-lesson-bar"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-ccard-lesson-icon"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:graduation-cap",
+    size: 17,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pf-ccard-lesson-text"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-ccard-lesson-title"
+  }, lesson.title), /*#__PURE__*/React.createElement("div", {
+    className: "pf-ccard-lesson-sub"
+  }, lesson.sub)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-ccard-lesson-cta"
+  }, "Learn More"))), /*#__PURE__*/React.createElement(PostActions, {
+    likes: st.likes,
+    comments: st.commentsCount,
+    shares: st.shares,
+    liked: liked,
+    saved: st.saved,
+    actioned: false,
+    onLike: onToggleLike,
+    onComment: () => setReplying(r => !r),
+    onShare: onShare,
+    onSave: onSave,
+    style: {
+      borderTop: "1px solid var(--border-default)",
+      paddingTop: 14
+    }
+  }), replying && /*#__PURE__*/React.createElement(CommentComposer, {
+    placeholder: "Write a reply…",
+    autoFocus: true,
+    small: true,
+    onSubmit: t => {
+      onAddComment(t);
+      setReplying(false);
+    }
+  }));
+}
+
+/* No purchase flow exists in this prototype yet, so the CTA is a stub that
+   just routes to MembershipTier.html. label/bucket describe the post that
+   triggered the paywall; currentTier is the viewer's own paid tier key
+   (null for a free viewer). When the viewer already pays for a lower tier
+   than the one gating this post, show a "your plan vs. this tier"
+   comparison instead of the generic first-time-paywall copy — a paying
+   member needs to see what the higher tier actually adds, not just be told
+   to "upgrade". */
 function UpgradeModal({
   label,
+  bucket,
+  currentTier,
   onClose
 }) {
   const sheetRef = useRef(null);
@@ -3338,6 +3896,50 @@ function UpgradeModal({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, []);
+  const target = TIER_LADDER_MAP[bucket];
+  const current = currentTier && TIER_LADDER_MAP[currentTier];
+  const showCompare = target && current && current.rank < target.rank;
+  const goToPlans = () => (window.pfGo || function (u) {
+    window.location.href = u;
+  })("MembershipTier.html");
+  if (!showCompare) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "saved-overlay",
+      onClick: onClose
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "saved-sheet",
+      ref: sheetRef,
+      onClick: e => e.stopPropagation(),
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-label": "Upgrade to unlock"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "saved-handle"
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "saved-icon-wrap"
+    }, /*#__PURE__*/React.createElement(IconifyIcon, {
+      name: "lucide:lock",
+      size: 30,
+      color: "var(--premium-orange)"
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "saved-title"
+    }, "Unlock ", label || "this content"), /*#__PURE__*/React.createElement("div", {
+      className: "saved-desc"
+    }, "Upgrade your membership to read this post in full, react, comment and post here yourself."), /*#__PURE__*/React.createElement("div", {
+      className: "saved-divider"
+    }), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "saved-btn",
+      style: {
+        background: "var(--premium-badge)"
+      },
+      onClick: goToPlans
+    }, "See Membership Plans"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "saved-skip",
+      onClick: onClose
+    }, "Maybe Later")));
+  }
   return /*#__PURE__*/React.createElement("div", {
     className: "saved-overlay",
     onClick: onClose
@@ -3347,20 +3949,58 @@ function UpgradeModal({
     onClick: e => e.stopPropagation(),
     role: "dialog",
     "aria-modal": "true",
-    "aria-label": "Upgrade to unlock"
+    "aria-label": "Upgrade to " + target.name
   }, /*#__PURE__*/React.createElement("div", {
     className: "saved-handle"
   }), /*#__PURE__*/React.createElement("div", {
     className: "saved-icon-wrap"
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:lock",
+    name: "lucide:gem",
     size: 30,
     color: "var(--premium-orange)"
   })), /*#__PURE__*/React.createElement("div", {
     className: "saved-title"
-  }, "Unlock ", label || "this content"), /*#__PURE__*/React.createElement("div", {
+  }, "Upgrade to ", target.name), /*#__PURE__*/React.createElement("div", {
     className: "saved-desc"
-  }, "Upgrade your membership to read this post in full, react, comment and post here yourself."), /*#__PURE__*/React.createElement("div", {
+  }, "You're already a ", current.name, " member — ", target.name, " unlocks this post plus everything below."), /*#__PURE__*/React.createElement("div", {
+    className: "pf-upgrade-compare"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-upgrade-tier"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-upgrade-tier-dot",
+    style: {
+      background: current.color
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pf-upgrade-tier-name"
+  }, current.name), /*#__PURE__*/React.createElement("div", {
+    className: "pf-upgrade-tier-badge"
+  }, "Your plan"), /*#__PURE__*/React.createElement("ul", {
+    className: "pf-upgrade-tier-perks"
+  }, current.perks.map((p, i) => /*#__PURE__*/React.createElement("li", {
+    key: i
+  }, p)))), /*#__PURE__*/React.createElement("span", {
+    className: "pf-upgrade-compare-arrow"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:arrow-right",
+    size: 18,
+    color: "var(--gray-400)"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pf-upgrade-tier highlight"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-upgrade-tier-dot",
+    style: {
+      background: target.color
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pf-upgrade-tier-name"
+  }, target.name), /*#__PURE__*/React.createElement("div", {
+    className: "pf-upgrade-tier-badge on"
+  }, "£397"), /*#__PURE__*/React.createElement("ul", {
+    className: "pf-upgrade-tier-perks"
+  }, target.perks.map((p, i) => /*#__PURE__*/React.createElement("li", {
+    key: i
+  }, p))))), /*#__PURE__*/React.createElement("div", {
     className: "saved-divider"
   }), /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -3368,10 +4008,8 @@ function UpgradeModal({
     style: {
       background: "var(--premium-badge)"
     },
-    onClick: () => (window.pfGo || function (u) {
-      window.location.href = u;
-    })("MembershipTier.html")
-  }, "See Membership Plans"), /*#__PURE__*/React.createElement("button", {
+    onClick: goToPlans
+  }, "Upgrade to ", target.name), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "saved-skip",
     onClick: onClose
@@ -3486,7 +4124,9 @@ function readUserPosts() {
 function getAllPosts() {
   return [...readUserPosts(), ...POSTS, ...BUCKET_POSTS];
 }
-function Feed() {
+function Feed({
+  channel
+} = {}) {
   const [posts, setPosts] = useState(() => {
     const base = typeof window !== "undefined" && window.PF_OFFICIAL_ONLY ? officialize(POSTS) : POSTS;
     return [...readUserPosts(), ...base];
@@ -3539,11 +4179,19 @@ function Feed() {
     item: p,
     mode: "full"
   }))] : bucketResolved;
-  const visibleFeedItems = feedItems;
+
+  /* a channel (Confidence/Mastery/Freedom/Inner Circle) narrows the feed
+     down to just that bucket's posts — used by the Community page's channel
+     switcher so picking "Mastery" shows only Mastery posts, etc. Access
+     still runs through resolveBucketFeed, so a channel the viewer hasn't
+     unlocked renders its normal teaser/upgrade card instead of the post. */
+  const visibleFeedItems = channel ? bucketResolved.filter(({
+    item: p
+  }) => p.bucket === channel) : feedItems;
   return /*#__PURE__*/React.createElement("main", {
     className: "feed",
     "data-screen-label": "Home feed"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, !channel && /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
@@ -3618,7 +4266,37 @@ function Feed() {
         st: st,
         onToggleLike: onToggleLike,
         onAddComment: onAddComment,
-        onSave: () => toggle(p.id, "saved")
+        onSave: () => toggle(p.id, "saved"),
+        onShare: () => setState(s => {
+          const cur = s[p.id];
+          return {
+            ...s,
+            [p.id]: {
+              ...cur,
+              shares: bump(cur.sharesBase)
+            }
+          };
+        })
+      });
+    }
+    if (p.bucket === "coursecomment") {
+      return /*#__PURE__*/React.createElement(CourseCommentCard, {
+        key: p.id,
+        post: p,
+        st: st,
+        onToggleLike: onToggleLike,
+        onAddComment: onAddComment,
+        onSave: () => toggle(p.id, "saved"),
+        onShare: () => setState(s => {
+          const cur = s[p.id];
+          return {
+            ...s,
+            [p.id]: {
+              ...cur,
+              shares: bump(cur.sharesBase)
+            }
+          };
+        })
       });
     }
     const setReaction = key => setState(s => {
@@ -3678,6 +4356,8 @@ function Feed() {
     });
   }), upgradeFor && /*#__PURE__*/React.createElement(UpgradeModal, {
     label: (BUCKET_META[upgradeFor.bucket] || {}).label,
+    bucket: upgradeFor.bucket,
+    currentTier: viewerCurrent.paid && !viewerCurrent.admin ? viewerPersona : null,
     onClose: () => setUpgradeFor(null)
   }));
 }
@@ -3771,7 +4451,9 @@ function App() {
 }
 
 /* Expose the feed + events so other pages (Community) can reuse them without
-   duplicating the reaction/comment logic. */
+   duplicating the reaction/comment logic. CommentComposer + ReactTrigger are
+   exposed so standalone pages (e.g. lesson detail) get the same comment
+   composer + Like control instead of rebuilding them. */
 window.PFApp = {
   Feed,
   EVENTS,
@@ -3779,7 +4461,9 @@ window.PFApp = {
   pfTagActiveNav,
   LeftRail,
   RightRail,
-  getAllPosts
+  getAllPosts,
+  CommentComposer,
+  ReactTrigger
 };
 if (!window.PF_EMBED) {
   ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(App, null));

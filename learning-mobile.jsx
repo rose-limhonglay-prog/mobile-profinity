@@ -9,14 +9,13 @@ const SurveyMobile = window.SurveyMobile;
 
 function goL(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
 
-const LM_CATS = ["All", "Design", "Development", "Business", "Marketing"];
-
 const LM_MINE = [
 { title: "Advanced Lip Techniques", dur: "4h 12m", rating: "4.8", reviews: "1,240", instr: "Dr. Tim Pearce", pct: 68, grad: "linear-gradient(140deg,#6172f3 0%,#3b82f6 100%)" },
 { title: "Temple Filler", dur: "2h 45m", rating: "4.7", reviews: "820", instr: "Dr. Tim Pearce", pct: 45, grad: "linear-gradient(140deg,#f59e0b 0%,#f0617a 100%)" }];
 
 
 const LM_REC = [
+{ title: "Toxin Battle with Julie Bass Kaplan", slug: "toxin-battle", cat: "Masterclass", rating: "4.9", price: "REPLAY", enrolled: "2h 36m replay", grad: "linear-gradient(150deg,#1a1550 0%,#292569 45%,#7c2d3f 100%)" },
 { title: "Facial Anatomy for Artists", cat: "Design", rating: "4.9", price: "£ 129", enrolled: "12.4k enrolled", grad: "linear-gradient(140deg,#0fb6a3 0%,#28d3a0 100%)" },
 { title: "Marketing Strategy Foundations", cat: "Business", rating: "4.8", price: "£ 99", enrolled: "8.1k enrolled", grad: "linear-gradient(140deg,#a855f7 0%,#d946ef 100%)" }];
 
@@ -25,11 +24,32 @@ const LM_FREE = [
 { title: "13 Risky Injection Areas", dur: "1h 20m", instr: "Dr. Tim Pearce", grad: "linear-gradient(140deg,#0fb6a3 0%,#28d3a0 100%)" },
 { title: "Bruising Checklist", dur: "45m", instr: "Dr. Tim Pearce", grad: "linear-gradient(140deg,#f59e0b 0%,#f0617a 100%)" }];
 
+function lmCourseUrl(c) {
+  if (c.slug) return "CourseDetail.html?course=" + c.slug;
+  const p = new URLSearchParams({ title: c.title, instr: c.instr || "Dr. Tim Pearce", dur: c.dur || "45m", grad: c.grad || "", pct: c.pct || 0 });
+  return "CourseDetail.html?" + p.toString();
+}
+
+function lmPriceValue(price) {
+  const n = parseInt(String(price || "").replace(/[^0-9]/g, ""), 10);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function lmCheckoutUrl(c) {
+  const p = new URLSearchParams({ title: c.title, instr: c.instr || "Dr. Tim Pearce", grad: c.grad || "", price: lmPriceValue(c.price) });
+  if (c.slug) p.set("course", c.slug);
+  return "CourseCheckout.html?" + p.toString();
+}
+
+function lmEnrollUrl(c) {
+  return c.price === "REPLAY" ? lmCourseUrl(c) : lmCheckoutUrl(c);
+}
+
 const LM_MEMBERSHIP = [
-{ icon: "lucide:graduation-cap", iconBg: "#E8F5E9", iconColor: "#2E7D32", label: "Foundation Courses", sub: "8 courses" },
-{ icon: "lucide:play-circle",    iconBg: "#EDE7F6", iconColor: "#7B1FA2", label: "Live Masterclasses",  sub: "5 replays" },
-{ icon: "lucide:file-text",      iconBg: "#FFF3E0", iconColor: "#CE9957", label: "Protocols & Guides",  sub: "12 files" },
-{ icon: "lucide:users",          iconBg: "#E3F2FD", iconColor: "#1565C0", label: "Confidence Channel",  sub: "Community" }];
+{ icon: "lucide:graduation-cap", iconBg: "#E8F5E9", iconColor: "#2E7D32", label: "Foundation Courses", sub: "8 courses", href: "MyLearning.html" },
+{ icon: "lucide:play-circle",    iconBg: "#EDE7F6", iconColor: "#7B1FA2", label: "Live Masterclasses",  sub: "5 replays", href: "CourseDetail.html?course=toxin-battle" },
+{ icon: "lucide:file-text",      iconBg: "#FFF3E0", iconColor: "#CE9957", label: "Protocols & Guides",  sub: "12 files", href: "MyLearning.html" },
+{ icon: "lucide:users",          iconBg: "#E3F2FD", iconColor: "#1565C0", label: "Confidence Channel",  sub: "Community", href: "MyLearning.html" }];
 
 const LM_TABS = [
 { key: "Home", label: "Home", icon: "lucide:home", href: "NewsfeedMobile.html" },
@@ -61,6 +81,42 @@ function useIsMobileL() {
   return mobile;
 }
 
+function useHeaderHideL(scrollRef) {
+  const [hidden, setHidden] = useStateL(false);
+  useEffectL(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let lastY = el.scrollTop;
+    const onScroll = () => {
+      const y = el.scrollTop;
+      const delta = y - lastY;
+      if (y < 24) setHidden(false);
+      else if (delta > 6) setHidden(true);
+      else if (delta < -6) setHidden(false);
+      lastY = y;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+  return hidden;
+}
+
+function LMGreeting() {
+  return (
+    <div className="lm-greeting">
+      <div>
+        <div className="lm-greeting-hi">Good morning,</div>
+        <h1 className="lm-greeting-name">Katy!</h1>
+      </div>
+      <div className="lm-greeting-right">
+        <button className="lm-mysave" onClick={() => goL("MySaved.html?from=learning")}>
+          <DSL.IconifyIcon name="lucide:bookmark" size={18} color="var(--brand-navy)" />
+          My Save
+        </button>
+      </div>
+    </div>);
+}
+
 function LMSearch() {
   return (
     <div className="lm-search">
@@ -72,15 +128,16 @@ function LMSearch() {
 }
 
 function LMCurrent() {
+  const url = lmCourseUrl({ title: "8D Lip Design", instr: "Dr. Tim Pearce", dur: "4h 30m", pct: 68 });
   return (
-    <div className="lm-current">
+    <div className="lm-current" role="button" tabIndex={0} onClick={() => goL(url)} onKeyDown={(e) => { if (e.key === "Enter") goL(url); }} style={{ cursor: "pointer" }}>
       <div className="lbl">Current course</div>
       <div className="lm-current-row" style={{ gap: "65px" }}>
         <div>
           <div className="ttl">8D Lip Design</div>
           <div className="ins">with Dr. Tim Pearce</div>
         </div>
-        <button className="lm-continue" onClick={() => goL("MyLearning.html")}>Continue<DSL.IconifyIcon name="lucide:arrow-right" size={18} color="#fff" /></button>
+        <button className="lm-continue" onClick={(e) => { e.stopPropagation(); goL(url); }}>Continue<DSL.IconifyIcon name="lucide:arrow-right" size={18} color="#fff" /></button>
       </div>
       <div className="lm-current-meta"><span className="l">Lesson 6 of 12</span><span className="p">68%</span></div>
       <div className="lm-bar"><span style={{ width: "68%" }} /></div>
@@ -88,28 +145,25 @@ function LMCurrent() {
 
 }
 
-function LMCats() {
-  const [active, setActive] = useStateL("All");
-  return (
-    <div>
-      <div className="lm-sec-h"><h2>Categories</h2></div>
-      <div className="lm-cats" role="tablist" aria-label="Course categories">
-        {LM_CATS.map((c) =>
-        <button key={c} role="tab" aria-selected={active === c} className={"lm-cat" + (active === c ? " on" : "")} onClick={() => setActive(c)}>{c}</button>
-        )}
-      </div>
-    </div>);
-
-}
-
-function YourMembership() {
+function YourMembership({ onOpen }) {
   return (
     <section className="lm-mem-section">
-      <div className="lm-sec-h">
-        <h2>Your Membership</h2>
-        <a href="#" onClick={(e) => e.preventDefault()} style={{ color: "var(--ai-purple)" }}>Manage</a>
-      </div>
-      <div className="lm-mem-card">
+      <button className="lm-mem-simple" onClick={onOpen}>
+        <span className="lm-mem-tier">
+          <DSL.IconifyIcon name="fluent:crown-16-filled" size={15} color="#fff" />
+          Confidence Path
+        </span>
+        <span className="lm-mem-simple-text">Your Membership <b>Active</b></span>
+        <DSL.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
+      </button>
+    </section>);
+}
+
+function MembershipModal({ open, onClose }) {
+  if (!open) return null;
+  return (
+    <div className="lm-mem-overlay" role="dialog" aria-modal="true" aria-label="Your Membership" onClick={onClose}>
+      <div className="lm-mem-card" onClick={(e) => e.stopPropagation()}>
         <div className="lm-mem-top">
           <span className="lm-mem-tier">
             <DSL.IconifyIcon name="fluent:crown-16-filled" size={15} color="#fff" />
@@ -123,7 +177,7 @@ function YourMembership() {
         <p className="lm-mem-desc">Jump straight into everything included in your plan.</p>
         <div className="lm-mem-rows">
           {LM_MEMBERSHIP.map((item, i) =>
-            <button key={i} className="lm-mem-row" onClick={() => goL("MyLearning.html")}>
+            <button key={i} className="lm-mem-row" onClick={() => goL(item.href)}>
               <span className="lm-mem-icon" style={{ background: item.iconBg }}>
                 <DSL.IconifyIcon name={item.icon} size={22} color={item.iconColor} />
               </span>
@@ -136,7 +190,7 @@ function YourMembership() {
           )}
         </div>
       </div>
-    </section>);
+    </div>);
 }
 
 function MyCourses({ loading }) {
@@ -147,7 +201,7 @@ function MyCourses({ loading }) {
         {loading
           ? Array.from({ length: 2 }).map((_, i) => <LMSkeletonCourse key={i} />)
           : LM_MINE.map((c, i) =>
-          <article className="lm-mc" key={i}>
+          <article className="lm-mc" key={i} role="button" tabIndex={0} onClick={() => goL(lmCourseUrl(c))} onKeyDown={(e) => { if (e.key === "Enter") goL(lmCourseUrl(c)); }} style={{ cursor: "pointer" }}>
               <div className="lm-mc-img" style={{ background: c.grad }}><span className="lm-mc-dur">{c.dur}</span></div>
               <div className="lm-mc-body">
                 <div className="lm-mc-ttl">{c.title}</div>
@@ -170,7 +224,7 @@ function Recommended({ loading }) {
         {loading
           ? Array.from({ length: 2 }).map((_, i) => <LMSkeletonRec key={i} />)
           : LM_REC.map((c, i) =>
-          <article className="lm-rc" key={i}>
+          <article className="lm-rc" key={i} role="button" tabIndex={0} onClick={() => goL(lmCourseUrl(c))} onKeyDown={(e) => { if (e.key === "Enter") goL(lmCourseUrl(c)); }} style={{ cursor: "pointer" }}>
               <div className="lm-rc-img" style={{ background: c.grad }}><span className="lm-rc-cat">{c.cat}</span></div>
               <div className="lm-rc-body">
                 <div className="lm-rc-ttl">{c.title}</div>
@@ -179,7 +233,7 @@ function Recommended({ loading }) {
                   <div className="lm-rc-price">{c.price}</div>
                 </div>
                 <div className="lm-rc-enr"><DSL.IconifyIcon name="lucide:users" size={17} color="var(--gray-450)" />{c.enrolled}</div>
-                <button className="lm-enroll" onClick={() => goL("MyLearning.html")}>Enroll<DSL.IconifyIcon name="lucide:arrow-right" size={17} color="#fff" /></button>
+                <button className="lm-enroll" onClick={(e) => { e.stopPropagation(); goL(lmEnrollUrl(c)); }}>Enroll<DSL.IconifyIcon name="lucide:arrow-right" size={17} color="#fff" /></button>
               </div>
             </article>
           )}
@@ -194,7 +248,7 @@ function FreeCourses({ onQuiz, unlocked }) {
       {unlocked ? (
         <div className="lm-rail">
           {LM_FREE.map((c, i) =>
-            <article className="lm-mc" key={i}>
+            <article className="lm-mc" key={i} role="button" tabIndex={0} onClick={() => goL(lmCourseUrl(c))} onKeyDown={(e) => { if (e.key === "Enter") goL(lmCourseUrl(c)); }} style={{ cursor: "pointer" }}>
               <div className="lm-mc-img" style={{ background: c.grad }}>
                 <span className="lm-mc-dur">{c.dur}</span>
                 <span className="lm-free-badge">Free</span>
@@ -202,7 +256,7 @@ function FreeCourses({ onQuiz, unlocked }) {
               <div className="lm-mc-body">
                 <div className="lm-mc-ttl">{c.title}</div>
                 <div className="ins">{c.instr}</div>
-                <button className="lm-enroll" style={{ marginTop: 14 }} onClick={() => goL("MyLearning.html")}>
+                <button className="lm-enroll" style={{ marginTop: 14 }} onClick={(e) => { e.stopPropagation(); goL(lmCourseUrl(c)); }}>
                   Start<DSL.IconifyIcon name="lucide:arrow-right" size={17} color="#fff" />
                 </button>
               </div>
@@ -259,9 +313,9 @@ function LMSkeletonRec() {
     </article>
   );
 }
-function LMTabBar() {
+const LMTabBar = React.forwardRef(function LMTabBar({ hidden }, ref) {
   return (
-    <nav className="lm-tabs" aria-label="Primary">
+    <nav ref={ref} className={"lm-tabs" + (hidden ? " lm-tabs-hidden" : "")} aria-label="Primary">
       {LM_TABS.map((t) =>
       <button key={t.key} className={"lm-tab" + (t.key === "Learning" ? " on" : "")}
       aria-current={t.key === "Learning" ? "page" : undefined} onClick={() => t.href && goL(t.href)}>
@@ -274,13 +328,39 @@ function LMTabBar() {
       )}
     </nav>);
 
-}
+});
 
 function LearningHome() {
   const [loading, setLoading] = useStateL(true);
   const [surveyOpen, setSurveyOpen] = useStateL(false);
+  const [membershipOpen, setMembershipOpen] = useStateL(false);
   const [coursesUnlocked, setCoursesUnlocked] = useStateL(false);
   useEffectL(() => { const t = setTimeout(() => setLoading(false), 1800); return () => clearTimeout(t); }, []);
+
+  const scrollRef = React.useRef(null);
+  const headerRef = React.useRef(null);
+  const tabsRef = React.useRef(null);
+  const [headerH, setHeaderH] = useStateL(0);
+  const [tabsH, setTabsH] = useStateL(0);
+  const chromeHidden = useHeaderHideL(scrollRef);
+  React.useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  React.useLayoutEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const measure = () => setTabsH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   function handleSurveyComplete() {
     setCoursesUnlocked(true);
@@ -289,19 +369,22 @@ function LearningHome() {
 
   return (
     <div className="lm-screen" data-screen-label="My Learning (mobile)">
-      <MobileChromeC />
-      <LMSearch />
-      <div className="lm-scroll">
+      <div ref={headerRef} className={"lm-header-wrap" + (chromeHidden ? " lm-header-hidden" : "")}>
+        <MobileChromeC />
+        <LMGreeting />
+        <LMSearch />
+      </div>
+      <div className="lm-scroll" ref={scrollRef} style={{ paddingTop: chromeHidden ? 0 : headerH, paddingBottom: chromeHidden ? 0 : tabsH }}>
         <LMCurrent />
-        <LMCats />
-        <YourMembership />
         <MyCourses loading={loading} />
+        <YourMembership onOpen={() => setMembershipOpen(true)} />
         <Recommended loading={loading} />
         <FreeCourses onQuiz={() => setSurveyOpen(true)} unlocked={coursesUnlocked} />
         <div style={{ height: 20 }} />
       </div>
-      <LMTabBar />
+      <LMTabBar ref={tabsRef} hidden={chromeHidden} />
       <SurveyMobile open={surveyOpen} onClose={() => setSurveyOpen(false)} onComplete={handleSurveyComplete} />
+      <MembershipModal open={membershipOpen} onClose={() => setMembershipOpen(false)} />
     </div>);
 }
 

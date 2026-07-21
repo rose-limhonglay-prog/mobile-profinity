@@ -92,12 +92,6 @@ const MTopBar = forwardRefM(function MTopBar({ onMenu, onBell, onMessages, hidde
 
 });
 
-const SM_CHANNELS = [
-{ label: "Clinical Chat", icon: "lucide:stethoscope", n: 10 },
-{ label: "Freedom Path", icon: "lucide:feather", n: 2 },
-{ label: "Tech Team", icon: "lucide:cpu", n: 1 },
-{ label: "Business & Mindset", icon: "lucide:briefcase", n: 5 }];
-
 const SM_RESOURCES = [
 { label: "Videos", icon: "lucide:square-play", n: 8 },
 { label: "Articles", icon: "lucide:feather", n: 4 },
@@ -598,6 +592,17 @@ function SideMenu({ open, onClose }) {
         </button>
 
         <div className="sm-body">
+          <button className="sm-upgrade" onClick={() => go("MembershipTier.html")}>
+            <span className="sm-upgrade-icon">
+              <DSM.IconifyIcon name="lucide:gem" size={20} color="#fff" />
+            </span>
+            <span className="sm-upgrade-main">
+              <span className="sm-upgrade-title">Upgrade to Confidence</span>
+              <span className="sm-upgrade-sub">Unlock premium channels &amp; courses</span>
+            </span>
+            <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
+          </button>
+
           <SmSection title="Communities" />
           <button className="sm-tier" onClick={() => go("CommunityMobile.html")}>
             <span className="sm-tier-top">
@@ -607,15 +612,6 @@ function SideMenu({ open, onClose }) {
             <span className="sm-tier-sub">Exclusive tier content</span>
             <span className="sm-tier-new">3 new posts</span>
           </button>
-          <nav className="sm-list">
-            {SM_CHANNELS.map((c) =>
-            <button key={c.label} className="sm-row" onClick={() => go("CommunityMobile.html")}>
-                <DSM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
-                <span className="sm-row-label">{c.label}</span>
-                <span className="sm-badge sm-badge-red">{c.n}</span>
-              </button>
-            )}
-          </nav>
 
           <SmSection title="Membership Resources" />
           <nav className="sm-list">
@@ -623,7 +619,6 @@ function SideMenu({ open, onClose }) {
             <button key={c.label} className="sm-row" onClick={() => go("MyLearning.html")}>
                 <DSM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
                 <span className="sm-row-label">{c.label}</span>
-                <span className="sm-badge sm-badge-gray">{c.n}</span>
               </button>
             )}
           </nav>

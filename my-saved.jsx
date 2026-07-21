@@ -7,6 +7,12 @@ const DSMS = window.ProfinityDesignSystem_c2b5cc;
 
 function goMS(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
 
+function msBackTarget() {
+  const from = new URLSearchParams(window.location.search).get("from");
+  if (from === "learning") return "LearningMobile.html";
+  return /LearningMobile\.html/i.test(document.referrer) ? "LearningMobile.html" : "AccountSettings.html";
+}
+
 function useDeviceScaleMS() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
   const [scale, setScale] = useStateMS(calc);
@@ -151,7 +157,7 @@ function MySaved() {
   return (
     <div className="ms-screen" data-screen-label="My Saved (mobile)">
       <header className="ms-top">
-        <button className="ms-back" aria-label="Back" onClick={() => goMS("AccountSettings.html")}>
+        <button className="ms-back" aria-label="Back" onClick={() => goMS(msBackTarget())}>
           <DSMS.IconifyIcon name="lucide:chevron-left" size={26} color="var(--gray-900)" />
         </button>
         <h1>My Saved</h1>

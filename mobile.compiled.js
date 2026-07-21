@@ -202,23 +202,6 @@ const MTopBar = forwardRefM(function MTopBar({
     color: "var(--white)"
   }), "48")));
 });
-const SM_CHANNELS = [{
-  label: "Clinical Chat",
-  icon: "lucide:stethoscope",
-  n: 10
-}, {
-  label: "Freedom Path",
-  icon: "lucide:feather",
-  n: 2
-}, {
-  label: "Tech Team",
-  icon: "lucide:cpu",
-  n: 1
-}, {
-  label: "Business & Mindset",
-  icon: "lucide:briefcase",
-  n: 5
-}];
 const SM_RESOURCES = [{
   label: "Videos",
   icon: "lucide:square-play",
@@ -1160,7 +1143,26 @@ function SideMenu({
     color: "var(--gray-800)"
   })), /*#__PURE__*/React.createElement("div", {
     className: "sm-body"
-  }, /*#__PURE__*/React.createElement(SmSection, {
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "sm-upgrade",
+    onClick: () => go("MembershipTier.html")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-upgrade-icon"
+  }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: "lucide:gem",
+    size: 20,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sm-upgrade-main"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-upgrade-title"
+  }, "Upgrade to Confidence"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-upgrade-sub"
+  }, "Unlock premium channels & courses")), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement(SmSection, {
     title: "Communities"
   }), /*#__PURE__*/React.createElement("button", {
     className: "sm-tier",
@@ -1175,21 +1177,7 @@ function SideMenu({
     className: "sm-tier-sub"
   }, "Exclusive tier content"), /*#__PURE__*/React.createElement("span", {
     className: "sm-tier-new"
-  }, "3 new posts")), /*#__PURE__*/React.createElement("nav", {
-    className: "sm-list"
-  }, SM_CHANNELS.map(c => /*#__PURE__*/React.createElement("button", {
-    key: c.label,
-    className: "sm-row",
-    onClick: () => go("CommunityMobile.html")
-  }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: c.icon,
-    size: 23,
-    color: "var(--gray-900)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "sm-row-label"
-  }, c.label), /*#__PURE__*/React.createElement("span", {
-    className: "sm-badge sm-badge-red"
-  }, c.n)))), /*#__PURE__*/React.createElement(SmSection, {
+  }, "3 new posts")), /*#__PURE__*/React.createElement(SmSection, {
     title: "Membership Resources"
   }), /*#__PURE__*/React.createElement("nav", {
     className: "sm-list"
@@ -1203,9 +1191,7 @@ function SideMenu({
     color: "var(--gray-900)"
   }), /*#__PURE__*/React.createElement("span", {
     className: "sm-row-label"
-  }, c.label), /*#__PURE__*/React.createElement("span", {
-    className: "sm-badge sm-badge-gray"
-  }, c.n)))), /*#__PURE__*/React.createElement(SmSection, {
+  }, c.label)))), /*#__PURE__*/React.createElement(SmSection, {
     title: "My Courses"
   }), /*#__PURE__*/React.createElement("div", {
     className: "sm-courses"

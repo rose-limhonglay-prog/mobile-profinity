@@ -180,8 +180,19 @@ function SRPersonCard({
     className: "sr-btn-remove"
   }, "Remove"))));
 }
+function initialQuerySR() {
+  try {
+    const tagSlug = new URLSearchParams(window.location.search).get("tag");
+    if (!tagSlug) return "";
+    const all = window.PFHashtags ? window.PFHashtags.getAll() : [];
+    const found = all.find(t => t.slug === tagSlug);
+    return found ? found.label : tagSlug;
+  } catch (e) {
+    return "";
+  }
+}
 function SearchPage() {
-  const [query, setQuery] = useStateSR("");
+  const [query, setQuery] = useStateSR(initialQuerySR);
   const [allTags] = useStateSR(() => window.PFHashtags ? window.PFHashtags.getAll() : []);
   const q = query.trim().toLowerCase().replace(/^#/, "");
   const matchedTag = q ? allTags.find(t => t.slug === t.slug && (t.label.toLowerCase() === q || t.slug === q || t.label.toLowerCase().includes(q))) : null;

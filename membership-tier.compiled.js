@@ -41,10 +41,11 @@ const TIERS_MT = [{
   yearly: 970,
   dark: false,
   highlight: false,
-  icon: null,
+  icon: "shield-check",
   badge: null,
   features: ["Full access to membership library", "Expert complications support", "Live Technique Tuesday training", "Clinician directory listing"],
-  cta: "Subscribe Now"
+  cta: "Subscribe Now",
+  trialNote: "Includes 30 days free trial"
 }, {
   key: "mastery",
   name: "Mastery",
@@ -218,7 +219,7 @@ function TierCard({
   }, /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
     name: "lucide:" + tier.icon,
     size: 20,
-    color: "var(--brand-gold-soft)"
+    color: tier.dark ? "var(--brand-gold-soft)" : "var(--brand-navy)"
   })), /*#__PURE__*/React.createElement("h3", null, tier.name)), tier.tagline && /*#__PURE__*/React.createElement("p", {
     className: "mt-tier-tagline"
   }, tier.tagline), /*#__PURE__*/React.createElement("div", {
@@ -242,7 +243,7 @@ function TierCard({
   }, /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
     name: "lucide:check",
     size: 16,
-    color: tier.dark ? "var(--brand-gold-soft)" : "var(--premium-orange)"
+    color: tier.dark ? "var(--brand-gold-soft)" : "var(--success)"
   }), /*#__PURE__*/React.createElement("span", null, f)))), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "mt-tier-cta" + (tier.dark ? " on-dark" : ""),
@@ -251,7 +252,13 @@ function TierCard({
     name: "lucide:arrow-right",
     size: 16,
     color: tier.dark ? "var(--brand-navy-900)" : "#fff"
-  })));
+  })), tier.trialNote && /*#__PURE__*/React.createElement("p", {
+    className: "mt-tier-trial-note"
+  }, /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
+    name: "lucide:gift",
+    size: 13,
+    color: "var(--brand-navy)"
+  }), " ", tier.trialNote));
 }
 function CompareStars({
   filled
@@ -266,7 +273,13 @@ function CompareStars({
   })));
 }
 function MembershipTier() {
-  const onSelect = tier => goMT("SubscribeCheckout.html?tier=" + tier.key);
+  const onSelect = tier => {
+    if (tier.cta === "Apply Now") {
+      goMT("MembershipApply.html?tier=" + tier.key);
+    } else {
+      goMT("SubscribeCheckout.html?tier=" + tier.key);
+    }
+  };
   return /*#__PURE__*/React.createElement("div", {
     className: "mt-screen",
     "data-screen-label": "Membership Tier (mobile)"
@@ -278,8 +291,8 @@ function MembershipTier() {
     onClick: () => goMT("NewsfeedMobile.html")
   }, /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
     name: "lucide:chevron-left",
-    size: 26,
-    color: "#fff"
+    size: 22,
+    color: "var(--brand-navy)"
   })), /*#__PURE__*/React.createElement("h1", null, "Membership Tier")), /*#__PURE__*/React.createElement("div", {
     className: "mt-scroll"
   }, /*#__PURE__*/React.createElement("section", {
@@ -291,23 +304,13 @@ function MembershipTier() {
   }, "From injector to ", /*#__PURE__*/React.createElement("span", null, "business owner.")), /*#__PURE__*/React.createElement("p", {
     className: "mt-hero-sub"
   }, "Profinity provides the roadmap, the credentials, and the systems to get you there — whether you're finding your feet or scaling to a sovereign clinic."), /*#__PURE__*/React.createElement("div", {
-    className: "mt-hero-ctas"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mt-btn-fill",
-    onClick: () => goMT("SubscribeCheckout.html")
-  }, "Subscribe Now"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mt-btn-outline",
-    onClick: () => goMT("SubscribeCheckout.html")
-  }, "Subscribe Now")), /*#__PURE__*/React.createElement("div", {
     className: "mt-stats"
   }, /*#__PURE__*/React.createElement(StatChip, {
-    icon: "lucide:trending-up",
+    icon: "lucide:trophy",
     value: "4",
     label: "Growth tiers"
   }), /*#__PURE__*/React.createElement(StatChip, {
-    icon: "lucide:book-open",
+    icon: "lucide:graduation-cap",
     value: "6",
     label: "Flagship courses"
   }), /*#__PURE__*/React.createElement(StatChip, {
@@ -319,14 +322,14 @@ function MembershipTier() {
   }, /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
     name: "lucide:sparkles",
     size: 16,
-    color: "var(--brand-navy-900)"
-  }), "Start your 2 months free trial"), /*#__PURE__*/React.createElement("section", {
+    color: "#fff"
+  }), "30 days free trial"), /*#__PURE__*/React.createElement("section", {
     className: "mt-section"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mt-eyebrow dark"
   }, "Programme structure"), /*#__PURE__*/React.createElement("h2", {
     className: "mt-section-title"
-  }, "Choose your growth tier"), /*#__PURE__*/React.createElement("p", {
+  }, "Choose your ", /*#__PURE__*/React.createElement("span", null, "growth tier")), /*#__PURE__*/React.createElement("p", {
     className: "mt-section-sub"
   }, "Each tier is a stage in your career journey. Join at the level that meets you where you are — and grow from there."), /*#__PURE__*/React.createElement(TierCard, {
     tier: TIERS_MT[0],
@@ -394,7 +397,7 @@ function MembershipTier() {
   }, "Subscribe Now ", /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
     name: "lucide:arrow-right",
     size: 14,
-    color: "#fff"
+    color: "var(--brand-navy)"
   }))), /*#__PURE__*/React.createElement("p", {
     className: "mt-footer-note"
   }, "Subscriptions are managed through our web app."), /*#__PURE__*/React.createElement("div", {

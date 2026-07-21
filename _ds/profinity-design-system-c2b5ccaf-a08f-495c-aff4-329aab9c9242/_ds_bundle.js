@@ -2905,6 +2905,7 @@ function PostCard({
   onComment,
   onShare,
   onSave,
+  onHashtagClick,
   style = {}
 }) {
   return /*#__PURE__*/React.createElement("div", {
@@ -2977,7 +2978,9 @@ function PostCard({
       transform: "rotate(90deg)"
     }
   })), hashtags.length > 0 && ["confidence", "mastery", "freedom", "inner-circle"].includes(hashtags[0].slug) && /*#__PURE__*/React.createElement("span", {
-    className: "pf-hashtag-badge"
+    className: "pf-hashtag-badge",
+    onClick: onHashtagClick ? function (e) { e.stopPropagation(); onHashtagClick(hashtags[0]); } : undefined,
+    style: onHashtagClick ? { cursor: "pointer" } : undefined
   }, hashtags[0].label), title && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "var(--font-sans)",
@@ -2997,7 +3000,9 @@ function PostCard({
     className: "pf-hashtag-row"
   }, hashtags.slice(1, 6).map((t, i) => /*#__PURE__*/React.createElement("span", {
     key: t.slug || i,
-    className: "pf-hashtag-chip"
+    className: "pf-hashtag-chip",
+    onClick: onHashtagClick ? function (e) { e.stopPropagation(); onHashtagClick(t); } : undefined,
+    style: onHashtagClick ? { cursor: "pointer" } : undefined
   }, "#" + t.label.replace(/\s+/g, "").toLowerCase())), hashtags.length > 6 && /*#__PURE__*/React.createElement("span", {
     className: "pf-hashtag-more"
   }, "+" + (hashtags.length - 6) + " more")), media, /*#__PURE__*/React.createElement(__ds_scope.PostActions, {

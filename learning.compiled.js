@@ -31,7 +31,8 @@ const IMG = {
   protox: "assets/clinic-toxin-guide.png",
   temple: "assets/clinic-treatment-collage.png",
   gold: "assets/texture-gold.png",
-  logo: "assets/profinity-academy-logo-full.png"
+  logo: "assets/profinity-academy-logo-full.png",
+  advancedLip: "assets/course-advanced-lip-techniques.jpg"
 };
 const TABS = ["All Courses", "Free Resources", "New Courses", "Recommended Courses", "Upcoming Webinars", "Certification Programs"];
 const MY_COURSES = [{
@@ -105,7 +106,7 @@ const RECOMMENDED = [{
   by: "Dr Emily Carter",
   price: "£1,245"
 }, {
-  image: IMG.protox,
+  image: IMG.advancedLip,
   level: "Intermediate",
   title: "Advanced Lip Techniques",
   description: "Master the nuances of lip anatomy for precise techniques.",

@@ -160,14 +160,324 @@ const PM_TABS = [{
   icon: "lucide:sparkles",
   href: "AgentMobile.html"
 }];
+const SM_RESOURCES_PM = [{
+  label: "Videos",
+  icon: "lucide:square-play"
+}, {
+  label: "Articles",
+  icon: "lucide:feather"
+}, {
+  label: "Webinars",
+  icon: "lucide:calendar"
+}];
+const SM_COURSES_PM = [{
+  label: "Face Anatomy Masterclass",
+  pct: 72
+}, {
+  label: "Lip Filler Techniques",
+  pct: 45
+}, {
+  label: "Advanced Botox Training",
+  pct: 20
+}];
+const SM_EVENTS_PM = [{
+  d: "30",
+  m: "JUN",
+  label: "Technique Tuesday Webinar",
+  t: "8:00 PM",
+  tag: "NEW"
+}, {
+  d: "5",
+  m: "JUL",
+  label: "Confidence Masterclass",
+  t: "6:00 PM"
+}, {
+  d: "12",
+  m: "JUL",
+  label: "Business Growth Workshop",
+  t: "7:00 PM"
+}];
+const SM_PROFILE_BEFORE_PM = [{
+  label: "Edit Profile",
+  icon: "lucide:book-open",
+  href: "ProfileMobile.html"
+}, {
+  label: "Account Settings",
+  icon: "lucide:graduation-cap",
+  href: "AccountSettings.html"
+}, {
+  label: "Notifications",
+  icon: "lucide:calendar",
+  href: "NotificationSettings.html"
+}];
+const SM_PROFILE_AFTER_PM = [{
+  label: "Privacy & Security",
+  icon: "lucide:book-open",
+  href: null
+}, {
+  label: "Admin Panel",
+  icon: "lucide:shield",
+  href: "AdminPanel.html"
+}];
+function useDarkModePM() {
+  const [dark, setDark] = useStatePM(() => {
+    try {
+      return localStorage.getItem('pf-theme') === 'dark';
+    } catch (e) {
+      return false;
+    }
+  });
+  function toggle() {
+    const next = !dark;
+    setDark(next);
+    try {
+      localStorage.setItem('pf-theme', next ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    } catch (e) {}
+  }
+  return [dark, toggle];
+}
+function SmDarkSwitchPM({
+  on,
+  onToggle
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    className: "sm-switch" + (on ? " on" : ""),
+    onClick: onToggle,
+    role: "switch",
+    "aria-checked": on,
+    "aria-label": on ? "Switch to light mode" : "Switch to dark mode"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-knob"
+  }, on && /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:moon",
+    size: 13,
+    color: "#1A1736"
+  })));
+}
+function SmDisplayCardPM({
+  dark,
+  onToggle
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "sm-display-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sm-display-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-display-label"
+  }, "Display"), /*#__PURE__*/React.createElement(SmDarkSwitchPM, {
+    on: dark,
+    onToggle: onToggle
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "sm-display-desc"
+  }, "Adjust the appearance of the app to reduce glare and give your eyes a break"));
+}
+function SmSectionPM({
+  title
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "sm-sec-h"
+  }, title);
+}
+function SideMenuPM({
+  open,
+  onClose
+}) {
+  const [dark, toggleDark] = useDarkModePM();
+  return /*#__PURE__*/React.createElement("div", {
+    className: "m-drawer-wrap" + (open ? " open" : ""),
+    "aria-hidden": !open
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "m-drawer-scrim",
+    onClick: onClose
+  }), /*#__PURE__*/React.createElement("aside", {
+    className: "m-drawer",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Menu"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "m-drawer-profile",
+    onClick: () => goPM("ProfileMobile.html")
+  }, /*#__PURE__*/React.createElement(DSPM.Avatar, {
+    name: PM_ME.name,
+    src: PM_ME.avatar,
+    size: 56
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "m-dp-main"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "m-dp-name"
+  }, PM_ME.name, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:badge-check",
+    size: 18,
+    color: "var(--reaction-like)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "m-dp-role"
+  }, PM_ME.role)), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 22,
+    color: "var(--gray-800)"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "sm-body"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "sm-upgrade",
+    onClick: () => goPM("MembershipTier.html")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-upgrade-icon"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:gem",
+    size: 20,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sm-upgrade-main"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-upgrade-title"
+  }, "Upgrade to Confidence"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-upgrade-sub"
+  }, "Unlock premium channels & courses")), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement(SmSectionPM, {
+    title: "Communities"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "sm-tier",
+    onClick: () => goPM("CommunityMobile.html")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-name"
+  }, "Confidence Path"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-pill"
+  }, "YOUR TIER")), /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-sub"
+  }, "Exclusive tier content"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-new"
+  }, "3 new posts")), /*#__PURE__*/React.createElement(SmSectionPM, {
+    title: "Membership Resources"
+  }), /*#__PURE__*/React.createElement("nav", {
+    className: "sm-list"
+  }, SM_RESOURCES_PM.map(c => /*#__PURE__*/React.createElement("button", {
+    key: c.label,
+    className: "sm-row",
+    onClick: () => goPM("LearningMobile.html")
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: c.icon,
+    size: 23,
+    color: "var(--gray-900)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "sm-row-label"
+  }, c.label)))), /*#__PURE__*/React.createElement(SmSectionPM, {
+    title: "My Courses"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "sm-courses"
+  }, SM_COURSES_PM.map(c => /*#__PURE__*/React.createElement("button", {
+    key: c.label,
+    className: "sm-course",
+    onClick: () => goPM("LearningMobile.html")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-course-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-course-thumb"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:image",
+    size: 20,
+    color: "var(--gray-400)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sm-course-name"
+  }, c.label)), /*#__PURE__*/React.createElement("span", {
+    className: "sm-progress"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-progress-fill",
+    style: {
+      width: c.pct + "%"
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sm-course-pct"
+  }, c.pct, "% complete")))), /*#__PURE__*/React.createElement(SmSectionPM, {
+    title: "Upcoming Events"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "sm-events"
+  }, SM_EVENTS_PM.map(e => /*#__PURE__*/React.createElement("button", {
+    key: e.label,
+    className: "sm-event",
+    onClick: () => goPM("EventsMobile.html")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-date"
+  }, /*#__PURE__*/React.createElement("b", null, e.d), /*#__PURE__*/React.createElement("i", null, e.m)), /*#__PURE__*/React.createElement("span", {
+    className: "sm-event-main"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-event-name"
+  }, e.label), /*#__PURE__*/React.createElement("span", {
+    className: "sm-event-time"
+  }, e.t)), e.tag && /*#__PURE__*/React.createElement("span", {
+    className: "sm-event-tag"
+  }, e.tag)))), /*#__PURE__*/React.createElement(SmSectionPM, {
+    title: "My Profile"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "sm-row sm-verify",
+    onClick: () => goPM("ProfileMobile.html")
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:book-open",
+    size: 23,
+    color: "var(--premium-orange)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "sm-row-label"
+  }, "Verify Profile"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-verify-pill"
+  }, "Not Verified")), /*#__PURE__*/React.createElement("nav", {
+    className: "sm-list"
+  }, SM_PROFILE_BEFORE_PM.map(c => /*#__PURE__*/React.createElement("button", {
+    key: c.label,
+    className: "sm-row",
+    onClick: () => c.href && goPM(c.href)
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: c.icon,
+    size: 23,
+    color: "var(--gray-900)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "sm-row-label"
+  }, c.label), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "var(--gray-450)"
+  })))), /*#__PURE__*/React.createElement(SmDisplayCardPM, {
+    dark: dark,
+    onToggle: toggleDark
+  }), /*#__PURE__*/React.createElement("nav", {
+    className: "sm-list"
+  }, SM_PROFILE_AFTER_PM.map(c => /*#__PURE__*/React.createElement("button", {
+    key: c.label,
+    className: "sm-row",
+    onClick: () => c.href && goPM(c.href)
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: c.icon,
+    size: 23,
+    color: "var(--gray-900)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "sm-row-label"
+  }, c.label), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "var(--gray-450)"
+  })))), /*#__PURE__*/React.createElement("button", {
+    className: "m-drawer-logout",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:log-out",
+    size: 22,
+    color: "var(--error)"
+  }), "Logout"))));
+}
 function PMTopBar({
+  onMenu,
   onMessages
 }) {
   return /*#__PURE__*/React.createElement("header", {
     className: "pm-top"
   }, /*#__PURE__*/React.createElement("button", {
     className: "pm-burger",
-    "aria-label": "Menu"
+    "aria-label": "Menu",
+    onClick: onMenu
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:menu",
     size: 24,
@@ -1250,10 +1560,12 @@ function useIsMobilePM() {
 function PMScreen() {
   const m = PM_ME;
   const [msgOpen, setMsgOpen] = useStatePM(false);
+  const [menuOpen, setMenuOpen] = useStatePM(false);
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-screen",
     "data-screen-label": "Profile (mobile)"
   }, /*#__PURE__*/React.createElement(PMTopBar, {
+    onMenu: () => setMenuOpen(true),
     onMessages: () => setMsgOpen(true)
   }), /*#__PURE__*/React.createElement("div", {
     className: "pm-scroll"
@@ -1449,6 +1761,9 @@ function PMScreen() {
   }), "Logout")), /*#__PURE__*/React.createElement(PMTabBar, null), /*#__PURE__*/React.createElement(MessagesPanelPM, {
     open: msgOpen,
     onClose: () => setMsgOpen(false)
+  }), /*#__PURE__*/React.createElement(SideMenuPM, {
+    open: menuOpen,
+    onClose: () => setMenuOpen(false)
   }));
 }
 function ProfileMobileApp() {

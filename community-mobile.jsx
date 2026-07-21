@@ -39,11 +39,192 @@ const CM_TABS = [
 { key: "Community", label: "Community", icon: "lucide:users", href: null },
 { key: "Agent", label: "Agent", icon: "lucide:sparkles", href: "AgentMobile.html" }];
 
+const SM_RESOURCES_CM = [
+{ label: "Videos", icon: "lucide:square-play", n: 8 },
+{ label: "Articles", icon: "lucide:feather", n: 4 },
+{ label: "Webinars", icon: "lucide:calendar", n: 3 }];
 
-function CMTopBar({ onMessages }) {
+const SM_COURSES_CM = [
+{ label: "Face Anatomy Masterclass", pct: 72 },
+{ label: "Lip Filler Techniques", pct: 45 },
+{ label: "Advanced Botox Training", pct: 20 }];
+
+const SM_EVENTS_CM = [
+{ d: "30", m: "JUN", label: "Technique Tuesday Webinar", t: "8:00 PM", tag: "NEW" },
+{ d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM" },
+{ d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM" }];
+
+const SM_PROFILE_BEFORE_CM = [
+{ label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
+{ label: "Account Settings",   icon: "lucide:graduation-cap",  href: null },
+{ label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" }];
+
+const SM_PROFILE_AFTER_CM = [
+{ label: "Privacy & Security", icon: "lucide:book-open",       href: null },
+{ label: "Admin Panel",        icon: "lucide:shield",          href: "AdminPanel.html" }];
+
+function useDarkModeCM() {
+  const [dark, setDark] = React.useState(() => {
+    try { return localStorage.getItem('pf-theme') === 'dark'; } catch(e) { return false; }
+  });
+  function toggle() {
+    const next = !dark;
+    setDark(next);
+    try {
+      localStorage.setItem('pf-theme', next ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    } catch(e) {}
+  }
+  return [dark, toggle];
+}
+
+function SmDarkSwitchCM({ on, onToggle }) {
+  return (
+    <button className={"sm-switch" + (on ? " on" : "")} onClick={onToggle} role="switch"
+      aria-checked={on} aria-label={on ? "Switch to light mode" : "Switch to dark mode"}>
+      <span className="sm-knob">
+        {on && <DSCM.IconifyIcon name="lucide:moon" size={13} color="#1A1736" />}
+      </span>
+    </button>);
+}
+
+function SmDisplayCardCM({ dark, onToggle }) {
+  return (
+    <div className="sm-display-card">
+      <div className="sm-display-top">
+        <span className="sm-display-label">Display</span>
+        <SmDarkSwitchCM on={dark} onToggle={onToggle} />
+      </div>
+      <p className="sm-display-desc">
+        Adjust the appearance of the app to reduce glare and give your eyes a break
+      </p>
+    </div>);
+}
+
+function SmSectionCM({ title }) {
+  return <div className="sm-sec-h">{title}</div>;
+}
+
+function SideMenuCM({ open, onClose }) {
+  const [dark, toggleDark] = useDarkModeCM();
+  return (
+    <div className={"m-drawer-wrap" + (open ? " open" : "")} aria-hidden={!open}>
+      <div className="m-drawer-scrim" onClick={onClose} />
+      <aside className="m-drawer" role="dialog" aria-modal="true" aria-label="Menu">
+        <button className="m-drawer-profile" onClick={() => goCM("ProfileMobile.html")}>
+          <DSCM.Avatar name={PFACM.ME.name} src={PFACM.ME.avatar} size={56} />
+          <span className="m-dp-main">
+            <span className="m-dp-name">{PFACM.ME.name}
+              <DSCM.IconifyIcon name="lucide:badge-check" size={18} color="var(--reaction-like)" />
+            </span>
+            <span className="m-dp-role">{PFACM.ME.role}</span>
+          </span>
+          <DSCM.IconifyIcon name="lucide:chevron-right" size={22} color="var(--gray-800)" />
+        </button>
+
+        <div className="sm-body">
+          <button className="sm-upgrade" onClick={() => goCM("MembershipTier.html")}>
+            <span className="sm-upgrade-icon">
+              <DSCM.IconifyIcon name="lucide:gem" size={20} color="#fff" />
+            </span>
+            <span className="sm-upgrade-main">
+              <span className="sm-upgrade-title">Upgrade to Confidence</span>
+              <span className="sm-upgrade-sub">Unlock premium channels &amp; courses</span>
+            </span>
+            <DSCM.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
+          </button>
+
+          <SmSectionCM title="Communities" />
+          <button className="sm-tier" onClick={onClose}>
+            <span className="sm-tier-top">
+              <span className="sm-tier-name">Confidence Path</span>
+              <span className="sm-tier-pill">YOUR TIER</span>
+            </span>
+            <span className="sm-tier-sub">Exclusive tier content</span>
+            <span className="sm-tier-new">3 new posts</span>
+          </button>
+
+          <SmSectionCM title="Membership Resources" />
+          <nav className="sm-list">
+            {SM_RESOURCES_CM.map((c) =>
+            <button key={c.label} className="sm-row" onClick={() => goCM("MyLearning.html")}>
+                <DSCM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
+                <span className="sm-row-label">{c.label}</span>
+              </button>
+            )}
+          </nav>
+
+          <SmSectionCM title="My Courses" />
+          <div className="sm-courses">
+            {SM_COURSES_CM.map((c) =>
+            <button key={c.label} className="sm-course" onClick={() => goCM("MyLearning.html")}>
+                <span className="sm-course-top">
+                  <span className="sm-course-thumb">
+                    <DSCM.IconifyIcon name="lucide:image" size={20} color="var(--gray-400)" />
+                  </span>
+                  <span className="sm-course-name">{c.label}</span>
+                </span>
+                <span className="sm-progress"><span className="sm-progress-fill" style={{ width: c.pct + "%" }} /></span>
+                <span className="sm-course-pct">{c.pct}% complete</span>
+              </button>
+            )}
+          </div>
+
+          <SmSectionCM title="Upcoming Events" />
+          <div className="sm-events">
+            {SM_EVENTS_CM.map((e) =>
+            <button key={e.label} className="sm-event" onClick={() => goCM("EventsMobile.html")}>
+                <span className="sm-date"><b>{e.d}</b><i>{e.m}</i></span>
+                <span className="sm-event-main">
+                  <span className="sm-event-name">{e.label}</span>
+                  <span className="sm-event-time">{e.t}</span>
+                </span>
+                {e.tag && <span className="sm-event-tag">{e.tag}</span>}
+              </button>
+            )}
+          </div>
+
+          <SmSectionCM title="My Profile" />
+          <button className="sm-row sm-verify" onClick={() => goCM("ProfileMobile.html")}>
+            <DSCM.IconifyIcon name="lucide:book-open" size={23} color="var(--premium-orange)" />
+            <span className="sm-row-label">Verify Profile</span>
+            <span className="sm-verify-pill">Not Verified</span>
+          </button>
+          <nav className="sm-list">
+            {SM_PROFILE_BEFORE_CM.map((c) =>
+            <button key={c.label} className="sm-row" onClick={() => c.href && goCM(c.href)}>
+                <DSCM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
+                <span className="sm-row-label">{c.label}</span>
+                <DSCM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+              </button>
+            )}
+          </nav>
+
+          <SmDisplayCardCM dark={dark} onToggle={toggleDark} />
+
+          <nav className="sm-list">
+            {SM_PROFILE_AFTER_CM.map((c) =>
+            <button key={c.label} className="sm-row" onClick={() => c.href && goCM(c.href)}>
+                <DSCM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
+                <span className="sm-row-label">{c.label}</span>
+                <DSCM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+              </button>
+            )}
+          </nav>
+
+          <button className="m-drawer-logout" onClick={onClose}>
+            <DSCM.IconifyIcon name="lucide:log-out" size={22} color="var(--error)" />
+            Logout
+          </button>
+        </div>
+      </aside>
+    </div>);
+}
+
+function CMTopBar({ onMenu, onMessages }) {
   return (
     <header className="cm-top">
-      <button className="cm-burger" aria-label="Menu"><DSCM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
+      <button className="cm-burger" aria-label="Menu" onClick={onMenu}><DSCM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
       <img className="m-logo-light" src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
       <img className="m-logo-dark" src="assets/profinity-academy-logo-dark.jpg" alt="PROfinity Academy" />
       <span className="grow" />
@@ -315,7 +496,9 @@ function MessagesPanelCM({ open, onClose }) {
 
 }
 
-const CM_CHANNELS = ["Confidence", "Clinical Chat", "Freedom Path", "Tech Team", "Business & Mindset"];
+const CM_CHANNELS = ["Confidence", "Mastery", "Freedom", "Inner Circle"];
+const CM_PREMIUM_CHANNELS = new Set(["Confidence", "Freedom", "Mastery", "Inner Circle"]);
+const CM_CHANNEL_BUCKET = { Confidence: "confidence", Mastery: "mastery", Freedom: "freedom", "Inner Circle": "inner" };
 
 function CMHeader({ channel, setChannel }) {
   const [following, setFollowing] = React.useState(false);
@@ -341,7 +524,12 @@ function CMHeader({ channel, setChannel }) {
           <button key={c} role="option" aria-selected={c === channel}
           className={"cm-chitem" + (c === channel ? " on" : "")}
           onClick={() => { setChannel(c); setOpen(false); }}>
-                {c}
+                <span className="cm-chitem-name">
+                  {c}
+                  {CM_PREMIUM_CHANNELS.has(c) &&
+                <DSCM.IconifyIcon name="fluent:crown-16-filled" size={14} color="var(--brand-gold)" />
+                }
+                </span>
                 {c === channel && <DSCM.IconifyIcon name="lucide:check" size={17} color="var(--brand-navy)" />}
               </button>
           )}
@@ -372,9 +560,9 @@ function CMComposer({ channel }) {
     </div>);
 }
 
-function CMTabBar() {
+const CMTabBar = React.forwardRef(function CMTabBar({ hidden }, ref) {
   return (
-    <nav className="cm-tabs" aria-label="Primary">
+    <nav ref={ref} className={"cm-tabs" + (hidden ? " cm-tabs-hidden" : "")} aria-label="Primary">
       {CM_TABS.map((t) =>
       <button key={t.key} className={"cm-tab" + (t.key === "Community" ? " on" : "")}
       aria-current={t.key === "Community" ? "page" : undefined}
@@ -387,17 +575,63 @@ function CMTabBar() {
       )}
     </nav>);
 
+});
+
+function useHeaderHideCM(scrollRef) {
+  const [hidden, setHidden] = React.useState(false);
+  React.useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let lastY = el.scrollTop;
+    const onScroll = () => {
+      const y = el.scrollTop;
+      const delta = y - lastY;
+      if (y < 24) setHidden(false);
+      else if (delta > 6) setHidden(true);
+      else if (delta < -6) setHidden(false);
+      lastY = y;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+  return hidden;
 }
 
 function CMScreen({ scrollRef, newPosts, dismiss }) {
   const [channel, setChannel] = React.useState("Confidence");
   const [msgOpen, setMsgOpen] = React.useState(false);
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  const headerRef = React.useRef(null);
+  const tabsRef = React.useRef(null);
+  const [headerH, setHeaderH] = React.useState(0);
+  const [tabsH, setTabsH] = React.useState(0);
+  const chromeHidden = useHeaderHideCM(scrollRef);
+  React.useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  React.useLayoutEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const measure = () => setTabsH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   return (
     <div className="cm-screen" data-screen-label="Community (mobile)">
-      <CMTopBar onMessages={() => setMsgOpen(true)} />
-      <CMHeader channel={channel} setChannel={setChannel} />
-      <CMComposer channel={channel} />
-      <div className="cm-scroll" ref={scrollRef}>
+      <div ref={headerRef} className={"cm-header-wrap" + (chromeHidden ? " cm-header-hidden" : "")}>
+        <CMTopBar onMenu={() => setMenuOpen(true)} onMessages={() => setMsgOpen(true)} />
+        <CMHeader channel={channel} setChannel={setChannel} />
+        <CMComposer channel={channel} />
+      </div>
+      <div className="cm-scroll" ref={scrollRef} style={{ paddingTop: chromeHidden ? 0 : headerH, paddingBottom: chromeHidden ? 0 : tabsH }}>
         {newPosts > 0 &&
         <button type="button" className="cm-newposts" onClick={dismiss}
         aria-label={newPosts + " new posts, tap to see them"}>
@@ -405,16 +639,17 @@ function CMScreen({ scrollRef, newPosts, dismiss }) {
             {newPosts} New Posts
           </button>
         }
-        <PFACM.Feed />
+        <PFACM.Feed channel={CM_CHANNEL_BUCKET[channel]} />
         <div className="cm-end">End of newsfeed</div>
       </div>
-      <button type="button" className="cm-clindir-fab" aria-label="Clinician Directory"
+      <button type="button" className={"cm-clindir-fab" + (chromeHidden ? " cm-clindir-fab-hidden" : "")} aria-label="Clinician Directory"
         onClick={() => goCM("ClinicianDirectory.html")}>
         <DSCM.IconifyIcon name="lucide:book-open" size={18} color="var(--white)" />
         Clinician Directory
       </button>
-      <CMTabBar />
+      <CMTabBar ref={tabsRef} hidden={chromeHidden} />
       <MessagesPanelCM open={msgOpen} onClose={() => setMsgOpen(false)} />
+      <SideMenuCM open={menuOpen} onClose={() => setMenuOpen(false)} />
     </div>);
 }
 

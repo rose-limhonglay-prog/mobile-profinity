@@ -38,6 +38,16 @@
 .sm-sec-h{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px;letter-spacing:.08em;
   text-transform:uppercase;color:var(--gray-400);margin:22px 2px 12px}
 
+.sm-upgrade{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
+  background:linear-gradient(90deg,var(--premium-orange),#d6a45f);border:none;border-radius:14px;
+  padding:16px 16px;margin:2px 0 6px;box-shadow:0 8px 20px rgba(184,124,45,.28)}
+.sm-upgrade:active{transform:scale(.98)}
+.sm-upgrade-icon{flex:none;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.22);
+  display:flex;align-items:center;justify-content:center}
+.sm-upgrade-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.sm-upgrade-title{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;color:#fff}
+.sm-upgrade-sub{font-family:var(--font-sans);font-size:13px;color:rgba(255,255,255,.9)}
+
 .sm-tier{display:flex;flex-direction:column;gap:5px;width:100%;text-align:left;cursor:pointer;
   background:#FCF4E4;border:1px solid #F0DFBE;border-radius:14px;padding:18px 18px 16px;margin-bottom:6px}
 .sm-tier-top{display:flex;align-items:center;justify-content:space-between;gap:10px}

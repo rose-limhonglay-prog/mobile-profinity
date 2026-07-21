@@ -1,0 +1,110 @@
+/* ===========================================================================
+   PROfinity — Subscribe Checkout / Payment Summary (mobile) · layout
+   Loaded after the DS tokens; styles the billing review + payment screen.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.sc-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-page); position: relative; }
+
+/* top bar */
+.sc-top { flex: none; display: flex; align-items: center; gap: 12px; position: relative;
+  padding: 60px 20px 16px; background: var(--surface-card); border-bottom: 1px solid var(--border-default); }
+.sc-back { flex: none; width: 40px; height: 40px; border: none; background: var(--gray-100); border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; }
+.sc-top h1 { flex: 1; text-align: center; margin: 0; padding-right: 40px;
+  font-family: var(--font-sans); font-weight: 600; font-size: 18px; color: var(--brand-navy); }
+
+.sc-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 24px; }
+.sc-scroll::-webkit-scrollbar { width: 0; }
+
+/* ---------- intro ---------- */
+.sc-intro { padding: 24px 20px 4px; }
+.sc-intro h2 { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 26px; margin: 0 0 6px; color: var(--brand-navy); }
+.sc-intro p { font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--gray-500); margin: 0; }
+
+/* ---------- plan card ---------- */
+.sc-plan-card { display: flex; align-items: center; gap: 12px; margin: 16px 20px 0; padding: 16px;
+  background: var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--r-lg); box-shadow: var(--shadow-card); }
+.sc-plan-icon { flex: none; width: 44px; height: 44px; border-radius: 10px; background: var(--brand-navy-900);
+  display: flex; align-items: center; justify-content: center; }
+.sc-plan-info { flex: 1; min-width: 0; }
+.sc-plan-info h3 { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 16px; margin: 0; color: var(--brand-navy); }
+.sc-plan-info p { font-family: var(--font-sans); font-size: 13px; color: var(--gray-500); margin: 3px 0 0; }
+.sc-change { flex: none; border: none; background: transparent; cursor: pointer; font-family: var(--font-sans);
+  font-weight: var(--fw-bold); font-size: 14px; color: var(--brand-gold); padding: 4px; }
+
+/* ---------- sections ---------- */
+.sc-section { padding: 24px 20px 0; }
+.sc-section h4 { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; margin: 0 0 10px; color: var(--brand-navy); }
+
+/* ---------- billing cycle ---------- */
+.sc-cycle-row { display: flex; gap: 10px; }
+.sc-cycle { position: relative; flex: 1; text-align: left; cursor: pointer; padding: 14px 14px 12px;
+  background: var(--surface-card); border: 1.5px solid var(--border-default); border-radius: var(--r-md);
+  display: flex; flex-direction: column; gap: 4px; }
+.sc-cycle.selected { border-color: var(--brand-navy); background: var(--brand-gold-100); }
+.sc-cycle-name { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--brand-navy); }
+.sc-cycle-price { font-family: var(--font-sans); font-size: 13px; color: var(--gray-500); }
+.sc-cycle-badge { position: absolute; top: -10px; right: 10px; background: var(--premium-badge); color: #fff;
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 10px; letter-spacing: .03em; text-transform: uppercase;
+  padding: 4px 9px; border-radius: var(--r-pill); }
+
+/* ---------- order summary ---------- */
+.sc-summary-card { background: var(--surface-card); border: 1px solid var(--border-default); border-radius: var(--r-lg);
+  overflow: hidden; }
+.sc-summary-row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 13px 16px; font-family: var(--font-sans); font-size: 14px; color: var(--gray-600); border-top: 1px solid var(--gray-100); }
+.sc-summary-row:first-child { border-top: none; }
+.sc-negative { color: var(--success); }
+.sc-summary-total { font-weight: var(--fw-bold); font-size: 15px; color: var(--brand-navy); }
+
+/* ---------- promo ---------- */
+.sc-promo-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 12px 14px;
+  background: var(--gray-100); border: 1px dashed var(--border-default); border-radius: var(--r-md); }
+.sc-promo-input { flex: 1; min-width: 0; border: none; background: transparent; outline: none;
+  font-family: var(--font-sans); font-size: 14px; color: var(--text-primary); }
+.sc-promo-input::placeholder { color: var(--gray-400); }
+.sc-promo-apply { flex: none; border: none; background: transparent; cursor: pointer; font-family: var(--font-sans);
+  font-weight: var(--fw-bold); font-size: 14px; color: var(--brand-navy); }
+
+/* ---------- payment method ---------- */
+.sc-payment-card { display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+  background: var(--surface-card); border: 1.5px solid var(--border-default); border-radius: var(--r-md); }
+.sc-payment-card.selected { border-color: var(--brand-navy); background: var(--brand-gold-100); }
+.sc-payment-icon { flex: none; width: 36px; height: 36px; border-radius: 8px; background: var(--gray-100);
+  display: flex; align-items: center; justify-content: center; }
+.sc-payment-info { flex: 1; min-width: 0; }
+.sc-payment-info h3 { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 14px; margin: 0; color: var(--brand-navy); }
+.sc-payment-info p { font-family: var(--font-sans); font-size: 12px; color: var(--gray-500); margin: 2px 0 0; }
+
+.sc-add-payment { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin-top: 10px;
+  padding: 12px; border: 1.5px dashed var(--border-default); border-radius: var(--r-md); background: transparent;
+  cursor: pointer; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 13px; color: var(--brand-navy); }
+
+.sc-trial-note { display: flex; align-items: flex-start; gap: 8px; margin: 16px 0 0;
+  font-family: var(--font-sans); font-size: 12px; line-height: 1.5; color: var(--gray-500); }
+.sc-trial-note iconify-icon { margin-top: 2px; }
+
+/* ---------- sticky footer ---------- */
+.sc-footer { flex: none; padding: 14px 20px calc(18px + env(safe-area-inset-bottom));
+  background: var(--surface-card); border-top: 1px solid var(--border-default); }
+.sc-footer-row { display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--font-sans); font-size: 14px; color: var(--gray-500); margin-bottom: 10px; }
+.sc-footer-row span:last-child { font-weight: var(--fw-bold); font-size: 18px; color: var(--brand-navy); }
+.sc-cta { width: 100%; border: none; border-radius: var(--r-pill); background: var(--brand-navy); color: #fff;
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; padding: 14px 16px;
+  display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+.sc-footer-secure { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 10px 0 0;
+  font-family: var(--font-sans); font-size: 11px; color: var(--gray-400); }
+
+/* real-mobile fullscreen */
+@media (max-width: 768px) {
+  body { background: var(--surface-page); }
+  .app.device-stage { padding: 0; }
+  .sc-screen { min-height: 100vh; }
+}

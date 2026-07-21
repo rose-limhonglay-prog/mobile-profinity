@@ -87,10 +87,192 @@ const PM_TABS = [
 { key: "Agent", label: "Agent", icon: "lucide:sparkles", href: "AgentMobile.html" }];
 
 
-function PMTopBar({ onMessages }) {
+const SM_RESOURCES_PM = [
+{ label: "Videos", icon: "lucide:square-play" },
+{ label: "Articles", icon: "lucide:feather" },
+{ label: "Webinars", icon: "lucide:calendar" }];
+
+const SM_COURSES_PM = [
+{ label: "Face Anatomy Masterclass", pct: 72 },
+{ label: "Lip Filler Techniques", pct: 45 },
+{ label: "Advanced Botox Training", pct: 20 }];
+
+const SM_EVENTS_PM = [
+{ d: "30", m: "JUN", label: "Technique Tuesday Webinar", t: "8:00 PM", tag: "NEW" },
+{ d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM" },
+{ d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM" }];
+
+const SM_PROFILE_BEFORE_PM = [
+{ label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
+{ label: "Account Settings",   icon: "lucide:graduation-cap",  href: "AccountSettings.html" },
+{ label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" }];
+
+const SM_PROFILE_AFTER_PM = [
+{ label: "Privacy & Security", icon: "lucide:book-open",       href: null },
+{ label: "Admin Panel",        icon: "lucide:shield",          href: "AdminPanel.html" }];
+
+function useDarkModePM() {
+  const [dark, setDark] = useStatePM(() => {
+    try { return localStorage.getItem('pf-theme') === 'dark'; } catch(e) { return false; }
+  });
+  function toggle() {
+    const next = !dark;
+    setDark(next);
+    try {
+      localStorage.setItem('pf-theme', next ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+    } catch(e) {}
+  }
+  return [dark, toggle];
+}
+
+function SmDarkSwitchPM({ on, onToggle }) {
+  return (
+    <button className={"sm-switch" + (on ? " on" : "")} onClick={onToggle} role="switch"
+      aria-checked={on} aria-label={on ? "Switch to light mode" : "Switch to dark mode"}>
+      <span className="sm-knob">
+        {on && <DSPM.IconifyIcon name="lucide:moon" size={13} color="#1A1736" />}
+      </span>
+    </button>);
+}
+
+function SmDisplayCardPM({ dark, onToggle }) {
+  return (
+    <div className="sm-display-card">
+      <div className="sm-display-top">
+        <span className="sm-display-label">Display</span>
+        <SmDarkSwitchPM on={dark} onToggle={onToggle} />
+      </div>
+      <p className="sm-display-desc">
+        Adjust the appearance of the app to reduce glare and give your eyes a break
+      </p>
+    </div>);
+}
+
+function SmSectionPM({ title }) {
+  return <div className="sm-sec-h">{title}</div>;
+}
+
+function SideMenuPM({ open, onClose }) {
+  const [dark, toggleDark] = useDarkModePM();
+  return (
+    <div className={"m-drawer-wrap" + (open ? " open" : "")} aria-hidden={!open}>
+      <div className="m-drawer-scrim" onClick={onClose} />
+      <aside className="m-drawer" role="dialog" aria-modal="true" aria-label="Menu">
+        <button className="m-drawer-profile" onClick={() => goPM("ProfileMobile.html")}>
+          <DSPM.Avatar name={PM_ME.name} src={PM_ME.avatar} size={56} />
+          <span className="m-dp-main">
+            <span className="m-dp-name">{PM_ME.name}
+              <DSPM.IconifyIcon name="lucide:badge-check" size={18} color="var(--reaction-like)" />
+            </span>
+            <span className="m-dp-role">{PM_ME.role}</span>
+          </span>
+          <DSPM.IconifyIcon name="lucide:chevron-right" size={22} color="var(--gray-800)" />
+        </button>
+
+        <div className="sm-body">
+          <button className="sm-upgrade" onClick={() => goPM("MembershipTier.html")}>
+            <span className="sm-upgrade-icon">
+              <DSPM.IconifyIcon name="lucide:gem" size={20} color="#fff" />
+            </span>
+            <span className="sm-upgrade-main">
+              <span className="sm-upgrade-title">Upgrade to Confidence</span>
+              <span className="sm-upgrade-sub">Unlock premium channels &amp; courses</span>
+            </span>
+            <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
+          </button>
+
+          <SmSectionPM title="Communities" />
+          <button className="sm-tier" onClick={() => goPM("CommunityMobile.html")}>
+            <span className="sm-tier-top">
+              <span className="sm-tier-name">Confidence Path</span>
+              <span className="sm-tier-pill">YOUR TIER</span>
+            </span>
+            <span className="sm-tier-sub">Exclusive tier content</span>
+            <span className="sm-tier-new">3 new posts</span>
+          </button>
+
+          <SmSectionPM title="Membership Resources" />
+          <nav className="sm-list">
+            {SM_RESOURCES_PM.map((c) =>
+            <button key={c.label} className="sm-row" onClick={() => goPM("LearningMobile.html")}>
+                <DSPM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
+                <span className="sm-row-label">{c.label}</span>
+              </button>
+            )}
+          </nav>
+
+          <SmSectionPM title="My Courses" />
+          <div className="sm-courses">
+            {SM_COURSES_PM.map((c) =>
+            <button key={c.label} className="sm-course" onClick={() => goPM("LearningMobile.html")}>
+                <span className="sm-course-top">
+                  <span className="sm-course-thumb">
+                    <DSPM.IconifyIcon name="lucide:image" size={20} color="var(--gray-400)" />
+                  </span>
+                  <span className="sm-course-name">{c.label}</span>
+                </span>
+                <span className="sm-progress"><span className="sm-progress-fill" style={{ width: c.pct + "%" }} /></span>
+                <span className="sm-course-pct">{c.pct}% complete</span>
+              </button>
+            )}
+          </div>
+
+          <SmSectionPM title="Upcoming Events" />
+          <div className="sm-events">
+            {SM_EVENTS_PM.map((e) =>
+            <button key={e.label} className="sm-event" onClick={() => goPM("EventsMobile.html")}>
+                <span className="sm-date"><b>{e.d}</b><i>{e.m}</i></span>
+                <span className="sm-event-main">
+                  <span className="sm-event-name">{e.label}</span>
+                  <span className="sm-event-time">{e.t}</span>
+                </span>
+                {e.tag && <span className="sm-event-tag">{e.tag}</span>}
+              </button>
+            )}
+          </div>
+
+          <SmSectionPM title="My Profile" />
+          <button className="sm-row sm-verify" onClick={() => goPM("ProfileMobile.html")}>
+            <DSPM.IconifyIcon name="lucide:book-open" size={23} color="var(--premium-orange)" />
+            <span className="sm-row-label">Verify Profile</span>
+            <span className="sm-verify-pill">Not Verified</span>
+          </button>
+          <nav className="sm-list">
+            {SM_PROFILE_BEFORE_PM.map((c) =>
+            <button key={c.label} className="sm-row" onClick={() => c.href && goPM(c.href)}>
+                <DSPM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
+                <span className="sm-row-label">{c.label}</span>
+                <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+              </button>
+            )}
+          </nav>
+
+          <SmDisplayCardPM dark={dark} onToggle={toggleDark} />
+
+          <nav className="sm-list">
+            {SM_PROFILE_AFTER_PM.map((c) =>
+            <button key={c.label} className="sm-row" onClick={() => c.href && goPM(c.href)}>
+                <DSPM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
+                <span className="sm-row-label">{c.label}</span>
+                <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+              </button>
+            )}
+          </nav>
+
+          <button className="m-drawer-logout" onClick={onClose}>
+            <DSPM.IconifyIcon name="lucide:log-out" size={22} color="var(--error)" />
+            Logout
+          </button>
+        </div>
+      </aside>
+    </div>);
+}
+
+function PMTopBar({ onMenu, onMessages }) {
   return (
     <header className="pm-top">
-      <button className="pm-burger" aria-label="Menu"><DSPM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
+      <button className="pm-burger" aria-label="Menu" onClick={onMenu}><DSPM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
       <img className="m-logo-light" src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
       <img className="m-logo-dark" src="assets/profinity-academy-logo-dark.jpg" alt="PROfinity Academy" />
       <span className="grow" />
@@ -721,9 +903,10 @@ function useIsMobilePM() {
 function PMScreen() {
   const m = PM_ME;
   const [msgOpen, setMsgOpen] = useStatePM(false);
+  const [menuOpen, setMenuOpen] = useStatePM(false);
   return (
     <div className="pm-screen" data-screen-label="Profile (mobile)">
-          <PMTopBar onMessages={() => setMsgOpen(true)} />
+          <PMTopBar onMenu={() => setMenuOpen(true)} onMessages={() => setMsgOpen(true)} />
           <div className="pm-scroll">
             <div className="pm-ig">
               <div className="pm-ig-top">
@@ -831,6 +1014,7 @@ function PMScreen() {
           </div>
           <PMTabBar />
           <MessagesPanelPM open={msgOpen} onClose={() => setMsgOpen(false)} />
+          <SideMenuPM open={menuOpen} onClose={() => setMenuOpen(false)} />
         </div>);
 
 }

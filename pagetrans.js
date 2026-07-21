@@ -19,8 +19,13 @@
       root.style.transform = "none";
     };
     requestAnimationFrame(function () { requestAnimationFrame(reveal); });
-    // safety net: never leave the page invisible
-    setTimeout(function () { root.style.opacity = "1"; root.style.transform = "none"; }, 600);
+    // clear the will-change hint once settled — left on, it keeps forcing a
+    // containing block for every position:fixed element on the page (modals
+    // end up sized against full document height instead of the viewport)
+    var clearWillChange = function () { root.style.willChange = "auto"; };
+    root.addEventListener("transitionend", clearWillChange, { once: true });
+    // safety net: never leave the page invisible (or will-change stuck)
+    setTimeout(function () { root.style.opacity = "1"; root.style.transform = "none"; clearWillChange(); }, 600);
   }
 
   // EXIT

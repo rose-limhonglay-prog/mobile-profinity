@@ -14,7 +14,6 @@ function goL(url) {
     window.location.href = u;
   })(url);
 }
-const LM_CATS = ["All", "Design", "Development", "Business", "Marketing"];
 const LM_MINE = [{
   title: "Advanced Lip Techniques",
   dur: "4h 12m",
@@ -33,6 +32,14 @@ const LM_MINE = [{
   grad: "linear-gradient(140deg,#f59e0b 0%,#f0617a 100%)"
 }];
 const LM_REC = [{
+  title: "Toxin Battle with Julie Bass Kaplan",
+  slug: "toxin-battle",
+  cat: "Masterclass",
+  rating: "4.9",
+  price: "REPLAY",
+  enrolled: "2h 36m replay",
+  grad: "linear-gradient(150deg,#1a1550 0%,#292569 45%,#7c2d3f 100%)"
+}, {
   title: "Facial Anatomy for Artists",
   cat: "Design",
   rating: "4.9",
@@ -58,30 +65,62 @@ const LM_FREE = [{
   instr: "Dr. Tim Pearce",
   grad: "linear-gradient(140deg,#f59e0b 0%,#f0617a 100%)"
 }];
+function lmCourseUrl(c) {
+  if (c.slug) return "CourseDetail.html?course=" + c.slug;
+  const p = new URLSearchParams({
+    title: c.title,
+    instr: c.instr || "Dr. Tim Pearce",
+    dur: c.dur || "45m",
+    grad: c.grad || "",
+    pct: c.pct || 0
+  });
+  return "CourseDetail.html?" + p.toString();
+}
+function lmPriceValue(price) {
+  const n = parseInt(String(price || "").replace(/[^0-9]/g, ""), 10);
+  return Number.isFinite(n) ? n : 0;
+}
+function lmCheckoutUrl(c) {
+  const p = new URLSearchParams({
+    title: c.title,
+    instr: c.instr || "Dr. Tim Pearce",
+    grad: c.grad || "",
+    price: lmPriceValue(c.price)
+  });
+  if (c.slug) p.set("course", c.slug);
+  return "CourseCheckout.html?" + p.toString();
+}
+function lmEnrollUrl(c) {
+  return c.price === "REPLAY" ? lmCourseUrl(c) : lmCheckoutUrl(c);
+}
 const LM_MEMBERSHIP = [{
   icon: "lucide:graduation-cap",
   iconBg: "#E8F5E9",
   iconColor: "#2E7D32",
   label: "Foundation Courses",
-  sub: "8 courses"
+  sub: "8 courses",
+  href: "MyLearning.html"
 }, {
   icon: "lucide:play-circle",
   iconBg: "#EDE7F6",
   iconColor: "#7B1FA2",
   label: "Live Masterclasses",
-  sub: "5 replays"
+  sub: "5 replays",
+  href: "CourseDetail.html?course=toxin-battle"
 }, {
   icon: "lucide:file-text",
   iconBg: "#FFF3E0",
   iconColor: "#CE9957",
   label: "Protocols & Guides",
-  sub: "12 files"
+  sub: "12 files",
+  href: "MyLearning.html"
 }, {
   icon: "lucide:users",
   iconBg: "#E3F2FD",
   iconColor: "#1565C0",
   label: "Confidence Channel",
-  sub: "Community"
+  sub: "Community",
+  href: "MyLearning.html"
 }];
 const LM_TABS = [{
   key: "Home",
@@ -130,6 +169,43 @@ function useIsMobileL() {
   }, []);
   return mobile;
 }
+function useHeaderHideL(scrollRef) {
+  const [hidden, setHidden] = useStateL(false);
+  useEffectL(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let lastY = el.scrollTop;
+    const onScroll = () => {
+      const y = el.scrollTop;
+      const delta = y - lastY;
+      if (y < 24) setHidden(false);else if (delta > 6) setHidden(true);else if (delta < -6) setHidden(false);
+      lastY = y;
+    };
+    el.addEventListener("scroll", onScroll, {
+      passive: true
+    });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+  return hidden;
+}
+function LMGreeting() {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lm-greeting"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "lm-greeting-hi"
+  }, "Good morning,"), /*#__PURE__*/React.createElement("h1", {
+    className: "lm-greeting-name"
+  }, "Katy!")), /*#__PURE__*/React.createElement("div", {
+    className: "lm-greeting-right"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "lm-mysave",
+    onClick: () => goL("MySaved.html?from=learning")
+  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "lucide:bookmark",
+    size: 18,
+    color: "var(--brand-navy)"
+  }), "My Save")));
+}
 function LMSearch() {
   return /*#__PURE__*/React.createElement("div", {
     className: "lm-search"
@@ -148,8 +224,23 @@ function LMSearch() {
   }));
 }
 function LMCurrent() {
+  const url = lmCourseUrl({
+    title: "8D Lip Design",
+    instr: "Dr. Tim Pearce",
+    dur: "4h 30m",
+    pct: 68
+  });
   return /*#__PURE__*/React.createElement("div", {
-    className: "lm-current"
+    className: "lm-current",
+    role: "button",
+    tabIndex: 0,
+    onClick: () => goL(url),
+    onKeyDown: e => {
+      if (e.key === "Enter") goL(url);
+    },
+    style: {
+      cursor: "pointer"
+    }
   }, /*#__PURE__*/React.createElement("div", {
     className: "lbl"
   }, "Current course"), /*#__PURE__*/React.createElement("div", {
@@ -163,7 +254,10 @@ function LMCurrent() {
     className: "ins"
   }, "with Dr. Tim Pearce")), /*#__PURE__*/React.createElement("button", {
     className: "lm-continue",
-    onClick: () => goL("MyLearning.html")
+    onClick: e => {
+      e.stopPropagation();
+      goL(url);
+    }
   }, "Continue", /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
     name: "lucide:arrow-right",
     size: 18,
@@ -182,35 +276,42 @@ function LMCurrent() {
     }
   })));
 }
-function LMCats() {
-  const [active, setActive] = useStateL("All");
-  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "lm-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Categories")), /*#__PURE__*/React.createElement("div", {
-    className: "lm-cats",
-    role: "tablist",
-    "aria-label": "Course categories"
-  }, LM_CATS.map(c => /*#__PURE__*/React.createElement("button", {
-    key: c,
-    role: "tab",
-    "aria-selected": active === c,
-    className: "lm-cat" + (active === c ? " on" : ""),
-    onClick: () => setActive(c)
-  }, c))));
-}
-function YourMembership() {
+function YourMembership({
+  onOpen
+}) {
   return /*#__PURE__*/React.createElement("section", {
     className: "lm-mem-section"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "lm-mem-simple",
+    onClick: onOpen
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-mem-tier"
+  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "fluent:crown-16-filled",
+    size: 15,
+    color: "#fff"
+  }), "Confidence Path"), /*#__PURE__*/React.createElement("span", {
+    className: "lm-mem-simple-text"
+  }, "Your Membership ", /*#__PURE__*/React.createElement("b", null, "Active")), /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "var(--gray-400)"
+  })));
+}
+function MembershipModal({
+  open,
+  onClose
+}) {
+  if (!open) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lm-mem-overlay",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Your Membership",
+    onClick: onClose
   }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Your Membership"), /*#__PURE__*/React.createElement("a", {
-    href: "#",
-    onClick: e => e.preventDefault(),
-    style: {
-      color: "var(--ai-purple)"
-    }
-  }, "Manage")), /*#__PURE__*/React.createElement("div", {
-    className: "lm-mem-card"
+    className: "lm-mem-card",
+    onClick: e => e.stopPropagation()
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm-mem-top"
   }, /*#__PURE__*/React.createElement("span", {
@@ -230,7 +331,7 @@ function YourMembership() {
   }, LM_MEMBERSHIP.map((item, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
     className: "lm-mem-row",
-    onClick: () => goL("MyLearning.html")
+    onClick: () => goL(item.href)
   }, /*#__PURE__*/React.createElement("span", {
     className: "lm-mem-icon",
     style: {
@@ -274,7 +375,16 @@ function MyCourses({
     key: i
   })) : LM_MINE.map((c, i) => /*#__PURE__*/React.createElement("article", {
     className: "lm-mc",
-    key: i
+    key: i,
+    role: "button",
+    tabIndex: 0,
+    onClick: () => goL(lmCourseUrl(c)),
+    onKeyDown: e => {
+      if (e.key === "Enter") goL(lmCourseUrl(c));
+    },
+    style: {
+      cursor: "pointer"
+    }
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm-mc-img",
     style: {
@@ -332,7 +442,16 @@ function Recommended({
     key: i
   })) : LM_REC.map((c, i) => /*#__PURE__*/React.createElement("article", {
     className: "lm-rc",
-    key: i
+    key: i,
+    role: "button",
+    tabIndex: 0,
+    onClick: () => goL(lmCourseUrl(c)),
+    onKeyDown: e => {
+      if (e.key === "Enter") goL(lmCourseUrl(c));
+    },
+    style: {
+      cursor: "pointer"
+    }
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm-rc-img",
     style: {
@@ -362,7 +481,10 @@ function Recommended({
     color: "var(--gray-450)"
   }), c.enrolled), /*#__PURE__*/React.createElement("button", {
     className: "lm-enroll",
-    onClick: () => goL("MyLearning.html")
+    onClick: e => {
+      e.stopPropagation();
+      goL(lmEnrollUrl(c));
+    }
   }, "Enroll", /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
     name: "lucide:arrow-right",
     size: 17,
@@ -383,7 +505,16 @@ function FreeCourses({
     className: "lm-rail"
   }, LM_FREE.map((c, i) => /*#__PURE__*/React.createElement("article", {
     className: "lm-mc",
-    key: i
+    key: i,
+    role: "button",
+    tabIndex: 0,
+    onClick: () => goL(lmCourseUrl(c)),
+    onKeyDown: e => {
+      if (e.key === "Enter") goL(lmCourseUrl(c));
+    },
+    style: {
+      cursor: "pointer"
+    }
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm-mc-img",
     style: {
@@ -404,7 +535,10 @@ function FreeCourses({
     style: {
       marginTop: 14
     },
-    onClick: () => goL("MyLearning.html")
+    onClick: e => {
+      e.stopPropagation();
+      goL(lmCourseUrl(c));
+    }
   }, "Start", /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
     name: "lucide:arrow-right",
     size: 17,
@@ -572,9 +706,12 @@ function LMSkeletonRec() {
     }
   })));
 }
-function LMTabBar() {
+const LMTabBar = React.forwardRef(function LMTabBar({
+  hidden
+}, ref) {
   return /*#__PURE__*/React.createElement("nav", {
-    className: "lm-tabs",
+    ref: ref,
+    className: "lm-tabs" + (hidden ? " lm-tabs-hidden" : ""),
     "aria-label": "Primary"
   }, LM_TABS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
@@ -590,14 +727,39 @@ function LMTabBar() {
   }), t.dot && /*#__PURE__*/React.createElement("span", {
     className: "dot"
   }, t.dot)), t.label)));
-}
+});
 function LearningHome() {
   const [loading, setLoading] = useStateL(true);
   const [surveyOpen, setSurveyOpen] = useStateL(false);
+  const [membershipOpen, setMembershipOpen] = useStateL(false);
   const [coursesUnlocked, setCoursesUnlocked] = useStateL(false);
   useEffectL(() => {
     const t = setTimeout(() => setLoading(false), 1800);
     return () => clearTimeout(t);
+  }, []);
+  const scrollRef = React.useRef(null);
+  const headerRef = React.useRef(null);
+  const tabsRef = React.useRef(null);
+  const [headerH, setHeaderH] = useStateL(0);
+  const [tabsH, setTabsH] = useStateL(0);
+  const chromeHidden = useHeaderHideL(scrollRef);
+  React.useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  React.useLayoutEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const measure = () => setTabsH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, []);
   function handleSurveyComplete() {
     setCoursesUnlocked(true);
@@ -606,10 +768,20 @@ function LearningHome() {
   return /*#__PURE__*/React.createElement("div", {
     className: "lm-screen",
     "data-screen-label": "My Learning (mobile)"
-  }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement(LMSearch, null), /*#__PURE__*/React.createElement("div", {
-    className: "lm-scroll"
-  }, /*#__PURE__*/React.createElement(LMCurrent, null), /*#__PURE__*/React.createElement(LMCats, null), /*#__PURE__*/React.createElement(YourMembership, null), /*#__PURE__*/React.createElement(MyCourses, {
+  }, /*#__PURE__*/React.createElement("div", {
+    ref: headerRef,
+    className: "lm-header-wrap" + (chromeHidden ? " lm-header-hidden" : "")
+  }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement(LMGreeting, null), /*#__PURE__*/React.createElement(LMSearch, null)), /*#__PURE__*/React.createElement("div", {
+    className: "lm-scroll",
+    ref: scrollRef,
+    style: {
+      paddingTop: chromeHidden ? 0 : headerH,
+      paddingBottom: chromeHidden ? 0 : tabsH
+    }
+  }, /*#__PURE__*/React.createElement(LMCurrent, null), /*#__PURE__*/React.createElement(MyCourses, {
     loading: loading
+  }), /*#__PURE__*/React.createElement(YourMembership, {
+    onOpen: () => setMembershipOpen(true)
   }), /*#__PURE__*/React.createElement(Recommended, {
     loading: loading
   }), /*#__PURE__*/React.createElement(FreeCourses, {
@@ -619,10 +791,16 @@ function LearningHome() {
     style: {
       height: 20
     }
-  })), /*#__PURE__*/React.createElement(LMTabBar, null), /*#__PURE__*/React.createElement(SurveyMobile, {
+  })), /*#__PURE__*/React.createElement(LMTabBar, {
+    ref: tabsRef,
+    hidden: chromeHidden
+  }), /*#__PURE__*/React.createElement(SurveyMobile, {
     open: surveyOpen,
     onClose: () => setSurveyOpen(false),
     onComplete: handleSurveyComplete
+  }), /*#__PURE__*/React.createElement(MembershipModal, {
+    open: membershipOpen,
+    onClose: () => setMembershipOpen(false)
   }));
 }
 function LearningMobileApp() {

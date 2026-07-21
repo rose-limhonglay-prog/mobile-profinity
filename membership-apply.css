@@ -1,0 +1,84 @@
+/* ===========================================================================
+   PROfinity — Membership Application (mobile) · layout
+   Loaded after the DS tokens; styles the "Apply Now" application form screen.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.ma-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-card); position: relative; }
+
+/* top bar */
+.ma-top { flex: none; display: flex; align-items: center; gap: 12px; position: relative;
+  padding: 60px 20px 16px; background: var(--surface-card); border-bottom: 1px solid var(--border-default); }
+.ma-back { flex: none; width: 40px; height: 40px; border: none; background: var(--gray-100); border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; }
+.ma-top h1 { flex: 1; text-align: center; margin: 0; padding-right: 40px;
+  font-family: var(--font-sans); font-weight: 600; font-size: 18px; color: var(--brand-navy); }
+
+.ma-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 24px; }
+.ma-scroll::-webkit-scrollbar { width: 0; }
+
+/* ---------- intro ---------- */
+.ma-intro { padding: 24px 20px 4px; }
+.ma-eyebrow { display: block; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 12px;
+  letter-spacing: .08em; text-transform: uppercase; color: var(--brand-gold); margin-bottom: 10px; }
+.ma-intro-title { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 28px; line-height: 1.18;
+  margin: 0 0 12px; color: var(--brand-navy); }
+.ma-intro-sub { font-family: var(--font-sans); font-size: 15px; line-height: 1.5; color: var(--gray-500); margin: 0; }
+
+/* ---------- form card ---------- */
+.ma-card { margin: 20px 20px 0; padding: 20px; background: var(--surface-card); border: 1px solid var(--border-default);
+  border-radius: var(--r-lg); box-shadow: var(--shadow-card); display: flex; flex-direction: column; gap: 18px; }
+
+.ma-field { display: flex; flex-direction: column; gap: 8px; }
+.ma-label { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--brand-gold); }
+
+.ma-input, .ma-textarea { border: 1px solid var(--border-default); border-radius: var(--r-md); padding: 12px 14px;
+  font-family: var(--font-sans); font-size: 14px; color: var(--text-primary); background: var(--surface-page); outline: none; }
+.ma-input::placeholder, .ma-textarea::placeholder { color: var(--gray-400); }
+.ma-input:focus, .ma-textarea:focus { border-color: var(--brand-navy); }
+.ma-textarea { resize: vertical; min-height: 88px; font-family: var(--font-sans); }
+
+/* ---------- tier selector ---------- */
+.ma-tier-options { display: flex; flex-direction: column; gap: 10px; }
+.ma-tier-opt { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; cursor: pointer;
+  padding: 14px; background: var(--surface-card); border: 1.5px solid var(--border-default); border-radius: var(--r-md); }
+.ma-tier-opt.selected { border-color: var(--brand-gold-soft); background: var(--brand-gold-100); }
+.ma-tier-radio { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border-default); position: relative; }
+.ma-tier-opt.selected .ma-tier-radio { border-color: var(--brand-gold-soft); }
+.ma-tier-opt.selected .ma-tier-radio::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--brand-gold-soft); }
+.ma-tier-opt-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ma-tier-opt-name { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--brand-navy); }
+.ma-tier-opt-desc { font-family: var(--font-sans); font-size: 12px; color: var(--gray-500); }
+.ma-tier-opt-price { flex: none; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 16px; color: var(--brand-gold); }
+
+/* ---------- submit ---------- */
+.ma-submit { width: 100%; border: none; border-radius: var(--r-md); background: var(--brand-navy); color: #fff;
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; padding: 14px 16px; cursor: pointer; }
+.ma-submit:disabled { opacity: .5; cursor: not-allowed; }
+
+.ma-notice { display: flex; align-items: flex-start; gap: 10px; margin: 18px 20px 4px;
+  font-family: var(--font-sans); font-size: 13px; line-height: 1.5; color: var(--gray-500); }
+.ma-notice-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--brand-gold-soft); margin-top: 5px; }
+
+/* ---------- confirmation ---------- */
+.ma-confirm { display: flex; flex-direction: column; align-items: center; text-align: center;
+  padding: 64px 28px 32px; gap: 14px; }
+.ma-confirm-icon { flex: none; width: 64px; height: 64px; border-radius: 50%; background: var(--brand-navy);
+  display: flex; align-items: center; justify-content: center; }
+.ma-confirm h2 { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 22px; color: var(--brand-navy); margin: 0; }
+.ma-confirm p { font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--gray-500); margin: 0; max-width: 320px; }
+.ma-confirm-cta { margin-top: 10px; border: none; border-radius: var(--r-pill); background: var(--brand-navy); color: #fff;
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; padding: 14px 24px; cursor: pointer; }
+
+/* real-mobile fullscreen */
+@media (max-width: 768px) {
+  body { background: var(--surface-page); }
+  .app.device-stage { padding: 0; }
+  .ma-screen { min-height: 100vh; }
+}

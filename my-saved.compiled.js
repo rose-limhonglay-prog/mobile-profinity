@@ -12,6 +12,11 @@ function goMS(url) {
     window.location.href = u;
   })(url);
 }
+function msBackTarget() {
+  const from = new URLSearchParams(window.location.search).get("from");
+  if (from === "learning") return "LearningMobile.html";
+  return /LearningMobile\.html/i.test(document.referrer) ? "LearningMobile.html" : "AccountSettings.html";
+}
 function useDeviceScaleMS() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
   const [scale, setScale] = useStateMS(calc);
@@ -189,7 +194,7 @@ function MySaved() {
   }, /*#__PURE__*/React.createElement("button", {
     className: "ms-back",
     "aria-label": "Back",
-    onClick: () => goMS("AccountSettings.html")
+    onClick: () => goMS(msBackTarget())
   }, /*#__PURE__*/React.createElement(DSMS.IconifyIcon, {
     name: "lucide:chevron-left",
     size: 26,

@@ -18,6 +18,7 @@ const IMG = {
   temple: "assets/clinic-treatment-collage.png",
   gold: "assets/texture-gold.png",
   logo: "assets/profinity-academy-logo-full.png",
+  advancedLip: "assets/course-advanced-lip-techniques.jpg",
 };
 
 const TABS = ["All Courses", "Free Resources", "New Courses", "Recommended Courses", "Upcoming Webinars", "Certification Programs"];
@@ -44,7 +45,7 @@ const PATHS = [
 
 const RECOMMENDED = [
   { image: IMG.lip, level: "Beginner", title: "Dynamic Facial Structures", description: "Explore intricate facial anatomy to enhance artistry and understanding.", by: "Dr Emily Carter", price: "£1,245" },
-  { image: IMG.protox, level: "Intermediate", title: "Advanced Lip Techniques", description: "Master the nuances of lip anatomy for precise techniques.", by: "Prof. Jonah Lee", price: "£1,300" },
+  { image: IMG.advancedLip, level: "Intermediate", title: "Advanced Lip Techniques", description: "Master the nuances of lip anatomy for precise techniques.", by: "Prof. Jonah Lee", price: "£1,300" },
   { image: IMG.temple, level: "Intermediate", title: "Comprehensive Facial Anatomy", description: "A thorough exploration of facial structures for artists and medics.", by: "Dr Lisa Huang", price: "£1,550" },
   { image: IMG.protox, level: "Intermediate", title: "Expert Lip Modelling", description: "Gain insights into the craft of lip modelling with expert guidance.", by: "Dr James Smith", price: "£1,250" },
 ];

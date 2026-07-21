@@ -69,23 +69,6 @@
       className: "dot"
     }, "12")));
   }
-  const SM_CHANNELS_C = [{
-    label: "Clinical Chat",
-    icon: "lucide:stethoscope",
-    n: 10
-  }, {
-    label: "Freedom Path",
-    icon: "lucide:feather",
-    n: 2
-  }, {
-    label: "Tech Team",
-    icon: "lucide:cpu",
-    n: 1
-  }, {
-    label: "Business & Mindset",
-    icon: "lucide:briefcase",
-    n: 5
-  }];
   const SM_RESOURCES_C = [{
     label: "Videos",
     icon: "lucide:square-play",
@@ -920,7 +903,26 @@
       color: "var(--gray-800)"
     })), /*#__PURE__*/React.createElement("div", {
       className: "sm-body"
-    }, /*#__PURE__*/React.createElement(SmSectionC, {
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "sm-upgrade",
+      onClick: () => goC("MembershipTier.html")
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sm-upgrade-icon"
+    }, /*#__PURE__*/React.createElement(DSC.IconifyIcon, {
+      name: "lucide:gem",
+      size: 20,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "sm-upgrade-main"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sm-upgrade-title"
+    }, "Upgrade to Confidence"), /*#__PURE__*/React.createElement("span", {
+      className: "sm-upgrade-sub"
+    }, "Unlock premium channels & courses")), /*#__PURE__*/React.createElement(DSC.IconifyIcon, {
+      name: "lucide:chevron-right",
+      size: 20,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement(SmSectionC, {
       title: "Communities"
     }), /*#__PURE__*/React.createElement("button", {
       className: "sm-tier",
@@ -941,24 +943,7 @@
       style: {
         color: "rgb(206, 153, 87)"
       }
-    }, "3 new posts")), /*#__PURE__*/React.createElement("nav", {
-      className: "sm-list"
-    }, SM_CHANNELS_C.map(c => /*#__PURE__*/React.createElement("button", {
-      key: c.label,
-      className: "sm-row",
-      onClick: () => goC("CommunityMobile.html")
-    }, /*#__PURE__*/React.createElement(DSC.IconifyIcon, {
-      name: c.icon,
-      size: 23,
-      color: "var(--gray-900)"
-    }), /*#__PURE__*/React.createElement("span", {
-      className: "sm-row-label",
-      style: {
-        color: "rgb(0, 0, 0)"
-      }
-    }, c.label), /*#__PURE__*/React.createElement("span", {
-      className: "sm-badge sm-badge-red"
-    }, c.n)))), /*#__PURE__*/React.createElement(SmSectionC, {
+    }, "3 new posts")), /*#__PURE__*/React.createElement(SmSectionC, {
       title: "Membership Resources"
     }), /*#__PURE__*/React.createElement("nav", {
       className: "sm-list"
@@ -975,9 +960,7 @@
       style: {
         color: "rgb(0, 0, 0)"
       }
-    }, c.label), c.n != null && /*#__PURE__*/React.createElement("span", {
-      className: "sm-badge sm-badge-gray"
-    }, c.n)))), /*#__PURE__*/React.createElement(SmSectionC, {
+    }, c.label)))), /*#__PURE__*/React.createElement(SmSectionC, {
       title: "My Courses"
     }), /*#__PURE__*/React.createElement("div", {
       className: "sm-courses"

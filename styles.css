@@ -460,10 +460,31 @@ img{max-width:100%}
   line-height:1.5;margin:0 0 14px}
 .pf-chcard-media{border-radius:var(--r-md);overflow:hidden;margin:0 0 14px}
 .pf-chcard-media img{width:100%;display:block;object-fit:cover}
-.pf-chcard-actions{display:flex;align-items:center;gap:22px;border-top:1px solid var(--border-default);padding-top:12px}
-.pf-chcard-action{display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;
-  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14px;color:var(--gray-500);padding:0}
-.pf-chcard-action:hover{color:var(--text-primary)}
+
+/* course-comment card — a full (unlocked) view of another member's comment
+   left on a course lesson, with a lesson promo below the comment so it
+   doubles as a soft upsell into that lesson / course */
+.pf-ccard-head{display:flex;align-items:flex-start;gap:12px;padding:14px 0 0}
+.pf-ccard-head-main{flex:1;min-width:0}
+.pf-ccard-head-name{display:flex;align-items:center;gap:6px;font-family:var(--font-sans);
+  font-weight:var(--fw-regular);font-size:var(--fs-body-lg);color:var(--text-primary)}
+.pf-ccard-head-time{margin-top:3px;font-family:var(--font-sans);font-size:var(--fs-caption);color:var(--gray-500)}
+.pf-ccard-body{font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--text-primary);
+  line-height:1.5;margin:12px 0 14px}
+.pf-ccard-lesson{display:block;text-decoration:none;color:inherit;border-radius:var(--r-md);
+  overflow:hidden;border:1px solid var(--border-default);margin:0 0 14px}
+.pf-ccard-lesson-media{background:var(--gray-100)}
+.pf-ccard-lesson-media img{width:100%;max-height:220px;display:block;object-fit:cover}
+.pf-ccard-lesson-bar{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface-card)}
+.pf-ccard-lesson-icon{flex:none;width:32px;height:32px;border-radius:50%;background:var(--gray-100);
+  display:flex;align-items:center;justify-content:center}
+.pf-ccard-lesson-text{flex:1;min-width:0}
+.pf-ccard-lesson-title{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);
+  color:var(--brand-navy);line-height:1.3}
+.pf-ccard-lesson-sub{font-family:var(--font-sans);font-size:var(--fs-caption);color:var(--gray-500);margin-top:2px}
+.pf-ccard-lesson-cta{flex:none;background:var(--brand-navy);color:#fff;border:none;border-radius:var(--r-pill);
+  padding:9px 16px;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;cursor:pointer}
+.pf-ccard-lesson-cta:hover{filter:brightness(1.1)}
 
 .sm-vertical{position:relative;display:flex;justify-content:center;background:var(--gray-100);
   border-radius:var(--r-md);overflow:hidden;margin-bottom:12px}
@@ -534,9 +555,12 @@ img{max-width:100%}
 
 /* Save (bookmark) active colour → brand navy. The DS PostActions sets the
    saved button + its icon to inline `color: var(--ai-purple)`; match that
-   inline value and recolour, so only the saved state turns navy. */
-.post-wrap [style*="ai-purple"]{color:var(--brand-navy) !important}
-.post-wrap iconify-icon[style*="ai-purple"]{color:var(--brand-navy) !important}
+   inline value and recolour, so only the saved state turns navy. Matches on
+   the `color:` declaration specifically — a plain `ai-purple` substring also
+   catches elements that only use it as a `background` (e.g. the locked-teaser
+   tier pill), which must keep its own white text. */
+.post-wrap [style*="color: var(--ai-purple)"]{color:var(--brand-navy) !important}
+.post-wrap iconify-icon[style*="color: var(--ai-purple)"]{color:var(--brand-navy) !important}
 
 /* comment reply link */
 .cmt-link{display:inline-block;background:none;border:none;cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-caption);color:var(--gray-500);padding:0}
@@ -603,3 +627,24 @@ img{max-width:100%}
 .saved-btn:hover{opacity:.88}
 .saved-skip{background:none;border:none;cursor:pointer;font-family:var(--font-sans);font-size:var(--fs-body-lg);
   color:var(--gray-450);padding:4px}
+
+/* upgrade modal — current-tier vs. gating-tier comparison, shown when the
+   viewer already pays for a lower tier than the one gating the post */
+.pf-upgrade-compare{display:flex;align-items:stretch;gap:10px;width:100%;margin-bottom:20px}
+.pf-upgrade-tier{flex:1;min-width:0;text-align:left;background:var(--surface-sunken);
+  border:1px solid var(--border-default);border-radius:var(--r-md);padding:14px 12px}
+.pf-upgrade-tier.highlight{background:var(--brand-gold-100);border-color:var(--brand-gold)}
+.pf-upgrade-tier-dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-bottom:8px}
+.pf-upgrade-tier-name{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-body-lg);
+  color:var(--text-heading)}
+.pf-upgrade-tier-badge{display:inline-block;margin:4px 0 10px;padding:2px 8px;border-radius:var(--r-pill);
+  font-family:var(--font-sans);font-size:11px;font-weight:var(--fw-semibold);color:var(--gray-500);
+  background:var(--gray-100)}
+.pf-upgrade-tier-badge.on{color:#fff;background:var(--premium-orange)}
+.pf-upgrade-tier-perks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.pf-upgrade-tier-perks li{position:relative;padding-left:14px;font-family:var(--font-sans);
+  font-size:12.5px;line-height:1.4;color:var(--gray-600)}
+.pf-upgrade-tier-perks li::before{content:"";position:absolute;left:0;top:6px;width:5px;height:5px;
+  border-radius:50%;background:var(--gray-400)}
+.pf-upgrade-tier.highlight .pf-upgrade-tier-perks li::before{background:var(--premium-orange)}
+.pf-upgrade-compare-arrow{flex:none;align-self:center;display:flex;align-items:center;justify-content:center}

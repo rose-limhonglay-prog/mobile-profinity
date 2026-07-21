@@ -33,7 +33,7 @@ function useIsMobileMT() {
 const TIERS_MT = [
   {
     key: "confidence", name: "Confidence", tagline: "Build your skills as an injector",
-    price: 97, yearly: 970, dark: false, highlight: false, icon: null, badge: null,
+    price: 97, yearly: 970, dark: false, highlight: false, icon: "shield-check", badge: null,
     features: [
       "Full access to membership library",
       "Expert complications support",
@@ -41,6 +41,7 @@ const TIERS_MT = [
       "Clinician directory listing",
     ],
     cta: "Subscribe Now",
+    trialNote: "Includes 30 days free trial",
   },
   {
     key: "mastery", name: "Mastery", tagline: "Become a recognised member",
@@ -144,7 +145,7 @@ function TierCard({ tier, onSelect }) {
       <div className="mt-tier-head">
         {tier.icon &&
         <span className="mt-tier-icon">
-            <DSMT.IconifyIcon name={"lucide:" + tier.icon} size={20} color="var(--brand-gold-soft)" />
+            <DSMT.IconifyIcon name={"lucide:" + tier.icon} size={20} color={tier.dark ? "var(--brand-gold-soft)" : "var(--brand-navy)"} />
           </span>
         }
         <h3>{tier.name}</h3>
@@ -163,7 +164,7 @@ function TierCard({ tier, onSelect }) {
       <ul className="mt-tier-features">
         {tier.features.map((f, i) =>
         <li key={i}>
-            <DSMT.IconifyIcon name="lucide:check" size={16} color={tier.dark ? "var(--brand-gold-soft)" : "var(--premium-orange)"} />
+            <DSMT.IconifyIcon name="lucide:check" size={16} color={tier.dark ? "var(--brand-gold-soft)" : "var(--success)"} />
             <span>{f}</span>
           </li>
         )}
@@ -171,6 +172,11 @@ function TierCard({ tier, onSelect }) {
       <button type="button" className={"mt-tier-cta" + (tier.dark ? " on-dark" : "")} onClick={() => onSelect(tier)}>
         {tier.cta} <DSMT.IconifyIcon name="lucide:arrow-right" size={16} color={tier.dark ? "var(--brand-navy-900)" : "#fff"} />
       </button>
+      {tier.trialNote &&
+      <p className="mt-tier-trial-note">
+          <DSMT.IconifyIcon name="lucide:gift" size={13} color="var(--brand-navy)" /> {tier.trialNote}
+        </p>
+      }
     </div>);
 }
 
@@ -185,13 +191,19 @@ function CompareStars({ filled }) {
 }
 
 function MembershipTier() {
-  const onSelect = (tier) => goMT("SubscribeCheckout.html?tier=" + tier.key);
+  const onSelect = (tier) => {
+    if (tier.cta === "Apply Now") {
+      goMT("MembershipApply.html?tier=" + tier.key);
+    } else {
+      goMT("SubscribeCheckout.html?tier=" + tier.key);
+    }
+  };
 
   return (
     <div className="mt-screen" data-screen-label="Membership Tier (mobile)">
       <header className="mt-top">
         <button className="mt-back" aria-label="Back" onClick={() => goMT("NewsfeedMobile.html")}>
-          <DSMT.IconifyIcon name="lucide:chevron-left" size={26} color="#fff" />
+          <DSMT.IconifyIcon name="lucide:chevron-left" size={22} color="var(--brand-navy)" />
         </button>
         <h1>Membership Tier</h1>
       </header>
@@ -202,26 +214,22 @@ function MembershipTier() {
           <span className="mt-eyebrow">Your path to your dream clinic</span>
           <h2 className="mt-hero-title">From injector to <span>business owner.</span></h2>
           <p className="mt-hero-sub">Profinity provides the roadmap, the credentials, and the systems to get you there — whether you're finding your feet or scaling to a sovereign clinic.</p>
-          <div className="mt-hero-ctas">
-            <button type="button" className="mt-btn-fill" onClick={() => goMT("SubscribeCheckout.html")}>Subscribe Now</button>
-            <button type="button" className="mt-btn-outline" onClick={() => goMT("SubscribeCheckout.html")}>Subscribe Now</button>
-          </div>
           <div className="mt-stats">
-            <StatChip icon="lucide:trending-up" value="4" label="Growth tiers" />
-            <StatChip icon="lucide:book-open" value="6" label="Flagship courses" />
+            <StatChip icon="lucide:trophy" value="4" label="Growth tiers" />
+            <StatChip icon="lucide:graduation-cap" value="6" label="Flagship courses" />
             <StatChip icon="lucide:infinity" value="∞" label="Price freeze" />
           </div>
         </section>
 
         <div className="mt-trial-banner">
-          <DSMT.IconifyIcon name="lucide:sparkles" size={16} color="var(--brand-navy-900)" />
-          Start your 2 months free trial
+          <DSMT.IconifyIcon name="lucide:sparkles" size={16} color="#fff" />
+          30 days free trial
         </div>
 
         {/* Programme structure */}
         <section className="mt-section">
           <span className="mt-eyebrow dark">Programme structure</span>
-          <h2 className="mt-section-title">Choose your growth tier</h2>
+          <h2 className="mt-section-title">Choose your <span>growth tier</span></h2>
           <p className="mt-section-sub">Each tier is a stage in your career journey. Join at the level that meets you where you are — and grow from there.</p>
 
           <TierCard tier={TIERS_MT[0]} onSelect={onSelect} />
@@ -280,7 +288,7 @@ function MembershipTier() {
           <p>Choose your tier, lock in your price, and begin.</p>
           <div className="mt-hero-ctas">
             <button type="button" className="mt-btn-fill" onClick={() => goMT("SubscribeCheckout.html")}>Subscribe Now</button>
-            <button type="button" className="mt-btn-outline" onClick={() => goMT("SubscribeCheckout.html")}>Subscribe Now <DSMT.IconifyIcon name="lucide:arrow-right" size={14} color="#fff" /></button>
+            <button type="button" className="mt-btn-outline" onClick={() => goMT("SubscribeCheckout.html")}>Subscribe Now <DSMT.IconifyIcon name="lucide:arrow-right" size={14} color="var(--brand-navy)" /></button>
           </div>
           <p className="mt-footer-note">Subscriptions are managed through our web app.</p>
           <div className="mt-footer-brand">
