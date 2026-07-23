@@ -1,0 +1,128 @@
+/* ===========================================================================
+   PROfinity — Admin · Events
+   Full-width admin shell: fixed sidebar + sticky header + events list
+   (Events / Webinars sub-nav, search + create controls, data table).
+   Classes prefixed evt- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--surface-page); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.evt-shell { display: flex; min-height: 100vh; background: var(--surface-page);
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.evt-shell a { color: var(--ai-purple); text-decoration: none; }
+.evt-shell a:hover { color: var(--ai-purple-600); }
+.evt-shell input::placeholder { color: var(--gray-400); }
+.evt-shell ::-webkit-scrollbar { width: 10px; height: 10px; }
+.evt-shell ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 8px; border: 2px solid var(--gray-50); }
+
+/* ---------------------------------------------------------------- sidebar */
+.evt-sidebar { width: 264px; flex-shrink: 0; background: var(--white);
+  border-right: 1px solid var(--border-default); padding: 22px 16px;
+  display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0;
+  align-self: flex-start; height: 100vh; overflow-y: auto; }
+.evt-logo { padding: 2px 8px 22px; }
+.evt-logo img { height: 50px; width: auto; }
+
+.evt-navitem { display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border-radius: 10px; color: var(--gray-600); font-weight: 500; font-size: 15px;
+  cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+  font-family: inherit; }
+.evt-navitem iconify-icon { font-size: 20px; flex-shrink: 0; }
+.evt-navitem:hover { background: var(--gray-50); color: var(--brand-navy); }
+.evt-navitem.is-active { background: var(--brand-navy); color: #fff; font-weight: 600; }
+.evt-navitem.is-active:hover { background: var(--brand-navy); color: #fff; }
+.evt-navitem .evt-spacer { flex: 1; }
+.evt-navitem .evt-chev { font-size: 18px; color: var(--gray-400); }
+
+/* ------------------------------------------------------------------ main */
+.evt-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.evt-header { display: flex; align-items: center; gap: 22px; padding: 16px 32px;
+  border-bottom: 1px solid var(--border-default); background: var(--white);
+  position: sticky; top: 0; z-index: 5; }
+.evt-header-title { font-size: 16px; font-weight: 600; color: var(--brand-navy); }
+.evt-header-search { position: relative; width: 360px; }
+.evt-header-search iconify-icon { position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%); color: var(--gray-400); font-size: 18px; }
+.evt-header-search input { width: 100%; height: 44px; padding: 0 16px 0 42px;
+  border-radius: 12px; border: 1px solid var(--border-default); background: var(--gray-50);
+  font-family: inherit; font-size: 14px; color: var(--text-primary); outline: none; }
+.evt-header .evt-spacer { flex: 1; }
+.evt-bell { position: relative; cursor: pointer; display: flex; }
+.evt-bell iconify-icon { font-size: 24px; color: var(--gray-600); }
+.evt-bell-badge { position: absolute; top: -7px; right: -8px; background: var(--brand-navy);
+  color: #fff; font-size: 11px; font-weight: 600; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 999px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--white); }
+.evt-user { text-align: right; line-height: 1.25; margin-left: 6px; }
+.evt-user-name { font-weight: 600; font-size: 15px; color: var(--brand-navy); }
+.evt-user-role { font-size: 13px; color: var(--gray-500); }
+.evt-user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.evt-header > iconify-icon { color: var(--gray-500); font-size: 20px; cursor: pointer; }
+
+.evt-content { padding: 32px; display: flex; flex-direction: column; gap: 24px; }
+
+/* --------------------------------------------------------------- topbar row */
+.evt-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.evt-page-head h1 { margin: 0; font-size: 32px; font-weight: 600; color: var(--brand-navy); letter-spacing: -0.01em; }
+.evt-page-head p { margin: 8px 0 0; font-size: 16px; color: var(--gray-500); }
+
+/* -------------------------------------------------------------- sub-nav */
+.evt-subnav { display: flex; align-items: center; gap: 12px; }
+.evt-subnav-btn { display: flex; align-items: center; gap: 9px; height: 46px; padding: 0 20px;
+  border-radius: 10px; border: 1px solid var(--border-default); background: var(--white);
+  color: var(--gray-600); font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.evt-subnav-btn iconify-icon { font-size: 18px; }
+.evt-subnav-btn:hover { background: var(--gray-50); }
+.evt-subnav-btn.is-active { background: var(--brand-navy); border-color: var(--brand-navy); color: #fff; }
+.evt-subnav-btn.is-active:hover { background: var(--brand-navy); }
+
+/* -------------------------------------------------------------- controls */
+.evt-controls { display: flex; align-items: center; gap: 16px; }
+.evt-search-input-wrap { position: relative; flex: 1; max-width: 420px; }
+.evt-search-input-wrap iconify-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+  color: var(--gray-400); font-size: 18px; }
+.evt-search-input-wrap input { width: 100%; height: 52px; padding: 0 16px 0 46px; border-radius: 12px;
+  border: 1px solid var(--border-default); background: var(--white); font-family: inherit; font-size: 15px;
+  color: var(--text-primary); outline: none; }
+.evt-search-input-wrap input:focus { border-color: var(--ai-purple); box-shadow: 0 0 0 4px var(--focus-ring); }
+
+.evt-btn { display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: 52px; padding: 0 22px; border-radius: 10px; font-family: inherit;
+  font-size: 15px; font-weight: 600; cursor: pointer; border: none; white-space: nowrap; }
+.evt-btn iconify-icon { font-size: 18px; }
+.evt-btn-navy { background: var(--brand-navy); color: #fff; }
+.evt-btn-navy:hover { background: var(--brand-navy-700); }
+
+/* ------------------------------------------------------------- table */
+.evt-table { background: var(--white); border: 1px solid var(--border-default); border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(12, 12, 13, .05); overflow: hidden; }
+.evt-row-grid { display: grid;
+  grid-template-columns: minmax(200px, 2fr) 150px 170px minmax(160px, 1.4fr) 90px 90px 90px 110px 36px;
+  align-items: center; gap: 12px; padding: 16px 24px; }
+.evt-thead { border-bottom: 1px solid var(--border-default); }
+.evt-th { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--gray-500); }
+.evt-trow { border-bottom: 1px solid var(--gray-100); }
+.evt-trow:last-of-type { border-bottom: none; }
+.evt-trow:hover { background: var(--gray-50); }
+.evt-trow-title { min-width: 0; padding-right: 12px; }
+.evt-trow-title-main { font-size: 15px; font-weight: 600; color: var(--brand-navy); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; }
+.evt-cell { font-size: 14px; color: var(--gray-600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.evt-cell-location { color: var(--gray-500); }
+.evt-metric { font-size: 15px; font-weight: 600; color: var(--gray-800); }
+.evt-status-pill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 999px;
+  width: fit-content; background: var(--gray-100); }
+.evt-status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gray-500); }
+.evt-status-label { font-size: 13px; font-weight: 600; color: var(--gray-500); }
+.evt-row-more { color: var(--gray-400); font-size: 20px; cursor: pointer; }
+
+.evt-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 56px 24px;
+  color: var(--gray-500); font-size: 15px; }
+.evt-empty iconify-icon { font-size: 32px; color: var(--gray-300); }
+
+@media (max-width: 1180px) {
+  .evt-table { overflow-x: auto; }
+  .evt-row-grid { min-width: 1080px; }
+}

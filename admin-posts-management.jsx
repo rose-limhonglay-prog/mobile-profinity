@@ -15,7 +15,6 @@ const APM_NAV = [
   { icon: "lucide:user", label: "Users" },
   { icon: "lucide:file-text", label: "Posts Management", active: true },
   { icon: "lucide:layout-dashboard", label: "Content Moderation" },
-  { icon: "lucide:book-open", label: "Science Articles" },
   { icon: "lucide:life-buoy", label: "Service Requests" },
   { icon: "lucide:shield-check", label: "Verification" },
   { icon: "lucide:users-round", label: "Agents" },
@@ -30,8 +29,21 @@ const APM_NAV = [
 ];
 
 const APM_NAV_LINKS = {
+  "Dashboard": "AdminDashboard.html",
+  "Users": "AdminUsers.html",
   "Posts Management": "AdminPostsManagement.html",
+  "Content Moderation": "AdminModeration.html",
+  "Service Requests": "AdminServiceRequests.html",
+  "Verification": "AdminVerification.html",
+  "Agents": "AdminAgents.html",
+  "Events": "AdminEvents.html",
+  "Product Mapping": "AdminProductMapping.html",
+  "Analytics": "AdminAnalytics.html",
+  "App Versions": "AdminAppVersions.html",
   "Push Notification": "AdminPushNotifications.html",
+  "Transactions": "AdminTransactions.html",
+  "Courses": "AdminCourses.html",
+  "Community": "AdminCommunity.html",
 };
 
 function APMSidebar() {

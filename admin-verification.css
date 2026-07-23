@@ -1,0 +1,135 @@
+/* ===========================================================================
+   PROfinity — Admin · Verification (desktop console)
+   Full-width admin shell: fixed sidebar + sticky header + single ID-document
+   review card (identity fields, front-ID preview, approve/reject actions).
+   Classes prefixed ver- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--surface-page); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.ver-shell { display: flex; min-height: 100vh; background: var(--surface-page);
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.ver-shell a { color: var(--ai-purple); text-decoration: none; }
+.ver-shell a:hover { color: var(--ai-purple-600); }
+.ver-shell input::placeholder { color: var(--gray-400); }
+.ver-shell ::-webkit-scrollbar { width: 10px; height: 10px; }
+.ver-shell ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 8px; border: 2px solid var(--gray-50); }
+
+@keyframes verSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.ver-spin { animation: verSpin .7s linear; }
+
+/* ---------------------------------------------------------------- sidebar */
+.ver-sidebar { width: 264px; flex-shrink: 0; background: var(--white);
+  border-right: 1px solid var(--border-default); padding: 22px 16px;
+  display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0;
+  align-self: flex-start; height: 100vh; overflow-y: auto; }
+.ver-logo { padding: 2px 8px 22px; }
+.ver-logo img { height: 50px; width: auto; }
+
+.ver-navitem { display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border-radius: 10px; color: var(--gray-600); font-weight: 500; font-size: 15px;
+  cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+  font-family: inherit; }
+.ver-navitem iconify-icon { font-size: 20px; flex-shrink: 0; }
+.ver-navitem:hover { background: var(--gray-50); color: var(--brand-navy); }
+.ver-navitem.is-active { background: var(--brand-navy); color: #fff; font-weight: 600; }
+.ver-navitem.is-active:hover { background: var(--brand-navy); color: #fff; }
+.ver-navitem .ver-spacer { flex: 1; }
+.ver-navitem .ver-chev { font-size: 18px; color: var(--gray-400); }
+
+/* ------------------------------------------------------------------ main */
+.ver-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.ver-header { display: flex; align-items: center; gap: 22px; padding: 16px 32px;
+  border-bottom: 1px solid var(--border-default); background: var(--white);
+  position: sticky; top: 0; z-index: 5; }
+.ver-header-title { font-size: 16px; font-weight: 600; color: var(--brand-navy); }
+.ver-header-search { position: relative; width: 360px; }
+.ver-header-search iconify-icon { position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%); color: var(--gray-400); font-size: 18px; }
+.ver-header-search input { width: 100%; height: 44px; padding: 0 16px 0 42px;
+  border-radius: 12px; border: 1px solid var(--border-default); background: var(--gray-50);
+  font-family: inherit; font-size: 14px; color: var(--text-primary); outline: none; }
+.ver-header .ver-spacer { flex: 1; }
+.ver-bell { position: relative; cursor: pointer; display: flex; }
+.ver-bell iconify-icon { font-size: 24px; color: var(--gray-600); }
+.ver-bell-badge { position: absolute; top: -7px; right: -8px; background: var(--brand-navy);
+  color: #fff; font-size: 11px; font-weight: 600; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 999px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--white); }
+.ver-user { text-align: right; line-height: 1.25; margin-left: 6px; }
+.ver-user-name { font-weight: 600; font-size: 15px; color: var(--brand-navy); }
+.ver-user-role { font-size: 13px; color: var(--gray-500); }
+.ver-user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.ver-header > iconify-icon { color: var(--gray-500); font-size: 20px; cursor: pointer; }
+
+.ver-content { padding: 32px; }
+.ver-view { display: flex; flex-direction: column; gap: 24px; max-width: 1180px; }
+
+/* --------------------------------------------------------------- topbar */
+.ver-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.ver-page-head h1 { margin: 0; font-size: 32px; font-weight: 600; color: var(--brand-navy); letter-spacing: -0.01em; }
+.ver-page-head p { margin: 8px 0 0; font-size: 16px; color: var(--gray-500); }
+.ver-page-head-actions { display: flex; gap: 12px; flex-shrink: 0; }
+
+/* --------------------------------------------------------------- buttons */
+.ver-btn { display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: 48px; padding: 0 22px; border-radius: 10px; font-family: inherit;
+  font-size: 15px; font-weight: 600; cursor: pointer; border: none; }
+.ver-btn iconify-icon { font-size: 18px; }
+.ver-btn-navy { background: var(--brand-navy); color: #fff; }
+.ver-btn-navy:hover { background: var(--brand-navy-700); }
+.ver-btn-outline { background: var(--white); color: var(--gray-700); border: 1px solid var(--border-strong); }
+.ver-btn-outline:hover { background: var(--gray-50); }
+.ver-btn-outline:disabled { color: var(--gray-400); border-color: var(--border-default); cursor: not-allowed; background: var(--gray-50); }
+.ver-btn-danger-outline { background: var(--error-bg); color: var(--error); border: 1px solid #f0c2c6; }
+.ver-btn-danger-outline:hover { background: #fbdde1; }
+
+/* ------------------------------------------------------------------ card */
+.ver-card { background: var(--white); border: 1px solid var(--border-default); border-radius: 20px;
+  box-shadow: 0 1px 3px rgba(12, 12, 13, .05); padding: 32px 36px; display: flex; flex-direction: column; gap: 28px; }
+
+.ver-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+  padding-bottom: 24px; border-bottom: 1px solid var(--border-default); }
+.ver-card-head-id { min-width: 0; }
+.ver-card-name { font-size: 22px; font-weight: 700; color: var(--gray-900); }
+.ver-card-sub { margin-top: 4px; font-size: 14px; color: var(--gray-500); }
+
+.ver-status-pill { display: inline-flex; align-items: center; flex-shrink: 0; padding: 6px 14px;
+  border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+
+/* ------------------------------------------------------------- field grid */
+.ver-field-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px 20px; }
+.ver-field { min-width: 0; }
+.ver-field-label { font-size: 12px; font-weight: 600; color: var(--gray-500); text-transform: uppercase;
+  letter-spacing: .04em; margin-bottom: 6px; }
+.ver-field-value { font-size: 15px; font-weight: 600; color: var(--gray-900); word-break: break-word; }
+.ver-field-value.is-empty { color: var(--gray-400); font-weight: 500; }
+.ver-field-value.ver-mono { font-family: "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+  font-size: 13px; font-weight: 500; color: var(--gray-700); }
+
+/* ------------------------------------------------------------ doc preview */
+.ver-doc-section { padding-top: 4px; }
+.ver-doc-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600;
+  color: var(--gray-600); margin-bottom: 10px; }
+.ver-doc-label iconify-icon { font-size: 16px; color: var(--gray-500); }
+.ver-doc-preview { height: 180px; max-width: 320px; border-radius: 14px; border: 1px dashed var(--border-strong);
+  display: flex; align-items: center; justify-content: center;
+  background-color: var(--gray-50);
+  background-image: repeating-linear-gradient(45deg, var(--gray-100) 0, var(--gray-100) 2px, transparent 2px, transparent 12px); }
+.ver-doc-preview span { font-size: 13px; font-weight: 600; color: var(--gray-400); background: var(--white);
+  padding: 6px 14px; border-radius: 999px; border: 1px solid var(--border-default); }
+
+/* --------------------------------------------------------------- footer */
+.ver-card-footer { display: flex; align-items: center; gap: 12px; padding-top: 24px; border-top: 1px solid var(--border-default); }
+.ver-card-footer .ver-spacer { flex: 1; }
+
+@media (max-width: 1100px) {
+  .ver-field-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .ver-field-grid { grid-template-columns: 1fr; }
+  .ver-card-footer { flex-wrap: wrap; }
+  .ver-card-footer .ver-spacer { display: none; }
+}

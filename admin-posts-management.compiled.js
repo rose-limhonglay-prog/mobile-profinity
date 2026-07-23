@@ -31,9 +31,6 @@ const APM_NAV = [{
   icon: "lucide:layout-dashboard",
   label: "Content Moderation"
 }, {
-  icon: "lucide:book-open",
-  label: "Science Articles"
-}, {
   icon: "lucide:life-buoy",
   label: "Service Requests"
 }, {
@@ -71,8 +68,21 @@ const APM_NAV = [{
   chevron: true
 }];
 const APM_NAV_LINKS = {
+  "Dashboard": "AdminDashboard.html",
+  "Users": "AdminUsers.html",
   "Posts Management": "AdminPostsManagement.html",
-  "Push Notification": "AdminPushNotifications.html"
+  "Content Moderation": "AdminModeration.html",
+  "Service Requests": "AdminServiceRequests.html",
+  "Verification": "AdminVerification.html",
+  "Agents": "AdminAgents.html",
+  "Events": "AdminEvents.html",
+  "Product Mapping": "AdminProductMapping.html",
+  "Analytics": "AdminAnalytics.html",
+  "App Versions": "AdminAppVersions.html",
+  "Push Notification": "AdminPushNotifications.html",
+  "Transactions": "AdminTransactions.html",
+  "Courses": "AdminCourses.html",
+  "Community": "AdminCommunity.html"
 };
 function APMSidebar() {
   return /*#__PURE__*/React.createElement("aside", {

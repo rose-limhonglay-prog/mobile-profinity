@@ -1,0 +1,160 @@
+/* ===========================================================================
+   PROfinity — Admin · Courses (All Courses list)
+   Full-width admin shell: fixed sidebar + sticky header + course table.
+   Classes prefixed crs- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--surface-page); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.crs-shell { display: flex; min-height: 100vh; background: var(--surface-page);
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.crs-shell a { color: var(--ai-purple); text-decoration: none; }
+.crs-shell a:hover { color: var(--ai-purple-600); }
+.crs-shell input::placeholder { color: var(--gray-400); }
+.crs-shell ::-webkit-scrollbar { width: 10px; height: 10px; }
+.crs-shell ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 8px; border: 2px solid var(--gray-50); }
+
+/* ---------------------------------------------------------------- sidebar */
+.crs-sidebar { width: 264px; flex-shrink: 0; background: var(--white);
+  border-right: 1px solid var(--border-default); padding: 22px 16px;
+  display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0;
+  align-self: flex-start; height: 100vh; overflow-y: auto; }
+.crs-logo { padding: 2px 8px 22px; }
+.crs-logo img { height: 50px; width: auto; }
+
+.crs-navitem { display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border-radius: 10px; color: var(--gray-600); font-weight: 500; font-size: 15px;
+  cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+  font-family: inherit; }
+.crs-navitem iconify-icon { font-size: 20px; flex-shrink: 0; }
+.crs-navitem:hover { background: var(--gray-50); color: var(--brand-navy); }
+.crs-navitem.is-active { background: var(--brand-navy); color: #fff; font-weight: 600; }
+.crs-navitem.is-active:hover { background: var(--brand-navy); color: #fff; }
+.crs-navitem .crs-spacer { flex: 1; }
+.crs-navitem .crs-chev { font-size: 18px; color: var(--gray-400); }
+.crs-navitem.is-active .crs-chev { color: rgba(255, 255, 255, .7); }
+
+/* ------------------------------------------------------------------ main */
+.crs-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.crs-header { display: flex; align-items: center; gap: 22px; padding: 16px 32px;
+  border-bottom: 1px solid var(--border-default); background: var(--white);
+  position: sticky; top: 0; z-index: 5; }
+.crs-header-title { font-size: 16px; font-weight: 600; color: var(--brand-navy); }
+.crs-header-search { position: relative; width: 360px; }
+.crs-header-search iconify-icon { position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%); color: var(--gray-400); font-size: 18px; }
+.crs-header-search input { width: 100%; height: 44px; padding: 0 16px 0 42px;
+  border-radius: 12px; border: 1px solid var(--border-default); background: var(--gray-50);
+  font-family: inherit; font-size: 14px; color: var(--text-primary); outline: none; }
+.crs-header .crs-spacer { flex: 1; }
+.crs-bell { position: relative; cursor: pointer; display: flex; }
+.crs-bell iconify-icon { font-size: 24px; color: var(--gray-600); }
+.crs-bell-badge { position: absolute; top: -7px; right: -8px; background: var(--brand-navy);
+  color: #fff; font-size: 11px; font-weight: 600; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 999px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--white); }
+.crs-user { text-align: right; line-height: 1.25; margin-left: 6px; }
+.crs-user-name { font-weight: 600; font-size: 15px; color: var(--brand-navy); }
+.crs-user-role { font-size: 13px; color: var(--gray-500); }
+.crs-user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.crs-header > iconify-icon { color: var(--gray-500); font-size: 20px; cursor: pointer; }
+
+.crs-content { padding: 32px; }
+.crs-view { display: flex; flex-direction: column; gap: 24px; }
+
+/* --------------------------------------------------------------- utility bar */
+.crs-utilitybar { display: flex; align-items: center; gap: 18px; background: var(--white);
+  border: 1px solid var(--border-default); border-radius: 14px; padding: 14px 20px;
+  box-shadow: 0 1px 3px rgba(12, 12, 13, .05); }
+.crs-utility-label { display: flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 600;
+  color: var(--brand-navy); flex-shrink: 0; }
+.crs-utility-label iconify-icon { font-size: 19px; color: var(--gray-500); }
+.crs-utility-search { position: relative; flex: 1; max-width: 420px; }
+.crs-utility-search iconify-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--gray-400); font-size: 17px; }
+.crs-utility-search input { width: 100%; height: 42px; padding: 0 14px 0 40px; border-radius: 10px;
+  border: 1px solid var(--border-default); background: var(--gray-50); font-family: inherit; font-size: 14px;
+  color: var(--text-primary); outline: none; }
+.crs-utility-search input:focus { border-color: var(--ai-purple); background: var(--white); }
+.crs-refresh-btn { margin-left: auto; width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border-default);
+  background: var(--white); color: var(--gray-500); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0; }
+.crs-refresh-btn:hover { background: var(--gray-50); color: var(--brand-navy); }
+.crs-refresh-btn iconify-icon { font-size: 18px; }
+
+/* --------------------------------------------------------------- page head */
+.crs-page-head { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.crs-page-head h2 { margin: 0; font-size: 26px; font-weight: 700; color: var(--brand-navy); letter-spacing: -0.01em; }
+
+/* --------------------------------------------------------------- buttons */
+.crs-btn { display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: 46px; padding: 0 20px; border-radius: 10px; font-family: inherit;
+  font-size: 15px; font-weight: 600; cursor: pointer; border: none; }
+.crs-btn iconify-icon { font-size: 18px; }
+.crs-btn-navy { background: var(--brand-navy); color: #fff; }
+.crs-btn-navy:hover { background: var(--brand-navy-700); }
+
+.crs-text-btn { background: none; border: none; padding: 0; font-family: inherit; font-size: 14px;
+  font-weight: 600; color: var(--gray-600); cursor: pointer; }
+.crs-text-btn:hover { color: var(--brand-navy); }
+.crs-text-btn + .crs-text-btn { margin-left: 20px; }
+
+/* ---------------------------------------------------------- card / panel */
+.crs-card { background: var(--white); border: 1px solid var(--border-default); border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(12, 12, 13, .05); overflow: hidden; }
+.crs-card-head { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px;
+  border-bottom: 1px solid var(--border-default); }
+.crs-card-title { font-size: 17px; font-weight: 700; color: var(--brand-navy); }
+.crs-card-actions { display: flex; align-items: center; }
+
+/* --------------------------------------------------------------- checkbox */
+.crs-check { width: 20px; height: 20px; border-radius: 6px; border: 1px solid var(--border-strong);
+  background: var(--white); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0; flex-shrink: 0; }
+.crs-check.is-on { background: var(--brand-gold); border-color: var(--brand-gold); }
+.crs-check iconify-icon { color: #fff; font-size: 14px; }
+
+/* --------------------------------------------------------------- toggle */
+.crs-toggle { flex-shrink: 0; width: 40px; height: 24px; border-radius: 999px; border: none;
+  background: var(--gray-300); position: relative; padding: 0; display: inline-block; }
+.crs-toggle.is-on { background: var(--brand-navy); }
+.crs-toggle-knob { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .2); transition: transform .2s; }
+.crs-toggle.is-on .crs-toggle-knob { transform: translateX(16px); }
+
+/* ------------------------------------------------------------------ table */
+.crs-table { width: 100%; }
+.crs-row-grid { display: grid;
+  grid-template-columns: 44px 100px minmax(180px, 1.6fr) minmax(150px, 1.4fr) 130px 130px 120px 110px 120px;
+  align-items: center; gap: 12px; padding: 16px 24px; }
+.crs-thead { border-bottom: 1px solid var(--border-default); }
+.crs-th { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--gray-500); }
+.crs-trow { border-bottom: 1px solid var(--gray-100); }
+.crs-trow:last-of-type { border-bottom: none; }
+.crs-trow:hover { background: var(--gray-50); }
+.crs-sku-cell { font-size: 14px; color: var(--gray-600); font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+.crs-trow-title { font-size: 15px; font-weight: 600; color: var(--brand-navy); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; padding-right: 8px; }
+.crs-subtitle-cell { font-size: 14px; color: var(--gray-500); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; padding-right: 8px; }
+.crs-cat-pill { font-size: 13px; font-weight: 600; color: var(--gray-700); background: var(--gray-100);
+  padding: 5px 12px; border-radius: 999px; width: fit-content; }
+.crs-level-cell { font-size: 14px; color: var(--gray-600); }
+.crs-price-cell { font-size: 15px; font-weight: 600; }
+.crs-status-cell { display: flex; align-items: center; gap: 10px; }
+.crs-status-label { font-size: 14px; font-weight: 600; color: var(--info); }
+
+/* -------------------------------------------------------------- pagination */
+.crs-pagination { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; }
+.crs-pageinfo { font-size: 14px; color: var(--gray-600); }
+.crs-pagelinks { display: flex; align-items: center; gap: 24px; }
+.crs-page-prev { font-size: 14px; font-weight: 600; color: var(--gray-400); cursor: pointer; }
+.crs-page-prev:hover { color: var(--gray-500); }
+.crs-page-next { font-size: 14px; font-weight: 600; color: var(--ai-purple); cursor: pointer; }
+.crs-page-next:hover { color: var(--ai-purple-600); }
+
+@media (max-width: 1180px) {
+  .crs-row-grid { grid-template-columns: 36px 90px minmax(160px, 1.4fr) minmax(120px, 1.2fr) 110px 110px 100px 90px 100px; }
+}

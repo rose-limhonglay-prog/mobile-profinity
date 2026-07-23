@@ -1,0 +1,135 @@
+/* ===========================================================================
+   PROfinity — Admin · Dashboard (desktop console)
+   Full-width admin shell: fixed sidebar + sticky header + overview page
+   (stat grid, recent activity, quick actions).
+   Classes prefixed dash- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--surface-page); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.dash-shell { display: flex; min-height: 100vh; background: var(--surface-page);
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.dash-shell a { color: var(--ai-purple); text-decoration: none; }
+.dash-shell a:hover { color: var(--ai-purple-600); }
+.dash-shell input::placeholder { color: var(--gray-400); }
+.dash-shell ::-webkit-scrollbar { width: 10px; height: 10px; }
+.dash-shell ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 8px; border: 2px solid var(--gray-50); }
+
+/* ---------------------------------------------------------------- sidebar */
+.dash-sidebar { width: 264px; flex-shrink: 0; background: var(--white);
+  border-right: 1px solid var(--border-default); padding: 22px 16px;
+  display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0;
+  align-self: flex-start; height: 100vh; overflow-y: auto; }
+.dash-logo { padding: 2px 8px 22px; }
+.dash-logo img { height: 50px; width: auto; }
+
+.dash-navitem { display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border-radius: 10px; color: var(--gray-600); font-weight: 500; font-size: 15px;
+  cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+  font-family: inherit; }
+.dash-navitem iconify-icon { font-size: 20px; flex-shrink: 0; }
+.dash-navitem:hover { background: var(--gray-50); color: var(--brand-navy); }
+.dash-navitem.is-active { background: var(--brand-navy); color: #fff; font-weight: 600; }
+.dash-navitem.is-active:hover { background: var(--brand-navy); color: #fff; }
+.dash-navitem .dash-spacer { flex: 1; }
+.dash-navitem .dash-chev { font-size: 18px; color: var(--gray-400); }
+
+/* ------------------------------------------------------------------ main */
+.dash-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.dash-header { display: flex; align-items: center; gap: 22px; padding: 16px 32px;
+  border-bottom: 1px solid var(--border-default); background: var(--white);
+  position: sticky; top: 0; z-index: 5; }
+.dash-header-title { font-size: 16px; font-weight: 600; color: var(--brand-navy); }
+.dash-header-search { position: relative; width: 360px; }
+.dash-header-search iconify-icon { position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%); color: var(--gray-400); font-size: 18px; }
+.dash-header-search input { width: 100%; height: 44px; padding: 0 16px 0 42px;
+  border-radius: 12px; border: 1px solid var(--border-default); background: var(--gray-50);
+  font-family: inherit; font-size: 14px; color: var(--text-primary); outline: none; }
+.dash-header .dash-spacer { flex: 1; }
+.dash-bell { position: relative; cursor: pointer; display: flex; }
+.dash-bell iconify-icon { font-size: 24px; color: var(--gray-600); }
+.dash-bell-badge { position: absolute; top: -7px; right: -8px; background: var(--brand-navy);
+  color: #fff; font-size: 11px; font-weight: 600; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 999px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--white); }
+.dash-user { text-align: right; line-height: 1.25; margin-left: 6px; }
+.dash-user-name { font-weight: 600; font-size: 15px; color: var(--brand-navy); }
+.dash-user-role { font-size: 13px; color: var(--gray-500); }
+.dash-user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.dash-header > iconify-icon { color: var(--gray-500); font-size: 20px; cursor: pointer; }
+
+.dash-view { padding: 32px; display: flex; flex-direction: column; gap: 24px; }
+
+/* --------------------------------------------------------------- buttons */
+.dash-btn { display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: 48px; padding: 0 22px; border-radius: 10px; font-family: inherit;
+  font-size: 15px; font-weight: 600; cursor: pointer; border: none; }
+.dash-btn iconify-icon { font-size: 18px; }
+.dash-btn-navy { background: var(--brand-navy); color: #fff; }
+.dash-btn-navy:hover { background: var(--brand-navy-700); }
+
+/* -------------------------------------------------------------- page head */
+.dash-page-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.dash-page-head h1 { margin: 0; font-size: 26px; font-weight: 700; color: var(--brand-navy); }
+
+/* ---------------------------------------------------------------- card */
+.dash-card { background: var(--white); border: 1px solid var(--border-default); border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(12, 12, 13, .05); padding: 24px; }
+.dash-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding-bottom: 16px; border-bottom: 1px solid var(--border-default); margin-bottom: 20px; }
+.dash-card-title-text { font-size: 18px; font-weight: 700; color: var(--brand-navy); }
+
+.dash-icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border-default);
+  background: var(--white); color: var(--gray-500); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0; }
+.dash-icon-btn iconify-icon { font-size: 18px; }
+.dash-icon-btn:hover { background: var(--gray-50); color: var(--brand-navy); border-color: var(--border-strong); }
+
+/* ------------------------------------------------------------- stat grid */
+.dash-stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+
+.dash-stat-card { background: var(--white); border: 1px solid var(--border-default); border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(12, 12, 13, .05); padding: 22px 24px;
+  display: flex; align-items: center; gap: 18px; }
+
+.dash-stat-icon { width: 56px; height: 56px; border-radius: 14px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; }
+.dash-stat-icon iconify-icon { font-size: 26px; }
+
+.dash-stat-body { min-width: 0; }
+.dash-stat-label { font-size: 14px; font-weight: 500; color: var(--gray-500); margin-bottom: 6px; }
+.dash-stat-value { font-size: 28px; font-weight: 700; color: var(--gray-900); line-height: 1.1; }
+
+/* ------------------------------------------------------------- bottom grid */
+.dash-bottom-grid { display: grid; grid-template-columns: 1.9fr 1fr; gap: 20px; align-items: start; }
+
+/* ---------------------------------------------------------- recent activity */
+.dash-empty { display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; padding: 64px 20px; text-align: center; }
+.dash-empty-icon { width: 64px; height: 64px; border-radius: 50%; background: var(--gray-50);
+  border: 1px solid var(--border-default); display: flex; align-items: center; justify-content: center;
+  color: var(--gray-400); }
+.dash-empty-icon iconify-icon { font-size: 28px; }
+.dash-empty p { margin: 0; font-size: 15px; font-weight: 500; color: var(--gray-500); }
+
+/* -------------------------------------------------------------- quick actions */
+.dash-quick-actions { display: flex; flex-direction: column; gap: 12px; }
+.dash-quick-btn { display: flex; align-items: center; gap: 12px; width: 100%; height: 52px;
+  padding: 0 20px; border-radius: 12px; border: 1px solid var(--border-default); background: var(--white);
+  font-family: inherit; font-size: 15px; font-weight: 600; color: var(--gray-800); cursor: pointer;
+  text-align: left; }
+.dash-quick-btn iconify-icon { font-size: 20px; color: var(--brand-navy); flex-shrink: 0; }
+.dash-quick-btn:hover { background: var(--gray-50); border-color: var(--border-strong); }
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width: 1180px) {
+  .dash-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .dash-bottom-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 720px) {
+  .dash-stat-grid { grid-template-columns: 1fr; }
+  .dash-header-search { display: none; }
+}

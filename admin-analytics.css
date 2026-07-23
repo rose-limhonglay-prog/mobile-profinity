@@ -1,0 +1,96 @@
+/* ===========================================================================
+   PROfinity — Admin · Analytics (desktop console)
+   Subscription user counts and recurring revenue summary table.
+   Classes prefixed ana- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--surface-page); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.ana-shell { display: flex; min-height: 100vh; background: var(--surface-page);
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.ana-shell a { color: var(--ai-purple); text-decoration: none; }
+.ana-shell a:hover { color: var(--ai-purple-600); }
+.ana-shell input::placeholder { color: var(--gray-400); }
+.ana-shell ::-webkit-scrollbar { width: 10px; height: 10px; }
+.ana-shell ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 8px; border: 2px solid var(--gray-50); }
+
+/* ---------------------------------------------------------------- sidebar */
+.ana-sidebar { width: 264px; flex-shrink: 0; background: var(--white);
+  border-right: 1px solid var(--border-default); padding: 22px 16px;
+  display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0;
+  align-self: flex-start; height: 100vh; overflow-y: auto; }
+.ana-logo { padding: 2px 8px 22px; }
+.ana-logo img { height: 50px; width: auto; }
+
+.ana-navitem { display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border-radius: 10px; color: var(--gray-600); font-weight: 500; font-size: 15px;
+  cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+  font-family: inherit; }
+.ana-navitem iconify-icon { font-size: 20px; flex-shrink: 0; }
+.ana-navitem:hover { background: var(--gray-50); color: var(--brand-navy); }
+.ana-navitem.is-active { background: var(--brand-navy); color: #fff; font-weight: 600; }
+.ana-navitem.is-active:hover { background: var(--brand-navy); color: #fff; }
+.ana-navitem .ana-spacer { flex: 1; }
+.ana-navitem .ana-chev { font-size: 18px; color: var(--gray-400); }
+
+/* ------------------------------------------------------------------ main */
+.ana-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.ana-header { display: flex; align-items: center; gap: 22px; padding: 16px 32px;
+  border-bottom: 1px solid var(--border-default); background: var(--white);
+  position: sticky; top: 0; z-index: 5; }
+.ana-header-title { font-size: 16px; font-weight: 600; color: var(--brand-navy); }
+.ana-header-search { position: relative; width: 360px; }
+.ana-header-search iconify-icon { position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%); color: var(--gray-400); font-size: 18px; }
+.ana-header-search input { width: 100%; height: 44px; padding: 0 16px 0 42px;
+  border-radius: 12px; border: 1px solid var(--border-default); background: var(--gray-50);
+  font-family: inherit; font-size: 14px; color: var(--text-primary); outline: none; }
+.ana-header .ana-spacer { flex: 1; }
+.ana-bell { position: relative; cursor: pointer; display: flex; }
+.ana-bell iconify-icon { font-size: 24px; color: var(--gray-600); }
+.ana-bell-badge { position: absolute; top: -7px; right: -8px; background: var(--brand-navy);
+  color: #fff; font-size: 11px; font-weight: 600; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 999px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--white); }
+.ana-user { text-align: right; line-height: 1.25; margin-left: 6px; }
+.ana-user-name { font-weight: 600; font-size: 15px; color: var(--brand-navy); }
+.ana-user-role { font-size: 13px; color: var(--gray-500); }
+.ana-user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.ana-header > iconify-icon { color: var(--gray-500); font-size: 20px; cursor: pointer; }
+
+.ana-view { padding: 32px; display: flex; flex-direction: column; gap: 24px; }
+
+/* --------------------------------------------------------------- buttons */
+.ana-btn { display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: 48px; padding: 0 22px; border-radius: 10px; font-family: inherit;
+  font-size: 15px; font-weight: 600; cursor: pointer; border: none; }
+.ana-btn iconify-icon { font-size: 18px; }
+.ana-btn-ghost { background: var(--white); color: var(--gray-600); border: 1px solid var(--border-strong); }
+.ana-btn-ghost:hover { background: var(--gray-50); }
+.ana-btn-navy-outline { background: var(--white); color: var(--brand-navy); border: 1px solid var(--brand-navy); }
+.ana-btn-navy-outline:hover { background: var(--brand-gold-100); }
+
+/* --------------------------------------------------------------- topbar row */
+.ana-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.ana-page-head h1 { margin: 0; font-size: 32px; font-weight: 600; color: var(--brand-navy); letter-spacing: -0.01em; }
+.ana-page-head p { margin: 8px 0 0; font-size: 16px; color: var(--gray-500); }
+.ana-page-head-actions { display: flex; gap: 12px; flex-shrink: 0; }
+
+/* ------------------------------------------------------------------- table */
+.ana-table { background: var(--white); border: 1px solid var(--border-default); border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(12, 12, 13, .05); overflow: hidden; }
+.ana-row-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; align-items: center; gap: 12px; padding: 18px 28px; }
+.ana-thead { background: var(--gray-50); border-bottom: 1px solid var(--border-default); }
+.ana-th { font-size: 12px; font-weight: 600; letter-spacing: 0.04em; color: var(--gray-500); }
+.ana-th-right { text-align: right; }
+.ana-trow { border-bottom: 1px solid var(--gray-100); }
+.ana-trow:last-child { border-bottom: none; }
+.ana-trow:hover { background: var(--gray-50); }
+.ana-metric-cell { font-size: 15px; font-weight: 500; color: var(--gray-800); }
+.ana-count-cell { font-size: 15px; font-weight: 500; color: var(--gray-800); text-align: right; }
+.ana-revenue-cell { font-size: 15px; font-weight: 500; color: var(--gray-800); text-align: right; }
+.ana-trow.is-bold .ana-metric-cell { font-size: 16px; font-weight: 700; color: var(--brand-navy); }
+.ana-trow.is-bold .ana-count-cell { font-size: 16px; font-weight: 700; color: var(--gray-900); }
+.ana-trow.is-bold .ana-revenue-cell { font-size: 16px; font-weight: 700; color: var(--gray-900); }

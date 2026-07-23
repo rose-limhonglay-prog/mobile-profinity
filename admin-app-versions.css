@@ -1,0 +1,112 @@
+/* ===========================================================================
+   PROfinity — Admin · App Versions (desktop console)
+   Full-width admin shell: fixed sidebar + sticky header + per-platform
+   version list. Classes prefixed apv- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--surface-page); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.apv-shell { display: flex; min-height: 100vh; background: var(--surface-page);
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.apv-shell a { color: var(--ai-purple); text-decoration: none; }
+.apv-shell a:hover { color: var(--ai-purple-600); }
+.apv-shell input::placeholder { color: var(--gray-400); }
+.apv-shell ::-webkit-scrollbar { width: 10px; height: 10px; }
+.apv-shell ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 8px; border: 2px solid var(--gray-50); }
+
+/* ---------------------------------------------------------------- sidebar */
+.apv-sidebar { width: 264px; flex-shrink: 0; background: var(--white);
+  border-right: 1px solid var(--border-default); padding: 22px 16px;
+  display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0;
+  align-self: flex-start; height: 100vh; overflow-y: auto; }
+.apv-logo { padding: 2px 8px 22px; }
+.apv-logo img { height: 50px; width: auto; }
+
+.apv-navitem { display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border-radius: 10px; color: var(--gray-600); font-weight: 500; font-size: 15px;
+  cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+  font-family: inherit; }
+.apv-navitem iconify-icon { font-size: 20px; flex-shrink: 0; }
+.apv-navitem:hover { background: var(--gray-50); color: var(--brand-navy); }
+.apv-navitem.is-active { background: var(--brand-navy); color: #fff; font-weight: 600; }
+.apv-navitem.is-active:hover { background: var(--brand-navy); color: #fff; }
+.apv-navitem .apv-spacer { flex: 1; }
+.apv-navitem .apv-chev { font-size: 18px; color: var(--gray-400); }
+
+/* ------------------------------------------------------------------ main */
+.apv-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.apv-header { display: flex; align-items: center; gap: 22px; padding: 16px 32px;
+  border-bottom: 1px solid var(--border-default); background: var(--white);
+  position: sticky; top: 0; z-index: 5; }
+.apv-header-title { font-size: 16px; font-weight: 600; color: var(--brand-navy); }
+.apv-header-search { position: relative; width: 360px; }
+.apv-header-search iconify-icon { position: absolute; left: 14px; top: 50%;
+  transform: translateY(-50%); color: var(--gray-400); font-size: 18px; }
+.apv-header-search input { width: 100%; height: 44px; padding: 0 16px 0 42px;
+  border-radius: 12px; border: 1px solid var(--border-default); background: var(--gray-50);
+  font-family: inherit; font-size: 14px; color: var(--text-primary); outline: none; }
+.apv-header .apv-spacer { flex: 1; }
+.apv-bell { position: relative; cursor: pointer; display: flex; }
+.apv-bell iconify-icon { font-size: 24px; color: var(--gray-600); }
+.apv-bell-badge { position: absolute; top: -7px; right: -8px; background: var(--brand-navy);
+  color: #fff; font-size: 11px; font-weight: 600; min-width: 18px; height: 18px; padding: 0 4px;
+  border-radius: 999px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--white); }
+.apv-user { text-align: right; line-height: 1.25; margin-left: 6px; }
+.apv-user-name { font-weight: 600; font-size: 15px; color: var(--brand-navy); }
+.apv-user-role { font-size: 13px; color: var(--gray-500); }
+.apv-user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.apv-header > iconify-icon { color: var(--gray-500); font-size: 20px; cursor: pointer; }
+
+.apv-content { padding: 32px; display: flex; flex-direction: column; gap: 32px; max-width: 1180px; }
+
+/* --------------------------------------------------------------- topbar row */
+.apv-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.apv-page-head h1 { margin: 0; font-size: 32px; font-weight: 600; color: var(--brand-navy); letter-spacing: -0.01em; }
+.apv-page-head p { margin: 10px 0 0; font-size: 16px; color: var(--gray-500); line-height: 1.55; max-width: 640px; }
+.apv-page-head-actions { display: flex; gap: 12px; flex-shrink: 0; }
+
+/* --------------------------------------------------------------- buttons */
+.apv-btn { display: flex; align-items: center; justify-content: center; gap: 8px;
+  height: 48px; padding: 0 22px; border-radius: 10px; font-family: inherit;
+  font-size: 15px; font-weight: 600; cursor: pointer; border: none; white-space: nowrap; }
+.apv-btn iconify-icon { font-size: 18px; }
+.apv-btn-navy { background: var(--brand-navy); color: #fff; }
+.apv-btn-navy:hover { background: var(--brand-navy-700); }
+
+/* ------------------------------------------------------- platform section */
+.apv-platform-section { display: flex; flex-direction: column; gap: 18px; }
+.apv-section-head { display: flex; align-items: center; gap: 12px; }
+.apv-section-icon { width: 36px; height: 36px; border-radius: 10px; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0; }
+.apv-section-icon iconify-icon { font-size: 19px; }
+.apv-section-label { font-size: 19px; font-weight: 700; color: var(--brand-navy); }
+.apv-section-count { font-size: 13px; font-weight: 600; color: var(--gray-500);
+  background: var(--gray-100); padding: 3px 10px; border-radius: 999px; }
+
+.apv-section-empty { border: 1px dashed var(--border-strong); border-radius: 14px;
+  padding: 22px 24px; font-size: 14px; color: var(--gray-500); background: var(--gray-50); }
+
+/* ------------------------------------------------------------ version card */
+.apv-version-list { display: flex; flex-direction: column; gap: 14px; }
+.apv-version-card { display: flex; align-items: flex-start; gap: 16px;
+  background: var(--white); border: 1px solid var(--border-default); border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(12, 12, 13, .05); padding: 20px 22px; }
+.apv-version-card.is-current { background: var(--ai-purple-100); border: 1.5px solid var(--ai-purple); }
+
+.apv-version-main { flex: 1; min-width: 0; }
+.apv-version-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.apv-version-num { font-size: 18px; font-weight: 700; color: var(--brand-navy); letter-spacing: -0.01em; }
+.apv-version-notes { margin: 10px 0 0; font-size: 14px; color: var(--gray-600); line-height: 1.6; }
+
+.apv-badge { font-size: 11px; font-weight: 700; letter-spacing: .04em; padding: 4px 10px; border-radius: 999px; }
+.apv-badge-current { color: var(--ai-purple); background: var(--white); border: 1px solid var(--ai-purple); }
+.apv-badge-mandatory { color: var(--error); background: var(--error-bg); }
+
+.apv-version-more { flex-shrink: 0; width: 36px; height: 36px; border-radius: 10px; border: none;
+  background: none; color: var(--gray-400); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; }
+.apv-version-more:hover { background: var(--gray-100); color: var(--gray-600); }
+.apv-version-more iconify-icon { font-size: 20px; }
