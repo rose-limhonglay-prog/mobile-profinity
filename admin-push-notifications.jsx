@@ -6,6 +6,8 @@
    =========================================================================== */
 const { useState: useStateAPN, useMemo: useMemoAPN } = React;
 
+function goAPN(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
+
 const APN_IOS = "mdi:apple", APN_ANDROID = "mdi:android", APN_WEB = "mdi:web";
 
 const APN_PLATFORMS = [
@@ -100,24 +102,37 @@ const APN_NAV = [
   { icon: "lucide:users", label: "Community", chevron: true },
 ];
 
+const APN_NAV_LINKS = {
+  "Posts Management": "AdminPostsManagement.html",
+  "Push Notification": "AdminPushNotifications.html",
+};
+
 function APNSidebar() {
   return (
     <aside className="apn-sidebar">
       <div className="apn-logo">
         <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
       </div>
-      {APN_NAV.map((item) => (
-        <button key={item.label} className={"apn-navitem" + (item.active ? " is-active" : "")} type="button">
-          <iconify-icon icon={item.icon}></iconify-icon>
-          <span>{item.label}</span>
-          {item.chevron && (
-            <>
-              <span className="apn-spacer" />
-              <iconify-icon icon="lucide:chevron-down" class="apn-chev"></iconify-icon>
-            </>
-          )}
-        </button>
-      ))}
+      {APN_NAV.map((item) => {
+        const href = APN_NAV_LINKS[item.label];
+        return (
+          <button
+            key={item.label}
+            className={"apn-navitem" + (item.active ? " is-active" : "")}
+            type="button"
+            onClick={href && !item.active ? () => goAPN(href) : undefined}
+          >
+            <iconify-icon icon={item.icon}></iconify-icon>
+            <span>{item.label}</span>
+            {item.chevron && (
+              <>
+                <span className="apn-spacer" />
+                <iconify-icon icon="lucide:chevron-down" class="apn-chev"></iconify-icon>
+              </>
+            )}
+          </button>
+        );
+      })}
     </aside>
   );
 }

@@ -8,6 +8,11 @@ const {
   useState: useStateAPN,
   useMemo: useMemoAPN
 } = React;
+function goAPN(url) {
+  (window.pfGo || function (u) {
+    window.location.href = u;
+  })(url);
+}
 const APN_IOS = "mdi:apple",
   APN_ANDROID = "mdi:android",
   APN_WEB = "mdi:web";
@@ -298,6 +303,10 @@ const APN_NAV = [{
   label: "Community",
   chevron: true
 }];
+const APN_NAV_LINKS = {
+  "Posts Management": "AdminPostsManagement.html",
+  "Push Notification": "AdminPushNotifications.html"
+};
 function APNSidebar() {
   return /*#__PURE__*/React.createElement("aside", {
     className: "apn-sidebar"
@@ -306,18 +315,22 @@ function APNSidebar() {
   }, /*#__PURE__*/React.createElement("img", {
     src: "assets/profinity-academy-logo-full.png",
     alt: "PROfinity Academy"
-  })), APN_NAV.map(item => /*#__PURE__*/React.createElement("button", {
-    key: item.label,
-    className: "apn-navitem" + (item.active ? " is-active" : ""),
-    type: "button"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: item.icon
-  }), /*#__PURE__*/React.createElement("span", null, item.label), item.chevron && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
-    className: "apn-spacer"
-  }), /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:chevron-down",
-    class: "apn-chev"
-  })))));
+  })), APN_NAV.map(item => {
+    const href = APN_NAV_LINKS[item.label];
+    return /*#__PURE__*/React.createElement("button", {
+      key: item.label,
+      className: "apn-navitem" + (item.active ? " is-active" : ""),
+      type: "button",
+      onClick: href && !item.active ? () => goAPN(href) : undefined
+    }, /*#__PURE__*/React.createElement("iconify-icon", {
+      icon: item.icon
+    }), /*#__PURE__*/React.createElement("span", null, item.label), item.chevron && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+      className: "apn-spacer"
+    }), /*#__PURE__*/React.createElement("iconify-icon", {
+      icon: "lucide:chevron-down",
+      class: "apn-chev"
+    })));
+  }));
 }
 function APNHeader() {
   return /*#__PURE__*/React.createElement("header", {
