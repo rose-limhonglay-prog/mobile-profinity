@@ -1869,7 +1869,11 @@ function makeImagePicker(pool) {
   };
 }
 const nextPostImages = makeImagePicker(POST_PHOTO_POOL);
-const POSTS = [{
+
+/* Pinned editorial posts — always the first two items in the feed (see the
+   bucket-splice comment on Feed()'s feedItems below, which assumes index 0
+   is the questionnaire and index 1 is the poll). */
+const PINNED_POSTS = [{
   id: "p_quiz",
   author: PROFINITY,
   time: "6h",
@@ -1924,7 +1928,8 @@ const POSTS = [{
   shares: "40",
   actioned: false,
   commentList: thread("Tear troughs, hands down — hoping this becomes the next masterclass!")
-}, {
+}];
+const EDITORIAL_POSTS = [{
   id: "p1",
   author: TIM,
   withOthers: "Miranda Pearce and 14 others",
@@ -2024,6 +2029,293 @@ const POSTS = [{
   actioned: false,
   commentList: thread("This step-by-step series is gold — thank you for sharing all 10!")
 }];
+
+/* Ten extra knowledge-check quizzes, scattered at random among the editorial
+   posts (see interleaveRandom below) so they surface throughout the feed
+   instead of clumping at the top. */
+const QUIZ_POSTS = [{
+  id: "p_quiz2",
+  author: PROFINITY,
+  time: "9h",
+  hashtags: ["masterclass", "anatomy", "questionnaire"],
+  body: "Knowledge check ✅ — quick one on nerve anatomy. Tap an answer to see if you're right.",
+  questionnaire: {
+    question: "Which nerve exits at the mental foramen and must be avoided when injecting the chin and jawline?",
+    options: [{
+      label: "Mental nerve",
+      correct: true
+    }, {
+      label: "Marginal mandibular nerve",
+      correct: false
+    }, {
+      label: "Buccal nerve",
+      correct: false
+    }, {
+      label: "Zygomatic nerve",
+      correct: false
+    }]
+  },
+  likes: "742",
+  comments: "51",
+  shares: "18",
+  actioned: false,
+  commentList: thread("Mixed up the mental and marginal mandibular nerves for years — this one's a great reminder!")
+}, {
+  id: "p_quiz3",
+  author: PROFINITY,
+  time: "14h",
+  hashtags: ["masterclass", "safety", "questionnaire"],
+  body: "Knowledge check ✅ — safety first. Tap an answer to see if you're right.",
+  questionnaire: {
+    question: "What is the recommended first step if you suspect a vascular occlusion during filler injection?",
+    options: [{
+      label: "Stop injecting immediately and assess",
+      correct: true
+    }, {
+      label: "Massage the area vigorously",
+      correct: false
+    }, {
+      label: "Apply ice only and continue",
+      correct: false
+    }, {
+      label: "Wait 24 hours to see if it resolves",
+      correct: false
+    }]
+  },
+  likes: "1.1K",
+  comments: "88",
+  shares: "34",
+  actioned: false,
+  commentList: thread("This is drilled into us every masterclass and it still saves lives — stop first, always.")
+}, {
+  id: "p_quiz4",
+  author: PROFINITY,
+  time: "1d",
+  hashtags: ["masterclass", "toxin", "questionnaire"],
+  body: "Knowledge check ✅ — toxin mechanism basics. Tap an answer to see if you're right.",
+  questionnaire: {
+    question: "Botulinum toxin type A works by blocking release of which neurotransmitter at the neuromuscular junction?",
+    options: [{
+      label: "Acetylcholine",
+      correct: true
+    }, {
+      label: "Dopamine",
+      correct: false
+    }, {
+      label: "Serotonin",
+      correct: false
+    }, {
+      label: "GABA",
+      correct: false
+    }]
+  },
+  likes: "890",
+  comments: "42",
+  shares: "15",
+  actioned: false,
+  commentList: thread("Good refresher — the mechanism question always comes up in patient consults too.")
+}, {
+  id: "p_quiz5",
+  author: PROFINITY,
+  time: "2d",
+  hashtags: ["masterclass", "cannula", "questionnaire"],
+  body: "Knowledge check ✅ — cannula technique. Tap an answer to see if you're right.",
+  questionnaire: {
+    question: "Which layer should a cannula typically stay within to minimize risk when treating the tear trough?",
+    options: [{
+      label: "Supraperiosteal plane",
+      correct: true
+    }, {
+      label: "Intradermal layer",
+      correct: false
+    }, {
+      label: "Subdermal fat only",
+      correct: false
+    }, {
+      label: "Intramuscular plane",
+      correct: false
+    }]
+  },
+  likes: "1.3K",
+  comments: "76",
+  shares: "29",
+  actioned: false,
+  commentList: thread("Staying supraperiosteal changed my tear trough results overnight.")
+}, {
+  id: "p_quiz6",
+  author: PROFINITY,
+  time: "2d",
+  hashtags: ["masterclass", "fullface", "questionnaire"],
+  body: "Knowledge check ✅ — full-face planning. Tap an answer to see if you're right.",
+  questionnaire: {
+    question: "In the “liquid facelift” concept, which combination of areas is most commonly addressed?",
+    options: [{
+      label: "Cheek, jawline, chin and temples",
+      correct: true
+    }, {
+      label: "Only the lips",
+      correct: false
+    }, {
+      label: "Only the forehead",
+      correct: false
+    }, {
+      label: "Only under-eye",
+      correct: false
+    }]
+  },
+  likes: "965",
+  comments: "58",
+  shares: "21",
+  actioned: false,
+  commentList: thread("Treating all four together is what actually gives that natural lift.")
+}, {
+  id: "p_quiz7",
+  author: PROFINITY,
+  time: "3d",
+  hashtags: ["masterclass", "toxin", "questionnaire"],
+  body: "Knowledge check ✅ — patient expectations. Tap an answer to see if you're right.",
+  questionnaire: {
+    question: "What is the typical onset time for a visible botulinum toxin effect?",
+    options: [{
+      label: "3–14 days",
+      correct: true
+    }, {
+      label: "Immediately",
+      correct: false
+    }, {
+      label: "6 months",
+      correct: false
+    }, {
+      label: "24 hours guaranteed",
+      correct: false
+    }]
+  },
+  likes: "1.5K",
+  comments: "94",
+  shares: "37",
+  actioned: false,
+  commentList: thread("Setting this expectation upfront saves so many anxious follow-up messages!")
+}, {
+  id: "p_quiz8",
+  author: PROFINITY,
+  time: "3d",
+  hashtags: ["masterclass", "anatomy", "questionnaire"],
+  body: "Knowledge check ✅ — temple danger zones. Tap an answer to see if you're right.",
+  questionnaire: {
+    question: "Which structure is the key danger zone when injecting the temporal region?",
+    options: [{
+      label: "Superficial temporal artery / frontal branch of facial nerve",
+      correct: true
+    }, {
+      label: "Angular artery",
+      correct: false
+    }, {
+      label: "Supratrochlear artery",
+      correct: false
+    }, {
+      label: "Facial vein only",
+      correct: false
+    }]
+  },
+  likes: "812",
+  comments: "47",
+  shares: "16",
+  actioned: false,
+  commentList: thread("The temple is so underestimated as a danger zone — great question.")
+}, {
+  id: "p_quiz9",
+  author: PROFINITY,
+  time: "4d",
+  hashtags: ["masterclass", "safety", "questionnaire"],
+  body: "Knowledge check ✅ — reversal agents. Tap an answer to see if you're right.",
+  questionnaire: {
+    question: "Hyaluronidase is used to?",
+    options: [{
+      label: "Dissolve hyaluronic acid filler",
+      correct: true
+    }, {
+      label: "Numb the skin",
+      correct: false
+    }, {
+      label: "Reverse botulinum toxin",
+      correct: false
+    }, {
+      label: "Increase filler longevity",
+      correct: false
+    }]
+  },
+  likes: "1.2K",
+  comments: "70",
+  shares: "25",
+  actioned: false,
+  commentList: thread("Every clinic should keep this stocked and know the dosing cold.")
+}, {
+  id: "p_quiz10",
+  author: PROFINITY,
+  time: "5d",
+  hashtags: ["masterclass", "safety", "questionnaire"],
+  body: "Knowledge check ✅ — contraindications. Tap an answer to see if you're right.",
+  questionnaire: {
+    question: "Which patient factor is a contraindication to elective filler treatment on the day?",
+    options: [{
+      label: "Active infection at the injection site",
+      correct: true
+    }, {
+      label: "Being over 40",
+      correct: false
+    }, {
+      label: "Having had filler before",
+      correct: false
+    }, {
+      label: "Mild seasonal allergies",
+      correct: false
+    }]
+  },
+  likes: "930",
+  comments: "53",
+  shares: "19",
+  actioned: false,
+  commentList: thread("Always reschedule for active infection — not worth the risk.")
+}, {
+  id: "p_quiz11",
+  author: PROFINITY,
+  time: "6d",
+  hashtags: ["masterclass", "lips", "questionnaire"],
+  body: "Knowledge check ✅ — lip anatomy. Tap an answer to see if you're right.",
+  questionnaire: {
+    question: "For lip filler, which vessel is the primary danger zone clinicians must map before injecting?",
+    options: [{
+      label: "Labial artery",
+      correct: true
+    }, {
+      label: "Facial vein",
+      correct: false
+    }, {
+      label: "Superficial temporal artery",
+      correct: false
+    }, {
+      label: "Supratrochlear artery",
+      correct: false
+    }]
+  },
+  likes: "1.4K",
+  comments: "81",
+  shares: "30",
+  actioned: false,
+  commentList: thread("Mapping the labial artery chairside before every lip case, no exceptions.")
+}];
+
+/* Scatters `extras` into random positions among `base`, shuffling both so the
+   result (and therefore the feed) reorders on every page load. */
+function interleaveRandom(base, extras) {
+  const items = base.slice();
+  shuffledDeck(extras).forEach(extra => {
+    const idx = Math.floor(Math.random() * (items.length + 1));
+    items.splice(idx, 0, extra);
+  });
+  return items;
+}
+const POSTS = [...PINNED_POSTS, ...interleaveRandom(EDITORIAL_POSTS, QUIZ_POSTS)];
 
 /* ============================ SHARED BITS ================================ */
 function SectionHead({
@@ -3427,6 +3719,18 @@ function SlidingDots({
   })));
 }
 
+/* Extra random placeholder image appended to every post, on top of whatever
+   media the post already has (photo carousel, video, poll, quiz, etc). */
+function RandomPostImage({
+  seed
+}) {
+  return /*#__PURE__*/React.createElement("img", {
+    src: "https://picsum.photos/400/300?random=" + encodeURIComponent(seed),
+    alt: "Random Image",
+    className: "pf-random-img"
+  });
+}
+
 /* Swipeable image carousel with dot indicators + counter for media posts. */
 function MediaCarousel({
   images
@@ -4198,7 +4502,7 @@ function FeedPost({
       text: post.body,
       more: post.channel ? "Learn More" : "See more"
     }),
-    media: post.questionnaire ? /*#__PURE__*/React.createElement(Questionnaire, {
+    media: /*#__PURE__*/React.createElement(React.Fragment, null, post.questionnaire ? /*#__PURE__*/React.createElement(Questionnaire, {
       questionnaire: post.questionnaire
     }) : post.poll ? /*#__PURE__*/React.createElement(Poll, {
       poll: post.poll
@@ -4206,7 +4510,9 @@ function FeedPost({
       sample: post.sample
     }) : post.media && post.media.length > 0 ? /*#__PURE__*/React.createElement(MediaCarousel, {
       images: post.media
-    }) : null,
+    }) : null, /*#__PURE__*/React.createElement(RandomPostImage, {
+      seed: post.id
+    })),
     liked: st.liked,
     saved: st.saved,
     actioned: false,
