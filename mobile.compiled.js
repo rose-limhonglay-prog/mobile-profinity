@@ -1294,11 +1294,11 @@ function SideMenu({
   }), "Logout"))));
 }
 const MTabBar = forwardRefM(function MTabBar({
-  hidden
+  compact
 }, ref) {
   return /*#__PURE__*/React.createElement("nav", {
     ref: ref,
-    className: "m-tabs" + (hidden ? " m-tabs-hidden" : ""),
+    className: "m-tabs" + (compact ? " m-tabs-compact" : ""),
     "aria-label": "Primary"
   }, M_TABS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
@@ -1309,11 +1309,13 @@ const MTabBar = forwardRefM(function MTabBar({
     className: "ic"
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: t.icon,
-    size: 24,
-    color: t.key === "Home" ? "var(--brand-navy)" : "var(--gray-450)"
+    size: 20,
+    color: t.key === "Home" ? "#fff" : "var(--gray-450)"
   }), t.dot && /*#__PURE__*/React.createElement("span", {
     className: "dot"
-  }, t.dot)), t.label)));
+  }, t.dot)), /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, t.label))));
 });
 function useHeaderHideM(scrollRef) {
   const [hidden, setHidden] = useStateM(false);
@@ -1376,20 +1378,22 @@ function MobileHome() {
     ref: scrollRefM,
     style: {
       paddingTop: chromeHidden ? 0 : headerH,
-      paddingBottom: chromeHidden ? 0 : tabsH
+      paddingBottom: tabsH + 34
     }
   }, /*#__PURE__*/React.createElement(PFAM.Feed, null)), /*#__PURE__*/React.createElement(MTabBar, {
     ref: tabsRefM,
-    hidden: chromeHidden
+    compact: chromeHidden
   }), /*#__PURE__*/React.createElement("button", {
-    className: "m-fab" + (chromeHidden ? " m-fab-hidden" : ""),
+    className: "m-fab" + (chromeHidden ? " m-fab-compact" : ""),
     "aria-label": "Share a Post",
     onClick: () => go("CreatePostMobile.html")
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: "lucide:plus",
-    size: 22,
+    size: 16,
     color: "#fff"
-  }), "Share a Post"), /*#__PURE__*/React.createElement(SideMenu, {
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, "Share a Post")), /*#__PURE__*/React.createElement(SideMenu, {
     open: menuOpen,
     onClose: () => setMenuOpen(false)
   }), /*#__PURE__*/React.createElement(NotificationsPanel, {

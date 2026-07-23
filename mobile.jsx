@@ -691,18 +691,18 @@ function SideMenu({ open, onClose }) {
 
 }
 
-const MTabBar = forwardRefM(function MTabBar({ hidden }, ref) {
+const MTabBar = forwardRefM(function MTabBar({ compact }, ref) {
   return (
-    <nav ref={ref} className={"m-tabs" + (hidden ? " m-tabs-hidden" : "")} aria-label="Primary">
+    <nav ref={ref} className={"m-tabs" + (compact ? " m-tabs-compact" : "")} aria-label="Primary">
       {M_TABS.map((t) =>
       <button key={t.key} className={"m-tab" + (t.key === "Home" ? " on" : "")}
       aria-current={t.key === "Home" ? "page" : undefined}
       onClick={() => t.href && go(t.href)}>
           <span className="ic">
-            <DSM.IconifyIcon name={t.icon} size={24} color={t.key === "Home" ? "var(--brand-navy)" : "var(--gray-450)"} />
+            <DSM.IconifyIcon name={t.icon} size={20} color={t.key === "Home" ? "#fff" : "var(--gray-450)"} />
             {t.dot && <span className="dot">{t.dot}</span>}
           </span>
-          {t.label}
+          <span className="lbl">{t.label}</span>
         </button>
       )}
     </nav>);
@@ -761,13 +761,13 @@ function MobileHome() {
     <div className="m-screen" data-screen-label="Home (mobile)">
       <PushNotifBanner />
       <MTopBar ref={headerRefM} hidden={chromeHidden} onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} onMessages={() => setMsgOpen(true)} />
-      <div className="m-scroll" ref={scrollRefM} style={{ paddingTop: chromeHidden ? 0 : headerH, paddingBottom: chromeHidden ? 0 : tabsH }}>
+      <div className="m-scroll" ref={scrollRefM} style={{ paddingTop: chromeHidden ? 0 : headerH, paddingBottom: tabsH + 34 }}>
         <PFAM.Feed />
       </div>
-      <MTabBar ref={tabsRefM} hidden={chromeHidden} />
-      <button className={"m-fab" + (chromeHidden ? " m-fab-hidden" : "")} aria-label="Share a Post" onClick={() => go("CreatePostMobile.html")}>
-        <DSM.IconifyIcon name="lucide:plus" size={22} color="#fff" />
-        Share a Post
+      <MTabBar ref={tabsRefM} compact={chromeHidden} />
+      <button className={"m-fab" + (chromeHidden ? " m-fab-compact" : "")} aria-label="Share a Post" onClick={() => go("CreatePostMobile.html")}>
+        <DSM.IconifyIcon name="lucide:plus" size={16} color="#fff" />
+        <span className="lbl">Share a Post</span>
       </button>
       <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
       <NotificationsPanel open={notifOpen} onClose={() => setNotifOpen(false)} />

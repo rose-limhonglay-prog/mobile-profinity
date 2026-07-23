@@ -162,7 +162,13 @@ const MASTERY_POST = {
     by: "Priya Shah", byAvatar: "assets/avatar-priya-shah.jpg", time: "5h" },
   time: "5 Hours Ago", hashtags: ["mastery", "anatomy"],
   body: "Cannula vs needle for the tear trough — here's the decision tree I actually use chairside.",
-  likes: "64", comments: "12", shares: "4", actioned: false, commentList: []
+  likes: "64", comments: "12", shares: "4", actioned: false,
+  commentList: [
+  { author: { name: "Dr Owen Clarke" }, text: "Saving this — cannula every time for me now but good to see the exceptions laid out.",
+    likes: "18", comments: "2", time: "4h", pills: [{ k: "like", n: "18" }], reactions: ["like"], reactionCount: "18" },
+  { author: { name: "Nurse Beth", avatar: "assets/avatar-nurse-beth.jpg" }, text: "The decision tree format is so much easier to teach juniors with, thank you!",
+    likes: "9", comments: "0", time: "3h", pills: [{ k: "like", n: "9" }], reactions: ["like"], reactionCount: "9" }]
+
 };
 
 const FREEDOM_POST = {
@@ -172,7 +178,13 @@ const FREEDOM_POST = {
     by: "Dr Amir Khan", byAvatar: "assets/avatar-amir-khan.jpg", time: "1d" },
   time: "1 Day Ago", hashtags: ["freedom", "business"],
   body: "How I went from one chair to three clinics in 18 months — the hiring order that mattered.",
-  likes: "110", comments: "18", shares: "9", actioned: false, commentList: []
+  likes: "110", comments: "18", shares: "9", actioned: false,
+  commentList: [
+  { author: { name: "Dr Rachel Voss" }, text: "The order you hired in is the opposite of what I did — wish I'd read this first.",
+    likes: "14", comments: "1", time: "20h", pills: [{ k: "like", n: "14" }], reactions: ["like"], reactionCount: "14" },
+  { author: { name: "Leo Martins" }, text: "This is exactly the roadmap I needed before opening clinic two. Bookmarking.",
+    likes: "11", comments: "0", time: "18h", pills: [{ k: "like", n: "11" }], reactions: ["like"], reactionCount: "11" }]
+
 };
 
 const INNER_POST = {
@@ -260,6 +272,229 @@ const MASTERY_POST_5 = {
   body: "Switched to cannula for the whole tear trough after last month's discussion here — zero bruising on all six patients since. Thank you all.",
   likes: "189", comments: "24", shares: "15", actioned: false, commentList: []
 };
+
+/* Rotating image pool + helpers for the extra Mastery-channel posts below —
+   reuses the existing demo imagery so every gallery/video post has real
+   assets without needing new files. */
+const MASTERY_IMG_POOL = [
+IMG.communityPoster, IMG.p1img1, IMG.p1img2, IMG.p1img3, IMG.p1img4,
+IMG.p2img1, IMG.p2img2, IMG.p2img3, IMG.p3img1, IMG.p3img2, IMG.p3img3,
+IMG.p4img1, IMG.p4img2, IMG.p4img3, IMG.p5img1, IMG.p5img2, IMG.p5img3,
+IMG.p5img4, IMG.p5img5, IMG.p5img6, IMG.p5img7, IMG.p5img8, IMG.p5img9, IMG.p5img10];
+
+function masteryGallery(offset) {
+  return Array.from({ length: 5 }, (_, i) => MASTERY_IMG_POOL[(offset + i) % MASTERY_IMG_POOL.length]);
+}
+
+function masteryComment(name, text, likes, time, avatar) {
+  return [{
+    author: avatar ? { name, avatar } : { name }, text,
+    likes, comments: "0", time, pills: [{ k: "like", n: likes }],
+    reactions: ["like"], reactionCount: likes }];
+
+}
+
+function masteryPost({ id, author, time, chTime, hashtags, body, media, sample, likes, comments, shares, comment }) {
+  return {
+    id, access: "gated", bucket: "mastery", author,
+    channel: { name: "#Mastery · Community", avatar: "assets/profinity-icon.jpg",
+      by: author.name, byAvatar: author.avatar, time: chTime },
+    time, hashtags, ...(media ? { media } : {}), ...(sample ? { sample } : {}),
+    body, likes, comments, shares, actioned: false,
+    commentList: masteryComment(comment.name, comment.text, comment.likes, comment.time, comment.avatar)
+  };
+}
+
+const AMIR = { name: "Dr Amir Khan", avatar: "assets/avatar-amir-khan.jpg", seals: ["gb", "verified"] };
+const PRIYA = { name: "Priya Shah", avatar: "assets/avatar-priya-shah.jpg", seals: ["gb"] };
+const OWEN = { name: "Dr Owen Clarke" };
+const BETH = { name: "Nurse Beth", avatar: "assets/avatar-nurse-beth.jpg" };
+const SARAH = { name: "Dr. Sarah Collins", avatar: "assets/avatar-sarah-collins.jpg", seals: ["gb", "verified", "skinfluencer"] };
+const RACHEL = { name: "Dr Rachel Voss" };
+const LEO = { name: "Leo Martins" };
+const MARK = { name: "Mark Ellis", avatar: "assets/avatar-mark-ellis.jpg", seals: ["skinfluencer"] };
+const JADE = { name: "Jade Osei" };
+const NAOMI = { name: "Dr Naomi Reyes" };
+
+const MASTERY_POST_6 = masteryPost({
+  id: "ch21", author: PRIYA, time: "9 Hours Ago", chTime: "9h",
+  hashtags: ["mastery", "rhinoplasty"],
+  body: "Non-surgical rhinoplasty case, five stages from consult to 2-week review — dorsal hump camouflage plus tip projection with a single syringe.",
+  media: masteryGallery(0),
+  likes: "112", comments: "17", shares: "8",
+  comment: { name: "Dr Owen Clarke", text: "That tip result is razor sharp — what gauge cannula did you use?", likes: "13", time: "8h" }
+});
+
+const MASTERY_POST_7 = masteryPost({
+  id: "ch22", author: OWEN, time: "14 Hours Ago", chTime: "14h",
+  hashtags: ["mastery", "midface"],
+  body: "Full midface restoration, five-stage gallery — cheek, tear trough and jawline done across two sessions six weeks apart.",
+  media: masteryGallery(5),
+  likes: "134", comments: "22", shares: "10",
+  comment: { name: "Priya Shah", text: "The staging between sessions is exactly the pacing I've been looking for — saving this.", likes: "16", time: "12h", avatar: "assets/avatar-priya-shah.jpg" }
+});
+
+const MASTERY_POST_8 = masteryPost({
+  id: "ch23", author: SARAH, time: "1 Day Ago", chTime: "1d",
+  hashtags: ["mastery", "jawline"],
+  body: "Jawline contouring series — five angles showing the transition from soft to defined without losing feminine proportion.",
+  media: masteryGallery(10),
+  likes: "158", comments: "28", shares: "12",
+  comment: { name: "Nurse Beth", text: "This is the balance I struggle to explain to patients — screenshotting for consults.", likes: "19", time: "20h", avatar: "assets/avatar-nurse-beth.jpg" }
+});
+
+const MASTERY_POST_9 = masteryPost({
+  id: "ch24", author: BETH, time: "1 Day Ago", chTime: "22h",
+  hashtags: ["mastery", "teartrough"],
+  body: "Tear trough correction, five-image progression — cannula entry point marked on the first frame for anyone following along.",
+  media: masteryGallery(15),
+  likes: "121", comments: "20", shares: "9",
+  comment: { name: "Dr Amir Khan", text: "Marking the entry point on the photo is such a small thing that helps so much — more of this please.", likes: "15", time: "18h", avatar: "assets/avatar-amir-khan.jpg" }
+});
+
+const MASTERY_POST_10 = masteryPost({
+  id: "ch25", author: AMIR, time: "2 Days Ago", chTime: "2d",
+  hashtags: ["mastery", "lips"],
+  body: "Natural lip enhancement case, five stages — Russian technique on the upper, structural on the lower, patient's own proportions kept throughout.",
+  media: masteryGallery(20),
+  likes: "143", comments: "25", shares: "11",
+  comment: { name: "Dr Rachel Voss", text: "Keeping her natural proportions instead of chasing trend lips is exactly why this looks so good.", likes: "17", time: "1d" }
+});
+
+const MASTERY_POST_11 = masteryPost({
+  id: "ch26", author: RACHEL, time: "2 Days Ago", chTime: "1d",
+  hashtags: ["mastery", "cheeks"],
+  body: "Cheek augmentation for symmetry correction, five-image set — patient had noticeable left-right imbalance, resolved over two syringes.",
+  media: masteryGallery(3),
+  likes: "97", comments: "16", shares: "7",
+  comment: { name: "Leo Martins", text: "Didn't realise how much a small asymmetry correction changes the whole face until this gallery.", likes: "10", time: "1d" }
+});
+
+const MASTERY_POST_12 = masteryPost({
+  id: "ch27", author: LEO, time: "3 Days Ago", chTime: "2d",
+  hashtags: ["mastery", "chin"],
+  body: "Chin projection and profile balancing, five stages — small volume, big shift in the overall facial third proportions.",
+  media: masteryGallery(8),
+  likes: "88", comments: "14", shares: "6",
+  comment: { name: "Mark Ellis", text: "Profile balancing like this is so underrated compared to lips and cheeks.", likes: "9", time: "2d", avatar: "assets/avatar-mark-ellis.jpg" }
+});
+
+const MASTERY_POST_13 = masteryPost({
+  id: "ch28", author: MARK, time: "3 Days Ago", chTime: "3d",
+  hashtags: ["mastery", "temples"],
+  body: "Temple hollowing restoration, five-image series — cannula technique, supraperiosteal plane, immediate volume with minimal swelling by day 3.",
+  media: masteryGallery(13),
+  likes: "104", comments: "18", shares: "8",
+  comment: { name: "Jade Osei", text: "Minimal swelling by day 3 is impressive for temples — what filler did you use here?", likes: "11", time: "2d" }
+});
+
+const MASTERY_POST_14 = masteryPost({
+  id: "ch29", author: JADE, time: "4 Days Ago", chTime: "3d",
+  hashtags: ["mastery", "skin-quality"],
+  body: "Skin quality case, five-stage gallery combining microneedling with a light toxin layer — texture change alone sold this patient on the full protocol.",
+  media: masteryGallery(18),
+  likes: "79", comments: "13", shares: "5",
+  comment: { name: "Dr Naomi Reyes", text: "The texture change between frame one and frame five is honestly the best result in this thread.", likes: "8", time: "3d" }
+});
+
+const MASTERY_POST_15 = masteryPost({
+  id: "ch30", author: NAOMI, time: "4 Days Ago", chTime: "4d",
+  hashtags: ["mastery", "fullface"],
+  body: "Full-face liquid facelift, five-stage before-and-after — tear trough, cheek, jawline and lips done in a single structured session.",
+  media: masteryGallery(23),
+  likes: "167", comments: "31", shares: "14",
+  comment: { name: "Dr. Sarah Collins", text: "Doing all four areas in one structured session and still keeping it natural is the real skill here.", likes: "18", time: "3d", avatar: "assets/avatar-sarah-collins.jpg" }
+});
+
+const MASTERY_POST_16 = masteryPost({
+  id: "ch31", author: PRIYA, time: "5 Hours Ago", chTime: "5h",
+  hashtags: ["mastery", "cannula"],
+  sample: { type: "video", poster: IMG.p1img1, duration: "8:12" },
+  body: "Full cannula entry-point walkthrough for the mid-face — camera angle shows exactly where I'm gauging depth against the periosteum.",
+  likes: "168", comments: "27", shares: "13",
+  comment: { name: "Dr Owen Clarke", text: "The close-up on the entry angle is the part every training course skips — thank you for this.", likes: "20", time: "3h" }
+});
+
+const MASTERY_POST_17 = masteryPost({
+  id: "ch32", author: OWEN, time: "10 Hours Ago", chTime: "10h",
+  hashtags: ["mastery", "masseter"],
+  sample: { type: "video", poster: IMG.p2img1, duration: "6:45" },
+  body: "Masseter injection walkthrough, split by facial width and bite strength — the dosing chart from last week's post, now demonstrated chairside.",
+  likes: "121", comments: "19", shares: "9",
+  comment: { name: "Nurse Beth", text: "Watching this after reading your dosing chart made the whole thing click.", likes: "14", time: "7h", avatar: "assets/avatar-nurse-beth.jpg" }
+});
+
+const MASTERY_POST_18 = masteryPost({
+  id: "ch33", author: AMIR, time: "1 Day Ago", chTime: "1d",
+  hashtags: ["mastery", "vascular-occlusion"],
+  sample: { type: "video", poster: IMG.p3img1, duration: "10:20" },
+  body: "Vascular occlusion management, real-time — recognising the early signs and the exact order I work through hyaluronidase, warmth and massage.",
+  likes: "203", comments: "36", shares: "21",
+  comment: { name: "Dr Rachel Voss", text: "Every injector needs to watch this before their next case, not just the ones who've had a scare.", likes: "27", time: "22h" }
+});
+
+const MASTERY_POST_19 = masteryPost({
+  id: "ch34", author: BETH, time: "1 Day Ago", chTime: "18h",
+  hashtags: ["mastery", "threadlift"],
+  sample: { type: "video", poster: IMG.p4img1, duration: "5:30" },
+  body: "Thread lift placement for the lower face — cog direction and vector planning explained before a single needle goes in.",
+  likes: "94", comments: "15", shares: "6",
+  comment: { name: "Priya Shah", text: "Planning the vectors out loud like this is such a good teaching habit — more of this please.", likes: "11", time: "15h", avatar: "assets/avatar-priya-shah.jpg" }
+});
+
+const MASTERY_POST_20 = masteryPost({
+  id: "ch35", author: TIM, time: "2 Days Ago", chTime: "1d",
+  hashtags: ["mastery", "masterclass"],
+  sample: { type: "video", poster: IMG.communityPoster, duration: "22:05" },
+  body: "Full replay of this month's Mastery masterclass — live injection walkthrough plus the Q&A that ran long because nobody wanted to leave.",
+  likes: "276", comments: "48", shares: "30",
+  comment: { name: "Dr Naomi Reyes", text: "The Q&A section alone was worth the whole session — thank you for keeping it in the replay.", likes: "24", time: "20h" }
+});
+
+const MASTERY_POST_21 = masteryPost({
+  id: "ch36", author: OWEN, time: "6 Hours Ago", chTime: "6h",
+  hashtags: ["mastery", "dosing"],
+  media: [IMG.p2img2],
+  body: "Updated masseter dosing infographic — printed this out for the treatment room, saves re-explaining the split every time.",
+  likes: "72", comments: "11", shares: "5",
+  comment: { name: "Nurse Beth", text: "Printing this for my room too, thank you!", likes: "9", time: "4h", avatar: "assets/avatar-nurse-beth.jpg" }
+});
+
+const MASTERY_POST_22 = masteryPost({
+  id: "ch37", author: PRIYA, time: "11 Hours Ago", chTime: "11h",
+  hashtags: ["mastery", "anatomy"],
+  media: [IMG.p3img2],
+  body: "Danger-zone reference sheet I keep pinned above my treatment chair — worth revisiting even years into practice.",
+  likes: "86", comments: "14", shares: "6",
+  comment: { name: "Dr Amir Khan", text: "Never a bad idea to keep this in view no matter how experienced you are.", likes: "12", time: "9h", avatar: "assets/avatar-amir-khan.jpg" }
+});
+
+const MASTERY_POST_23 = masteryPost({
+  id: "ch38", author: AMIR, time: "2 Days Ago", chTime: "1d",
+  hashtags: ["mastery", "complications"],
+  sample: { type: "video", poster: IMG.p4img2, duration: "4:15" },
+  body: "Short case discussion on a delayed nodule complication — timeline, what I tried first, and when I referred out.",
+  likes: "118", comments: "21", shares: "10",
+  comment: { name: "Dr Rachel Voss", text: "Appreciate you sharing the referral decision too, not just the successful part.", likes: "13", time: "22h" }
+});
+
+const MASTERY_POST_24 = masteryPost({
+  id: "ch39", author: BETH, time: "3 Days Ago", chTime: "2d",
+  hashtags: ["mastery", "qanda"],
+  sample: { type: "video", poster: IMG.p3img3, duration: "15:50" },
+  body: "Recorded Q&A from this week's Mastery drop-in — mostly temple and tear trough questions, timestamps in the comments.",
+  likes: "103", comments: "17", shares: "7",
+  comment: { name: "Jade Osei", text: "The temple question at the start was exactly what I needed answered, thank you!", likes: "10", time: "1d" }
+});
+
+const MASTERY_POST_25 = masteryPost({
+  id: "ch40", author: RACHEL, time: "4 Days Ago", chTime: "3d",
+  hashtags: ["mastery", "filler"],
+  media: [IMG.p1img2],
+  body: "Filler viscosity cheat sheet by treatment area — the one chart I wish someone had given me in year one.",
+  likes: "91", comments: "15", shares: "6",
+  comment: { name: "Leo Martins", text: "This should be handed out on day one of every training course.", likes: "12", time: "2d" }
+});
 
 const FREEDOM_POST_2 = {
   id: "ch13", access: "gated", bucket: "freedom",
@@ -359,7 +594,7 @@ const COURSE_COMMENT_2 = {
   author: { name: "Jeniffer R", avatar: "assets/avatar-miranda.jpg", seals: ["gb", "verified", "crown", "gold"] },
   time: "1 Hour Ago", hashtags: ["course", "discussion"],
   body: "This finally made cannula depth and layering click for me — I tried the tear trough, cheekbone and jawline sequence chairside today and saw a real jump in patient satisfaction. Thank you Dr. Tim!",
-  lesson: { title: "Full-Face Rejuvenation Protocol", sub: "PROTOX Course · Module 4 · Lesson 2", image: IMG.p1img1 },
+  lesson: { title: "Full-Face Rejuvenation Protocol", sub: "PROTOX Course · Module 4 · Lesson 2", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRp-aTNLPnPGrav4xz2d8LBFNdjcVNPNBU2S1D8UEFlCA&s" },
   likes: "31", comments: "5", shares: "0", actioned: false, commentList: []
 };
 
@@ -392,6 +627,10 @@ const FOLLOWSAVE_AMIR_POST = {
 const BUCKET_POSTS = [
 CHANNEL_POST, CONFIDENCE_POST_2, CONFIDENCE_POST_3, CONFIDENCE_POST_4, CONFIDENCE_POST_5,
 MASTERY_POST, MASTERY_POST_2, MASTERY_POST_3, MASTERY_POST_4, MASTERY_POST_5,
+MASTERY_POST_6, MASTERY_POST_7, MASTERY_POST_8, MASTERY_POST_9, MASTERY_POST_10,
+MASTERY_POST_11, MASTERY_POST_12, MASTERY_POST_13, MASTERY_POST_14, MASTERY_POST_15,
+MASTERY_POST_16, MASTERY_POST_17, MASTERY_POST_18, MASTERY_POST_19, MASTERY_POST_20,
+MASTERY_POST_21, MASTERY_POST_22, MASTERY_POST_23, MASTERY_POST_24, MASTERY_POST_25,
 FREEDOM_POST, FREEDOM_POST_2, FREEDOM_POST_3, FREEDOM_POST_4, FREEDOM_POST_5,
 INNER_POST, INNER_POST_2, INNER_POST_3, INNER_POST_4, INNER_POST_5,
 COURSE_POST, COURSE_COMMENT, COURSE_COMMENT_2, GENERAL_MARK_POST, FOLLOWSAVE_AMIR_POST, MYLEARNING_POST];
@@ -481,11 +720,20 @@ function resolveBucketFeed(personaKey, toggles) {
     map((item) => ({ item, mode: "teaser" }));
   }
   const out = [];
+  const teasedBuckets = new Set();
   BUCKET_POSTS.forEach((x) => {
     switch (x.bucket) {
       case "confidence":case "mastery":case "freedom":case "inner":
-        if (persona.admin || persona.channels.includes(x.bucket)) out.push({ item: x, mode: "full" });
-        else out.push({ item: x, mode: "teaser" });
+        if (persona.admin || persona.channels.includes(x.bucket)) {
+          out.push({ item: x, mode: "full" });
+        } else {
+          // a locked channel only needs one teaser card in the newsfeed to
+          // upsell it — showing every gated post as a separate blocker card
+          // clutters the feed for viewers already partway up the ladder.
+          if (teasedBuckets.has(x.bucket)) break;
+          teasedBuckets.add(x.bucket);
+          out.push({ item: x, mode: "teaser" });
+        }
         break;
       case "course":case "coursecomment":
         if (persona.admin || persona.paid) out.push({ item: x, mode: "full" });
@@ -581,19 +829,89 @@ function thread(extra) {
 
 }
 
+/* Random photo pool for the Home newsfeed — every real content photo already
+   in assets/ (excludes avatars, logos, badges, textures, which aren't post
+   photos). Shuffled once per page load and handed out without repeats until
+   the deck runs out, so consecutive posts never show the same image. Add a
+   filename to this list any time a new photo lands in assets/. */
+const POST_PHOTO_POOL = [
+IMG.p1img1, IMG.p1img2, IMG.p1img3, IMG.p1img4,
+IMG.p2img1, IMG.p2img2, IMG.p2img3,
+IMG.p3img1, IMG.p3img2, IMG.p3img3,
+IMG.p4img1, IMG.p4img2, IMG.p4img3,
+IMG.p5img1, IMG.p5img2, IMG.p5img3, IMG.p5img4, IMG.p5img5,
+IMG.p5img6, IMG.p5img7, IMG.p5img8, IMG.p5img9, IMG.p5img10,
+IMG.toxin, IMG.collage, IMG.lip, IMG.communityPoster];
+
+
+function shuffledDeck(pool) {
+  const a = pool.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* Hands out `count` images at a time from a shuffled deck, reshuffling once
+   exhausted — call once per post so images stay stable while the post is on
+   screen but vary post-to-post and reload-to-reload. */
+function makeImagePicker(pool) {
+  let deck = shuffledDeck(pool);
+  return function pick(count) {
+    if (deck.length < count) deck = shuffledDeck(pool);
+    return deck.splice(0, count);
+  };
+}
+
+const nextPostImages = makeImagePicker(POST_PHOTO_POOL);
+
 const POSTS = [
+{
+  id: "p_quiz", author: PROFINITY, time: "6h",
+  hashtags: ["masterclass", "anatomy", "questionnaire"],
+  body: "Knowledge check ✅ — test yourself before this week's masterclass. Tap an answer to see if you're right.",
+  questionnaire: {
+    question: "Which facial danger zone carries the highest risk of vascular occlusion during tear trough filler injection?",
+    options: [
+    { label: "Angular artery, medial canthus region", correct: true },
+    { label: "Superficial temporal artery", correct: false },
+    { label: "Facial artery, nasolabial fold", correct: false },
+    { label: "Supratrochlear artery", correct: false }]
+
+  },
+  likes: "980", comments: "64", shares: "22", actioned: false,
+  commentList: thread("Got it right first try — this danger zone comes up constantly in the masterclass Q&A!")
+},
+{
+  id: "p8", author: PROFINITY, time: "1d",
+  hashtags: ["masterclass", "poll"],
+  body: "Quick poll for the community — we're planning next month's masterclass and want to focus where you need it most. Cast your vote 👇",
+  poll: {
+    question: "Which area do you find most challenging to treat confidently?",
+    options: [
+    { label: "Lips", pct: 29 },
+    { label: "Tear troughs", pct: 42 },
+    { label: "Chin & jawline", pct: 17 },
+    { label: "Temples", pct: 12 }],
+
+    votes: 1400
+  },
+  likes: "1.4K", comments: "96", shares: "40", actioned: false,
+  commentList: thread("Tear troughs, hands down — hoping this becomes the next masterclass!")
+},
 {
   id: "p1", author: TIM, withOthers: "Miranda Pearce and 14 others", time: "1 Week Ago",
   hashtags: ["case-study", "patient", "business", "clinic", "profinity", "healthcare"],
   title: CASE_TITLE,
-  media: [IMG.p1img1, IMG.p1img2, IMG.p1img3, IMG.p1img4],
+  media: nextPostImages(4),
   body: CASE_BODY, likes: "1.2K", comments: "150", shares: "150", actioned: true,
   commentList: thread()
 },
 {
   id: "p2", author: TIM, withOthers: "Miranda Pearce and 14 others", time: "1 Week Ago",
   hashtags: ["protocol", "business", "clinic"],
-  media: [IMG.p2img1, IMG.p2img2, IMG.p2img3],
+  media: nextPostImages(3),
   body: "This protocol shows the exact steps for safely correcting migrated or uneven lip filler using a structured, repeatable framework you can apply chairside.",
   likes: "1.2K", comments: "150", shares: "150", actioned: true,
   commentList: thread("This is exactly what I was looking for. Thank you!")
@@ -601,7 +919,7 @@ const POSTS = [
 {
   id: "p3", author: MIRANDA, withOthers: "Dr Tim Pearce", time: "2 Weeks Ago",
   hashtags: ["discussion", "business"],
-  media: [IMG.p3img1, IMG.p3img2, IMG.p3img3],
+  media: nextPostImages(3),
   body: "Growing your clinic revenue doesn't require discounts. Here are 5 strategies top clinicians use to build a premium, referral-led practice.",
   likes: "1.2K", comments: "150", shares: "150", actioned: false,
   commentList: thread("So easy to follow — even on a busy clinic day!")
@@ -609,7 +927,7 @@ const POSTS = [
 {
   id: "p4", author: MIRANDA, time: "2 Weeks Ago",
   hashtags: ["community", "confidence"],
-  media: [IMG.p4img1, IMG.p4img2, IMG.p4img3],
+  media: nextPostImages(3),
   body: "I've been terrified for months, but after studying the Toxin Confidence Pathway, I finally did it! Thank you everyone for your support — this community keeps me moving.",
   likes: "1.2K", comments: "150", shares: "150", actioned: false,
   commentList: thread("So proud of you — the leap is always the hardest part!")
@@ -617,7 +935,7 @@ const POSTS = [
 {
   id: "p5", author: TIM, time: "3 Days Ago",
   hashtags: ["masterclass", "anatomy"],
-  sample: { type: "video", poster: IMG.p5img1, duration: "12:40" },
+  sample: { type: "video", poster: nextPostImages(1)[0], duration: "12:40" },
   body: "Watch the full walkthrough of the Golden Ratio full-face assessment — every landmark, every measurement, explained step by step.",
   likes: "3.4K", comments: "210", shares: "180", actioned: false,
   commentList: thread("Watched it twice already — incredibly clear teaching.")
@@ -625,7 +943,7 @@ const POSTS = [
 {
   id: "p6", author: MIRANDA, time: "4 Days Ago",
   hashtags: ["reel"],
-  sample: { type: "vertical", image: IMG.p5img2 },
+  sample: { type: "vertical", image: nextPostImages(1)[0] },
   body: "A 30-second vertical reel of a lip refinement — saving this format for sharing straight to socials.",
   likes: "2.1K", comments: "140", shares: "320", actioned: false,
   commentList: thread("Perfect for Reels — the vertical crop looks great.")
@@ -633,7 +951,7 @@ const POSTS = [
 {
   id: "p7", author: TIM, withOthers: "Miranda Pearce and 14 others", time: "5 Days Ago",
   hashtags: ["case-study", "anatomy", "patient"],
-  sample: { type: "gallery", images: [IMG.p5img1, IMG.p5img2, IMG.p5img3, IMG.p5img4, IMG.p5img5, IMG.p5img6, IMG.p5img7, IMG.p5img8, IMG.p5img9, IMG.p5img10] },
+  sample: { type: "gallery", images: nextPostImages(10) },
   body: "Full 10-step before-and-after series from a complete facial rejuvenation — swipe through every stage of the treatment plan.",
   likes: "5.6K", comments: "430", shares: "390", actioned: false,
   commentList: thread("This step-by-step series is gold — thank you for sharing all 10!")
@@ -948,6 +1266,67 @@ function ReactionPicker({ at, onPick, onEnter, onLeave }) {
     </div>,
     document.body
   );
+}
+
+/* Shared hover-to-reveal reaction bar behaviour for any post card whose ref
+   wraps a DS PostActions row: reveals the ReactionPicker on like-button
+   hover, reflects the chosen reaction's icon/color back onto that button,
+   and bursts floating emoji when a reaction is picked. */
+function useReactionPicker(ref, reaction, onReact) {
+  const [picker, setPicker] = useState(null);
+  const hideT = useRef(null);
+
+  const show = () => {
+    clearTimeout(hideT.current);
+    const btn = likeButtonOf(ref.current);
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    setPicker({ bottom: window.innerHeight - r.top + 8 });
+  };
+  const scheduleHide = () => {
+    clearTimeout(hideT.current);
+    hideT.current = setTimeout(() => setPicker(null), 280);
+  };
+  const cancelHide = () => clearTimeout(hideT.current);
+
+  useEffect(() => {
+    const btn = likeButtonOf(ref.current);
+    if (!btn) return undefined;
+    btn.addEventListener("mouseenter", show);
+    btn.addEventListener("mouseleave", scheduleHide);
+    return () => {
+      btn.removeEventListener("mouseenter", show);
+      btn.removeEventListener("mouseleave", scheduleHide);
+      clearTimeout(hideT.current);
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const btn = likeButtonOf(ref.current);
+    if (!btn) return;
+    const icon = btn.querySelector("iconify-icon");
+    const label = btn.querySelector("span");
+    const r = REACTION_MAP[reaction];
+    if (r) {
+      const col = cssVar(r.color);
+      if (icon) {icon.setAttribute("icon", r.icon);icon.style.color = col;}
+      if (label) {label.style.color = col;label.style.fontWeight = "var(--fw-semibold)";}
+      btn.dataset.reacted = r.key;
+    } else if (btn.dataset.reacted) {
+      if (icon) {icon.setAttribute("icon", "fluent:thumb-like-16-filled");icon.style.color = "";}
+      if (label) {label.style.color = "";label.style.fontWeight = "";}
+      delete btn.dataset.reacted;
+    }
+  });
+
+  const pick = (key) => {
+    const changing = reaction !== key;
+    onReact(key);
+    if (changing) burstReaction(ref.current, key);
+    setPicker(null);
+  };
+
+  return { picker, pick, cancelHide, scheduleHide };
 }
 
 /* assigns stable ids to seeded comments so replies can target them */
@@ -1518,6 +1897,88 @@ function SampleMedia({ sample }) {
 
 }
 
+/* Community poll — Profinity posts a question with a fixed set of options;
+   tapping any option casts the viewer's vote (once) and reveals the result
+   bars for all options, with the viewer's own pick marked by a checkmark. */
+function Poll({ poll }) {
+  const [voted, setVoted] = useState(null);
+  const answered = voted !== null;
+  const totalVotes = poll.votes + (answered ? 1 : 0);
+
+  return (
+    <div className="pf-poll">
+      <div className="pf-poll-q">
+        <IconifyIcon name="lucide:bar-chart-2" size={18} color="var(--brand-navy)" />
+        <span>{poll.question}</span>
+      </div>
+      <div className="pf-poll-opts">
+        {poll.options.map((o, i) =>
+        <button type="button" key={o.label}
+        className={"pf-poll-opt" + (answered ? " answered" : "") + (voted === i ? " selected" : "")}
+        disabled={answered}
+        onClick={() => setVoted(i)}>
+            {answered && <span className="pf-poll-fill" style={{ width: o.pct + "%" }} />}
+            <span className="pf-poll-opt-row">
+              {answered ?
+            voted === i && <span className="pf-poll-check"><IconifyIcon name="lucide:check" size={12} color="var(--white)" /></span> :
+
+            <span className="pf-poll-radio" />
+            }
+              <span className="pf-poll-label">{o.label}</span>
+              {answered && <span className="pf-poll-pct">{o.pct}%</span>}
+            </span>
+          </button>
+        )}
+      </div>
+      <div className="pf-poll-foot">
+        {totalVotes.toLocaleString()} votes · {answered ? "Thanks for voting" : "Tap an option to vote"}
+      </div>
+    </div>);
+
+}
+
+/* Community questionnaire — Profinity posts a knowledge-check question with one
+   correct option; tapping any option locks in the viewer's answer and reveals
+   whether they were right (their pick + the correct one both highlighted). */
+function Questionnaire({ questionnaire: q }) {
+  const [picked, setPicked] = useState(null);
+  const answered = picked !== null;
+  const isCorrect = answered && q.options[picked].correct;
+
+  return (
+    <div className="pf-quiz">
+      <div className="pf-quiz-q">
+        <IconifyIcon name="lucide:help-circle" size={18} color="var(--brand-navy)" />
+        <span>{q.question}</span>
+      </div>
+      <div className="pf-quiz-opts">
+        {q.options.map((o, i) => {
+          const state = answered && o.correct ? "correct" : answered && picked === i ? "incorrect" : "";
+          return (
+            <button type="button" key={o.label}
+            className={"pf-quiz-opt" + (answered ? " answered" : "") + (state ? " " + state : "")}
+            disabled={answered}
+            onClick={() => setPicked(i)}>
+              <span className="pf-quiz-opt-row">
+                {state ?
+                <span className={"pf-quiz-mark " + state}>
+                    <IconifyIcon name={state === "correct" ? "lucide:check" : "lucide:x"} size={12} color="var(--white)" />
+                  </span> :
+                <span className="pf-quiz-radio" />
+                }
+                <span className="pf-quiz-label">{o.label}</span>
+              </span>
+            </button>);
+
+        })}
+      </div>
+      <div className={"pf-quiz-foot" + (answered ? " " + (isCorrect ? "correct" : "incorrect") : "")}>
+        {answered ? isCorrect ? "Correct! Nice work." : "Not quite — the correct answer is highlighted above." : "Tap an option to answer"}
+      </div>
+    </div>);
+
+}
+
 const PILL_EMOJI = {
   like: "fluent-emoji-flat:thumbs-up",
   love: "fluent-emoji-flat:red-heart",
@@ -1662,14 +2123,13 @@ function goToHashtag(tag) {
 
 function FeedPost({ post, st, hideTags, onToggleLike, onReact, onShare, onSave, onAddComment, onAddReply }) {
   const ref = useRef(null);
-  const [picker, setPicker] = useState(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [replyFor, setReplyFor] = useState(null);
   const [likesOpen, setLikesOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [savedSheetOpen, setSavedSheetOpen] = useState(false);
   const commentSheet = typeof window !== "undefined" && window.PF_COMMENT_SHEET;
-  const hideT = useRef(null);
+  const { picker, pick, cancelHide, scheduleHide } = useReactionPicker(ref, st.reaction, onReact);
 
   const actionIcon = (idx) => {
     const btns = ref.current ? ref.current.querySelectorAll("button") : [];
@@ -1677,60 +2137,10 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onShare, onSave, 
     return b ? b.querySelector("iconify-icon, svg") : null;
   };
 
-  const show = () => {
-    clearTimeout(hideT.current);
-    const btn = likeButtonOf(ref.current);
-    if (!btn) return;
-    const r = btn.getBoundingClientRect();
-    setPicker({ bottom: window.innerHeight - r.top + 8 });
-  };
-  const scheduleHide = () => {
-    clearTimeout(hideT.current);
-    hideT.current = setTimeout(() => setPicker(null), 280);
-  };
-
-  // hover the DS like button to reveal the picker
-  useEffect(() => {
-    const btn = likeButtonOf(ref.current);
-    if (!btn) return undefined;
-    btn.addEventListener("mouseenter", show);
-    btn.addEventListener("mouseleave", scheduleHide);
-    return () => {
-      btn.removeEventListener("mouseenter", show);
-      btn.removeEventListener("mouseleave", scheduleHide);
-      clearTimeout(hideT.current);
-    };
-  }, []);
-
-  // reflect the chosen reaction back onto the DS like button (survives re-renders)
-  useLayoutEffect(() => {
-    const btn = likeButtonOf(ref.current);
-    if (!btn) return;
-    const icon = btn.querySelector("iconify-icon");
-    const label = btn.querySelector("span");
-    const r = REACTION_MAP[st.reaction];
-    if (r) {
-      const col = cssVar(r.color);
-      if (icon) {icon.setAttribute("icon", r.icon);icon.style.color = col;}
-      if (label) {label.style.color = col;label.style.fontWeight = "var(--fw-semibold)";}
-      btn.dataset.reacted = r.key;
-    } else if (btn.dataset.reacted) {
-      if (icon) {icon.setAttribute("icon", "fluent:thumb-like-16-filled");icon.style.color = "";}
-      if (label) {label.style.color = "";label.style.fontWeight = "";}
-      delete btn.dataset.reacted;
-    }
-  });
-
   const handleLike = () => {
     const willReact = !st.reaction;
     onToggleLike();
     if (willReact) burstReaction(ref.current, "like");
-  };
-  const pick = (key) => {
-    const changing = st.reaction !== key;
-    onReact(key);
-    if (changing) burstReaction(ref.current, key);
-    setPicker(null);
   };
   const handleComment = () => {
     const g = actionIcon(1);
@@ -1777,7 +2187,11 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onShare, onSave, 
       hashtags={hideTags ? [] : resolveHashtags(post.hashtags)}
       title={post.title}
       body={<ClampText text={post.body} more={post.channel ? "Learn More" : "See more"} />}
-      media={post.sample
+      media={post.questionnaire
+        ? <Questionnaire questionnaire={post.questionnaire} />
+        : post.poll
+        ? <Poll poll={post.poll} />
+        : post.sample
         ? <SampleMedia sample={post.sample} />
         : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} /> : null}
       liked={st.liked} saved={st.saved} actioned={false} likes={st.likes} shares={st.shares} comments={st.commentsCount}
@@ -1833,7 +2247,7 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onShare, onSave, 
         </div>
       }
       {commentSheet &&
-      <div style={{ borderTop: "1px solid var(--border-default)" }}>
+      <div>
         <LikedByRow onOpen={() => setLikesOpen(true)} />
       </div>
       }
@@ -1851,7 +2265,7 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onShare, onSave, 
         }
         </div>
       }
-      <ReactionPicker at={picker} onPick={pick} onEnter={() => clearTimeout(hideT.current)} onLeave={scheduleHide} />
+      <ReactionPicker at={picker} onPick={pick} onEnter={cancelHide} onLeave={scheduleHide} />
       {likesOpen && <LikesModal onClose={() => setLikesOpen(false)} />}
       {sheetOpen &&
       <CommentsSheet post={post} comments={comments}
@@ -1937,34 +2351,68 @@ function TeaserPost({ post, onUpgrade }) {
    Deliberately lighter than FeedPost — no media carousel, no full comment
    thread — this is "a tagged post in your feed", not the full community
    thread view (that still lives on the Community screen itself). */
-function ChannelFeedCard({ post, st, onToggleLike, onSave, onShare, onAddComment }) {
+function ChannelFeedCard({ post, st, onToggleLike, onReact, onSave, onShare, onAddComment, onAddReply }) {
   const meta = BUCKET_META[post.bucket] || { label: "Community", color: "var(--gray-500)" };
   const [replying, setReplying] = useState(false);
+  const [likesOpen, setLikesOpen] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const liked = !!st.reaction;
+  const ref = useRef(null);
+  const { picker, pick, cancelHide, scheduleHide } = useReactionPicker(ref, st.reaction, onReact);
+  const comments = st.comments || [];
+  const handleLike = () => {
+    const willReact = !st.reaction;
+    onToggleLike();
+    if (willReact) burstReaction(ref.current, "like");
+  };
   return (
-    <div className="pf-chcard"
+    <div className="pf-chcard" ref={ref}
     style={{ background: "var(--surface-card)", border: "1px solid var(--border-default)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-card)", padding: "16px" }}>
       <div className="pf-chcard-head">
         <Avatar name={post.channel.by} src={post.channel.byAvatar} size={40} />
         <div>
           <div className="pf-chcard-name">{post.channel.by}</div>
           <span className="pf-chcard-tag" style={{ color: meta.color, background: `color-mix(in srgb, ${meta.color} 15%, transparent)` }}>
-            <span className="pf-chcard-dot" style={{ background: meta.color }} />
             {meta.label}
           </span>
         </div>
       </div>
       <p className="pf-chcard-body">{post.body}</p>
-      {post.media && post.media.length > 0 &&
-      <div className="pf-chcard-media"><img src={post.media[0]} alt="" /></div>
-      }
+      {post.sample ?
+      <SampleMedia sample={post.sample} /> :
+      post.media && post.media.length > 0 ?
+      <MediaCarousel images={post.media} /> :
+      null}
       <PostActions likes={st.likes} comments={st.commentsCount} shares={st.shares}
       liked={liked} saved={st.saved} actioned={false}
-      onLike={onToggleLike} onComment={() => setReplying((r) => !r)} onShare={onShare} onSave={onSave}
+      onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={onShare} onSave={onSave}
       style={{ borderTop: "1px solid var(--border-default)", paddingTop: 14 }} />
+      <div>
+        <LikedByRow onOpen={() => setLikesOpen(true)} />
+      </div>
+      {comments.length > 0 &&
+      <div className="comments-region cm-preview-region" style={{ padding: "0px", margin: "8px 0px 0px" }}>
+          <div className="cmt-preview" role="button" tabIndex={0}
+        onClick={() => setSheetOpen(true)}
+        onKeyDown={(e) => {if (e.key === "Enter") setSheetOpen(true);}}>
+            <CommentItem {...comments[0]} reactions={null} reactionCount={null} replies={[]} />
+          </div>
+          {comments.length > 1 &&
+        <button type="button" className="cmt-viewmore" onClick={() => setSheetOpen(true)}>
+              View all {comments.length} comments
+            </button>
+        }
+        </div>
+      }
       {replying &&
       <CommentComposer placeholder="Write a reply…" autoFocus small
       onSubmit={(t) => {onAddComment(t);setReplying(false);}} />
+      }
+      <ReactionPicker at={picker} onPick={pick} onEnter={cancelHide} onLeave={scheduleHide} />
+      {likesOpen && <LikesModal onClose={() => setLikesOpen(false)} />}
+      {sheetOpen &&
+      <CommentsSheet post={post} comments={comments}
+      onClose={() => setSheetOpen(false)} onAddComment={onAddComment} onAddReply={onAddReply} />
       }
     </div>);
 
@@ -1975,12 +2423,19 @@ function ChannelFeedCard({ post, st, onToggleLike, onSave, onShare, onAddComment
    course X" header as the locked teaser, plus a lesson-promo strip below
    the comment — doubles as a soft upsell into that lesson for anyone who
    hasn't taken it yet, or a refresher link for those who have. */
-function CourseCommentCard({ post, st, onToggleLike, onSave, onAddComment, onShare }) {
+function CourseCommentCard({ post, st, onToggleLike, onReact, onSave, onAddComment, onShare }) {
   const [replying, setReplying] = useState(false);
   const liked = !!st.reaction;
   const lesson = post.lesson;
+  const ref = useRef(null);
+  const { picker, pick, cancelHide, scheduleHide } = useReactionPicker(ref, st.reaction, onReact);
+  const handleLike = () => {
+    const willReact = !st.reaction;
+    onToggleLike();
+    if (willReact) burstReaction(ref.current, "like");
+  };
   return (
-    <div className="post-wrap pf-ccard"
+    <div className="post-wrap pf-ccard" ref={ref}
     style={{ background: "var(--surface-card)", border: "1px solid var(--border-default)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-card)", overflow: "hidden", padding: "0px 16px" }}>
       <div className="pf-teaser-activity">
         <strong>{post.author.name}</strong> commented in course <strong>{COURSE_NAMES[post.course] || "the course"}</strong>
@@ -2013,12 +2468,13 @@ function CourseCommentCard({ post, st, onToggleLike, onSave, onAddComment, onSha
       }
       <PostActions likes={st.likes} comments={st.commentsCount} shares={st.shares}
       liked={liked} saved={st.saved} actioned={false}
-      onLike={onToggleLike} onComment={() => setReplying((r) => !r)} onShare={onShare} onSave={onSave}
+      onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={onShare} onSave={onSave}
       style={{ borderTop: "1px solid var(--border-default)", paddingTop: 14 }} />
       {replying &&
       <CommentComposer placeholder="Write a reply…" autoFocus small
       onSubmit={(t) => {onAddComment(t);setReplying(false);}} />
       }
+      <ReactionPicker at={picker} onPick={pick} onEnter={cancelHide} onLeave={scheduleHide} />
     </div>);
 
 }
@@ -2185,24 +2641,25 @@ function Feed({ channel } = {}) {
     return m;
   });
   const [sort, setSort] = useState("All");
-  const [viewerPersona, setViewerPersona] = useState("confidence");
+  const [viewerPersona, setViewerPersona] = useState("mastery");
   const [bucketToggles, setBucketToggles] = useState({ course: false, save: false, mute: false });
   const [upgradeFor, setUpgradeFor] = useState(null);
 
   const toggle = (id, key) => setState((s) => ({ ...s, [id]: { ...s[id], [key]: !s[id][key] } }));
 
   /* the bucket-merged block (channel ladder / course / My Learning / general)
-     is spliced in right after the first editorial post, exactly where the
-     single hard-coded CHANNEL_POST used to sit — everything else about the
-     editorial list is untouched. */
+     is spliced in right after the top two editorial posts (questionnaire,
+     then poll), exactly where the single hard-coded CHANNEL_POST used to
+     sit — everything else about the editorial list is untouched. */
   const viewerCurrent = PERSONA_MAP[viewerPersona] || PERSONA_MAP.confidence;
   const isFreeViewer = !viewerCurrent.paid && !viewerCurrent.admin;
   const bucketResolved = resolveBucketFeed(viewerPersona, bucketToggles);
   const feedItems = posts.length ?
   [
   { item: posts[0], mode: "full" },
+  ...(posts[1] ? [{ item: posts[1], mode: "full" }] : []),
   ...bucketResolved,
-  ...posts.slice(1).map((p) => ({ item: p, mode: "full" }))] :
+  ...posts.slice(2).map((p) => ({ item: p, mode: "full" }))] :
 
   bucketResolved;
 
@@ -2239,13 +2696,25 @@ function Feed({ channel } = {}) {
           const c = { _id: "c" + Date.now(), author: { name: ME.name, avatar: ME.avatar, seals: ["gb", "verified"] }, text, replies: [] };
           return { ...s, [p.id]: { ...cur, comments: [c, ...cur.comments], commentsCount: bump(cur.commentsCount) } };
         });
+        const setReaction = (key) => setState((s) => {
+          const cur = s[p.id];
+          const reaction = cur.reaction === key ? null : key;
+          return { ...s, [p.id]: { ...cur, reaction, liked: !!reaction, likes: reaction ? bump(cur.base) : cur.base } };
+        });
         /* community-channel content (Confidence/Mastery/Freedom/Inner Circle)
            merges into this same paid newsfeed, just tagged with its channel —
            not split into a separate surface — so it gets the compact card. */
         if (p.channel) {
           return (
             <ChannelFeedCard key={p.id} post={p} st={st}
-            onToggleLike={onToggleLike} onAddComment={onAddComment}
+            onToggleLike={onToggleLike} onReact={setReaction} onAddComment={onAddComment}
+            onAddReply={(cid, text) => setState((s) => {
+              const cur = s[p.id];
+              const comments = cur.comments.map((c) => c._id === cid ?
+              { ...c, replies: [...(c.replies || []), { author: { name: ME.name, avatar: ME.avatar, seals: ["gb", "verified"] }, text }] } :
+              c);
+              return { ...s, [p.id]: { ...cur, comments, commentsCount: bump(cur.commentsCount) } };
+            })}
             onSave={() => toggle(p.id, "saved")}
             onShare={() => setState((s) => {
               const cur = s[p.id];
@@ -2256,7 +2725,7 @@ function Feed({ channel } = {}) {
         if (p.bucket === "coursecomment") {
           return (
             <CourseCommentCard key={p.id} post={p} st={st}
-            onToggleLike={onToggleLike} onAddComment={onAddComment}
+            onToggleLike={onToggleLike} onReact={setReaction} onAddComment={onAddComment}
             onSave={() => toggle(p.id, "saved")}
             onShare={() => setState((s) => {
               const cur = s[p.id];
@@ -2264,11 +2733,6 @@ function Feed({ channel } = {}) {
             })} />);
 
         }
-        const setReaction = (key) => setState((s) => {
-          const cur = s[p.id];
-          const reaction = cur.reaction === key ? null : key;
-          return { ...s, [p.id]: { ...cur, reaction, liked: !!reaction, likes: reaction ? bump(cur.base) : cur.base } };
-        });
         return (
           <FeedPost key={p.id} post={p} st={st} hideTags={isFreeViewer}
           onToggleLike={onToggleLike}

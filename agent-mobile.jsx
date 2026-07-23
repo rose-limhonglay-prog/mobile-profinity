@@ -112,7 +112,7 @@ function AgTabBar() {
       <button key={t.key} className={"ag-tab" + (t.key === "Agent" ? " on" : "")}
       aria-current={t.key === "Agent" ? "page" : undefined} onClick={() => t.href && goAG(t.href)}>
           <span className="ic">
-            <DSAG.IconifyIcon name={t.icon} size={24} color={t.key === "Agent" ? "var(--brand-navy)" : "var(--gray-450)"} />
+            <DSAG.IconifyIcon name={t.icon} size={20} color={t.key === "Agent" ? "#fff" : "var(--gray-450)"} />
             {t.dot && <span className="dot">{t.dot}</span>}
           </span>
           {t.label}

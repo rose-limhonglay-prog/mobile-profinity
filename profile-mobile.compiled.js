@@ -998,9 +998,12 @@ function MessagesPanelPM({
     v: v
   })))));
 }
-function PMTabBar() {
+const PMTabBar = React.forwardRef(function PMTabBar({
+  compact
+}, ref) {
   return /*#__PURE__*/React.createElement("nav", {
-    className: "pm-tabs",
+    ref: ref,
+    className: "pm-tabs" + (compact ? " pm-tabs-compact" : ""),
     "aria-label": "Primary"
   }, PM_TABS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
@@ -1011,11 +1014,32 @@ function PMTabBar() {
     className: "ic"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: t.icon,
-    size: 23,
-    color: t.key === "Profile" ? "var(--brand-navy)" : "var(--gray-450)"
+    size: 20,
+    color: t.key === "Profile" ? "#fff" : "var(--gray-450)"
   }), t.dot && /*#__PURE__*/React.createElement("span", {
     className: "dot"
-  }, t.dot)), t.label)));
+  }, t.dot)), /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, t.label))));
+});
+function useHeaderHidePM(scrollRef) {
+  const [hidden, setHidden] = useStatePM(false);
+  useEffectPM(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let lastY = el.scrollTop;
+    const onScroll = () => {
+      const y = el.scrollTop;
+      const delta = y - lastY;
+      if (y < 24) setHidden(false);else if (delta > 6) setHidden(true);else if (delta < -6) setHidden(false);
+      lastY = y;
+    };
+    el.addEventListener("scroll", onScroll, {
+      passive: true
+    });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+  return hidden;
 }
 const PM_STEPS_INIT = [{
   ti: "Add a profile photo",
@@ -1561,6 +1585,8 @@ function PMScreen() {
   const m = PM_ME;
   const [msgOpen, setMsgOpen] = useStatePM(false);
   const [menuOpen, setMenuOpen] = useStatePM(false);
+  const scrollRef = React.useRef(null);
+  const chromeHidden = useHeaderHidePM(scrollRef);
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-screen",
     "data-screen-label": "Profile (mobile)"
@@ -1568,7 +1594,8 @@ function PMScreen() {
     onMenu: () => setMenuOpen(true),
     onMessages: () => setMsgOpen(true)
   }), /*#__PURE__*/React.createElement("div", {
-    className: "pm-scroll"
+    className: "pm-scroll",
+    ref: scrollRef
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-ig"
   }, /*#__PURE__*/React.createElement("div", {
@@ -1758,7 +1785,9 @@ function PMScreen() {
     name: "lucide:log-out",
     size: 20,
     color: "var(--error)"
-  }), "Logout")), /*#__PURE__*/React.createElement(PMTabBar, null), /*#__PURE__*/React.createElement(MessagesPanelPM, {
+  }), "Logout")), /*#__PURE__*/React.createElement(PMTabBar, {
+    compact: chromeHidden
+  }), /*#__PURE__*/React.createElement(MessagesPanelPM, {
     open: msgOpen,
     onClose: () => setMsgOpen(false)
   }), /*#__PURE__*/React.createElement(SideMenuPM, {

@@ -999,11 +999,11 @@ function CMComposer({
   })));
 }
 const CMTabBar = React.forwardRef(function CMTabBar({
-  hidden
+  compact
 }, ref) {
   return /*#__PURE__*/React.createElement("nav", {
     ref: ref,
-    className: "cm-tabs" + (hidden ? " cm-tabs-hidden" : ""),
+    className: "cm-tabs" + (compact ? " cm-tabs-compact" : ""),
     "aria-label": "Primary"
   }, CM_TABS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
@@ -1014,9 +1014,11 @@ const CMTabBar = React.forwardRef(function CMTabBar({
     className: "ic"
   }, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
     name: t.icon,
-    size: 23,
-    color: t.key === "Community" ? "var(--brand-navy)" : "var(--gray-450)"
-  })), t.label)));
+    size: 20,
+    color: t.key === "Community" ? "#fff" : "var(--gray-450)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, t.label))));
 });
 function useHeaderHideCM(scrollRef) {
   const [hidden, setHidden] = React.useState(false);
@@ -1087,7 +1089,7 @@ function CMScreen({
     ref: scrollRef,
     style: {
       paddingTop: chromeHidden ? 0 : headerH,
-      paddingBottom: chromeHidden ? 0 : tabsH
+      paddingBottom: tabsH + 34
     }
   }, newPosts > 0 && /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -1104,16 +1106,16 @@ function CMScreen({
     className: "cm-end"
   }, "End of newsfeed")), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "cm-clindir-fab" + (chromeHidden ? " cm-clindir-fab-hidden" : ""),
+    className: "cm-clindir-fab",
     "aria-label": "Clinician Directory",
     onClick: () => goCM("ClinicianDirectory.html")
   }, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
     name: "lucide:book-open",
-    size: 18,
+    size: 15,
     color: "var(--white)"
   }), "Clinician Directory"), /*#__PURE__*/React.createElement(CMTabBar, {
     ref: tabsRef,
-    hidden: chromeHidden
+    compact: chromeHidden
   }), /*#__PURE__*/React.createElement(MessagesPanelCM, {
     open: msgOpen,
     onClose: () => setMsgOpen(false)

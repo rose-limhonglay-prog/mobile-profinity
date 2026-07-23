@@ -64,10 +64,13 @@
   border-color: var(--border-default);
 }
 [data-theme="dark"] .m-tabs {
-  background: rgba(20, 18, 45, 0.95);
-  -webkit-backdrop-filter: blur(14px) saturate(180%);
-  backdrop-filter: blur(14px) saturate(180%);
-  border-color: var(--border-default);
+  background: linear-gradient(180deg, rgba(38,34,70,.36), rgba(20,18,42,.44));
+  border-color: rgba(255,255,255,.16);
+  box-shadow: 0 16px 40px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08);
+}
+[data-theme="dark"] .m-tab.on .ic {
+  background: linear-gradient(180deg, rgba(206,153,87,.92), rgba(206,153,87,.98));
+  box-shadow: 0 4px 14px rgba(206,153,87,.4), inset 0 1px 0 rgba(255,255,255,.2);
 }
 [data-theme="dark"] .m-iconbtn { background: rgba(206, 153, 87, 0.12); }
 [data-theme="dark"] .m-iconbtn:active { background: rgba(206, 153, 87, 0.22); }
@@ -107,6 +110,17 @@
   background: #1e1c38 !important;
 }
 
+/* Community — floating glass navigation dock */
+[data-theme="dark"] .cm-tabs {
+  background: linear-gradient(180deg, rgba(38,34,70,.36), rgba(20,18,42,.44));
+  border-color: rgba(255,255,255,.16);
+  box-shadow: 0 16px 40px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08);
+}
+[data-theme="dark"] .cm-tab.on .ic {
+  background: linear-gradient(180deg, rgba(206,153,87,.92), rgba(206,153,87,.98));
+  box-shadow: 0 4px 14px rgba(206,153,87,.4), inset 0 1px 0 rgba(255,255,255,.2);
+}
+
 /* Select-channel modal selected item */
 [data-theme="dark"] .sc-item.on {
   background: rgba(206, 153, 87, 0.14);
@@ -142,6 +156,15 @@
 [data-theme="dark"] .pm-ig-btn.navy { background: var(--brand-navy); color: #fff; border-color: transparent; }
 [data-theme="dark"] .pm-sec-h h2   { color: var(--text-heading); }
 [data-theme="dark"] .pm-tab.on     { color: var(--brand-navy); }
+[data-theme="dark"] .pm-tabs {
+  background: linear-gradient(180deg, rgba(38,34,70,.36), rgba(20,18,42,.44));
+  border-color: rgba(255,255,255,.16);
+  box-shadow: 0 16px 40px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08);
+}
+[data-theme="dark"] .pm-tab.on .ic {
+  background: linear-gradient(180deg, rgba(206,153,87,.92), rgba(206,153,87,.98));
+  box-shadow: 0 4px 14px rgba(206,153,87,.4), inset 0 1px 0 rgba(255,255,255,.2);
+}
 [data-theme="dark"] .pm-tool       { background: rgba(206,153,87,.1); }
 [data-theme="dark"] .pm-tool:active { background: rgba(206,153,87,.2); }
 [data-theme="dark"] .pm-sheet-opt.sel { background: rgba(206,153,87,.1); }
@@ -152,3 +175,25 @@
    ============================================================ */
 [data-theme="dark"] .lm-mc-dur { background: rgba(20,18,45,.88); color: var(--text-heading); }
 [data-theme="dark"] .lm-rc-cat { background: rgba(20,18,45,.88); color: var(--text-heading); }
+[data-theme="dark"] .lm-tabs {
+  background: linear-gradient(180deg, rgba(38,34,70,.36), rgba(20,18,42,.44));
+  border-color: rgba(255,255,255,.16);
+  box-shadow: 0 16px 40px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08);
+}
+[data-theme="dark"] .lm-tab.on .ic {
+  background: linear-gradient(180deg, rgba(206,153,87,.92), rgba(206,153,87,.98));
+  box-shadow: 0 4px 14px rgba(206,153,87,.4), inset 0 1px 0 rgba(255,255,255,.2);
+}
+
+/* ============================================================
+   Agent — floating glass navigation dock
+   ============================================================ */
+[data-theme="dark"] .ag-tabs {
+  background: linear-gradient(180deg, rgba(38,34,70,.36), rgba(20,18,42,.44));
+  border-color: rgba(255,255,255,.16);
+  box-shadow: 0 16px 40px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08);
+}
+[data-theme="dark"] .ag-tab.on .ic {
+  background: linear-gradient(180deg, rgba(206,153,87,.92), rgba(206,153,87,.98));
+  box-shadow: 0 4px 14px rgba(206,153,87,.4), inset 0 1px 0 rgba(255,255,255,.2);
+}

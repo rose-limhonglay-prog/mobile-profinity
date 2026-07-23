@@ -27,7 +27,8 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 .cp-post-btn:not(:disabled):active{filter:brightness(1.15)}
 
 /* ===== scrollable content ===== */
-.cp-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.cp-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  display:flex;flex-direction:column}
 .cp-scroll::-webkit-scrollbar{width:0}
 
 /* ===== author row ===== */
@@ -61,9 +62,12 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 .cp-aopt-lbl{flex:1}
 
 /* ===== textarea ===== */
-.cp-textarea{display:block;width:100%;min-height:180px;resize:none;border:none;outline:none;
+.cp-textarea{display:block;width:100%;flex:1 1 auto;min-height:120px;resize:none;border:none;outline:none;
+  box-shadow:none;-webkit-tap-highlight-color:transparent;
   padding:12px 16px 16px;font-family:var(--font-sans);font-size:17px;line-height:1.55;
   color:var(--text-primary);background:transparent}
+.cp-textarea:focus{outline:none;box-shadow:none}
+#pf-root .cp-textarea:focus-visible{outline:none;box-shadow:none}
 .cp-textarea::placeholder{color:var(--gray-350,#b4b8c8)}
 
 /* ===== image previews ===== */

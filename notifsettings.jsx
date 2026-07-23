@@ -44,11 +44,9 @@ function ToggleNS({ label, desc, on, onToggle }) {
 }
 
 function NotificationSettings() {
-  const [security, setSecurity] = useStateNS(true);
-  const [activity, setActivity] = useStateNS(true);
-  const [toasts, setToasts] = useStateNS(true);
-  const [sound, setSound] = useStateNS(true);
-  const [tone, setTone] = useStateNS(0.65);
+  const [push, setPush] = useStateNS(true);
+  const [social, setSocial] = useStateNS(true);
+  const [learning, setLearning] = useStateNS(true);
 
   return (
     <div className="ns-screen" data-screen-label="Notification Settings (mobile)">
@@ -61,42 +59,17 @@ function NotificationSettings() {
 
       <div className="ns-scroll">
         <div className="ns-sec-h">Updates &amp; Alerts</div>
-        <p className="ns-sec-desc">Manage how and when you receive updates from the platform.</p>
+        <p className="ns-sec-desc">Keep it simple — choose what you want to hear about.</p>
 
         <div className="ns-card">
-          <div className="ns-card-h">Push Notifications</div>
-          <p className="ns-card-desc">Real-time alerts sent to your browser or mobile app.</p>
-          <ToggleNS label="Security alerts" desc="Instant notifications for new logins or password changes."
-          on={security} onToggle={() => setSecurity((v) => !v)} />
-        </div>
-
-        <div className="ns-card">
-          <div className="ns-card-h">In-App Notifications</div>
-          <p className="ns-card-desc">Notifications that appear while you are using the platform.</p>
-          <ToggleNS label="Activity Feed" desc="Show minor updates and non-critical activity in the sidebar feed."
-          on={activity} onToggle={() => setActivity((v) => !v)} />
+          <ToggleNS label="Push notifications" desc="Real-time alerts sent to your device, including security and account activity."
+          on={push} onToggle={() => setPush((v) => !v)} />
           <div className="ns-divider" />
-          <ToggleNS label="Pop-up toasts" desc="Show brief success or error messages for system actions."
-          on={toasts} onToggle={() => setToasts((v) => !v)} />
-        </div>
-
-        <div className="ns-card">
-          <div className="ns-card-h">Sound &amp; Vibration</div>
-          <p className="ns-card-desc">Control how notifications make noise and vibrate.</p>
-          <ToggleNS label="Notification sound" desc="Play a sound when you receive a notification."
-          on={sound} onToggle={() => setSound((v) => !v)} />
+          <ToggleNS label="Social & community" desc="Comments, likes, follows and new posts in channels you follow."
+          on={social} onToggle={() => setSocial((v) => !v)} />
           <div className="ns-divider" />
-          <div className="ns-tone-row">
-            <span className="ns-toggle-label">Notification tone</span>
-            <div className="ns-slider" role="slider" aria-label="Notification tone" aria-valuenow={Math.round(tone * 100)}
-            onClick={(e) => {
-              const r = e.currentTarget.getBoundingClientRect();
-              setTone(Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)));
-            }}>
-              <span className="ns-slider-fill" style={{ width: (tone * 100) + "%" }} />
-              <span className="ns-slider-thumb" style={{ left: (tone * 100) + "%" }} />
-            </div>
-          </div>
+          <ToggleNS label="Learning & courses" desc="Course reminders and new courses available in your topics."
+          on={learning} onToggle={() => setLearning((v) => !v)} />
         </div>
       </div>
     </div>);

@@ -14,6 +14,8 @@ function goL(url) {
     window.location.href = u;
   })(url);
 }
+const LM_STATUS_BAR_H = 52; // matches .m-top's status-bar/notch clearance
+
 const LM_MINE = [{
   title: "Advanced Lip Techniques",
   dur: "4h 12m",
@@ -122,6 +124,16 @@ const LM_MEMBERSHIP = [{
   sub: "Community",
   href: "MyLearning.html"
 }];
+const LM_COACH_ACTIONS = [{
+  label: "Build my study plan",
+  reply: "On it — I'll map out a study plan for this week around finishing 8D Lip Design and starting Facial Anatomy for Artists next."
+}, {
+  label: "What should I learn next?",
+  reply: "You're 68% through 8D Lip Design, so I'd wrap that up first, then move into Facial Anatomy for Artists to round out your technique."
+}, {
+  label: "Explain my confidence score",
+  reply: "Your confidence score blends quiz accuracy, course completion, and practical assessments. Finishing your current course is the fastest way to raise it."
+}];
 const LM_TABS = [{
   key: "Home",
   label: "Home",
@@ -206,7 +218,15 @@ function LMGreeting() {
     color: "var(--brand-navy)"
   }), "My Save")));
 }
-function LMSearch() {
+function LMSearch({
+  autoFocus,
+  collapsible,
+  onCollapse
+}) {
+  const inputRef = React.useRef(null);
+  useEffectL(() => {
+    if (autoFocus && inputRef.current) inputRef.current.focus();
+  }, [autoFocus]);
   return /*#__PURE__*/React.createElement("div", {
     className: "lm-search"
   }, /*#__PURE__*/React.createElement(DSL.Icon, {
@@ -214,12 +234,29 @@ function LMSearch() {
     size: 21,
     color: "var(--gray-450)"
   }), /*#__PURE__*/React.createElement("input", {
+    ref: inputRef,
     type: "text",
     placeholder: "Search courses, topics, instructors…",
-    "aria-label": "Search courses"
+    "aria-label": "Search courses",
+    onBlur: e => {
+      if (collapsible && !e.target.value) onCollapse && onCollapse();
+    }
   }), /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
     name: "lucide:sliders-horizontal",
     size: 21,
+    color: "var(--gray-500)"
+  }));
+}
+function LMSearchFab({
+  onClick
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    className: "lm-search-fab",
+    "aria-label": "Open search",
+    onClick: onClick
+  }, /*#__PURE__*/React.createElement(DSL.Icon, {
+    name: "search",
+    size: 20,
     color: "var(--gray-500)"
   }));
 }
@@ -352,6 +389,141 @@ function MembershipModal({
     size: 20,
     color: "var(--gray-400)"
   }))))));
+}
+function AICoachFab({
+  onClick,
+  bottom
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    className: "lm-coach-fab",
+    style: {
+      bottom
+    },
+    onClick: onClick
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-coach-fab-ic"
+  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 15,
+    color: "var(--ai-purple)"
+  })), "AI Coach");
+}
+function AICoachModal({
+  open,
+  onClose
+}) {
+  const [messages, setMessages] = useStateL([{
+    role: "coach",
+    text: "Hi Katy! \u{1F44B} Based on your progress in 8D Lip Design, want me to build a study plan for this week?"
+  }]);
+  const [input, setInput] = useStateL("");
+  const bodyRef = React.useRef(null);
+  const [rendered, setRendered] = useStateL(open);
+  const [closing, setClosing] = useStateL(false);
+  useEffectL(() => {
+    if (open) {
+      setMessages([{
+        role: "coach",
+        text: "Hi Katy! \u{1F44B} Based on your progress in 8D Lip Design, want me to build a study plan for this week?"
+      }]);
+      setInput("");
+      setClosing(false);
+      setRendered(true);
+    } else if (rendered) {
+      setClosing(true);
+      const t = setTimeout(() => {
+        setRendered(false);
+        setClosing(false);
+      }, 260);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
+  useEffectL(() => {
+    const el = bodyRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages]);
+  function sendMessage(text, reply) {
+    if (!text.trim()) return;
+    setMessages(m => [...m, {
+      role: "me",
+      text
+    }]);
+    setInput("");
+    setTimeout(() => {
+      setMessages(m => [...m, {
+        role: "coach",
+        text: reply || "Thanks for asking! Try one of the quick actions above, or check back soon as I learn more."
+      }]);
+    }, 500);
+  }
+  if (!rendered) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-overlay" + (closing ? " lm-coach-overlay-closing" : ""),
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Profinity Coach",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-card" + (closing ? " lm-coach-card-closing" : ""),
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-coach-avatar"
+  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 22,
+    color: "var(--ai-purple)"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-title-wrap"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-title"
+  }, "Profinity Coach"), /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-sub"
+  }, "Your learning companion")), /*#__PURE__*/React.createElement("button", {
+    className: "lm-coach-x",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "lucide:x",
+    size: 18,
+    color: "var(--gray-600)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-body",
+    ref: bodyRef
+  }, messages.map((m, i) => /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-msg" + (m.role === "me" ? " me" : ""),
+    key: i
+  }, m.text)), messages.length === 1 && /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-actions"
+  }, LM_COACH_ACTIONS.map((a, i) => /*#__PURE__*/React.createElement("button", {
+    key: i,
+    className: "lm-coach-action",
+    onClick: () => sendMessage(a.label, a.reply)
+  }, a.label)))), /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-input-row"
+  }, /*#__PURE__*/React.createElement("input", {
+    className: "lm-coach-input",
+    type: "text",
+    placeholder: "Ask your coach anything…",
+    "aria-label": "Ask your coach anything",
+    value: input,
+    onChange: e => setInput(e.target.value),
+    onKeyDown: e => {
+      if (e.key === "Enter") sendMessage(input);
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "lm-coach-send",
+    "aria-label": "Send",
+    disabled: !input.trim(),
+    onClick: () => sendMessage(input)
+  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "lucide:arrow-up",
+    size: 19,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-disclaimer"
+  }, "AI can make mistakes. Verify important outputs.")));
 }
 function MyCourses({
   loading
@@ -707,11 +879,11 @@ function LMSkeletonRec() {
   })));
 }
 const LMTabBar = React.forwardRef(function LMTabBar({
-  hidden
+  compact
 }, ref) {
   return /*#__PURE__*/React.createElement("nav", {
     ref: ref,
-    className: "lm-tabs" + (hidden ? " lm-tabs-hidden" : ""),
+    className: "lm-tabs" + (compact ? " lm-tabs-compact" : ""),
     "aria-label": "Primary"
   }, LM_TABS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
@@ -722,16 +894,19 @@ const LMTabBar = React.forwardRef(function LMTabBar({
     className: "ic"
   }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
     name: t.icon,
-    size: 24,
-    color: t.key === "Learning" ? "var(--brand-navy)" : "var(--gray-450)"
+    size: 20,
+    color: t.key === "Learning" ? "#fff" : "var(--gray-450)"
   }), t.dot && /*#__PURE__*/React.createElement("span", {
     className: "dot"
-  }, t.dot)), t.label)));
+  }, t.dot)), /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, t.label))));
 });
 function LearningHome() {
   const [loading, setLoading] = useStateL(true);
   const [surveyOpen, setSurveyOpen] = useStateL(false);
   const [membershipOpen, setMembershipOpen] = useStateL(false);
+  const [coachOpen, setCoachOpen] = useStateL(false);
   const [coursesUnlocked, setCoursesUnlocked] = useStateL(false);
   useEffectL(() => {
     const t = setTimeout(() => setLoading(false), 1800);
@@ -739,14 +914,29 @@ function LearningHome() {
   }, []);
   const scrollRef = React.useRef(null);
   const headerRef = React.useRef(null);
+  const searchRef = React.useRef(null);
   const tabsRef = React.useRef(null);
   const [headerH, setHeaderH] = useStateL(0);
+  const [searchH, setSearchH] = useStateL(0);
   const [tabsH, setTabsH] = useStateL(0);
   const chromeHidden = useHeaderHideL(scrollRef);
+  const [searchOpen, setSearchOpen] = useStateL(false);
+  React.useEffect(() => {
+    if (!chromeHidden) setSearchOpen(false);
+  }, [chromeHidden]);
   React.useLayoutEffect(() => {
     const el = headerRef.current;
     if (!el) return;
     const measure = () => setHeaderH(el.offsetHeight);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  React.useLayoutEffect(() => {
+    const el = searchRef.current;
+    if (!el) return;
+    const measure = () => setSearchH(el.offsetHeight);
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -771,12 +961,24 @@ function LearningHome() {
   }, /*#__PURE__*/React.createElement("div", {
     ref: headerRef,
     className: "lm-header-wrap" + (chromeHidden ? " lm-header-hidden" : "")
-  }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement(LMGreeting, null), /*#__PURE__*/React.createElement(LMSearch, null)), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement(LMGreeting, null)), /*#__PURE__*/React.createElement("div", {
+    ref: searchRef,
+    className: "lm-search-wrap" + (chromeHidden && !searchOpen ? " lm-search-collapsed" : ""),
+    style: {
+      top: chromeHidden ? LM_STATUS_BAR_H : headerH
+    }
+  }, chromeHidden && !searchOpen ? /*#__PURE__*/React.createElement(LMSearchFab, {
+    onClick: () => setSearchOpen(true)
+  }) : /*#__PURE__*/React.createElement(LMSearch, {
+    autoFocus: chromeHidden && searchOpen,
+    collapsible: chromeHidden,
+    onCollapse: () => setSearchOpen(false)
+  })), /*#__PURE__*/React.createElement("div", {
     className: "lm-scroll",
     ref: scrollRef,
     style: {
-      paddingTop: chromeHidden ? 0 : headerH,
-      paddingBottom: chromeHidden ? 0 : tabsH
+      paddingTop: (chromeHidden ? LM_STATUS_BAR_H : headerH) + searchH,
+      paddingBottom: tabsH + 34
     }
   }, /*#__PURE__*/React.createElement(LMCurrent, null), /*#__PURE__*/React.createElement(MyCourses, {
     loading: loading
@@ -791,9 +993,12 @@ function LearningHome() {
     style: {
       height: 20
     }
-  })), /*#__PURE__*/React.createElement(LMTabBar, {
+  })), /*#__PURE__*/React.createElement(AICoachFab, {
+    bottom: tabsH + 34,
+    onClick: () => setCoachOpen(true)
+  }), /*#__PURE__*/React.createElement(LMTabBar, {
     ref: tabsRef,
-    hidden: chromeHidden
+    compact: chromeHidden
   }), /*#__PURE__*/React.createElement(SurveyMobile, {
     open: surveyOpen,
     onClose: () => setSurveyOpen(false),
@@ -801,6 +1006,9 @@ function LearningHome() {
   }), /*#__PURE__*/React.createElement(MembershipModal, {
     open: membershipOpen,
     onClose: () => setMembershipOpen(false)
+  }), /*#__PURE__*/React.createElement(AICoachModal, {
+    open: coachOpen,
+    onClose: () => setCoachOpen(false)
   }));
 }
 function LearningMobileApp() {

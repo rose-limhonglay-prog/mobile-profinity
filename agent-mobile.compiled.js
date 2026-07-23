@@ -150,8 +150,8 @@ function AgTabBar() {
     className: "ic"
   }, /*#__PURE__*/React.createElement(DSAG.IconifyIcon, {
     name: t.icon,
-    size: 24,
-    color: t.key === "Agent" ? "var(--brand-navy)" : "var(--gray-450)"
+    size: 20,
+    color: t.key === "Agent" ? "#fff" : "var(--gray-450)"
   }), t.dot && /*#__PURE__*/React.createElement("span", {
     className: "dot"
   }, t.dot)), t.label)));

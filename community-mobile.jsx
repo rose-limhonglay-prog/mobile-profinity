@@ -560,17 +560,17 @@ function CMComposer({ channel }) {
     </div>);
 }
 
-const CMTabBar = React.forwardRef(function CMTabBar({ hidden }, ref) {
+const CMTabBar = React.forwardRef(function CMTabBar({ compact }, ref) {
   return (
-    <nav ref={ref} className={"cm-tabs" + (hidden ? " cm-tabs-hidden" : "")} aria-label="Primary">
+    <nav ref={ref} className={"cm-tabs" + (compact ? " cm-tabs-compact" : "")} aria-label="Primary">
       {CM_TABS.map((t) =>
       <button key={t.key} className={"cm-tab" + (t.key === "Community" ? " on" : "")}
       aria-current={t.key === "Community" ? "page" : undefined}
       onClick={() => t.href && goCM(t.href)}>
           <span className="ic">
-            <DSCM.IconifyIcon name={t.icon} size={23} color={t.key === "Community" ? "var(--brand-navy)" : "var(--gray-450)"} />
+            <DSCM.IconifyIcon name={t.icon} size={20} color={t.key === "Community" ? "#fff" : "var(--gray-450)"} />
           </span>
-          {t.label}
+          <span className="lbl">{t.label}</span>
         </button>
       )}
     </nav>);
@@ -631,7 +631,7 @@ function CMScreen({ scrollRef, newPosts, dismiss }) {
         <CMHeader channel={channel} setChannel={setChannel} />
         <CMComposer channel={channel} />
       </div>
-      <div className="cm-scroll" ref={scrollRef} style={{ paddingTop: chromeHidden ? 0 : headerH, paddingBottom: chromeHidden ? 0 : tabsH }}>
+      <div className="cm-scroll" ref={scrollRef} style={{ paddingTop: chromeHidden ? 0 : headerH, paddingBottom: tabsH + 34 }}>
         {newPosts > 0 &&
         <button type="button" className="cm-newposts" onClick={dismiss}
         aria-label={newPosts + " new posts, tap to see them"}>
@@ -642,12 +642,12 @@ function CMScreen({ scrollRef, newPosts, dismiss }) {
         <PFACM.Feed channel={CM_CHANNEL_BUCKET[channel]} />
         <div className="cm-end">End of newsfeed</div>
       </div>
-      <button type="button" className={"cm-clindir-fab" + (chromeHidden ? " cm-clindir-fab-hidden" : "")} aria-label="Clinician Directory"
+      <button type="button" className="cm-clindir-fab" aria-label="Clinician Directory"
         onClick={() => goCM("ClinicianDirectory.html")}>
-        <DSCM.IconifyIcon name="lucide:book-open" size={18} color="var(--white)" />
+        <DSCM.IconifyIcon name="lucide:book-open" size={15} color="var(--white)" />
         Clinician Directory
       </button>
-      <CMTabBar ref={tabsRef} hidden={chromeHidden} />
+      <CMTabBar ref={tabsRef} compact={chromeHidden} />
       <MessagesPanelCM open={msgOpen} onClose={() => setMsgOpen(false)} />
       <SideMenuCM open={menuOpen} onClose={() => setMenuOpen(false)} />
     </div>);

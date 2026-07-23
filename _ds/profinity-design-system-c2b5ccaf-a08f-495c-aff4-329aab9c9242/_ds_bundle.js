@@ -1767,7 +1767,7 @@ function PostActions({
     glyph: saved ? "bookmark-filled" : "bookmark",
     label: "Save",
     active: saved,
-    color: "var(--ai-purple)",
+    color: "var(--brand-navy)",
     onClick: onSave
   })));
 }

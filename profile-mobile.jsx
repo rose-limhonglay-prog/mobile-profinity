@@ -544,22 +544,42 @@ function MessagesPanelPM({ open, onClose }) {
 
 }
 
-function PMTabBar() {
+const PMTabBar = React.forwardRef(function PMTabBar({ compact }, ref) {
   return (
-    <nav className="pm-tabs" aria-label="Primary">
+    <nav ref={ref} className={"pm-tabs" + (compact ? " pm-tabs-compact" : "")} aria-label="Primary">
       {PM_TABS.map((t) =>
       <button key={t.key} className={"pm-tab" + (t.key === "Profile" ? " on" : "")}
       aria-current={t.key === "Profile" ? "page" : undefined}
       onClick={() => t.href && goPM(t.href)}>
           <span className="ic">
-            <DSPM.IconifyIcon name={t.icon} size={23} color={t.key === "Profile" ? "var(--brand-navy)" : "var(--gray-450)"} />
+            <DSPM.IconifyIcon name={t.icon} size={20} color={t.key === "Profile" ? "#fff" : "var(--gray-450)"} />
             {t.dot && <span className="dot">{t.dot}</span>}
           </span>
-          {t.label}
+          <span className="lbl">{t.label}</span>
         </button>
       )}
     </nav>);
 
+});
+
+function useHeaderHidePM(scrollRef) {
+  const [hidden, setHidden] = useStatePM(false);
+  useEffectPM(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let lastY = el.scrollTop;
+    const onScroll = () => {
+      const y = el.scrollTop;
+      const delta = y - lastY;
+      if (y < 24) setHidden(false);
+      else if (delta > 6) setHidden(true);
+      else if (delta < -6) setHidden(false);
+      lastY = y;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+  return hidden;
 }
 
 const PM_STEPS_INIT = [
@@ -904,10 +924,12 @@ function PMScreen() {
   const m = PM_ME;
   const [msgOpen, setMsgOpen] = useStatePM(false);
   const [menuOpen, setMenuOpen] = useStatePM(false);
+  const scrollRef = React.useRef(null);
+  const chromeHidden = useHeaderHidePM(scrollRef);
   return (
     <div className="pm-screen" data-screen-label="Profile (mobile)">
           <PMTopBar onMenu={() => setMenuOpen(true)} onMessages={() => setMsgOpen(true)} />
-          <div className="pm-scroll">
+          <div className="pm-scroll" ref={scrollRef}>
             <div className="pm-ig">
               <div className="pm-ig-top">
                 <div className="pm-ig-avwrap">
@@ -1012,7 +1034,7 @@ function PMScreen() {
               <DSPM.IconifyIcon name="lucide:log-out" size={20} color="var(--error)" />Logout
             </button>
           </div>
-          <PMTabBar />
+          <PMTabBar compact={chromeHidden} />
           <MessagesPanelPM open={msgOpen} onClose={() => setMsgOpen(false)} />
           <SideMenuPM open={menuOpen} onClose={() => setMenuOpen(false)} />
         </div>);
