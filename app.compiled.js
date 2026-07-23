@@ -3719,18 +3719,6 @@ function SlidingDots({
   })));
 }
 
-/* Extra random placeholder image appended to every post, on top of whatever
-   media the post already has (photo carousel, video, poll, quiz, etc). */
-function RandomPostImage({
-  seed
-}) {
-  return /*#__PURE__*/React.createElement("img", {
-    src: "https://picsum.photos/400/300?random=" + encodeURIComponent(seed),
-    alt: "Random Image",
-    className: "pf-random-img"
-  });
-}
-
 /* Swipeable image carousel with dot indicators + counter for media posts. */
 function MediaCarousel({
   images
@@ -4510,9 +4498,7 @@ function FeedPost({
       sample: post.sample
     }) : post.media && post.media.length > 0 ? /*#__PURE__*/React.createElement(MediaCarousel, {
       images: post.media
-    }) : null, /*#__PURE__*/React.createElement(RandomPostImage, {
-      seed: post.id
-    })),
+    }) : null),
     liked: st.liked,
     saved: st.saved,
     actioned: false,

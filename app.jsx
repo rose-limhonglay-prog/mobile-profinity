@@ -1864,12 +1864,6 @@ function SlidingDots({ count, idx }) {
   );
 }
 
-/* Extra random placeholder image appended to every post, on top of whatever
-   media the post already has (photo carousel, video, poll, quiz, etc). */
-function RandomPostImage({ seed }) {
-  return <img src={"https://picsum.photos/400/300?random=" + encodeURIComponent(seed)} alt="Random Image" className="pf-random-img" />;
-}
-
 /* Swipeable image carousel with dot indicators + counter for media posts. */
 function MediaCarousel({ images }) {
   const [idx, setIdx] = useState(0);
@@ -2384,7 +2378,6 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onShare, onSave, 
         : post.sample
         ? <SampleMedia sample={post.sample} />
         : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} /> : null}
-        <RandomPostImage seed={post.id} />
       </>}
       liked={st.liked} saved={st.saved} actioned={false} likes={st.likes} shares={st.shares} comments={st.commentsCount}
       onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare}
