@@ -32,7 +32,40 @@ if (typeof window !== "undefined" && !window.PFHashtags) {
       { slug: "freedom", label: "Freedom", icon: "lucide:trending-up" },
       { slug: "confidence", label: "Confidence", icon: "lucide:users" },
       { slug: "inner-circle", label: "Inner Circle", icon: "lucide:gem" },
-      { slug: "learning", label: "Learning", icon: "lucide:bookmark" }
+      { slug: "learning", label: "Learning", icon: "lucide:bookmark" },
+      { slug: "toxin", label: "Toxin", icon: "lucide:droplet" },
+      { slug: "filler", label: "Filler", icon: "lucide:syringe" },
+      { slug: "technique", label: "Technique", icon: "lucide:wand-2" },
+      { slug: "rhinoplasty", label: "Rhinoplasty", icon: "lucide:scan-face" },
+      { slug: "midface", label: "Midface", icon: "lucide:scan-face" },
+      { slug: "jawline", label: "Jawline", icon: "lucide:scan-face" },
+      { slug: "teartrough", label: "Tear Trough", icon: "lucide:scan-face" },
+      { slug: "lips", label: "Lips", icon: "lucide:smile" },
+      { slug: "cheeks", label: "Cheeks", icon: "lucide:scan-face" },
+      { slug: "chin", label: "Chin", icon: "lucide:scan-face" },
+      { slug: "temples", label: "Temples", icon: "lucide:scan-face" },
+      { slug: "skin-quality", label: "Skin Quality", icon: "lucide:sparkles" },
+      { slug: "fullface", label: "Full Face", icon: "lucide:scan-face" },
+      { slug: "cannula", label: "Cannula", icon: "lucide:syringe" },
+      { slug: "masseter", label: "Masseter", icon: "lucide:scan-face" },
+      { slug: "vascular-occlusion", label: "Vascular Occlusion", icon: "lucide:alert-triangle" },
+      { slug: "threadlift", label: "Thread Lift", icon: "lucide:zap" },
+      { slug: "dosing", label: "Dosing", icon: "lucide:beaker" },
+      { slug: "complications", label: "Complications", icon: "lucide:alert-triangle" },
+      { slug: "qanda", label: "Q&A", icon: "lucide:help-circle" },
+      { slug: "firstcase", label: "First Case", icon: "lucide:flag" },
+      { slug: "mindset", label: "Mindset", icon: "lucide:brain" },
+      { slug: "imposter-syndrome", label: "Imposter Syndrome", icon: "lucide:brain" },
+      { slug: "wins", label: "Wins", icon: "lucide:trophy" },
+      { slug: "hiring", label: "Hiring", icon: "lucide:user-plus" },
+      { slug: "marketing", label: "Marketing", icon: "lucide:megaphone" },
+      { slug: "pricing", label: "Pricing", icon: "lucide:dollar-sign" },
+      { slug: "mentorship", label: "Mentorship", icon: "lucide:users" },
+      { slug: "exit", label: "Exit", icon: "lucide:door-open" },
+      { slug: "investment", label: "Investment", icon: "lucide:trending-up" },
+      { slug: "poll", label: "Poll", icon: "lucide:bar-chart-2" },
+      { slug: "questionnaire", label: "Questionnaire", icon: "lucide:list-checks" },
+      { slug: "safety", label: "Safety", icon: "lucide:shield-check" }
     ];
     function slugify(label) {
       return String(label || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
@@ -50,7 +83,11 @@ if (typeof window !== "undefined" && !window.PFHashtags) {
     }
     function getAll() {
       var list = readRaw();
-      if (!list) { list = DEFAULT_HASHTAGS.slice(); writeRaw(list); }
+      if (!list) { list = DEFAULT_HASHTAGS.slice(); writeRaw(list); return list; }
+      var have = {};
+      list.forEach(function (t) { have[t.slug] = true; });
+      var missing = DEFAULT_HASHTAGS.filter(function (t) { return !have[t.slug]; });
+      if (missing.length) { list = list.concat(missing); writeRaw(list); }
       return list;
     }
     function add(tag) {
@@ -99,6 +136,7 @@ const IMG = {
   p1img2: "assets/post1-img2.png",
   p1img3: "assets/post1-img3.png",
   p1img4: "assets/post1-img4.png",
+  ffSqImg1Swap: "assets/ff-sqimg1-toxin-swap.jpg",
   p2img1: "assets/post2-img1.png",
   p2img2: "assets/post2-img2.png",
   p2img3: "assets/post2-img3.png",
@@ -108,7 +146,11 @@ const IMG = {
   p4img1: "assets/post4-img1.png",
   p4img2: "assets/post4-img2.png",
   p4img3: "assets/post4-img3.png",
+  p4img3Followup: "assets/post4-img3-followup.jpg",
+  p4img3Followup2: "assets/post4-img3-followup2.jpg",
+  caseP1Img1: "assets/post-case-p1-img1.jpg",
   communityPoster: "assets/community-poster.png",
+  chinPositions: "assets/chin-positions.png",
   p5img1: "assets/post5-img1.png",
   p5img2: "assets/post5-img2.png",
   p5img3: "assets/post5-img3.png",
@@ -122,15 +164,61 @@ const IMG = {
 };
 
 /* ============================ DATA ======================================= */
-const ME = { name: "Katy Wilson", role: "Nurse Practitioner", avatar: "assets/avatar-katy.jpg" };
-const TIM = { name: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png", seals: ["gb", "gold", "verified", "crown"] };
+const ME = { name: "Katy Wilson", role: "Nurse Practitioner", avatar: "assets/avatar-katy.jpg", tier: "Confidence" };
+
+/* Membership ladder — each tier's upgrade banner should point at the next
+   rung up, not repeat the tier the viewer is already in. A viewer with no
+   tier yet (free) isn't on the ladder at all (indexOf === -1), so they point
+   at the first rung rather than reading as "already at the top". */
+const SM_TIER_LADDER = ["Confidence", "Mastery", "Freedom", "Inner Circle"];
+function smNextTier(tier) {
+  const i = SM_TIER_LADDER.indexOf(tier);
+  if (i === SM_TIER_LADDER.length - 1) return null;
+  return SM_TIER_LADDER[i + 1];
+}
+/* A viewer's paid tier unlocks every rung below it too. Returns the viewer's
+   tier first (current, highlighted "YOUR TIER") followed by the rungs it
+   includes, lowest last — e.g. "Freedom" -> ["Freedom","Mastery","Confidence"]. */
+function smIncludedTiers(tier) {
+  const i = SM_TIER_LADDER.indexOf(tier);
+  if (i === -1) return [];
+  return SM_TIER_LADDER.slice(0, i + 1).reverse();
+}
+const TIM = { name: "Dr Tim Pearce", avatar: "https://yt3.googleusercontent.com/HlxBYCZyQaKVlrTEJBC-7kM4rrkRH3i9lY9RJvAFPy5KqTEOs8nd8lWohPvrAS2XzIxjsHso=s900-c-k-c0x00ffffff-no-rj", seals: ["gb", "gold", "verified", "crown"] };
 const MIRANDA = { name: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", seals: ["gb", "verified", "gold"] };
 
-/* Official Profinity Academy account — the sole author when PF_OFFICIAL_ONLY
-   is set (the Home / Newsfeed surfaces). */
+/* Official Profinity Academy account — used as the author for knowledge-check
+   quizzes/polls and any post explicitly opted out via channel/keepAuthor when
+   PF_OFFICIAL_ONLY is set (the Home / Newsfeed surfaces). Every other post
+   gets a random community member from RANDOM_AUTHOR_POOL below, so the free
+   newsfeed reads as real community activity rather than a single broadcast
+   account. */
 const PROFINITY = { name: "Profinity", avatar: "assets/profinity-icon.jpg", seals: ["verified"] };
+
+const RANDOM_AUTHOR_POOL = [
+{ name: "Dr. Sarah Collins", avatar: "assets/avatar-sarah-collins.jpg", seals: ["gb", "verified", "skinfluencer"] },
+{ name: "Priya Shah", avatar: "assets/avatar-priya-shah.jpg", seals: ["gb"] },
+{ name: "Dr Amir Khan", avatar: "assets/avatar-amir-khan.jpg", seals: ["gb", "verified"] },
+{ name: "Nurse Beth", avatar: "assets/avatar-nurse-beth.jpg" },
+{ name: "Mark Ellis", avatar: "assets/avatar-mark-ellis.jpg", seals: ["skinfluencer"] },
+{ name: "Jade Osei" },
+{ name: "Dr Owen Clarke" }];
+
+
+/* Deterministic per-post pick (not Math.random()) so a post's author stays
+   stable across re-renders instead of reshuffling on every like/comment. */
+function pickRandomAuthor(id) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  return RANDOM_AUTHOR_POOL[Math.abs(hash) % RANDOM_AUTHOR_POOL.length];
+}
+
 function officialize(list) {
-  return list.map((p) => p.channel ? p : { ...p, author: PROFINITY, withOthers: null });
+  return list.map((p) => {
+    if (p.channel || p.keepAuthor) return p;
+    if (p.questionnaire || p.poll) return { ...p, author: PROFINITY, withOthers: null };
+    return { ...p, author: pickRandomAuthor(p.id), withOthers: null };
+  });
 }
 
 /* Every item below carries a bucket + access:"gated" — the same routing
@@ -148,7 +236,7 @@ const CHANNEL_POST = {
   body: "Just shared my first lip-correction case in the Confidence channel — the support here is unreal. If you're nervous about posting your work, this is the place to start. 💜",
   likes: "842", comments: "96", shares: "40", actioned: false,
   commentList: [
-  { author: { name: "Phoenix Baker", seals: ["gb", "verified"] }, text: "Welcome! This is exactly what the channel is for. 🙌",
+  { author: { name: "Miranda P.", avatar: "assets/avatar-miranda.jpg", seals: ["gb", "verified"] }, text: "Welcome! This is exactly what the channel is for. 🙌",
     likes: "120", comments: "8", time: "2d", pills: [{ k: "like", n: "20" }, { k: "love", n: "6" }], reactions: ["like", "love"], reactionCount: "120" },
   { author: { name: "Luna Chen" }, text: "Beautiful result — thanks for being brave enough to share!",
     likes: "64", comments: "3", time: "1d", pills: [{ k: "like", n: "9" }], reactions: ["like"], reactionCount: "64" }]
@@ -570,6 +658,400 @@ const INNER_POST_5 = {
   likes: "231", comments: "29", shares: "18", actioned: false, commentList: []
 };
 
+/* Generic per-bucket post factory (mirrors masteryPost above) — used to add
+   volume to the Confidence, Freedom and Inner Circle channels so every paid
+   tier reads as an active community, not just Mastery. */
+function tierComment(name, text, likes, time, avatar) {
+  return [{
+    author: avatar ? { name, avatar } : { name }, text,
+    likes, comments: "0", time, pills: [{ k: "like", n: likes }],
+    reactions: ["like"], reactionCount: likes }];
+
+}
+function tierPost(bucket, channelLabel) {
+  return function ({ id, author, time, chTime, hashtags, body, media, sample, likes, comments, shares, comment }) {
+    return {
+      id, access: "gated", bucket, author,
+      channel: { name: `#${channelLabel} · Community`, avatar: "assets/profinity-icon.jpg",
+        by: author.name, byAvatar: author.avatar, time: chTime },
+      time, hashtags, ...(media ? { media } : {}), ...(sample ? { sample } : {}),
+      body, likes, comments, shares, actioned: false,
+      commentList: tierComment(comment.name, comment.text, comment.likes, comment.time, comment.avatar)
+    };
+  };
+}
+const confidencePost = tierPost("confidence", "Confidence");
+const freedomPost = tierPost("freedom", "Freedom");
+const innerPost = tierPost("inner", "Inner Circle");
+
+const CHLOE = { name: "Chloe Bennett" };
+const FAISAL = { name: "Dr Faisal Rahman", seals: ["gb"] };
+const BEN = { name: "Ben Foster" };
+const LAYLA = { name: "Layla Hassan" };
+const RUTH = { name: "Ruth Adeyemi" };
+const ELENA = { name: "Dr Elena Vasquez", seals: ["verified"] };
+const JAMES = { name: "James Whitfield" };
+
+const CONFIDENCE_POST_6 = confidencePost({
+  id: "ch41", author: CHLOE, time: "3 Hours Ago", chTime: "3h",
+  hashtags: ["confidence", "firstcase"], media: masteryGallery(1),
+  body: "First cannula case posted here and the channel talked me through every worry beforehand — five photos from consult to two-week review.",
+  likes: "118", comments: "24", shares: "9",
+  comment: { name: "Priya Shah", text: "This is exactly why we're all here — congratulations on posting it!", likes: "14", time: "2h", avatar: "assets/avatar-priya-shah.jpg" }
+});
+
+const CONFIDENCE_POST_7 = confidencePost({
+  id: "ch42", author: FAISAL, time: "7 Hours Ago", chTime: "7h",
+  hashtags: ["confidence", "mindset"],
+  body: "Told a patient today I was still building confidence with a technique and she said that honesty was why she trusted me. Vulnerability sells better than bravado.",
+  likes: "142", comments: "19", shares: "6",
+  comment: { name: "Nurse Beth", text: "Saying this out loud to patients is harder than any injection technique, honestly.", likes: "12", time: "5h", avatar: "assets/avatar-nurse-beth.jpg" }
+});
+
+const CONFIDENCE_POST_8 = confidencePost({
+  id: "ch43", author: PRIYA, time: "10 Hours Ago", chTime: "10h",
+  hashtags: ["confidence", "reminders"], media: [IMG.p1img3],
+  body: "Printed out the encouragement thread from last month and stuck it inside my treatment room door. Needed a reminder today.",
+  likes: "96", comments: "11", shares: "4",
+  comment: { name: "Jade Osei", text: "Doing this too from now on, what a good idea.", likes: "8", time: "8h" }
+});
+
+const CONFIDENCE_POST_9 = confidencePost({
+  id: "ch44", author: BEN, time: "1 Day Ago", chTime: "22h",
+  hashtags: ["confidence", "overthinking"],
+  body: "How long did it take everyone to stop replaying a night's consults in your head before sleep? Two years in and mine still runs.",
+  likes: "173", comments: "41", shares: "7",
+  comment: { name: "Dr Owen Clarke", text: "Five years in and mine still does it sometimes. You're not alone in this.", likes: "22", time: "18h" }
+});
+
+const CONFIDENCE_POST_10 = confidencePost({
+  id: "ch45", author: SARAH, time: "1 Day Ago", chTime: "20h",
+  hashtags: ["confidence", "masterclass"], sample: { type: "video", poster: IMG.p2img3, duration: "9:40" },
+  body: "Recorded panel from tonight's Confidence circle — three of us talking through the exact moment we stopped feeling like frauds.",
+  likes: "204", comments: "37", shares: "16",
+  comment: { name: "Mark Ellis", text: "The bit about the first year plateau was the whole panel for me.", likes: "19", time: "16h", avatar: "assets/avatar-mark-ellis.jpg" }
+});
+
+const CONFIDENCE_POST_11 = confidencePost({
+  id: "ch46", author: LAYLA, time: "2 Days Ago", chTime: "1d",
+  hashtags: ["confidence", "milestone"], media: masteryGallery(6),
+  body: "My tenth post in this channel! Here's the case that finally made me stop deleting drafts before hitting submit.",
+  likes: "131", comments: "28", shares: "10",
+  comment: { name: "Dr. Sarah Collins", text: "Ten posts in and this quality — so glad you stopped deleting the drafts.", likes: "17", time: "22h", avatar: "assets/avatar-sarah-collins.jpg" }
+});
+
+const CONFIDENCE_POST_12 = confidencePost({
+  id: "ch47", author: AMIR, time: "2 Days Ago", chTime: "1d",
+  hashtags: ["confidence", "mentorship"],
+  body: "Junior injector shadowing me today asked how I handle nerves before a big case. Told her honestly: I don't, I just start anyway.",
+  likes: "158", comments: "23", shares: "9",
+  comment: { name: "Ruth Adeyemi", text: "\"I just start anyway\" might be the most useful sentence in this whole channel.", likes: "15", time: "1d" }
+});
+
+const CONFIDENCE_POST_13 = confidencePost({
+  id: "ch48", author: RUTH, time: "3 Days Ago", chTime: "2d",
+  hashtags: ["confidence", "patientfeedback"], media: [IMG.p3img1],
+  body: "Patient card that made my week: \"you explained everything twice without making me feel silly for asking.\"",
+  likes: "112", comments: "14", shares: "5",
+  comment: { name: "Chloe Bennett", text: "This is the kind of feedback that means more than any before-and-after.", likes: "10", time: "2d" }
+});
+
+const CONFIDENCE_POST_14 = confidencePost({
+  id: "ch49", author: MARK, time: "3 Days Ago", chTime: "2d", sample: { type: "video", poster: IMG.p4img3, duration: "3:55" },
+  hashtags: ["confidence", "nerves"],
+  body: "Filmed myself talking through pre-case nerves for anyone who needs to hear it isn't just you.",
+  likes: "147", comments: "26", shares: "13",
+  comment: { name: "Dr Faisal Rahman", text: "Needed exactly this before tomorrow's list, thank you Mark.", likes: "13", time: "1d" }
+});
+
+const CONFIDENCE_POST_15 = confidencePost({
+  id: "ch50", author: OWEN, time: "4 Days Ago", chTime: "3d",
+  hashtags: ["confidence", "learning"],
+  body: "Three years qualified and I still google things I definitely already know, chairside, between patients. This channel normalised that for me.",
+  likes: "189", comments: "32", shares: "11",
+  comment: { name: "Ben Foster", text: "The relief of reading this as someone one year in is enormous.", likes: "16", time: "3d" }
+});
+
+const CONFIDENCE_POST_16 = confidencePost({
+  id: "ch51", author: ELENA, time: "4 Days Ago", chTime: "4d",
+  hashtags: ["confidence", "growth"], media: masteryGallery(11),
+  body: "Toxin case #3 in the confidence channel — used to only post my \"perfect\" work, now I post the ones I actually learned from.",
+  likes: "104", comments: "18", shares: "6",
+  comment: { name: "Dr Amir Khan", text: "The ones you learn from are always more useful to the rest of us anyway.", likes: "12", time: "3d", avatar: "assets/avatar-amir-khan.jpg" }
+});
+
+const CONFIDENCE_POST_17 = confidencePost({
+  id: "ch52", author: JADE, time: "5 Days Ago", chTime: "4d",
+  hashtags: ["confidence", "selfdoubt"],
+  body: "A patient cancelled last minute today and my brain immediately decided it was because of my work. It wasn't. Anyone else do that math?",
+  likes: "121", comments: "29", shares: "5",
+  comment: { name: "Layla Hassan", text: "Every single time, and it's never actually about that. Hope the rest of your day was better.", likes: "14", time: "4d" }
+});
+
+const CONFIDENCE_POST_18 = confidencePost({
+  id: "ch53", author: BETH, time: "5 Days Ago", chTime: "5d", media: [IMG.p5img4],
+  hashtags: ["confidence", "peerreview"],
+  body: "Whiteboard from tonight's peer review — writing \"good enough is not the same as unsafe\" where I can see it every shift.",
+  likes: "99", comments: "15", shares: "7",
+  comment: { name: "Priya Shah", text: "Stealing this for my own treatment room, thank you Beth.", likes: "11", time: "4d", avatar: "assets/avatar-priya-shah.jpg" }
+});
+
+const CONFIDENCE_POST_19 = confidencePost({
+  id: "ch54", author: FAISAL, time: "6 Days Ago", chTime: "5d", sample: { type: "video", poster: IMG.communityPoster, duration: "12:30" },
+  hashtags: ["confidence", "complications"],
+  body: "Talking through the first complication I ever had and what actually helped me recover my nerve afterwards.",
+  likes: "176", comments: "34", shares: "20",
+  comment: { name: "Nurse Beth", text: "This is exactly the kind of honesty that makes this channel worth paying for.", likes: "21", time: "4d", avatar: "assets/avatar-nurse-beth.jpg" }
+});
+
+const CONFIDENCE_POST_20 = confidencePost({
+  id: "ch55", author: NAOMI, time: "1 Week Ago", chTime: "6d",
+  hashtags: ["confidence", "fullcircle"],
+  body: "Six months since my last post here I was terrified to make. Today someone messaged saying it helped them post their first. Full circle.",
+  likes: "215", comments: "38", shares: "17",
+  comment: { name: "Dr Rachel Voss", text: "This is why we all keep showing up in this channel. Thank you for coming back to say it.", likes: "20", time: "5d" }
+});
+
+const FREEDOM_POST_6 = freedomPost({
+  id: "ch56", author: CHLOE, time: "4 Hours Ago", chTime: "4h",
+  hashtags: ["freedom", "renovation"], media: masteryGallery(16),
+  body: "Renovation before-and-after on clinic two — five photos, six weeks, way over budget but worth it.",
+  likes: "108", comments: "16", shares: "8",
+  comment: { name: "Leo Martins", text: "Over budget every single time, but it always looks worth it in the after shots.", likes: "11", time: "3h" }
+});
+
+const FREEDOM_POST_7 = freedomPost({
+  id: "ch57", author: FAISAL, time: "8 Hours Ago", chTime: "8h",
+  hashtags: ["freedom", "associates"],
+  body: "Switched from hourly to fixed day-rate for my associates. Retention up, arguments about clock-watching gone.",
+  likes: "134", comments: "21", shares: "9",
+  comment: { name: "Dr Rachel Voss", text: "Made the same switch in January, wish I'd done it years earlier.", likes: "13", time: "6h" }
+});
+
+const FREEDOM_POST_8 = freedomPost({
+  id: "ch58", author: RACHEL, time: "12 Hours Ago", chTime: "12h", media: [IMG.p1img4],
+  hashtags: ["freedom", "systems"],
+  body: "New booking system dashboard live today — cut no-shows by a third in the first month alone.",
+  likes: "149", comments: "24", shares: "12",
+  comment: { name: "Mark Ellis", text: "Which system is this? Ours is still held together with reminder texts.", likes: "14", time: "9h", avatar: "assets/avatar-mark-ellis.jpg" }
+});
+
+const FREEDOM_POST_9 = freedomPost({
+  id: "ch59", author: BEN, time: "1 Day Ago", chTime: "20h",
+  hashtags: ["freedom", "expansion"],
+  body: "Anyone else find the second location harder than the first? First one I could wing. Second one needed actual systems.",
+  likes: "127", comments: "27", shares: "6",
+  comment: { name: "Leo Martins", text: "Second one is always the hard one, third gets easier again once the systems exist.", likes: "12", time: "17h" }
+});
+
+const FREEDOM_POST_10 = freedomPost({
+  id: "ch60", author: LEO, time: "1 Day Ago", chTime: "18h", sample: { type: "video", poster: IMG.p2img1, duration: "7:10" },
+  hashtags: ["freedom", "sop"],
+  body: "Walkthrough of the SOP folder I built for my clinic managers — every process from onboarding to end of day float count.",
+  likes: "161", comments: "22", shares: "15",
+  comment: { name: "Dr Amir Khan", text: "Documenting the float count process alone would save my managers an hour a week.", likes: "16", time: "14h", avatar: "assets/avatar-amir-khan.jpg" }
+});
+
+const FREEDOM_POST_11 = freedomPost({
+  id: "ch61", author: LAYLA, time: "2 Days Ago", chTime: "1d",
+  hashtags: ["freedom", "hiring"],
+  body: "Fired my first employee this year. Should have done it four months earlier than I did — the team morale shift afterward was immediate.",
+  likes: "118", comments: "31", shares: "7",
+  comment: { name: "Ruth Adeyemi", text: "The delay is always longer than it should be, every time I've had to do it too.", likes: "13", time: "1d" }
+});
+
+const FREEDOM_POST_12 = freedomPost({
+  id: "ch62", author: MARK, time: "2 Days Ago", chTime: "1d", media: masteryGallery(21),
+  hashtags: ["freedom", "rebrand"],
+  body: "Rebrand launch across all three locations — five shots from signage to new patient forms.",
+  likes: "143", comments: "19", shares: "11",
+  comment: { name: "Chloe Bennett", text: "The consistency across all three locations is what really sells the rebrand.", likes: "12", time: "20h" }
+});
+
+const FREEDOM_POST_13 = freedomPost({
+  id: "ch63", author: RUTH, time: "3 Days Ago", chTime: "2d",
+  hashtags: ["freedom", "suppliers"],
+  body: "Negotiated my supplier contracts down 12% just by asking what the volume discount tiers actually were. Nobody offers it upfront.",
+  likes: "137", comments: "20", shares: "14",
+  comment: { name: "Dr Faisal Rahman", text: "Asked mine the same question this morning after reading this. Already saved 8%.", likes: "15", time: "2d" }
+});
+
+const FREEDOM_POST_14 = freedomPost({
+  id: "ch64", author: AMIR, time: "3 Days Ago", chTime: "2d", sample: { type: "video", poster: IMG.p3img2, duration: "5:05" },
+  hashtags: ["freedom", "objections"],
+  body: "Recorded the exact script my reception team uses for price objections — word for word, feel free to steal it.",
+  likes: "168", comments: "25", shares: "19",
+  comment: { name: "Nurse Beth", text: "Handing this straight to my front desk tomorrow morning.", likes: "17", time: "1d", avatar: "assets/avatar-nurse-beth.jpg" }
+});
+
+const FREEDOM_POST_15 = freedomPost({
+  id: "ch65", author: ELENA, time: "4 Days Ago", chTime: "3d",
+  hashtags: ["freedom", "promotion"],
+  body: "Promoted my most senior nurse to clinic manager instead of hiring externally. Best decision I made this year.",
+  likes: "121", comments: "17", shares: "8",
+  comment: { name: "Dr Owen Clarke", text: "Promoting from within always pays off more than people expect it to.", likes: "10", time: "3d" }
+});
+
+const FREEDOM_POST_16 = freedomPost({
+  id: "ch66", author: OWEN, time: "4 Days Ago", chTime: "4d", media: [IMG.p4img1],
+  hashtags: ["freedom", "financials"],
+  body: "Financials review from Q2 — margins finally where I wanted them after cutting three underperforming treatment lines.",
+  likes: "109", comments: "13", shares: "6",
+  comment: { name: "Dr Rachel Voss", text: "Cutting the underperforming lines is always the hardest financial decision to make.", likes: "9", time: "3d" }
+});
+
+const FREEDOM_POST_17 = freedomPost({
+  id: "ch67", author: JADE, time: "5 Days Ago", chTime: "4d",
+  hashtags: ["freedom", "franchise"],
+  body: "Considering franchising the brand versus opening owned locations. Anyone in here done both? Want the real trade-offs, not the theory.",
+  likes: "133", comments: "36", shares: "9",
+  comment: { name: "Leo Martins", text: "Done both — happy to jump on a call and walk you through the real trade-offs.", likes: "14", time: "4d" }
+});
+
+const FREEDOM_POST_18 = freedomPost({
+  id: "ch68", author: BETH, time: "5 Days Ago", chTime: "5d", sample: { type: "video", poster: IMG.p5img1, duration: "15:00" },
+  hashtags: ["freedom", "milestone"],
+  body: "Filmed a walkthrough of clinic three on opening day — three locations, eighteen months, still can't quite believe it.",
+  likes: "187", comments: "29", shares: "18",
+  comment: { name: "Mark Ellis", text: "Eighteen months for three locations is an incredible pace — congratulations Beth.", likes: "19", time: "4d", avatar: "assets/avatar-mark-ellis.jpg" }
+});
+
+const FREEDOM_POST_19 = freedomPost({
+  id: "ch69", author: RACHEL, time: "6 Days Ago", chTime: "5d",
+  hashtags: ["freedom", "retention"],
+  body: "Raised associate day rates to retain my best injector after a competitor tried to poach her. Cheaper than replacing her, every time.",
+  likes: "124", comments: "18", shares: "7",
+  comment: { name: "Dr Amir Khan", text: "Always cheaper to retain than replace — learned that one the expensive way.", likes: "11", time: "4d", avatar: "assets/avatar-amir-khan.jpg" }
+});
+
+const FREEDOM_POST_20 = freedomPost({
+  id: "ch70", author: LEO, time: "1 Week Ago", chTime: "6d", media: masteryGallery(2),
+  hashtags: ["freedom", "marketing"],
+  body: "Five photos from the trade show booth this weekend — best lead-gen we've done all year, sharing the setup in case it helps.",
+  likes: "115", comments: "16", shares: "10",
+  comment: { name: "Ben Foster", text: "The booth setup alone is worth copying, thanks for sharing the photos.", likes: "10", time: "5d" }
+});
+
+const INNER_POST_6 = innerPost({
+  id: "ch71", author: TIM, time: "6 Hours Ago", chTime: "6h",
+  hashtags: ["inner-circle", "acquisition"],
+  body: "Closed on clinic number four this week. The earn-out structure took longer to negotiate than the price itself.",
+  likes: "248", comments: "33", shares: "19",
+  comment: { name: "Dr Naomi Reyes", text: "The earn-out is always the real negotiation — congratulations on number four.", likes: "22", time: "4h" }
+});
+
+const INNER_POST_7 = innerPost({
+  id: "ch72", author: NAOMI, time: "10 Hours Ago", chTime: "10h", sample: { type: "video", poster: IMG.communityPoster, duration: "18:20" },
+  hashtags: ["inner-circle", "duediligence"],
+  body: "Recorded my own walkthrough of the data room I built before going to market — saved months in due diligence.",
+  likes: "196", comments: "27", shares: "21",
+  comment: { name: "James Whitfield", text: "Wish I'd seen this before my own process — would have saved a huge amount of back and forth.", likes: "18", time: "8h" }
+});
+
+const INNER_POST_8 = innerPost({
+  id: "ch73", author: JAMES, time: "1 Day Ago", chTime: "22h",
+  hashtags: ["inner-circle", "privateequity"],
+  body: "Private equity buyer walked from our deal at the eleventh hour over an EBITDA add-back disagreement. Happy to share where the number actually landed.",
+  likes: "211", comments: "44", shares: "16",
+  comment: { name: "Dr Tim Pearce", text: "The add-back disagreements are where most of these deals actually die — appreciate you sharing the detail.", likes: "24", time: "18h", avatar: "assets/avatar-drtim.png" }
+});
+
+const INNER_POST_9 = innerPost({
+  id: "ch74", author: ELENA, time: "1 Day Ago", chTime: "20h",
+  hashtags: ["inner-circle", "finance"],
+  body: "Applied for my first acquisition loan through the lender three of you recommended at the roundtable. Approved in nine days.",
+  likes: "167", comments: "20", shares: "12",
+  comment: { name: "Dr Naomi Reyes", text: "Nine days is fast for that lender — glad the recommendation paid off.", likes: "14", time: "16h" }
+});
+
+const INNER_POST_10 = innerPost({
+  id: "ch75", author: TIM, time: "2 Days Ago", chTime: "1d", media: [IMG.p2img2],
+  hashtags: ["inner-circle", "dealstructure"],
+  body: "Deal structure diagram from this quarter's acquisition — sharing the earn-out schedule with the group as promised.",
+  likes: "223", comments: "31", shares: "20",
+  comment: { name: "Dr Elena Vasquez", text: "The staged earn-out schedule is exactly the structure I've been trying to model for mine.", likes: "20", time: "22h" }
+});
+
+const INNER_POST_11 = innerPost({
+  id: "ch76", author: FAISAL, time: "2 Days Ago", chTime: "1d",
+  hashtags: ["inner-circle", "postexit"],
+  body: "Six months post-exit and the hardest part wasn't the money, it was waking up without a clinic to run. Anyone else been through this?",
+  likes: "189", comments: "38", shares: "9",
+  comment: { name: "Dr Naomi Reyes", text: "Every word of this. Took me almost a year to feel settled after my own exit.", likes: "21", time: "1d" }
+});
+
+const INNER_POST_12 = innerPost({
+  id: "ch77", author: RUTH, time: "3 Days Ago", chTime: "2d", sample: { type: "video", poster: IMG.p3img3, duration: "9:15" },
+  hashtags: ["inner-circle", "mbo"],
+  body: "Recorded walkthrough of how I structured the management buyout for my senior team instead of selling externally.",
+  likes: "178", comments: "24", shares: "17",
+  comment: { name: "James Whitfield", text: "Keeping it internal like this is undervalued compared to chasing the highest external bid.", likes: "16", time: "2d" }
+});
+
+const INNER_POST_13 = innerPost({
+  id: "ch78", author: JAMES, time: "3 Days Ago", chTime: "2d",
+  hashtags: ["inner-circle", "market"],
+  body: "Two more PE-backed groups pausing acquisitions confirmed at last night's dinner. Multiples are compressing faster than the reports suggest.",
+  likes: "202", comments: "41", shares: "23",
+  comment: { name: "Dr Tim Pearce", text: "Matches what I'm hearing from three separate brokers this month.", likes: "23", time: "2d", avatar: "assets/avatar-drtim.png" }
+});
+
+const INNER_POST_14 = innerPost({
+  id: "ch79", author: NAOMI, time: "4 Days Ago", chTime: "3d", media: [IMG.p4img2],
+  hashtags: ["inner-circle", "valuation"],
+  body: "Valuation bridge from the broker's first offer to what we actually closed at — six-figure gap, worth every hour of negotiation.",
+  likes: "215", comments: "29", shares: "18",
+  comment: { name: "Dr Elena Vasquez", text: "That gap is exactly why I'm not accepting the broker's first number on mine.", likes: "19", time: "3d" }
+});
+
+const INNER_POST_15 = innerPost({
+  id: "ch80", author: TIM, time: "4 Days Ago", chTime: "4d",
+  hashtags: ["inner-circle", "mentorship"],
+  body: "Mentorship cohort applications close Friday. Three seats left for Inner Circle only, message me directly.",
+  likes: "184", comments: "35", shares: "11",
+  comment: { name: "Ruth Adeyemi", text: "Just sent my application in, hoping one of those three seats is still open.", likes: "15", time: "3d" }
+});
+
+const INNER_POST_16 = innerPost({
+  id: "ch81", author: LAYLA, time: "5 Days Ago", chTime: "4d", sample: { type: "video", poster: IMG.p1img1, duration: "20:40" },
+  hashtags: ["inner-circle", "exit"],
+  body: "Filmed my own exit story for the group — eighteen months from first conversation with the buyer to completion.",
+  likes: "231", comments: "39", shares: "22",
+  comment: { name: "Dr Naomi Reyes", text: "Eighteen months is realistic and refreshing to hear compared to the six-month stories people usually tell.", likes: "20", time: "4d" }
+});
+
+const INNER_POST_17 = innerPost({
+  id: "ch82", author: BEN, time: "5 Days Ago", chTime: "5d",
+  hashtags: ["inner-circle", "jointventure"],
+  body: "Considering a joint venture on clinic five rather than going it alone this time. Anyone structured a JV with an existing owner-operator?",
+  likes: "142", comments: "26", shares: "10",
+  comment: { name: "James Whitfield", text: "Structured one last year — happy to talk through the equity split we landed on.", likes: "13", time: "4d" }
+});
+
+const INNER_POST_18 = innerPost({
+  id: "ch83", author: ELENA, time: "6 Days Ago", chTime: "5d",
+  hashtags: ["inner-circle", "legal"],
+  body: "Legal review flagged a non-compete clause in the term sheet that would've blocked my next move entirely. Read every line twice.",
+  likes: "176", comments: "22", shares: "15",
+  comment: { name: "Dr Faisal Rahman", text: "This is why I now pay for a second legal opinion on every term sheet, no exceptions.", likes: "17", time: "5d" }
+});
+
+const INNER_POST_19 = innerPost({
+  id: "ch84", author: JAMES, time: "6 Days Ago", chTime: "6d", media: [IMG.p5img7],
+  hashtags: ["inner-circle", "integration"],
+  body: "Slide from the roundtable deck on integration timelines — the 90-day plan Tim mentioned, sharing with the group as promised.",
+  likes: "159", comments: "19", shares: "13",
+  comment: { name: "Dr Tim Pearce", text: "Glad this is useful beyond the room — the 90-day plan is worth revisiting every acquisition.", likes: "16", time: "5d", avatar: "assets/avatar-drtim.png" }
+});
+
+const INNER_POST_20 = innerPost({
+  id: "ch85", author: TIM, time: "1 Week Ago", chTime: "6d", sample: { type: "video", poster: IMG.p1img2, duration: "25:10" },
+  hashtags: ["inner-circle", "roundtable"],
+  body: "This quarter's Inner Circle roundtable replay — full session on acquisition integration and the mistakes that actually cost money.",
+  likes: "267", comments: "46", shares: "28",
+  comment: { name: "Dr Naomi Reyes", text: "The section on the mistakes that cost money was worth the whole quarter's membership alone.", likes: "25", time: "5d" }
+});
+
 const COURSE_POST = {
   id: "crs1", access: "gated", bucket: "course", course: "protox",
   author: { name: "Profinity", avatar: "assets/profinity-icon.jpg" },
@@ -626,13 +1108,22 @@ const FOLLOWSAVE_AMIR_POST = {
    order here is the order it appears once resolved into the feed. */
 const BUCKET_POSTS = [
 CHANNEL_POST, CONFIDENCE_POST_2, CONFIDENCE_POST_3, CONFIDENCE_POST_4, CONFIDENCE_POST_5,
+CONFIDENCE_POST_6, CONFIDENCE_POST_7, CONFIDENCE_POST_8, CONFIDENCE_POST_9, CONFIDENCE_POST_10,
+CONFIDENCE_POST_11, CONFIDENCE_POST_12, CONFIDENCE_POST_13, CONFIDENCE_POST_14, CONFIDENCE_POST_15,
+CONFIDENCE_POST_16, CONFIDENCE_POST_17, CONFIDENCE_POST_18, CONFIDENCE_POST_19, CONFIDENCE_POST_20,
 MASTERY_POST, MASTERY_POST_2, MASTERY_POST_3, MASTERY_POST_4, MASTERY_POST_5,
 MASTERY_POST_6, MASTERY_POST_7, MASTERY_POST_8, MASTERY_POST_9, MASTERY_POST_10,
 MASTERY_POST_11, MASTERY_POST_12, MASTERY_POST_13, MASTERY_POST_14, MASTERY_POST_15,
 MASTERY_POST_16, MASTERY_POST_17, MASTERY_POST_18, MASTERY_POST_19, MASTERY_POST_20,
 MASTERY_POST_21, MASTERY_POST_22, MASTERY_POST_23, MASTERY_POST_24, MASTERY_POST_25,
 FREEDOM_POST, FREEDOM_POST_2, FREEDOM_POST_3, FREEDOM_POST_4, FREEDOM_POST_5,
+FREEDOM_POST_6, FREEDOM_POST_7, FREEDOM_POST_8, FREEDOM_POST_9, FREEDOM_POST_10,
+FREEDOM_POST_11, FREEDOM_POST_12, FREEDOM_POST_13, FREEDOM_POST_14, FREEDOM_POST_15,
+FREEDOM_POST_16, FREEDOM_POST_17, FREEDOM_POST_18, FREEDOM_POST_19, FREEDOM_POST_20,
 INNER_POST, INNER_POST_2, INNER_POST_3, INNER_POST_4, INNER_POST_5,
+INNER_POST_6, INNER_POST_7, INNER_POST_8, INNER_POST_9, INNER_POST_10,
+INNER_POST_11, INNER_POST_12, INNER_POST_13, INNER_POST_14, INNER_POST_15,
+INNER_POST_16, INNER_POST_17, INNER_POST_18, INNER_POST_19, INNER_POST_20,
 COURSE_POST, COURSE_COMMENT, COURSE_COMMENT_2, GENERAL_MARK_POST, FOLLOWSAVE_AMIR_POST, MYLEARNING_POST];
 
 
@@ -708,6 +1199,21 @@ const PERSONAS = [
 { key: "admin", name: "Admin", desc: "Sees everything.", channels: ["confidence", "mastery", "freedom", "inner"], paid: true, admin: true }];
 
 const PERSONA_MAP = PERSONAS.reduce((m, p) => {m[p.key] = p;return m;}, {});
+
+/* Persisted "who's actually subscribed" state — there's no real auth/billing
+   backend, so every surface that needs to know the viewer's tier (newsfeed,
+   community, profile, the membership/checkout/apply pages) reads and writes
+   this same localStorage key. Pages that don't load app.jsx keep their own
+   tiny copy of get/setUserTier pointed at the same key. */
+const PF_TIER_KEY = "pf-subscription-tier";
+function getUserTier() {
+  try { return localStorage.getItem(PF_TIER_KEY) || "free"; } catch (e) { return "free"; }
+}
+function setUserTier(tier) {
+  try { localStorage.setItem(PF_TIER_KEY, tier); } catch (e) {}
+}
+const TIER_DISPLAY_NAME = { confidence: "Confidence", mastery: "Mastery", freedom: "Freedom", inner: "Inner Circle" };
+ME.tier = TIER_DISPLAY_NAME[getUserTier()] || null;
 
 /* The actual routing logic: given who's looking + their bucket toggles,
    resolve which BUCKET_POSTS are visible, and in what mode. Mirrors the
@@ -814,7 +1320,7 @@ const REPLY_A = {
 function thread(extra) {
   return [
   {
-    author: { name: "Phoenix Baker", seals: ["gb", "verified", "skinfluencer"] },
+    author: { name: "Miranda P.", avatar: "assets/avatar-miranda.jpg", seals: ["gb", "verified", "skinfluencer"] },
     text: "This is an amazing protocol! It has helped us a lot in our research.",
     likes: "1.1K", comments: "300", time: "1w", pills: [{ k: "like", n: "12" }, { k: "love", n: "5" }],
     reactions: ["like", "love", "laugh"], reactionCount: "1.2K",
@@ -866,9 +1372,9 @@ function makeImagePicker(pool) {
 
 const nextPostImages = makeImagePicker(POST_PHOTO_POOL);
 
-/* Pinned editorial posts — always the first two items in the feed (see the
-   bucket-splice comment on Feed()'s feedItems below, which assumes index 0
-   is the questionnaire and index 1 is the poll). */
+/* Quiz/poll content pool — individual entries are referenced by index from
+   FEED_SEQUENCE (see below) at their designed slots, rather than always
+   leading the feed. */
 const PINNED_POSTS = [
 {
   id: "p_quiz", author: PROFINITY, time: "6h",
@@ -906,10 +1412,26 @@ const PINNED_POSTS = [
 
 const EDITORIAL_POSTS = [
 {
+  id: "p7", author: TIM, withOthers: "Miranda Pearce and 14 others", time: "5 Days Ago", keepAuthor: true,
+  hashtags: ["case-study", "anatomy", "patient"],
+  sample: { type: "gallery", images: nextPostImages(10) },
+  body: "Full 10-step before-and-after series from a complete facial rejuvenation — swipe through every stage of the treatment plan.",
+  likes: "5.6K", comments: "430", shares: "390", actioned: false,
+  commentList: thread("This step-by-step series is gold — thank you for sharing all 10!")
+},
+{
+  id: "p6", author: MIRANDA, time: "4 Days Ago",
+  hashtags: ["reel"],
+  sample: { type: "vertical", image: nextPostImages(1)[0] },
+  body: "A 30-second walkthrough of a lip refinement — saving this format for sharing straight to socials.",
+  likes: "2.1K", comments: "140", shares: "320", actioned: false,
+  commentList: thread("Perfect for Reels — the crop looks great.")
+},
+{
   id: "p1", author: TIM, withOthers: "Miranda Pearce and 14 others", time: "1 Week Ago",
   hashtags: ["case-study", "patient", "business", "clinic", "profinity", "healthcare"],
   title: CASE_TITLE,
-  media: nextPostImages(4),
+  media: [IMG.caseP1Img1, IMG.p1img1, IMG.p1img2, IMG.p1img3],
   body: CASE_BODY, likes: "1.2K", comments: "150", shares: "150", actioned: true,
   commentList: thread()
 },
@@ -940,31 +1462,14 @@ const EDITORIAL_POSTS = [
 {
   id: "p5", author: TIM, time: "3 Days Ago",
   hashtags: ["masterclass", "anatomy"],
-  sample: { type: "video", poster: nextPostImages(1)[0], duration: "12:40" },
+  sample: { type: "video", poster: nextPostImages(1)[0], aspect: "square", duration: "12:40" },
   body: "Watch the full walkthrough of the Golden Ratio full-face assessment — every landmark, every measurement, explained step by step.",
   likes: "3.4K", comments: "210", shares: "180", actioned: false,
   commentList: thread("Watched it twice already — incredibly clear teaching.")
-},
-{
-  id: "p6", author: MIRANDA, time: "4 Days Ago",
-  hashtags: ["reel"],
-  sample: { type: "vertical", image: nextPostImages(1)[0] },
-  body: "A 30-second vertical reel of a lip refinement — saving this format for sharing straight to socials.",
-  likes: "2.1K", comments: "140", shares: "320", actioned: false,
-  commentList: thread("Perfect for Reels — the vertical crop looks great.")
-},
-{
-  id: "p7", author: TIM, withOthers: "Miranda Pearce and 14 others", time: "5 Days Ago",
-  hashtags: ["case-study", "anatomy", "patient"],
-  sample: { type: "gallery", images: nextPostImages(10) },
-  body: "Full 10-step before-and-after series from a complete facial rejuvenation — swipe through every stage of the treatment plan.",
-  likes: "5.6K", comments: "430", shares: "390", actioned: false,
-  commentList: thread("This step-by-step series is gold — thank you for sharing all 10!")
 }];
 
-/* Ten extra knowledge-check quizzes, scattered at random among the editorial
-   posts (see interleaveRandom below) so they surface throughout the feed
-   instead of clumping at the top. */
+/* Ten extra knowledge-check quizzes — a content pool FEED_SEQUENCE pulls
+   specific entries from by index for its quiz slots. */
 const QUIZ_POSTS = [
 {
   id: "p_quiz2", author: PROFINITY, time: "9h",
@@ -1127,18 +1632,259 @@ const QUIZ_POSTS = [
   commentList: thread("Mapping the labial artery chairside before every lip case, no exceptions.")
 }];
 
-/* Scatters `extras` into random positions among `base`, shuffling both so the
-   result (and therefore the feed) reorders on every page load. */
-function interleaveRandom(base, extras) {
-  const items = base.slice();
-  shuffledDeck(extras).forEach((extra) => {
-    const idx = Math.floor(Math.random() * (items.length + 1));
-    items.splice(idx, 0, extra);
-  });
-  return items;
-}
+/* ---- Free-newsfeed fixed sequence: net-new post-type demos ---- */
+const TEXT_POST_1 = {
+  id: "ff_text1", author: PROFINITY, time: "2h",
+  hashtags: ["community", "discussion"],
+  body: "What's one thing you wish someone had told you in your first year of injecting? Drop it below — the newest members in this community will thank you.",
+  likes: "612", comments: "88", shares: "14", actioned: false,
+  commentList: thread("Go slower than you think you need to — every single time.")
+};
 
-const POSTS = [...PINNED_POSTS, ...interleaveRandom(EDITORIAL_POSTS, QUIZ_POSTS)];
+const SQUARE_IMG_POST_1 = {
+  id: "ff_sqimg1", author: TIM, time: "3h",
+  hashtags: ["clinic", "protocol"],
+  media: [IMG.ffSqImg1Swap], aspect: "square",
+  body: "Our toxin dosing reference, laid out the way we actually use it chairside — save this one.",
+  likes: "740", comments: "52", shares: "38", actioned: false,
+  commentList: thread("Printed this for the treatment room already — thank you!")
+};
+
+const PORTRAIT_IMG_POST_1 = {
+  id: "ff_ptimg1", author: MIRANDA, time: "5h",
+  hashtags: ["patient", "case-study"],
+  media: [IMG.lip], aspect: "portrait",
+  body: "Lip design case, full-face portrait crop — proportion first, volume second.",
+  likes: "890", comments: "61", shares: "45", actioned: false,
+  commentList: thread("The proportion-first approach is exactly why this looks so natural.")
+};
+
+const MASTERCLASS_UNLOCK_POST = {
+  id: "ff_mc1", author: TIM, time: "1d",
+  hashtags: ["masterclass"],
+  sample: { type: "video", poster: IMG.chinPositions, duration: "24:10" },
+  unlockBadge: true,
+  body: "Free Technique Tuesday unlock — this month's live masterclass, open to every member for a limited time. Watch the full replay before it's gated again.",
+  likes: "2.3K", comments: "184", shares: "260", actioned: false,
+  commentList: thread("Grateful this one's open to everyone — shared it with my whole team.")
+};
+
+const TEXT_POST_2 = {
+  id: "ff_text2", author: PROFINITY, time: "1d",
+  hashtags: ["community", "mindset"],
+  body: "Real talk: what's the last case that made you nervous, and how did you talk yourself through it? This community exists so nobody has to figure that out alone.",
+  likes: "534", comments: "73", shares: "9", actioned: false,
+  commentList: thread("Every case still gets my heart rate up a little — good to know it's not just me.")
+};
+
+const SQUARE_IMG_POST_2 = {
+  id: "ff_sqimg2", author: TIM, time: "6h",
+  hashtags: ["clinic", "protocol"],
+  media: [IMG.p4img3Followup], aspect: "square",
+  body: "Full treatment-day collage from the clinic — every station, one glance.",
+  likes: "455", comments: "31", shares: "20", actioned: false,
+  commentList: thread("Love seeing the whole day laid out like this.")
+};
+
+const PORTRAIT_IMG_POST_2 = {
+  id: "ff_ptimg2", author: MIRANDA, time: "9h",
+  hashtags: ["patient", "case-study"],
+  media: [IMG.p4img3Followup2], aspect: "portrait",
+  body: "Full-face portrait follow-up, six weeks post-treatment — settled and natural.",
+  likes: "702", comments: "48", shares: "33", actioned: false,
+  commentList: thread("Six weeks out and it still looks this natural — great result.")
+};
+
+const SQUARE_VIDEO_POST_2 = {
+  id: "ff_sqvid2", author: TIM, time: "8h",
+  hashtags: ["masterclass", "technique"],
+  sample: { type: "video", poster: IMG.p3img2, aspect: "square", duration: "9:45" },
+  body: "Quick chairside demo — marking the danger zone before a single needle goes in.",
+  likes: "980", comments: "64", shares: "51", actioned: false,
+  commentList: thread("Marking it out loud like this should be standard practice.")
+};
+
+const PORTRAIT_VIDEO_POST_2 = {
+  id: "ff_ptvid2", author: MIRANDA, time: "10h",
+  hashtags: ["reel"],
+  sample: { type: "vertical", image: IMG.p2img3 },
+  body: "60 seconds on why we always numb before we measure, not after.",
+  likes: "1.3K", comments: "97", shares: "210", actioned: false,
+  commentList: thread("Never thought about the order until this reel.")
+};
+
+const POLL_POST_2 = {
+  id: "ff_poll2", author: PROFINITY, time: "1d",
+  hashtags: ["masterclass", "poll"],
+  body: "Another quick poll — help us pick the next Technique Tuesday topic 👇",
+  poll: {
+    question: "Which topic should we cover at the next Technique Tuesday?",
+    options: [
+    { label: "Vascular occlusion management", pct: 38 },
+    { label: "Full-face liquid facelift planning", pct: 27 },
+    { label: "Cannula vs needle decision tree", pct: 22 },
+    { label: "Building patient confidence pre-treatment", pct: 13 }],
+
+    votes: 960
+  },
+  likes: "1.1K", comments: "70", shares: "26", actioned: false,
+  commentList: thread("Vascular occlusion, please — always worth another deep dive.")
+};
+
+/* Cycle 3 — same post-type shape as cycle 2, ending on the Freedom Hidden
+   Post instead of Mastery. */
+const TEXT_POST_3 = {
+  id: "ff_text3", author: PROFINITY, time: "4h",
+  hashtags: ["community", "questions"],
+  body: "If you could only keep one piece of equipment in your treatment room, what would it be and why? Curious what the veterans in here can't work without.",
+  likes: "480", comments: "66", shares: "11", actioned: false,
+  commentList: thread("My loupes, without question — everything else I could improvise around.")
+};
+
+const SQUARE_IMG_POST_3 = {
+  id: "ff_sqimg3", author: TIM, time: "7h",
+  hashtags: ["clinic", "reference"],
+  media: [IMG.p3img3], aspect: "square",
+  body: "Filler viscosity reference chart, printed and laminated for the treatment room — the one resource I wish I'd had in year one.",
+  likes: "612", comments: "40", shares: "29", actioned: false,
+  commentList: thread("Laminating mine tonight, thank you for sharing this.")
+};
+
+const PORTRAIT_IMG_POST_3 = {
+  id: "ff_ptimg3", author: MIRANDA, time: "10h",
+  hashtags: ["patient", "case-study"],
+  media: [IMG.collage], aspect: "portrait",
+  body: "Full treatment-day portrait recap — consult, plan, and result in one frame.",
+  likes: "705", comments: "55", shares: "38", actioned: false,
+  commentList: thread("Love seeing the whole journey in a single portrait like this.")
+};
+
+const SQUARE_VIDEO_POST_3 = {
+  id: "ff_sqvid3", author: TIM, time: "9h",
+  hashtags: ["masterclass", "technique"],
+  sample: { type: "video", poster: IMG.p1img1, aspect: "square", duration: "7:30" },
+  body: "Short demo on vector planning before the first needle goes in — plan the shape, then inject it.",
+  likes: "860", comments: "58", shares: "44", actioned: false,
+  commentList: thread("Planning the vectors out loud is such an underrated habit.")
+};
+
+const PORTRAIT_VIDEO_POST_3 = {
+  id: "ff_ptvid3", author: MIRANDA, time: "11h",
+  hashtags: ["reel"],
+  sample: { type: "vertical", image: IMG.p4img1 },
+  body: "45 seconds on the one consult question that changes how every patient hears their treatment plan.",
+  likes: "1.1K", comments: "81", shares: "175", actioned: false,
+  commentList: thread("Stealing this question for every consult from now on.")
+};
+
+const POLL_POST_3 = {
+  id: "ff_poll3", author: PROFINITY, time: "1d",
+  hashtags: ["poll", "community"],
+  body: "Another quick poll for the group — what should the next free Technique Tuesday actually focus on? 👇",
+  poll: {
+    question: "Which format do you want more of at Technique Tuesday?",
+    options: [
+    { label: "Live Q&A", pct: 34 },
+    { label: "Full case walkthroughs", pct: 31 },
+    { label: "Quick technique demos", pct: 24 },
+    { label: "Guest specialist sessions", pct: 11 }],
+
+    votes: 1120
+  },
+  likes: "980", comments: "61", shares: "22", actioned: false,
+  commentList: thread("Guest specialist sessions, please — would love an outside perspective.")
+};
+
+/* Cycle 4 — same shape again, ending on the Inner Circle Hidden Post. */
+const TEXT_POST_4 = {
+  id: "ff_text4", author: PROFINITY, time: "5h",
+  hashtags: ["community", "reflection"],
+  body: "One year from now, what do you want to be able to say about your practice that you can't say today? Would love to read a few answers below.",
+  likes: "398", comments: "52", shares: "7", actioned: false,
+  commentList: thread("That I stopped second-guessing every consult before I even walk in.")
+};
+
+const SQUARE_IMG_POST_4 = {
+  id: "ff_sqimg4", author: TIM, time: "6h",
+  hashtags: ["clinic", "protocol"],
+  media: [IMG.p2img2], aspect: "square",
+  body: "Updated masseter dosing infographic — printed this for the treatment room, saves re-explaining the split every time.",
+  likes: "540", comments: "36", shares: "25", actioned: false,
+  commentList: thread("Printing this for my room too, thank you!")
+};
+
+const PORTRAIT_IMG_POST_4 = {
+  id: "ff_ptimg4", author: MIRANDA, time: "8h",
+  hashtags: ["patient", "case-study"],
+  media: [IMG.chinPositions], aspect: "portrait",
+  body: "Chin and profile balancing, full-face portrait — small volume, big shift in the overall proportions.",
+  likes: "622", comments: "41", shares: "30", actioned: false,
+  commentList: thread("The profile change here is so subtle and so effective.")
+};
+
+const SQUARE_VIDEO_POST_4 = {
+  id: "ff_sqvid4", author: TIM, time: "7h",
+  hashtags: ["masterclass", "safety"],
+  sample: { type: "video", poster: IMG.p5img5, aspect: "square", duration: "11:05" },
+  body: "Recognising the early signs of a vascular event, chairside — the exact order I work through before reaching for hyaluronidase.",
+  likes: "1.2K", comments: "92", shares: "70", actioned: false,
+  commentList: thread("Every injector should watch this before their next case.")
+};
+
+const PORTRAIT_VIDEO_POST_4 = {
+  id: "ff_ptvid4", author: MIRANDA, time: "9h",
+  hashtags: ["reel"],
+  sample: { type: "vertical", image: IMG.p5img8 },
+  body: "60 seconds on why I always photograph in the same three angles, every single patient, no exceptions.",
+  likes: "980", comments: "70", shares: "160", actioned: false,
+  commentList: thread("Consistent angles make before/afters so much more convincing — great tip.")
+};
+
+const POLL_POST_4 = {
+  id: "ff_poll4", author: PROFINITY, time: "2d",
+  hashtags: ["poll", "masterclass"],
+  body: "Last poll of the batch — help us decide what to record next for the free vault 👇",
+  poll: {
+    question: "Which recorded session would help you most right now?",
+    options: [
+    { label: "Complication management deep dive", pct: 36 },
+    { label: "Consult scripting for nervous patients", pct: 26 },
+    { label: "Advanced cannula technique", pct: 23 },
+    { label: "Pricing & business systems", pct: 15 }],
+
+    votes: 890
+  },
+  likes: "870", comments: "49", shares: "18", actioned: false,
+  commentList: thread("Complication management, always — can't get enough safety content.")
+};
+
+/* The free-newsfeed's fixed post-type sequence — four designed cycles (cycle
+   1 ends with the Upcoming Event + Masterclass Unlock, cycles 2-4 end with a
+   tier's Hidden Post — Mastery, Freedom, Inner Circle in turn) instead of a
+   random interleave, so every post format shows up in a deliberate order and
+   every subscriber tier gets featured. Each cycle's Hidden Post is the only
+   slot whose mode isn't fixed "full" — Feed() still resolves it teaser-vs-full
+   from the current viewing persona, exactly like every other gated bucket
+   post, so the persona-preview switcher still demonstrates unlocking. */
+const FEED_SEQUENCE = [
+// Cycle 1
+TEXT_POST_1, SQUARE_IMG_POST_1, PORTRAIT_IMG_POST_1, EDITORIAL_POSTS[2] /* p1: carousel */,
+EDITORIAL_POSTS[6] /* p5: square video */, EDITORIAL_POSTS[1] /* p6: portrait reel */,
+PINNED_POSTS[0] /* p_quiz */, CONFIDENCE_POST_2 /* Confidence Hidden */, PINNED_POSTS[1] /* p8: poll */,
+{ id: "ff_event1", eventData: EVENTS[0], likes: "0", comments: "0", shares: "0", actioned: false, commentList: [] },
+MASTERCLASS_UNLOCK_POST,
+// Cycle 2
+TEXT_POST_2, SQUARE_IMG_POST_2, PORTRAIT_IMG_POST_2, EDITORIAL_POSTS[3] /* p2: carousel */,
+SQUARE_VIDEO_POST_2, PORTRAIT_VIDEO_POST_2, QUIZ_POSTS[0] /* p_quiz2 */, POLL_POST_2,
+MASTERY_POST_2 /* Mastery Hidden */,
+// Cycle 3
+TEXT_POST_3, SQUARE_IMG_POST_3, PORTRAIT_IMG_POST_3, EDITORIAL_POSTS[4] /* p3: carousel */,
+SQUARE_VIDEO_POST_3, PORTRAIT_VIDEO_POST_3, QUIZ_POSTS[1] /* p_quiz3 */, POLL_POST_3,
+FREEDOM_POST_2 /* Freedom Hidden */,
+// Cycle 4
+TEXT_POST_4, SQUARE_IMG_POST_4, PORTRAIT_IMG_POST_4, EDITORIAL_POSTS[5] /* p4: carousel */,
+SQUARE_VIDEO_POST_4, PORTRAIT_VIDEO_POST_4, QUIZ_POSTS[2] /* p_quiz4 */, POLL_POST_4,
+INNER_POST_2 /* Inner Circle Hidden */];
 
 
 /* ============================ SHARED BITS ================================ */
@@ -1599,24 +2345,8 @@ function PostComposer({ onPost }) {
 
 }
 
-const LIKED_BY = ["Jessica Hue", "Marco Ricci", "Sofia Chen"];
-function LikedByRow({ onOpen }) {
-  return (
-    <button type="button" onClick={onOpen} className="likedby-row"
-    aria-label="See who reacted to this post" aria-haspopup="dialog"
-    style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 0 4px", background: "none", border: "none", cursor: "pointer" }}>
-      <span style={{ display: "inline-flex" }}>
-        {LIKED_BY.map((n, i) =>
-        <span key={i} style={{ marginLeft: i === 0 ? 0 : -10, border: "2px solid var(--surface-card)", borderRadius: "50%", display: "inline-flex" }}>
-            <Avatar name={n} size={26} />
-          </span>
-        )}
-      </span>
-      <span style={{ fontFamily: "var(--font-sans)", fontSize: "var(--fs-body)", color: "var(--gray-600)" }}>
-        Liked by <span style={{ color: "var(--text-primary)" }}>Jessica Hue</span> and <span style={{ color: "var(--text-primary)" }}>others</span>
-      </span>
-    </button>);
-
+function LikedByRow() {
+  return null;
 }
 
 /* ---- Likes modal: who reacted, split into people-you-follow / others ----- */
@@ -1864,10 +2594,27 @@ function SlidingDots({ count, idx }) {
   );
 }
 
-/* Swipeable image carousel with dot indicators + counter for media posts. */
-function MediaCarousel({ images }) {
+/* Swipeable image carousel with dot indicators + counter for media posts.
+   `aspect` ("square"|"portrait") only applies to single-image posts; multi-
+   image carousels open a click-to-fullscreen viewer (own swipeable strip of
+   the same images) — see the reel's sm-fs overlay for the pattern this
+   mirrors. */
+function MediaCarousel({ images, aspect }) {
   const [idx, setIdx] = useState(0);
+  const [fs, setFs] = useState(false);
+  const [fsIdx, setFsIdx] = useState(0);
   const ref = useRef(null);
+  const fsRef = useRef(null);
+  useEffect(() => {
+    if (!fs) return;
+    const onKey = (e) => {if (e.key === "Escape") setFs(false);};
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [fs]);
+  useEffect(() => {
+    if (fs && fsRef.current) fsRef.current.scrollLeft = fsIdx * fsRef.current.clientWidth;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fs]);
   if (!images || images.length === 0) return null;
   const single = images.length === 1;
   const onScroll = () => {
@@ -1877,15 +2624,38 @@ function MediaCarousel({ images }) {
     const w = first ? first.offsetWidth + 8 : el.clientWidth * 0.74 + 8;
     setIdx(Math.round(el.scrollLeft / w));
   };
+  const openFullscreen = (i) => {
+    if (single) return;
+    setFsIdx(i);
+    setFs(true);
+  };
+  const onFsScroll = () => {
+    const el = fsRef.current;
+    if (!el) return;
+    setFsIdx(Math.round(el.scrollLeft / el.clientWidth));
+  };
   return (
     <div className="mc-wrap">
-      <div className={"mc-scroll" + (single ? " mc-scroll-single" : "")} ref={ref} onScroll={onScroll}>
+      <div className={"mc-scroll" + (single ? " mc-scroll-single" + (aspect ? " mc-aspect-" + aspect : "") : "")} ref={ref} onScroll={onScroll}>
         {images.map((src, i) =>
-          <img key={i} src={src} alt={"Image " + (i + 1) + " of " + images.length} className="mc-img" />
+          <img key={i} src={src} alt={"Image " + (i + 1) + " of " + images.length} className="mc-img"
+          onClick={() => openFullscreen(i)} />
         )}
       </div>
       {!single && <span className="mc-count">{idx + 1}/{images.length}</span>}
       {!single && <SlidingDots count={images.length} idx={idx} />}
+      {fs &&
+      <div className="sm-fs" onClick={(e) => {e.stopPropagation();}}>
+          <div className="mc-fs-track" onScroll={onFsScroll} ref={fsRef}>
+            {images.map((src, i) => <img key={i} src={src} alt={"Image " + (i + 1) + " of " + images.length} />)}
+          </div>
+          <button type="button" className="sm-fs-close" aria-label="Close fullscreen"
+        onClick={() => setFs(false)}>
+            <IconifyIcon name="lucide:x" size={24} color="var(--white)" />
+          </button>
+          <span className="mc-fs-count">{fsIdx + 1}/{images.length}</span>
+        </div>
+      }
     </div>
   );
 }
@@ -1895,9 +2665,9 @@ function MediaCarousel({ images }) {
 /* Floating avatars of people you follow who reacted — overlaid bottom-left on
    video/reel media (Facebook-style), each with a small reaction badge. */
 const FOLLOW_REACTORS = [
-{ name: "Daryll Cee", avatar: "assets/avatar-drtim.png", rxn: "like" },
-{ name: "Marco Ricci", avatar: "assets/avatar-katy.jpg", rxn: "heart" },
-{ name: "Sofia Chen", avatar: "assets/avatar-drtim.png", rxn: "heart" }];
+{ name: "Daryll Cee", avatar: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRl_iS6ah90lEufyitkFEND2e98ccufb7spcgCLbb2gY1vw7151sSqjaXGp&s=10", rxn: "like" },
+{ name: "Marco Ricci", avatar: "https://images.ctfassets.net/h6goo9gw1hh6/2sNZtFAWOdP1lmQ33VwRN3/24e953b920a9cd0ff2e1d587742a2472/1-intro-photo-final.jpg?w=1200&h=992&fl=progressive&q=70&fm=jpg", rxn: "heart" },
+{ name: "Sofia Chen", avatar: "https://plus.unsplash.com/premium_photo-1689568126014-06fea9d5d341?fm=jpg&q=60&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8cHJvZmlsZXxlbnwwfHwwfHx8MA%3D%3D", rxn: "heart" }];
 
 const RXN_BADGE = {
   like: { icon: "fluent-emoji-flat:thumbs-up", bg: "var(--reaction-like)" },
@@ -1997,7 +2767,7 @@ function SampleMedia({ sample }) {
 
   if (sample.type === "video") {
     return (
-      <div className="sm-video" onClick={() => setPlaying((p) => !p)}>
+      <div className={"sm-video" + (sample.aspect === "square" ? " sm-video-square" : "")} onClick={() => setPlaying((p) => !p)}>
         <img src={sample.poster} alt="" />
         <span className={"sm-play" + (playing ? " on" : "")}>
           <IconifyIcon name={playing ? "fluent:pause-16-filled" : "fluent:play-16-filled"} size={26} color="var(--brand-navy)" />
@@ -2275,13 +3045,74 @@ function SavedModal({ onClose }) {
         <div className="saved-where">
           <span className="saved-where-av" />
           <div className="saved-where-tx">
-            <div className="saved-where-path">Profile  →  Settings  →  My Saved</div>
+            <div className="saved-where-path">My Learning  →  My Learning</div>
             <div className="saved-where-sub">Find all your saved posts here</div>
           </div>
         </div>
         <button type="button" className="saved-btn" onClick={onClose}>View Saved</button>
         <button type="button" className="saved-skip" onClick={onClose}>Maybe Later</button>
       </div>
+    </div>
+  );
+}
+
+/* Confirmation sheet shown after a viewer reports a post from the post's
+   "..." menu — reuses the SavedModal's slide-up sheet shell with a red
+   flag icon in place of the gold bookmark. */
+function ReportedModal({ onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  return (
+    <div className="saved-overlay" onClick={onClose}>
+      <div className="saved-sheet" onClick={(e) => e.stopPropagation()}
+        role="dialog" aria-modal="true" aria-label="Post reported">
+        <div className="saved-handle" />
+        <div className="saved-icon-wrap" style={{ background: "var(--error-bg)" }}>
+          <IconifyIcon name="lucide:flag" size={30} color="var(--error)" />
+        </div>
+        <div className="saved-title">Reported</div>
+        <div className="saved-desc">Thanks for letting us know. Our team will review this post and take action if it breaks our community guidelines.</div>
+        <button type="button" className="saved-btn" style={{ background: "var(--error)" }} onClick={onClose}>Done</button>
+      </div>
+    </div>
+  );
+}
+
+/* Shared "..." menu for post cards that don't render through the DS PostCard
+   (ChannelFeedCard, CourseCommentCard) — mirrors the menu PostCard itself
+   opens from its own "..." icon, so every post gets the same two actions. */
+function PostMoreMenu({ saved, onSave, onReport }) {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const close = () => setOpen(false);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [open]);
+  return (
+    <div style={{ position: "relative", flex: "none", marginLeft: "auto" }}>
+      <button type="button" aria-label="Post options" aria-haspopup="menu" aria-expanded={open}
+        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
+        style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", lineHeight: 0 }}>
+        <IconifyIcon name="lucide:more-vertical" size={20} color="var(--gray-400)" />
+      </button>
+      {open &&
+      <div className="pf-post-menu" role="menu" onClick={(e) => e.stopPropagation()}>
+        <button type="button" role="menuitem" className="pf-post-menu-item"
+          onClick={() => { setOpen(false); onSave && onSave(); }}>
+          <IconifyIcon name={saved ? "lucide:bookmark-minus" : "lucide:bookmark"} size={18} color="var(--gray-700)" />
+          {saved ? "Remove from saved" : "Save post"}
+        </button>
+        <button type="button" role="menuitem" className="pf-post-menu-item pf-post-menu-item--danger"
+          onClick={() => { setOpen(false); onReport && onReport(); }}>
+          <IconifyIcon name="lucide:flag" size={18} color="var(--error)" />
+          Report post
+        </button>
+      </div>
+      }
     </div>
   );
 }
@@ -2311,6 +3142,7 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onShare, onSave, 
   const [likesOpen, setLikesOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [savedSheetOpen, setSavedSheetOpen] = useState(false);
+  const [reportedOpen, setReportedOpen] = useState(false);
   const commentSheet = typeof window !== "undefined" && window.PF_COMMENT_SHEET;
   const { picker, pick, cancelHide, scheduleHide } = useReactionPicker(ref, st.reaction, onReact);
 
@@ -2364,23 +3196,30 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onShare, onSave, 
 
   return (
     <div className={"post-wrap" + (post.channel ? " has-chx" : "")} ref={ref}
-    style={{ background: "var(--surface-card)", border: "1px solid var(--border-default)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-card)", overflow: "hidden", padding: "0px 16px" }}>
+    style={{ background: "var(--surface-card)", borderRadius: "var(--r-md)", overflow: "hidden", padding: "0px 16px" }}>
       {post.channel && <ChannelContext channel={post.channel} />}
       <PostCard {...post} commentList={[]}
       hashtags={hideTags ? [] : resolveHashtags(post.hashtags)}
       title={post.title}
-      body={<ClampText text={post.body} more={post.channel ? "Learn More" : "See more"} />}
-      media={<>
+      body={post.questionnaire || post.poll ? null : <ClampText text={post.body} more={post.channel ? "Learn More" : "See more"} />}
+      media={<div style={post.unlockBadge ? { position: "relative" } : undefined}>
         {post.questionnaire
         ? <Questionnaire questionnaire={post.questionnaire} />
         : post.poll
         ? <Poll poll={post.poll} />
         : post.sample
         ? <SampleMedia sample={post.sample} />
-        : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} /> : null}
-      </>}
+        : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} aspect={post.aspect} /> : null}
+        {post.unlockBadge &&
+        <span className="pf-unlock-badge">
+            <IconifyIcon name="lucide:lock-open" size={14} color="var(--brand-navy)" />Unlocked
+          </span>
+        }
+      </div>}
       liked={st.liked} saved={st.saved} actioned={false} likes={st.likes} shares={st.shares} comments={st.commentsCount}
       onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare}
+      onReport={() => setReportedOpen(true)}
+      onReactionsClick={() => setLikesOpen(true)}
       onHashtagClick={goToHashtag}
       style={{ boxShadow: "none", border: "none", borderRadius: 0, background: "transparent" }} />
       {inlineBubbles && hasRegion &&
@@ -2457,6 +3296,7 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onShare, onSave, 
       onClose={() => setSheetOpen(false)} onAddComment={onAddComment} onAddReply={onAddReply} />
       }
       {savedSheetOpen && <SavedModal onClose={() => setSavedSheetOpen(false)} />}
+      {reportedOpen && <ReportedModal onClose={() => setReportedOpen(false)} />}
     </div>);
 
 }
@@ -2485,7 +3325,7 @@ function TeaserPost({ post, onUpgrade }) {
   const isCourseComment = post.bucket === "coursecomment";
   return (
     <div className="post-wrap pf-teaser"
-    style={{ background: "var(--surface-card)", border: "1px solid var(--border-default)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-card)", overflow: "hidden", padding: "0px 16px" }}>
+    style={{ background: "var(--surface-card)", borderRadius: "var(--r-md)", overflow: "hidden", padding: "0px 16px" }}>
       {isCourseComment &&
       <div className="pf-teaser-activity">
           <strong>{author.name}</strong> commented in course <strong>{COURSE_NAMES[post.course] || "the course"}</strong>
@@ -2530,6 +3370,22 @@ function TeaserPost({ post, onUpgrade }) {
 
 }
 
+/* Upcoming Event post — the DS EventCard (banner image, title, host, date,
+   CTA — same one used in RightRail's "My Events" widget) dropped straight
+   into the feed as its own card, labeled so it reads as an event rather than
+   a regular update. */
+function FeedEventCard({ event }) {
+  return (
+    <div className="post-wrap pf-event-feed" style={{ background: "transparent", overflow: "visible", padding: "0px 16px" }}>
+      <div className="pf-event-feed-label">
+        <IconifyIcon name="lucide:calendar-clock" size={16} color="var(--premium-gold-deep)" />
+        <span>Upcoming Event</span>
+      </div>
+      <EventCard {...event} />
+    </div>);
+
+}
+
 /* Compact community-channel post — how a paid member's channel content
    (Confidence/Mastery/Freedom/Inner Circle) surfaces merged into the main
    newsfeed: avatar + name + tier tag, body, then React/Reply/Save actions.
@@ -2541,6 +3397,7 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onSave, onShare, onA
   const [replying, setReplying] = useState(false);
   const [likesOpen, setLikesOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [reportedOpen, setReportedOpen] = useState(false);
   const liked = !!st.reaction;
   const ref = useRef(null);
   const { picker, pick, cancelHide, scheduleHide } = useReactionPicker(ref, st.reaction, onReact);
@@ -2552,7 +3409,7 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onSave, onShare, onA
   };
   return (
     <div className="pf-chcard" ref={ref}
-    style={{ background: "var(--surface-card)", border: "1px solid var(--border-default)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-card)", padding: "16px" }}>
+    style={{ background: "var(--surface-card)", borderRadius: "var(--r-md)", padding: "16px" }}>
       <div className="pf-chcard-head">
         <Avatar name={post.channel.by} src={post.channel.byAvatar} size={40} />
         <div>
@@ -2561,6 +3418,7 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onSave, onShare, onA
             {meta.label}
           </span>
         </div>
+        <PostMoreMenu saved={st.saved} onSave={onSave} onReport={() => setReportedOpen(true)} />
       </div>
       <p className="pf-chcard-body">{post.body}</p>
       {post.sample ?
@@ -2571,6 +3429,7 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onSave, onShare, onA
       <PostActions likes={st.likes} comments={st.commentsCount} shares={st.shares}
       liked={liked} saved={st.saved} actioned={false}
       onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={onShare} onSave={onSave}
+      onReactionsClick={() => setLikesOpen(true)}
       style={{ borderTop: "1px solid var(--border-default)", paddingTop: 14 }} />
       <div>
         <LikedByRow onOpen={() => setLikesOpen(true)} />
@@ -2599,6 +3458,7 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onSave, onShare, onA
       <CommentsSheet post={post} comments={comments}
       onClose={() => setSheetOpen(false)} onAddComment={onAddComment} onAddReply={onAddReply} />
       }
+      {reportedOpen && <ReportedModal onClose={() => setReportedOpen(false)} />}
     </div>);
 
 }
@@ -2610,6 +3470,8 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onSave, onShare, onA
    hasn't taken it yet, or a refresher link for those who have. */
 function CourseCommentCard({ post, st, onToggleLike, onReact, onSave, onAddComment, onShare }) {
   const [replying, setReplying] = useState(false);
+  const [likesOpen, setLikesOpen] = useState(false);
+  const [reportedOpen, setReportedOpen] = useState(false);
   const liked = !!st.reaction;
   const lesson = post.lesson;
   const ref = useRef(null);
@@ -2621,7 +3483,7 @@ function CourseCommentCard({ post, st, onToggleLike, onReact, onSave, onAddComme
   };
   return (
     <div className="post-wrap pf-ccard" ref={ref}
-    style={{ background: "var(--surface-card)", border: "1px solid var(--border-default)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-card)", overflow: "hidden", padding: "0px 16px" }}>
+    style={{ background: "var(--surface-card)", borderRadius: "var(--r-md)", overflow: "hidden", padding: "0px 16px" }}>
       <div className="pf-teaser-activity">
         <strong>{post.author.name}</strong> commented in course <strong>{COURSE_NAMES[post.course] || "the course"}</strong>
       </div>
@@ -2634,6 +3496,7 @@ function CourseCommentCard({ post, st, onToggleLike, onReact, onSave, onAddComme
           </div>
           <div className="pf-ccard-head-time">{post.time}</div>
         </div>
+        <PostMoreMenu saved={st.saved} onSave={onSave} onReport={() => setReportedOpen(true)} />
       </div>
       <div className="pf-ccard-body"><ClampText text={post.body} lines={4} /></div>
       {lesson &&
@@ -2654,12 +3517,15 @@ function CourseCommentCard({ post, st, onToggleLike, onReact, onSave, onAddComme
       <PostActions likes={st.likes} comments={st.commentsCount} shares={st.shares}
       liked={liked} saved={st.saved} actioned={false}
       onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={onShare} onSave={onSave}
+      onReactionsClick={() => setLikesOpen(true)}
       style={{ borderTop: "1px solid var(--border-default)", paddingTop: 14 }} />
       {replying &&
       <CommentComposer placeholder="Write a reply…" autoFocus small
       onSubmit={(t) => {onAddComment(t);setReplying(false);}} />
       }
       <ReactionPicker at={picker} onPick={pick} onEnter={cancelHide} onLeave={scheduleHide} />
+      {likesOpen && <LikesModal onClose={() => setLikesOpen(false)} />}
+      {reportedOpen && <ReportedModal onClose={() => setReportedOpen(false)} />}
     </div>);
 
 }
@@ -2806,47 +3672,60 @@ function FeedPreviewPanel({ persona, onPersona, toggles, onToggle }) {
 
 const PF_USER_POSTS_KEY = "pf-newsfeed-user-posts";
 function readUserPosts() {
-  try { return JSON.parse(localStorage.getItem(PF_USER_POSTS_KEY)) || []; } catch (e) { return []; }
+  try {
+    const list = JSON.parse(localStorage.getItem(PF_USER_POSTS_KEY)) || [];
+    return list.filter((p) => p && p.author && p.author.name && p.body);
+  } catch (e) { return []; }
 }
 
 /* All posts across the app (own + editorial + gated) — used by Search to
    find posts by hashtag. */
 function getAllPosts() {
-  return [...readUserPosts(), ...POSTS, ...BUCKET_POSTS];
+  return [...readUserPosts(), ...FEED_SEQUENCE, ...BUCKET_POSTS];
 }
 
 function Feed({ channel } = {}) {
-  const [posts, setPosts] = useState(() => {
-    const base = typeof window !== "undefined" && window.PF_OFFICIAL_ONLY ? officialize(POSTS) : POSTS;
-    return [...readUserPosts(), ...base];
-  });
+  const [userPosts] = useState(() => readUserPosts());
   const [state, setState] = useState(() => {
     const m = {};
-    [...readUserPosts(), ...POSTS, ...BUCKET_POSTS].forEach((p) => {m[p.id] = { liked: false, saved: false, actioned: p.actioned, likes: p.likes, base: p.likes, reaction: null, shares: p.shares, sharesBase: p.shares, comments: withIds(p.commentList), commentsCount: p.comments };});
+    [...readUserPosts(), ...FEED_SEQUENCE, ...BUCKET_POSTS].forEach((p) => {m[p.id] = { liked: false, saved: false, actioned: p.actioned, likes: p.likes, base: p.likes, reaction: null, shares: p.shares, sharesBase: p.shares, comments: withIds(p.commentList), commentsCount: p.comments };});
     return m;
   });
   const [sort, setSort] = useState("All");
-  const [viewerPersona, setViewerPersona] = useState("mastery");
+  /* Defaults to whatever tier is actually persisted (set for real by the
+     checkout/apply flows, or overridden here by the dev preview switcher —
+     either way both write the same localStorage key, so newsfeed, community
+     and the membership page all agree on "who's looking"). */
+  const [viewerPersona, setViewerPersonaRaw] = useState(getUserTier);
+  const setViewerPersona = (key) => { setUserTier(key); setViewerPersonaRaw(key); };
   const [bucketToggles, setBucketToggles] = useState({ course: false, save: false, mute: false });
   const [upgradeFor, setUpgradeFor] = useState(null);
 
   const toggle = (id, key) => setState((s) => ({ ...s, [id]: { ...s[id], [key]: !s[id][key] } }));
 
-  /* the bucket-merged block (channel ladder / course / My Learning / general)
-     is spliced in right after the top two editorial posts (questionnaire,
-     then poll), exactly where the single hard-coded CHANNEL_POST used to
-     sit — everything else about the editorial list is untouched. */
   const viewerCurrent = PERSONA_MAP[viewerPersona] || PERSONA_MAP.confidence;
-  const isFreeViewer = !viewerCurrent.paid && !viewerCurrent.admin;
   const bucketResolved = resolveBucketFeed(viewerPersona, bucketToggles);
-  const feedItems = posts.length ?
-  [
-  { item: posts[0], mode: "full" },
-  ...(posts[1] ? [{ item: posts[1], mode: "full" }] : []),
-  ...bucketResolved,
-  ...posts.slice(2).map((p) => ({ item: p, mode: "full" }))] :
 
-  bucketResolved;
+  /* The main newsfeed is FEED_SEQUENCE's fixed, designed post-type order —
+     any locally composed posts show up first, then the sequence plays out
+     exactly as authored: four repeating cycles (text / square image /
+     portrait image / carousel / square video / portrait video / quiz /
+     [event + masterclass on cycle 1] / poll / one tier's Hidden Post),
+     cycling through Confidence, Mastery, Freedom and Inner Circle so every
+     subscriber tier gets featured in the rotation. Each cycle's Hidden Post
+     is the only slot whose mode isn't a fixed "full" — like every other
+     gated bucket post, it resolves teaser-vs-full from the current viewing
+     persona, so the persona-preview switcher still demonstrates unlocking. */
+  const sequenceBase = typeof window !== "undefined" && window.PF_OFFICIAL_ONLY ? officialize(FEED_SEQUENCE) : FEED_SEQUENCE;
+  const feedItems = [
+  ...userPosts.map((p) => ({ item: p, mode: "full" })),
+  ...sequenceBase.map((p) => {
+    if (p.bucket && TEASABLE_BUCKETS.has(p.bucket)) {
+      const unlocked = viewerCurrent.admin || viewerCurrent.channels.includes(p.bucket);
+      return { item: p, mode: unlocked ? "full" : "teaser" };
+    }
+    return { item: p, mode: "full" };
+  })];
 
   /* a channel (Confidence/Mastery/Freedom/Inner Circle) narrows the feed
      down to just that bucket's posts — used by the Community page's channel
@@ -2869,6 +3748,9 @@ function Feed({ channel } = {}) {
       {visibleFeedItems.map(({ item: p, mode }) => {
         if (mode === "teaser") {
           return <TeaserPost key={p.id} post={p} onUpgrade={() => setUpgradeFor(p)} />;
+        }
+        if (p.eventData) {
+          return <FeedEventCard key={p.id} event={p.eventData} />;
         }
         const st = state[p.id] || {};
         const onToggleLike = () => setState((s) => {
@@ -2919,7 +3801,7 @@ function Feed({ channel } = {}) {
 
         }
         return (
-          <FeedPost key={p.id} post={p} st={st} hideTags={isFreeViewer}
+          <FeedPost key={p.id} post={p} st={st}
           onToggleLike={onToggleLike}
           onReact={setReaction}
           onAddComment={onAddComment}
@@ -2988,7 +3870,7 @@ function App() {
       "--r-md": t.radius + "px",
       "--feed-w": t.feedWidth + "px"
     }}>
-      {!window.PF_EMBED && <TopNav active="Home" user={ME} logoSrc="assets/profinity-academy-logo-full.png"
+      {!window.PF_EMBED && <TopNav active="Home" user={ME} logoSrc="assets/profinity-icon-purple-gold.png"
       onNavigate={(label) => {var u = { Profile: "Profile.html", "My Learning": "MyLearning.html", Community: "Community.html", Agent: "Agent.html" }[label];if (u) (window.pfGo || function (x) {window.location.href = x;})(u);}}
       style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />}
       <div className="page">
@@ -3015,7 +3897,7 @@ function App() {
    duplicating the reaction/comment logic. CommentComposer + ReactTrigger are
    exposed so standalone pages (e.g. lesson detail) get the same comment
    composer + Like control instead of rebuilding them. */
-window.PFApp = { Feed, EVENTS, ME, pfTagActiveNav, LeftRail, RightRail, getAllPosts, CommentComposer, ReactTrigger };
+window.PFApp = { Feed, EVENTS, ME, smNextTier, smIncludedTiers, pfTagActiveNav, LeftRail, RightRail, getAllPosts, CommentComposer, ReactTrigger, getUserTier, setUserTier };
 
 if (!window.PF_EMBED) {
   ReactDOM.createRoot(document.getElementById("pf-root")).render(<App />);
