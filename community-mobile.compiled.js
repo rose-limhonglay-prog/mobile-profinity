@@ -232,7 +232,7 @@ function SideMenuCM({
     className: "sm-upgrade-main"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sm-upgrade-title"
-  }, "Upgrade to Confidence"), /*#__PURE__*/React.createElement("span", {
+  }, PFACM.smNextTier(PFACM.ME.tier) ? "Upgrade to " + PFACM.smNextTier(PFACM.ME.tier) : "You're at the top tier"), /*#__PURE__*/React.createElement("span", {
     className: "sm-upgrade-sub"
   }, "Unlock premium channels & courses")), /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
     name: "lucide:chevron-right",
@@ -240,20 +240,32 @@ function SideMenuCM({
     color: "#fff"
   })), /*#__PURE__*/React.createElement(SmSectionCM, {
     title: "Communities"
-  }), /*#__PURE__*/React.createElement("button", {
+  }), PFACM.ME.tier ? PFACM.smIncludedTiers(PFACM.ME.tier).map((t, i) => /*#__PURE__*/React.createElement("button", {
+    key: t,
     className: "sm-tier",
     onClick: onClose
   }, /*#__PURE__*/React.createElement("span", {
     className: "sm-tier-top"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sm-tier-name"
-  }, "Confidence Path"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-pill"
-  }, "YOUR TIER")), /*#__PURE__*/React.createElement("span", {
+  }, t, " Path"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-pill" + (i === 0 ? " sm-tier-pill-yours" : "")
+  }, i === 0 ? "YOUR TIER" : "INCLUDED")), /*#__PURE__*/React.createElement("span", {
     className: "sm-tier-sub"
-  }, "Exclusive tier content"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-new"
-  }, "3 new posts")), /*#__PURE__*/React.createElement(SmSectionCM, {
+  }, "Exclusive tier content"), i === 0 && /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-new sm-tier-new-yours"
+  }, "3 new posts"))) : /*#__PURE__*/React.createElement("button", {
+    className: "sm-tier",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-name"
+  }, "No active plan"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-pill"
+  }, "FREE")), /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-sub"
+  }, "Subscribe to unlock a channel")), /*#__PURE__*/React.createElement(SmSectionCM, {
     title: "Membership Resources"
   }), /*#__PURE__*/React.createElement("nav", {
     className: "sm-list"
@@ -384,12 +396,7 @@ function CMTopBar({
     size: 24,
     color: "var(--gray-700)"
   })), /*#__PURE__*/React.createElement("img", {
-    className: "m-logo-light",
-    src: "assets/profinity-academy-logo-full.png",
-    alt: "PROfinity Academy"
-  }), /*#__PURE__*/React.createElement("img", {
-    className: "m-logo-dark",
-    src: "assets/profinity-academy-logo-dark.jpg",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   }), /*#__PURE__*/React.createElement("span", {
     className: "grow"

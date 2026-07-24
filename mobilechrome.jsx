@@ -9,13 +9,40 @@
   const DSC = window.ProfinityDesignSystem_c2b5cc;
   function goC(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
 
-  const ME_C = { name: "Katy Wilson", avatar: "assets/avatar-katy.jpg" };
+  /* Same "pf-subscription-tier" key the newsfeed/community/membership pages
+     read and write — this file doesn't load app.jsx, so it keeps its own
+     tiny copy rather than depending on window.PFApp. */
+  const PF_TIER_KEY_C = "pf-subscription-tier";
+  function getUserTierC() {
+    try { return localStorage.getItem(PF_TIER_KEY_C) || "free"; } catch (e) { return "free"; }
+  }
+  const TIER_DISPLAY_NAME_C = { confidence: "Confidence", mastery: "Mastery", freedom: "Freedom", inner: "Inner Circle" };
+
+  const ME_C = { name: "Katy Wilson", avatar: "assets/avatar-katy.jpg", tier: TIER_DISPLAY_NAME_C[getUserTierC()] || null };
+
+  /* Membership ladder — the upgrade banner should point at the next rung up,
+     not repeat the tier the viewer already holds. A free viewer (no tier,
+     indexOf === -1) points at the first rung rather than reading as "top". */
+  const SM_TIER_LADDER_C = ["Confidence", "Mastery", "Freedom", "Inner Circle"];
+  function smNextTierC(tier) {
+    const i = SM_TIER_LADDER_C.indexOf(tier);
+    if (i === SM_TIER_LADDER_C.length - 1) return null;
+    return SM_TIER_LADDER_C[i + 1];
+  }
+  /* A viewer's paid tier unlocks every rung below it too. Returns the viewer's
+     tier first (current, highlighted "YOUR TIER") followed by the rungs it
+     includes, lowest last. */
+  function smIncludedTiersC(tier) {
+    const i = SM_TIER_LADDER_C.indexOf(tier);
+    if (i === -1) return [];
+    return SM_TIER_LADDER_C.slice(0, i + 1).reverse();
+  }
 
   function MTopBarC({ onMenu, onBell, onMessages, dark }) {
     return (
       <header className="m-top">
         <button className="m-burger" aria-label="Menu" onClick={onMenu}><DSC.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
-        <img src={dark ? "assets/profinity-logo-dark.jpg" : "assets/profinity-academy-logo-full.png"} alt="PROfinity Academy" />
+        <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
         <span className="grow" />
         <button className="m-iconbtn" aria-label="Search"><DSC.Icon name="search" size={20} color="var(--brand-navy)" /></button>
         <button className="m-iconbtn" aria-label="Notifications" onClick={() => onBell && onBell()}>
@@ -434,21 +461,32 @@
                 <DSC.IconifyIcon name="lucide:gem" size={20} color="#fff" />
               </span>
               <span className="sm-upgrade-main">
-                <span className="sm-upgrade-title">Upgrade to Confidence</span>
+                <span className="sm-upgrade-title">{smNextTierC(ME_C.tier) ? "Upgrade to " + smNextTierC(ME_C.tier) : "You're at the top tier"}</span>
                 <span className="sm-upgrade-sub">Unlock premium channels &amp; courses</span>
               </span>
               <DSC.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
             </button>
 
             <SmSectionC title="Communities" />
-            <button className="sm-tier" onClick={() => goC("CommunityMobile.html")}>
-              <span className="sm-tier-top">
-                <span className="sm-tier-name">Confidence Path</span>
-                <span className="sm-tier-pill" style={{ color: "rgb(206, 153, 87)" }}>YOUR TIER</span>
-              </span>
-              <span className="sm-tier-sub">Exclusive tier content</span>
-              <span className="sm-tier-new" style={{ color: "rgb(206, 153, 87)" }}>3 new posts</span>
-            </button>
+            {ME_C.tier ?
+              smIncludedTiersC(ME_C.tier).map((t, i) =>
+                <button key={t} className="sm-tier" onClick={() => goC("CommunityMobile.html")}>
+                  <span className="sm-tier-top">
+                    <span className="sm-tier-name">{t} Path</span>
+                    <span className={"sm-tier-pill" + (i === 0 ? " sm-tier-pill-yours" : "")}>{i === 0 ? "YOUR TIER" : "INCLUDED"}</span>
+                  </span>
+                  <span className="sm-tier-sub">Exclusive tier content</span>
+                  {i === 0 && <span className="sm-tier-new sm-tier-new-yours">3 new posts</span>}
+                </button>
+              ) :
+              <button className="sm-tier" onClick={() => goC("CommunityMobile.html")}>
+                <span className="sm-tier-top">
+                  <span className="sm-tier-name">No active plan</span>
+                  <span className="sm-tier-pill">FREE</span>
+                </span>
+                <span className="sm-tier-sub">Subscribe to unlock a channel</span>
+              </button>
+            }
             <SmSectionC title="Membership Resources" />
             <nav className="sm-list">
               {SM_RESOURCES_C.map((c) =>

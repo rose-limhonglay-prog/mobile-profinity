@@ -111,8 +111,7 @@ function PushNotifBanner() {
 const MTopBar = forwardRefM(function MTopBar({
   onMenu,
   onBell,
-  onMessages,
-  hidden
+  onMessages
 }, ref) {
   const [showNotif, setShowNotif] = useStateM(true);
   useEffectM(() => {
@@ -121,7 +120,7 @@ const MTopBar = forwardRefM(function MTopBar({
   }, []);
   return /*#__PURE__*/React.createElement("header", {
     ref: ref,
-    className: "m-top" + (hidden ? " m-top-hidden" : "")
+    className: "m-top"
   }, /*#__PURE__*/React.createElement("button", {
     className: "m-burger",
     "aria-label": "Menu",
@@ -131,12 +130,7 @@ const MTopBar = forwardRefM(function MTopBar({
     size: 24,
     color: "var(--gray-700)"
   })), /*#__PURE__*/React.createElement("img", {
-    className: "m-logo-light",
-    src: "assets/profinity-academy-logo-full.png",
-    alt: "PROfinity Academy"
-  }), /*#__PURE__*/React.createElement("img", {
-    className: "m-logo-dark",
-    src: "assets/profinity-academy-logo-dark.jpg",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   }), /*#__PURE__*/React.createElement("span", {
     className: "grow"
@@ -1156,7 +1150,7 @@ function SideMenu({
     className: "sm-upgrade-main"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sm-upgrade-title"
-  }, "Upgrade to Confidence"), /*#__PURE__*/React.createElement("span", {
+  }, PFAM.smNextTier(PFAM.ME.tier) ? "Upgrade to " + PFAM.smNextTier(PFAM.ME.tier) : "You're at the top tier"), /*#__PURE__*/React.createElement("span", {
     className: "sm-upgrade-sub"
   }, "Unlock premium channels & courses")), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: "lucide:chevron-right",
@@ -1164,20 +1158,32 @@ function SideMenu({
     color: "#fff"
   })), /*#__PURE__*/React.createElement(SmSection, {
     title: "Communities"
-  }), /*#__PURE__*/React.createElement("button", {
+  }), PFAM.ME.tier ? PFAM.smIncludedTiers(PFAM.ME.tier).map((t, i) => /*#__PURE__*/React.createElement("button", {
+    key: t,
     className: "sm-tier",
     onClick: () => go("CommunityMobile.html")
   }, /*#__PURE__*/React.createElement("span", {
     className: "sm-tier-top"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sm-tier-name"
-  }, "Confidence Path"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-pill"
-  }, "YOUR TIER")), /*#__PURE__*/React.createElement("span", {
+  }, t, " Path"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-pill" + (i === 0 ? " sm-tier-pill-yours" : "")
+  }, i === 0 ? "YOUR TIER" : "INCLUDED")), /*#__PURE__*/React.createElement("span", {
     className: "sm-tier-sub"
-  }, "Exclusive tier content"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-new"
-  }, "3 new posts")), /*#__PURE__*/React.createElement(SmSection, {
+  }, "Exclusive tier content"), i === 0 && /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-new sm-tier-new-yours"
+  }, "3 new posts"))) : /*#__PURE__*/React.createElement("button", {
+    className: "sm-tier",
+    onClick: () => go("CommunityMobile.html")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-name"
+  }, "No active plan"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-pill"
+  }, "FREE")), /*#__PURE__*/React.createElement("span", {
+    className: "sm-tier-sub"
+  }, "Subscribe to unlock a channel")), /*#__PURE__*/React.createElement(SmSection, {
     title: "Membership Resources"
   }), /*#__PURE__*/React.createElement("nav", {
     className: "sm-list"
@@ -1318,15 +1324,25 @@ const MTabBar = forwardRefM(function MTabBar({
   }, t.label))));
 });
 function useHeaderHideM(scrollRef) {
-  const [hidden, setHidden] = useStateM(false);
+  const [state, setState] = useStateM({
+    hidden: false,
+    floating: false
+  });
   useEffectM(() => {
     const el = scrollRef.current;
     if (!el) return;
     let lastY = el.scrollTop;
     const onScroll = () => {
       const y = el.scrollTop;
-      const delta = y - lastY;
-      if (y < 24) setHidden(false);else if (delta > 6) setHidden(true);else if (delta < -6) setHidden(false);
+      const dy = y - lastY;
+      setState(prev => {
+        let hidden = prev.hidden;
+        if (y < 40) hidden = false;else if (dy > 6) hidden = true;else if (dy < -6) hidden = false;
+        return {
+          hidden,
+          floating: y > 40
+        };
+      });
       lastY = y;
     };
     el.addEventListener("scroll", onScroll, {
@@ -1334,7 +1350,7 @@ function useHeaderHideM(scrollRef) {
     });
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
-  return hidden;
+  return state;
 }
 function MobileHome() {
   const [menuOpen, setMenuOpen] = useStateM(false);
@@ -1345,7 +1361,10 @@ function MobileHome() {
   const tabsRefM = useRefM(null);
   const [headerH, setHeaderH] = useStateM(0);
   const [tabsH, setTabsH] = useStateM(0);
-  const chromeHidden = useHeaderHideM(scrollRefM);
+  const {
+    hidden: chromeHidden,
+    floating: chromeFloat
+  } = useHeaderHideM(scrollRefM);
   useLayoutEffectM(() => {
     const el = headerRefM.current;
     if (!el) return;
@@ -1365,11 +1384,10 @@ function MobileHome() {
     return () => ro.disconnect();
   }, []);
   return /*#__PURE__*/React.createElement("div", {
-    className: "m-screen",
+    className: "m-screen" + (chromeHidden ? " chrome-hidden" : "") + (chromeFloat ? " chrome-float" : ""),
     "data-screen-label": "Home (mobile)"
   }, /*#__PURE__*/React.createElement(PushNotifBanner, null), /*#__PURE__*/React.createElement(MTopBar, {
     ref: headerRefM,
-    hidden: chromeHidden,
     onMenu: () => setMenuOpen(true),
     onBell: () => setNotifOpen(true),
     onMessages: () => setMsgOpen(true)

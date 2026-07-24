@@ -58,17 +58,16 @@ function PushNotifBanner() {
 
 }
 
-const MTopBar = forwardRefM(function MTopBar({ onMenu, onBell, onMessages, hidden }, ref) {
+const MTopBar = forwardRefM(function MTopBar({ onMenu, onBell, onMessages }, ref) {
   const [showNotif, setShowNotif] = useStateM(true);
   useEffectM(() => {
     const t = setTimeout(() => setShowNotif(false), 5000);
     return () => clearTimeout(t);
   }, []);
   return (
-    <header ref={ref} className={"m-top" + (hidden ? " m-top-hidden" : "")}>
+    <header ref={ref} className="m-top">
       <button className="m-burger" aria-label="Menu" onClick={onMenu}><DSM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
-      <img className="m-logo-light" src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
-      <img className="m-logo-dark" src="assets/profinity-academy-logo-dark.jpg" alt="PROfinity Academy" />
+      <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       <span className="grow" />
       <button className="m-iconbtn" aria-label="Search" onClick={() => go("SearchMobile.html")}><DSM.Icon name="search" size={20} color="var(--brand-navy)" /></button>
       <button className="m-iconbtn" aria-label="Notifications" onClick={() => {setShowNotif(false);onBell && onBell();}}>
@@ -597,21 +596,32 @@ function SideMenu({ open, onClose }) {
               <DSM.IconifyIcon name="lucide:gem" size={20} color="#fff" />
             </span>
             <span className="sm-upgrade-main">
-              <span className="sm-upgrade-title">Upgrade to Confidence</span>
+              <span className="sm-upgrade-title">{PFAM.smNextTier(PFAM.ME.tier) ? "Upgrade to " + PFAM.smNextTier(PFAM.ME.tier) : "You're at the top tier"}</span>
               <span className="sm-upgrade-sub">Unlock premium channels &amp; courses</span>
             </span>
             <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
           </button>
 
           <SmSection title="Communities" />
-          <button className="sm-tier" onClick={() => go("CommunityMobile.html")}>
-            <span className="sm-tier-top">
-              <span className="sm-tier-name">Confidence Path</span>
-              <span className="sm-tier-pill">YOUR TIER</span>
-            </span>
-            <span className="sm-tier-sub">Exclusive tier content</span>
-            <span className="sm-tier-new">3 new posts</span>
-          </button>
+          {PFAM.ME.tier ?
+            PFAM.smIncludedTiers(PFAM.ME.tier).map((t, i) =>
+              <button key={t} className="sm-tier" onClick={() => go("CommunityMobile.html")}>
+                <span className="sm-tier-top">
+                  <span className="sm-tier-name">{t} Path</span>
+                  <span className={"sm-tier-pill" + (i === 0 ? " sm-tier-pill-yours" : "")}>{i === 0 ? "YOUR TIER" : "INCLUDED"}</span>
+                </span>
+                <span className="sm-tier-sub">Exclusive tier content</span>
+                {i === 0 && <span className="sm-tier-new sm-tier-new-yours">3 new posts</span>}
+              </button>
+            ) :
+            <button className="sm-tier" onClick={() => go("CommunityMobile.html")}>
+              <span className="sm-tier-top">
+                <span className="sm-tier-name">No active plan</span>
+                <span className="sm-tier-pill">FREE</span>
+              </span>
+              <span className="sm-tier-sub">Subscribe to unlock a channel</span>
+            </button>
+          }
 
           <SmSection title="Membership Resources" />
           <nav className="sm-list">
@@ -710,23 +720,27 @@ const MTabBar = forwardRefM(function MTabBar({ compact }, ref) {
 });
 
 function useHeaderHideM(scrollRef) {
-  const [hidden, setHidden] = useStateM(false);
+  const [state, setState] = useStateM({ hidden: false, floating: false });
   useEffectM(() => {
     const el = scrollRef.current;
     if (!el) return;
     let lastY = el.scrollTop;
     const onScroll = () => {
       const y = el.scrollTop;
-      const delta = y - lastY;
-      if (y < 24) setHidden(false);
-      else if (delta > 6) setHidden(true);
-      else if (delta < -6) setHidden(false);
+      const dy = y - lastY;
+      setState((prev) => {
+        let hidden = prev.hidden;
+        if (y < 40) hidden = false;
+        else if (dy > 6) hidden = true;
+        else if (dy < -6) hidden = false;
+        return { hidden, floating: y > 40 };
+      });
       lastY = y;
     };
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
-  return hidden;
+  return state;
 }
 
 function MobileHome() {
@@ -738,7 +752,7 @@ function MobileHome() {
   const tabsRefM = useRefM(null);
   const [headerH, setHeaderH] = useStateM(0);
   const [tabsH, setTabsH] = useStateM(0);
-  const chromeHidden = useHeaderHideM(scrollRefM);
+  const { hidden: chromeHidden, floating: chromeFloat } = useHeaderHideM(scrollRefM);
   useLayoutEffectM(() => {
     const el = headerRefM.current;
     if (!el) return;
@@ -758,9 +772,9 @@ function MobileHome() {
     return () => ro.disconnect();
   }, []);
   return (
-    <div className="m-screen" data-screen-label="Home (mobile)">
+    <div className={"m-screen" + (chromeHidden ? " chrome-hidden" : "") + (chromeFloat ? " chrome-float" : "")} data-screen-label="Home (mobile)">
       <PushNotifBanner />
-      <MTopBar ref={headerRefM} hidden={chromeHidden} onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} onMessages={() => setMsgOpen(true)} />
+      <MTopBar ref={headerRefM} onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} onMessages={() => setMsgOpen(true)} />
       <div className="m-scroll" ref={scrollRefM} style={{ paddingTop: chromeHidden ? 0 : headerH, paddingBottom: tabsH + 34 }}>
         <PFAM.Feed />
       </div>

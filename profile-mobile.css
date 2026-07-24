@@ -351,13 +351,16 @@ img{max-width:100%}
 .sm-upgrade-sub{font-family:var(--font-sans);font-size:13px;color:rgba(255,255,255,.9)}
 
 .sm-tier{display:flex;flex-direction:column;gap:5px;width:100%;text-align:left;cursor:pointer;
-  background:#FCF4E4;border:1px solid #F0DFBE;border-radius:14px;padding:18px 18px 16px;margin-bottom:6px}
+  background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:18px 18px 16px;margin-bottom:6px;
+  box-shadow:0 1px 3px rgba(12,12,13,.05)}
 .sm-tier-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .sm-tier-name{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--text-heading)}
 .sm-tier-pill{flex:none;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:10px;letter-spacing:.04em;
   color:var(--premium-orange);border:1.5px solid var(--premium-orange);border-radius:var(--r-pill);padding:4px 10px}
+.sm-tier-pill-yours{color:var(--ai-purple);border-color:var(--ai-purple)}
 .sm-tier-sub{font-family:var(--font-sans);font-size:14px;color:var(--gray-500)}
 .sm-tier-new{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px;color:var(--premium-orange);margin-top:2px}
+.sm-tier-new-yours{color:var(--ai-purple)}
 
 .sm-list{display:flex;flex-direction:column}
 .sm-row{display:flex;align-items:center;gap:16px;width:100%;text-align:left;cursor:pointer;

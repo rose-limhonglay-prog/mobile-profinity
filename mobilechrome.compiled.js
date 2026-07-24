@@ -15,10 +15,47 @@
       window.location.href = u;
     })(url);
   }
+
+  /* Same "pf-subscription-tier" key the newsfeed/community/membership pages
+     read and write — this file doesn't load app.jsx, so it keeps its own
+     tiny copy rather than depending on window.PFApp. */
+  const PF_TIER_KEY_C = "pf-subscription-tier";
+  function getUserTierC() {
+    try {
+      return localStorage.getItem(PF_TIER_KEY_C) || "free";
+    } catch (e) {
+      return "free";
+    }
+  }
+  const TIER_DISPLAY_NAME_C = {
+    confidence: "Confidence",
+    mastery: "Mastery",
+    freedom: "Freedom",
+    inner: "Inner Circle"
+  };
   const ME_C = {
     name: "Katy Wilson",
-    avatar: "assets/avatar-katy.jpg"
+    avatar: "assets/avatar-katy.jpg",
+    tier: TIER_DISPLAY_NAME_C[getUserTierC()] || null
   };
+
+  /* Membership ladder — the upgrade banner should point at the next rung up,
+     not repeat the tier the viewer already holds. A free viewer (no tier,
+     indexOf === -1) points at the first rung rather than reading as "top". */
+  const SM_TIER_LADDER_C = ["Confidence", "Mastery", "Freedom", "Inner Circle"];
+  function smNextTierC(tier) {
+    const i = SM_TIER_LADDER_C.indexOf(tier);
+    if (i === SM_TIER_LADDER_C.length - 1) return null;
+    return SM_TIER_LADDER_C[i + 1];
+  }
+  /* A viewer's paid tier unlocks every rung below it too. Returns the viewer's
+     tier first (current, highlighted "YOUR TIER") followed by the rungs it
+     includes, lowest last. */
+  function smIncludedTiersC(tier) {
+    const i = SM_TIER_LADDER_C.indexOf(tier);
+    if (i === -1) return [];
+    return SM_TIER_LADDER_C.slice(0, i + 1).reverse();
+  }
   function MTopBarC({
     onMenu,
     onBell,
@@ -36,7 +73,7 @@
       size: 24,
       color: "var(--gray-700)"
     })), /*#__PURE__*/React.createElement("img", {
-      src: dark ? "assets/profinity-logo-dark.jpg" : "assets/profinity-academy-logo-full.png",
+      src: "assets/profinity-icon-purple-gold.png",
       alt: "PROfinity Academy"
     }), /*#__PURE__*/React.createElement("span", {
       className: "grow"
@@ -916,7 +953,7 @@
       className: "sm-upgrade-main"
     }, /*#__PURE__*/React.createElement("span", {
       className: "sm-upgrade-title"
-    }, "Upgrade to Confidence"), /*#__PURE__*/React.createElement("span", {
+    }, smNextTierC(ME_C.tier) ? "Upgrade to " + smNextTierC(ME_C.tier) : "You're at the top tier"), /*#__PURE__*/React.createElement("span", {
       className: "sm-upgrade-sub"
     }, "Unlock premium channels & courses")), /*#__PURE__*/React.createElement(DSC.IconifyIcon, {
       name: "lucide:chevron-right",
@@ -924,26 +961,32 @@
       color: "#fff"
     })), /*#__PURE__*/React.createElement(SmSectionC, {
       title: "Communities"
-    }), /*#__PURE__*/React.createElement("button", {
+    }), ME_C.tier ? smIncludedTiersC(ME_C.tier).map((t, i) => /*#__PURE__*/React.createElement("button", {
+      key: t,
       className: "sm-tier",
       onClick: () => goC("CommunityMobile.html")
     }, /*#__PURE__*/React.createElement("span", {
       className: "sm-tier-top"
     }, /*#__PURE__*/React.createElement("span", {
       className: "sm-tier-name"
-    }, "Confidence Path"), /*#__PURE__*/React.createElement("span", {
-      className: "sm-tier-pill",
-      style: {
-        color: "rgb(206, 153, 87)"
-      }
-    }, "YOUR TIER")), /*#__PURE__*/React.createElement("span", {
+    }, t, " Path"), /*#__PURE__*/React.createElement("span", {
+      className: "sm-tier-pill" + (i === 0 ? " sm-tier-pill-yours" : "")
+    }, i === 0 ? "YOUR TIER" : "INCLUDED")), /*#__PURE__*/React.createElement("span", {
       className: "sm-tier-sub"
-    }, "Exclusive tier content"), /*#__PURE__*/React.createElement("span", {
-      className: "sm-tier-new",
-      style: {
-        color: "rgb(206, 153, 87)"
-      }
-    }, "3 new posts")), /*#__PURE__*/React.createElement(SmSectionC, {
+    }, "Exclusive tier content"), i === 0 && /*#__PURE__*/React.createElement("span", {
+      className: "sm-tier-new sm-tier-new-yours"
+    }, "3 new posts"))) : /*#__PURE__*/React.createElement("button", {
+      className: "sm-tier",
+      onClick: () => goC("CommunityMobile.html")
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sm-tier-top"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sm-tier-name"
+    }, "No active plan"), /*#__PURE__*/React.createElement("span", {
+      className: "sm-tier-pill"
+    }, "FREE")), /*#__PURE__*/React.createElement("span", {
+      className: "sm-tier-sub"
+    }, "Subscribe to unlock a channel")), /*#__PURE__*/React.createElement(SmSectionC, {
       title: "Membership Resources"
     }), /*#__PURE__*/React.createElement("nav", {
       className: "sm-list"

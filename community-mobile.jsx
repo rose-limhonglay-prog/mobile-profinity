@@ -128,21 +128,32 @@ function SideMenuCM({ open, onClose }) {
               <DSCM.IconifyIcon name="lucide:gem" size={20} color="#fff" />
             </span>
             <span className="sm-upgrade-main">
-              <span className="sm-upgrade-title">Upgrade to Confidence</span>
+              <span className="sm-upgrade-title">{PFACM.smNextTier(PFACM.ME.tier) ? "Upgrade to " + PFACM.smNextTier(PFACM.ME.tier) : "You're at the top tier"}</span>
               <span className="sm-upgrade-sub">Unlock premium channels &amp; courses</span>
             </span>
             <DSCM.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
           </button>
 
           <SmSectionCM title="Communities" />
-          <button className="sm-tier" onClick={onClose}>
-            <span className="sm-tier-top">
-              <span className="sm-tier-name">Confidence Path</span>
-              <span className="sm-tier-pill">YOUR TIER</span>
-            </span>
-            <span className="sm-tier-sub">Exclusive tier content</span>
-            <span className="sm-tier-new">3 new posts</span>
-          </button>
+          {PFACM.ME.tier ?
+            PFACM.smIncludedTiers(PFACM.ME.tier).map((t, i) =>
+              <button key={t} className="sm-tier" onClick={onClose}>
+                <span className="sm-tier-top">
+                  <span className="sm-tier-name">{t} Path</span>
+                  <span className={"sm-tier-pill" + (i === 0 ? " sm-tier-pill-yours" : "")}>{i === 0 ? "YOUR TIER" : "INCLUDED"}</span>
+                </span>
+                <span className="sm-tier-sub">Exclusive tier content</span>
+                {i === 0 && <span className="sm-tier-new sm-tier-new-yours">3 new posts</span>}
+              </button>
+            ) :
+            <button className="sm-tier" onClick={onClose}>
+              <span className="sm-tier-top">
+                <span className="sm-tier-name">No active plan</span>
+                <span className="sm-tier-pill">FREE</span>
+              </span>
+              <span className="sm-tier-sub">Subscribe to unlock a channel</span>
+            </button>
+          }
 
           <SmSectionCM title="Membership Resources" />
           <nav className="sm-list">
@@ -225,8 +236,7 @@ function CMTopBar({ onMenu, onMessages }) {
   return (
     <header className="cm-top">
       <button className="cm-burger" aria-label="Menu" onClick={onMenu}><DSCM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
-      <img className="m-logo-light" src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
-      <img className="m-logo-dark" src="assets/profinity-academy-logo-dark.jpg" alt="PROfinity Academy" />
+      <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       <span className="grow" />
       <button className="cm-iconbtn" aria-label="Search"><DSCM.Icon name="search" size={21} color="var(--brand-navy)" /></button>
       <button className="cm-iconbtn" aria-label="Notifications">

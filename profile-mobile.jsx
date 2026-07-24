@@ -31,12 +31,40 @@ function PMSealBadge({ src, alt, label, width, height, style }) {
   );
 }
 
+/* Same "pf-subscription-tier" key the newsfeed/community/membership pages
+   read and write — this file doesn't load app.jsx, so it keeps its own tiny
+   copy rather than depending on window.PFApp. */
+const PF_TIER_KEY_PM = "pf-subscription-tier";
+function getUserTierPM() {
+  try { return localStorage.getItem(PF_TIER_KEY_PM) || "free"; } catch (e) { return "free"; }
+}
+const TIER_DISPLAY_NAME_PM = { confidence: "Confidence", mastery: "Mastery", freedom: "Freedom", inner: "Inner Circle" };
+
 const PM_ME = {
   name: "Katy Wilson", role: "Registered Nurse", avatar: "assets/avatar-katy.jpg",
   seals: ["gb", "verified", "crown", "gold"],
   bio: "Enhance patient satisfaction scores by 15% over the next 6 months through improved communication and personalized care planning.",
-  followers: "1,546", following: "880", posts: "57", location: "London, United Kingdom", clinic: "Allcare Medical"
+  followers: "1,546", following: "880", posts: "57", location: "London, United Kingdom", clinic: "Allcare Medical",
+  tier: TIER_DISPLAY_NAME_PM[getUserTierPM()] || null
 };
+
+/* Membership ladder — the upgrade banner should point at the next rung up,
+   not repeat the tier the viewer already holds. A free viewer (no tier,
+   indexOf === -1) points at the first rung rather than reading as "top". */
+const SM_TIER_LADDER_PM = ["Confidence", "Mastery", "Freedom", "Inner Circle"];
+function smNextTierPM(tier) {
+  const i = SM_TIER_LADDER_PM.indexOf(tier);
+  if (i === SM_TIER_LADDER_PM.length - 1) return null;
+  return SM_TIER_LADDER_PM[i + 1];
+}
+/* A viewer's paid tier unlocks every rung below it too. Returns the viewer's
+   tier first (current, highlighted "YOUR TIER") followed by the rungs it
+   includes, lowest last. */
+function smIncludedTiersPM(tier) {
+  const i = SM_TIER_LADDER_PM.indexOf(tier);
+  if (i === -1) return [];
+  return SM_TIER_LADDER_PM.slice(0, i + 1).reverse();
+}
 
 const PM_SERVICES = [
 { ti: "Botox (Anti-Wrinkle Injections)", su: "Career Academy: Dr Tim Pearce" },
@@ -176,21 +204,32 @@ function SideMenuPM({ open, onClose }) {
               <DSPM.IconifyIcon name="lucide:gem" size={20} color="#fff" />
             </span>
             <span className="sm-upgrade-main">
-              <span className="sm-upgrade-title">Upgrade to Confidence</span>
+              <span className="sm-upgrade-title">{smNextTierPM(PM_ME.tier) ? "Upgrade to " + smNextTierPM(PM_ME.tier) : "You're at the top tier"}</span>
               <span className="sm-upgrade-sub">Unlock premium channels &amp; courses</span>
             </span>
             <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
           </button>
 
           <SmSectionPM title="Communities" />
-          <button className="sm-tier" onClick={() => goPM("CommunityMobile.html")}>
-            <span className="sm-tier-top">
-              <span className="sm-tier-name">Confidence Path</span>
-              <span className="sm-tier-pill">YOUR TIER</span>
-            </span>
-            <span className="sm-tier-sub">Exclusive tier content</span>
-            <span className="sm-tier-new">3 new posts</span>
-          </button>
+          {PM_ME.tier ?
+            smIncludedTiersPM(PM_ME.tier).map((t, i) =>
+              <button key={t} className="sm-tier" onClick={() => goPM("CommunityMobile.html")}>
+                <span className="sm-tier-top">
+                  <span className="sm-tier-name">{t} Path</span>
+                  <span className={"sm-tier-pill" + (i === 0 ? " sm-tier-pill-yours" : "")}>{i === 0 ? "YOUR TIER" : "INCLUDED"}</span>
+                </span>
+                <span className="sm-tier-sub">Exclusive tier content</span>
+                {i === 0 && <span className="sm-tier-new sm-tier-new-yours">3 new posts</span>}
+              </button>
+            ) :
+            <button className="sm-tier" onClick={() => goPM("CommunityMobile.html")}>
+              <span className="sm-tier-top">
+                <span className="sm-tier-name">No active plan</span>
+                <span className="sm-tier-pill">FREE</span>
+              </span>
+              <span className="sm-tier-sub">Subscribe to unlock a channel</span>
+            </button>
+          }
 
           <SmSectionPM title="Membership Resources" />
           <nav className="sm-list">
@@ -273,8 +312,7 @@ function PMTopBar({ onMenu, onMessages }) {
   return (
     <header className="pm-top">
       <button className="pm-burger" aria-label="Menu" onClick={onMenu}><DSPM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
-      <img className="m-logo-light" src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
-      <img className="m-logo-dark" src="assets/profinity-academy-logo-dark.jpg" alt="PROfinity Academy" />
+      <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       <span className="grow" />
       <button className="pm-iconbtn" aria-label="Search"><DSPM.Icon name="search" size={21} color="var(--brand-navy)" /></button>
       <button className="pm-iconbtn" aria-label="Notifications">
