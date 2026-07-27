@@ -86,7 +86,7 @@ function TXNSidebar() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "txn-logo"
   }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-academy-logo-full.png",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   })), TXN_NAV.map(item => {
     const href = TXN_NAV_LINKS[item.label];

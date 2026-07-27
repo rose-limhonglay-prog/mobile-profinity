@@ -50,7 +50,7 @@ function EVTSidebar() {
   return (
     <aside className="evt-sidebar">
       <div className="evt-logo">
-        <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+        <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       </div>
       {EVT_NAV.map((item) => {
         const href = EVT_NAV_LINKS[item.label];

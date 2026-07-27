@@ -17,18 +17,25 @@ const IMG = {
   protox: "assets/clinic-toxin-guide.png",
   temple: "assets/clinic-treatment-collage.png",
   gold: "assets/texture-gold.png",
-  logo: "assets/profinity-academy-logo-full.png",
+  logo: "assets/profinity-icon-purple-gold.png",
   advancedLip: "assets/course-advanced-lip-techniques.jpg",
 };
 
 const TABS = ["All Courses", "Free Resources", "New Courses", "Recommended Courses", "Upcoming Webinars", "Certification Programs"];
 
 const MY_COURSES = [
-  { image: IMG.lip, level: "Beginner", title: "8D Lip Design", description: "Discover a complete view of human anatomy for deeper learning.", progress: 20, cta: "Continue learning", active: true },
+  { image: IMG.lip, level: "Beginner", title: "8D Lip Design", description: "Discover a complete view of human anatomy for deeper learning.", progress: 20, cta: "Continue learning", active: true, slug: "8d-lips" },
   { image: IMG.temple, level: "Intermediate", title: "Temple Filler", description: "Confidently Inject Temples & add YOUTH back into your patients.", progress: 0, cta: "Start learning" },
   { image: IMG.protox, level: "Advance", title: "Protox Course", description: "Elevate Your Botulinum Toxin Skills, 10x Your Confidence, and more.", progress: 0, cta: "Start learning" },
   { image: IMG.temple, level: "Advance", title: "Temple Filler", description: "Confidently Inject Temples & add YOUTH back into your patients.", progress: 0, cta: "Start learning" },
 ];
+
+function goToCourse(c) {
+  const url = c.slug
+    ? `CourseWeb.html?course=${c.slug}`
+    : `CourseWeb.html?${new URLSearchParams({ title: c.title, instr: TUTOR, pct: c.progress || 0 })}`;
+  (window.pfGo || function (u) { window.location.href = u; })(url);
+}
 
 const RESOURCES = [
   { image: IMG.temple, title: "13 Risky Injection Areas", lines: ["Facial Vein Mapping", "Navigating Risky Zones"] },
@@ -217,7 +224,7 @@ function MyLearningApp() {
 
   return (
     <div className="app" style={{ "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" }}>
-      <TopNav active="My Learning" user={ME} logoSrc="assets/profinity-academy-logo-full.png"
+      <TopNav active="My Learning" user={ME} logoSrc="assets/profinity-icon-purple-gold.png"
         onNavigate={navigate}
         style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />
 
@@ -240,7 +247,7 @@ function MyLearningApp() {
           <div className="row">
             {loading
               ? Array.from({ length: 4 }).map((_, i) => <SkeletonCourseCard key={i} />)
-              : MY_COURSES.map((c, i) => <CourseTile key={i} {...c} className="w-course" style={{ width: 264 }} />)}
+              : MY_COURSES.map((c, i) => <CourseTile key={i} {...c} onCta={() => goToCourse(c)} className="w-course" style={{ width: 264 }} />)}
           </div>
         </section>
 

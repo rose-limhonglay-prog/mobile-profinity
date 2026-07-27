@@ -67,7 +67,7 @@ function MapSidebar() {
   return (
     <aside className="map-sidebar">
       <div className="map-logo">
-        <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+        <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       </div>
       {MAP_NAV.map((item) => {
         const href = MAP_NAV_LINKS[item.label];

@@ -13,6 +13,21 @@ function goMA(url) {
     window.location.href = u;
   })(url);
 }
+
+/* Same "pf-subscription-tier" key the newsfeed/community/membership pages
+   read and write. There's no real admissions backend to wait on here, so
+   for this prototype a submitted application instantly grants the tier —
+   Builder -> the "freedom" gating bucket, Sovereign -> "inner". */
+const PF_TIER_KEY_MA = "pf-subscription-tier";
+function setUserTierMA(tier) {
+  try {
+    localStorage.setItem(PF_TIER_KEY_MA, tier);
+  } catch (e) {}
+}
+const MA_GATING_KEY = {
+  builder: "freedom",
+  sovereign: "inner"
+};
 function useDeviceScaleMA() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
   const [scale, setScale] = useStateMA(calc);
@@ -59,6 +74,7 @@ function MembershipApply() {
   const canSubmit = fullName.trim() && email.trim() && phone.trim();
   const handleSubmit = () => {
     if (!canSubmit) return;
+    setUserTierMA(MA_GATING_KEY[tierKey] || tierKey);
     setSubmitted(true);
   };
   if (submitted) {

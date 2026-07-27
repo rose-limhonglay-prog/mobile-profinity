@@ -47,7 +47,7 @@ function ANASidebar() {
   return (
     <aside className="ana-sidebar">
       <div className="ana-logo">
-        <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+        <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       </div>
       {ANA_NAV.map((item) => {
         const href = ANA_NAV_LINKS[item.label];

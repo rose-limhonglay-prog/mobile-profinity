@@ -47,7 +47,7 @@
       <div className="sv-overlay" role="dialog" aria-modal="true" aria-label="Personalize your experience">
         <div className="sv-card">
           <header className="sv-head">
-            <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+            <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
             <button className="sv-x" aria-label="Close" onClick={onClose}>
               <DSS.IconifyIcon name="lucide:x" size={24} color="var(--gray-700)" />
             </button>

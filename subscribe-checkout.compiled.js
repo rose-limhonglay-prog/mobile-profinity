@@ -13,6 +13,16 @@ function goSC(url) {
     window.location.href = u;
   })(url);
 }
+
+/* Same "pf-subscription-tier" key the newsfeed/community/membership pages
+   read and write — confirming checkout here is what actually "subscribes"
+   the viewer in this backend-less prototype. */
+const PF_TIER_KEY_SC = "pf-subscription-tier";
+function setUserTierSC(tier) {
+  try {
+    localStorage.setItem(PF_TIER_KEY_SC, tier);
+  } catch (e) {}
+}
 function useDeviceScaleSC() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
   const [scale, setScale] = useStateSC(calc);
@@ -36,6 +46,7 @@ function useIsMobileSC() {
 const VAT_RATE_SC = 0.2;
 const TIERS_SC = {
   confidence: {
+    key: "confidence",
     name: "Confidence",
     desc: "Full portal access",
     icon: "shield-check",
@@ -43,6 +54,7 @@ const TIERS_SC = {
     yearly: 970
   },
   mastery: {
+    key: "mastery",
     name: "Mastery",
     desc: "Full portal access",
     icon: "crown",
@@ -180,7 +192,10 @@ function SubscribeCheckout() {
   }, /*#__PURE__*/React.createElement("span", null, "Due today"), /*#__PURE__*/React.createElement("span", null, "£", dueToday.toLocaleString())), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "sc-cta",
-    onClick: () => goSC("NewsfeedMobile.html")
+    onClick: () => {
+      setUserTierSC(tier.key);
+      goSC("NewsfeedMobile.html");
+    }
   }, /*#__PURE__*/React.createElement(DSSC.IconifyIcon, {
     name: "lucide:lock",
     size: 15,

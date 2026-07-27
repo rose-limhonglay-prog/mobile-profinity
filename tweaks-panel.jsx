@@ -2,8 +2,9 @@
    PROfinity — Tweaks Panel
    Provides: useTweaks, TweaksPanel, TweakSection, TweakColor, TweakSlider
    Loaded before app.jsx; registers globals on window so app.jsx can call them.
+   useState comes from app.jsx's own `const { useState, ... } = React` — it
+   loads after this file but before anything here actually calls useState().
    =========================================================================== */
-const { useState } = React;
 
 /* ---- Hook ---------------------------------------------------------------- */
 function useTweaks(defaults) {

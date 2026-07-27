@@ -84,7 +84,7 @@ function ANASidebar() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "ana-logo"
   }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-academy-logo-full.png",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   })), ANA_NAV.map(item => {
     const href = ANA_NAV_LINKS[item.label];

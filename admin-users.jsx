@@ -66,7 +66,7 @@ function USRSidebar() {
   return (
     <aside className="usr-sidebar">
       <div className="usr-logo">
-        <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+        <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       </div>
       {USR_NAV.map((item) => {
         const href = USR_NAV_LINKS[item.label];

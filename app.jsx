@@ -1075,7 +1075,7 @@ const COURSE_COMMENT_2 = {
   id: "crs3", access: "gated", bucket: "coursecomment", course: "protox",
   author: { name: "Jeniffer R", avatar: "assets/avatar-miranda.jpg", seals: ["gb", "verified", "crown", "gold"] },
   time: "1 Hour Ago", hashtags: ["course", "discussion"],
-  body: "This finally made cannula depth and layering click for me — I tried the tear trough, cheekbone and jawline sequence chairside today and saw a real jump in patient satisfaction. Thank you Dr. Tim!",
+  body: "This finally made cannula depth and layering click for me — I tried the tear trough, and the results are incredibly smooth. Looking forward to putting this into practice…",
   lesson: { title: "Full-Face Rejuvenation Protocol", sub: "PROTOX Course · Module 4 · Lesson 2", image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRp-aTNLPnPGrav4xz2d8LBFNdjcVNPNBU2S1D8UEFlCA&s" },
   likes: "31", comments: "5", shares: "0", actioned: false, commentList: []
 };
@@ -1291,7 +1291,7 @@ const FOLLOWS = [
 
 const EVENTS = [
 {
-  image: "assets/event-technique-tuesday.png",
+  image: "assets/event-thumbnail-1.png",
   title: "Technique Tuesday", host: "Dr Tim Pearce",
   date: "17 March 2026", time: "20:00 GMT • 16:00 ET", cta: "Join Now!", ctaVariant: "primary"
 },
@@ -1378,7 +1378,6 @@ const nextPostImages = makeImagePicker(POST_PHOTO_POOL);
 const PINNED_POSTS = [
 {
   id: "p_quiz", author: PROFINITY, time: "6h",
-  hashtags: ["masterclass", "anatomy", "questionnaire"],
   body: "Knowledge check ✅ — test yourself before this week's masterclass. Tap an answer to see if you're right.",
   questionnaire: {
     question: "Which facial danger zone carries the highest risk of vascular occlusion during tear trough filler injection?",
@@ -1394,7 +1393,6 @@ const PINNED_POSTS = [
 },
 {
   id: "p8", author: PROFINITY, time: "1d",
-  hashtags: ["masterclass", "poll"],
   body: "Quick poll for the community — we're planning next month's masterclass and want to focus where you need it most. Cast your vote 👇",
   poll: {
     question: "Which area do you find most challenging to treat confidently?",
@@ -1473,7 +1471,6 @@ const EDITORIAL_POSTS = [
 const QUIZ_POSTS = [
 {
   id: "p_quiz2", author: PROFINITY, time: "9h",
-  hashtags: ["masterclass", "anatomy", "questionnaire"],
   body: "Knowledge check ✅ — quick one on nerve anatomy. Tap an answer to see if you're right.",
   questionnaire: {
     question: "Which nerve exits at the mental foramen and must be avoided when injecting the chin and jawline?",
@@ -1489,7 +1486,6 @@ const QUIZ_POSTS = [
 },
 {
   id: "p_quiz3", author: PROFINITY, time: "14h",
-  hashtags: ["masterclass", "safety", "questionnaire"],
   body: "Knowledge check ✅ — safety first. Tap an answer to see if you're right.",
   questionnaire: {
     question: "What is the recommended first step if you suspect a vascular occlusion during filler injection?",
@@ -1505,7 +1501,6 @@ const QUIZ_POSTS = [
 },
 {
   id: "p_quiz4", author: PROFINITY, time: "1d",
-  hashtags: ["masterclass", "toxin", "questionnaire"],
   body: "Knowledge check ✅ — toxin mechanism basics. Tap an answer to see if you're right.",
   questionnaire: {
     question: "Botulinum toxin type A works by blocking release of which neurotransmitter at the neuromuscular junction?",
@@ -1521,7 +1516,6 @@ const QUIZ_POSTS = [
 },
 {
   id: "p_quiz5", author: PROFINITY, time: "2d",
-  hashtags: ["masterclass", "cannula", "questionnaire"],
   body: "Knowledge check ✅ — cannula technique. Tap an answer to see if you're right.",
   questionnaire: {
     question: "Which layer should a cannula typically stay within to minimize risk when treating the tear trough?",
@@ -1537,7 +1531,6 @@ const QUIZ_POSTS = [
 },
 {
   id: "p_quiz6", author: PROFINITY, time: "2d",
-  hashtags: ["masterclass", "fullface", "questionnaire"],
   body: "Knowledge check ✅ — full-face planning. Tap an answer to see if you're right.",
   questionnaire: {
     question: "In the “liquid facelift” concept, which combination of areas is most commonly addressed?",
@@ -1553,7 +1546,6 @@ const QUIZ_POSTS = [
 },
 {
   id: "p_quiz7", author: PROFINITY, time: "3d",
-  hashtags: ["masterclass", "toxin", "questionnaire"],
   body: "Knowledge check ✅ — patient expectations. Tap an answer to see if you're right.",
   questionnaire: {
     question: "What is the typical onset time for a visible botulinum toxin effect?",
@@ -1569,7 +1561,6 @@ const QUIZ_POSTS = [
 },
 {
   id: "p_quiz8", author: PROFINITY, time: "3d",
-  hashtags: ["masterclass", "anatomy", "questionnaire"],
   body: "Knowledge check ✅ — temple danger zones. Tap an answer to see if you're right.",
   questionnaire: {
     question: "Which structure is the key danger zone when injecting the temporal region?",
@@ -1585,7 +1576,6 @@ const QUIZ_POSTS = [
 },
 {
   id: "p_quiz9", author: PROFINITY, time: "4d",
-  hashtags: ["masterclass", "safety", "questionnaire"],
   body: "Knowledge check ✅ — reversal agents. Tap an answer to see if you're right.",
   questionnaire: {
     question: "Hyaluronidase is used to?",
@@ -1601,7 +1591,6 @@ const QUIZ_POSTS = [
 },
 {
   id: "p_quiz10", author: PROFINITY, time: "5d",
-  hashtags: ["masterclass", "safety", "questionnaire"],
   body: "Knowledge check ✅ — contraindications. Tap an answer to see if you're right.",
   questionnaire: {
     question: "Which patient factor is a contraindication to elective filler treatment on the day?",
@@ -1617,7 +1606,6 @@ const QUIZ_POSTS = [
 },
 {
   id: "p_quiz11", author: PROFINITY, time: "6d",
-  hashtags: ["masterclass", "lips", "questionnaire"],
   body: "Knowledge check ✅ — lip anatomy. Tap an answer to see if you're right.",
   questionnaire: {
     question: "For lip filler, which vessel is the primary danger zone clinicians must map before injecting?",
@@ -1715,7 +1703,6 @@ const PORTRAIT_VIDEO_POST_2 = {
 
 const POLL_POST_2 = {
   id: "ff_poll2", author: PROFINITY, time: "1d",
-  hashtags: ["masterclass", "poll"],
   body: "Another quick poll — help us pick the next Technique Tuesday topic 👇",
   poll: {
     question: "Which topic should we cover at the next Technique Tuesday?",
@@ -1779,7 +1766,6 @@ const PORTRAIT_VIDEO_POST_3 = {
 
 const POLL_POST_3 = {
   id: "ff_poll3", author: PROFINITY, time: "1d",
-  hashtags: ["poll", "community"],
   body: "Another quick poll for the group — what should the next free Technique Tuesday actually focus on? 👇",
   poll: {
     question: "Which format do you want more of at Technique Tuesday?",
@@ -1842,7 +1828,6 @@ const PORTRAIT_VIDEO_POST_4 = {
 
 const POLL_POST_4 = {
   id: "ff_poll4", author: PROFINITY, time: "2d",
-  hashtags: ["poll", "masterclass"],
   body: "Last poll of the batch — help us decide what to record next for the free vault 👇",
   poll: {
     question: "Which recorded session would help you most right now?",
@@ -1858,6 +1843,100 @@ const POLL_POST_4 = {
   commentList: thread("Complication management, always — can't get enough safety content.")
 };
 
+/* Ten extra video posts appended to the end of the sequence so the Reels-
+   style fullscreen swipe (see SampleMedia / videoQueue in Feed()) has a
+   deeper library to page through — reads as "every video uploaded to
+   Profinity" rather than just the handful seeded per cycle above. */
+const EXTRA_VIDEO_POST_1 = {
+  id: "ff_vidmore1", author: TIM, time: "12h",
+  hashtags: ["masterclass", "technique"],
+  sample: { type: "video", poster: IMG.p1img3, duration: "14:20" },
+  body: "Full breakdown of the mid-face assessment I run before any filler goes near the cheeks — landmarks first, product second.",
+  likes: "1.6K", comments: "112", shares: "88", actioned: false,
+  commentList: thread("The landmark walkthrough alone was worth the watch.")
+};
+
+const EXTRA_VIDEO_POST_2 = {
+  id: "ff_vidmore2", author: MIRANDA, time: "14h",
+  hashtags: ["reel"],
+  sample: { type: "vertical", image: IMG.p1img4 },
+  body: "30 seconds on the one thing I check before every toxin consult — most people skip it.",
+  likes: "990", comments: "76", shares: "205", actioned: false,
+  commentList: thread("Never skipping this step again after watching.")
+};
+
+const EXTRA_VIDEO_POST_3 = {
+  id: "ff_vidmore3", author: TIM, time: "16h",
+  hashtags: ["clinic", "safety"],
+  sample: { type: "video", poster: IMG.p3img1, aspect: "square", duration: "10:05" },
+  body: "Chairside walkthrough of the aspiration technique I use across every high-risk zone — slow, deliberate, no shortcuts.",
+  likes: "1.3K", comments: "94", shares: "60", actioned: false,
+  commentList: thread("Slow and deliberate — exactly the reminder I needed.")
+};
+
+const EXTRA_VIDEO_POST_4 = {
+  id: "ff_vidmore4", author: MIRANDA, time: "18h",
+  hashtags: ["patient", "case-study"],
+  sample: { type: "video", poster: IMG.p4img2, duration: "8:50" },
+  body: "Full consult-to-result video for a jawline contouring case — every question the patient asked, answered on camera.",
+  likes: "1.1K", comments: "68", shares: "42", actioned: false,
+  commentList: thread("Filming the actual consult questions is such a great idea.")
+};
+
+const EXTRA_VIDEO_POST_5 = {
+  id: "ff_vidmore5", author: TIM, time: "20h",
+  hashtags: ["masterclass", "anatomy"],
+  sample: { type: "vertical", image: IMG.p5img2 },
+  body: "60 seconds on why the temple should almost never be your first treatment area.",
+  likes: "1.4K", comments: "101", shares: "230", actioned: false,
+  commentList: thread("Wish someone told me this before my first temple case.")
+};
+
+const EXTRA_VIDEO_POST_6 = {
+  id: "ff_vidmore6", author: MIRANDA, time: "22h",
+  hashtags: ["clinic", "protocol"],
+  sample: { type: "video", poster: IMG.p5img3, aspect: "square", duration: "13:15" },
+  body: "Full run-through of our aftercare consult script — word for word, so nothing gets missed at checkout.",
+  likes: "870", comments: "55", shares: "34", actioned: false,
+  commentList: thread("Stealing this script for my own aftercare calls.")
+};
+
+const EXTRA_VIDEO_POST_7 = {
+  id: "ff_vidmore7", author: TIM, time: "1d",
+  hashtags: ["masterclass", "technique"],
+  sample: { type: "video", poster: IMG.p5img4, duration: "17:40" },
+  body: "Complete cannula entry-point selection guide — where I go in, why, and what changes the decision.",
+  likes: "1.5K", comments: "128", shares: "96", actioned: false,
+  commentList: thread("The entry-point decision tree finally makes sense to me.")
+};
+
+const EXTRA_VIDEO_POST_8 = {
+  id: "ff_vidmore8", author: MIRANDA, time: "1d",
+  hashtags: ["reel"],
+  sample: { type: "vertical", image: IMG.p5img6 },
+  body: "45 seconds on the after-photo mistake almost every new injector makes.",
+  likes: "1.0K", comments: "82", shares: "190", actioned: false,
+  commentList: thread("Guilty of this exact mistake — fixing it today.")
+};
+
+const EXTRA_VIDEO_POST_9 = {
+  id: "ff_vidmore9", author: TIM, time: "1d",
+  hashtags: ["clinic", "business"],
+  sample: { type: "video", poster: IMG.p5img7, aspect: "square", duration: "9:30" },
+  body: "How we structure the first-visit consult so every new patient leaves confident, not overwhelmed.",
+  likes: "960", comments: "61", shares: "48", actioned: false,
+  commentList: thread("This structure would've saved me so many awkward first visits.")
+};
+
+const EXTRA_VIDEO_POST_10 = {
+  id: "ff_vidmore10", author: MIRANDA, time: "2d",
+  hashtags: ["masterclass", "safety"],
+  sample: { type: "video", poster: IMG.communityPoster, duration: "20:15" },
+  body: "Full replay of our vascular occlusion emergency drill — the exact steps our whole team now runs on repeat.",
+  likes: "1.8K", comments: "142", shares: "115", actioned: false,
+  commentList: thread("Every clinic should be running this drill regularly.")
+};
+
 /* The free-newsfeed's fixed post-type sequence — four designed cycles (cycle
    1 ends with the Upcoming Event + Masterclass Unlock, cycles 2-4 end with a
    tier's Hidden Post — Mastery, Freedom, Inner Circle in turn) instead of a
@@ -1870,8 +1949,10 @@ const FEED_SEQUENCE = [
 // Cycle 1
 TEXT_POST_1, SQUARE_IMG_POST_1, PORTRAIT_IMG_POST_1, EDITORIAL_POSTS[2] /* p1: carousel */,
 EDITORIAL_POSTS[6] /* p5: square video */, EDITORIAL_POSTS[1] /* p6: portrait reel */,
-PINNED_POSTS[0] /* p_quiz */, CONFIDENCE_POST_2 /* Confidence Hidden */, PINNED_POSTS[1] /* p8: poll */,
-{ id: "ff_event1", eventData: EVENTS[0], likes: "0", comments: "0", shares: "0", actioned: false, commentList: [] },
+PINNED_POSTS[0] /* p_quiz */, CONFIDENCE_POST_2 /* Confidence Hidden */,
+COURSE_COMMENT_2 /* Course discussion — PROTOX, seen by enrolled + commenting members */,
+PINNED_POSTS[1] /* p8: poll */,
+{ id: "ff_event1", author: PROFINITY, keepAuthor: true, time: "3h", eventData: EVENTS[0], likes: "0", comments: "0", shares: "0", actioned: false, commentList: [] },
 MASTERCLASS_UNLOCK_POST,
 // Cycle 2
 TEXT_POST_2, SQUARE_IMG_POST_2, PORTRAIT_IMG_POST_2, EDITORIAL_POSTS[3] /* p2: carousel */,
@@ -1884,7 +1965,10 @@ FREEDOM_POST_2 /* Freedom Hidden */,
 // Cycle 4
 TEXT_POST_4, SQUARE_IMG_POST_4, PORTRAIT_IMG_POST_4, EDITORIAL_POSTS[5] /* p4: carousel */,
 SQUARE_VIDEO_POST_4, PORTRAIT_VIDEO_POST_4, QUIZ_POSTS[2] /* p_quiz4 */, POLL_POST_4,
-INNER_POST_2 /* Inner Circle Hidden */];
+INNER_POST_2 /* Inner Circle Hidden */,
+// Extra video library — deepens the fullscreen Reels-style video queue
+EXTRA_VIDEO_POST_1, EXTRA_VIDEO_POST_2, EXTRA_VIDEO_POST_3, EXTRA_VIDEO_POST_4, EXTRA_VIDEO_POST_5,
+EXTRA_VIDEO_POST_6, EXTRA_VIDEO_POST_7, EXTRA_VIDEO_POST_8, EXTRA_VIDEO_POST_9, EXTRA_VIDEO_POST_10];
 
 
 /* ============================ SHARED BITS ================================ */
@@ -2056,22 +2140,6 @@ function RightRail() {
 }
 
 /* ============================ FEED ======================================= */
-function SortBar({ value, onCycle }) {
-  return (
-    <div className="pf-sortbar" style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, padding: "0 4px",
-      fontFamily: "var(--font-sans)", fontSize: "var(--fs-body-lg)", color: "var(--gray-500)" }}>
-      Sort by:
-      <button type="button" onClick={onCycle}
-      style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer",
-        fontFamily: "var(--font-sans)", fontWeight: "var(--fw-bold)", fontSize: "var(--fs-body-lg)", color: "var(--text-primary)" }}>
-        {value}
-        <Icon name="chevron-down" size={16} color="var(--gray-500)" />
-      </button>
-    </div>);
-
-}
-
-const SORTS = ["All", "Latest", "Top", "Following"];
 
 /* Facebook-style reaction set — colorful 3D Fluent Emoji + per-reaction accent. */
 const REACTIONS = [
@@ -2136,6 +2204,43 @@ function likeButtonOf(wrap) {
 
 /* Burst of floating reaction glyphs + a springy pop on the like icon. */
 function burstReaction(wrap, key) {burstFrom(likeButtonOf(wrap), key);}
+
+/* Instagram-style "double tap to love": tracks tap timing per media element
+   and, when a second tap lands within 300ms, cancels the pending single-tap
+   action (play/pause, open fullscreen, …), fires the Love reaction, and pops
+   a big heart at the tap point. Rendered via portal so it escapes any
+   overflow:hidden/scrolling ancestor (video frame, swipeable gallery). */
+function useDoubleTapLove(onLove) {
+  const lastTap = useRef(0);
+  const pending = useRef(null);
+  const [heart, setHeart] = useState(null);
+  const heartSeq = useRef(0);
+
+  const wrap = (singleTap) => (e) => {
+    const now = Date.now();
+    const x = e.clientX,y = e.clientY;
+    if (now - lastTap.current < 300) {
+      lastTap.current = 0;
+      clearTimeout(pending.current);
+      const key = ++heartSeq.current;
+      setHeart({ x, y, key });
+      setTimeout(() => setHeart((h) => h && h.key === key ? null : h), 700);
+      onLove();
+      return;
+    }
+    lastTap.current = now;
+    if (singleTap) pending.current = setTimeout(singleTap, 260);
+  };
+
+  const heartNode = heart && typeof document !== "undefined" && ReactDOM.createPortal(
+    <span key={heart.key} className="sm-double-heart" style={{ left: heart.x, top: heart.y }}>
+      <IconifyIcon name="fluent:heart-16-filled" size={96} color="var(--reaction-love)" />
+    </span>,
+    document.body
+  );
+
+  return { wrap, heartNode };
+}
 
 function burstFrom(btn, key) {
   if (!btn || typeof window === "undefined") return;
@@ -2324,23 +2429,80 @@ function CommentComposer({ placeholder, onSubmit, autoFocus, small }) {
 
 }
 
-/* Minimal post composer (input only) — replaces the DS Composer's media row. */
+/* Post composer — "What's on your mind?" pill with quick-attach icons
+   (Video / Photo / Reel) plus a Post button, matching the create-post-mobile
+   flow's post shape so new posts render identically on both surfaces. Only
+   Photo actually attaches (via post.media, rendered by MediaCarousel);
+   Video/Reel focus the composer since there's no capture/upload pipeline
+   for those yet. */
+function ComposerIconButton({ icon, color, label, onClick }) {
+  return (
+    <button type="button" onClick={onClick} aria-label={label}
+    style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, flexShrink: 0, borderRadius: "var(--r-pill)", border: "none", cursor: "pointer", background: "transparent" }}>
+      <IconifyIcon name={icon} size={19} color={color} />
+    </button>);
+
+}
+
 function PostComposer({ onPost }) {
   const [v, setV] = useState("");
-  const submit = () => {const t = v.trim();if (!t) return;onPost(t);setV("");};
-  const ready = v.trim().length > 0;
+  const [images, setImages] = useState([]);
+  const inputRef = useRef(null);
+  const firstName = (ME.name || "").split(" ")[0];
+  const ready = v.trim().length > 0 || images.length > 0;
+
+  const submit = () => {
+    if (!ready) return;
+    onPost({ body: v.trim(), media: images });
+    setV(""); setImages([]);
+  };
+
+  const focusInput = () => { if (inputRef.current) inputRef.current.focus(); };
+
+  const pickImages = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.multiple = true;
+    input.onchange = (e) => {
+      Array.from(e.target.files || []).slice(0, Math.max(0, 4 - images.length)).forEach((f) => {
+        const reader = new FileReader();
+        reader.onload = () => setImages((prev) => [...prev, reader.result].slice(0, 4));
+        reader.readAsDataURL(f);
+      });
+    };
+    input.click();
+  };
+
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--surface-card)", border: "1px solid var(--border-default)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-card)", padding: 16 }}>
-      <Avatar name={ME.name} src={ME.avatar} size={44} />
-      <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, background: "var(--surface-sunken)", border: "1px solid var(--border-default)", borderRadius: "var(--r-pill)", padding: "9px 9px 9px 18px" }}>
-        <input value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => {if (e.key === "Enter") submit();}}
-        placeholder="Write an article or share an update…"
-        style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: "var(--font-sans)", fontSize: "var(--fs-body-lg)", color: "var(--text-primary)", minWidth: 0 }} />
-        <button type="button" onClick={submit} aria-label="Post"
-        style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 38, height: 38, flexShrink: 0, borderRadius: "var(--r-pill)", border: "none", cursor: ready ? "pointer" : "default", background: ready ? "var(--action-primary)" : "var(--gray-200)", transition: "background var(--dur-fast)" }}>
-          <IconifyIcon name="lucide:send" size={18} color={ready ? "var(--white)" : "var(--gray-500)"} />
-        </button>
+    <div style={{ display: "flex", flexDirection: "column", gap: 10, background: "var(--surface-card)", border: "1px solid var(--border-default)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-card)", padding: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <Avatar name={ME.name} src={ME.avatar} size={44} />
+        <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 4, background: "var(--surface-sunken)", border: "1px solid var(--border-default)", borderRadius: "var(--r-pill)", padding: "9px 9px 9px 18px" }}>
+          <input ref={inputRef} value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => {if (e.key === "Enter") submit();}}
+          placeholder={"What's on your mind, " + firstName + "?"}
+          style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: "var(--font-sans)", fontSize: "var(--fs-body-lg)", color: "var(--text-primary)", minWidth: 0 }} />
+          <ComposerIconButton icon="lucide:video" color="var(--error)" label="Add video" onClick={focusInput} />
+          <ComposerIconButton icon="lucide:image" color="var(--success)" label="Add photo" onClick={pickImages} />
+          <ComposerIconButton icon="lucide:clapperboard" color="var(--reaction-love)" label="Add reel" onClick={focusInput} />
+          <button type="button" onClick={submit} aria-label="New post"
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 38, height: 38, flexShrink: 0, borderRadius: "var(--r-pill)", border: "none", cursor: ready ? "pointer" : "default", background: ready ? "var(--action-primary)" : "var(--gray-200)", transition: "background var(--dur-fast)" }}>
+            <IconifyIcon name="lucide:send" size={18} color={ready ? "var(--white)" : "var(--gray-500)"} />
+          </button>
+        </div>
       </div>
+      {images.length > 0 &&
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", paddingLeft: 56 }}>
+        {images.map((src, i) =>
+        <div key={i} style={{ position: "relative" }}>
+            <img src={src} alt="" style={{ width: 72, height: 72, borderRadius: "var(--r-sm)", objectFit: "cover", display: "block" }} />
+            <button type="button" aria-label="Remove image" onClick={() => setImages((imgs) => imgs.filter((_, j) => j !== i))}
+          style={{ position: "absolute", top: -6, right: -6, width: 20, height: 20, borderRadius: "50%", border: "none", cursor: "pointer", background: "var(--gray-900)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <IconifyIcon name="lucide:x" size={12} color="var(--white)" />
+            </button>
+          </div>
+        )}
+      </div>}
     </div>);
 
 }
@@ -2599,12 +2761,13 @@ function SlidingDots({ count, idx }) {
    image carousels open a click-to-fullscreen viewer (own swipeable strip of
    the same images) — see the reel's sm-fs overlay for the pattern this
    mirrors. */
-function MediaCarousel({ images, aspect }) {
+function MediaCarousel({ images, aspect, onLoveReact }) {
   const [idx, setIdx] = useState(0);
   const [fs, setFs] = useState(false);
   const [fsIdx, setFsIdx] = useState(0);
   const ref = useRef(null);
   const fsRef = useRef(null);
+  const { wrap, heartNode } = useDoubleTapLove(onLoveReact || (() => {}));
   useEffect(() => {
     if (!fs) return;
     const onKey = (e) => {if (e.key === "Escape") setFs(false);};
@@ -2639,11 +2802,12 @@ function MediaCarousel({ images, aspect }) {
       <div className={"mc-scroll" + (single ? " mc-scroll-single" + (aspect ? " mc-aspect-" + aspect : "") : "")} ref={ref} onScroll={onScroll}>
         {images.map((src, i) =>
           <img key={i} src={src} alt={"Image " + (i + 1) + " of " + images.length} className="mc-img"
-          onClick={() => openFullscreen(i)} />
+          onClick={wrap(() => openFullscreen(i))} />
         )}
       </div>
       {!single && <span className="mc-count">{idx + 1}/{images.length}</span>}
       {!single && <SlidingDots count={images.length} idx={idx} />}
+      {heartNode}
       {fs &&
       <div className="sm-fs" onClick={(e) => {e.stopPropagation();}}>
           <div className="mc-fs-track" onScroll={onFsScroll} ref={fsRef}>
@@ -2751,82 +2915,219 @@ function ChannelContext({ channel }) {
 
 }
 
-function SampleMedia({ sample }) {
+const SM_FS_TRANSITION_MS = 320;
+
+function SampleMedia({ sample, saved, onSave, onReport, onLoveReact, author, likes, commentsCount, shares, liked, comments, onLike, onComment, onShare, fsOpen, onFsOpen, onFsClose, onNextVideo, onPrevVideo, navDir }) {
   const galleryRef = useRef(null);
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(sample && sample.type === "vertical");
   const [muted, setMuted] = useState(true);
-  const [fs, setFs] = useState(false);
+  const [localFs, setLocalFs] = useState(false);
+  const fs = fsOpen !== undefined ? fsOpen : localFs;
+  const setFs = (open) => {
+    if (open) onFsOpen ? onFsOpen() : setLocalFs(true);
+    else onFsClose ? onFsClose() : setLocalFs(false);
+  };
+  const { wrap, heartNode } = useDoubleTapLove(onLoveReact || (() => {}));
   useEffect(() => {
     if (!fs) return;
     const onKey = (e) => {if (e.key === "Escape") setFs(false);};
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [fs]);
+  /* Reels-style vertical navigation inside fullscreen playback: scrolling or
+     swiping up advances to the next video/reel post in the feed, down goes
+     back — mirrors TikTok/IG. navLock debounces one nav per gesture since a
+     single swipe/wheel fires many move events. `navDir` (±1, from the feed)
+     tells this instance it's crossfading in/out; a plain tap-to-open
+     or tap-to-close (navDir null) has no fade, matching the old behavior. */
+  const prevFsRef = useRef(fs);
+  const [fsVisible, setFsVisible] = useState(fs);
+  const [fsAnimClass, setFsAnimClass] = useState("");
+  useEffect(() => {
+    const wasOpen = prevFsRef.current;
+    prevFsRef.current = fs;
+    if (fs === wasOpen) return;
+    if (fs) {
+      setPlaying(true);
+      setFsVisible(true);
+      setFsAnimClass(navDir ? navDir > 0 ? "sm-fs-enter-next" : "sm-fs-enter-prev" : "");
+      return;
+    }
+    if (navDir) {
+      setFsAnimClass(navDir > 0 ? "sm-fs-exit-next" : "sm-fs-exit-prev");
+      const t = setTimeout(() => {setFsVisible(false);setFsAnimClass("");}, SM_FS_TRANSITION_MS);
+      return () => clearTimeout(t);
+    }
+    setFsVisible(false);
+  }, [fs, navDir]);
+  const navLock = useRef(false);
+  const touchStartY = useRef(null);
+  const triggerNav = (delta) => {
+    if (navLock.current) return;
+    const handler = delta < 0 ? onNextVideo : onPrevVideo;
+    if (!handler) return;
+    navLock.current = true;
+    handler();
+    setTimeout(() => {navLock.current = false;}, 500);
+  };
+  const onFsWheel = (e) => {
+    if (Math.abs(e.deltaY) < 12) return;
+    triggerNav(e.deltaY);
+  };
+  const onFsTouchStart = (e) => {touchStartY.current = e.touches[0].clientY;};
+  const onFsTouchMove = (e) => {
+    if (touchStartY.current == null) return;
+    const dy = e.touches[0].clientY - touchStartY.current;
+    if (Math.abs(dy) < 40) return;
+    triggerNav(dy);
+    touchStartY.current = null;
+  };
   if (!sample) return null;
 
   if (sample.type === "video") {
     return (
-      <div className={"sm-video" + (sample.aspect === "square" ? " sm-video-square" : "")} onClick={() => setPlaying((p) => !p)}>
-        <img src={sample.poster} alt="" />
-        <span className={"sm-play" + (playing ? " on" : "")}>
-          <IconifyIcon name={playing ? "fluent:pause-16-filled" : "fluent:play-16-filled"} size={26} color="var(--brand-navy)" />
-        </span>
-        <button type="button" className="sm-mute" aria-label={muted ? "Unmute" : "Mute"}
-        onClick={(e) => {e.stopPropagation();setMuted((m) => !m);}}>
-          <IconifyIcon name={muted ? "lucide:volume-x" : "lucide:volume-2"} size={16} color="var(--white)" />
-        </button>
-        <FloatingReactors />
-        <span className="sm-badge"><IconifyIcon name="lucide:video" size={14} color="var(--white)" />{sample.duration}</span>
-      </div>);
+      <>
+        <div className={"sm-video" + (sample.aspect === "square" ? " sm-video-square" : "")}
+        onClick={wrap(() => {setFs(true);setPlaying(true);})}>
+          <img src={sample.poster} alt="" />
+          <span className={"sm-play" + (playing ? " on" : "")}>
+            <IconifyIcon name={playing ? "fluent:pause-16-filled" : "fluent:play-16-filled"} size={26} color="var(--brand-navy)" />
+          </span>
+          {!playing && !fs && <FloatingReactors />}
+        </div>
+        {fsVisible &&
+        <div className={"sm-fs sm-fs-video" + (fsAnimClass ? " " + fsAnimClass : "")} onClick={(e) => {e.stopPropagation();wrap(null)(e);}}
+        onWheel={onFsWheel} onTouchStart={onFsTouchStart} onTouchMove={onFsTouchMove}>
+          <img src={sample.poster} alt="" />
+          <div className="sm-fs-topbar" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="sm-fs-topbtn" aria-label="Close fullscreen" onClick={() => setFs(false)}>
+              <IconifyIcon name="lucide:x" size={20} color="var(--white)" />
+            </button>
+            <button type="button" className="sm-fs-topbtn" aria-label={muted ? "Unmute" : "Mute"}
+            onClick={(e) => {e.stopPropagation();setMuted((m) => !m);}}>
+              <IconifyIcon name={muted ? "lucide:volume-x" : "lucide:volume-2"} size={18} color="var(--white)" />
+            </button>
+          </div>
+          <span className={"sm-play" + (playing ? " on" : "")} onClick={(e) => {e.stopPropagation();setPlaying((p) => !p);}}>
+            <IconifyIcon name={playing ? "fluent:pause-16-filled" : "fluent:play-16-filled"} size={26} color="var(--brand-navy)" />
+          </span>
+          <div className="sm-fs-rail" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="sm-fs-rail-btn" aria-label={liked ? "Unlike" : "Like"} onClick={onLike}>
+              <IconifyIcon name="fluent:thumb-like-16-filled" size={26} color={liked ? "var(--reaction-like)" : "var(--white)"} />
+            </button>
+            <button type="button" className="sm-fs-rail-btn" aria-label="Comment" onClick={onComment}>
+              <IconifyIcon name="lucide:message-circle" size={26} color="var(--white)" />
+              {commentsCount != null && <span>{commentsCount}</span>}
+            </button>
+            <button type="button" className="sm-fs-rail-btn" aria-label="Share" onClick={onShare}>
+              <IconifyIcon name="lucide:send" size={25} color="var(--white)" />
+              {shares != null && <span>{shares}</span>}
+            </button>
+            <button type="button" className="sm-fs-rail-btn" aria-label={saved ? "Remove from saved" : "Save"} onClick={onSave}>
+              <IconifyIcon name={saved ? "lucide:bookmark-check" : "lucide:bookmark"} size={26} color="var(--white)" />
+            </button>
+          </div>
+          {author &&
+          <div className="sm-fs-bottom" onClick={(e) => e.stopPropagation()}>
+            <div className="sm-fs-author">
+              <Avatar name={author.name} src={author.avatar} size={34} />
+              <span className="sm-fs-author-name">{author.name}</span>
+              {author.seals && <VerificationSeals seals={author.seals} size={14} />}
+              <IconifyIcon name="lucide:globe" size={13} color="rgba(255,255,255,.75)" />
+            </div>
+            {comments && comments.length > 0 &&
+            <p className="sm-fs-comment-preview">
+              <strong>{comments[0].author && comments[0].author.name}</strong> commented: {comments[0].text}
+            </p>
+            }
+            <span className="sm-fs-timeline">
+              <span className={"sm-fs-timeline-fill" + (playing ? " playing" : "")} />
+            </span>
+          </div>
+          }
+        </div>
+        }
+        {heartNode}
+      </>);
 
   }
 
   if (sample.type === "vertical") {
     return (
-      <div className={"sm-vertical sm-reel" + (playing ? " playing" : "")} onClick={() => setPlaying((p) => !p)}>
-        <img src={sample.image} alt="" />
-        <span className="sm-badge sm-badge-tr"><IconifyIcon name="lucide:smartphone" size={14} color="var(--white)" />Reel</span>
-        <span className="sm-mute" onClick={(e) => {e.stopPropagation();setMuted((m) => !m);}}>
-          <IconifyIcon name={muted ? "lucide:volume-x" : "lucide:volume-2"} size={16} color="var(--white)" />
-        </span>
-        <span className={"sm-bigplay" + (playing ? " hide" : "")}>
-          <IconifyIcon name="fluent:play-16-filled" size={30} color="var(--white)" />
-        </span>
-        <FloatingReactors />
-        <div className="sm-controls" onClick={(e) => e.stopPropagation()}>
-          <button type="button" className="sm-ctl" aria-label={playing ? "Pause" : "Play"} onClick={() => setPlaying((p) => !p)}>
-            <IconifyIcon name={playing ? "fluent:pause-16-filled" : "fluent:play-16-filled"} size={18} color="var(--white)" />
-          </button>
-          <span className="sm-time">0:12</span>
-          <span className="sm-track"><span className="sm-fill" /></span>
-          <span className="sm-time">0:30</span>
-          <button type="button" className="sm-ctl" aria-label="Fullscreen" onClick={(e) => {e.stopPropagation();setFs(true);}}>
-            <IconifyIcon name="lucide:maximize-2" size={16} color="var(--white)" />
-          </button>
-        </div>
-        {fs &&
-        <div className="sm-fs" onClick={(e) => {e.stopPropagation();}}>
-            <img src={sample.image} alt="" />
-            <button type="button" className="sm-fs-close" aria-label="Close fullscreen"
-          onClick={() => setFs(false)}>
-              <IconifyIcon name="lucide:x" size={24} color="var(--white)" />
+      <>
+        <div className={"sm-vertical sm-reel" + (playing ? " playing" : "")}
+        onClick={wrap(() => {setFs(true);setPlaying(true);})}>
+          <img src={sample.image} alt="" />
+          <span className={"sm-bigplay" + (playing ? " hide" : "")}>
+            <IconifyIcon name="fluent:play-16-filled" size={30} color="var(--white)" />
+          </span>
+          <div className="sm-controls" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="sm-ctl" aria-label={playing ? "Pause" : "Play"} onClick={() => setPlaying((p) => !p)}>
+              <IconifyIcon name={playing ? "fluent:pause-16-filled" : "fluent:play-16-filled"} size={18} color="var(--white)" />
             </button>
-            <button type="button" className="sm-fs-mute" aria-label={muted ? "Unmute" : "Mute"}
-          onClick={() => setMuted((m) => !m)}>
-              <IconifyIcon name={muted ? "lucide:volume-x" : "lucide:volume-2"} size={20} color="var(--white)" />
+            <span className="sm-time">0:12</span>
+            <span className="sm-track"><span className="sm-fill" /></span>
+            <span className="sm-time">0:30</span>
+            <button type="button" className="sm-ctl" aria-label={muted ? "Unmute" : "Mute"} onClick={(e) => {e.stopPropagation();setMuted((m) => !m);}}>
+              <IconifyIcon name={muted ? "lucide:volume-x" : "lucide:volume-2"} size={16} color="var(--white)" />
             </button>
-            <div className="sm-fs-bar">
-              <button type="button" className="sm-ctl" aria-label={playing ? "Pause" : "Play"} onClick={() => setPlaying((p) => !p)}>
-                <IconifyIcon name={playing ? "fluent:pause-16-filled" : "fluent:play-16-filled"} size={22} color="var(--white)" />
-              </button>
-              <span className="sm-time">0:12</span>
-              <span className="sm-track"><span className="sm-fill" /></span>
-              <span className="sm-time">0:30</span>
-            </div>
           </div>
+        </div>
+        {fsVisible &&
+        <div className={"sm-fs sm-fs-video" + (fsAnimClass ? " " + fsAnimClass : "")} onClick={(e) => {e.stopPropagation();wrap(null)(e);}}
+        onWheel={onFsWheel} onTouchStart={onFsTouchStart} onTouchMove={onFsTouchMove}>
+          <img src={sample.image} alt="" />
+          <div className="sm-fs-topbar" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="sm-fs-topbtn" aria-label="Close fullscreen" onClick={() => setFs(false)}>
+              <IconifyIcon name="lucide:x" size={20} color="var(--white)" />
+            </button>
+            <button type="button" className="sm-fs-topbtn" aria-label={muted ? "Unmute" : "Mute"}
+            onClick={(e) => {e.stopPropagation();setMuted((m) => !m);}}>
+              <IconifyIcon name={muted ? "lucide:volume-x" : "lucide:volume-2"} size={18} color="var(--white)" />
+            </button>
+          </div>
+          <span className={"sm-play" + (playing ? " on" : "")} onClick={(e) => {e.stopPropagation();setPlaying((p) => !p);}}>
+            <IconifyIcon name={playing ? "fluent:pause-16-filled" : "fluent:play-16-filled"} size={26} color="var(--brand-navy)" />
+          </span>
+          <div className="sm-fs-rail" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="sm-fs-rail-btn" aria-label={liked ? "Unlike" : "Like"} onClick={onLike}>
+              <IconifyIcon name="fluent:thumb-like-16-filled" size={26} color={liked ? "var(--reaction-like)" : "var(--white)"} />
+            </button>
+            <button type="button" className="sm-fs-rail-btn" aria-label="Comment" onClick={onComment}>
+              <IconifyIcon name="lucide:message-circle" size={26} color="var(--white)" />
+              {commentsCount != null && <span>{commentsCount}</span>}
+            </button>
+            <button type="button" className="sm-fs-rail-btn" aria-label="Share" onClick={onShare}>
+              <IconifyIcon name="lucide:send" size={25} color="var(--white)" />
+              {shares != null && <span>{shares}</span>}
+            </button>
+            <button type="button" className="sm-fs-rail-btn" aria-label={saved ? "Remove from saved" : "Save"} onClick={onSave}>
+              <IconifyIcon name={saved ? "lucide:bookmark-check" : "lucide:bookmark"} size={26} color="var(--white)" />
+            </button>
+          </div>
+          {author &&
+          <div className="sm-fs-bottom" onClick={(e) => e.stopPropagation()}>
+            <div className="sm-fs-author">
+              <Avatar name={author.name} src={author.avatar} size={34} />
+              <span className="sm-fs-author-name">{author.name}</span>
+              {author.seals && <VerificationSeals seals={author.seals} size={14} />}
+              <IconifyIcon name="lucide:globe" size={13} color="rgba(255,255,255,.75)" />
+            </div>
+            {comments && comments.length > 0 &&
+            <p className="sm-fs-comment-preview">
+              <strong>{comments[0].author && comments[0].author.name}</strong> commented: {comments[0].text}
+            </p>
+            }
+            <span className="sm-fs-timeline">
+              <span className={"sm-fs-timeline-fill" + (playing ? " playing" : "")} />
+            </span>
+          </div>
+          }
+        </div>
         }
-      </div>);
+        {heartNode}
+      </>);
 
   }
 
@@ -2841,11 +3142,12 @@ function SampleMedia({ sample }) {
     <div className="sm-gallery-wrap">
       <div className="sm-gallery" ref={galleryRef} onScroll={onScroll}>
         {sample.images.map((src, i) =>
-        <img key={i} src={src} alt={"Image " + (i + 1) + " of " + sample.images.length} />
+        <img key={i} src={src} alt={"Image " + (i + 1) + " of " + sample.images.length} onClick={wrap(null)} />
         )}
       </div>
       <span className="sm-count">{idx + 1}/{sample.images.length}</span>
       <SlidingDots count={sample.images.length} idx={idx} />
+      {heartNode}
     </div>);
 
 }
@@ -2901,7 +3203,9 @@ function Questionnaire({ questionnaire: q }) {
   return (
     <div className="pf-quiz">
       <div className="pf-quiz-q">
-        <IconifyIcon name="lucide:help-circle" size={18} color="var(--brand-navy)" />
+        <span className="pf-quiz-badge">
+          <IconifyIcon name="lucide:brain" size={16} color="var(--brand-navy)" />
+        </span>
         <span>{q.question}</span>
       </div>
       <div className="pf-quiz-opts">
@@ -3084,7 +3388,7 @@ function ReportedModal({ onClose }) {
 /* Shared "..." menu for post cards that don't render through the DS PostCard
    (ChannelFeedCard, CourseCommentCard) — mirrors the menu PostCard itself
    opens from its own "..." icon, so every post gets the same two actions. */
-function PostMoreMenu({ saved, onSave, onReport }) {
+function PostMoreMenu({ saved, onSave, onReport, iconColor = "var(--gray-400)" }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (!open) return;
@@ -3097,7 +3401,7 @@ function PostMoreMenu({ saved, onSave, onReport }) {
       <button type="button" aria-label="Post options" aria-haspopup="menu" aria-expanded={open}
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}
         style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex", lineHeight: 0 }}>
-        <IconifyIcon name="lucide:more-vertical" size={20} color="var(--gray-400)" />
+        <IconifyIcon name="lucide:more-vertical" size={20} color={iconColor} />
       </button>
       {open &&
       <div className="pf-post-menu" role="menu" onClick={(e) => e.stopPropagation()}>
@@ -3127,6 +3431,33 @@ function resolveHashtags(slugs) {
   return slugs.map((s) => map[s]).filter(Boolean);
 }
 
+/* Reels get their own Instagram-style action row (heart/comment/send with
+   counts, bookmark alone on the far right) instead of the shared DS
+   PostActions row — the CSS hides that row for .is-reel posts. */
+function ReelActionsRow({ likes, comments, shares, liked, saved, onLike, onComment, onShare, onSave }) {
+  return (
+    <div className="pf-reel-actions">
+      <div className="pf-reel-actions-left">
+        <button type="button" className="pf-reel-act" aria-label={liked ? "Unlike" : "Like"} onClick={onLike}>
+          <IconifyIcon name={liked ? "fluent:heart-16-filled" : "lucide:heart"} size={24} color={liked ? "var(--reaction-love)" : "var(--text-primary)"} />
+          <span>{likes}</span>
+        </button>
+        <button type="button" className="pf-reel-act" aria-label="Comment" onClick={onComment}>
+          <IconifyIcon name="lucide:message-circle" size={23} color="var(--text-primary)" />
+          <span>{comments}</span>
+        </button>
+        <button type="button" className="pf-reel-act" aria-label="Share" onClick={onShare}>
+          <IconifyIcon name="lucide:send" size={22} color="var(--text-primary)" />
+          <span>{shares}</span>
+        </button>
+      </div>
+      <button type="button" className="pf-reel-save" aria-label={saved ? "Remove from saved" : "Save"} onClick={onSave}>
+        <IconifyIcon name={saved ? "lucide:bookmark-check" : "lucide:bookmark"} size={24} color="var(--text-primary)" />
+      </button>
+    </div>);
+
+}
+
 /* Clicking a hashtag on a post (Newsfeed or Community) jumps to the Search
    page pre-filtered to every other post sharing that same tag. */
 function goToHashtag(tag) {
@@ -3135,7 +3466,7 @@ function goToHashtag(tag) {
   (window.pfGo || function (u) { window.location.href = u; })(url);
 }
 
-function FeedPost({ post, st, hideTags, onToggleLike, onReact, onShare, onSave, onAddComment, onAddReply }) {
+function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, onShare, onSave, onAddComment, onAddReply, videoFsOpen, onVideoFsOpen, onVideoFsClose, onVideoNext, onVideoPrev, videoNavDir }) {
   const ref = useRef(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [replyFor, setReplyFor] = useState(null);
@@ -3156,6 +3487,11 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onShare, onSave, 
     const willReact = !st.reaction;
     onToggleLike();
     if (willReact) burstReaction(ref.current, "like");
+  };
+  const handleDoubleTapLove = () => {
+    const willReact = !st.reaction;
+    onDoubleTapLove();
+    if (willReact) burstReaction(ref.current, "love");
   };
   const handleComment = () => {
     const g = actionIcon(1);
@@ -3193,23 +3529,37 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onShare, onSave, 
   const comments = st.comments || [];
   const hasRegion = comments.length > 0 || composerOpen;
   const inlineBubbles = typeof window !== "undefined" && window.PF_INLINE_BUBBLES;
+  const isReel = post.sample && post.sample.type === "vertical";
 
   return (
-    <div className={"post-wrap" + (post.channel ? " has-chx" : "")} ref={ref}
+    <div className={"post-wrap" + (post.channel ? " has-chx" : "") + (isReel ? " is-reel" : "")} ref={ref}
     style={{ background: "var(--surface-card)", borderRadius: "var(--r-md)", overflow: "hidden", padding: "0px 16px" }}>
       {post.channel && <ChannelContext channel={post.channel} />}
       <PostCard {...post} commentList={[]}
-      hashtags={hideTags ? [] : resolveHashtags(post.hashtags)}
+      hashtags={hideTags || post.questionnaire || post.poll ? [] : resolveHashtags(post.hashtags)}
       title={post.title}
       body={post.questionnaire || post.poll ? null : <ClampText text={post.body} more={post.channel ? "Learn More" : "See more"} />}
-      media={<div style={post.unlockBadge ? { position: "relative" } : undefined}>
+      media={<div className="pf-media-bleed" style={{
+        ...(post.unlockBadge ? { position: "relative" } : null),
+        // cancel post-wrap's 16px horizontal padding so media bleeds
+        // edge-to-edge with the card instead of sitting inset
+        margin: "0 -16px"
+      }}>
         {post.questionnaire
         ? <Questionnaire questionnaire={post.questionnaire} />
         : post.poll
         ? <Poll poll={post.poll} />
         : post.sample
-        ? <SampleMedia sample={post.sample} />
-        : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} aspect={post.aspect} /> : null}
+        ? <SampleMedia sample={post.sample}
+          saved={st.saved} onSave={handleSave} onReport={() => setReportedOpen(true)} onLoveReact={handleDoubleTapLove}
+          author={post.author} likes={st.likes} commentsCount={st.commentsCount} shares={st.shares} liked={st.liked}
+          comments={comments} onLike={handleLike} onComment={handleComment} onShare={handleShare}
+          fsOpen={videoFsOpen} onFsOpen={onVideoFsOpen} onFsClose={onVideoFsClose} onNextVideo={onVideoNext} onPrevVideo={onVideoPrev} navDir={videoNavDir} />
+        : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} aspect={post.aspect} onLoveReact={handleDoubleTapLove} /> : null}
+        {isReel &&
+        <ReelActionsRow likes={st.likes} comments={st.commentsCount} shares={st.shares}
+          liked={st.liked} saved={st.saved}
+          onLike={handleLike} onComment={handleComment} onShare={handleShare} onSave={handleSave} />}
         {post.unlockBadge &&
         <span className="pf-unlock-badge">
             <IconifyIcon name="lucide:lock-open" size={14} color="var(--brand-navy)" />Unlocked
@@ -3374,13 +3724,21 @@ function TeaserPost({ post, onUpgrade }) {
    CTA — same one used in RightRail's "My Events" widget) dropped straight
    into the feed as its own card, labeled so it reads as an event rather than
    a regular update. */
-function FeedEventCard({ event }) {
+function FeedEventCard({ post, event }) {
+  const author = post && post.author;
   return (
     <div className="post-wrap pf-event-feed" style={{ background: "transparent", overflow: "visible", padding: "0px 16px" }}>
-      <div className="pf-event-feed-label">
-        <IconifyIcon name="lucide:calendar-clock" size={16} color="var(--premium-gold-deep)" />
-        <span>Upcoming Event</span>
-      </div>
+      {author &&
+      <div className="pf-teaser-head">
+        <Avatar name={author.name} src={author.avatar} size={44} />
+        <div className="pf-teaser-head-main">
+          <div className="pf-teaser-head-name">
+            <span>{author.name}</span>
+            {author.seals && <VerificationSeals seals={author.seals} size={16} />}
+          </div>
+          {post.time && <div className="pf-teaser-head-sub"><span>{post.time}</span></div>}
+        </div>
+      </div>}
       <EventCard {...event} />
     </div>);
 
@@ -3392,7 +3750,7 @@ function FeedEventCard({ event }) {
    Deliberately lighter than FeedPost — no media carousel, no full comment
    thread — this is "a tagged post in your feed", not the full community
    thread view (that still lives on the Community screen itself). */
-function ChannelFeedCard({ post, st, onToggleLike, onReact, onSave, onShare, onAddComment, onAddReply }) {
+function ChannelFeedCard({ post, st, onToggleLike, onReact, onDoubleTapLove, onSave, onShare, onAddComment, onAddReply, videoFsOpen, onVideoFsOpen, onVideoFsClose, onVideoNext, onVideoPrev, videoNavDir }) {
   const meta = BUCKET_META[post.bucket] || { label: "Community", color: "var(--gray-500)" };
   const [replying, setReplying] = useState(false);
   const [likesOpen, setLikesOpen] = useState(false);
@@ -3406,6 +3764,11 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onSave, onShare, onA
     const willReact = !st.reaction;
     onToggleLike();
     if (willReact) burstReaction(ref.current, "like");
+  };
+  const handleDoubleTapLove = () => {
+    const willReact = !st.reaction;
+    onDoubleTapLove();
+    if (willReact) burstReaction(ref.current, "love");
   };
   return (
     <div className="pf-chcard" ref={ref}
@@ -3421,11 +3784,17 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onSave, onShare, onA
         <PostMoreMenu saved={st.saved} onSave={onSave} onReport={() => setReportedOpen(true)} />
       </div>
       <p className="pf-chcard-body">{post.body}</p>
-      {post.sample ?
-      <SampleMedia sample={post.sample} /> :
-      post.media && post.media.length > 0 ?
-      <MediaCarousel images={post.media} /> :
-      null}
+      {(post.sample || post.media && post.media.length > 0) &&
+      <div className="pf-chcard-media pf-media-bleed" style={{ margin: "0 -16px 14px" }}>
+        {post.sample ?
+        <SampleMedia sample={post.sample} onLoveReact={handleDoubleTapLove}
+          saved={st.saved} onSave={onSave}
+          author={{ name: post.channel.by, avatar: post.channel.byAvatar }}
+          likes={st.likes} commentsCount={st.commentsCount} shares={st.shares} liked={liked}
+          comments={comments} onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={onShare}
+          fsOpen={videoFsOpen} onFsOpen={onVideoFsOpen} onFsClose={onVideoFsClose} onNextVideo={onVideoNext} onPrevVideo={onVideoPrev} navDir={videoNavDir} /> :
+        <MediaCarousel images={post.media} onLoveReact={handleDoubleTapLove} />}
+      </div>}
       <PostActions likes={st.likes} comments={st.commentsCount} shares={st.shares}
       liked={liked} saved={st.saved} actioned={false}
       onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={onShare} onSave={onSave}
@@ -3685,13 +4054,12 @@ function getAllPosts() {
 }
 
 function Feed({ channel } = {}) {
-  const [userPosts] = useState(() => readUserPosts());
+  const [userPosts, setUserPosts] = useState(() => readUserPosts());
   const [state, setState] = useState(() => {
     const m = {};
     [...readUserPosts(), ...FEED_SEQUENCE, ...BUCKET_POSTS].forEach((p) => {m[p.id] = { liked: false, saved: false, actioned: p.actioned, likes: p.likes, base: p.likes, reaction: null, shares: p.shares, sharesBase: p.shares, comments: withIds(p.commentList), commentsCount: p.comments };});
     return m;
   });
-  const [sort, setSort] = useState("All");
   /* Defaults to whatever tier is actually persisted (set for real by the
      checkout/apply flows, or overridden here by the dev preview switcher —
      either way both write the same localStorage key, so newsfeed, community
@@ -3700,8 +4068,34 @@ function Feed({ channel } = {}) {
   const setViewerPersona = (key) => { setUserTier(key); setViewerPersonaRaw(key); };
   const [bucketToggles, setBucketToggles] = useState({ course: false, save: false, mute: false });
   const [upgradeFor, setUpgradeFor] = useState(null);
+  /* Fullscreen video/reel playback is tracked here (not locally per-post) so
+     scrolling/swiping while a video is open can advance to the next
+     video/reel post in feed order, Reels-style. `dir` (±1) travels alongside
+     the open post's id so both the post sliding out and the post sliding in
+     animate in the same direction that render; a direct tap-to-open/close
+     carries no dir, so it opens/closes instantly as before. */
+  const [openVideo, setOpenVideo] = useState(null);
+  const openVideoId = openVideo ? openVideo.id : null;
+  const goToVideo = (delta) => setOpenVideo((cur) => {
+    if (!cur) return cur;
+    const i = videoQueue.indexOf(cur.id);
+    if (i === -1) return cur;
+    const next = i + delta;
+    return next >= 0 && next < videoQueue.length ? { id: videoQueue[next], dir: delta } : cur;
+  });
 
   const toggle = (id, key) => setState((s) => ({ ...s, [id]: { ...s[id], [key]: !s[id][key] } }));
+
+  /* Composer submits straight into the feed — same post shape + localStorage
+     key ("pf-newsfeed-user-posts") that CreatePostMobile writes, so posts
+     made from either surface show up on both. */
+  const addPost = ({ body, media }) => {
+    const post = { id: "u" + Date.now(), author: { name: ME.name, avatar: ME.avatar, seals: ["gb", "verified"] },
+      time: "Just now", body, media: media || [], likes: "0", comments: "0", shares: "0", commentList: [] };
+    try { localStorage.setItem(PF_USER_POSTS_KEY, JSON.stringify([post, ...readUserPosts()])); } catch (e) {}
+    setUserPosts((list) => [post, ...list]);
+    setState((s) => ({ ...s, [post.id]: { liked: false, saved: false, actioned: post.actioned, likes: post.likes, base: post.likes, reaction: null, shares: post.shares, sharesBase: post.shares, comments: withIds(post.commentList), commentsCount: post.comments } }));
+  };
 
   const viewerCurrent = PERSONA_MAP[viewerPersona] || PERSONA_MAP.confidence;
   const bucketResolved = resolveBucketFeed(viewerPersona, bucketToggles);
@@ -3717,15 +4111,27 @@ function Feed({ channel } = {}) {
      gated bucket post, it resolves teaser-vs-full from the current viewing
      persona, so the persona-preview switcher still demonstrates unlocking. */
   const sequenceBase = typeof window !== "undefined" && window.PF_OFFICIAL_ONLY ? officialize(FEED_SEQUENCE) : FEED_SEQUENCE;
+  /* The feed shows at most ONE locked-post paywall card, full stop — with a
+     Hidden Post in every cycle, a viewer locked out of all four tiers would
+     otherwise see four separate "premium members only" blockers stacked
+     through the feed. Once the first one renders, every later Hidden Post
+     is simply omitted rather than adding another blocker. */
+  let teaserShown = false;
   const feedItems = [
   ...userPosts.map((p) => ({ item: p, mode: "full" })),
   ...sequenceBase.map((p) => {
     if (p.bucket && TEASABLE_BUCKETS.has(p.bucket)) {
-      const unlocked = viewerCurrent.admin || viewerCurrent.channels.includes(p.bucket);
-      return { item: p, mode: unlocked ? "full" : "teaser" };
+      const unlocked = viewerCurrent.admin ||
+      (p.bucket === "course" || p.bucket === "coursecomment" ?
+      viewerCurrent.paid :
+      viewerCurrent.channels.includes(p.bucket));
+      if (unlocked) return { item: p, mode: "full" };
+      if (teaserShown) return null;
+      teaserShown = true;
+      return { item: p, mode: "teaser" };
     }
     return { item: p, mode: "full" };
-  })];
+  }).filter(Boolean)];
 
   /* a channel (Confidence/Mastery/Freedom/Inner Circle) narrows the feed
      down to just that bucket's posts — used by the Community page's channel
@@ -3735,22 +4141,23 @@ function Feed({ channel } = {}) {
   const visibleFeedItems = channel ?
   bucketResolved.filter(({ item: p }) => p.bucket === channel) :
   feedItems;
+  const videoQueue = visibleFeedItems.
+  filter(({ item: p }) => p.sample && (p.sample.type === "video" || p.sample.type === "vertical")).
+  map(({ item: p }) => p.id);
 
   return (
     <main className="feed" data-screen-label="Home feed">
+      {!channel && <PostComposer onPost={addPost} />}
       {!channel &&
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
-        <FeedPreviewPanel persona={viewerPersona} onPersona={setViewerPersona}
-        toggles={bucketToggles} onToggle={(k, v) => setBucketToggles((t) => ({ ...t, [k]: v }))} />
-        <SortBar value={sort} onCycle={() => setSort(SORTS[(SORTS.indexOf(sort) + 1) % SORTS.length])} />
-      </div>
+      <FeedPreviewPanel persona={viewerPersona} onPersona={setViewerPersona}
+      toggles={bucketToggles} onToggle={(k, v) => setBucketToggles((t) => ({ ...t, [k]: v }))} />
       }
       {visibleFeedItems.map(({ item: p, mode }) => {
         if (mode === "teaser") {
           return <TeaserPost key={p.id} post={p} onUpgrade={() => setUpgradeFor(p)} />;
         }
         if (p.eventData) {
-          return <FeedEventCard key={p.id} event={p.eventData} />;
+          return <FeedEventCard key={p.id} post={p} event={p.eventData} />;
         }
         const st = state[p.id] || {};
         const onToggleLike = () => setState((s) => {
@@ -3768,13 +4175,20 @@ function Feed({ channel } = {}) {
           const reaction = cur.reaction === key ? null : key;
           return { ...s, [p.id]: { ...cur, reaction, liked: !!reaction, likes: reaction ? bump(cur.base) : cur.base } };
         });
+        /* Instagram-style double-tap-to-love: always lands on Love, never
+           toggles it back off (unlike the single-tap Like button above). */
+        const onDoubleTapLove = () => setState((s) => {
+          const cur = s[p.id];
+          if (cur.reaction) return s;
+          return { ...s, [p.id]: { ...cur, reaction: "love", liked: true, likes: bump(cur.base) } };
+        });
         /* community-channel content (Confidence/Mastery/Freedom/Inner Circle)
            merges into this same paid newsfeed, just tagged with its channel —
            not split into a separate surface — so it gets the compact card. */
         if (p.channel) {
           return (
             <ChannelFeedCard key={p.id} post={p} st={st}
-            onToggleLike={onToggleLike} onReact={setReaction} onAddComment={onAddComment}
+            onToggleLike={onToggleLike} onReact={setReaction} onDoubleTapLove={onDoubleTapLove} onAddComment={onAddComment}
             onAddReply={(cid, text) => setState((s) => {
               const cur = s[p.id];
               const comments = cur.comments.map((c) => c._id === cid ?
@@ -3786,7 +4200,13 @@ function Feed({ channel } = {}) {
             onShare={() => setState((s) => {
               const cur = s[p.id];
               return { ...s, [p.id]: { ...cur, shares: bump(cur.sharesBase) } };
-            })} />);
+            })}
+            videoFsOpen={openVideoId === p.id}
+            onVideoFsOpen={() => setOpenVideo({ id: p.id, dir: null })}
+            onVideoFsClose={() => setOpenVideo(null)}
+            onVideoNext={() => goToVideo(1)}
+            onVideoPrev={() => goToVideo(-1)}
+            videoNavDir={openVideoId === p.id ? openVideo.dir : null} />);
 
         }
         if (p.bucket === "coursecomment") {
@@ -3804,6 +4224,7 @@ function Feed({ channel } = {}) {
           <FeedPost key={p.id} post={p} st={st}
           onToggleLike={onToggleLike}
           onReact={setReaction}
+          onDoubleTapLove={onDoubleTapLove}
           onAddComment={onAddComment}
           onAddReply={(cid, text) => setState((s) => {
             const cur = s[p.id];
@@ -3816,7 +4237,13 @@ function Feed({ channel } = {}) {
             const cur = s[p.id];
             return { ...s, [p.id]: { ...cur, shares: bump(cur.sharesBase) } };
           })}
-          onSave={() => toggle(p.id, "saved")} />);
+          onSave={() => toggle(p.id, "saved")}
+          videoFsOpen={openVideoId === p.id}
+          onVideoFsOpen={() => setOpenVideo({ id: p.id, dir: null })}
+          onVideoFsClose={() => setOpenVideo(null)}
+          onVideoNext={() => goToVideo(1)}
+          onVideoPrev={() => goToVideo(-1)}
+          videoNavDir={openVideoId === p.id ? openVideo.dir : null} />);
 
 
       })}

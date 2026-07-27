@@ -89,7 +89,7 @@ function EVTSidebar() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "evt-logo"
   }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-academy-logo-full.png",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   })), EVT_NAV.map(item => {
     const href = EVT_NAV_LINKS[item.label];

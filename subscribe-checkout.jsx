@@ -8,6 +8,14 @@ const DSSC = window.ProfinityDesignSystem_c2b5cc;
 
 function goSC(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
 
+/* Same "pf-subscription-tier" key the newsfeed/community/membership pages
+   read and write — confirming checkout here is what actually "subscribes"
+   the viewer in this backend-less prototype. */
+const PF_TIER_KEY_SC = "pf-subscription-tier";
+function setUserTierSC(tier) {
+  try { localStorage.setItem(PF_TIER_KEY_SC, tier); } catch (e) {}
+}
+
 function useDeviceScaleSC() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
   const [scale, setScale] = useStateSC(calc);
@@ -33,8 +41,8 @@ function useIsMobileSC() {
 const VAT_RATE_SC = 0.2;
 
 const TIERS_SC = {
-  confidence: { name: "Confidence", desc: "Full portal access", icon: "shield-check", monthly: 97, yearly: 970 },
-  mastery: { name: "Mastery", desc: "Full portal access", icon: "crown", monthly: 397, yearly: 3970 },
+  confidence: { key: "confidence", name: "Confidence", desc: "Full portal access", icon: "shield-check", monthly: 97, yearly: 970 },
+  mastery: { key: "mastery", name: "Mastery", desc: "Full portal access", icon: "crown", monthly: 397, yearly: 3970 },
 };
 
 function getTierFromQuerySC() {
@@ -163,7 +171,7 @@ function SubscribeCheckout() {
           <span>Due today</span>
           <span>£{dueToday.toLocaleString()}</span>
         </div>
-        <button type="button" className="sc-cta" onClick={() => goSC("NewsfeedMobile.html")}>
+        <button type="button" className="sc-cta" onClick={() => { setUserTierSC(tier.key); goSC("NewsfeedMobile.html"); }}>
           <DSSC.IconifyIcon name="lucide:lock" size={15} color="#fff" /> Start free trial
         </button>
         <p className="sc-footer-secure">

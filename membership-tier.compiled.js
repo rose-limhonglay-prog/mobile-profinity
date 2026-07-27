@@ -13,6 +13,40 @@ function goMT(url) {
     window.location.href = u;
   })(url);
 }
+
+/* Same "pf-subscription-tier" key the newsfeed/community/checkout/apply
+   pages read and write — this page doesn't load app.jsx, so it keeps its
+   own tiny copy rather than depending on window.PFApp. Pricing-page plan
+   keys (confidence/mastery/builder/sovereign) map onto the gating-system
+   tier keys (confidence/mastery/freedom/inner) so "current plan" and
+   "upgrade to X" logic lines up with what newsfeed/community actually gate. */
+const PF_TIER_KEY_MT = "pf-subscription-tier";
+function getUserTierMT() {
+  try {
+    return localStorage.getItem(PF_TIER_KEY_MT) || "free";
+  } catch (e) {
+    return "free";
+  }
+}
+const PRICING_TO_GATING_MT = {
+  confidence: "confidence",
+  mastery: "mastery",
+  builder: "freedom",
+  sovereign: "inner"
+};
+const GATING_LADDER_MT = ["confidence", "mastery", "freedom", "inner"];
+
+/* Current plan -> "current", already-included lower tier -> "included",
+   a higher tier while already paying -> "upgrade" (changes the CTA to
+   "Upgrade to X"), otherwise "default" (first-time free-viewer purchase). */
+function tierStatusMT(tierKey, currentTier) {
+  const rank = GATING_LADDER_MT.indexOf(PRICING_TO_GATING_MT[tierKey]);
+  const curRank = GATING_LADDER_MT.indexOf(currentTier);
+  if (rank === curRank) return "current";
+  if (curRank >= 0 && rank < curRank) return "included";
+  if (curRank >= 0) return "upgrade";
+  return "default";
+}
 function useDeviceScaleMT() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
   const [scale, setScale] = useStateMT(calc);
@@ -202,17 +236,24 @@ function StatChip({
 }
 function TierCard({
   tier,
+  status,
   onSelect
 }) {
+  const isCurrent = status === "current";
+  const isIncluded = status === "included";
+  const isUpgrade = status === "upgrade";
+  const badgeText = isCurrent ? "YOUR CURRENT PLAN" : isIncluded ? "INCLUDED IN YOUR PLAN" : tier.badge;
+  const ctaLabel = isCurrent ? "Current Plan" : isIncluded ? "Included" : isUpgrade ? "Upgrade to " + tier.name : tier.cta;
+  const ctaDisabled = isCurrent || isIncluded;
   return /*#__PURE__*/React.createElement("div", {
-    className: "mt-tier" + (tier.dark ? " dark" : "") + (tier.highlight ? " highlight" : "")
-  }, tier.badge && /*#__PURE__*/React.createElement("span", {
-    className: "mt-tier-badge"
+    className: "mt-tier" + (tier.dark ? " dark" : "") + (tier.highlight ? " highlight" : "") + (isCurrent ? " current" : "")
+  }, badgeText && /*#__PURE__*/React.createElement("span", {
+    className: "mt-tier-badge" + (isCurrent ? " current" : "") + (isIncluded ? " included" : "")
   }, /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
-    name: "lucide:star",
+    name: isCurrent ? "lucide:check" : "lucide:star",
     size: 13,
     color: "#fff"
-  }), " ", tier.badge), /*#__PURE__*/React.createElement("div", {
+  }), " ", badgeText), /*#__PURE__*/React.createElement("div", {
     className: "mt-tier-head"
   }, tier.icon && /*#__PURE__*/React.createElement("span", {
     className: "mt-tier-icon"
@@ -247,8 +288,9 @@ function TierCard({
   }), /*#__PURE__*/React.createElement("span", null, f)))), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "mt-tier-cta" + (tier.dark ? " on-dark" : ""),
-    onClick: () => onSelect(tier)
-  }, tier.cta, " ", /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
+    disabled: ctaDisabled,
+    onClick: () => !ctaDisabled && onSelect(tier)
+  }, ctaLabel, " ", !ctaDisabled && /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
     name: "lucide:arrow-right",
     size: 16,
     color: tier.dark ? "var(--brand-navy-900)" : "#fff"
@@ -273,6 +315,7 @@ function CompareStars({
   })));
 }
 function MembershipTier() {
+  const [currentTier] = useStateMT(getUserTierMT);
   const onSelect = tier => {
     if (tier.cta === "Apply Now") {
       goMT("MembershipApply.html?tier=" + tier.key);
@@ -333,9 +376,11 @@ function MembershipTier() {
     className: "mt-section-sub"
   }, "Each tier is a stage in your career journey. Join at the level that meets you where you are — and grow from there."), /*#__PURE__*/React.createElement(TierCard, {
     tier: TIERS_MT[0],
+    status: tierStatusMT(TIERS_MT[0].key, currentTier),
     onSelect: onSelect
   }), /*#__PURE__*/React.createElement(TierCard, {
     tier: TIERS_MT[1],
+    status: tierStatusMT(TIERS_MT[1].key, currentTier),
     onSelect: onSelect
   })), /*#__PURE__*/React.createElement("section", {
     className: "mt-freedom"
@@ -345,9 +390,11 @@ function MembershipTier() {
     className: "mt-freedom-sub"
   }, "For the injector ready to build a business — not just a skill set."), /*#__PURE__*/React.createElement(TierCard, {
     tier: TIERS_MT[2],
+    status: tierStatusMT(TIERS_MT[2].key, currentTier),
     onSelect: onSelect
   }), /*#__PURE__*/React.createElement(TierCard, {
     tier: TIERS_MT[3],
+    status: tierStatusMT(TIERS_MT[3].key, currentTier),
     onSelect: onSelect
   })), /*#__PURE__*/React.createElement("section", {
     className: "mt-section"

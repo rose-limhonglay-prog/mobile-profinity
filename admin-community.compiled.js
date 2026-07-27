@@ -87,7 +87,7 @@ function COMSidebar() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "com-logo"
   }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-academy-logo-full.png",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   })), COM_NAV.map(item => {
     const href = COM_NAV_LINKS[item.label];

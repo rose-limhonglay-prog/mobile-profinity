@@ -118,7 +118,7 @@ function APVSidebar() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "apv-logo"
   }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-academy-logo-full.png",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   })), APV_NAV.map(item => {
     const href = APV_NAV_LINKS[item.label];

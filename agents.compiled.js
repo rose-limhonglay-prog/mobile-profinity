@@ -115,7 +115,7 @@ function AgentsApp() {
   }, /*#__PURE__*/React.createElement(TopNav, {
     active: "Agent",
     user: ME,
-    logoSrc: "assets/profinity-academy-logo-full.png",
+    logoSrc: "assets/profinity-icon-purple-gold.png",
     onNavigate: navigate,
     style: {
       position: "sticky",

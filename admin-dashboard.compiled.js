@@ -84,7 +84,7 @@ function DashSidebar() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "dash-logo"
   }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-academy-logo-full.png",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   })), DASH_NAV.map(item => {
     const href = DASH_NAV_LINKS[item.label];

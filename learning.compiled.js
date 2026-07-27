@@ -1,4 +1,3 @@
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* ===========================================================================
    PROfinity Academy — My Learning
    Composed from the bound Profinity Design System bundle. The course rows use
@@ -31,7 +30,7 @@ const IMG = {
   protox: "assets/clinic-toxin-guide.png",
   temple: "assets/clinic-treatment-collage.png",
   gold: "assets/texture-gold.png",
-  logo: "assets/profinity-academy-logo-full.png",
+  logo: "assets/profinity-icon-purple-gold.png",
   advancedLip: "assets/course-advanced-lip-techniques.jpg"
 };
 const TABS = ["All Courses", "Free Resources", "New Courses", "Recommended Courses", "Upcoming Webinars", "Certification Programs"];
@@ -42,7 +41,8 @@ const MY_COURSES = [{
   description: "Discover a complete view of human anatomy for deeper learning.",
   progress: 20,
   cta: "Continue learning",
-  active: true
+  active: true,
+  slug: "8d-lips"
 }, {
   image: IMG.temple,
   level: "Intermediate",
@@ -65,6 +65,16 @@ const MY_COURSES = [{
   progress: 0,
   cta: "Start learning"
 }];
+function goToCourse(c) {
+  const url = c.slug ? `CourseWeb.html?course=${c.slug}` : `CourseWeb.html?${new URLSearchParams({
+    title: c.title,
+    instr: TUTOR,
+    pct: c.progress || 0
+  })}`;
+  (window.pfGo || function (u) {
+    window.location.href = u;
+  })(url);
+}
 const RESOURCES = [{
   image: IMG.temple,
   title: "13 Risky Injection Areas",
@@ -324,43 +334,124 @@ function PathIntro() {
 
 /* ---------------------------------------------------------------- skeletons -- */
 function SkeletonCourseCard() {
-  return /*#__PURE__*/React.createElement("div", {className: "skel-card w-course"},
-    /*#__PURE__*/React.createElement("div", {className: "skel", style: {height: 150}}),
-    /*#__PURE__*/React.createElement("div", {className: "sk-body"},
-      /*#__PURE__*/React.createElement("div", {className: "skel sk-line", style: {width: "30%", height: 10}}),
-      /*#__PURE__*/React.createElement("div", {className: "skel sk-line", style: {width: "80%"}}),
-      /*#__PURE__*/React.createElement("div", {className: "skel sk-line", style: {width: "90%", height: 10}}),
-      /*#__PURE__*/React.createElement("div", {className: "skel", style: {height: 8, width: "100%", borderRadius: "var(--r-pill)", marginTop: 4}}),
-      /*#__PURE__*/React.createElement("div", {className: "skel sk-btn"})
-    )
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: "skel-card w-course"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "skel",
+    style: {
+      height: 150
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "sk-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-line",
+    style: {
+      width: "30%",
+      height: 10
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-line",
+    style: {
+      width: "80%"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-line",
+    style: {
+      width: "90%",
+      height: 10
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "skel",
+    style: {
+      height: 8,
+      width: "100%",
+      borderRadius: "var(--r-pill)",
+      marginTop: 4
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-btn"
+  })));
 }
 function SkeletonResourceCard() {
-  return /*#__PURE__*/React.createElement("div", {className: "skel-card w-card"},
-    /*#__PURE__*/React.createElement("div", {className: "skel", style: {height: 150}}),
-    /*#__PURE__*/React.createElement("div", {className: "sk-body"},
-      /*#__PURE__*/React.createElement("div", {className: "skel sk-line", style: {width: "75%"}}),
-      /*#__PURE__*/React.createElement("div", {className: "skel sk-line", style: {width: "90%"}}),
-      /*#__PURE__*/React.createElement("div", {className: "skel sk-line", style: {width: "90%"}}),
-      /*#__PURE__*/React.createElement("div", {className: "skel sk-line", style: {width: "45%"}}),
-      /*#__PURE__*/React.createElement("div", {className: "skel sk-btn"})
-    )
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: "skel-card w-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "skel",
+    style: {
+      height: 150
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "sk-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-line",
+    style: {
+      width: "75%"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-line",
+    style: {
+      width: "90%"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-line",
+    style: {
+      width: "90%"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-line",
+    style: {
+      width: "45%"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-btn"
+  })));
 }
 function SkeletonPriceCard() {
-  return /*#__PURE__*/React.createElement("div", {className: "skel-card w-card"},
-    /*#__PURE__*/React.createElement("div", {className: "skel", style: {height: 158}}),
-    /*#__PURE__*/React.createElement("div", {className: "sk-body"},
-      /*#__PURE__*/React.createElement("div", {className: "skel sk-line", style: {width: "70%"}}),
-      /*#__PURE__*/React.createElement("div", {className: "skel sk-line", style: {width: "90%"}}),
-      /*#__PURE__*/React.createElement("div", {className: "skel sk-line", style: {width: "90%"}}),
-      /*#__PURE__*/React.createElement("div", {className: "skel sk-line", style: {width: "50%"}}),
-      /*#__PURE__*/React.createElement("div", {className: "sk-foot"},
-        /*#__PURE__*/React.createElement("div", {className: "skel sk-line", style: {width: 64, height: 22}}),
-        /*#__PURE__*/React.createElement("div", {className: "skel", style: {height: 42, width: 110, borderRadius: "var(--r-sm)"}})
-      )
-    )
-  );
+  return /*#__PURE__*/React.createElement("div", {
+    className: "skel-card w-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "skel",
+    style: {
+      height: 158
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "sk-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-line",
+    style: {
+      width: "70%"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-line",
+    style: {
+      width: "90%"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-line",
+    style: {
+      width: "90%"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-line",
+    style: {
+      width: "50%"
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "sk-foot"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "skel sk-line",
+    style: {
+      width: 64,
+      height: 22
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "skel",
+    style: {
+      height: 42,
+      width: 110,
+      borderRadius: "var(--r-sm)"
+    }
+  }))));
 }
 
 /* ---------------------------------------------------------------- app ----- */
@@ -404,7 +495,7 @@ function MyLearningApp() {
   }, /*#__PURE__*/React.createElement(TopNav, {
     active: "My Learning",
     user: ME,
-    logoSrc: "assets/profinity-academy-logo-full.png",
+    logoSrc: "assets/profinity-icon-purple-gold.png",
     onNavigate: navigate,
     style: {
       position: "sticky",
@@ -432,7 +523,7 @@ function MyLearningApp() {
     size: 20,
     color: "var(--gray-450)"
   }), /*#__PURE__*/React.createElement("input", {
-    placeholder: "Search course\u2026",
+    placeholder: "Search course…",
     "aria-label": "Search course"
   })), /*#__PURE__*/React.createElement("section", {
     className: "panel",
@@ -441,7 +532,19 @@ function MyLearningApp() {
     title: "My Courses"
   }), /*#__PURE__*/React.createElement("div", {
     className: "row"
-  }, loading ? Array.from({length: 4}).map((_, i) => /*#__PURE__*/React.createElement(SkeletonCourseCard, {key: i})) : MY_COURSES.map((c, i) => /*#__PURE__*/React.createElement(CourseTile, _extends({key: i}, c, {className: "w-course", style: {width: 264}}))))), /*#__PURE__*/React.createElement("section", {
+  }, loading ? Array.from({
+    length: 4
+  }).map((_, i) => /*#__PURE__*/React.createElement(SkeletonCourseCard, {
+    key: i
+  })) : MY_COURSES.map((c, i) => /*#__PURE__*/React.createElement(CourseTile, {
+    key: i,
+    ...c,
+    onCta: () => goToCourse(c),
+    className: "w-course",
+    style: {
+      width: 264
+    }
+  })))), /*#__PURE__*/React.createElement("section", {
     className: "sec",
     "data-screen-label": "Free Resources"
   }, /*#__PURE__*/React.createElement(SectionHead, {
@@ -460,7 +563,14 @@ function MyLearningApp() {
     }))
   }), /*#__PURE__*/React.createElement("div", {
     className: "row"
-  }, loading ? Array.from({length: 4}).map((_, i) => /*#__PURE__*/React.createElement(SkeletonResourceCard, {key: i})) : RESOURCES.map((r, i) => /*#__PURE__*/React.createElement(ResourceCard, {key: i, r: r}))), /*#__PURE__*/React.createElement("div", {
+  }, loading ? Array.from({
+    length: 4
+  }).map((_, i) => /*#__PURE__*/React.createElement(SkeletonResourceCard, {
+    key: i
+  })) : RESOURCES.map((r, i) => /*#__PURE__*/React.createElement(ResourceCard, {
+    key: i,
+    r: r
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "sec-divider"
   })), /*#__PURE__*/React.createElement("section", {
     className: "sec",
@@ -473,7 +583,16 @@ function MyLearningApp() {
     className: "panel cream"
   }, /*#__PURE__*/React.createElement("div", {
     className: "row"
-  }, loading ? Array.from({length: 4}).map((_, i) => /*#__PURE__*/React.createElement(SkeletonPriceCard, {key: i})) : [/*#__PURE__*/React.createElement(PathIntro, {key: "intro"}), ...PATHS.map((c, i) => /*#__PURE__*/React.createElement(PathCard, {key: i, c: c}))]))), /*#__PURE__*/React.createElement("section", {
+  }, loading ? Array.from({
+    length: 4
+  }).map((_, i) => /*#__PURE__*/React.createElement(SkeletonPriceCard, {
+    key: i
+  })) : [/*#__PURE__*/React.createElement(PathIntro, {
+    key: "intro"
+  }), ...PATHS.map((c, i) => /*#__PURE__*/React.createElement(PathCard, {
+    key: i,
+    c: c
+  }))]))), /*#__PURE__*/React.createElement("section", {
     className: "sec",
     "data-screen-label": "Recommended Course"
   }, /*#__PURE__*/React.createElement(SectionHead, {
@@ -492,7 +611,14 @@ function MyLearningApp() {
     }))
   }), /*#__PURE__*/React.createElement("div", {
     className: "row"
-  }, loading ? Array.from({length: 4}).map((_, i) => /*#__PURE__*/React.createElement(SkeletonPriceCard, {key: i})) : RECOMMENDED.map((c, i) => /*#__PURE__*/React.createElement(PriceCard, {key: i, c: c}))), /*#__PURE__*/React.createElement("div", {
+  }, loading ? Array.from({
+    length: 4
+  }).map((_, i) => /*#__PURE__*/React.createElement(SkeletonPriceCard, {
+    key: i
+  })) : RECOMMENDED.map((c, i) => /*#__PURE__*/React.createElement(PriceCard, {
+    key: i,
+    c: c
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "sec-divider"
   })), /*#__PURE__*/React.createElement("section", {
     className: "sec",
@@ -501,7 +627,14 @@ function MyLearningApp() {
     title: "New Courses"
   }), /*#__PURE__*/React.createElement("div", {
     className: "row"
-  }, loading ? Array.from({length: 4}).map((_, i) => /*#__PURE__*/React.createElement(SkeletonPriceCard, {key: i})) : NEW_COURSES.map((c, i) => /*#__PURE__*/React.createElement(PriceCard, {key: i, c: c}))), /*#__PURE__*/React.createElement("div", {
+  }, loading ? Array.from({
+    length: 4
+  }).map((_, i) => /*#__PURE__*/React.createElement(SkeletonPriceCard, {
+    key: i
+  })) : NEW_COURSES.map((c, i) => /*#__PURE__*/React.createElement(PriceCard, {
+    key: i,
+    c: c
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "sec-divider"
   })), /*#__PURE__*/React.createElement("section", {
     className: "sec",
@@ -510,6 +643,13 @@ function MyLearningApp() {
     title: "Popular Courses"
   }), /*#__PURE__*/React.createElement("div", {
     className: "row"
-  }, loading ? Array.from({length: 4}).map((_, i) => /*#__PURE__*/React.createElement(SkeletonPriceCard, {key: i})) : POPULAR.map((c, i) => /*#__PURE__*/React.createElement(PriceCard, {key: i, c: c}))))));
+  }, loading ? Array.from({
+    length: 4
+  }).map((_, i) => /*#__PURE__*/React.createElement(SkeletonPriceCard, {
+    key: i
+  })) : POPULAR.map((c, i) => /*#__PURE__*/React.createElement(PriceCard, {
+    key: i,
+    c: c
+  }))))));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(MyLearningApp, null));

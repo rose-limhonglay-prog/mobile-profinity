@@ -49,7 +49,7 @@ function VerSidebar() {
   return (
     <aside className="ver-sidebar">
       <div className="ver-logo">
-        <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+        <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       </div>
       {VER_NAV.map((item) => {
         const href = VER_NAV_LINKS[item.label];

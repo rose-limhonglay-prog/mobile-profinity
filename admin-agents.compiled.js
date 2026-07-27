@@ -88,7 +88,7 @@ function AGTSidebar() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "agt-logo"
   }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-academy-logo-full.png",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   })), AGT_NAV.map(item => {
     const href = AGT_NAV_LINKS[item.label];

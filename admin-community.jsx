@@ -49,7 +49,7 @@ function COMSidebar() {
   return (
     <aside className="com-sidebar">
       <div className="com-logo">
-        <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+        <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       </div>
       {COM_NAV.map((item) => {
         const href = COM_NAV_LINKS[item.label];

@@ -90,7 +90,7 @@ function APMSidebar() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "apm-logo"
   }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-academy-logo-full.png",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   })), APM_NAV.map(item => {
     const href = APM_NAV_LINKS[item.label];

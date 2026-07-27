@@ -50,7 +50,7 @@ function APMSidebar() {
   return (
     <aside className="apm-sidebar">
       <div className="apm-logo">
-        <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+        <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       </div>
       {APM_NAV.map((item) => {
         const href = APM_NAV_LINKS[item.label];

@@ -123,7 +123,7 @@ function APNSidebar() {
   return (
     <aside className="apn-sidebar">
       <div className="apn-logo">
-        <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+        <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       </div>
       {APN_NAV.map((item) => {
         const href = APN_NAV_LINKS[item.label];

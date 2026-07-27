@@ -47,7 +47,7 @@ function DashSidebar() {
   return (
     <aside className="dash-sidebar">
       <div className="dash-logo">
-        <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+        <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       </div>
       {DASH_NAV.map((item) => {
         const href = DASH_NAV_LINKS[item.label];

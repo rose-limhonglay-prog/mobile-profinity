@@ -114,7 +114,7 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
 .evt-metric { font-size: 15px; font-weight: 600; color: var(--gray-800); }
 .evt-status-pill { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px; border-radius: 999px;
   width: fit-content; background: var(--gray-100); }
-.evt-status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gray-500); }
+.evt-status-dot { width: 7px; height: 7px; border-radius: 50%; background: #667085; }
 .evt-status-label { font-size: 13px; font-weight: 600; color: var(--gray-500); }
 .evt-row-more { color: var(--gray-400); font-size: 20px; cursor: pointer; }
 

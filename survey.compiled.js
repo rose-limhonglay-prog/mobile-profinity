@@ -71,7 +71,7 @@
     }, /*#__PURE__*/React.createElement("header", {
       className: "sv-head"
     }, /*#__PURE__*/React.createElement("img", {
-      src: "assets/profinity-academy-logo-full.png",
+      src: "assets/profinity-icon-purple-gold.png",
       alt: "PROfinity Academy"
     }), /*#__PURE__*/React.createElement("button", {
       className: "sv-x",

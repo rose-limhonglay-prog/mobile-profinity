@@ -63,7 +63,7 @@ function SVCSidebar() {
   return (
     <aside className="svc-sidebar">
       <div className="svc-logo">
-        <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+        <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       </div>
       {SVC_NAV.map((item) => {
         const href = SVC_NAV_LINKS[item.label];

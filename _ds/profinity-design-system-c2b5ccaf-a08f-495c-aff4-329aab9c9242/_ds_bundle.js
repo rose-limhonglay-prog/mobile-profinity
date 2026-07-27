@@ -1604,7 +1604,7 @@ function EventCard({
     }
   }, image && /*#__PURE__*/React.createElement("div", {
     style: {
-      height: 150,
+      height: 190,
       background: `center/cover no-repeat url(${image})`,
       backgroundColor: "var(--gray-200)"
     }
@@ -1702,6 +1702,11 @@ function Action({
 /**
  * Engagement bar under a feed post — like / comment / share on the left,
  * an optional "Actioned" status and Save (bookmark) on the right.
+ *
+ * A Facebook-style reaction summary (overlapping emoji + count) sits in that
+ * same row, right-aligned. It defaults to a mixed like/love/laugh cluster
+ * totalling the like count, but can be overridden per post via
+ * `reactions`/`reactionCount`, or suppressed by passing `reactions={null}`.
  */
 function PostActions({
   likes,
@@ -1710,12 +1715,17 @@ function PostActions({
   liked = false,
   saved = false,
   actioned = false,
+  reactions,
+  reactionCount,
   onLike,
   onComment,
   onShare,
   onSave,
+  onReactionsClick,
   style = {}
 }) {
+  const summaryTotal = reactionCount != null ? reactionCount : likes;
+  const showSummary = reactions !== null && summaryTotal != null && summaryTotal !== "0" && summaryTotal !== 0;
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -1747,9 +1757,25 @@ function PostActions({
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 8
+      gap: 12
     }
-  }, actioned && /*#__PURE__*/React.createElement("span", {
+  }, showSummary && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: onReactionsClick,
+    "aria-label": "See who reacted",
+    style: {
+      display: "inline-flex",
+      background: "none",
+      border: "none",
+      padding: 0,
+      margin: 0,
+      cursor: onReactionsClick ? "pointer" : "default"
+    }
+  }, /*#__PURE__*/React.createElement(__ds_scope.ReactionGroup, {
+    reactions: reactions || ["like", "love", "laugh"],
+    count: summaryTotal,
+    size: 20
+  })), actioned && /*#__PURE__*/React.createElement("span", {
     style: {
       display: "inline-flex",
       alignItems: "center",
@@ -1763,13 +1789,7 @@ function PostActions({
     name: "lucide:circle-check-big",
     size: 18,
     color: "var(--success)"
-  }), "Actioned"), /*#__PURE__*/React.createElement(Action, {
-    glyph: saved ? "bookmark-filled" : "bookmark",
-    label: "Save",
-    active: saved,
-    color: "var(--brand-navy)",
-    onClick: onSave
-  })));
+  }), "Actioned")));
 }
 Object.assign(__ds_scope, { PostActions });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/feed/PostActions.jsx", error: String((e && e.message) || e) }); }
@@ -2900,14 +2920,27 @@ function PostCard({
   liked,
   saved,
   actioned,
+  reactions,
+  reactionCount,
   commentList = [],
   onLike,
   onComment,
   onShare,
   onSave,
+  onReport,
+  onReactionsClick,
   onHashtagClick,
   style = {}
 }) {
+  const [menuOpen, setMenuOpen] = React.useState(false);
+  React.useEffect(() => {
+    if (!menuOpen) return;
+    const close = () => setMenuOpen(false);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [menuOpen]);
+  const tierBadgeTag = hashtags.find(t => ["confidence", "mastery", "freedom", "inner-circle"].includes(t.slug));
+  const chipTags = hashtags.filter(t => t !== tierBadgeTag);
   return /*#__PURE__*/React.createElement("div", {
     style: {
       background: "var(--surface-card)",
@@ -2970,18 +3003,68 @@ function PostCard({
       color: "var(--gray-500)",
       marginTop: 2
     }
-  }, time)), /*#__PURE__*/React.createElement(__ds_scope.Icon, {
+  }, time)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "relative",
+      flex: "none"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": "Post options",
+    "aria-haspopup": "menu",
+    "aria-expanded": menuOpen,
+    onClick: function (e) {
+      e.stopPropagation();
+      setMenuOpen(function (o) { return !o; });
+    },
+    style: {
+      background: "none",
+      border: "none",
+      cursor: "pointer",
+      padding: 4,
+      display: "flex",
+      lineHeight: 0
+    }
+  }, /*#__PURE__*/React.createElement(__ds_scope.Icon, {
     name: "settings",
     size: 20,
     color: "var(--gray-400)",
     style: {
       transform: "rotate(90deg)"
     }
-  })), hashtags.length > 0 && ["confidence", "mastery", "freedom", "inner-circle"].includes(hashtags[0].slug) && /*#__PURE__*/React.createElement("span", {
+  })), menuOpen && /*#__PURE__*/React.createElement("div", {
+    className: "pf-post-menu",
+    role: "menu",
+    onClick: function (e) { e.stopPropagation(); }
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    role: "menuitem",
+    className: "pf-post-menu-item",
+    onClick: function () {
+      setMenuOpen(false);
+      onSave && onSave();
+    }
+  }, /*#__PURE__*/React.createElement(__ds_scope.IconifyIcon, {
+    name: saved ? "lucide:bookmark-minus" : "lucide:bookmark",
+    size: 18,
+    color: "var(--gray-700)"
+  }), saved ? "Remove from saved" : "Save post"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    role: "menuitem",
+    className: "pf-post-menu-item pf-post-menu-item--danger",
+    onClick: function () {
+      setMenuOpen(false);
+      onReport && onReport();
+    }
+  }, /*#__PURE__*/React.createElement(__ds_scope.IconifyIcon, {
+    name: "lucide:flag",
+    size: 18,
+    color: "var(--error)"
+  }), "Report post")))), tierBadgeTag && /*#__PURE__*/React.createElement("span", {
     className: "pf-hashtag-badge",
-    onClick: onHashtagClick ? function (e) { e.stopPropagation(); onHashtagClick(hashtags[0]); } : undefined,
+    onClick: onHashtagClick ? function (e) { e.stopPropagation(); onHashtagClick(tierBadgeTag); } : undefined,
     style: onHashtagClick ? { cursor: "pointer" } : undefined
-  }, hashtags[0].label), title && /*#__PURE__*/React.createElement("div", {
+  }, tierBadgeTag.label), title && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: "var(--font-sans)",
       fontWeight: "var(--fw-regular)",
@@ -2996,22 +3079,25 @@ function PostCard({
       lineHeight: "var(--lh-relaxed)",
       color: "var(--gray-600)"
     }
-  }, body), hashtags.length > 1 && /*#__PURE__*/React.createElement("div", {
+  }, body), chipTags.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "pf-hashtag-row"
-  }, hashtags.slice(1, 6).map((t, i) => /*#__PURE__*/React.createElement("span", {
+  }, chipTags.slice(0, 5).map((t, i) => /*#__PURE__*/React.createElement("span", {
     key: t.slug || i,
     className: "pf-hashtag-chip",
     onClick: onHashtagClick ? function (e) { e.stopPropagation(); onHashtagClick(t); } : undefined,
     style: onHashtagClick ? { cursor: "pointer" } : undefined
-  }, "#" + t.label.replace(/\s+/g, "").toLowerCase())), hashtags.length > 6 && /*#__PURE__*/React.createElement("span", {
+  }, "#" + t.label.replace(/\s+/g, "").toLowerCase())), chipTags.length > 5 && /*#__PURE__*/React.createElement("span", {
     className: "pf-hashtag-more"
-  }, "+" + (hashtags.length - 6) + " more")), media, /*#__PURE__*/React.createElement(__ds_scope.PostActions, {
+  }, "+" + (chipTags.length - 5) + " more")), media, /*#__PURE__*/React.createElement(__ds_scope.PostActions, {
     likes: likes,
     comments: comments,
     shares: shares,
     liked: liked,
     saved: saved,
     actioned: actioned,
+    reactions: reactions,
+    reactionCount: reactionCount,
+    onReactionsClick: onReactionsClick,
     onLike: onLike,
     onComment: onComment,
     onShare: onShare,

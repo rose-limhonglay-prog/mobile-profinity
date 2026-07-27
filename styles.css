@@ -153,7 +153,7 @@ img{max-width:100%}
 .pf-react-opt[data-react="angry"]::before,
 .pf-react-opt[data-react="angry"]::after{
   content:"";position:absolute;top:6px;width:9px;height:9px;border-radius:50%;
-  background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.95), color-mix(in srgb, var(--gray-400) 70%, transparent));
+  background:radial-gradient(circle at 35% 35%, rgba(255,255,255,.95), color-mix(in srgb, #98a2b3 70%, transparent));
   opacity:0;pointer-events:none;z-index:3;will-change:transform,opacity;
 }
 .pf-react-opt[data-react="angry"]::before{left:7px}
@@ -286,6 +286,8 @@ img{max-width:100%}
 .post-wrap > div > div:nth-child(1) .avatar img{object-fit:contain !important;background:transparent !important}
 /* channel post: hide the redundant primary-hashtag badge (its own tier badge already shows) */
 .post-wrap.has-chx .pf-hashtag-badge{display:none !important}
+/* reels render their own Instagram-style ReelActionsRow below the video instead of the shared DS PostActions row */
+.post-wrap.is-reel [style*="space-between"][style*="border-top"]{display:none !important}
 
 /* comment body text → black (preview CommentItem + comments sheet + bubbles) */
 .cmt-preview > div > div:nth-child(2) > div:nth-child(2),
@@ -348,10 +350,31 @@ img{max-width:100%}
   transition:transform .15s ease}
 .sm-video:hover .sm-play{transform:translate(-50%,-50%) scale(1.08)}
 .sm-play.on{background:rgba(255,255,255,.82)}
-.sm-badge{position:absolute;bottom:12px;left:12px;display:inline-flex;align-items:center;gap:6px;
+.sm-badge{position:absolute;bottom:16px;left:16px;display:inline-flex;align-items:center;gap:6px;
   padding:5px 10px;border-radius:var(--r-pill);background:rgba(16,24,40,.7);color:var(--white);
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px}
-.sm-badge-tr{bottom:auto;left:auto;top:12px;right:12px}
+
+/* single square video (vs. the default wide/cover crop) */
+.sm-video.sm-video-square{aspect-ratio:1/1}
+.sm-video.sm-video-square img{width:100%;height:100%;max-height:none;object-fit:cover}
+
+/* "unlock" badge — free-preview masterclass post, top-right over the media (top-left is reserved for the video mute button) */
+.pf-unlock-badge{position:absolute;top:12px;right:12px;z-index:2;display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:var(--r-pill);background:var(--brand-gold-100);color:var(--brand-navy);
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px}
+
+/* double-tap-to-love heart: pops in at the tap point, holds briefly, fades */
+.sm-double-heart{position:fixed;z-index:9999;pointer-events:none;transform:translate(-50%,-50%);
+  filter:drop-shadow(0 0 3px rgba(255,255,255,.85)) drop-shadow(0 4px 14px rgba(0,0,0,.35));
+  animation:sm-heart-pop .7s cubic-bezier(.17,.89,.32,1.49) forwards}
+@keyframes sm-heart-pop{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}
+  18%{opacity:1;transform:translate(-50%,-50%) scale(1.15)}
+  32%{transform:translate(-50%,-50%) scale(.95)}
+  75%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1)}
+}
+@media (prefers-reduced-motion:reduce){.sm-double-heart{animation:none;opacity:.9}}
 
 /* floating "people you follow who reacted" avatars, bottom-left over media */
 .sm-reactors{position:absolute;left:14px;bottom:16px;z-index:3;display:flex;gap:16px}
@@ -461,6 +484,14 @@ img{max-width:100%}
 .pf-chcard-media{border-radius:var(--r-md);overflow:hidden;margin:0 0 14px}
 .pf-chcard-media img{width:100%;display:block;object-fit:cover}
 
+/* media bleeding edge-to-edge in a feed card (cancels the card's horizontal
+   padding) reads wrong with its own rounded corners peeking through the
+   card's straight edge, so strip radius on every media type it can wrap */
+.pf-media-bleed.pf-chcard-media,
+.pf-media-bleed .mc-img,
+.pf-media-bleed .sm-video,
+.pf-media-bleed .sm-gallery img{border-radius:0}
+
 /* course-comment card — a full (unlocked) view of another member's comment
    left on a course lesson, with a lesson promo below the comment so it
    doubles as a soft upsell into that lesson / course */
@@ -486,20 +517,21 @@ img{max-width:100%}
   padding:9px 16px;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;cursor:pointer}
 .pf-ccard-lesson-cta:hover{filter:brightness(1.1)}
 
-.sm-vertical{position:relative;display:flex;justify-content:center;background:var(--gray-100);
-  border-radius:var(--r-md);overflow:hidden;margin-bottom:12px}
-.sm-vertical img{width:auto;height:440px;max-width:100%;aspect-ratio:9/16;object-fit:cover;display:block}
+.sm-vertical{position:relative;background:var(--gray-100);
+  border-radius:0;overflow:hidden;margin-bottom:12px}
+.sm-vertical img{width:100%;height:auto;aspect-ratio:9/16;object-fit:cover;display:block}
 
 /* vertical reel → video-player UI */
 .sm-reel{cursor:pointer;background:#000}
-.sm-reel::after{content:"";position:absolute;left:0;right:0;bottom:0;height:120px;
-  background:linear-gradient(180deg,transparent,rgba(0,0,0,.6));pointer-events:none}
-.sm-mute{position:absolute;top:12px;left:12px;z-index:2;width:34px;height:34px;border-radius:50%;
+.sm-reel::after{content:"";position:absolute;left:0;right:0;bottom:0;height:190px;
+  background:linear-gradient(180deg,transparent,rgba(0,0,0,.65));pointer-events:none}
+.sm-mute{position:absolute;top:16px;left:16px;z-index:2;width:34px;height:34px;border-radius:50%;
   background:rgba(16,24,40,.55);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .sm-bigplay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;
   width:66px;height:66px;border-radius:50%;background:rgba(16,24,40,.5);backdrop-filter:blur(2px);
   display:flex;align-items:center;justify-content:center;transition:opacity .2s ease,transform .2s ease}
 .sm-bigplay.hide{opacity:0;transform:translate(-50%,-50%) scale(.6);pointer-events:none}
+
 .sm-controls{position:absolute;left:0;right:0;bottom:0;z-index:3;display:flex;align-items:center;gap:10px;
   padding:12px 14px}
 .sm-ctl{background:none;border:none;cursor:pointer;padding:2px;display:flex;flex-shrink:0}
@@ -510,18 +542,76 @@ img{max-width:100%}
 @keyframes sm-progress{from{width:38%}to{width:100%}}
 @media (prefers-reduced-motion:reduce){.sm-reel.playing .sm-fill{animation:none}}
 
-/* reel fullscreen overlay */
+/* Instagram-style action row below a reel — heart/comment/send with counts
+   on the left, a lone bookmark on the right. Replaces the shared DS
+   PostActions row, which is hidden for .is-reel posts (see post-wrap rules). */
+.pf-reel-actions{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 4px}
+.pf-reel-actions-left{display:flex;align-items:center;gap:18px}
+.pf-reel-act,.pf-reel-save{display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;
+  padding:2px;font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:13px;color:var(--text-primary)}
+
+/* reel fullscreen overlay (also the shared chrome for the carousel fullscreen
+   viewer below — same fixed black backdrop, close button, entrance fade) */
 .sm-fs{position:fixed;inset:0;z-index:9600;background:#000;display:flex;align-items:center;justify-content:center;
-  animation:sm-fs-in .2s ease}
+  border-radius:34px;overflow:hidden;animation:sm-fs-in .2s ease}
 @keyframes sm-fs-in{from{opacity:0}to{opacity:1}}
 .sm-fs > img{width:100%;height:100%;object-fit:contain}
+
+/* video fullscreen player — edge-to-edge (cropped, not letterboxed) with a
+   Facebook-style top bar, right-side action rail and bottom author/comment
+   overlay, matching the immersive fullscreen video view. */
+.sm-fs-video > img{object-fit:cover}
+.sm-fs-video .sm-play{z-index:4}
+.sm-fs-video::after{content:"";position:absolute;left:0;right:0;bottom:0;height:280px;z-index:3;
+  background:linear-gradient(180deg,transparent,rgba(0,0,0,.75) 65%);pointer-events:none}
+.sm-fs-topbar{position:absolute;top:0;left:0;right:0;z-index:4;display:flex;align-items:center;justify-content:space-between;
+  padding:max(18px,env(safe-area-inset-top)) 16px 0}
+.sm-fs-topbtn{width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center}
+.sm-fs-rail{position:absolute;right:14px;bottom:190px;z-index:4;display:flex;flex-direction:column;align-items:center;gap:22px}
+.sm-fs-rail-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--white);font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px;
+  text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.sm-fs-bottom{position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;flex-direction:column;gap:8px;
+  padding:0 16px max(16px,env(safe-area-inset-bottom))}
+.sm-fs-author{display:flex;align-items:center;gap:8px}
+.sm-fs-author-name{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14px;color:var(--white)}
+.sm-fs-comment-preview{margin:0;font-family:var(--font-sans);font-size:13px;line-height:1.4;color:rgba(255,255,255,.92);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sm-fs-comment-preview strong{font-weight:var(--fw-semibold)}
+.sm-fs-timeline{align-self:stretch;height:3px;border-radius:var(--r-pill);background:rgba(255,255,255,.3);overflow:hidden}
+.sm-fs-timeline-fill{display:block;height:100%;width:38%;border-radius:var(--r-pill);background:var(--white);
+  animation:sm-progress 30s linear forwards;animation-play-state:paused}
+.sm-fs-timeline-fill.playing{animation-play-state:running}
+@media (prefers-reduced-motion:reduce){.sm-fs-timeline-fill{animation:none}}
+
+/* Vertical page transition between videos when scrolling/swiping in
+   fullscreen — the closing post slides fully off-screen while the next
+   post's overlay slides in from the opposite edge, same duration so there's
+   no gap (see SM_FS_TRANSITION_MS in app.jsx). Mirrors a TikTok/Reels-style
+   vertical page swap rather than a crossfade. */
+.sm-fs-enter-next,.sm-fs-enter-prev,.sm-fs-exit-next,.sm-fs-exit-prev{animation-duration:.32s;animation-timing-function:ease;animation-fill-mode:both}
+.sm-fs-enter-next{animation-name:sm-fs-slide-in-up}
+.sm-fs-enter-prev{animation-name:sm-fs-slide-in-down}
+.sm-fs-exit-next{animation-name:sm-fs-slide-out-up}
+.sm-fs-exit-prev{animation-name:sm-fs-slide-out-down}
+@keyframes sm-fs-slide-in-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes sm-fs-slide-in-down{from{transform:translateY(-100%)}to{transform:translateY(0)}}
+@keyframes sm-fs-slide-out-up{from{transform:translateY(0)}to{transform:translateY(-100%)}}
+@keyframes sm-fs-slide-out-down{from{transform:translateY(0)}to{transform:translateY(100%)}}
+@media (prefers-reduced-motion:reduce){.sm-fs-enter-next,.sm-fs-enter-prev,.sm-fs-exit-next,.sm-fs-exit-prev{animation:none}}
+
+/* carousel fullscreen viewer — tap any image in a multi-image post to open a
+   swipeable, full-size version of the same carousel */
+.mc-fs-track{display:flex;width:100%;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+.mc-fs-track::-webkit-scrollbar{display:none}
+.mc-fs-track img{flex:0 0 100%;width:100%;height:100%;object-fit:contain;scroll-snap-align:center}
+.mc-fs-count{position:absolute;top:max(18px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);
+  padding:5px 12px;border-radius:var(--r-pill);background:rgba(255,255,255,.16);color:var(--white);
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px}
 .sm-fs-close{position:absolute;top:max(18px,env(safe-area-inset-top));left:16px;width:42px;height:42px;border-radius:50%;
   border:none;cursor:pointer;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center}
-.sm-fs-mute{position:absolute;top:max(18px,env(safe-area-inset-top));right:16px;width:42px;height:42px;border-radius:50%;
-  border:none;cursor:pointer;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center}
-.sm-fs-bar{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;align-items:center;gap:12px;
-  padding:18px 20px max(28px,env(safe-area-inset-bottom));
-  background:linear-gradient(180deg,transparent,rgba(0,0,0,.55))}
 
 .sm-gallery-wrap{position:relative;margin-bottom:16px}
 .sm-gallery{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
@@ -537,9 +627,14 @@ img{max-width:100%}
   -webkit-overflow-scrolling:touch;scrollbar-width:none}
 .mc-scroll::-webkit-scrollbar{display:none}
 .mc-scroll-single{overflow:hidden}
-.mc-img{flex:0 0 auto;width:74%;height:240px;object-fit:cover;
+.mc-img{flex:0 0 auto;width:100%;height:340px;object-fit:cover;
   border-radius:var(--r-md);scroll-snap-align:start;background:var(--gray-100)}
 .mc-scroll-single .mc-img{width:100%}
+.mc-scroll:not(.mc-scroll-single) .mc-img{cursor:pointer}
+/* single-image aspect variants — square vs. portrait crop instead of the
+   default fixed-height cover box */
+.mc-scroll-single.mc-aspect-square .mc-img{aspect-ratio:1/1;height:auto}
+.mc-scroll-single.mc-aspect-portrait .mc-img{aspect-ratio:4/5;height:auto}
 .mc-count{position:absolute;top:12px;right:8px;padding:4px 10px;border-radius:var(--r-pill);
   background:rgba(16,24,40,.72);color:#fff;font-family:var(--font-sans);
   font-weight:var(--fw-semibold);font-size:12px;pointer-events:none}
@@ -549,13 +644,13 @@ img{max-width:100%}
 .mc-dot.on{background:var(--brand-navy)}
 /* ===== Poll: bar-chart question + tap-to-vote options ===== */
 .pf-poll{display:flex;flex-direction:column;gap:14px;margin-bottom:12px;
-  padding:16px;border:1px solid var(--border-default);border-radius:var(--r-md)}
+  padding:16px;border:1px solid var(--border-default);border-radius:0;background:var(--ai-purple-200)}
 .pf-poll-q{display:flex;align-items:flex-start;gap:8px;font-family:var(--font-sans);
   font-weight:var(--fw-bold);font-size:var(--fs-body-lg);line-height:var(--lh-relaxed);color:var(--brand-navy)}
 .pf-poll-q iconify-icon{flex-shrink:0;margin-top:2px}
 .pf-poll-opts{display:flex;flex-direction:column;gap:10px}
 .pf-poll-opt{position:relative;overflow:hidden;width:100%;padding:14px 16px;
-  border:1px solid var(--border-default);border-radius:var(--r-md);background:var(--surface-card);
+  border:1px solid var(--border-default);border-radius:0;background:var(--surface-card);
   font-family:var(--font-sans);cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;
   transition:border-color .15s ease,box-shadow .15s ease}
 .pf-poll-opt:not(.answered):hover{border-color:var(--brand-navy)}
@@ -574,13 +669,14 @@ img{max-width:100%}
 
 /* ===== Questionnaire: quiz question with a right/wrong answer reveal ===== */
 .pf-quiz{display:flex;flex-direction:column;gap:14px;margin-bottom:12px;
-  padding:16px;border:1px solid var(--border-default);border-radius:var(--r-md)}
-.pf-quiz-q{display:flex;align-items:flex-start;gap:8px;font-family:var(--font-sans);
+  padding:16px;border:1px solid var(--border-default);border-radius:0;background:var(--brand-gold-100)}
+.pf-quiz-q{display:flex;align-items:center;gap:10px;font-family:var(--font-sans);
   font-weight:var(--fw-bold);font-size:var(--fs-body-lg);line-height:var(--lh-relaxed);color:var(--brand-navy)}
-.pf-quiz-q iconify-icon{flex-shrink:0;margin-top:2px}
+.pf-quiz-badge{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--brand-gold);
+  display:flex;align-items:center;justify-content:center}
 .pf-quiz-opts{display:flex;flex-direction:column;gap:10px}
 .pf-quiz-opt{position:relative;width:100%;padding:14px 16px;
-  border:1px solid var(--border-default);border-radius:var(--r-md);background:var(--surface-card);
+  border:1px solid var(--border-default);border-radius:0;background:var(--surface-card);
   font-family:var(--font-sans);cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;
   transition:border-color .15s ease,box-shadow .15s ease,background .15s ease}
 .pf-quiz-opt:not(.answered):hover{border-color:var(--brand-navy)}
@@ -596,6 +692,13 @@ img{max-width:100%}
 .pf-quiz-foot{font-family:var(--font-sans);font-size:var(--fs-caption);color:var(--gray-500)}
 .pf-quiz-foot.correct{color:var(--success);font-weight:var(--fw-semibold)}
 .pf-quiz-foot.incorrect{color:var(--error);font-weight:var(--fw-semibold)}
+
+/* ===== Upcoming Event post — DS EventCard dropped into the feed ===== */
+.pf-event-feed{padding-top:16px;padding-bottom:16px}
+.pf-event-feed .pf-teaser-head{padding-bottom:14px}
+.pf-event-feed-label{display:flex;align-items:center;gap:8px;margin-bottom:10px;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-caption);
+  text-transform:uppercase;letter-spacing:.04em;color:var(--premium-gold-deep)}
 
 /* post media fills its frame (no letterbox space) — any aspect is cropped to fill */
 .post-wrap img[style*="380"]{object-fit:cover !important;height:380px !important;width:100% !important;background:var(--gray-100)}
@@ -637,19 +740,19 @@ img{max-width:100%}
   border-radius:var(--r-lg);box-shadow:var(--shadow-lg);overflow:hidden;animation:likes-rise .2s cubic-bezier(.22,.61,.36,1)}
 @keyframes likes-rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 .likes-handle{width:48px;height:5px;border-radius:var(--r-pill);background:var(--gray-200);margin:12px auto 4px}
-.likes-head{display:flex;align-items:center;justify-content:space-between;padding:8px 24px 0}
+.likes-head{display:flex;align-items:center;justify-content:space-between;padding:8px 32px 0}
 .likes-title{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-h1);color:var(--text-primary)}
 .likes-x{width:40px;height:40px;border-radius:50%;border:1px solid var(--border-default);background:var(--surface-card);
   cursor:pointer;display:flex;align-items:center;justify-content:center}
 .likes-x:hover{background:var(--surface-sunken)}
-.likes-tabs{display:flex;align-items:center;gap:26px;padding:14px 24px 0;border-bottom:1px solid var(--border-default)}
+.likes-tabs{display:flex;align-items:center;gap:26px;padding:14px 32px 0;border-bottom:1px solid var(--border-default)}
 .likes-tab{display:inline-flex;align-items:center;gap:7px;padding:0 0 12px;background:none;border:none;cursor:pointer;
   font-family:var(--font-sans);font-size:var(--fs-body-lg);font-weight:var(--fw-semibold);color:var(--gray-500);
   border-bottom:2px solid transparent;margin-bottom:-1px}
 .likes-tab .cnt{color:inherit}
 .likes-tab.on{color:var(--brand-navy);border-bottom-color:var(--brand-navy)}
 .likes-tab:hover{color:var(--text-primary)}
-.likes-body{overflow-y:auto;padding:8px 24px 24px}
+.likes-body{overflow-y:auto;padding:8px 32px 24px}
 .likes-sec-label{font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--gray-500);padding:14px 0 4px}
 .likes-divider{height:1px;background:var(--border-default);margin:10px 0}
 
@@ -677,6 +780,17 @@ img{max-width:100%}
 .saved-skip{background:none;border:none;cursor:pointer;font-family:var(--font-sans);font-size:var(--fs-body-lg);
   color:var(--gray-450);padding:4px}
 
+/* post options dropdown — opened from the "..." icon on a post card header */
+.pf-post-menu{position:absolute;top:30px;right:0;z-index:60;width:220px;
+  background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--r-md);
+  box-shadow:var(--shadow-card);padding:6px;display:flex;flex-direction:column;
+  animation:saved-fade .15s ease}
+.pf-post-menu-item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
+  background:none;border:none;padding:10px 12px;border-radius:var(--r-sm);
+  font-family:var(--font-sans);font-size:var(--fs-body);color:var(--gray-700)}
+.pf-post-menu-item:hover,.pf-post-menu-item:active{background:var(--surface-sunken)}
+.pf-post-menu-item--danger{color:var(--error)}
+
 /* upgrade modal — current-tier vs. gating-tier comparison, shown when the
    viewer already pays for a lower tier than the one gating the post */
 .pf-upgrade-compare{display:flex;align-items:stretch;gap:10px;width:100%;margin-bottom:20px}
@@ -694,6 +808,6 @@ img{max-width:100%}
 .pf-upgrade-tier-perks li{position:relative;padding-left:14px;font-family:var(--font-sans);
   font-size:12.5px;line-height:1.4;color:var(--gray-600)}
 .pf-upgrade-tier-perks li::before{content:"";position:absolute;left:0;top:6px;width:5px;height:5px;
-  border-radius:50%;background:var(--gray-400)}
+  border-radius:50%;background:#98a2b3}
 .pf-upgrade-tier.highlight .pf-upgrade-tier-perks li::before{background:var(--premium-orange)}
 .pf-upgrade-compare-arrow{flex:none;align-self:center;display:flex;align-items:center;justify-content:center}

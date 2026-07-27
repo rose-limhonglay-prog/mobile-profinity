@@ -116,7 +116,7 @@ function SVCSidebar() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "svc-logo"
   }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-academy-logo-full.png",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   })), SVC_NAV.map(item => {
     const href = SVC_NAV_LINKS[item.label];

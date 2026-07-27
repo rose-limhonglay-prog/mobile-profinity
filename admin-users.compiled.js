@@ -124,7 +124,7 @@ function USRSidebar() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "usr-logo"
   }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-academy-logo-full.png",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   })), USR_NAV.map(item => {
     const href = USR_NAV_LINKS[item.label];

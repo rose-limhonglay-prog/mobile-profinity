@@ -61,7 +61,11 @@
 [data-theme="dark"] .m-logo-dark  { display: block; }
 
 [data-theme="dark"] .m-top {
+  background: rgba(13, 12, 29, .72);
   border-color: var(--border-default);
+}
+[data-theme="dark"] .m-screen.chrome-float .m-top {
+  background: transparent;
 }
 [data-theme="dark"] .m-tabs {
   background: linear-gradient(180deg, rgba(38,34,70,.36), rgba(20,18,42,.44));
@@ -129,6 +133,8 @@
 /* Sidebar tier pill + new-posts text (color was previously inline style) */
 [data-theme="dark"] .sm-tier-pill { color: var(--brand-gold); }
 [data-theme="dark"] .sm-tier-new  { color: var(--brand-gold); }
+[data-theme="dark"] .sm-tier-pill-yours { color: var(--ai-purple); border-color: var(--ai-purple); }
+[data-theme="dark"] .sm-tier-new-yours  { color: var(--ai-purple); }
 [data-theme="dark"] .sm-event-tag { color: var(--brand-gold); border-color: var(--brand-gold); }
 [data-theme="dark"] .sm-verify-pill { background: var(--premium-orange); }
 

@@ -48,7 +48,7 @@ function CrsSidebar() {
   return (
     <aside className="crs-sidebar">
       <div className="crs-logo">
-        <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+        <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       </div>
       {CRS_NAV.map((item) => {
         const href = CRS_NAV_LINKS[item.label];

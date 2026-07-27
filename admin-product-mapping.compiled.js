@@ -137,7 +137,7 @@ function MapSidebar() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "map-logo"
   }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-academy-logo-full.png",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   })), MAP_NAV.map(item => {
     const href = MAP_NAV_LINKS[item.label];

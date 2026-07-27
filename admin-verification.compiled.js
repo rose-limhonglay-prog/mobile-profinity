@@ -87,7 +87,7 @@ function VerSidebar() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "ver-logo"
   }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-academy-logo-full.png",
+    src: "assets/profinity-icon-purple-gold.png",
     alt: "PROfinity Academy"
   })), VER_NAV.map(item => {
     const href = VER_NAV_LINKS[item.label];

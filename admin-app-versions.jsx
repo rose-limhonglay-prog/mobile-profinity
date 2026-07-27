@@ -59,7 +59,7 @@ function APVSidebar() {
   return (
     <aside className="apv-sidebar">
       <div className="apv-logo">
-        <img src="assets/profinity-academy-logo-full.png" alt="PROfinity Academy" />
+        <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       </div>
       {APV_NAV.map((item) => {
         const href = APV_NAV_LINKS[item.label];
