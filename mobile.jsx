@@ -805,6 +805,11 @@ function MobileHome() {
   const [headerH, setHeaderH] = useStateM(0);
   const [tabsH, setTabsH] = useStateM(0);
   const { hidden: chromeHidden, floating: chromeFloat } = useHeaderHideM(scrollRefM);
+  useEffectM(() => {
+    const el = scrollRefM.current;
+    if (!el || !window.pfRestoreScroll) return;
+    window.pfRestoreScroll(el);
+  }, []);
   useLayoutEffectM(() => {
     const el = headerRefM.current;
     if (!el) return;

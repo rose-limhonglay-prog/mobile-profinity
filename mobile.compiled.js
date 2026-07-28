@@ -1445,6 +1445,11 @@ function MobileHome() {
     hidden: chromeHidden,
     floating: chromeFloat
   } = useHeaderHideM(scrollRefM);
+  useEffectM(() => {
+    const el = scrollRefM.current;
+    if (!el || !window.pfRestoreScroll) return;
+    window.pfRestoreScroll(el);
+  }, []);
   useLayoutEffectM(() => {
     const el = headerRefM.current;
     if (!el) return;

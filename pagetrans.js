@@ -37,4 +37,34 @@
     root.style.transform = "translateY(-7px)";
     setTimeout(function () { window.location.href = url; }, 175);
   };
+
+  // Scroll memory: each screen is a full page load rather than a kept-alive
+  // stack entry, so a screen must save its own scroll offset right before
+  // navigating away and restore it on the next load of that same page.
+  window.pfSaveScroll = function (el) {
+    if (!el) return;
+    try { sessionStorage.setItem("pfScroll:" + location.pathname, String(el.scrollTop)); } catch (e) {}
+  };
+  window.pfRestoreScroll = function (el) {
+    if (!el) return;
+    try {
+      var key = "pfScroll:" + location.pathname;
+      var saved = sessionStorage.getItem(key);
+      if (saved == null) return;
+      sessionStorage.removeItem(key);
+      el.scrollTop = parseInt(saved, 10) || 0;
+    } catch (e) {}
+  };
+
+  // Watched-video memory: once a feed video has been opened (tapped through
+  // to the fullscreen reel), remember it for the rest of the session so the
+  // "people you follow reacted" bubbles don't keep nudging a video already seen.
+  window.pfMarkWatched = function (id) {
+    if (id == null) return;
+    try { sessionStorage.setItem("pfWatched:" + id, "1"); } catch (e) {}
+  };
+  window.pfWasWatched = function (id) {
+    if (id == null) return false;
+    try { return sessionStorage.getItem("pfWatched:" + id) === "1"; } catch (e) { return false; }
+  };
 })();

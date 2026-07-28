@@ -2923,12 +2923,24 @@ function ChannelContext({ channel }) {
 
 }
 
-function SampleMedia({ sample, saved, onSave, onReport, onLoveReact, author, likes, commentsCount, shares, liked, comments, onLike, onComment, onShare }) {
+function SampleMedia({ sample, postId, saved, onSave, onReport, onLoveReact, author, likes, commentsCount, shares, liked, comments, onLike, onComment, onShare }) {
   const galleryRef = useRef(null);
+  const videoRef = useRef(null);
   const [idx, setIdx] = useState(0);
-  const [playing, setPlaying] = useState(sample && sample.type === "vertical");
+  const [playing, setPlaying] = useState(() => (sample && sample.type === "vertical") || (postId != null && window.pfWasWatched && window.pfWasWatched(postId)));
   const [muted, setMuted] = useState(true);
-  const openReel = () => (window.pfGo || function (u) {window.location.href = u;})("ReelMobile.html");
+  const openReel = () => {
+    if (postId != null && window.pfMarkWatched) window.pfMarkWatched(postId);
+    let el = videoRef.current;
+    while (el && el.parentElement) {
+      el = el.parentElement;
+      if (el.scrollHeight > el.clientHeight + 1) {
+        if (window.pfSaveScroll) window.pfSaveScroll(el);
+        break;
+      }
+    }
+    (window.pfGo || function (u) {window.location.href = u;})("ReelMobile.html");
+  };
   const { wrap, heartNode } = useDoubleTapLove(onLoveReact || (() => {}));
   if (!sample) return null;
 
@@ -2936,12 +2948,14 @@ function SampleMedia({ sample, saved, onSave, onReport, onLoveReact, author, lik
     return (
       <>
         <div className={"sm-video" + (sample.aspect === "square" ? " sm-video-square" : "")}
+        ref={videoRef}
         onClick={wrap(openReel)} role="button" tabIndex={0} aria-label="Open reel"
         onKeyDown={(e) => {if (e.key === "Enter") {e.preventDefault();openReel();}}}>
           <img src={sample.poster} alt="" />
-          <span className={"sm-play" + (playing ? " on" : "")}>
-            <IconifyIcon name={playing ? "fluent:pause-16-filled" : "fluent:play-16-filled"} size={26} color="var(--brand-navy)" />
-          </span>
+          <button type="button" className="sm-mute" aria-label={muted ? "Unmute" : "Mute"}
+          onClick={(e) => {e.stopPropagation();setMuted((m) => !m);}}>
+            <IconifyIcon name={muted ? "lucide:volume-x" : "lucide:volume-2"} size={16} color="var(--white)" />
+          </button>
           {!playing && <FloatingReactors />}
           <div className="sm-video-controls">
             <span className="sm-time">0:07</span>
@@ -2958,6 +2972,7 @@ function SampleMedia({ sample, saved, onSave, onReport, onLoveReact, author, lik
     return (
       <>
         <div className={"sm-vertical sm-reel" + (playing ? " playing" : "")}
+        ref={videoRef}
         onClick={wrap(openReel)} role="button" tabIndex={0} aria-label="Open reel"
         onKeyDown={(e) => {if (e.key === "Enter") {e.preventDefault();openReel();}}}>
           <img src={sample.image} alt="" />
@@ -3518,7 +3533,7 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
         : post.poll
         ? <Poll poll={post.poll} />
         : post.sample
-        ? <SampleMedia sample={post.sample}
+        ? <SampleMedia sample={post.sample} postId={post.id}
           saved={st.saved} onSave={onSave} onReport={() => setReportedOpen(true)} onLoveReact={handleDoubleTapLove}
           author={post.author} likes={st.likes} commentsCount={st.commentsCount} shares={st.shares} liked={st.liked}
           comments={comments} onLike={handleLike} onComment={handleComment} onShare={handleShare} />
@@ -3765,7 +3780,7 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onDoubleTapLove, onS
       {(post.sample || post.media && post.media.length > 0) &&
       <div className="pf-chcard-media pf-media-bleed" style={{ margin: "0 -16px 14px" }}>
         {post.sample ?
-        <SampleMedia sample={post.sample} onLoveReact={handleDoubleTapLove}
+        <SampleMedia sample={post.sample} postId={post.id} onLoveReact={handleDoubleTapLove}
           saved={st.saved} onSave={onSave}
           author={{ name: post.channel.by, avatar: post.channel.byAvatar }}
           likes={st.likes} commentsCount={st.commentsCount} shares={st.shares} liked={liked}

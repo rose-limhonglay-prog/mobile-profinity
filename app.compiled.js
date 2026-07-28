@@ -5795,6 +5795,7 @@ function ChannelContext({
 }
 function SampleMedia({
   sample,
+  postId,
   saved,
   onSave,
   onReport,
@@ -5810,12 +5811,24 @@ function SampleMedia({
   onShare
 }) {
   const galleryRef = useRef(null);
+  const videoRef = useRef(null);
   const [idx, setIdx] = useState(0);
-  const [playing, setPlaying] = useState(sample && sample.type === "vertical");
+  const [playing, setPlaying] = useState(() => sample && sample.type === "vertical" || postId != null && window.pfWasWatched && window.pfWasWatched(postId));
   const [muted, setMuted] = useState(true);
-  const openReel = () => (window.pfGo || function (u) {
-    window.location.href = u;
-  })("ReelMobile.html");
+  const openReel = () => {
+    if (postId != null && window.pfMarkWatched) window.pfMarkWatched(postId);
+    let el = videoRef.current;
+    while (el && el.parentElement) {
+      el = el.parentElement;
+      if (el.scrollHeight > el.clientHeight + 1) {
+        if (window.pfSaveScroll) window.pfSaveScroll(el);
+        break;
+      }
+    }
+    (window.pfGo || function (u) {
+      window.location.href = u;
+    })("ReelMobile.html");
+  };
   const {
     wrap,
     heartNode
@@ -5824,6 +5837,7 @@ function SampleMedia({
   if (sample.type === "video") {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "sm-video" + (sample.aspect === "square" ? " sm-video-square" : ""),
+      ref: videoRef,
       onClick: wrap(openReel),
       role: "button",
       tabIndex: 0,
@@ -5837,12 +5851,18 @@ function SampleMedia({
     }, /*#__PURE__*/React.createElement("img", {
       src: sample.poster,
       alt: ""
-    }), /*#__PURE__*/React.createElement("span", {
-      className: "sm-play" + (playing ? " on" : "")
+    }), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "sm-mute",
+      "aria-label": muted ? "Unmute" : "Mute",
+      onClick: e => {
+        e.stopPropagation();
+        setMuted(m => !m);
+      }
     }, /*#__PURE__*/React.createElement(IconifyIcon, {
-      name: playing ? "fluent:pause-16-filled" : "fluent:play-16-filled",
-      size: 26,
-      color: "var(--brand-navy)"
+      name: muted ? "lucide:volume-x" : "lucide:volume-2",
+      size: 16,
+      color: "var(--white)"
     })), !playing && /*#__PURE__*/React.createElement(FloatingReactors, null), /*#__PURE__*/React.createElement("div", {
       className: "sm-video-controls"
     }, /*#__PURE__*/React.createElement("span", {
@@ -5858,6 +5878,7 @@ function SampleMedia({
   if (sample.type === "vertical") {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "sm-vertical sm-reel" + (playing ? " playing" : ""),
+      ref: videoRef,
       onClick: wrap(openReel),
       role: "button",
       tabIndex: 0,
@@ -6738,6 +6759,7 @@ function FeedPost({
       poll: post.poll
     }) : post.sample ? /*#__PURE__*/React.createElement(SampleMedia, {
       sample: post.sample,
+      postId: post.id,
       saved: st.saved,
       onSave: onSave,
       onReport: () => setReportedOpen(true),
@@ -7146,6 +7168,7 @@ function ChannelFeedCard({
     }
   }, post.sample ? /*#__PURE__*/React.createElement(SampleMedia, {
     sample: post.sample,
+    postId: post.id,
     onLoveReact: handleDoubleTapLove,
     saved: st.saved,
     onSave: onSave,
