@@ -91,29 +91,70 @@ const MTopBar = forwardRefM(function MTopBar({ onMenu, onBell, onMessages }, ref
 
 });
 
-const SM_RESOURCES = [
-{ label: "Videos", icon: "lucide:square-play", n: 8 },
-{ label: "Articles", icon: "lucide:feather", n: 4 },
-{ label: "Webinars", icon: "lucide:calendar", n: 3 }];
+/* Paid tier ladder, low → high. A viewer's own tier unlocks every rung below
+   it too. "sovereign" aligns with the pricing-tier naming used by
+   membership-tier.jsx (its "sovereign" plan maps to this same top rung). */
+const SM_TIER_LADDER_M = ["confidence", "mastery", "freedom", "sovereign"];
+const SM_TIER_META_M = {
+  confidence: { name: "Confidence" },
+  mastery:    { name: "Mastery" },
+  freedom:    { name: "Freedom" },
+  sovereign:  { name: "Sovereign" }
+};
+const SM_TIER_RESOURCES_M = {
+  confidence: [
+  { label: "Confidence channel",  icon: "lucide:message-circle", n: 3,  href: "CommunityMobile.html" },
+  { label: "Foundation courses",  icon: "lucide:graduation-cap", n: 6,  href: "LearningMobile.html" },
+  { label: "Chairside protocols", icon: "lucide:file-text",      n: 12, href: "LearningMobile.html" },
+  { label: "Member webinars",     icon: "lucide:calendar",       n: 2,  href: "EventsMobile.html" }],
 
-const SM_COURSES = [
-{ label: "Face Anatomy Masterclass", pct: 72 },
-{ label: "Lip Filler Techniques", pct: 45 },
-{ label: "Advanced Botox Training", pct: 20 }];
+  mastery: [
+  { label: "Mastery lounge",          icon: "lucide:message-circle", n: 6,  href: "CommunityMobile.html" },
+  { label: "Advanced masterclasses",  icon: "lucide:graduation-cap", n: 9,  href: "LearningMobile.html" },
+  { label: "Complication library",    icon: "lucide:file-text",      n: 18, href: "LearningMobile.html" },
+  { label: "Live case reviews",       icon: "lucide:calendar",       n: 3,  href: "EventsMobile.html" }],
+
+  freedom: [
+  { label: "Freedom circle",       icon: "lucide:message-circle", n: 2, href: "CommunityMobile.html" },
+  { label: "Business playbooks",   icon: "lucide:graduation-cap", n: 7, href: "LearningMobile.html" },
+  { label: "1:1 mentor sessions",  icon: "lucide:calendar",       n: 1, href: "EventsMobile.html" }],
+
+  sovereign: [
+  { label: "Sovereign roundtable",   icon: "lucide:message-circle", n: 4, href: "CommunityMobile.html" },
+  { label: "Executive mentorship",   icon: "lucide:calendar",       n: 1, href: "EventsMobile.html" },
+  { label: "Legacy case archive",    icon: "lucide:file-text",      n: 9, href: "LearningMobile.html" },
+  { label: "Founder office hours",   icon: "lucide:calendar",       n: 2, href: "EventsMobile.html" }]
+
+};
+
+/* Tiers unlocked by a viewer on `tier`, highest first. Free (no match) unlocks none. */
+function smUnlockedTiersM(tier) {
+  const i = SM_TIER_LADDER_M.indexOf(tier);
+  if (i === -1) return [];
+  return SM_TIER_LADDER_M.slice(0, i + 1).reverse();
+}
+/* The next rung up from `tier` — null once at the top of the ladder. A free
+   viewer (tier not on the ladder, i === -1) points at the first rung. */
+function smNextTierM(tier) {
+  const i = SM_TIER_LADDER_M.indexOf(tier);
+  if (i === SM_TIER_LADDER_M.length - 1) return null;
+  return SM_TIER_LADDER_M[i + 1];
+}
+/* window.PF_TIER is set per newsfeed variant page to preview a given tier.
+   Falls back to the shared subscription-tier localStorage key from app.jsx
+   so today's single NewsfeedMobile.html keeps working unset. */
+function smReadTierM() {
+  if (window.PF_TIER) return window.PF_TIER;
+  try {
+    const t = PFAM.getUserTier ? PFAM.getUserTier() : "free";
+    return t === "inner" ? "sovereign" : t;
+  } catch (e) {return "free";}
+}
 
 const SM_EVENTS = [
-{ d: "30", m: "JUN", label: "Technique Tuesday Webinar", t: "8:00 PM", tag: "NEW" },
-{ d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM" },
-{ d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM" }];
-
-const SM_PROFILE_BEFORE = [
-{ label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
-{ label: "Account Settings",   icon: "lucide:graduation-cap",  href: null },
-{ label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" }];
-
-const SM_PROFILE_AFTER = [
-{ label: "Privacy & Security", icon: "lucide:book-open",       href: null },
-{ label: "Admin Panel",        icon: "lucide:shield",          href: "AdminPanel.html" }];
+{ d: "30", m: "JUN", label: "Technique Tuesday Webinar", t: "8:00 PM", access: "open" },
+{ d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM", access: "members" },
+{ d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM", access: "members" }];
 
 const NOTIFS = {
   "New": [
@@ -549,7 +590,7 @@ function SmDarkSwitch({ on, onToggle }) {
       aria-label={on ? "Switch to light mode" : "Switch to dark mode"}
     >
       <span className="sm-knob">
-        {on && <DSM.IconifyIcon name="lucide:moon" size={13} color="#1A1736" />}
+        <DSM.IconifyIcon name={on ? "lucide:moon" : "lucide:sun"} size={13} color={on ? "#1A1736" : "var(--gray-450)"} />
       </span>
     </button>
   );
@@ -573,8 +614,58 @@ function SmSection({ title }) {
   return <div className="sm-sec-h">{title}</div>;
 }
 
+function SmTierResourceRow({ r }) {
+  return (
+    <button className="smt-resource" onClick={() => go(r.href)}>
+      <DSM.IconifyIcon name={r.icon} size={20} color="var(--gray-900)" />
+      <span className="smt-resource-label">{r.label}</span>
+      <span className="smt-count">{r.n}</span>
+    </button>);
+
+}
+
+function SmTierCard({ tierKey, isOwn, open, onToggle }) {
+  const resources = SM_TIER_RESOURCES_M[tierKey];
+  return (
+    <div className="smt-card">
+      <button className="smt-head" aria-expanded={open} onClick={onToggle}>
+        <span className="smt-top">
+          <span className="smt-name">{SM_TIER_META_M[tierKey].name} Path</span>
+          {!isOwn && <span className="smt-pill">INCLUDED</span>}
+        </span>
+        <DSM.IconifyIcon name={open ? "lucide:chevron-up" : "lucide:chevron-down"} size={20} color="var(--gray-450)" />
+      </button>
+      {open &&
+      <div className="smt-resources">
+          {resources.map((r) => <SmTierResourceRow key={r.label} r={r} />)}
+        </div>
+      }
+    </div>);
+
+}
+
 function SideMenu({ open, onClose }) {
   const [dark, toggleDark] = useDarkModeM();
+  const tier = smReadTierM();
+  const unlockedTiers = smUnlockedTiersM(tier);
+  const nextTier = smNextTierM(tier);
+  const showUpgrade = tier === "free" || tier === "confidence" || tier === "mastery";
+  const [openTierKey, setOpenTierKey] = useStateM(() => unlockedTiers[0] || null);
+  const burgerRefM = useRefM(null);
+
+  useEffectM(() => {
+    if (!open) return;
+    burgerRefM.current = document.querySelector('.m-burger');
+    const onKey = (e) => {
+      if (e.key === "Escape") { onClose(); }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      burgerRefM.current && burgerRefM.current.focus();
+    };
+  }, [open]);
+
   return (
     <div className={"m-drawer-wrap" + (open ? " open" : "")} aria-hidden={!open}>
       <div className="m-drawer-scrim" onClick={onClose} />
@@ -591,63 +682,39 @@ function SideMenu({ open, onClose }) {
         </button>
 
         <div className="sm-body">
+          {showUpgrade && nextTier &&
           <button className="sm-upgrade" onClick={() => go("MembershipTier.html")}>
-            <span className="sm-upgrade-icon">
-              <DSM.IconifyIcon name="lucide:gem" size={20} color="#fff" />
-            </span>
-            <span className="sm-upgrade-main">
-              <span className="sm-upgrade-title">{PFAM.smNextTier(PFAM.ME.tier) ? "Upgrade to " + PFAM.smNextTier(PFAM.ME.tier) : "You're at the top tier"}</span>
-              <span className="sm-upgrade-sub">Unlock premium channels &amp; courses</span>
-            </span>
-            <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
-          </button>
-
-          <SmSection title="Communities" />
-          {PFAM.ME.tier ?
-            PFAM.smIncludedTiers(PFAM.ME.tier).map((t, i) =>
-              <button key={t} className="sm-tier" onClick={() => go("CommunityMobile.html")}>
-                <span className="sm-tier-top">
-                  <span className="sm-tier-name">{t} Path</span>
-                  <span className={"sm-tier-pill" + (i === 0 ? " sm-tier-pill-yours" : "")}>{i === 0 ? "YOUR TIER" : "INCLUDED"}</span>
-                </span>
-                <span className="sm-tier-sub">Exclusive tier content</span>
-                {i === 0 && <span className="sm-tier-new sm-tier-new-yours">3 new posts</span>}
-              </button>
-            ) :
-            <button className="sm-tier" onClick={() => go("CommunityMobile.html")}>
-              <span className="sm-tier-top">
-                <span className="sm-tier-name">No active plan</span>
-                <span className="sm-tier-pill">FREE</span>
+              <span className="sm-upgrade-icon">
+                <DSM.IconifyIcon name="lucide:gem" size={20} color="#fff" />
               </span>
-              <span className="sm-tier-sub">Subscribe to unlock a channel</span>
+              <span className="sm-upgrade-main">
+                <span className="sm-upgrade-title">Upgrade to {SM_TIER_META_M[nextTier].name}</span>
+                <span className="sm-upgrade-sub">Unlock more premium channels &amp; courses</span>
+              </span>
+              <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
             </button>
           }
 
-          <SmSection title="Membership Resources" />
-          <nav className="sm-list">
-            {SM_RESOURCES.map((c) =>
-            <button key={c.label} className="sm-row" onClick={() => go("MyLearning.html")}>
-                <DSM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
-                <span className="sm-row-label">{c.label}</span>
-              </button>
+          {unlockedTiers.length > 0 &&
+          <div className="smt-list">
+              {unlockedTiers.map((tKey) =>
+            <SmTierCard key={tKey} tierKey={tKey} isOwn={tKey === tier}
+              open={openTierKey === tKey}
+              onToggle={() => setOpenTierKey((k) => k === tKey ? null : tKey)} />
             )}
-          </nav>
+            </div>
+          }
 
-          <SmSection title="My Courses" />
-          <div className="sm-courses">
-            {SM_COURSES.map((c) =>
-            <button key={c.label} className="sm-course" onClick={() => go("MyLearning.html")}>
-                <span className="sm-course-top">
-                  <span className="sm-course-thumb">
-                    <DSM.IconifyIcon name="lucide:image" size={20} color="var(--gray-400)" />
-                  </span>
-                  <span className="sm-course-name">{c.label}</span>
-                </span>
-                <span className="sm-progress"><span className="sm-progress-fill" style={{ width: c.pct + "%" }} /></span>
-                <span className="sm-course-pct">{c.pct}% complete</span>
-              </button>
-            )}
-          </div>
+          <button className="sm-primary-card" onClick={() => go("LearningMobile.html")}>
+            <span className="sm-primary-icon">
+              <DSM.IconifyIcon name="lucide:graduation-cap" size={22} color="var(--brand-navy)" />
+            </span>
+            <span className="sm-primary-main">
+              <span className="sm-primary-title">My Learning</span>
+              <span className="sm-primary-sub">Courses, protocols &amp; certificates</span>
+            </span>
+            <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+          </button>
 
           <SmSection title="Upcoming Events" />
           <div className="sm-events">
@@ -658,38 +725,23 @@ function SideMenu({ open, onClose }) {
                   <span className="sm-event-name">{e.label}</span>
                   <span className="sm-event-time">{e.t}</span>
                 </span>
-                {e.tag && <span className="sm-event-tag">{e.tag}</span>}
+                <span className={"sm-event-access" + (e.access === "members" ? " sm-event-access-members" : " sm-event-access-open")}>
+                  {e.access === "members" ? "Members only" : "Open to all"}
+                </span>
               </button>
             )}
           </div>
 
           <SmSection title="My Profile" />
-          <button className="sm-row sm-verify" onClick={() => go("ProfileMobile.html")}>
-            <DSM.IconifyIcon name="lucide:book-open" size={23} color="var(--premium-orange)" />
-            <span className="sm-row-label">Verify Profile</span>
-            <span className="sm-verify-pill">Not Verified</span>
-          </button>
           <nav className="sm-list">
-            {SM_PROFILE_BEFORE.map((c) =>
-            <button key={c.label} className="sm-row" onClick={() => c.href && go(c.href)}>
-                <DSM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
-                <span className="sm-row-label">{c.label}</span>
-                <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
-              </button>
-            )}
+            <button className="sm-row" onClick={() => go("NotificationSettings.html")}>
+              <DSM.IconifyIcon name="lucide:bell" size={23} color="var(--gray-900)" />
+              <span className="sm-row-label">Notifications</span>
+              <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+            </button>
           </nav>
 
           <SmDisplayCard dark={dark} onToggle={toggleDark} />
-
-          <nav className="sm-list">
-            {SM_PROFILE_AFTER.map((c) =>
-            <button key={c.label} className="sm-row" onClick={() => c.href && go(c.href)}>
-                <DSM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
-                <span className="sm-row-label">{c.label}</span>
-                <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
-              </button>
-            )}
-          </nav>
 
           <button className="m-drawer-logout" onClick={onClose}>
             <DSM.IconifyIcon name="lucide:log-out" size={22} color="var(--error)" />

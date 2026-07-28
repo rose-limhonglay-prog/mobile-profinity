@@ -214,14 +214,14 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 .cmt-react-btn.on{font-weight:var(--fw-bold)}
 .cmt-react-cur{display:inline-flex;align-items:center;gap:5px}
 .cmt-react-cur iconify-icon{vertical-align:-2px}
-.cmt-react-pop{position:absolute;bottom:calc(100% + 8px);left:-6px;z-index:20;display:flex;gap:4px;
-  padding:6px 8px;background:var(--surface-card);border:1px solid var(--border-default);
+.cmt-react-pop{position:absolute;bottom:calc(100% + 6px);left:-6px;z-index:20;display:flex;gap:2px;
+  padding:4px 6px;background:var(--surface-card);border:1px solid var(--border-default);
   border-radius:var(--r-pill);box-shadow:0 10px 30px rgba(16,24,40,.22);
   animation:cmt-pop-in .16s cubic-bezier(.34,1.56,.64,1)}
 @keyframes cmt-pop-in{from{opacity:0;transform:translateY(6px) scale(.9)}to{opacity:1;transform:none}}
 .cmt-react-opt{background:none;border:none;cursor:pointer;padding:2px;line-height:0;
   transition:transform .12s cubic-bezier(.34,1.56,.64,1)}
-.cmt-react-opt:hover{transform:translateY(-5px) scale(1.25)}
+.cmt-react-opt:hover{transform:translateY(-4px) scale(1.15)}
 .cmtsheet-foot{flex:none;padding:10px 16px 30px;border-top:1px solid var(--border-default);background:var(--surface-card)}
 .cmtsheet-foot .cmt-compose,.cmtsheet-foot form{margin-top:0 !important}
 

@@ -85,6 +85,8 @@
 
 /* Drawer */
 [data-theme="dark"] .m-drawer { background: var(--surface-card); box-shadow: 6px 0 40px rgba(0,0,0,.5); }
+[data-theme="dark"] .m-dp-name { color: #F5F5FA; }
+[data-theme="dark"] .m-dp-role { color: #9A9AB5; }
 
 /* Push notification banner */
 [data-theme="dark"] .m-push { background: rgba(28, 26, 58, 0.92); box-shadow: 0 20px 40px rgba(0,0,0,.5); }
@@ -97,16 +99,40 @@
 [data-theme="dark"] .sm-event-name  { color: var(--text-primary); }
 [data-theme="dark"] .sm-course-name { color: var(--text-primary); }
 
-/* Tier card — warm cream → dark */
+/* Tier card — warm cream → dark (community-mobile.jsx / mobilechrome.jsx / profile-mobile.jsx's own drawer copies) */
 [data-theme="dark"] .sm-tier {
   background: #1e1c38;
   border-color: var(--border-default);
 }
 
-/* Verify row in drawer — warm cream → dark */
+/* Verify row in drawer — warm cream → dark (same other-drawer copies) */
 [data-theme="dark"] .sm-verify {
   background: #1e1a35;
   border-left-color: var(--premium-orange);
+}
+
+/* mobile.jsx SideMenu — tier cards, My Learning card, event cards → dark drawer cards */
+[data-theme="dark"] .smt-card,
+[data-theme="dark"] .sm-primary-card,
+[data-theme="dark"] .sm-event {
+  background: #221F4A;
+  border-color: #332F63;
+}
+[data-theme="dark"] .smt-name,
+[data-theme="dark"] .sm-primary-title,
+[data-theme="dark"] .smt-resource-label {
+  color: #F5F5FA;
+}
+[data-theme="dark"] .sm-primary-sub,
+[data-theme="dark"] .smt-resources {
+  color: #9A9AB5;
+}
+[data-theme="dark"] .smt-resources { border-left-color: #332F63; }
+[data-theme="dark"] .smt-pill,
+[data-theme="dark"] .sm-event-access-members {
+  color: #E8BE85;
+  border-color: #E8BE85;
+  background: rgba(232, 190, 133, .14);
 }
 
 /* Community-channel lavender card → dark */
@@ -182,7 +208,7 @@
 [data-theme="dark"] .lm-mc-dur { background: rgba(20,18,45,.88); color: var(--text-heading); }
 [data-theme="dark"] .lm-rc-cat { background: rgba(20,18,45,.88); color: var(--text-heading); }
 [data-theme="dark"] .lm-tabs {
-  background: linear-gradient(180deg, rgba(38,34,70,.36), rgba(20,18,42,.44));
+  background: linear-gradient(180deg, rgba(38,34,70,.88), rgba(20,18,42,.92));
   border-color: rgba(255,255,255,.16);
   box-shadow: 0 16px 40px rgba(0,0,0,.5), 0 2px 10px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.08);
 }

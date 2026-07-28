@@ -487,15 +487,19 @@
                 <span className="sm-tier-sub">Subscribe to unlock a channel</span>
               </button>
             }
-            <SmSectionC title="Membership Resources" />
-            <nav className="sm-list">
-              {SM_RESOURCES_C.map((c) =>
-                <button key={c.label} className="sm-row" onClick={() => goC("LearningMobile.html")}>
-                  <DSC.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
-                  <span className="sm-row-label" style={{ color: "rgb(0, 0, 0)" }}>{c.label}</span>
-                </button>
-              )}
-            </nav>
+            {ME_C.tier &&
+            <>
+              <SmSectionC title="Membership Resources" />
+              <nav className="sm-list">
+                {SM_RESOURCES_C.map((c) =>
+                  <button key={c.label} className="sm-row" onClick={() => goC("LearningMobile.html")}>
+                    <DSC.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
+                    <span className="sm-row-label" style={{ color: "rgb(0, 0, 0)" }}>{c.label}</span>
+                  </button>
+                )}
+              </nav>
+            </>
+            }
             <SmSectionC title="My Courses" />
             <div className="sm-courses">
               {SM_COURSES_C.map((c) =>

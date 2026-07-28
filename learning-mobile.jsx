@@ -26,6 +26,10 @@ const LM_FREE = [
 { title: "13 Risky Injection Areas", dur: "1h 20m", instr: "Dr. Tim Pearce", grad: "linear-gradient(140deg,#0fb6a3 0%,#28d3a0 100%)" },
 { title: "Bruising Checklist", dur: "45m", instr: "Dr. Tim Pearce", grad: "linear-gradient(140deg,#f59e0b 0%,#f0617a 100%)" }];
 
+const LM_RESOURCES = [
+{ title: "Lip Anatomy Basics", tag: "Beginner", instr: "Dr. Tim Pearce", dur: "18 min", grad: "linear-gradient(135deg,#1a1550 0%,#3730a3 100%)" },
+{ title: "Safe Injection Zones Guide", tag: "Intermediate", instr: "Dr. Tim Pearce", dur: "24 min", grad: "linear-gradient(135deg,#f59e0b 0%,#fbbf24 100%)" }];
+
 function lmCourseUrl(c) {
   if (c.slug) return "CourseDetail.html?course=" + c.slug;
   const p = new URLSearchParams({ title: c.title, instr: c.instr || "Dr. Tim Pearce", dur: c.dur || "45m", grad: c.grad || "", pct: c.pct || 0 });
@@ -45,6 +49,11 @@ function lmCheckoutUrl(c) {
 
 function lmEnrollUrl(c) {
   return c.price === "REPLAY" ? lmCourseUrl(c) : lmCheckoutUrl(c);
+}
+
+function lmResourceUrl(r) {
+  const p = new URLSearchParams({ title: r.title, instr: r.instr || "Dr. Tim Pearce", dur: r.dur || "20 min", grad: r.grad || "" });
+  return "CourseDetail.html?" + p.toString();
 }
 
 const LM_MEMBERSHIP = [
@@ -149,6 +158,14 @@ function LMSearchFab({ onClick }) {
   return (
     <button className="lm-search-fab" aria-label="Open search" onClick={onClick}>
       <DSL.Icon name="search" size={20} color="var(--gray-500)" />
+    </button>);
+
+}
+
+function LMBookmarkFab({ onClick }) {
+  return (
+    <button className="lm-bookmark-fab" aria-label="Saved courses" onClick={onClick}>
+      <DSL.IconifyIcon name="lucide:bookmark" size={20} color="var(--gray-500)" />
     </button>);
 
 }
@@ -353,6 +370,28 @@ function Recommended({ loading }) {
     </section>);
 }
 
+function FreeResources() {
+  return (
+    <section>
+      <div className="lm-sec-h"><h2>Free Resources</h2><a href="#" onClick={(e) => {e.preventDefault();goL("MyLearning.html");}} style={{ color: "rgb(41, 37, 105)" }}>View All</a></div>
+      <div className="lm-res-grid">
+        {LM_RESOURCES.map((r, i) =>
+        <article className="lm-res" key={i} role="button" tabIndex={0} onClick={() => goL(lmResourceUrl(r))} onKeyDown={(e) => { if (e.key === "Enter") goL(lmResourceUrl(r)); }} style={{ cursor: "pointer" }}>
+            <div className="lm-res-img" style={{ background: r.grad }}>
+              <span className="lm-res-tag">{r.tag}</span>
+              <span className="lm-res-play"><DSL.IconifyIcon name="lucide:play" size={18} color="var(--brand-navy)" /></span>
+            </div>
+            <div className="lm-res-body">
+              <div className="lm-res-ttl">{r.title}</div>
+              <div className="ins">{r.instr}</div>
+              <div className="lm-res-dur"><DSL.IconifyIcon name="lucide:clock" size={15} color="var(--gray-450)" />{r.dur}</div>
+            </div>
+          </article>
+        )}
+      </div>
+    </section>);
+}
+
 function FreeCourses({ onQuiz, unlocked }) {
   return (
     <section>
@@ -503,7 +542,10 @@ function LearningHome() {
       </div>
       <div ref={searchRef} className={"lm-search-wrap" + (chromeHidden && !searchOpen ? " lm-search-collapsed" : "")} style={{ top: chromeHidden ? LM_STATUS_BAR_H : headerH }}>
         {chromeHidden && !searchOpen ?
-        <LMSearchFab onClick={() => setSearchOpen(true)} /> :
+        <>
+          <LMSearchFab onClick={() => setSearchOpen(true)} />
+          <LMBookmarkFab onClick={() => goL("MySaved.html?from=learning")} />
+        </> :
 
         <LMSearch autoFocus={chromeHidden && searchOpen} collapsible={chromeHidden} onCollapse={() => setSearchOpen(false)} />
         }
@@ -513,6 +555,7 @@ function LearningHome() {
         <MyCourses loading={loading} />
         <YourMembership onOpen={() => setMembershipOpen(true)} />
         <Recommended loading={loading} />
+        <FreeResources />
         <FreeCourses onQuiz={() => setSurveyOpen(true)} unlocked={coursesUnlocked} />
         <div style={{ height: 20 }} />
       </div>

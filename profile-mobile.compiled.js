@@ -401,7 +401,7 @@ function SideMenuPM({
     className: "sm-tier-pill"
   }, "FREE")), /*#__PURE__*/React.createElement("span", {
     className: "sm-tier-sub"
-  }, "Subscribe to unlock a channel")), /*#__PURE__*/React.createElement(SmSectionPM, {
+  }, "Subscribe to unlock a channel")), PM_ME.tier && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SmSectionPM, {
     title: "Membership Resources"
   }), /*#__PURE__*/React.createElement("nav", {
     className: "sm-list"
@@ -415,7 +415,7 @@ function SideMenuPM({
     color: "var(--gray-900)"
   }), /*#__PURE__*/React.createElement("span", {
     className: "sm-row-label"
-  }, c.label)))), /*#__PURE__*/React.createElement(SmSectionPM, {
+  }, c.label))))), /*#__PURE__*/React.createElement(SmSectionPM, {
     title: "My Courses"
   }), /*#__PURE__*/React.createElement("div", {
     className: "sm-courses"

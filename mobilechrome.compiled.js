@@ -986,7 +986,7 @@
       className: "sm-tier-pill"
     }, "FREE")), /*#__PURE__*/React.createElement("span", {
       className: "sm-tier-sub"
-    }, "Subscribe to unlock a channel")), /*#__PURE__*/React.createElement(SmSectionC, {
+    }, "Subscribe to unlock a channel")), ME_C.tier && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SmSectionC, {
       title: "Membership Resources"
     }), /*#__PURE__*/React.createElement("nav", {
       className: "sm-list"
@@ -1003,7 +1003,7 @@
       style: {
         color: "rgb(0, 0, 0)"
       }
-    }, c.label)))), /*#__PURE__*/React.createElement(SmSectionC, {
+    }, c.label))))), /*#__PURE__*/React.createElement(SmSectionC, {
       title: "My Courses"
     }), /*#__PURE__*/React.createElement("div", {
       className: "sm-courses"

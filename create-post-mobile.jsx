@@ -84,6 +84,56 @@ const CP_ATTACH = [
   { icon: "lucide:smile", label: "Feeling", color: "#d4a017" },
 ];
 
+/* Background styles for a text-only post, Facebook-style. Only meaningful
+   when there are no photos attached — swapping to a style clears images. */
+const CP_BACKGROUNDS = [
+  { id: "none", label: "No background", css: "", fg: "var(--text-primary)" },
+  { id: "navy", label: "Navy", css: "linear-gradient(150deg,#292569,#3d3688)", fg: "#fff" },
+  { id: "gold", label: "Gold", css: "linear-gradient(150deg,#ce9957,#a26301)", fg: "#fff" },
+  { id: "purple", label: "AI purple", css: "linear-gradient(150deg,#6c63ff,#4022a8)", fg: "#fff" },
+  { id: "teal", label: "Clinical teal", css: "linear-gradient(150deg,#25515c,#173840)", fg: "#fff" },
+  { id: "cream", label: "Cream", css: "linear-gradient(150deg,#fcf4e4,#f3e3c8)", fg: "var(--brand-navy)" },
+  { id: "navygold", label: "Navy to gold", css: "linear-gradient(150deg,#292569 40%,#ce9957)", fg: "#fff" },
+  { id: "sunrise", label: "Sunrise", css: "linear-gradient(150deg,#e58f0c,#be1e2d)", fg: "#fff" },
+  { id: "mint", label: "Mint", css: "linear-gradient(150deg,#2a9568,#186b4a)", fg: "#fff" },
+  { id: "slate", label: "Slate", css: "linear-gradient(150deg,#475467,#1f2937)", fg: "#fff" },
+  { id: "blush", label: "Blush", css: "linear-gradient(150deg,#f7d6de,#e9afbe)", fg: "var(--brand-navy)" },
+  { id: "ink", label: "Ink", css: "#101828", fg: "#fff" },
+];
+
+function CPStyleSheet({ value, onPick, onClose }) {
+  React.useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  return (
+    <div className="cp-sheet-overlay" onClick={onClose}>
+      <div className="cp-sheet" role="dialog" aria-modal="true" aria-label="Background style"
+        onClick={(e) => e.stopPropagation()}>
+        <span className="cp-sheet-grip" aria-hidden="true"></span>
+        <div className="cp-sheet-hd">
+          <h3>Background</h3>
+          <button className="cp-sheet-done" aria-label="Done" onClick={onClose}>
+            <DSCP.IconifyIcon name="lucide:check" size={22} color="var(--brand-navy)" />
+          </button>
+        </div>
+        <div className="cp-swatches" role="radiogroup" aria-label="Background style">
+          {CP_BACKGROUNDS.map((b) => (
+            <button key={b.id} role="radio" aria-checked={b.id === value} aria-label={b.label}
+              className={"cp-swatch" + (b.id === value ? " on" : "") + (b.id === "none" ? " none" : "")}
+              style={b.css ? { background: b.css } : undefined}
+              onClick={() => onPick(b.id)}>
+              {b.id === "none" && <DSCP.IconifyIcon name="lucide:ban" size={20} color="var(--gray-450)" />}
+              {b.id === value && b.id !== "none" &&
+                <span className="cp-swatch-ck"><DSCP.IconifyIcon name="lucide:check" size={15} color="var(--brand-navy)" /></span>}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>);
+}
+
 function CPTopBar({ canPost, onPost, onCancel }) {
   return (
     <header className="cp-top">
@@ -120,9 +170,17 @@ function CPScreen() {
   const [images, setImages] = React.useState([]);
   const [audience, setAudience] = React.useState("Everyone");
   const [allTags] = React.useState(() => (window.PFHashtags ? window.PFHashtags.getAll() : []));
-  const [selectedTags, setSelectedTags] = React.useState(["update"]);
+  const [selectedTags, setSelectedTags] = React.useState([]);
+  const [bgId, setBgId] = React.useState("none");
+  const [styleSheetOpen, setStyleSheetOpen] = React.useState(false);
+  const bg = CP_BACKGROUNDS.find((b) => b.id === bgId) || CP_BACKGROUNDS[0];
   const textareaRef = React.useRef(null);
   const backTo = channels.length > 0 ? "CommunityMobile.html" : "NewsfeedMobile.html";
+
+  const pickBg = (id) => {
+    setBgId(id);
+    if (id !== "none") setImages([]);
+  };
 
   const toggleTag = (slug) => {
     setSelectedTags((prev) => prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]);
@@ -140,7 +198,8 @@ function CPScreen() {
         id: "u" + Date.now(),
         author: { name: PFACP.ME.name, avatar: PFACP.ME.avatar, seals: ["gb", "verified"] },
         time: "Just now", hashtags: selectedTags,
-        media: images, body, likes: "0", comments: "0", shares: "0", commentList: []
+        media: images, body, bg: bg.id !== "none" ? { id: bg.id, css: bg.css, fg: bg.fg } : null,
+        likes: "0", comments: "0", shares: "0", commentList: []
       };
       try {
         const existing = JSON.parse(localStorage.getItem("pf-newsfeed-user-posts")) || [];
@@ -157,10 +216,10 @@ function CPScreen() {
     input.accept = "image/*";
     input.multiple = true;
     input.onchange = (e) => {
-      const files = Array.from(e.target.files || []).slice(0, Math.max(0, 4 - images.length));
+      const files = Array.from(e.target.files || []).slice(0, Math.max(0, 5 - images.length));
       files.forEach((f) => {
         const reader = new FileReader();
-        reader.onload = () => setImages((prev) => [...prev, reader.result].slice(0, 4));
+        reader.onload = () => setImages((prev) => [...prev, reader.result].slice(0, 5));
         reader.readAsDataURL(f);
       });
     };
@@ -192,12 +251,22 @@ function CPScreen() {
         </div>
 
         {/* ---- Text input ---- */}
-        <textarea
-          ref={textareaRef}
-          className="cp-textarea"
-          placeholder="What's on your mind?"
-          value={text}
-          onChange={(e) => setText(e.target.value)} />
+        <div className={"cp-compose" + (bg.css ? " cp-compose-bg" : "")}
+          style={bg.css ? { background: bg.css } : undefined}>
+          <textarea
+            ref={textareaRef}
+            className={"cp-textarea" + (bg.css ? " on-bg" : "")}
+            placeholder="What's on your mind?"
+            value={text}
+            style={bg.css ? { color: bg.fg } : undefined}
+            onChange={(e) => setText(e.target.value)} />
+          {bg.css && (
+            <button className="cp-bg-fab" aria-label="Change background style"
+              onClick={() => setStyleSheetOpen(true)}>
+              <span className="cp-bg-aa">Aa</span>
+            </button>
+          )}
+        </div>
 
         {/* ---- Image previews ---- */}
         {images.length > 0 && (
@@ -225,12 +294,21 @@ function CPScreen() {
         <div className="cp-attach-row">
           {CP_ATTACH.map((a) => (
             <button key={a.label} className="cp-attach-btn" aria-label={a.label}
+              disabled={a.label === "Photo" && !!bg.css}
               onClick={a.label === "Photo" ? handleImagePick : undefined}>
               <DSCP.IconifyIcon name={a.icon} size={24} color={a.color} />
             </button>
           ))}
+          <button className="cp-attach-btn" aria-label="Background" disabled={images.length > 0}
+            onClick={() => setStyleSheetOpen(true)}>
+            <span className="cp-bg-aa lg">Aa</span>
+          </button>
         </div>
       </div>
+
+      {styleSheetOpen && (
+        <CPStyleSheet value={bgId} onPick={pickBg} onClose={() => setStyleSheetOpen(false)} />
+      )}
     </div>);
 }
 

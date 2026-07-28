@@ -113,7 +113,7 @@ if (typeof window !== "undefined" && !window.PFHashtags) {
   })();
 }
 
-const { useState, useRef, useEffect, useLayoutEffect } = React;
+const { useState, useRef, useEffect, useLayoutEffect, useMemo } = React;
 const DS = window.ProfinityDesignSystem_c2b5cc;
 const {
   TopNav, PostCard, EventCard, MembershipCard, ChannelItem,
@@ -1289,11 +1289,21 @@ const FOLLOWS = [
 { name: "Amina El-Masri", loc: "Cairo, Egypt" }];
 
 
+/* Events are stored with a UTC instant and rendered in the viewer's own
+   timezone (via the browser's Intl locale) rather than a fixed GMT/ET pair. */
+function formatEventLocalDateTime(utcISO) {
+  const d = new Date(utcISO);
+  return {
+    date: d.toLocaleDateString(undefined, { day: "numeric", month: "long", year: "numeric" }),
+    time: d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", timeZoneName: "short" })
+  };
+}
+
 const EVENTS = [
 {
   image: "assets/event-thumbnail-1.png",
   title: "Technique Tuesday", host: "Dr Tim Pearce",
-  date: "17 March 2026", time: "20:00 GMT • 16:00 ET", cta: "Join Now!", ctaVariant: "primary"
+  ...formatEventLocalDateTime("2026-03-17T20:00:00Z"), cta: "Join Now!", ctaVariant: "primary"
 },
 {
   image: "assets/event-art-codes.png",
@@ -1460,7 +1470,7 @@ const EDITORIAL_POSTS = [
 {
   id: "p5", author: TIM, time: "3 Days Ago",
   hashtags: ["masterclass", "anatomy"],
-  sample: { type: "video", poster: nextPostImages(1)[0], aspect: "square", duration: "12:40" },
+  sample: { type: "video", poster: IMG.chinPositions, aspect: "square", duration: "12:40" },
   body: "Watch the full walkthrough of the Golden Ratio full-face assessment — every landmark, every measurement, explained step by step.",
   likes: "3.4K", comments: "210", shares: "180", actioned: false,
   commentList: thread("Watched it twice already — incredibly clear teaching.")
@@ -1843,10 +1853,9 @@ const POLL_POST_4 = {
   commentList: thread("Complication management, always — can't get enough safety content.")
 };
 
-/* Ten extra video posts appended to the end of the sequence so the Reels-
-   style fullscreen swipe (see SampleMedia / videoQueue in Feed()) has a
-   deeper library to page through — reads as "every video uploaded to
-   Profinity" rather than just the handful seeded per cycle above. */
+/* Ten extra video posts appended to the end of the sequence for a deeper
+   library to scroll through — reads as "every video uploaded to Profinity"
+   rather than just the handful seeded per cycle above. */
 const EXTRA_VIDEO_POST_1 = {
   id: "ff_vidmore1", author: TIM, time: "12h",
   hashtags: ["masterclass", "technique"],
@@ -1966,7 +1975,7 @@ FREEDOM_POST_2 /* Freedom Hidden */,
 TEXT_POST_4, SQUARE_IMG_POST_4, PORTRAIT_IMG_POST_4, EDITORIAL_POSTS[5] /* p4: carousel */,
 SQUARE_VIDEO_POST_4, PORTRAIT_VIDEO_POST_4, QUIZ_POSTS[2] /* p_quiz4 */, POLL_POST_4,
 INNER_POST_2 /* Inner Circle Hidden */,
-// Extra video library — deepens the fullscreen Reels-style video queue
+// Extra video library — extra variety to scroll through
 EXTRA_VIDEO_POST_1, EXTRA_VIDEO_POST_2, EXTRA_VIDEO_POST_3, EXTRA_VIDEO_POST_4, EXTRA_VIDEO_POST_5,
 EXTRA_VIDEO_POST_6, EXTRA_VIDEO_POST_7, EXTRA_VIDEO_POST_8, EXTRA_VIDEO_POST_9, EXTRA_VIDEO_POST_10];
 
@@ -2179,7 +2188,7 @@ function CommentReact() {
         <button key={opt.key} type="button" role="menuitem" aria-label={opt.label}
         className="cmt-react-opt" data-react={opt.key}
         onClick={() => {setReaction(opt.key);setOpen(false);}}>
-              <iconify-icon icon={opt.icon} width="30" height="30"></iconify-icon>
+              <iconify-icon icon={opt.icon} width="22" height="22"></iconify-icon>
             </button>
         )}
         </span>
@@ -2465,9 +2474,9 @@ function PostComposer({ onPost }) {
     input.accept = "image/*";
     input.multiple = true;
     input.onchange = (e) => {
-      Array.from(e.target.files || []).slice(0, Math.max(0, 4 - images.length)).forEach((f) => {
+      Array.from(e.target.files || []).slice(0, Math.max(0, 5 - images.length)).forEach((f) => {
         const reader = new FileReader();
-        reader.onload = () => setImages((prev) => [...prev, reader.result].slice(0, 4));
+        reader.onload = () => setImages((prev) => [...prev, reader.result].slice(0, 5));
         reader.readAsDataURL(f);
       });
     };
@@ -2707,7 +2716,7 @@ function CommentsSheet({ post, comments, onClose, onAddComment, onAddReply }) {
 
 /* Clamp the post body to a few lines with a "See more" / "See less" toggle.
    Passed as the `body` node to the DS PostCard (which renders {body} as-is). */
-function ClampText({ text, lines = 3, more = "See more" }) {
+function ClampText({ text, lines = 3, more = "See more", color = "var(--text-primary)" }) {
   const [expanded, setExpanded] = useState(false);
   const [overflowing, setOverflowing] = useState(false);
   const ref = useRef(null);
@@ -2718,7 +2727,7 @@ function ClampText({ text, lines = 3, more = "See more" }) {
   return (
     <span className="pf-clampwrap">
       <span ref={ref} className={"pf-clamp" + (expanded ? " open" : "")}
-      style={{ ...(expanded ? null : { WebkitLineClamp: lines }), color: "var(--text-primary)" }}>
+      style={{ ...(expanded ? null : { WebkitLineClamp: lines }), color }}>
         {text}
       </span>
       {(overflowing || expanded) &&
@@ -2759,8 +2768,7 @@ function SlidingDots({ count, idx }) {
 /* Swipeable image carousel with dot indicators + counter for media posts.
    `aspect` ("square"|"portrait") only applies to single-image posts; multi-
    image carousels open a click-to-fullscreen viewer (own swipeable strip of
-   the same images) — see the reel's sm-fs overlay for the pattern this
-   mirrors. */
+   the same images). */
 function MediaCarousel({ images, aspect, onLoveReact }) {
   const [idx, setIdx] = useState(0);
   const [fs, setFs] = useState(false);
@@ -2915,139 +2923,32 @@ function ChannelContext({ channel }) {
 
 }
 
-const SM_FS_TRANSITION_MS = 320;
-
-function SampleMedia({ sample, saved, onSave, onReport, onLoveReact, author, likes, commentsCount, shares, liked, comments, onLike, onComment, onShare, fsOpen, onFsOpen, onFsClose, onNextVideo, onPrevVideo, navDir }) {
+function SampleMedia({ sample, saved, onSave, onReport, onLoveReact, author, likes, commentsCount, shares, liked, comments, onLike, onComment, onShare }) {
   const galleryRef = useRef(null);
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(sample && sample.type === "vertical");
   const [muted, setMuted] = useState(true);
-  const [localFs, setLocalFs] = useState(false);
-  const fs = fsOpen !== undefined ? fsOpen : localFs;
-  const setFs = (open) => {
-    if (open) onFsOpen ? onFsOpen() : setLocalFs(true);
-    else onFsClose ? onFsClose() : setLocalFs(false);
-  };
+  const openReel = () => (window.pfGo || function (u) {window.location.href = u;})("ReelMobile.html");
   const { wrap, heartNode } = useDoubleTapLove(onLoveReact || (() => {}));
-  useEffect(() => {
-    if (!fs) return;
-    const onKey = (e) => {if (e.key === "Escape") setFs(false);};
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [fs]);
-  /* Reels-style vertical navigation inside fullscreen playback: scrolling or
-     swiping up advances to the next video/reel post in the feed, down goes
-     back — mirrors TikTok/IG. navLock debounces one nav per gesture since a
-     single swipe/wheel fires many move events. `navDir` (±1, from the feed)
-     tells this instance it's crossfading in/out; a plain tap-to-open
-     or tap-to-close (navDir null) has no fade, matching the old behavior. */
-  const prevFsRef = useRef(fs);
-  const [fsVisible, setFsVisible] = useState(fs);
-  const [fsAnimClass, setFsAnimClass] = useState("");
-  useEffect(() => {
-    const wasOpen = prevFsRef.current;
-    prevFsRef.current = fs;
-    if (fs === wasOpen) return;
-    if (fs) {
-      setPlaying(true);
-      setFsVisible(true);
-      setFsAnimClass(navDir ? navDir > 0 ? "sm-fs-enter-next" : "sm-fs-enter-prev" : "");
-      return;
-    }
-    if (navDir) {
-      setFsAnimClass(navDir > 0 ? "sm-fs-exit-next" : "sm-fs-exit-prev");
-      const t = setTimeout(() => {setFsVisible(false);setFsAnimClass("");}, SM_FS_TRANSITION_MS);
-      return () => clearTimeout(t);
-    }
-    setFsVisible(false);
-  }, [fs, navDir]);
-  const navLock = useRef(false);
-  const touchStartY = useRef(null);
-  const triggerNav = (delta) => {
-    if (navLock.current) return;
-    const handler = delta < 0 ? onNextVideo : onPrevVideo;
-    if (!handler) return;
-    navLock.current = true;
-    handler();
-    setTimeout(() => {navLock.current = false;}, 500);
-  };
-  const onFsWheel = (e) => {
-    if (Math.abs(e.deltaY) < 12) return;
-    triggerNav(e.deltaY);
-  };
-  const onFsTouchStart = (e) => {touchStartY.current = e.touches[0].clientY;};
-  const onFsTouchMove = (e) => {
-    if (touchStartY.current == null) return;
-    const dy = e.touches[0].clientY - touchStartY.current;
-    if (Math.abs(dy) < 40) return;
-    triggerNav(dy);
-    touchStartY.current = null;
-  };
   if (!sample) return null;
 
   if (sample.type === "video") {
     return (
       <>
         <div className={"sm-video" + (sample.aspect === "square" ? " sm-video-square" : "")}
-        onClick={wrap(() => {setFs(true);setPlaying(true);})}>
+        onClick={wrap(openReel)} role="button" tabIndex={0} aria-label="Open reel"
+        onKeyDown={(e) => {if (e.key === "Enter") {e.preventDefault();openReel();}}}>
           <img src={sample.poster} alt="" />
           <span className={"sm-play" + (playing ? " on" : "")}>
             <IconifyIcon name={playing ? "fluent:pause-16-filled" : "fluent:play-16-filled"} size={26} color="var(--brand-navy)" />
           </span>
-          {!playing && !fs && <FloatingReactors />}
+          {!playing && <FloatingReactors />}
+          <div className="sm-video-controls">
+            <span className="sm-time">0:07</span>
+            <span className="sm-track"><span className="sm-fill sm-video-fill" /></span>
+            <span className="sm-time">0:15</span>
+          </div>
         </div>
-        {fsVisible &&
-        <div className={"sm-fs sm-fs-video" + (fsAnimClass ? " " + fsAnimClass : "")} onClick={(e) => {e.stopPropagation();wrap(null)(e);}}
-        onWheel={onFsWheel} onTouchStart={onFsTouchStart} onTouchMove={onFsTouchMove}>
-          <img src={sample.poster} alt="" />
-          <div className="sm-fs-topbar" onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="sm-fs-topbtn" aria-label="Close fullscreen" onClick={() => setFs(false)}>
-              <IconifyIcon name="lucide:x" size={20} color="var(--white)" />
-            </button>
-            <button type="button" className="sm-fs-topbtn" aria-label={muted ? "Unmute" : "Mute"}
-            onClick={(e) => {e.stopPropagation();setMuted((m) => !m);}}>
-              <IconifyIcon name={muted ? "lucide:volume-x" : "lucide:volume-2"} size={18} color="var(--white)" />
-            </button>
-          </div>
-          <span className={"sm-play" + (playing ? " on" : "")} onClick={(e) => {e.stopPropagation();setPlaying((p) => !p);}}>
-            <IconifyIcon name={playing ? "fluent:pause-16-filled" : "fluent:play-16-filled"} size={26} color="var(--brand-navy)" />
-          </span>
-          <div className="sm-fs-rail" onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="sm-fs-rail-btn" aria-label={liked ? "Unlike" : "Like"} onClick={onLike}>
-              <IconifyIcon name="fluent:thumb-like-16-filled" size={26} color={liked ? "var(--reaction-like)" : "var(--white)"} />
-            </button>
-            <button type="button" className="sm-fs-rail-btn" aria-label="Comment" onClick={onComment}>
-              <IconifyIcon name="lucide:message-circle" size={26} color="var(--white)" />
-              {commentsCount != null && <span>{commentsCount}</span>}
-            </button>
-            <button type="button" className="sm-fs-rail-btn" aria-label="Share" onClick={onShare}>
-              <IconifyIcon name="lucide:send" size={25} color="var(--white)" />
-              {shares != null && <span>{shares}</span>}
-            </button>
-            <button type="button" className="sm-fs-rail-btn" aria-label={saved ? "Remove from saved" : "Save"} onClick={onSave}>
-              <IconifyIcon name={saved ? "lucide:bookmark-check" : "lucide:bookmark"} size={26} color="var(--white)" />
-            </button>
-          </div>
-          {author &&
-          <div className="sm-fs-bottom" onClick={(e) => e.stopPropagation()}>
-            <div className="sm-fs-author">
-              <Avatar name={author.name} src={author.avatar} size={34} />
-              <span className="sm-fs-author-name">{author.name}</span>
-              {author.seals && <VerificationSeals seals={author.seals} size={14} />}
-              <IconifyIcon name="lucide:globe" size={13} color="rgba(255,255,255,.75)" />
-            </div>
-            {comments && comments.length > 0 &&
-            <p className="sm-fs-comment-preview">
-              <strong>{comments[0].author && comments[0].author.name}</strong> commented: {comments[0].text}
-            </p>
-            }
-            <span className="sm-fs-timeline">
-              <span className={"sm-fs-timeline-fill" + (playing ? " playing" : "")} />
-            </span>
-          </div>
-          }
-        </div>
-        }
         {heartNode}
       </>);
 
@@ -3057,7 +2958,8 @@ function SampleMedia({ sample, saved, onSave, onReport, onLoveReact, author, lik
     return (
       <>
         <div className={"sm-vertical sm-reel" + (playing ? " playing" : "")}
-        onClick={wrap(() => {setFs(true);setPlaying(true);})}>
+        onClick={wrap(openReel)} role="button" tabIndex={0} aria-label="Open reel"
+        onKeyDown={(e) => {if (e.key === "Enter") {e.preventDefault();openReel();}}}>
           <img src={sample.image} alt="" />
           <span className={"sm-bigplay" + (playing ? " hide" : "")}>
             <IconifyIcon name="fluent:play-16-filled" size={30} color="var(--white)" />
@@ -3074,58 +2976,6 @@ function SampleMedia({ sample, saved, onSave, onReport, onLoveReact, author, lik
             </button>
           </div>
         </div>
-        {fsVisible &&
-        <div className={"sm-fs sm-fs-video" + (fsAnimClass ? " " + fsAnimClass : "")} onClick={(e) => {e.stopPropagation();wrap(null)(e);}}
-        onWheel={onFsWheel} onTouchStart={onFsTouchStart} onTouchMove={onFsTouchMove}>
-          <img src={sample.image} alt="" />
-          <div className="sm-fs-topbar" onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="sm-fs-topbtn" aria-label="Close fullscreen" onClick={() => setFs(false)}>
-              <IconifyIcon name="lucide:x" size={20} color="var(--white)" />
-            </button>
-            <button type="button" className="sm-fs-topbtn" aria-label={muted ? "Unmute" : "Mute"}
-            onClick={(e) => {e.stopPropagation();setMuted((m) => !m);}}>
-              <IconifyIcon name={muted ? "lucide:volume-x" : "lucide:volume-2"} size={18} color="var(--white)" />
-            </button>
-          </div>
-          <span className={"sm-play" + (playing ? " on" : "")} onClick={(e) => {e.stopPropagation();setPlaying((p) => !p);}}>
-            <IconifyIcon name={playing ? "fluent:pause-16-filled" : "fluent:play-16-filled"} size={26} color="var(--brand-navy)" />
-          </span>
-          <div className="sm-fs-rail" onClick={(e) => e.stopPropagation()}>
-            <button type="button" className="sm-fs-rail-btn" aria-label={liked ? "Unlike" : "Like"} onClick={onLike}>
-              <IconifyIcon name="fluent:thumb-like-16-filled" size={26} color={liked ? "var(--reaction-like)" : "var(--white)"} />
-            </button>
-            <button type="button" className="sm-fs-rail-btn" aria-label="Comment" onClick={onComment}>
-              <IconifyIcon name="lucide:message-circle" size={26} color="var(--white)" />
-              {commentsCount != null && <span>{commentsCount}</span>}
-            </button>
-            <button type="button" className="sm-fs-rail-btn" aria-label="Share" onClick={onShare}>
-              <IconifyIcon name="lucide:send" size={25} color="var(--white)" />
-              {shares != null && <span>{shares}</span>}
-            </button>
-            <button type="button" className="sm-fs-rail-btn" aria-label={saved ? "Remove from saved" : "Save"} onClick={onSave}>
-              <IconifyIcon name={saved ? "lucide:bookmark-check" : "lucide:bookmark"} size={26} color="var(--white)" />
-            </button>
-          </div>
-          {author &&
-          <div className="sm-fs-bottom" onClick={(e) => e.stopPropagation()}>
-            <div className="sm-fs-author">
-              <Avatar name={author.name} src={author.avatar} size={34} />
-              <span className="sm-fs-author-name">{author.name}</span>
-              {author.seals && <VerificationSeals seals={author.seals} size={14} />}
-              <IconifyIcon name="lucide:globe" size={13} color="rgba(255,255,255,.75)" />
-            </div>
-            {comments && comments.length > 0 &&
-            <p className="sm-fs-comment-preview">
-              <strong>{comments[0].author && comments[0].author.name}</strong> commented: {comments[0].text}
-            </p>
-            }
-            <span className="sm-fs-timeline">
-              <span className={"sm-fs-timeline-fill" + (playing ? " playing" : "")} />
-            </span>
-          </div>
-          }
-        </div>
-        }
         {heartNode}
       </>);
 
@@ -3163,7 +3013,9 @@ function Poll({ poll }) {
   return (
     <div className="pf-poll">
       <div className="pf-poll-q">
-        <IconifyIcon name="lucide:bar-chart-2" size={18} color="var(--brand-navy)" />
+        <span className="pf-poll-badge">
+          <IconifyIcon name="lucide:bar-chart-2" size={20} color="var(--white)" />
+        </span>
         <span>{poll.question}</span>
       </div>
       <div className="pf-poll-opts">
@@ -3192,19 +3044,79 @@ function Poll({ poll }) {
 
 }
 
+/* Confetti burst — a fixed pool of celebratory pieces rendered only while
+   `active`, each launched from the card's center and radiating outward
+   before gravity takes over, with randomized angle/distance/spin/fall baked
+   into inline vars so the CSS keyframes stay generic. Self-unmounts (via the
+   parent clearing `active`) once the animation finishes so idle quiz cards
+   keep zero nodes. */
+function ConfettiBurst({ active }) {
+  const pieces = useMemo(() => {
+    if (!active) return [];
+    const colors = ["var(--brand-gold)", "var(--brand-navy)", "var(--success)", "var(--info)", "var(--warning)"];
+    return Array.from({ length: 48 }).map((_, i) => {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 60 + Math.random() * 140;
+      return {
+        id: i,
+        dx: Math.cos(angle) * radius,
+        dy: Math.sin(angle) * radius * 0.5,
+        fall: 160 + Math.random() * 120,
+        drift: (Math.random() - 0.5) * 50,
+        rotate: (Math.random() - 0.5) * 720,
+        delay: Math.random() * 0.25,
+        duration: 1.8 + Math.random() * 0.9,
+        color: colors[i % colors.length],
+        w: 6 + Math.random() * 5
+      };
+    });
+  }, [active]);
+
+  if (!active) return null;
+
+  return (
+    <div className="pf-confetti" aria-hidden="true">
+      {pieces.map((p) =>
+      <span key={p.id} className="pf-confetti-piece"
+      style={{
+        "--pf-confetti-dx": p.dx + "px",
+        "--pf-confetti-dy": p.dy + "px",
+        "--pf-confetti-fall": p.fall + "px",
+        "--pf-confetti-drift": p.drift + "px",
+        "--pf-confetti-rotate": p.rotate + "deg",
+        animationDelay: p.delay + "s",
+        animationDuration: p.duration + "s",
+        background: p.color,
+        width: p.w + "px",
+        height: p.w * 0.4 + "px"
+      }} />
+      )}
+    </div>);
+
+}
+
 /* Community questionnaire — Profinity posts a knowledge-check question with one
    correct option; tapping any option locks in the viewer's answer and reveals
    whether they were right (their pick + the correct one both highlighted). */
 function Questionnaire({ questionnaire: q }) {
   const [picked, setPicked] = useState(null);
+  const [celebrate, setCelebrate] = useState(false);
   const answered = picked !== null;
   const isCorrect = answered && q.options[picked].correct;
 
+  useEffect(() => {
+    if (!isCorrect) return;
+    setCelebrate(true);
+    const t = setTimeout(() => setCelebrate(false), 3200);
+    return () => clearTimeout(t);
+  }, [isCorrect]);
+
   return (
     <div className="pf-quiz">
+      <ConfettiBurst active={celebrate} />
       <div className="pf-quiz-q">
         <span className="pf-quiz-badge">
-          <IconifyIcon name="lucide:brain" size={16} color="var(--brand-navy)" />
+          <IconifyIcon name="lucide:brain" size={20} color="var(--white)" />
         </span>
         <span>{q.question}</span>
       </div>
@@ -3230,7 +3142,10 @@ function Questionnaire({ questionnaire: q }) {
         })}
       </div>
       <div className={"pf-quiz-foot" + (answered ? " " + (isCorrect ? "correct" : "incorrect") : "")}>
-        {answered ? isCorrect ? "Correct! Nice work." : "Not quite — the correct answer is highlighted above." : "Tap an option to answer"}
+        {answered ?
+        isCorrect ? "Correct! Nice work." : "Not quite — the correct answer is highlighted above." :
+        <>Tap an option to answer <IconifyIcon name="lucide:wand-sparkles" size={14} color="var(--gray-500)" /></>
+        }
       </div>
     </div>);
 
@@ -3328,41 +3243,9 @@ function LikedByRowInline() {
 
 }
 
-function SavedModal({ onClose }) {
-  const sheetRef = useRef(null);
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, []);
-  return (
-    <div className="saved-overlay" onClick={onClose}>
-      <div className="saved-sheet" ref={sheetRef} onClick={(e) => e.stopPropagation()}
-        role="dialog" aria-modal="true" aria-label="Post saved">
-        <div className="saved-handle" />
-        <div className="saved-icon-wrap">
-          <IconifyIcon name="lucide:bookmark-check" size={30} color="var(--brand-gold)" />
-        </div>
-        <div className="saved-title">Saved!</div>
-        <div className="saved-desc">Your post has been saved to your collection.</div>
-        <div className="saved-divider" />
-        <div className="saved-where">
-          <span className="saved-where-av" />
-          <div className="saved-where-tx">
-            <div className="saved-where-path">My Learning  →  My Learning</div>
-            <div className="saved-where-sub">Find all your saved posts here</div>
-          </div>
-        </div>
-        <button type="button" className="saved-btn" onClick={onClose}>View Saved</button>
-        <button type="button" className="saved-skip" onClick={onClose}>Maybe Later</button>
-      </div>
-    </div>
-  );
-}
-
 /* Confirmation sheet shown after a viewer reports a post from the post's
-   "..." menu — reuses the SavedModal's slide-up sheet shell with a red
-   flag icon in place of the gold bookmark. */
+   "..." menu — reuses the saved-sheet slide-up shell (see useSaveFlow below)
+   with a red flag icon in place of the gold bookmark. */
 function ReportedModal({ onClose }) {
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -3421,6 +3304,94 @@ function PostMoreMenu({ saved, onSave, onReport, iconColor = "var(--gray-400)" }
   );
 }
 
+/* The same collections a viewer sees on the My Saved screen (my-saved.jsx's
+   MS_COLLECTIONS) — kept in sync by hand since each page loads its own
+   script and there's no shared module system here. */
+const PF_COLLECTIONS = [
+  { name: "Lip protocols", n: 14, img: "assets/course-lip.png" },
+  { name: "Toxin techniques", n: 22, img: "assets/course-protox.png" },
+  { name: "Watch later", n: 8, icon: "lucide:clock" },
+  { name: "Complication cases", n: 11, img: "assets/chin-positions.png" },
+  { name: "Full-face assessment", n: 6, img: "assets/post5-img1.png" },
+  { name: "Business growth", n: 9, img: "assets/post3-img1.png" },
+  { name: "Temple & midface", n: 5, img: "assets/course-temple.png" },
+  { name: "Chairside handouts", n: 17, img: "assets/clinic-toxin-guide.png" },
+];
+
+/* Reel-style save flow shared by every post card: tapping Save shows a
+   "Saved" toast with a Collections link; picking a collection from the
+   sheet swaps it for a "Saved to <name>" toast with a View link. One
+   instance lives on Feed itself (not per-card) so saving two different
+   posts back-to-back can't stack two toasts on top of each other. */
+function useSaveFlow() {
+  const [toast, setToast] = useState(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const timer = useRef(null);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+  const showToast = (cfg) => {
+    if (timer.current) clearTimeout(timer.current);
+    setToast(cfg);
+    timer.current = setTimeout(() => setToast(null), 3500);
+  };
+  const dismissToast = () => {
+    if (timer.current) clearTimeout(timer.current);
+    setToast(null);
+  };
+  return {
+    toast, sheetOpen,
+    notifySaved: () => showToast({ kind: "saved" }),
+    notifyUnsaved: () => { dismissToast(); setSheetOpen(false); },
+    openCollections: () => { dismissToast(); setSheetOpen(true); },
+    closeSheet: () => setSheetOpen(false),
+    chooseCollection: (name) => { setSheetOpen(false); showToast({ kind: "savedTo", collection: name }); }
+  };
+}
+
+/* Renders the toast + "Save to collection" sheet for a useSaveFlow() result.
+   Every post card mounts one of these alongside its own ReportedModal etc. */
+function SaveFlowUI({ flow }) {
+  const goToMySaved = () => (window.pfGo || function (u) { window.location.href = u; })("MySaved.html");
+  return (
+    <>
+      {flow.toast &&
+      <div className="pf-save-toast" role="status">
+        <span className="pf-save-toast-ck"><IconifyIcon name="lucide:check" size={13} color="#0a0a0a" /></span>
+        <span className="pf-save-toast-tx">{flow.toast.kind === "saved" ? "Saved" : `Saved to ${flow.toast.collection}`}</span>
+        <button type="button" className="pf-save-toast-act" onClick={flow.toast.kind === "saved" ? flow.openCollections : goToMySaved}>
+          {flow.toast.kind === "saved" ? "Collections" : "View"}
+          <IconifyIcon name="lucide:chevron-right" size={16} color="#fff" />
+        </button>
+      </div>}
+      {flow.sheetOpen &&
+      <div className="saved-overlay" onClick={flow.closeSheet}>
+        <div className="saved-sheet pf-save-sheet" onClick={(e) => e.stopPropagation()}
+          role="dialog" aria-modal="true" aria-label="Save to collection">
+          <div className="saved-handle" />
+          <h3 className="pf-save-sheet-title">Save to collection</h3>
+          <div className="pf-save-sheet-list">
+            {PF_COLLECTIONS.map((c) =>
+            <button key={c.name} type="button" className="pf-save-sheet-row" onClick={() => flow.chooseCollection(c.name)}>
+                <span className="pf-save-sheet-thumb">
+                  {c.img ? <img src={c.img} alt="" /> : <IconifyIcon name={c.icon} size={20} color="var(--gray-500)" />}
+                </span>
+                <span className="pf-save-sheet-info">
+                  <span className="pf-save-sheet-nm">{c.name}<IconifyIcon name="lucide:lock" size={12} color="var(--gray-400)" /></span>
+                  <span className="pf-save-sheet-n">{c.n} posts</span>
+                </span>
+                <span className="pf-save-sheet-plus"><IconifyIcon name="lucide:plus" size={18} color="var(--text-heading)" /></span>
+              </button>
+            )}
+            <button type="button" className="pf-save-sheet-row" onClick={() => flow.chooseCollection("New collection")}>
+              <span className="pf-save-sheet-thumb pf-save-sheet-thumb-new"><IconifyIcon name="lucide:plus" size={20} color="var(--brand-navy)" /></span>
+              <span className="pf-save-sheet-info"><span className="pf-save-sheet-nm">Create new collection</span></span>
+            </button>
+          </div>
+        </div>
+      </div>}
+    </>
+  );
+}
+
 /* Resolves a post's stored hashtag slugs into the admin-managed tag objects
    (label + icon) the DS PostCard renders — slugs that no longer exist in the
    admin list (e.g. removed from the Admin Panel) are silently dropped. */
@@ -3466,13 +3437,12 @@ function goToHashtag(tag) {
   (window.pfGo || function (u) { window.location.href = u; })(url);
 }
 
-function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, onShare, onSave, onAddComment, onAddReply, videoFsOpen, onVideoFsOpen, onVideoFsClose, onVideoNext, onVideoPrev, videoNavDir }) {
+function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, onShare, onSave, onAddComment, onAddReply }) {
   const ref = useRef(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [replyFor, setReplyFor] = useState(null);
   const [likesOpen, setLikesOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [savedSheetOpen, setSavedSheetOpen] = useState(false);
   const [reportedOpen, setReportedOpen] = useState(false);
   const commentSheet = typeof window !== "undefined" && window.PF_COMMENT_SHEET;
   const { picker, pick, cancelHide, scheduleHide } = useReactionPicker(ref, st.reaction, onReact);
@@ -3504,12 +3474,6 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
     setComposerOpen((o) => !o);
     if (commentSheet) {setSheetOpen(true);setComposerOpen(false);}
   };
-  const handleSave = () => {
-    const willSave = !st.saved;
-    onSave();
-    if (willSave) setSavedSheetOpen(true);
-  };
-
   const handleShare = () => {
     onShare();
     const g = actionIcon(2);
@@ -3538,7 +3502,11 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
       <PostCard {...post} commentList={[]}
       hashtags={hideTags || post.questionnaire || post.poll ? [] : resolveHashtags(post.hashtags)}
       title={post.title}
-      body={post.questionnaire || post.poll ? null : <ClampText text={post.body} more={post.channel ? "Learn More" : "See more"} />}
+      body={post.questionnaire || post.poll ? null : post.bg
+        ? <div className="pf-post-bg" style={{ background: post.bg.css, color: post.bg.fg }}>
+            <ClampText text={post.body} lines={6} more={post.channel ? "Learn More" : "See more"} color={post.bg.fg} />
+          </div>
+        : <ClampText text={post.body} more={post.channel ? "Learn More" : "See more"} />}
       media={<div className="pf-media-bleed" style={{
         ...(post.unlockBadge ? { position: "relative" } : null),
         // cancel post-wrap's 16px horizontal padding so media bleeds
@@ -3551,15 +3519,14 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
         ? <Poll poll={post.poll} />
         : post.sample
         ? <SampleMedia sample={post.sample}
-          saved={st.saved} onSave={handleSave} onReport={() => setReportedOpen(true)} onLoveReact={handleDoubleTapLove}
+          saved={st.saved} onSave={onSave} onReport={() => setReportedOpen(true)} onLoveReact={handleDoubleTapLove}
           author={post.author} likes={st.likes} commentsCount={st.commentsCount} shares={st.shares} liked={st.liked}
-          comments={comments} onLike={handleLike} onComment={handleComment} onShare={handleShare}
-          fsOpen={videoFsOpen} onFsOpen={onVideoFsOpen} onFsClose={onVideoFsClose} onNextVideo={onVideoNext} onPrevVideo={onVideoPrev} navDir={videoNavDir} />
+          comments={comments} onLike={handleLike} onComment={handleComment} onShare={handleShare} />
         : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} aspect={post.aspect} onLoveReact={handleDoubleTapLove} /> : null}
         {isReel &&
         <ReelActionsRow likes={st.likes} comments={st.commentsCount} shares={st.shares}
           liked={st.liked} saved={st.saved}
-          onLike={handleLike} onComment={handleComment} onShare={handleShare} onSave={handleSave} />}
+          onLike={handleLike} onComment={handleComment} onShare={handleShare} onSave={onSave} />}
         {post.unlockBadge &&
         <span className="pf-unlock-badge">
             <IconifyIcon name="lucide:lock-open" size={14} color="var(--brand-navy)" />Unlocked
@@ -3567,7 +3534,7 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
         }
       </div>}
       liked={st.liked} saved={st.saved} actioned={false} likes={st.likes} shares={st.shares} comments={st.commentsCount}
-      onLike={handleLike} onSave={handleSave} onComment={handleComment} onShare={handleShare}
+      onLike={handleLike} onSave={onSave} onComment={handleComment} onShare={handleShare}
       onReport={() => setReportedOpen(true)}
       onReactionsClick={() => setLikesOpen(true)}
       onHashtagClick={goToHashtag}
@@ -3645,7 +3612,6 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
       <CommentsSheet post={post} comments={comments}
       onClose={() => setSheetOpen(false)} onAddComment={onAddComment} onAddReply={onAddReply} />
       }
-      {savedSheetOpen && <SavedModal onClose={() => setSavedSheetOpen(false)} />}
       {reportedOpen && <ReportedModal onClose={() => setReportedOpen(false)} />}
     </div>);
 
@@ -3662,15 +3628,27 @@ function teaserExcerpt(text, max = 120) {
   return text.slice(0, max).replace(/\s+\S*$/, "");
 }
 
-/* Locked teaser card for gated content shown to a free-tier viewer: a real
-   post header (avatar/name/seals/tier pill) and a short real excerpt make it
-   read as genuine activity, then a blurred filler line fades into the
-   "premium members only" paywall panel — the only action is "Upgrade". */
+/* Teasers must only ever be attributed to these trusted internal accounts,
+   never to the real creator — keeps paid creators' content from being used
+   as free bait. Picked deterministically from the post id so a given post
+   doesn't relabel itself on every re-render. */
+const TEASER_NAMES = ["Alicia", "Ash", "Tim Pearce", "Miranda Pearce"];
+function teaserSourceName(seed) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  return TEASER_NAMES[hash % TEASER_NAMES.length];
+}
+
+/* Locked teaser card for gated content shown to a free-tier viewer: a
+   name+initials-avatar header (never the real creator's photo) and a short
+   real excerpt make it read as genuine activity, then a blurred filler line
+   fades into the "premium members only" paywall panel — the only action is
+   "Upgrade". */
 function TeaserPost({ post, onUpgrade }) {
   const meta = BUCKET_META[post.bucket] || { label: "Members only" };
   const pillColor = TEASER_PILL[post.bucket] || "var(--gray-500)";
   const cta = TEASER_CTA[post.bucket] || TEASER_CTA.confidence;
-  const author = post.channel ? { name: post.channel.by, avatar: post.channel.byAvatar, seals: post.author && post.author.seals } : post.author;
+  const author = { name: teaserSourceName(post.id || post.text || ""), avatar: null, seals: null };
   const time = post.channel ? post.channel.time : post.time;
   const isCourseComment = post.bucket === "coursecomment";
   return (
@@ -3750,7 +3728,7 @@ function FeedEventCard({ post, event }) {
    Deliberately lighter than FeedPost — no media carousel, no full comment
    thread — this is "a tagged post in your feed", not the full community
    thread view (that still lives on the Community screen itself). */
-function ChannelFeedCard({ post, st, onToggleLike, onReact, onDoubleTapLove, onSave, onShare, onAddComment, onAddReply, videoFsOpen, onVideoFsOpen, onVideoFsClose, onVideoNext, onVideoPrev, videoNavDir }) {
+function ChannelFeedCard({ post, st, onToggleLike, onReact, onDoubleTapLove, onSave, onShare, onAddComment, onAddReply }) {
   const meta = BUCKET_META[post.bucket] || { label: "Community", color: "var(--gray-500)" };
   const [replying, setReplying] = useState(false);
   const [likesOpen, setLikesOpen] = useState(false);
@@ -3791,8 +3769,7 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onDoubleTapLove, onS
           saved={st.saved} onSave={onSave}
           author={{ name: post.channel.by, avatar: post.channel.byAvatar }}
           likes={st.likes} commentsCount={st.commentsCount} shares={st.shares} liked={liked}
-          comments={comments} onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={onShare}
-          fsOpen={videoFsOpen} onFsOpen={onVideoFsOpen} onFsClose={onVideoFsClose} onNextVideo={onVideoNext} onPrevVideo={onVideoPrev} navDir={videoNavDir} /> :
+          comments={comments} onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={onShare} /> :
         <MediaCarousel images={post.media} onLoveReact={handleDoubleTapLove} />}
       </div>}
       <PostActions likes={st.likes} comments={st.commentsCount} shares={st.shares}
@@ -4068,23 +4045,14 @@ function Feed({ channel } = {}) {
   const setViewerPersona = (key) => { setUserTier(key); setViewerPersonaRaw(key); };
   const [bucketToggles, setBucketToggles] = useState({ course: false, save: false, mute: false });
   const [upgradeFor, setUpgradeFor] = useState(null);
-  /* Fullscreen video/reel playback is tracked here (not locally per-post) so
-     scrolling/swiping while a video is open can advance to the next
-     video/reel post in feed order, Reels-style. `dir` (±1) travels alongside
-     the open post's id so both the post sliding out and the post sliding in
-     animate in the same direction that render; a direct tap-to-open/close
-     carries no dir, so it opens/closes instantly as before. */
-  const [openVideo, setOpenVideo] = useState(null);
-  const openVideoId = openVideo ? openVideo.id : null;
-  const goToVideo = (delta) => setOpenVideo((cur) => {
-    if (!cur) return cur;
-    const i = videoQueue.indexOf(cur.id);
-    if (i === -1) return cur;
-    const next = i + delta;
-    return next >= 0 && next < videoQueue.length ? { id: videoQueue[next], dir: delta } : cur;
-  });
+  const saveFlow = useSaveFlow();
 
   const toggle = (id, key) => setState((s) => ({ ...s, [id]: { ...s[id], [key]: !s[id][key] } }));
+  const toggleSave = (id) => {
+    const willSave = !state[id].saved;
+    toggle(id, "saved");
+    if (willSave) saveFlow.notifySaved();else saveFlow.notifyUnsaved();
+  };
 
   /* Composer submits straight into the feed — same post shape + localStorage
      key ("pf-newsfeed-user-posts") that CreatePostMobile writes, so posts
@@ -4141,13 +4109,10 @@ function Feed({ channel } = {}) {
   const visibleFeedItems = channel ?
   bucketResolved.filter(({ item: p }) => p.bucket === channel) :
   feedItems;
-  const videoQueue = visibleFeedItems.
-  filter(({ item: p }) => p.sample && (p.sample.type === "video" || p.sample.type === "vertical")).
-  map(({ item: p }) => p.id);
 
   return (
     <main className="feed" data-screen-label="Home feed">
-      {!channel && <PostComposer onPost={addPost} />}
+      {!channel && !window.PF_EMBED && <PostComposer onPost={addPost} />}
       {!channel &&
       <FeedPreviewPanel persona={viewerPersona} onPersona={setViewerPersona}
       toggles={bucketToggles} onToggle={(k, v) => setBucketToggles((t) => ({ ...t, [k]: v }))} />
@@ -4196,24 +4161,18 @@ function Feed({ channel } = {}) {
               c);
               return { ...s, [p.id]: { ...cur, comments, commentsCount: bump(cur.commentsCount) } };
             })}
-            onSave={() => toggle(p.id, "saved")}
+            onSave={() => toggleSave(p.id)}
             onShare={() => setState((s) => {
               const cur = s[p.id];
               return { ...s, [p.id]: { ...cur, shares: bump(cur.sharesBase) } };
-            })}
-            videoFsOpen={openVideoId === p.id}
-            onVideoFsOpen={() => setOpenVideo({ id: p.id, dir: null })}
-            onVideoFsClose={() => setOpenVideo(null)}
-            onVideoNext={() => goToVideo(1)}
-            onVideoPrev={() => goToVideo(-1)}
-            videoNavDir={openVideoId === p.id ? openVideo.dir : null} />);
+            })} />);
 
         }
         if (p.bucket === "coursecomment") {
           return (
             <CourseCommentCard key={p.id} post={p} st={st}
             onToggleLike={onToggleLike} onReact={setReaction} onAddComment={onAddComment}
-            onSave={() => toggle(p.id, "saved")}
+            onSave={() => toggleSave(p.id)}
             onShare={() => setState((s) => {
               const cur = s[p.id];
               return { ...s, [p.id]: { ...cur, shares: bump(cur.sharesBase) } };
@@ -4237,13 +4196,7 @@ function Feed({ channel } = {}) {
             const cur = s[p.id];
             return { ...s, [p.id]: { ...cur, shares: bump(cur.sharesBase) } };
           })}
-          onSave={() => toggle(p.id, "saved")}
-          videoFsOpen={openVideoId === p.id}
-          onVideoFsOpen={() => setOpenVideo({ id: p.id, dir: null })}
-          onVideoFsClose={() => setOpenVideo(null)}
-          onVideoNext={() => goToVideo(1)}
-          onVideoPrev={() => goToVideo(-1)}
-          videoNavDir={openVideoId === p.id ? openVideo.dir : null} />);
+          onSave={() => toggleSave(p.id)} />);
 
 
       })}
@@ -4253,6 +4206,7 @@ function Feed({ channel } = {}) {
       currentTier={viewerCurrent.paid && !viewerCurrent.admin ? viewerPersona : null}
       onClose={() => setUpgradeFor(null)} />
       }
+      <SaveFlowUI flow={saveFlow} />
     </main>);
 
 }

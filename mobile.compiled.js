@@ -196,67 +196,150 @@ const MTopBar = forwardRefM(function MTopBar({
     color: "var(--white)"
   }), "48")));
 });
-const SM_RESOURCES = [{
-  label: "Videos",
-  icon: "lucide:square-play",
-  n: 8
-}, {
-  label: "Articles",
-  icon: "lucide:feather",
-  n: 4
-}, {
-  label: "Webinars",
-  icon: "lucide:calendar",
-  n: 3
-}];
-const SM_COURSES = [{
-  label: "Face Anatomy Masterclass",
-  pct: 72
-}, {
-  label: "Lip Filler Techniques",
-  pct: 45
-}, {
-  label: "Advanced Botox Training",
-  pct: 20
-}];
+
+/* Paid tier ladder, low → high. A viewer's own tier unlocks every rung below
+   it too. "sovereign" aligns with the pricing-tier naming used by
+   membership-tier.jsx (its "sovereign" plan maps to this same top rung). */
+const SM_TIER_LADDER_M = ["confidence", "mastery", "freedom", "sovereign"];
+const SM_TIER_META_M = {
+  confidence: {
+    name: "Confidence"
+  },
+  mastery: {
+    name: "Mastery"
+  },
+  freedom: {
+    name: "Freedom"
+  },
+  sovereign: {
+    name: "Sovereign"
+  }
+};
+const SM_TIER_RESOURCES_M = {
+  confidence: [{
+    label: "Confidence channel",
+    icon: "lucide:message-circle",
+    n: 3,
+    href: "CommunityMobile.html"
+  }, {
+    label: "Foundation courses",
+    icon: "lucide:graduation-cap",
+    n: 6,
+    href: "LearningMobile.html"
+  }, {
+    label: "Chairside protocols",
+    icon: "lucide:file-text",
+    n: 12,
+    href: "LearningMobile.html"
+  }, {
+    label: "Member webinars",
+    icon: "lucide:calendar",
+    n: 2,
+    href: "EventsMobile.html"
+  }],
+  mastery: [{
+    label: "Mastery lounge",
+    icon: "lucide:message-circle",
+    n: 6,
+    href: "CommunityMobile.html"
+  }, {
+    label: "Advanced masterclasses",
+    icon: "lucide:graduation-cap",
+    n: 9,
+    href: "LearningMobile.html"
+  }, {
+    label: "Complication library",
+    icon: "lucide:file-text",
+    n: 18,
+    href: "LearningMobile.html"
+  }, {
+    label: "Live case reviews",
+    icon: "lucide:calendar",
+    n: 3,
+    href: "EventsMobile.html"
+  }],
+  freedom: [{
+    label: "Freedom circle",
+    icon: "lucide:message-circle",
+    n: 2,
+    href: "CommunityMobile.html"
+  }, {
+    label: "Business playbooks",
+    icon: "lucide:graduation-cap",
+    n: 7,
+    href: "LearningMobile.html"
+  }, {
+    label: "1:1 mentor sessions",
+    icon: "lucide:calendar",
+    n: 1,
+    href: "EventsMobile.html"
+  }],
+  sovereign: [{
+    label: "Sovereign roundtable",
+    icon: "lucide:message-circle",
+    n: 4,
+    href: "CommunityMobile.html"
+  }, {
+    label: "Executive mentorship",
+    icon: "lucide:calendar",
+    n: 1,
+    href: "EventsMobile.html"
+  }, {
+    label: "Legacy case archive",
+    icon: "lucide:file-text",
+    n: 9,
+    href: "LearningMobile.html"
+  }, {
+    label: "Founder office hours",
+    icon: "lucide:calendar",
+    n: 2,
+    href: "EventsMobile.html"
+  }]
+};
+
+/* Tiers unlocked by a viewer on `tier`, highest first. Free (no match) unlocks none. */
+function smUnlockedTiersM(tier) {
+  const i = SM_TIER_LADDER_M.indexOf(tier);
+  if (i === -1) return [];
+  return SM_TIER_LADDER_M.slice(0, i + 1).reverse();
+}
+/* The next rung up from `tier` — null once at the top of the ladder. A free
+   viewer (tier not on the ladder, i === -1) points at the first rung. */
+function smNextTierM(tier) {
+  const i = SM_TIER_LADDER_M.indexOf(tier);
+  if (i === SM_TIER_LADDER_M.length - 1) return null;
+  return SM_TIER_LADDER_M[i + 1];
+}
+/* window.PF_TIER is set per newsfeed variant page to preview a given tier.
+   Falls back to the shared subscription-tier localStorage key from app.jsx
+   so today's single NewsfeedMobile.html keeps working unset. */
+function smReadTierM() {
+  if (window.PF_TIER) return window.PF_TIER;
+  try {
+    const t = PFAM.getUserTier ? PFAM.getUserTier() : "free";
+    return t === "inner" ? "sovereign" : t;
+  } catch (e) {
+    return "free";
+  }
+}
 const SM_EVENTS = [{
   d: "30",
   m: "JUN",
   label: "Technique Tuesday Webinar",
   t: "8:00 PM",
-  tag: "NEW"
+  access: "open"
 }, {
   d: "5",
   m: "JUL",
   label: "Confidence Masterclass",
-  t: "6:00 PM"
+  t: "6:00 PM",
+  access: "members"
 }, {
   d: "12",
   m: "JUL",
   label: "Business Growth Workshop",
-  t: "7:00 PM"
-}];
-const SM_PROFILE_BEFORE = [{
-  label: "Edit Profile",
-  icon: "lucide:book-open",
-  href: "ProfileMobile.html"
-}, {
-  label: "Account Settings",
-  icon: "lucide:graduation-cap",
-  href: null
-}, {
-  label: "Notifications",
-  icon: "lucide:calendar",
-  href: "NotificationSettings.html"
-}];
-const SM_PROFILE_AFTER = [{
-  label: "Privacy & Security",
-  icon: "lucide:book-open",
-  href: null
-}, {
-  label: "Admin Panel",
-  icon: "lucide:shield",
-  href: "AdminPanel.html"
+  t: "7:00 PM",
+  access: "members"
 }];
 const NOTIFS = {
   "New": [{
@@ -1068,10 +1151,10 @@ function SmDarkSwitch({
     "aria-label": on ? "Switch to light mode" : "Switch to dark mode"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sm-knob"
-  }, on && /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: "lucide:moon",
+  }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: on ? "lucide:moon" : "lucide:sun",
     size: 13,
-    color: "#1A1736"
+    color: on ? "#1A1736" : "var(--gray-450)"
   })));
 }
 function SmDisplayCard({
@@ -1098,11 +1181,77 @@ function SmSection({
     className: "sm-sec-h"
   }, title);
 }
+function SmTierResourceRow({
+  r
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    className: "smt-resource",
+    onClick: () => go(r.href)
+  }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: r.icon,
+    size: 20,
+    color: "var(--gray-900)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "smt-resource-label"
+  }, r.label), /*#__PURE__*/React.createElement("span", {
+    className: "smt-count"
+  }, r.n));
+}
+function SmTierCard({
+  tierKey,
+  isOwn,
+  open,
+  onToggle
+}) {
+  const resources = SM_TIER_RESOURCES_M[tierKey];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "smt-card"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "smt-head",
+    "aria-expanded": open,
+    onClick: onToggle
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "smt-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "smt-name"
+  }, SM_TIER_META_M[tierKey].name, " Path"), !isOwn && /*#__PURE__*/React.createElement("span", {
+    className: "smt-pill"
+  }, "INCLUDED")), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: open ? "lucide:chevron-up" : "lucide:chevron-down",
+    size: 20,
+    color: "var(--gray-450)"
+  })), open && /*#__PURE__*/React.createElement("div", {
+    className: "smt-resources"
+  }, resources.map(r => /*#__PURE__*/React.createElement(SmTierResourceRow, {
+    key: r.label,
+    r: r
+  }))));
+}
 function SideMenu({
   open,
   onClose
 }) {
   const [dark, toggleDark] = useDarkModeM();
+  const tier = smReadTierM();
+  const unlockedTiers = smUnlockedTiersM(tier);
+  const nextTier = smNextTierM(tier);
+  const showUpgrade = tier === "free" || tier === "confidence" || tier === "mastery";
+  const [openTierKey, setOpenTierKey] = useStateM(() => unlockedTiers[0] || null);
+  const burgerRefM = useRefM(null);
+  useEffectM(() => {
+    if (!open) return;
+    burgerRefM.current = document.querySelector('.m-burger');
+    const onKey = e => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      burgerRefM.current && burgerRefM.current.focus();
+    };
+  }, [open]);
   return /*#__PURE__*/React.createElement("div", {
     className: "m-drawer-wrap" + (open ? " open" : ""),
     "aria-hidden": !open
@@ -1137,7 +1286,7 @@ function SideMenu({
     color: "var(--gray-800)"
   })), /*#__PURE__*/React.createElement("div", {
     className: "sm-body"
-  }, /*#__PURE__*/React.createElement("button", {
+  }, showUpgrade && nextTier && /*#__PURE__*/React.createElement("button", {
     className: "sm-upgrade",
     onClick: () => go("MembershipTier.html")
   }, /*#__PURE__*/React.createElement("span", {
@@ -1150,81 +1299,40 @@ function SideMenu({
     className: "sm-upgrade-main"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sm-upgrade-title"
-  }, PFAM.smNextTier(PFAM.ME.tier) ? "Upgrade to " + PFAM.smNextTier(PFAM.ME.tier) : "You're at the top tier"), /*#__PURE__*/React.createElement("span", {
+  }, "Upgrade to ", SM_TIER_META_M[nextTier].name), /*#__PURE__*/React.createElement("span", {
     className: "sm-upgrade-sub"
-  }, "Unlock premium channels & courses")), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+  }, "Unlock more premium channels & courses")), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 20,
     color: "#fff"
-  })), /*#__PURE__*/React.createElement(SmSection, {
-    title: "Communities"
-  }), PFAM.ME.tier ? PFAM.smIncludedTiers(PFAM.ME.tier).map((t, i) => /*#__PURE__*/React.createElement("button", {
-    key: t,
-    className: "sm-tier",
-    onClick: () => go("CommunityMobile.html")
+  })), unlockedTiers.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "smt-list"
+  }, unlockedTiers.map(tKey => /*#__PURE__*/React.createElement(SmTierCard, {
+    key: tKey,
+    tierKey: tKey,
+    isOwn: tKey === tier,
+    open: openTierKey === tKey,
+    onToggle: () => setOpenTierKey(k => k === tKey ? null : tKey)
+  }))), /*#__PURE__*/React.createElement("button", {
+    className: "sm-primary-card",
+    onClick: () => go("LearningMobile.html")
   }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-top"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-name"
-  }, t, " Path"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-pill" + (i === 0 ? " sm-tier-pill-yours" : "")
-  }, i === 0 ? "YOUR TIER" : "INCLUDED")), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-sub"
-  }, "Exclusive tier content"), i === 0 && /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-new sm-tier-new-yours"
-  }, "3 new posts"))) : /*#__PURE__*/React.createElement("button", {
-    className: "sm-tier",
-    onClick: () => go("CommunityMobile.html")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-top"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-name"
-  }, "No active plan"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-pill"
-  }, "FREE")), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-sub"
-  }, "Subscribe to unlock a channel")), /*#__PURE__*/React.createElement(SmSection, {
-    title: "Membership Resources"
-  }), /*#__PURE__*/React.createElement("nav", {
-    className: "sm-list"
-  }, SM_RESOURCES.map(c => /*#__PURE__*/React.createElement("button", {
-    key: c.label,
-    className: "sm-row",
-    onClick: () => go("MyLearning.html")
+    className: "sm-primary-icon"
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: c.icon,
-    size: 23,
-    color: "var(--gray-900)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "sm-row-label"
-  }, c.label)))), /*#__PURE__*/React.createElement(SmSection, {
-    title: "My Courses"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "sm-courses"
-  }, SM_COURSES.map(c => /*#__PURE__*/React.createElement("button", {
-    key: c.label,
-    className: "sm-course",
-    onClick: () => go("MyLearning.html")
+    name: "lucide:graduation-cap",
+    size: 22,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sm-primary-main"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-course-top"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-course-thumb"
-  }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: "lucide:image",
+    className: "sm-primary-title"
+  }, "My Learning"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-primary-sub"
+  }, "Courses, protocols & certificates")), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: "lucide:chevron-right",
     size: 20,
-    color: "var(--gray-400)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "sm-course-name"
-  }, c.label)), /*#__PURE__*/React.createElement("span", {
-    className: "sm-progress"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-progress-fill",
-    style: {
-      width: c.pct + "%"
-    }
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "sm-course-pct"
-  }, c.pct, "% complete")))), /*#__PURE__*/React.createElement(SmSection, {
+    color: "var(--gray-450)"
+  })), /*#__PURE__*/React.createElement(SmSection, {
     title: "Upcoming Events"
   }), /*#__PURE__*/React.createElement("div", {
     className: "sm-events"
@@ -1240,57 +1348,29 @@ function SideMenu({
     className: "sm-event-name"
   }, e.label), /*#__PURE__*/React.createElement("span", {
     className: "sm-event-time"
-  }, e.t)), e.tag && /*#__PURE__*/React.createElement("span", {
-    className: "sm-event-tag"
-  }, e.tag)))), /*#__PURE__*/React.createElement(SmSection, {
+  }, e.t)), /*#__PURE__*/React.createElement("span", {
+    className: "sm-event-access" + (e.access === "members" ? " sm-event-access-members" : " sm-event-access-open")
+  }, e.access === "members" ? "Members only" : "Open to all")))), /*#__PURE__*/React.createElement(SmSection, {
     title: "My Profile"
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "sm-row sm-verify",
-    onClick: () => go("ProfileMobile.html")
-  }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: "lucide:book-open",
-    size: 23,
-    color: "var(--premium-orange)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "sm-row-label"
-  }, "Verify Profile"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-verify-pill"
-  }, "Not Verified")), /*#__PURE__*/React.createElement("nav", {
-    className: "sm-list"
-  }, SM_PROFILE_BEFORE.map(c => /*#__PURE__*/React.createElement("button", {
-    key: c.label,
-    className: "sm-row",
-    onClick: () => c.href && go(c.href)
-  }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: c.icon,
-    size: 23,
-    color: "var(--gray-900)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "sm-row-label"
-  }, c.label), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 20,
-    color: "var(--gray-450)"
-  })))), /*#__PURE__*/React.createElement(SmDisplayCard, {
-    dark: dark,
-    onToggle: toggleDark
   }), /*#__PURE__*/React.createElement("nav", {
     className: "sm-list"
-  }, SM_PROFILE_AFTER.map(c => /*#__PURE__*/React.createElement("button", {
-    key: c.label,
+  }, /*#__PURE__*/React.createElement("button", {
     className: "sm-row",
-    onClick: () => c.href && go(c.href)
+    onClick: () => go("NotificationSettings.html")
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: c.icon,
+    name: "lucide:bell",
     size: 23,
     color: "var(--gray-900)"
   }), /*#__PURE__*/React.createElement("span", {
     className: "sm-row-label"
-  }, c.label), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+  }, "Notifications"), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 20,
     color: "var(--gray-450)"
-  })))), /*#__PURE__*/React.createElement("button", {
+  }))), /*#__PURE__*/React.createElement(SmDisplayCard, {
+    dark: dark,
+    onToggle: toggleDark
+  }), /*#__PURE__*/React.createElement("button", {
     className: "m-drawer-logout",
     onClick: onClose
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {

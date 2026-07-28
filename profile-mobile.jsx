@@ -231,15 +231,19 @@ function SideMenuPM({ open, onClose }) {
             </button>
           }
 
-          <SmSectionPM title="Membership Resources" />
-          <nav className="sm-list">
-            {SM_RESOURCES_PM.map((c) =>
-            <button key={c.label} className="sm-row" onClick={() => goPM("LearningMobile.html")}>
-                <DSPM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
-                <span className="sm-row-label">{c.label}</span>
-              </button>
-            )}
-          </nav>
+          {PM_ME.tier &&
+          <>
+            <SmSectionPM title="Membership Resources" />
+            <nav className="sm-list">
+              {SM_RESOURCES_PM.map((c) =>
+              <button key={c.label} className="sm-row" onClick={() => goPM("LearningMobile.html")}>
+                  <DSPM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
+                  <span className="sm-row-label">{c.label}</span>
+                </button>
+              )}
+            </nav>
+          </>
+          }
 
           <SmSectionPM title="My Courses" />
           <div className="sm-courses">

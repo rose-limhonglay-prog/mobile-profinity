@@ -1,6 +1,7 @@
 /* ===========================================================================
    PROfinity — My Saved (mobile) · iPhone 17 Pro Max
    Composed on the bound DS bundle. Suffixed -MS to avoid global-scope clashes.
+   Collection tiles reuse the lm-col / lm-savedtabs classes from learning-mobile.css.
    =========================================================================== */
 const { useState: useStateMS, useEffect: useEffectMS } = React;
 const DSMS = window.ProfinityDesignSystem_c2b5cc;
@@ -35,124 +36,106 @@ function useIsMobileMS() {
   return mobile;
 }
 
-const MS_ITEMS = [
-  {
-    id: 1, type: "post", category: "Post",
-    title: "Temple Filler Techniques",
-    subtitle: "Katy Wilson · London, United Kingdom",
-    meta: "Saved today",
-    icon: "lucide:file-text",
-    color: "var(--brand-navy)"
-  },
-  {
-    id: 2, type: "course", category: "Course",
-    title: "The Ultimate Toxin Eye Complications Masterclass",
-    subtitle: "PROfinity Academy",
-    meta: "Saved 3 days ago",
-    icon: "lucide:graduation-cap",
-    color: "var(--ai-purple)"
-  },
-  {
-    id: 3, type: "post", category: "Post",
-    title: "Advanced Lip Anatomy for Aesthetic Practitioners",
-    subtitle: "Dr. Tim Pearce · Career Academy",
-    meta: "Saved last week",
-    icon: "lucide:file-text",
-    color: "var(--brand-navy)"
-  },
-  {
-    id: 4, type: "course", category: "Course",
-    title: "8D Lips Course",
-    subtitle: "PROfinity Academy",
-    meta: "Saved last week",
-    icon: "lucide:graduation-cap",
-    color: "var(--ai-purple)"
-  },
-  {
-    id: 5, type: "event", category: "Event",
-    title: "Aesthetics Summit London 2026",
-    subtitle: "ExCeL London · 14 Aug 2026",
-    meta: "Saved 2 weeks ago",
-    icon: "lucide:calendar",
-    color: "var(--premium-orange)"
-  },
-  {
-    id: 6, type: "course", category: "Course",
-    title: "Pro Tox Course",
-    subtitle: "PROfinity Academy",
-    meta: "Saved 3 weeks ago",
-    icon: "lucide:graduation-cap",
-    color: "var(--ai-purple)"
-  },
-  {
-    id: 7, type: "post", category: "Post",
-    title: "Emerging Technologies in Aesthetic Medicine",
-    subtitle: "Linda Garcia · Toronto, Canada",
-    meta: "Saved last month",
-    icon: "lucide:file-text",
-    color: "var(--brand-navy)"
-  },
-  {
-    id: 8, type: "event", category: "Event",
-    title: "Injectable Masterclass Workshop",
-    subtitle: "Harley Street, London · 22 Sep 2026",
-    meta: "Saved last month",
-    icon: "lucide:calendar",
-    color: "var(--premium-orange)"
-  },
+const MS_COLLECTIONS = [
+  { name: "Lip protocols", n: 14, img: "assets/course-lip.png" },
+  { name: "Toxin techniques", n: 22, img: "assets/course-protox.png" },
+  { name: "Watch later", n: 8, img: null, icon: "clock" },
+  { name: "Complication cases", n: 11, img: "assets/chin-positions.png" },
+  { name: "Full-face assessment", n: 6, img: "assets/post5-img1.png" },
+  { name: "Business growth", n: 9, img: "assets/post3-img1.png" },
+  { name: "Temple & midface", n: 5, img: "assets/course-temple.png" },
+  { name: "Chairside handouts", n: 17, img: "assets/clinic-toxin-guide.png" },
 ];
 
-const MS_TABS = ["All", "Posts", "Courses", "Events"];
+const MS_TABS = [
+  { k: "Collections", n: 8 },
+  { k: "Courses", n: 26 },
+  { k: "Posts", n: 112 },
+  { k: "Resources", n: 34 },
+];
 
-function MSTab({ label, active, onClick }) {
+function MSCollectionTile({ c }) {
   return (
-    <button className={"ms-tab" + (active ? " on" : "")} onClick={onClick}>
-      {label}
+    <button className={"lm-col" + (c.img ? "" : " empty")}>
+      {c.img ?
+        <img src={c.img} alt="" /> :
+        <span className="lm-col-blank" aria-hidden="true" />}
+      <span className="lm-col-veil" aria-hidden="true" />
+      <span className="lm-col-meta">
+        <DSMS.IconifyIcon name={c.icon === "clock" ? "lucide:clock" : "lucide:bookmark"} size={20} color="#fff" />
+        <span className="lm-col-name">{c.name}</span>
+        <span className="lm-col-n">{c.n} saved</span>
+      </span>
+      <span className="lm-col-lock" aria-label="Private collection">
+        <DSMS.IconifyIcon name="lucide:lock" size={15} color="#fff" />
+      </span>
     </button>
   );
 }
 
-function MSSavedCard({ item, onUnsave }) {
-  return (
-    <div className="ms-card">
-      <div className="ms-card-icon" style={{ background: item.color + "18" }}>
-        <DSMS.IconifyIcon name={item.icon} size={22} color={item.color} />
-      </div>
-      <div className="ms-card-body">
-        <span className="ms-card-cat" style={{ color: item.color }}>{item.category}</span>
-        <h3 className="ms-card-title">{item.title}</h3>
-        <p className="ms-card-sub">{item.subtitle}</p>
-        <p className="ms-card-meta">{item.meta}</p>
-      </div>
-      <button className="ms-card-unsave" aria-label="Remove from saved" onClick={() => onUnsave(item.id)}>
-        <DSMS.IconifyIcon name="lucide:bookmark" size={20} color="var(--brand-navy)" />
-      </button>
-    </div>
-  );
-}
+function MSNewCollectionSheet({ onClose }) {
+  const [name, setName] = useStateMS("");
+  const [makePublic, setMakePublic] = useStateMS(false);
 
-function MSEmpty() {
+  useEffectMS(() => {
+    const onKey = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   return (
-    <div className="ms-empty">
-      <div className="ms-empty-icon">
-        <DSMS.IconifyIcon name="lucide:bookmark" size={36} color="var(--gray-400)" />
+    <div className="mcs-overlay" onClick={onClose}>
+      <div className="mcs-sheet" role="dialog" aria-modal="true" aria-label="Create new collection" onClick={e => e.stopPropagation()}>
+        <div className="mcs-hd">
+          <button className="mcs-close" onClick={onClose} aria-label="Close">
+            <DSMS.IconifyIcon name="lucide:x" size={22} color="var(--gray-900)" />
+          </button>
+          <h2>Create new collection</h2>
+        </div>
+
+        <div className="mcs-body">
+          <div className="mcs-card">
+            <div className="mcs-field">
+              <label htmlFor="mcs-name">Name</label>
+              <input id="mcs-name" type="text" placeholder="Enter collection name"
+                value={name} onChange={e => setName(e.target.value)} autoFocus />
+            </div>
+          </div>
+
+          <div className="mcs-card">
+            <button className="mcs-row" type="button">
+              <span className="mcs-row-copy">
+                <span className="mcs-row-title">Share with a friend</span>
+                <span className="mcs-row-sub">They will be able to add their favorite posts.</span>
+              </span>
+              <span className="mcs-row-right">
+                <DSMS.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+              </span>
+            </button>
+            <div className="mcs-row">
+              <span className="mcs-row-copy">
+                <span className="mcs-row-title">Make public</span>
+                <span className="mcs-row-sub">The collection will be shown on your profile.</span>
+              </span>
+              <span className="mcs-row-right">
+                <button className={"mcs-switch" + (makePublic ? " on" : "")} role="switch"
+                  aria-checked={makePublic} aria-label="Make public" onClick={() => setMakePublic(v => !v)}>
+                  <span className="mcs-knob" />
+                </button>
+              </span>
+            </div>
+          </div>
+
+          <button className="mcs-cta" disabled={!name.trim()} onClick={onClose}>Next</button>
+        </div>
       </div>
-      <h3 className="ms-empty-h">Nothing saved yet</h3>
-      <p className="ms-empty-sub">Bookmark posts, courses, and events to find them here.</p>
     </div>
   );
 }
 
 function MySaved() {
-  const [activeTab, setActiveTab] = useStateMS("All");
-  const [items, setItems] = useStateMS(MS_ITEMS);
-
-  const typeMap = { Posts: "post", Courses: "course", Events: "event" };
-  const filtered = activeTab === "All" ? items : items.filter(i => i.type === typeMap[activeTab]);
-
-  function unsave(id) {
-    setItems(prev => prev.filter(i => i.id !== id));
-  }
+  const [tab, setTab] = useStateMS("Collections");
+  const [newCollectionOpen, setNewCollectionOpen] = useStateMS(false);
 
   return (
     <div className="ms-screen" data-screen-label="My Saved (mobile)">
@@ -161,20 +144,38 @@ function MySaved() {
           <DSMS.IconifyIcon name="lucide:chevron-left" size={26} color="var(--gray-900)" />
         </button>
         <h1>My Saved</h1>
+        <button className="ms-back" aria-label="Search saved items">
+          <DSMS.IconifyIcon name="lucide:search" size={22} color="var(--gray-900)" />
+        </button>
       </header>
 
-      <div className="ms-tabs-row">
-        {MS_TABS.map(t =>
-          <MSTab key={t} label={t} active={activeTab === t} onClick={() => setActiveTab(t)} />
-        )}
+      <div className="ms-scroll">
+        <div className="lm-savedtabs" role="tablist" aria-label="Saved content">
+          {MS_TABS.map(t =>
+            <button key={t.k} role="tab" aria-selected={tab === t.k}
+              className={"lm-st" + (tab === t.k ? " on" : "")} onClick={() => setTab(t.k)}>
+              {t.k} <span className="n">{t.n}</span>
+            </button>
+          )}
+        </div>
+
+        {tab === "Collections" ?
+          <div className="lm-colgrid">
+            <button className="lm-col lm-col-new" aria-label="Create a new collection" onClick={() => setNewCollectionOpen(true)}>
+              <span className="lm-col-plus"><DSMS.IconifyIcon name="lucide:plus" size={26} color="var(--brand-navy)" /></span>
+              <span className="lm-col-newtx">New collection</span>
+            </button>
+            {MS_COLLECTIONS.map(c => <MSCollectionTile key={c.name} c={c} />)}
+          </div> :
+          <div className="lm-saved-empty">
+            <DSMS.IconifyIcon name="lucide:bookmark" size={34} color="var(--gray-400)" />
+            <p><b>Nothing saved here yet</b>Tap the bookmark on any {tab.toLowerCase().replace(/s$/, "")} to keep it for later.</p>
+          </div>}
+
+        <div style={{ height: 24 }} />
       </div>
 
-      <div className="ms-scroll">
-        {filtered.length === 0
-          ? <MSEmpty />
-          : filtered.map(item => <MSSavedCard key={item.id} item={item} onUnsave={unsave} />)
-        }
-      </div>
+      {newCollectionOpen && <MSNewCollectionSheet onClose={() => setNewCollectionOpen(false)} />}
     </div>
   );
 }

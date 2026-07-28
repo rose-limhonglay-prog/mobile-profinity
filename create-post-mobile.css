@@ -70,10 +70,50 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 #pf-root .cp-textarea:focus-visible{outline:none;box-shadow:none}
 .cp-textarea::placeholder{color:var(--gray-350,#b4b8c8)}
 
+/* ===== background-style compose (text-only "Aa" post) ===== */
+.cp-compose{display:flex;flex:1 1 auto;min-height:0}
+.cp-compose-bg{position:relative;flex:none;display:flex;align-items:center;justify-content:center;
+  margin:4px 16px 16px;padding:26px 22px;border-radius:16px;aspect-ratio:1/1;overflow:hidden}
+.cp-compose-bg .cp-textarea{flex:none;min-height:0;max-height:100%;padding:0;
+  text-align:center;font-size:24px;font-weight:var(--fw-semibold);line-height:1.35}
+.cp-compose-bg .cp-textarea::placeholder{color:rgba(255,255,255,.72)}
+.cp-bg-fab{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;cursor:pointer;
+  border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.9);
+  display:flex;align-items:center;justify-content:center}
+.cp-bg-fab:active{opacity:.8}
+.cp-bg-aa{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15px;
+  background:linear-gradient(135deg,#6c63ff,#ce9957,#be1e2d);-webkit-background-clip:text;
+  background-clip:text;color:transparent}
+.cp-bg-aa.lg{font-size:19px}
+
+/* ===== background style picker sheet ===== */
+.cp-sheet-overlay{position:absolute;inset:0;z-index:200;display:flex;align-items:flex-end;
+  background:rgba(16,24,40,.42);animation:cp-fade .18s ease both}
+@keyframes cp-fade{from{opacity:0}to{opacity:1}}
+.cp-sheet{width:100%;background:var(--surface-card);border-radius:22px 22px 0 0;
+  padding:10px 16px 26px;max-height:70%;display:flex;flex-direction:column;
+  animation:cp-up .24s cubic-bezier(.22,.61,.36,1) both}
+@keyframes cp-up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.cp-sheet-grip{align-self:center;width:40px;height:5px;border-radius:100px;background:var(--gray-300);margin:4px 0 12px}
+.cp-sheet-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.cp-sheet-hd h3{margin:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--text-heading)}
+.cp-sheet-done{width:40px;height:40px;border:none;background:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+.cp-swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;overflow-y:auto;padding:6px 2px 2px}
+.cp-swatch{position:relative;aspect-ratio:1/1;border-radius:12px;border:1.5px solid var(--border-default);
+  cursor:pointer;background:var(--surface-sunken);display:flex;align-items:center;justify-content:center;
+  transition:transform .15s cubic-bezier(.22,1.2,.4,1)}
+.cp-swatch:active{transform:scale(.94)}
+.cp-swatch.on{box-shadow:0 0 0 3px var(--brand-navy)}
+.cp-swatch-ck{width:24px;height:24px;border-radius:50%;background:#fff;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(16,24,40,.2)}
+@media (prefers-reduced-motion:reduce){.cp-swatch{transition:none}}
+
 /* ===== image previews ===== */
 .cp-images{display:grid;gap:4px;padding:0 16px 12px}
 .cp-images-1{grid-template-columns:1fr}
-.cp-images-2,.cp-images-3,.cp-images-4{grid-template-columns:1fr 1fr}
+.cp-images-2,.cp-images-3,.cp-images-4,.cp-images-5{grid-template-columns:1fr 1fr}
+.cp-images-5 .cp-img-wrap:nth-child(5){grid-column:1 / -1}
 .cp-img-wrap{position:relative;border-radius:12px;overflow:hidden;background:var(--gray-100)}
 .cp-img{width:100%;height:200px;object-fit:cover;display:block}
 .cp-images-1 .cp-img{height:260px}
@@ -93,6 +133,8 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 .cp-attach-btn{width:44px;height:44px;border-radius:12px;border:none;cursor:pointer;
   background:var(--surface-sunken);display:flex;align-items:center;justify-content:center}
 .cp-attach-btn:active{background:var(--gray-200)}
+.cp-attach-btn:disabled{opacity:.35;cursor:not-allowed}
+.cp-attach-btn:disabled:active{background:var(--surface-sunken)}
 
 /* ===== Native mobile mode (real phone, no device frame) ===== */
 @media (max-width: 768px) {

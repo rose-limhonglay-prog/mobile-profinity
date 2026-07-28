@@ -11,6 +11,8 @@
   --brand-gold: #ce9957;        /* logo tagline + accents */
   --brand-gold-soft: #e7a769;
   --brand-gold-100: #f7efe3;    /* gold wash background */
+  --brand-rose: #d98a94;        /* dusty rose accent (e.g. collection-creation CTA) */
+  --brand-rose-700: #c56f7a;    /* pressed */
 
   /* ---- Agent / AI accent (Coach, Lumina, Marketing agents) ---- */
   --ai-purple: #6c63ff;         /* primary agent action color */

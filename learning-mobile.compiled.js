@@ -67,6 +67,19 @@ const LM_FREE = [{
   instr: "Dr. Tim Pearce",
   grad: "linear-gradient(140deg,#f59e0b 0%,#f0617a 100%)"
 }];
+const LM_RESOURCES = [{
+  title: "Lip Anatomy Basics",
+  tag: "Beginner",
+  instr: "Dr. Tim Pearce",
+  dur: "18 min",
+  grad: "linear-gradient(135deg,#1a1550 0%,#3730a3 100%)"
+}, {
+  title: "Safe Injection Zones Guide",
+  tag: "Intermediate",
+  instr: "Dr. Tim Pearce",
+  dur: "24 min",
+  grad: "linear-gradient(135deg,#f59e0b 0%,#fbbf24 100%)"
+}];
 function lmCourseUrl(c) {
   if (c.slug) return "CourseDetail.html?course=" + c.slug;
   const p = new URLSearchParams({
@@ -94,6 +107,15 @@ function lmCheckoutUrl(c) {
 }
 function lmEnrollUrl(c) {
   return c.price === "REPLAY" ? lmCourseUrl(c) : lmCheckoutUrl(c);
+}
+function lmResourceUrl(r) {
+  const p = new URLSearchParams({
+    title: r.title,
+    instr: r.instr || "Dr. Tim Pearce",
+    dur: r.dur || "20 min",
+    grad: r.grad || ""
+  });
+  return "CourseDetail.html?" + p.toString();
 }
 const LM_MEMBERSHIP = [{
   icon: "lucide:graduation-cap",
@@ -256,6 +278,19 @@ function LMSearchFab({
     onClick: onClick
   }, /*#__PURE__*/React.createElement(DSL.Icon, {
     name: "search",
+    size: 20,
+    color: "var(--gray-500)"
+  }));
+}
+function LMBookmarkFab({
+  onClick
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    className: "lm-bookmark-fab",
+    "aria-label": "Saved courses",
+    onClick: onClick
+  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "lucide:bookmark",
     size: 20,
     color: "var(--gray-500)"
   }));
@@ -663,6 +698,59 @@ function Recommended({
     color: "#fff"
   })))))));
 }
+function FreeResources() {
+  return /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("div", {
+    className: "lm-sec-h"
+  }, /*#__PURE__*/React.createElement("h2", null, "Free Resources"), /*#__PURE__*/React.createElement("a", {
+    href: "#",
+    onClick: e => {
+      e.preventDefault();
+      goL("MyLearning.html");
+    },
+    style: {
+      color: "rgb(41, 37, 105)"
+    }
+  }, "View All")), /*#__PURE__*/React.createElement("div", {
+    className: "lm-res-grid"
+  }, LM_RESOURCES.map((r, i) => /*#__PURE__*/React.createElement("article", {
+    className: "lm-res",
+    key: i,
+    role: "button",
+    tabIndex: 0,
+    onClick: () => goL(lmResourceUrl(r)),
+    onKeyDown: e => {
+      if (e.key === "Enter") goL(lmResourceUrl(r));
+    },
+    style: {
+      cursor: "pointer"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-res-img",
+    style: {
+      background: r.grad
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-res-tag"
+  }, r.tag), /*#__PURE__*/React.createElement("span", {
+    className: "lm-res-play"
+  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "lucide:play",
+    size: 18,
+    color: "var(--brand-navy)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "lm-res-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-res-ttl"
+  }, r.title), /*#__PURE__*/React.createElement("div", {
+    className: "ins"
+  }, r.instr), /*#__PURE__*/React.createElement("div", {
+    className: "lm-res-dur"
+  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    name: "lucide:clock",
+    size: 15,
+    color: "var(--gray-450)"
+  }), r.dur))))));
+}
 function FreeCourses({
   onQuiz,
   unlocked
@@ -967,9 +1055,11 @@ function LearningHome() {
     style: {
       top: chromeHidden ? LM_STATUS_BAR_H : headerH
     }
-  }, chromeHidden && !searchOpen ? /*#__PURE__*/React.createElement(LMSearchFab, {
+  }, chromeHidden && !searchOpen ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(LMSearchFab, {
     onClick: () => setSearchOpen(true)
-  }) : /*#__PURE__*/React.createElement(LMSearch, {
+  }), /*#__PURE__*/React.createElement(LMBookmarkFab, {
+    onClick: () => goL("MySaved.html?from=learning")
+  })) : /*#__PURE__*/React.createElement(LMSearch, {
     autoFocus: chromeHidden && searchOpen,
     collapsible: chromeHidden,
     onCollapse: () => setSearchOpen(false)
@@ -986,7 +1076,7 @@ function LearningHome() {
     onOpen: () => setMembershipOpen(true)
   }), /*#__PURE__*/React.createElement(Recommended, {
     loading: loading
-  }), /*#__PURE__*/React.createElement(FreeCourses, {
+  }), /*#__PURE__*/React.createElement(FreeResources, null), /*#__PURE__*/React.createElement(FreeCourses, {
     onQuiz: () => setSurveyOpen(true),
     unlocked: coursesUnlocked
   }), /*#__PURE__*/React.createElement("div", {
