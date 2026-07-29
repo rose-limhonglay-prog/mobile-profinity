@@ -2641,8 +2641,8 @@ const BUCKET_META = {
     color: "var(--success)"
   },
   coursecomment: {
-    label: "Course",
-    color: "var(--success)"
+    label: "Confidence",
+    color: "var(--info)"
   },
   general: {
     label: "General",
@@ -2666,7 +2666,7 @@ const TEASER_PILL = {
   freedom: "var(--ai-purple)",
   inner: "var(--brand-navy-900)",
   course: "var(--success)",
-  coursecomment: "var(--success)",
+  coursecomment: "var(--brand-navy)",
   general: "var(--gray-500)"
 };
 

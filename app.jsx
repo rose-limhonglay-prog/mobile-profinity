@@ -1141,7 +1141,7 @@ const BUCKET_META = {
   freedom: { label: "Freedom", color: "var(--ai-purple)" },
   inner: { label: "Inner Circle", color: "var(--premium-gold-deep)" },
   course: { label: "Course", color: "var(--success)" },
-  coursecomment: { label: "Course", color: "var(--success)" },
+  coursecomment: { label: "Confidence", color: "var(--info)" },
   general: { label: "General", color: "var(--gray-500)" },
   followsave: { label: "Activity", color: "var(--gray-500)" },
   mylearning: { label: "My Learning", color: "var(--premium-orange)" }
@@ -1155,7 +1155,7 @@ const TEASER_PILL = {
   freedom: "var(--ai-purple)",
   inner: "var(--brand-navy-900)",
   course: "var(--success)",
-  coursecomment: "var(--success)",
+  coursecomment: "var(--brand-navy)",
   general: "var(--gray-500)"
 };
 
