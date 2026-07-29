@@ -4043,35 +4043,591 @@ const EXTRA_VIDEO_POST_10 = {
   commentList: thread("Every clinic should be running this drill regularly.")
 };
 
-/* The free-newsfeed's fixed post-type sequence — four designed cycles (cycle
-   1 ends with the Upcoming Event + Masterclass Unlock) instead of a random
-   interleave, so every post format shows up in a deliberate order. The
-   per-cycle tier "Hidden Post" (Confidence/Mastery/Freedom/Inner Circle
-   ChannelFeedCard teaser) has been removed from the newsfeed entirely —
-   membership tiers still get featured via the tier-tagged posts
-   (tierTagPostsFor) instead. */
-const FEED_SEQUENCE = [
-// Cycle 1
-TEXT_POST_1, SQUARE_IMG_POST_1, PORTRAIT_IMG_POST_1, EDITORIAL_POSTS[2] /* p1: carousel */, EDITORIAL_POSTS[6] /* p5: square video */, EDITORIAL_POSTS[1] /* p6: portrait reel */, PINNED_POSTS[0] /* p_quiz */, COURSE_COMMENT_2 /* Course discussion — PROTOX, seen by enrolled + commenting members */, PINNED_POSTS[1] /* p8: poll */, {
-  id: "ff_event1",
-  author: PROFINITY,
-  keepAuthor: true,
-  time: "3h",
-  eventData: EVENTS[0],
-  likes: "0",
-  comments: "0",
-  shares: "0",
+/* Tier-aware newsfeed sequences — every subscription tier (Free/Confidence/
+   Mastery) walks the same designed post-format order (text, square image,
+   vertical image, 5-image carousel, square video, event-registration,
+   reel/vertical video, poll, quiz, paywall lock), but a paid tier blends in
+   extra posts "sourced" from its own tier on top of everything the tier
+   below it sees, and the sequence runs twice — once teasing the next tier
+   up, once (repeat) teasing the tier after that. See cycleSlots() below. */
+function cycleSlots({
+  text,
+  sqImg,
+  vertImg,
+  carousel,
+  sqVideo,
+  event,
+  reel,
+  poll,
+  quiz,
+  lock
+}) {
+  return [text, ...sqImg, ...vertImg, ...carousel, ...sqVideo, event, ...reel, poll, quiz, lock];
+}
+
+/* Gives a repeated-cycle post a distinct id from its first appearance, so two
+   cycles that deliberately reuse the same tier-sourced content (see below)
+   never collide on React key / interaction-state lookup. */
+function reid(post, suffix) {
+  return {
+    ...post,
+    id: post.id + suffix
+  };
+}
+function reidAll(posts, suffix) {
+  return posts.map(p => reid(p, suffix));
+}
+
+/* ---- Free-tier pool: 5-image carousels + event-registration posts ---- */
+const FREE_CAROUSEL5_1 = {
+  id: "ff_car5_1",
+  author: TIM,
+  withOthers: "Miranda Pearce and 9 others",
+  time: "6h",
+  hashtags: ["case-study", "patient"],
+  sample: {
+    type: "gallery",
+    images: masteryGallery(0)
+  },
+  body: "Five-stage before-and-after set from this week's full-face consult — swipe through the whole plan.",
+  likes: "1.3K",
+  comments: "112",
+  shares: "84",
   actioned: false,
-  commentList: []
-}, MASTERCLASS_UNLOCK_POST,
-// Cycle 2
-TEXT_POST_2, SQUARE_IMG_POST_2, PORTRAIT_IMG_POST_2, EDITORIAL_POSTS[3] /* p2: carousel */, SQUARE_VIDEO_POST_2, PORTRAIT_VIDEO_POST_2, QUIZ_POSTS[0] /* p_quiz2 */, POLL_POST_2,
-// Cycle 3
-TEXT_POST_3, SQUARE_IMG_POST_3, PORTRAIT_IMG_POST_3, EDITORIAL_POSTS[4] /* p3: carousel */, SQUARE_VIDEO_POST_3, PORTRAIT_VIDEO_POST_3, QUIZ_POSTS[1] /* p_quiz3 */, POLL_POST_3,
-// Cycle 4
-TEXT_POST_4, SQUARE_IMG_POST_4, PORTRAIT_IMG_POST_4, EDITORIAL_POSTS[5] /* p4: carousel */, SQUARE_VIDEO_POST_4, PORTRAIT_VIDEO_POST_4, QUIZ_POSTS[2] /* p_quiz4 */, POLL_POST_4,
-// Extra video library — extra variety to scroll through
-EXTRA_VIDEO_POST_1, EXTRA_VIDEO_POST_2, EXTRA_VIDEO_POST_3, EXTRA_VIDEO_POST_4, EXTRA_VIDEO_POST_5, EXTRA_VIDEO_POST_6, EXTRA_VIDEO_POST_7, EXTRA_VIDEO_POST_8, EXTRA_VIDEO_POST_9, EXTRA_VIDEO_POST_10];
+  commentList: thread("Swiped through all five — the progression is so clear.")
+};
+const FREE_CAROUSEL5_2 = {
+  id: "ff_car5_2",
+  author: MIRANDA,
+  time: "8h",
+  hashtags: ["clinic", "patient"],
+  sample: {
+    type: "gallery",
+    images: masteryGallery(5)
+  },
+  body: "Five angles from today's jawline contouring case — same lighting, same distance, easiest way to judge a result honestly.",
+  likes: "1.1K",
+  comments: "94",
+  shares: "70",
+  actioned: false,
+  commentList: thread("Same lighting and distance every time is such an underrated habit.")
+};
+const FREE_EVENTREG_1 = {
+  id: "ff_evreg1",
+  author: {
+    name: "Priya Shah",
+    avatar: "assets/avatar-priya-shah.jpg",
+    seals: ["gb"]
+  },
+  time: "4h",
+  eventReg: {
+    title: EVENTS[0].title,
+    date: EVENTS[0].date,
+    time: EVENTS[0].time,
+    going: "318"
+  }
+};
+const FREE_EVENTREG_2 = {
+  id: "ff_evreg2",
+  author: {
+    name: "Mark Ellis",
+    avatar: "assets/avatar-mark-ellis.jpg",
+    seals: ["skinfluencer"]
+  },
+  time: "9h",
+  eventReg: {
+    title: EVENTS[0].title,
+    date: EVENTS[0].date,
+    time: EVENTS[0].time,
+    going: "276"
+  }
+};
+
+/* ---- Confidence-tier pool — blended into every Confidence+ viewer's feed
+   on top of the Free pool above ---- */
+const CONFIDENCE_SQIMG_1 = {
+  id: "cf_sqimg1",
+  author: {
+    name: "Dr. Sarah Collins",
+    avatar: "assets/avatar-sarah-collins.jpg",
+    seals: ["gb", "verified", "skinfluencer"]
+  },
+  time: "5h",
+  hashtags: ["confidence", "protocol"],
+  media: [IMG.p2img1],
+  aspect: "square",
+  body: "Confidence-channel favourite: my go-to consult checklist, laminated and taped inside every treatment room drawer.",
+  likes: "410",
+  comments: "36",
+  shares: "18",
+  actioned: false,
+  commentList: thread("Taping mine up today — thank you for sharing this!")
+};
+const CONFIDENCE_SQIMG_2 = {
+  id: "cf_sqimg2",
+  author: {
+    name: "Priya Shah",
+    avatar: "assets/avatar-priya-shah.jpg",
+    seals: ["gb"]
+  },
+  time: "7h",
+  hashtags: ["confidence", "clinic"],
+  media: [IMG.p3img2],
+  aspect: "square",
+  body: "Before/after photo setup, exactly as we shoot it — same stool height, same distance marker taped to the floor.",
+  likes: "365",
+  comments: "29",
+  shares: "14",
+  actioned: false,
+  commentList: thread("The floor marker trick is so simple and I never thought of it.")
+};
+const CONFIDENCE_SQIMG_3 = {
+  id: "cf_sqimg3",
+  author: {
+    name: "Nurse Beth",
+    avatar: "assets/avatar-nurse-beth.jpg"
+  },
+  time: "10h",
+  hashtags: ["confidence", "reference"],
+  media: [IMG.p4img1],
+  aspect: "square",
+  body: "Aftercare card we hand every patient at checkout — cut the follow-up questions in half since we started this.",
+  likes: "298",
+  comments: "24",
+  shares: "20",
+  actioned: false,
+  commentList: thread("Making a version of this for our own front desk.")
+};
+const CONFIDENCE_VERTIMG_1 = {
+  id: "cf_vertimg1",
+  author: {
+    name: "Mark Ellis",
+    avatar: "assets/avatar-mark-ellis.jpg",
+    seals: ["skinfluencer"]
+  },
+  time: "8h",
+  hashtags: ["confidence", "case-study"],
+  media: [IMG.p2img2],
+  aspect: "portrait",
+  body: "First solo cheek case since finishing the Confidence pathway — nerves the whole way through, worth every second.",
+  likes: "520",
+  comments: "42",
+  shares: "26",
+  actioned: false,
+  commentList: thread("The nerves never fully go away, but it gets easier — great work.")
+};
+const CONFIDENCE_CAROUSEL5_1 = {
+  id: "cf_car5_1",
+  author: {
+    name: "Dr. Sarah Collins",
+    avatar: "assets/avatar-sarah-collins.jpg",
+    seals: ["gb", "verified", "skinfluencer"]
+  },
+  time: "6h",
+  hashtags: ["confidence", "case-study"],
+  sample: {
+    type: "gallery",
+    images: masteryGallery(10)
+  },
+  body: "Five-frame consult-to-result set from a first-time toxin patient — talked through every step on camera for the Confidence channel.",
+  likes: "480",
+  comments: "38",
+  shares: "22",
+  actioned: false,
+  commentList: thread("Talking it through on camera like this is so reassuring to watch.")
+};
+const CONFIDENCE_CAROUSEL5_2 = {
+  id: "cf_car5_2",
+  author: {
+    name: "Priya Shah",
+    avatar: "assets/avatar-priya-shah.jpg",
+    seals: ["gb"]
+  },
+  time: "9h",
+  hashtags: ["confidence", "patient"],
+  sample: {
+    type: "gallery",
+    images: masteryGallery(15)
+  },
+  body: "Five-stage lip case, shot the exact way we teach in the Confidence pathway — proportion first, volume second, every time.",
+  likes: "455",
+  comments: "33",
+  shares: "19",
+  actioned: false,
+  commentList: thread("Proportion-first is the one lesson that changed my results the most.")
+};
+const CONFIDENCE_SQVIDEO_1 = {
+  id: "cf_sqvid1",
+  author: {
+    name: "Nurse Beth",
+    avatar: "assets/avatar-nurse-beth.jpg"
+  },
+  time: "7h",
+  hashtags: ["confidence", "technique"],
+  sample: {
+    type: "video",
+    poster: IMG.p2img3,
+    aspect: "square",
+    duration: "6:20"
+  },
+  body: "Chairside walkthrough of my consent conversation, word for word — shared for anyone still nervous about that part.",
+  likes: "310",
+  comments: "27",
+  shares: "16",
+  actioned: false,
+  commentList: thread("The wording here is exactly what I've been missing.")
+};
+const CONFIDENCE_REEL_1 = {
+  id: "cf_reel1",
+  author: {
+    name: "Mark Ellis",
+    avatar: "assets/avatar-mark-ellis.jpg",
+    seals: ["skinfluencer"]
+  },
+  time: "11h",
+  hashtags: ["confidence", "reel"],
+  sample: {
+    type: "vertical",
+    image: IMG.p3img3
+  },
+  body: "30 seconds on the one line I say to every nervous first-time patient before we even sit down.",
+  likes: "640",
+  comments: "48",
+  shares: "95",
+  actioned: false,
+  commentList: thread("Using this exact line in my consult room from tomorrow.")
+};
+
+/* ---- Mastery-tier pool — blended in on top of Free + Confidence for any
+   Mastery+ viewer ---- */
+const MASTERY_SQIMG_1 = {
+  id: "ms_sqimg1",
+  author: {
+    name: "Dr Amir Khan",
+    avatar: "assets/avatar-amir-khan.jpg",
+    seals: ["gb", "verified"]
+  },
+  time: "5h",
+  hashtags: ["mastery", "protocol"],
+  media: [IMG.p4img2],
+  aspect: "square",
+  body: "Masseter dosing chart split by facial width and bite strength — the version I actually use chairside, not the textbook one.",
+  likes: "520",
+  comments: "44",
+  shares: "30",
+  actioned: false,
+  commentList: thread("This split is so much more useful than a flat dose chart.")
+};
+const MASTERY_SQIMG_2 = {
+  id: "ms_sqimg2",
+  author: {
+    name: "Dr Owen Clarke"
+  },
+  time: "9h",
+  hashtags: ["mastery", "anatomy"],
+  media: [IMG.p1img2],
+  aspect: "square",
+  body: "Danger-zone reference from this week's cadaver lab — the temporal artery sits closer to the brow than most training shows.",
+  likes: "470",
+  comments: "39",
+  shares: "51",
+  actioned: false,
+  commentList: thread("Printing this straight after the cadaver lab notes, thank you.")
+};
+const MASTERY_VERTIMG_1 = {
+  id: "ms_vertimg1",
+  author: {
+    name: "Priya Shah",
+    avatar: "assets/avatar-priya-shah.jpg",
+    seals: ["gb"]
+  },
+  time: "6h",
+  hashtags: ["mastery", "case-study"],
+  media: [IMG.p1img3],
+  aspect: "portrait",
+  body: "Full-face structure-volume-finesse sequence on a complex revision case — three passes, three very different products.",
+  likes: "610",
+  comments: "52",
+  shares: "40",
+  actioned: false,
+  commentList: thread("The three-pass structure is exactly how I plan revisions now too.")
+};
+const MASTERY_VERTIMG_2 = {
+  id: "ms_vertimg2",
+  author: {
+    name: "Jade Osei"
+  },
+  time: "10h",
+  hashtags: ["mastery", "technique"],
+  media: [IMG.p3img1],
+  aspect: "portrait",
+  body: "Cannula entry-point mapped out on a real patient, full-face portrait crop — every mark explained in the caption.",
+  likes: "455",
+  comments: "35",
+  shares: "28",
+  actioned: false,
+  commentList: thread("Mapping it out like this on a real face makes it click instantly.")
+};
+const MASTERY_CAROUSEL5_1 = {
+  id: "ms_car5_1",
+  author: {
+    name: "Dr Amir Khan",
+    avatar: "assets/avatar-amir-khan.jpg",
+    seals: ["gb", "verified"]
+  },
+  time: "7h",
+  hashtags: ["mastery", "masterclass"],
+  sample: {
+    type: "gallery",
+    images: masteryGallery(20)
+  },
+  body: "Five-frame full-face rebuild, structure to finesse — the sequencing logic from this month's Mastery masterclass, applied start to finish.",
+  likes: "540",
+  comments: "46",
+  shares: "35",
+  actioned: false,
+  commentList: thread("Seeing the sequencing applied end to end just reorganised my whole plan.")
+};
+const MASTERY_CAROUSEL5_2 = {
+  id: "ms_car5_2",
+  author: {
+    name: "Dr Owen Clarke"
+  },
+  time: "12h",
+  hashtags: ["mastery", "anatomy"],
+  sample: {
+    type: "gallery",
+    images: masteryGallery(2)
+  },
+  body: "Five-angle vascular danger-zone map from this week's cadaver lab, printed for the treatment room wall.",
+  likes: "495",
+  comments: "41",
+  shares: "44",
+  actioned: false,
+  commentList: thread("Printing this whole set for our team — invaluable reference.")
+};
+const MASTERY_CAROUSEL5_3 = {
+  id: "ms_car5_3",
+  author: {
+    name: "Priya Shah",
+    avatar: "assets/avatar-priya-shah.jpg",
+    seals: ["gb"]
+  },
+  time: "13h",
+  hashtags: ["mastery", "case-study"],
+  sample: {
+    type: "gallery",
+    images: masteryGallery(7)
+  },
+  body: "Five-stage jawline revision — correcting a migrated filler case a colleague sent over, full technique breakdown in the caption.",
+  likes: "515",
+  comments: "43",
+  shares: "37",
+  actioned: false,
+  commentList: thread("Revision cases like this are exactly what Mastery should be teaching.")
+};
+const MASTERY_SQVIDEO_1 = {
+  id: "ms_sqvid1",
+  author: {
+    name: "Dr Amir Khan",
+    avatar: "assets/avatar-amir-khan.jpg",
+    seals: ["gb", "verified"]
+  },
+  time: "8h",
+  hashtags: ["mastery", "safety"],
+  sample: {
+    type: "video",
+    poster: IMG.p5img4,
+    aspect: "square",
+    duration: "15:30"
+  },
+  body: "Full vascular occlusion emergency drill, run exactly the way our team rehearses it every quarter.",
+  likes: "870",
+  comments: "68",
+  shares: "60",
+  actioned: false,
+  commentList: thread("Every clinic should be running this drill on repeat.")
+};
+const MASTERY_SQVIDEO_2 = {
+  id: "ms_sqvid2",
+  author: {
+    name: "Jade Osei"
+  },
+  time: "14h",
+  hashtags: ["mastery", "technique"],
+  sample: {
+    type: "video",
+    poster: IMG.p2img1,
+    aspect: "square",
+    duration: "10:50"
+  },
+  body: "Cannula vs needle decision tree for the tear trough, worked through on three real cases back to back.",
+  likes: "705",
+  comments: "55",
+  shares: "48",
+  actioned: false,
+  commentList: thread("Seeing the decision tree applied to three real cases sealed it for me.")
+};
+const MASTERY_REEL_1 = {
+  id: "ms_reel1",
+  author: {
+    name: "Dr Owen Clarke"
+  },
+  time: "9h",
+  hashtags: ["mastery", "reel"],
+  sample: {
+    type: "vertical",
+    image: IMG.p4img3
+  },
+  body: "45 seconds on the jawline hiring order that turned one chair into three clinics.",
+  likes: "780",
+  comments: "61",
+  shares: "140",
+  actioned: false,
+  commentList: thread("Wish I'd seen this before opening my second location.")
+};
+const MASTERY_REEL_2 = {
+  id: "ms_reel2",
+  author: {
+    name: "Priya Shah",
+    avatar: "assets/avatar-priya-shah.jpg",
+    seals: ["gb"]
+  },
+  time: "15h",
+  hashtags: ["mastery", "reel"],
+  sample: {
+    type: "vertical",
+    image: IMG.p5img6
+  },
+  body: "60 seconds on the full-face sequencing rule: structure first, volume second, finesse last — never the reverse.",
+  likes: "820",
+  comments: "64",
+  shares: "155",
+  actioned: false,
+  commentList: thread("This ordering rule alone reorganised how I plan every full-face consult.")
+};
+const MASTERY_REEL_3 = {
+  id: "ms_reel3",
+  author: {
+    name: "Dr Amir Khan",
+    avatar: "assets/avatar-amir-khan.jpg",
+    seals: ["gb", "verified"]
+  },
+  time: "17h",
+  hashtags: ["mastery", "reel"],
+  sample: {
+    type: "vertical",
+    image: IMG.p5img9
+  },
+  body: "30 seconds on the masseter dosing split most training courses skip entirely.",
+  likes: "690",
+  comments: "50",
+  shares: "120",
+  actioned: false,
+  commentList: thread("Skipped by every course I've taken — glad it's finally spelled out.")
+};
+
+/* Free viewers: two designed cycles (Text/SqImg/VertImg/Carousel5/SqVideo/
+   Event/Reel/Poll/Quiz/Lock), teasing Confidence then Mastery, followed by
+   the rest of today's editorial/video library as scroll-depth filler. */
+const FREE_FEED_SEQUENCE = [...cycleSlots({
+  text: TEXT_POST_1,
+  sqImg: [SQUARE_IMG_POST_1],
+  vertImg: [PORTRAIT_IMG_POST_1],
+  carousel: [FREE_CAROUSEL5_1],
+  sqVideo: [EDITORIAL_POSTS[6]] /* p5 */,
+  event: FREE_EVENTREG_1,
+  reel: [EDITORIAL_POSTS[1]] /* p6 */,
+  poll: PINNED_POSTS[1],
+  quiz: PINNED_POSTS[0],
+  lock: CONFIDENCE_POST_2
+}), ...cycleSlots({
+  text: TEXT_POST_2,
+  sqImg: [SQUARE_IMG_POST_2],
+  vertImg: [PORTRAIT_IMG_POST_2],
+  carousel: [FREE_CAROUSEL5_2],
+  sqVideo: [SQUARE_VIDEO_POST_2],
+  event: FREE_EVENTREG_2,
+  reel: [PORTRAIT_VIDEO_POST_2],
+  poll: POLL_POST_2,
+  quiz: QUIZ_POSTS[0],
+  lock: MASTERY_POST_2
+}),
+// Extra library — everything else already authored, kept as scroll-depth filler.
+TEXT_POST_3, SQUARE_IMG_POST_3, PORTRAIT_IMG_POST_3, EDITORIAL_POSTS[3] /* p2: carousel */, SQUARE_VIDEO_POST_3, PORTRAIT_VIDEO_POST_3, QUIZ_POSTS[1] /* p_quiz3 */, POLL_POST_3, COURSE_COMMENT_2, MASTERCLASS_UNLOCK_POST, TEXT_POST_4, SQUARE_IMG_POST_4, PORTRAIT_IMG_POST_4, EDITORIAL_POSTS[4] /* p3: carousel */, SQUARE_VIDEO_POST_4, PORTRAIT_VIDEO_POST_4, QUIZ_POSTS[2] /* p_quiz4 */, POLL_POST_4, EDITORIAL_POSTS[0] /* p7: 10-image gallery */, EDITORIAL_POSTS[5] /* p4: carousel */, EXTRA_VIDEO_POST_1, EXTRA_VIDEO_POST_2, EXTRA_VIDEO_POST_3, EXTRA_VIDEO_POST_4, EXTRA_VIDEO_POST_5, EXTRA_VIDEO_POST_6, EXTRA_VIDEO_POST_7, EXTRA_VIDEO_POST_8, EXTRA_VIDEO_POST_9, EXTRA_VIDEO_POST_10];
+
+/* Confidence subscribers: Free pool blended with the Confidence pool at the
+   spec'd ratio per slot, teasing Mastery then (repeat) Freedom. The repeat
+   cycle reuses the same Confidence-sourced posts (reid'd to keep distinct
+   keys) rather than authoring a second set, varying only the Free-sourced
+   item and the Lock target. */
+const CONFIDENCE_FEED_SEQUENCE = [...cycleSlots({
+  text: TEXT_POST_1,
+  sqImg: [SQUARE_IMG_POST_1, CONFIDENCE_SQIMG_1, CONFIDENCE_SQIMG_2, CONFIDENCE_SQIMG_3],
+  vertImg: [PORTRAIT_IMG_POST_1, CONFIDENCE_VERTIMG_1],
+  carousel: [FREE_CAROUSEL5_1, CONFIDENCE_CAROUSEL5_1, CONFIDENCE_CAROUSEL5_2],
+  sqVideo: [SQUARE_VIDEO_POST_2, CONFIDENCE_SQVIDEO_1],
+  event: FREE_EVENTREG_1,
+  reel: [PORTRAIT_VIDEO_POST_2, CONFIDENCE_REEL_1],
+  poll: PINNED_POSTS[1],
+  quiz: PINNED_POSTS[0],
+  lock: MASTERY_POST_2
+}), ...cycleSlots({
+  text: TEXT_POST_2,
+  sqImg: [SQUARE_IMG_POST_2, ...reidAll([CONFIDENCE_SQIMG_1, CONFIDENCE_SQIMG_2, CONFIDENCE_SQIMG_3], "_b")],
+  vertImg: [PORTRAIT_IMG_POST_2, reid(CONFIDENCE_VERTIMG_1, "_b")],
+  carousel: [FREE_CAROUSEL5_2, ...reidAll([CONFIDENCE_CAROUSEL5_1, CONFIDENCE_CAROUSEL5_2], "_b")],
+  sqVideo: [SQUARE_VIDEO_POST_3, reid(CONFIDENCE_SQVIDEO_1, "_b")],
+  event: FREE_EVENTREG_2,
+  reel: [PORTRAIT_VIDEO_POST_3, reid(CONFIDENCE_REEL_1, "_b")],
+  poll: POLL_POST_2,
+  quiz: QUIZ_POSTS[0],
+  lock: FREEDOM_POST_2
+})];
+
+/* Mastery+ subscribers (also used for Freedom/Inner Circle/Admin viewers —
+   their own Lock slots simply resolve to "full" once unlocked): Free +
+   Confidence + Mastery pools blended per the spec'd ratio, teasing Freedom
+   then (repeat) Inner Circle. */
+const MASTERY_FEED_SEQUENCE = [...cycleSlots({
+  text: TEXT_POST_1,
+  sqImg: [SQUARE_IMG_POST_1, CONFIDENCE_SQIMG_1, CONFIDENCE_SQIMG_2, CONFIDENCE_SQIMG_3, MASTERY_SQIMG_1, MASTERY_SQIMG_2],
+  vertImg: [PORTRAIT_IMG_POST_1, CONFIDENCE_VERTIMG_1, MASTERY_VERTIMG_1, MASTERY_VERTIMG_2],
+  carousel: [FREE_CAROUSEL5_1, CONFIDENCE_CAROUSEL5_1, CONFIDENCE_CAROUSEL5_2, MASTERY_CAROUSEL5_1, MASTERY_CAROUSEL5_2, MASTERY_CAROUSEL5_3],
+  sqVideo: [SQUARE_VIDEO_POST_2, CONFIDENCE_SQVIDEO_1, MASTERY_SQVIDEO_1, MASTERY_SQVIDEO_2],
+  event: FREE_EVENTREG_1,
+  reel: [PORTRAIT_VIDEO_POST_2, CONFIDENCE_REEL_1, MASTERY_REEL_1, MASTERY_REEL_2, MASTERY_REEL_3],
+  poll: PINNED_POSTS[1],
+  quiz: PINNED_POSTS[0],
+  lock: FREEDOM_POST_2
+}), ...cycleSlots({
+  text: TEXT_POST_2,
+  sqImg: [SQUARE_IMG_POST_2, ...reidAll([CONFIDENCE_SQIMG_1, CONFIDENCE_SQIMG_2, CONFIDENCE_SQIMG_3, MASTERY_SQIMG_1, MASTERY_SQIMG_2], "_c")],
+  vertImg: [PORTRAIT_IMG_POST_2, ...reidAll([CONFIDENCE_VERTIMG_1, MASTERY_VERTIMG_1, MASTERY_VERTIMG_2], "_c")],
+  carousel: [FREE_CAROUSEL5_2, ...reidAll([CONFIDENCE_CAROUSEL5_1, CONFIDENCE_CAROUSEL5_2, MASTERY_CAROUSEL5_1, MASTERY_CAROUSEL5_2, MASTERY_CAROUSEL5_3], "_c")],
+  sqVideo: [SQUARE_VIDEO_POST_3, ...reidAll([CONFIDENCE_SQVIDEO_1, MASTERY_SQVIDEO_1, MASTERY_SQVIDEO_2], "_c")],
+  event: FREE_EVENTREG_2,
+  reel: [PORTRAIT_VIDEO_POST_3, ...reidAll([CONFIDENCE_REEL_1, MASTERY_REEL_1, MASTERY_REEL_2, MASTERY_REEL_3], "_c")],
+  poll: POLL_POST_2,
+  quiz: QUIZ_POSTS[0],
+  lock: INNER_POST_2
+})];
+const TIER_FEED_SEQUENCES = {
+  free: FREE_FEED_SEQUENCE,
+  confidence: CONFIDENCE_FEED_SEQUENCE,
+  mastery: MASTERY_FEED_SEQUENCE,
+  freedom: MASTERY_FEED_SEQUENCE,
+  inner: MASTERY_FEED_SEQUENCE,
+  admin: MASTERY_FEED_SEQUENCE
+};
+/* De-duplicated union of every post appearing in any tier's sequence — used
+   to seed interaction state and search so switching tiers via the live
+   persona-preview switcher never loses a post's likes/comments state, and
+   Search can still find posts that only some tiers' sequences contain. */
+const ALL_FEED_SEQUENCE_POSTS = Object.values([...FREE_FEED_SEQUENCE, ...CONFIDENCE_FEED_SEQUENCE, ...MASTERY_FEED_SEQUENCE].reduce((m, p) => {
+  m[p.id] = p;
+  return m;
+}, {}));
 
 /* Tier-tagged posts — genuine member activity carrying a coloured tierTag
    chip (see TierTagChip), stacked on top of the membership ladder: each
@@ -7130,13 +7686,7 @@ function TeaserPost({
     className: "pf-teaser-fade"
   })), /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-gate"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pf-teaser-diamond"
-  }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:gem",
-    size: 20,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-gate-title"
   }, "This content is for premium members only."), /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-gate-sub"
@@ -7144,21 +7694,13 @@ function TeaserPost({
     type: "button",
     className: "pf-teaser-cta",
     onClick: onUpgrade
-  }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:gem",
-    size: 18,
-    color: "#fff"
-  }), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     className: "pf-teaser-cta-text"
   }, /*#__PURE__*/React.createElement("span", {
     className: "pf-teaser-cta-title"
   }, cta.title), /*#__PURE__*/React.createElement("span", {
     className: "pf-teaser-cta-sub"
-  }, cta.sub))), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pf-teaser-learnmore",
-    onClick: onUpgrade
-  }, "Learn More"))));
+  }, cta.sub))))));
 }
 
 /* Upcoming Event post — the DS EventCard (banner image, title, host, date,
@@ -7861,9 +8403,11 @@ function readEventRegPosts() {
 }
 
 /* All posts across the app (own + editorial + gated) — used by Search to
-   find posts by hashtag. */
+   find posts by hashtag. Pulls from ALL_FEED_SEQUENCE_POSTS (the union of
+   every tier's sequence) rather than a single fixed FEED_SEQUENCE, since the
+   newsfeed itself is now tier-aware (see TIER_FEED_SEQUENCES). */
 function getAllPosts() {
-  return [...readUserPosts(), ...EVENT_REG_SEED, ...readEventRegPosts(), ...FEED_SEQUENCE, ...BUCKET_POSTS, ...TIER_TAG_POSTS];
+  return [...readUserPosts(), ...EVENT_REG_SEED, ...readEventRegPosts(), ...ALL_FEED_SEQUENCE_POSTS, ...BUCKET_POSTS, ...TIER_TAG_POSTS];
 }
 function Feed({
   channel
@@ -7872,7 +8416,10 @@ function Feed({
   const [eventRegPosts] = useState(() => [...EVENT_REG_SEED, ...readEventRegPosts()]);
   const [state, setState] = useState(() => {
     const m = {};
-    [...readUserPosts(), ...FEED_SEQUENCE, ...BUCKET_POSTS, ...TIER_TAG_POSTS].forEach(p => {
+    /* Seeded from the union of every tier's sequence (not just the one the
+       current viewer sees) so switching tiers via the live persona-preview
+       switcher never leaves a post with no interaction state. */
+    [...readUserPosts(), ...ALL_FEED_SEQUENCE_POSTS, ...BUCKET_POSTS, ...TIER_TAG_POSTS].forEach(p => {
       m[p.id] = {
         liked: false,
         saved: false,
@@ -7968,23 +8515,20 @@ function Feed({
     mode: "full"
   }));
 
-  /* The main newsfeed is FEED_SEQUENCE's fixed, designed post-type order —
-     any locally composed posts show up first, then the sequence plays out
-     exactly as authored: four repeating cycles (text / square image /
-     portrait image / carousel / square video / portrait video / quiz /
-     [event + masterclass on cycle 1] / poll). The per-tier ChannelFeedCard
-     "Hidden Post" teaser has been removed from the newsfeed — membership
-     tiers are now featured via the tier-tagged posts (tierTagItems) instead.
-     The course-comment slot (COURSE_COMMENT_2) is the only remaining item
-     whose mode isn't a fixed "full" — it still resolves teaser-vs-full from
-     the current viewing persona, so the persona-preview switcher still
-     demonstrates unlocking. */
-  const sequenceBase = typeof window !== "undefined" && window.PF_OFFICIAL_ONLY ? officialize(FEED_SEQUENCE) : FEED_SEQUENCE;
-  /* The feed shows at most ONE locked-post paywall card, full stop — if more
-     than one teasable bucket post ever appears in the sequence again, only
-     the first renders as a teaser; the rest are simply omitted rather than
-     adding another blocker. */
-  let teaserShown = false;
+  /* The main newsfeed is tier-aware: TIER_FEED_SEQUENCES picks the designed
+     post-type sequence for the current viewer (see cycleSlots() and
+     FREE/CONFIDENCE/MASTERY_FEED_SEQUENCE above) — any locally composed
+     posts show up first, then that sequence plays out exactly as authored.
+     Each sequence carries its own two paywall Lock slots (teasing the next
+     tier up, then the tier after that); Freedom/Inner Circle/Admin viewers
+     get the Mastery sequence, since its Lock slots resolve to "full" for
+     them automatically once their channels include that bucket. */
+  const rawSequence = TIER_FEED_SEQUENCES[viewerPersona] || FREE_FEED_SEQUENCE;
+  const sequenceBase = typeof window !== "undefined" && window.PF_OFFICIAL_ONLY ? officialize(rawSequence) : rawSequence;
+  /* Every deliberate Lock slot renders its own teaser when the viewer
+     doesn't hold that tier — each tier's sequence has exactly two Lock
+     posts by design (first cycle + repeat cycle), so no single-teaser cap
+     is needed here the way the old random Hidden Post rotation required. */
   const feedItems = [...userPosts.map(p => ({
     item: p,
     mode: "full"
@@ -8001,8 +8545,6 @@ function Feed({
         },
         mode: "full"
       };
-      if (teaserShown) return null;
-      teaserShown = true;
       return {
         item: p,
         mode: "teaser"
@@ -8012,7 +8554,7 @@ function Feed({
       item: p,
       mode: "full"
     };
-  }).filter(Boolean)];
+  })];
 
   /* a channel (Confidence/Mastery/Freedom/Inner Circle) narrows the feed
      down to just that bucket's posts — used by the Community page's channel

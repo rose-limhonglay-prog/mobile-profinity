@@ -4040,19 +4040,14 @@ function TeaserPost({ post, onUpgrade }) {
           <div className="pf-teaser-fade" />
         </div>
         <div className="pf-teaser-gate">
-          <span className="pf-teaser-diamond">
-            <IconifyIcon name="lucide:gem" size={20} color="#fff" />
-          </span>
           <div className="pf-teaser-gate-title">This content is for premium members only.</div>
           <div className="pf-teaser-gate-sub">Upgrade your plan to view this post and access exclusive content.</div>
           <button type="button" className="pf-teaser-cta" onClick={onUpgrade}>
-            <IconifyIcon name="lucide:gem" size={18} color="#fff" />
             <span className="pf-teaser-cta-text">
               <span className="pf-teaser-cta-title">{cta.title}</span>
               <span className="pf-teaser-cta-sub">{cta.sub}</span>
             </span>
           </button>
-          <button type="button" className="pf-teaser-learnmore" onClick={onUpgrade}>Learn More</button>
         </div>
       </div>
     </div>);
