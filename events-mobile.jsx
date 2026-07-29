@@ -85,7 +85,10 @@ const EVENTS_LIST = [
 ];
 
 const EV_DETAIL = {
-  title: "Chew the FATPAD", host: "Dr Tim Pearce", banner: "assets/event-technique-tuesday.png",
+  /* No default banner: real per-event thumbnails aren't photographed yet, so
+     the hero shows a plain placeholder rather than a stock photo that may not
+     match the event. */
+  title: "Chew the FATPAD", host: "Dr Tim Pearce", banner: null,
   date: "June 12, 2026", time: "9:00 PM", attendees: "380",
   about: "Join Dr. Tim Pearce every week for Technique Tuesday, a live, interactive session where he shares his expert knowledge, answers your burning questions, and demonstrates the latest techniques in aesthetic medicine. Don't miss this opportunity to enhance your skills and stay ahead of the curve!",
   membersOnly: true,
@@ -425,7 +428,7 @@ function InviteSheet({ title, event, onClose }) {
 
 /* ---- screen 2: event detail (open to everyone; gate fires on action) ---- */
 function EventDetail({ onBack, onJoin, event }) {
-  const d = Object.assign({}, EV_DETAIL, event || {}, { banner: (event && event.banner) || EV_DETAIL.banner });
+  const d = Object.assign({}, EV_DETAIL, event || {});
   const [tab, setTab] = useStateEV("Overview");
   const [attending, setAttending] = useStateEV(() => evStatusOf(d, evStore()).registered);
   const [inCal, setInCal] = useStateEV(() => evStatusOf(d, evStore()).calendar);
@@ -465,7 +468,9 @@ function EventDetail({ onBack, onJoin, event }) {
         <span className="spacer" />
       </header>
       <div className="ev-scroll">
-        <div className="ev-hero" style={{ backgroundImage: "url(" + d.banner + ")" }} />
+        {d.banner
+          ? <div className="ev-hero" style={{ backgroundImage: "url(" + d.banner + ")" }} />
+          : <div className="ev-hero ev-hero-ph" role="img" aria-label={d.title + " — thumbnail coming soon"} />}
         <div className="ev-detail-body">
           <span className={"ev-live-badge" + (d.state === "live" ? " live" : "")}>
             {d.state === "live" ? <React.Fragment><span className="pulse" />Live now · started 4 min ago</React.Fragment> : "Live Event"}

@@ -181,9 +181,12 @@ const EVENTS_LIST = [...evNextTuesdays(3).map((d, i) => ({
   membersOnly: false
 }];
 const EV_DETAIL = {
+  /* No default banner: real per-event thumbnails aren't photographed yet, so
+     the hero shows a plain placeholder rather than a stock photo that may not
+     match the event. */
   title: "Chew the FATPAD",
   host: "Dr Tim Pearce",
-  banner: "assets/event-technique-tuesday.png",
+  banner: null,
   date: "June 12, 2026",
   time: "9:00 PM",
   attendees: "380",
@@ -819,9 +822,7 @@ function EventDetail({
   onJoin,
   event
 }) {
-  const d = Object.assign({}, EV_DETAIL, event || {}, {
-    banner: event && event.banner || EV_DETAIL.banner
-  });
+  const d = Object.assign({}, EV_DETAIL, event || {});
   const [tab, setTab] = useStateEV("Overview");
   const [attending, setAttending] = useStateEV(() => evStatusOf(d, evStore()).registered);
   const [inCal, setInCal] = useStateEV(() => evStatusOf(d, evStore()).calendar);
@@ -895,11 +896,15 @@ function EventDetail({
     className: "spacer"
   })), /*#__PURE__*/React.createElement("div", {
     className: "ev-scroll"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, d.banner ? /*#__PURE__*/React.createElement("div", {
     className: "ev-hero",
     style: {
       backgroundImage: "url(" + d.banner + ")"
     }
+  }) : /*#__PURE__*/React.createElement("div", {
+    className: "ev-hero ev-hero-ph",
+    role: "img",
+    "aria-label": d.title + " — thumbnail coming soon"
   }), /*#__PURE__*/React.createElement("div", {
     className: "ev-detail-body"
   }, /*#__PURE__*/React.createElement("span", {

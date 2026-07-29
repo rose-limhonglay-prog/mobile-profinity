@@ -206,6 +206,7 @@ img{max-width:100%}
 
 /* ===== event detail ===== */
 .ev-hero{position:relative;height:230px;background-size:cover;background-position:center;background-color:var(--brand-navy)}
+.ev-hero-ph{background-color:var(--gray-150)}
 .ev-detail-body{padding:20px}
 .ev-live-badge{display:inline-block;padding:6px 14px;border-radius:var(--r-pill);background:var(--brand-navy);
   color:var(--white);font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;margin-bottom:12px}
