@@ -39,12 +39,12 @@ const EV_TODAY = new Date();
 function evFmtDate(d) {
   return EV_MONTHS[d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear();
 }
-/* Next `n` Tuesdays from today (today counts if it is itself a Tuesday). */
-function evNextTuesdays(n) {
+/* Every Tuesday from `start` through `end`, inclusive (both plain Date). */
+function evTuesdaysBetween(start, end) {
   const out = [];
-  const d = new Date(EV_TODAY.getFullYear(), EV_TODAY.getMonth(), EV_TODAY.getDate());
+  const d = new Date(start.getFullYear(), start.getMonth(), start.getDate());
   d.setDate(d.getDate() + ((2 - d.getDay() + 7) % 7));
-  for (let i = 0; i < n; i++) { out.push(new Date(d)); d.setDate(d.getDate() + 7); }
+  while (d <= end) { out.push(new Date(d)); d.setDate(d.getDate() + 7); }
   return out;
 }
 /* Parse "March 17, 2026" / "November 26 – 30, 2026" into {y, m, d}. */
@@ -55,10 +55,11 @@ function evParse(date) {
   return { y, m, d };
 }
 
-/* Ten events across 2026: Technique Tuesday recurs weekly (co-hosted by Dr Tim
-   Pearce & Miranda Pearce, soonest occurrence live) plus nine one-off events. */
+/* Ten events across 2026: Technique Tuesday recurs weekly, every Tuesday from
+   August 4 through the end of December (co-hosted by Dr Tim Pearce & Miranda
+   Pearce, soonest occurrence live), plus nine one-off events. */
 const EVENTS_LIST = [
-  ...evNextTuesdays(3).map((d, i) => ({
+  ...evTuesdaysBetween(new Date(2026, 7, 4), new Date(2026, 11, 31)).map((d, i) => ({
     id: "tt" + i, title: "Technique Tuesday", host: "Dr Tim Pearce", cohost: "Miranda Pearce", banner: null,
     date: evFmtDate(d), time: "20:00 GMT", weekly: true, primary: i === 0,
     state: i === 0 ? "live" : "upcoming", going: i === 0 ? "342" : "128",
