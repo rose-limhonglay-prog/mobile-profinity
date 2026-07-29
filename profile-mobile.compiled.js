@@ -197,16 +197,76 @@ const PM_TABS = [{
   icon: "lucide:sparkles",
   href: "AgentMobile.html"
 }];
-const SM_RESOURCES_PM = [{
-  label: "Videos",
-  icon: "lucide:square-play"
-}, {
-  label: "Articles",
-  icon: "lucide:feather"
-}, {
-  label: "Webinars",
-  icon: "lucide:calendar"
-}];
+const SM_TIER_RESOURCES_PM = {
+  Confidence: [{
+    label: "Community Chat",
+    icon: "lucide:message-circle",
+    href: "CommunityMobile.html"
+  }, {
+    label: "Membership Training",
+    icon: "lucide:graduation-cap",
+    href: "LearningMobile.html"
+  }, {
+    label: "Technique Tuesday",
+    icon: "lucide:calendar-check",
+    href: "EventsMobile.html"
+  }, {
+    label: "Complications Help",
+    icon: "lucide:shield-alert",
+    href: "DirectMessage.html"
+  }, {
+    label: "AI Coach",
+    icon: "lucide:sparkles",
+    href: "LearningMobile.html"
+  }],
+  Mastery: [{
+    label: "Mastery lounge",
+    icon: "lucide:message-circle",
+    href: "CommunityMobile.html"
+  }, {
+    label: "Advanced masterclasses",
+    icon: "lucide:graduation-cap",
+    href: "LearningMobile.html"
+  }, {
+    label: "Complication library",
+    icon: "lucide:file-text",
+    href: "LearningMobile.html"
+  }, {
+    label: "Live case reviews",
+    icon: "lucide:calendar",
+    href: "EventsMobile.html"
+  }],
+  Freedom: [{
+    label: "Freedom circle",
+    icon: "lucide:message-circle",
+    href: "CommunityMobile.html"
+  }, {
+    label: "Business playbooks",
+    icon: "lucide:graduation-cap",
+    href: "LearningMobile.html"
+  }, {
+    label: "1:1 mentor sessions",
+    icon: "lucide:calendar",
+    href: "EventsMobile.html"
+  }],
+  "Inner Circle": [{
+    label: "Inner Circle roundtable",
+    icon: "lucide:message-circle",
+    href: "CommunityMobile.html"
+  }, {
+    label: "Executive mentorship",
+    icon: "lucide:calendar",
+    href: "EventsMobile.html"
+  }, {
+    label: "Legacy case archive",
+    icon: "lucide:file-text",
+    href: "LearningMobile.html"
+  }, {
+    label: "Founder office hours",
+    icon: "lucide:calendar",
+    href: "EventsMobile.html"
+  }]
+};
 const SM_COURSES_PM = [{
   label: "Face Anatomy Masterclass",
   pct: 72
@@ -246,15 +306,10 @@ const SM_PROFILE_BEFORE_PM = [{
   label: "Notifications",
   icon: "lucide:calendar",
   href: "NotificationSettings.html"
-}];
-const SM_PROFILE_AFTER_PM = [{
+}, {
   label: "Privacy & Security",
   icon: "lucide:book-open",
   href: null
-}, {
-  label: "Admin Panel",
-  icon: "lucide:shield",
-  href: "AdminPanel.html"
 }];
 function useDarkModePM() {
   const [dark, setDark] = useStatePM(() => {
@@ -316,6 +371,46 @@ function SmSectionPM({
     className: "sm-sec-h"
   }, title);
 }
+function SmTierResourceRowPM({
+  r
+}) {
+  return /*#__PURE__*/React.createElement("button", {
+    className: "smt-resource",
+    onClick: () => r.href && goPM(r.href)
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: r.icon,
+    size: 20,
+    color: "var(--gray-900)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "smt-resource-label"
+  }, r.label), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "var(--gray-450)"
+  }));
+}
+function SmTierCardPM({
+  tierName,
+  isOwn
+}) {
+  const resources = SM_TIER_RESOURCES_PM[tierName] || [];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "smt-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "smt-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "smt-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "smt-name"
+  }, tierName, " Path"), !isOwn && /*#__PURE__*/React.createElement("span", {
+    className: "smt-pill"
+  }, "INCLUDED"))), /*#__PURE__*/React.createElement("div", {
+    className: "smt-resources"
+  }, resources.map(r => /*#__PURE__*/React.createElement(SmTierResourceRowPM, {
+    key: r.label,
+    r: r
+  }))));
+}
 function SideMenuPM({
   open,
   onClose
@@ -375,22 +470,14 @@ function SideMenuPM({
     size: 20,
     color: "#fff"
   })), /*#__PURE__*/React.createElement(SmSectionPM, {
-    title: "Communities"
-  }), PM_ME.tier ? smIncludedTiersPM(PM_ME.tier).map((t, i) => /*#__PURE__*/React.createElement("button", {
+    title: "My Membership"
+  }), PM_ME.tier ? /*#__PURE__*/React.createElement("div", {
+    className: "smt-list"
+  }, smIncludedTiersPM(PM_ME.tier).map((t, i) => /*#__PURE__*/React.createElement(SmTierCardPM, {
     key: t,
-    className: "sm-tier",
-    onClick: () => goPM("CommunityMobile.html")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-top"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-name"
-  }, t, " Path"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-pill" + (i === 0 ? " sm-tier-pill-yours" : "")
-  }, i === 0 ? "YOUR TIER" : "INCLUDED")), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-sub"
-  }, "Exclusive tier content"), i === 0 && /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-new sm-tier-new-yours"
-  }, "3 new posts"))) : /*#__PURE__*/React.createElement("button", {
+    tierName: t,
+    isOwn: i === 0
+  }))) : /*#__PURE__*/React.createElement("button", {
     className: "sm-tier",
     onClick: () => goPM("CommunityMobile.html")
   }, /*#__PURE__*/React.createElement("span", {
@@ -401,21 +488,7 @@ function SideMenuPM({
     className: "sm-tier-pill"
   }, "FREE")), /*#__PURE__*/React.createElement("span", {
     className: "sm-tier-sub"
-  }, "Subscribe to unlock a channel")), PM_ME.tier && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SmSectionPM, {
-    title: "Membership Resources"
-  }), /*#__PURE__*/React.createElement("nav", {
-    className: "sm-list"
-  }, SM_RESOURCES_PM.map(c => /*#__PURE__*/React.createElement("button", {
-    key: c.label,
-    className: "sm-row",
-    onClick: () => goPM("LearningMobile.html")
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: c.icon,
-    size: 23,
-    color: "var(--gray-900)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "sm-row-label"
-  }, c.label))))), /*#__PURE__*/React.createElement(SmSectionPM, {
+  }, "Subscribe to unlock a channel")), /*#__PURE__*/React.createElement(SmSectionPM, {
     title: "My Courses"
   }), /*#__PURE__*/React.createElement("div", {
     className: "sm-courses"
@@ -446,7 +519,7 @@ function SideMenuPM({
     title: "Upcoming Events"
   }), /*#__PURE__*/React.createElement("div", {
     className: "sm-events"
-  }, SM_EVENTS_PM.map(e => /*#__PURE__*/React.createElement("button", {
+  }, SM_EVENTS_PM.slice(0, 2).map(e => /*#__PURE__*/React.createElement("button", {
     key: e.label,
     className: "sm-event",
     onClick: () => goPM("EventsMobile.html")
@@ -492,23 +565,7 @@ function SideMenuPM({
   })))), /*#__PURE__*/React.createElement(SmDisplayCardPM, {
     dark: dark,
     onToggle: toggleDark
-  }), /*#__PURE__*/React.createElement("nav", {
-    className: "sm-list"
-  }, SM_PROFILE_AFTER_PM.map(c => /*#__PURE__*/React.createElement("button", {
-    key: c.label,
-    className: "sm-row",
-    onClick: () => c.href && goPM(c.href)
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: c.icon,
-    size: 23,
-    color: "var(--gray-900)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "sm-row-label"
-  }, c.label), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 20,
-    color: "var(--gray-450)"
-  })))), /*#__PURE__*/React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     className: "m-drawer-logout",
     onClick: onClose
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {

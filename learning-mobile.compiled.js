@@ -362,7 +362,7 @@ function YourMembership({
     name: "fluent:crown-16-filled",
     size: 15,
     color: "#fff"
-  }), "Confidence Path"), /*#__PURE__*/React.createElement("span", {
+  }), "My Membership - Mastery Path"), /*#__PURE__*/React.createElement("span", {
     className: "lm-mem-simple-text"
   }, "Your Membership ", /*#__PURE__*/React.createElement("b", null, "Active")), /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
     name: "lucide:chevron-right",
@@ -392,7 +392,7 @@ function MembershipModal({
     name: "fluent:crown-16-filled",
     size: 15,
     color: "#fff"
-  }), "Confidence Path"), /*#__PURE__*/React.createElement("span", {
+  }), "My Membership - Mastery Path"), /*#__PURE__*/React.createElement("span", {
     className: "lm-mem-active"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lm-mem-dot"
@@ -1086,6 +1086,9 @@ function LearningHome() {
   })), /*#__PURE__*/React.createElement(AICoachFab, {
     bottom: tabsH + 34,
     onClick: () => setCoachOpen(true)
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm-tabs-scrim",
+    "aria-hidden": "true"
   }), /*#__PURE__*/React.createElement(LMTabBar, {
     ref: tabsRef,
     compact: chromeHidden

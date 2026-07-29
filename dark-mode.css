@@ -128,11 +128,16 @@
   color: #9A9AB5;
 }
 [data-theme="dark"] .smt-resources { border-left-color: #332F63; }
-[data-theme="dark"] .smt-pill,
+[data-theme="dark"] .smt-pill:not(.smt-pill-yours),
 [data-theme="dark"] .sm-event-access-members {
   color: #E8BE85;
   border-color: #E8BE85;
   background: rgba(232, 190, 133, .14);
+}
+/* "YOUR TIER" pill keeps its inline per-tier color/border (SM_TIER_COLOR_M);
+   only strip the light-mode gold tint background in dark mode. */
+[data-theme="dark"] .smt-pill-yours {
+  background: transparent;
 }
 
 /* Community-channel lavender card → dark */

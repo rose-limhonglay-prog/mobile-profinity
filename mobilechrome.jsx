@@ -16,26 +16,55 @@
   function getUserTierC() {
     try { return localStorage.getItem(PF_TIER_KEY_C) || "free"; } catch (e) { return "free"; }
   }
-  const TIER_DISPLAY_NAME_C = { confidence: "Confidence", mastery: "Mastery", freedom: "Freedom", inner: "Inner Circle" };
-
-  const ME_C = { name: "Katy Wilson", avatar: "assets/avatar-katy.jpg", tier: TIER_DISPLAY_NAME_C[getUserTierC()] || null };
+  const ME_C = { name: "Katy Wilson", avatar: "assets/avatar-katy.jpg" };
 
   /* Membership ladder — the upgrade banner should point at the next rung up,
      not repeat the tier the viewer already holds. A free viewer (no tier,
      indexOf === -1) points at the first rung rather than reading as "top". */
-  const SM_TIER_LADDER_C = ["Confidence", "Mastery", "Freedom", "Inner Circle"];
+  const SM_TIER_LADDER_C = ["confidence", "mastery", "freedom", "inner"];
+  const SM_TIER_META_C = {
+    confidence: { name: "Confidence" },
+    mastery:    { name: "Mastery" },
+    freedom:    { name: "Freedom" },
+    inner:      { name: "Inner Circle" }
+  };
+  const SM_TIER_RESOURCES_C = {
+    confidence: [
+    { label: "Community Chat",       icon: "lucide:message-circle", href: "CommunityMobile.html" },
+    { label: "Membership Training",  icon: "lucide:graduation-cap", href: "LearningMobile.html" },
+    { label: "Technique Tuesday",    icon: "lucide:calendar-check", href: "EventsMobile.html" },
+    { label: "Complications Help",   icon: "lucide:shield-alert",   href: "DirectMessage.html" },
+    { label: "AI Coach",             icon: "lucide:sparkles",       href: "LearningMobile.html" }],
+
+    mastery: [
+    { label: "Mastery lounge",          icon: "lucide:message-circle", n: 6,  href: "CommunityMobile.html" },
+    { label: "Advanced masterclasses",  icon: "lucide:graduation-cap", n: 9,  href: "LearningMobile.html" },
+    { label: "Complication library",    icon: "lucide:file-text",      n: 18, href: "LearningMobile.html" },
+    { label: "Live case reviews",       icon: "lucide:calendar",       n: 3,  href: "EventsMobile.html" }],
+
+    freedom: [
+    { label: "Freedom circle",       icon: "lucide:message-circle", n: 2, href: "CommunityMobile.html" },
+    { label: "Business playbooks",   icon: "lucide:graduation-cap", n: 7, href: "LearningMobile.html" },
+    { label: "1:1 mentor sessions",  icon: "lucide:calendar",       n: 1, href: "EventsMobile.html" }],
+
+    inner: [
+    { label: "Inner Circle roundtable", icon: "lucide:message-circle", n: 4, href: "CommunityMobile.html" },
+    { label: "Executive mentorship",    icon: "lucide:calendar",       n: 1, href: "EventsMobile.html" },
+    { label: "Legacy case archive",     icon: "lucide:file-text",      n: 9, href: "LearningMobile.html" },
+    { label: "Founder office hours",    icon: "lucide:calendar",       n: 2, href: "EventsMobile.html" }]
+
+  };
+  /* Tiers unlocked by a viewer on `tier`, highest first. Free (no match) unlocks none. */
+  function smUnlockedTiersC(tier) {
+    const i = SM_TIER_LADDER_C.indexOf(tier);
+    if (i === -1) return [];
+    return SM_TIER_LADDER_C.slice(0, i + 1).reverse();
+  }
+  /* The next rung up from `tier` — null once at the top of the ladder. */
   function smNextTierC(tier) {
     const i = SM_TIER_LADDER_C.indexOf(tier);
     if (i === SM_TIER_LADDER_C.length - 1) return null;
     return SM_TIER_LADDER_C[i + 1];
-  }
-  /* A viewer's paid tier unlocks every rung below it too. Returns the viewer's
-     tier first (current, highlighted "YOUR TIER") followed by the rungs it
-     includes, lowest last. */
-  function smIncludedTiersC(tier) {
-    const i = SM_TIER_LADDER_C.indexOf(tier);
-    if (i === -1) return [];
-    return SM_TIER_LADDER_C.slice(0, i + 1).reverse();
   }
 
   function MTopBarC({ onMenu, onBell, onMessages, dark }) {
@@ -56,24 +85,16 @@
       </header>);
   }
 
-  const SM_RESOURCES_C = [
-    { label: "Videos", icon: "lucide:square-play", n: 8 },
-    { label: "Articles", icon: "lucide:feather", n: 4 },
-    { label: "Webinars", icon: "lucide:calendar" }];
-  const SM_COURSES_C = [
-    { label: "Face Anatomy Masterclass", pct: 72 },
-    { label: "Lip Filler Techniques", pct: 45 },
-    { label: "Advanced Botox Training", pct: 20 }];
   const SM_EVENTS_C = [
-    { d: "30", m: "JUN", label: "Technique Tuesday Webinar", t: "8:00 PM", tag: "NEW" },
-    { d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM" },
-    { d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM" }];
+    { d: "30", m: "JUN", label: "Technique Tuesday Webinar", t: "8:00 PM", access: "open" },
+    { d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM", access: "members" },
+    { d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM", access: "members" }];
   const SM_PROFILE_C = [
     { label: "Edit Profile", icon: "lucide:book-open", href: "ProfileMobile.html" },
     { label: "Account Settings", icon: "lucide:graduation-cap", href: null },
     { label: "Notifications", icon: "lucide:calendar", href: "NotificationSettings.html" },
-    { label: "Display Settings", icon: "lucide:cpu", href: "DisplaySettings.html" },
-    { label: "Privacy & Security", icon: "lucide:book-open", href: null }];
+    { label: "Privacy & Security", icon: "lucide:book-open", href: null },
+    { label: "Display Settings", icon: "lucide:cpu", href: "DisplaySettings.html" }];
 
   const NOTIFS_C = {
     "New": [
@@ -440,7 +461,36 @@
     );
   }
 
+  function SmTierResourceRowC({ r }) {
+    return (
+      <button className="smt-resource" onClick={() => goC(r.href)}>
+        <DSC.IconifyIcon name={r.icon} size={20} color="var(--gray-900)" />
+        <span className="smt-resource-label">{r.label}</span>
+        <DSC.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+      </button>);
+  }
+
+  function SmTierCardC({ tierKey, isOwn }) {
+    const resources = SM_TIER_RESOURCES_C[tierKey];
+    return (
+      <div className="smt-card">
+        <div className="smt-head">
+          <span className="smt-top">
+            <span className="smt-name">{SM_TIER_META_C[tierKey].name} Path</span>
+            {!isOwn && <span className="smt-pill">INCLUDED</span>}
+          </span>
+        </div>
+        <div className="smt-resources">
+          {resources.map((r) => <SmTierResourceRowC key={r.label} r={r} />)}
+        </div>
+      </div>);
+  }
+
   function SideMenuC({ open, onClose, dark, onToggleDark }) {
+    const tier = getUserTierC();
+    const unlockedTiers = smUnlockedTiersC(tier);
+    const nextTier = smNextTierC(tier);
+    const showUpgrade = tier === "free" || tier === "confidence" || tier === "mastery";
     return (
       <div className={"m-drawer-wrap" + (open ? " open" : "")} aria-hidden={!open}>
         <div className="m-drawer-scrim" onClick={onClose} />
@@ -456,73 +506,66 @@
             <DSC.IconifyIcon name="lucide:chevron-right" size={22} color="var(--gray-800)" />
           </button>
           <div className="sm-body">
+            {showUpgrade && nextTier &&
             <button className="sm-upgrade" onClick={() => goC("MembershipTier.html")}>
-              <span className="sm-upgrade-icon">
-                <DSC.IconifyIcon name="lucide:gem" size={20} color="#fff" />
-              </span>
-              <span className="sm-upgrade-main">
-                <span className="sm-upgrade-title">{smNextTierC(ME_C.tier) ? "Upgrade to " + smNextTierC(ME_C.tier) : "You're at the top tier"}</span>
-                <span className="sm-upgrade-sub">Unlock premium channels &amp; courses</span>
-              </span>
-              <DSC.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
-            </button>
-
-            <SmSectionC title="Communities" />
-            {ME_C.tier ?
-              smIncludedTiersC(ME_C.tier).map((t, i) =>
-                <button key={t} className="sm-tier" onClick={() => goC("CommunityMobile.html")}>
-                  <span className="sm-tier-top">
-                    <span className="sm-tier-name">{t} Path</span>
-                    <span className={"sm-tier-pill" + (i === 0 ? " sm-tier-pill-yours" : "")}>{i === 0 ? "YOUR TIER" : "INCLUDED"}</span>
-                  </span>
-                  <span className="sm-tier-sub">Exclusive tier content</span>
-                  {i === 0 && <span className="sm-tier-new sm-tier-new-yours">3 new posts</span>}
-                </button>
-              ) :
-              <button className="sm-tier" onClick={() => goC("CommunityMobile.html")}>
-                <span className="sm-tier-top">
-                  <span className="sm-tier-name">No active plan</span>
-                  <span className="sm-tier-pill">FREE</span>
+                <span className="sm-upgrade-icon">
+                  <DSC.IconifyIcon name="lucide:gem" size={20} color="#fff" />
                 </span>
-                <span className="sm-tier-sub">Subscribe to unlock a channel</span>
+                <span className="sm-upgrade-main">
+                  <span className="sm-upgrade-title">Upgrade to {SM_TIER_META_C[nextTier].name}</span>
+                  <span className="sm-upgrade-sub">Unlock more premium channels &amp; courses</span>
+                </span>
+                <DSC.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
               </button>
             }
-            {ME_C.tier &&
-            <>
-              <SmSectionC title="Membership Resources" />
-              <nav className="sm-list">
-                {SM_RESOURCES_C.map((c) =>
-                  <button key={c.label} className="sm-row" onClick={() => goC("LearningMobile.html")}>
-                    <DSC.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
-                    <span className="sm-row-label" style={{ color: "rgb(0, 0, 0)" }}>{c.label}</span>
-                  </button>
+
+            {unlockedTiers.length > 0 &&
+            <React.Fragment>
+                <SmSectionC title="My Membership" />
+                <div className="smt-list">
+                  {unlockedTiers.map((tKey) =>
+                <SmTierCardC key={tKey} tierKey={tKey} isOwn={tKey === tier} />
                 )}
-              </nav>
-            </>
+                </div>
+              </React.Fragment>
             }
-            <SmSectionC title="My Courses" />
-            <div className="sm-courses">
-              {SM_COURSES_C.map((c) =>
-                <button key={c.label} className="sm-course" onClick={() => goC("LearningMobile.html")}>
-                  <span className="sm-course-top">
-                    <span className="sm-course-thumb"><DSC.IconifyIcon name="lucide:image" size={20} color="var(--gray-400)" /></span>
-                    <span className="sm-course-name" style={{ color: "rgb(0, 0, 0)" }}>{c.label}</span>
-                  </span>
-                  <span className="sm-progress"><span className="sm-progress-fill" style={{ width: c.pct + "%", backgroundColor: "rgb(206, 153, 87)" }} /></span>
-                  <span className="sm-course-pct">{c.pct}% complete</span>
-                </button>
-              )}
-            </div>
+
+            <button className="sm-primary-card" onClick={() => goC("LearningMobile.html")}>
+              <span className="sm-primary-icon">
+                <DSC.IconifyIcon name="lucide:graduation-cap" size={22} color="var(--brand-navy)" />
+              </span>
+              <span className="sm-primary-main">
+                <span className="sm-primary-title">My Learning</span>
+                <span className="sm-primary-sub">Courses, protocols &amp; certificates</span>
+              </span>
+              <DSC.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+            </button>
+
+            {unlockedTiers.includes("freedom") &&
+            <button className="sm-primary-card" onClick={() => goC("FreedomPathChat.html")}>
+              <span className="sm-primary-icon">
+                <DSC.IconifyIcon name="lucide:rocket" size={22} color="var(--brand-navy)" />
+              </span>
+              <span className="sm-primary-main">
+                <span className="sm-primary-title">Freedom Path Chat</span>
+                <span className="sm-primary-sub">Business, scaling &amp; mentorship</span>
+              </span>
+              <DSC.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+            </button>
+            }
+
             <SmSectionC title="Upcoming Events" />
             <div className="sm-events">
-              {SM_EVENTS_C.map((e) =>
+              {SM_EVENTS_C.slice(0, 2).map((e) =>
                 <button key={e.label} className="sm-event" onClick={() => goC("EventsMobile.html")}>
                   <span className="sm-date"><b>{e.d}</b><i>{e.m}</i></span>
                   <span className="sm-event-main">
-                    <span className="sm-event-name" style={{ color: "rgb(0, 0, 0)" }}>{e.label}</span>
+                    <span className="sm-event-name">{e.label}</span>
                     <span className="sm-event-time">{e.t}</span>
                   </span>
-                  {e.tag && <span className="sm-event-tag" style={{ borderColor: "rgb(206, 153, 87)", color: "rgb(206, 153, 87)" }}>{e.tag}</span>}
+                  <span className={"sm-event-access" + (e.access === "members" ? " sm-event-access-members" : " sm-event-access-open")}>
+                    {e.access === "members" ? "Members only" : "Open to all"}
+                  </span>
                 </button>
               )}
             </div>

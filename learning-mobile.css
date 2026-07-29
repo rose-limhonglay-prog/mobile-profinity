@@ -195,6 +195,12 @@ img { max-width: 100%; }
   background: var(--brand-navy); color: #fff; border-radius: 50%; }
 .lm-quiz:active { filter: brightness(1.12); }
 
+/* solid backdrop behind the floating dock — without this, scrolled content
+   (e.g. the Your Membership row) shows through the gap between the dock and
+   the true bottom edge */
+.lm-tabs-scrim { position: absolute; left: 0; right: 0; bottom: 0; z-index: 19; pointer-events: none;
+  height: 140px; background: linear-gradient(180deg, rgba(255,255,255,0) 0%, var(--surface-card) 60%, var(--surface-card) 100%); }
+
 /* floating glass navigation dock */
 .lm-tabs { position: absolute; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom,0px)); z-index: 20;
   width: calc(100% - 36px); transform: translateX(-50%);

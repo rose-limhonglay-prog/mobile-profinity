@@ -350,6 +350,34 @@ img{max-width:100%}
 .sm-upgrade-title{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;color:#fff}
 .sm-upgrade-sub{font-family:var(--font-sans);font-size:13px;color:rgba(255,255,255,.9)}
 
+/* tier cards — expandable, one per unlocked tier */
+.smt-list{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
+.smt-card{background:var(--surface-card);border:1px solid var(--border-default);border-radius:12px;
+  overflow:hidden;box-shadow:0 1px 3px rgba(12,12,13,.05)}
+.smt-head{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:44px;
+  text-align:left;background:none;border:none;padding:16px 18px}
+.smt-top{display:flex;align-items:center;gap:10px;min-width:0}
+.smt-name{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--text-heading)}
+.smt-pill{flex:none;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:10px;letter-spacing:.04em;
+  color:#8A6321;background:rgba(206,153,87,.12);border:1.5px solid var(--brand-gold);border-radius:var(--r-pill);padding:4px 10px}
+
+/* indented resource rows, revealed on expand */
+.smt-resources{display:flex;flex-direction:column;padding:2px 18px 14px}
+.smt-resource{display:flex;align-items:center;gap:14px;width:100%;min-height:44px;text-align:left;cursor:pointer;
+  background:none;border:none;padding:10px 4px}
+.smt-resource:active{background:var(--surface-sunken);border-radius:9px}
+.smt-resource-label{flex:1;min-width:0;font-family:var(--font-sans);font-weight:500;font-size:16px;color:var(--text-heading)}
+
+/* My Learning — primary destination card, same weight as tier cards */
+.sm-primary-card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
+  background:var(--surface-card);border:1px solid var(--border-default);border-radius:12px;padding:16px 18px;margin-bottom:6px;
+  box-shadow:0 1px 3px rgba(12,12,13,.05)}
+.sm-primary-icon{flex:none;width:42px;height:42px;border-radius:11px;background:var(--surface-sunken);
+  display:flex;align-items:center;justify-content:center}
+.sm-primary-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.sm-primary-title{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:17px;color:var(--brand-navy)}
+.sm-primary-sub{font-family:var(--font-sans);font-size:14px;color:var(--gray-500)}
+
 .sm-tier{display:flex;flex-direction:column;gap:5px;width:100%;text-align:left;cursor:pointer;
   background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:18px 18px 16px;margin-bottom:6px;
   box-shadow:0 1px 3px rgba(12,12,13,.05)}
@@ -394,6 +422,10 @@ img{max-width:100%}
 .sm-event-time{font-family:var(--font-sans);font-size:14px;color:var(--gray-500)}
 .sm-event-tag{flex:none;align-self:flex-start;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:10px;letter-spacing:.04em;
   color:var(--premium-orange);border:1.5px solid var(--premium-orange);border-radius:var(--r-pill);padding:3px 9px}
+.sm-event-access{flex:none;align-self:flex-start;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:10px;letter-spacing:.04em;
+  border-radius:var(--r-pill);padding:3px 9px;border:1.5px solid var(--border-strong)}
+.sm-event-access-open{color:var(--gray-500);border-color:var(--gray-300)}
+.sm-event-access-members{color:#8A6321;background:rgba(206,153,87,.12);border-color:var(--brand-gold)}
 
 .sm-verify{background:#FCF4E4;border-radius:11px;border-left:4px solid var(--premium-orange);
   padding:14px 14px;margin-bottom:4px}

@@ -39,29 +39,65 @@ const CM_TABS = [
 { key: "Community", label: "Community", icon: "lucide:users", href: null },
 { key: "Agent", label: "Agent", icon: "lucide:sparkles", href: "AgentMobile.html" }];
 
-const SM_RESOURCES_CM = [
-{ label: "Videos", icon: "lucide:square-play", n: 8 },
-{ label: "Articles", icon: "lucide:feather", n: 4 },
-{ label: "Webinars", icon: "lucide:calendar", n: 3 }];
+/* Same tier keys as app.jsx's TIER_LADDER, with the resource lists the
+   expandable Communities cards in the side menu need — app.jsx's ladder only
+   carries upgrade-modal perks copy, not per-tier resource counts. */
+const SM_TIER_LADDER_CM = ["confidence", "mastery", "freedom", "inner"];
+const SM_TIER_META_CM = {
+  confidence: { name: "Confidence" },
+  mastery:    { name: "Mastery" },
+  freedom:    { name: "Freedom" },
+  inner:      { name: "Inner Circle" }
+};
+const SM_TIER_RESOURCES_CM = {
+  confidence: [
+  { label: "Community Chat",       icon: "lucide:message-circle", href: null },
+  { label: "Membership Training",  icon: "lucide:graduation-cap", href: "MyLearning.html" },
+  { label: "Technique Tuesday",    icon: "lucide:calendar-check", href: "EventsMobile.html" },
+  { label: "Complications Help",   icon: "lucide:shield-alert",   href: "DirectMessage.html" },
+  { label: "AI Coach",             icon: "lucide:sparkles",       href: "MyLearning.html" }],
 
-const SM_COURSES_CM = [
-{ label: "Face Anatomy Masterclass", pct: 72 },
-{ label: "Lip Filler Techniques", pct: 45 },
-{ label: "Advanced Botox Training", pct: 20 }];
+  mastery: [
+  { label: "Mastery lounge",          icon: "lucide:message-circle", n: 6,  href: null },
+  { label: "Advanced masterclasses",  icon: "lucide:graduation-cap", n: 9,  href: "MyLearning.html" },
+  { label: "Complication library",    icon: "lucide:file-text",      n: 18, href: "MyLearning.html" },
+  { label: "Live case reviews",       icon: "lucide:calendar",       n: 3,  href: "EventsMobile.html" }],
+
+  freedom: [
+  { label: "Freedom circle",       icon: "lucide:message-circle", n: 2, href: null },
+  { label: "Business playbooks",   icon: "lucide:graduation-cap", n: 7, href: "MyLearning.html" },
+  { label: "1:1 mentor sessions",  icon: "lucide:calendar",       n: 1, href: "EventsMobile.html" }],
+
+  inner: [
+  { label: "Inner Circle roundtable", icon: "lucide:message-circle", n: 4, href: null },
+  { label: "Executive mentorship",    icon: "lucide:calendar",       n: 1, href: "EventsMobile.html" },
+  { label: "Legacy case archive",     icon: "lucide:file-text",      n: 9, href: "MyLearning.html" },
+  { label: "Founder office hours",    icon: "lucide:calendar",       n: 2, href: "EventsMobile.html" }]
+
+};
+/* Tiers unlocked by a viewer on `tier`, highest first. Free (no match) unlocks none. */
+function smUnlockedTiersCM(tier) {
+  const i = SM_TIER_LADDER_CM.indexOf(tier);
+  if (i === -1) return [];
+  return SM_TIER_LADDER_CM.slice(0, i + 1).reverse();
+}
+/* The next rung up from `tier` — null once at the top of the ladder. */
+function smNextTierCM(tier) {
+  const i = SM_TIER_LADDER_CM.indexOf(tier);
+  if (i === SM_TIER_LADDER_CM.length - 1) return null;
+  return SM_TIER_LADDER_CM[i + 1];
+}
 
 const SM_EVENTS_CM = [
-{ d: "30", m: "JUN", label: "Technique Tuesday Webinar", t: "8:00 PM", tag: "NEW" },
-{ d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM" },
-{ d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM" }];
+{ d: "30", m: "JUN", label: "Technique Tuesday Webinar", t: "8:00 PM", access: "open" },
+{ d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM", access: "members" },
+{ d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM", access: "members" }];
 
 const SM_PROFILE_BEFORE_CM = [
 { label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
 { label: "Account Settings",   icon: "lucide:graduation-cap",  href: null },
-{ label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" }];
-
-const SM_PROFILE_AFTER_CM = [
-{ label: "Privacy & Security", icon: "lucide:book-open",       href: null },
-{ label: "Admin Panel",        icon: "lucide:shield",          href: "AdminPanel.html" }];
+{ label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" },
+{ label: "Privacy & Security", icon: "lucide:book-open",       href: null }];
 
 function useDarkModeCM() {
   const [dark, setDark] = React.useState(() => {
@@ -105,8 +141,39 @@ function SmSectionCM({ title }) {
   return <div className="sm-sec-h">{title}</div>;
 }
 
+function SmTierResourceRowCM({ r }) {
+  return (
+    <button className="smt-resource" onClick={() => r.href && goCM(r.href)}>
+      <DSCM.IconifyIcon name={r.icon} size={20} color="var(--gray-900)" />
+      <span className="smt-resource-label">{r.label}</span>
+      <DSCM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+    </button>);
+
+}
+
+function SmTierCardCM({ tierKey, isOwn }) {
+  const resources = SM_TIER_RESOURCES_CM[tierKey];
+  return (
+    <div className="smt-card">
+      <div className="smt-head">
+        <span className="smt-top">
+          <span className="smt-name">{SM_TIER_META_CM[tierKey].name} Path</span>
+          {!isOwn && <span className="smt-pill">INCLUDED</span>}
+        </span>
+      </div>
+      <div className="smt-resources">
+        {resources.map((r) => <SmTierResourceRowCM key={r.label} r={r} />)}
+      </div>
+    </div>);
+
+}
+
 function SideMenuCM({ open, onClose }) {
   const [dark, toggleDark] = useDarkModeCM();
+  const tier = PFACM.getUserTier();
+  const unlockedTiers = smUnlockedTiersCM(tier);
+  const nextTier = smNextTierCM(tier);
+  const showUpgrade = tier === "free" || tier === "confidence" || tier === "mastery";
   return (
     <div className={"m-drawer-wrap" + (open ? " open" : "")} aria-hidden={!open}>
       <div className="m-drawer-scrim" onClick={onClose} />
@@ -123,74 +190,66 @@ function SideMenuCM({ open, onClose }) {
         </button>
 
         <div className="sm-body">
+          {showUpgrade && nextTier &&
           <button className="sm-upgrade" onClick={() => goCM("MembershipTier.html")}>
-            <span className="sm-upgrade-icon">
-              <DSCM.IconifyIcon name="lucide:gem" size={20} color="#fff" />
-            </span>
-            <span className="sm-upgrade-main">
-              <span className="sm-upgrade-title">{PFACM.smNextTier(PFACM.ME.tier) ? "Upgrade to " + PFACM.smNextTier(PFACM.ME.tier) : "You're at the top tier"}</span>
-              <span className="sm-upgrade-sub">Unlock premium channels &amp; courses</span>
-            </span>
-            <DSCM.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
-          </button>
-
-          <SmSectionCM title="Communities" />
-          {PFACM.ME.tier ?
-            PFACM.smIncludedTiers(PFACM.ME.tier).map((t, i) =>
-              <button key={t} className="sm-tier" onClick={onClose}>
-                <span className="sm-tier-top">
-                  <span className="sm-tier-name">{t} Path</span>
-                  <span className={"sm-tier-pill" + (i === 0 ? " sm-tier-pill-yours" : "")}>{i === 0 ? "YOUR TIER" : "INCLUDED"}</span>
-                </span>
-                <span className="sm-tier-sub">Exclusive tier content</span>
-                {i === 0 && <span className="sm-tier-new sm-tier-new-yours">3 new posts</span>}
-              </button>
-            ) :
-            <button className="sm-tier" onClick={onClose}>
-              <span className="sm-tier-top">
-                <span className="sm-tier-name">No active plan</span>
-                <span className="sm-tier-pill">FREE</span>
+              <span className="sm-upgrade-icon">
+                <DSCM.IconifyIcon name="lucide:gem" size={20} color="#fff" />
               </span>
-              <span className="sm-tier-sub">Subscribe to unlock a channel</span>
+              <span className="sm-upgrade-main">
+                <span className="sm-upgrade-title">Upgrade to {SM_TIER_META_CM[nextTier].name}</span>
+                <span className="sm-upgrade-sub">Unlock more premium channels &amp; courses</span>
+              </span>
+              <DSCM.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
             </button>
           }
 
-          <SmSectionCM title="Membership Resources" />
-          <nav className="sm-list">
-            {SM_RESOURCES_CM.map((c) =>
-            <button key={c.label} className="sm-row" onClick={() => goCM("MyLearning.html")}>
-                <DSCM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
-                <span className="sm-row-label">{c.label}</span>
-              </button>
+          {unlockedTiers.length > 0 &&
+          <>
+            <SmSectionCM title="My Membership" />
+            <div className="smt-list">
+              {unlockedTiers.map((tKey) =>
+            <SmTierCardCM key={tKey} tierKey={tKey} isOwn={tKey === tier} />
             )}
-          </nav>
+            </div>
+          </>
+          }
 
-          <SmSectionCM title="My Courses" />
-          <div className="sm-courses">
-            {SM_COURSES_CM.map((c) =>
-            <button key={c.label} className="sm-course" onClick={() => goCM("MyLearning.html")}>
-                <span className="sm-course-top">
-                  <span className="sm-course-thumb">
-                    <DSCM.IconifyIcon name="lucide:image" size={20} color="var(--gray-400)" />
-                  </span>
-                  <span className="sm-course-name">{c.label}</span>
-                </span>
-                <span className="sm-progress"><span className="sm-progress-fill" style={{ width: c.pct + "%" }} /></span>
-                <span className="sm-course-pct">{c.pct}% complete</span>
-              </button>
-            )}
-          </div>
+          <button className="sm-primary-card" onClick={() => goCM("MyLearning.html")}>
+            <span className="sm-primary-icon">
+              <DSCM.IconifyIcon name="lucide:graduation-cap" size={22} color="var(--brand-navy)" />
+            </span>
+            <span className="sm-primary-main">
+              <span className="sm-primary-title">My Learning</span>
+              <span className="sm-primary-sub">Courses, protocols &amp; certificates</span>
+            </span>
+            <DSCM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+          </button>
+
+          {unlockedTiers.includes("freedom") &&
+          <button className="sm-primary-card" onClick={() => goCM("FreedomPathChat.html")}>
+              <span className="sm-primary-icon">
+                <DSCM.IconifyIcon name="lucide:rocket" size={22} color="var(--brand-navy)" />
+              </span>
+              <span className="sm-primary-main">
+                <span className="sm-primary-title">Freedom Path Chat</span>
+                <span className="sm-primary-sub">Business, scaling &amp; mentorship</span>
+              </span>
+              <DSCM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+            </button>
+          }
 
           <SmSectionCM title="Upcoming Events" />
           <div className="sm-events">
-            {SM_EVENTS_CM.map((e) =>
+            {SM_EVENTS_CM.slice(0, 2).map((e) =>
             <button key={e.label} className="sm-event" onClick={() => goCM("EventsMobile.html")}>
                 <span className="sm-date"><b>{e.d}</b><i>{e.m}</i></span>
                 <span className="sm-event-main">
                   <span className="sm-event-name">{e.label}</span>
                   <span className="sm-event-time">{e.t}</span>
                 </span>
-                {e.tag && <span className="sm-event-tag">{e.tag}</span>}
+                <span className={"sm-event-access" + (e.access === "members" ? " sm-event-access-members" : " sm-event-access-open")}>
+                  {e.access === "members" ? "Members only" : "Open to all"}
+                </span>
               </button>
             )}
           </div>
@@ -212,16 +271,6 @@ function SideMenuCM({ open, onClose }) {
           </nav>
 
           <SmDisplayCardCM dark={dark} onToggle={toggleDark} />
-
-          <nav className="sm-list">
-            {SM_PROFILE_AFTER_CM.map((c) =>
-            <button key={c.label} className="sm-row" onClick={() => c.href && goCM(c.href)}>
-                <DSCM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
-                <span className="sm-row-label">{c.label}</span>
-                <DSCM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
-              </button>
-            )}
-          </nav>
 
           <button className="m-drawer-logout" onClick={onClose}>
             <DSCM.IconifyIcon name="lucide:log-out" size={22} color="var(--error)" />

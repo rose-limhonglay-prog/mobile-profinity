@@ -700,6 +700,25 @@ img{max-width:100%}
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-caption);
   text-transform:uppercase;letter-spacing:.04em;color:var(--premium-gold-deep)}
 
+/* ===== Event-registration social proof post ("X has registered for Y") ===== */
+.pf-event-reg-headline{margin:0 0 12px;font-family:var(--font-sans);font-size:var(--fs-body-lg);
+  line-height:1.45;color:var(--text-primary)}
+.pf-event-reg-headline b{font-weight:var(--fw-semibold)}
+.pf-event-reg-card{margin-bottom:16px;border:1px solid var(--border-default);border-radius:var(--r-md);
+  background:var(--surface-sunken);overflow:hidden}
+.pf-event-reg-main{display:flex;flex-direction:column;gap:4px;width:100%;text-align:left;cursor:pointer;
+  border:none;background:none;padding:14px 16px;min-height:44px}
+.pf-event-reg-main:hover{background:var(--gray-100)}
+.pf-event-reg-main:focus-visible{outline:2px solid var(--brand-navy);outline-offset:-2px}
+.pf-event-reg-title{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body-lg);color:var(--brand-navy)}
+.pf-event-reg-sub{font-family:var(--font-sans);font-size:var(--fs-caption);color:var(--gray-500)}
+.pf-event-reg-going{font-family:var(--font-sans);font-size:var(--fs-caption);font-weight:var(--fw-medium);color:var(--premium-gold-deep)}
+.pf-event-reg-cta{display:block;width:100%;min-height:46px;padding:0 16px;border:none;border-top:1px solid var(--border-default);
+  background:var(--brand-navy);color:#fff;cursor:pointer;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);letter-spacing:.01em}
+.pf-event-reg-cta:hover{filter:brightness(1.08)}
+.pf-event-reg-cta:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+
 /* post media fills its frame (no letterbox space) — any aspect is cropped to fill */
 .post-wrap img[style*="380"]{object-fit:cover !important;height:380px !important;width:100% !important;background:var(--gray-100)}
 .sm-video img{object-fit:cover !important;background:#000}

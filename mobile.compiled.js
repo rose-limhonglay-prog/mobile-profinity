@@ -215,28 +215,63 @@ const SM_TIER_META_M = {
     name: "Sovereign"
   }
 };
+
+/* Tiers that get the single "My Membership" summary card + dedicated chat
+   card in the drawer, as opposed to sovereign's stacked tier-card ladder
+   (SmTierCard), which shows every tier a sovereign viewer has unlocked. */
+const SM_MEMBERSHIP_TIERS_M = ["confidence", "mastery", "freedom"];
+
+/* Rows inside the "My Membership" card — identical across confidence/mastery/
+   freedom; freedom appends one extra row (SM_FREEDOM_LECTURE_ROW_M). */
+const SM_MEMBERSHIP_ROWS_M = [{
+  label: "Membership Training",
+  icon: "lucide:graduation-cap",
+  href: "LearningMobile.html"
+}, {
+  label: "Technique Tuesday",
+  icon: "lucide:calendar-check",
+  href: "EventsMobile.html"
+}, {
+  label: "Complications Help",
+  icon: "lucide:shield-alert",
+  href: "DirectMessage.html"
+}, {
+  label: "AI Coach",
+  icon: "lucide:sparkles",
+  href: "LearningMobile.html"
+}];
+const SM_FREEDOM_LECTURE_ROW_M = {
+  label: "Freedom Path Lectures",
+  icon: "lucide:video",
+  href: "LearningMobile.html"
+};
+
+/* Upgrade-CTA label keyed by the viewer's CURRENT tier — not derivable from
+   the next tier's own display name, since mastery's target reads "Freedom
+   Path" while freedom's target reads plain "Sovereign". */
+const SM_UPGRADE_LABEL_M = {
+  free: "Confidence",
+  confidence: "Mastery",
+  mastery: "Freedom Path",
+  freedom: "Sovereign"
+};
+
+/* Accent color per tier, used for the tier-card "YOUR TIER" pill. */
+const SM_TIER_COLOR_M = {
+  confidence: "var(--info)",
+  mastery: "var(--level-intermediate)",
+  freedom: "var(--ai-purple)",
+  sovereign: "var(--premium-gold-deep)"
+};
+
+/* Chat-card label per tier — always routes to CommunityMobile.html. */
+const SM_CHAT_LABEL_M = {
+  confidence: "Community Chat",
+  mastery: "Mastery Chat",
+  freedom: "Freedom Path Chat"
+};
 const SM_TIER_RESOURCES_M = {
-  confidence: [{
-    label: "Confidence channel",
-    icon: "lucide:message-circle",
-    n: 3,
-    href: "CommunityMobile.html"
-  }, {
-    label: "Foundation courses",
-    icon: "lucide:graduation-cap",
-    n: 6,
-    href: "LearningMobile.html"
-  }, {
-    label: "Chairside protocols",
-    icon: "lucide:file-text",
-    n: 12,
-    href: "LearningMobile.html"
-  }, {
-    label: "Member webinars",
-    icon: "lucide:calendar",
-    n: 2,
-    href: "EventsMobile.html"
-  }],
+  confidence: SM_MEMBERSHIP_ROWS_M,
   mastery: [{
     label: "Mastery lounge",
     icon: "lucide:message-circle",
@@ -327,19 +362,41 @@ const SM_EVENTS = [{
   m: "JUN",
   label: "Technique Tuesday Webinar",
   t: "8:00 PM",
-  access: "open"
+  access: "open",
+  hosts: [{
+    name: "Dr Tim Pearce",
+    avatar: "assets/avatar-drtim.png"
+  }, {
+    name: "Miranda Pearce",
+    avatar: "assets/avatar-miranda.jpg"
+  }]
 }, {
   d: "5",
   m: "JUL",
   label: "Confidence Masterclass",
   t: "6:00 PM",
   access: "members"
+}];
+const SM_PROFILE_BEFORE_M = [{
+  label: "Edit Profile",
+  icon: "lucide:book-open",
+  href: "ProfileMobile.html"
 }, {
-  d: "12",
-  m: "JUL",
-  label: "Business Growth Workshop",
-  t: "7:00 PM",
-  access: "members"
+  label: "Account Settings",
+  icon: "lucide:graduation-cap",
+  href: null
+}, {
+  label: "Notifications",
+  icon: "lucide:calendar",
+  href: "NotificationSettings.html"
+}, {
+  label: "Privacy & Security",
+  icon: "lucide:book-open",
+  href: null
+}, {
+  label: "Display Settings",
+  icon: "lucide:cpu",
+  href: "DisplaySettings.html"
 }];
 const NOTIFS = {
   "New": [{
@@ -1193,36 +1250,56 @@ function SmTierResourceRow({
     color: "var(--gray-900)"
   }), /*#__PURE__*/React.createElement("span", {
     className: "smt-resource-label"
-  }, r.label), /*#__PURE__*/React.createElement("span", {
-    className: "smt-count"
-  }, r.n));
+  }, r.label), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "var(--gray-450)"
+  }));
 }
 function SmTierCard({
   tierKey,
-  isOwn,
-  open,
-  onToggle
+  isOwn
 }) {
   const resources = SM_TIER_RESOURCES_M[tierKey];
+  const color = SM_TIER_COLOR_M[tierKey];
   return /*#__PURE__*/React.createElement("div", {
     className: "smt-card"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "smt-head",
-    "aria-expanded": open,
-    onClick: onToggle
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "smt-head"
   }, /*#__PURE__*/React.createElement("span", {
     className: "smt-top"
   }, /*#__PURE__*/React.createElement("span", {
     className: "smt-name"
-  }, SM_TIER_META_M[tierKey].name, " Path"), !isOwn && /*#__PURE__*/React.createElement("span", {
+  }, SM_TIER_META_M[tierKey].name, " Path")), isOwn ? /*#__PURE__*/React.createElement("span", {
+    className: "smt-pill smt-pill-yours",
+    style: {
+      color,
+      borderColor: color
+    }
+  }, "YOUR TIER") : /*#__PURE__*/React.createElement("span", {
     className: "smt-pill"
-  }, "INCLUDED")), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: open ? "lucide:chevron-up" : "lucide:chevron-down",
-    size: 20,
-    color: "var(--gray-450)"
-  })), open && /*#__PURE__*/React.createElement("div", {
+  }, "INCLUDED")), /*#__PURE__*/React.createElement("div", {
     className: "smt-resources"
   }, resources.map(r => /*#__PURE__*/React.createElement(SmTierResourceRow, {
+    key: r.label,
+    r: r
+  }))));
+}
+function SmMembershipCard({
+  tier
+}) {
+  const rows = tier === "freedom" ? [...SM_MEMBERSHIP_ROWS_M, SM_FREEDOM_LECTURE_ROW_M] : SM_MEMBERSHIP_ROWS_M;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "smt-card sm-membership-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "smt-head sm-membership-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-membership-eyebrow"
+  }, "MY MEMBERSHIP"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-membership-tier"
+  }, SM_TIER_META_M[tier].name, " Path")), /*#__PURE__*/React.createElement("div", {
+    className: "smt-resources"
+  }, rows.map(r => /*#__PURE__*/React.createElement(SmTierResourceRow, {
     key: r.label,
     r: r
   }))));
@@ -1235,8 +1312,8 @@ function SideMenu({
   const tier = smReadTierM();
   const unlockedTiers = smUnlockedTiersM(tier);
   const nextTier = smNextTierM(tier);
-  const showUpgrade = tier === "free" || tier === "confidence" || tier === "mastery";
-  const [openTierKey, setOpenTierKey] = useStateM(() => unlockedTiers[0] || null);
+  const showMyMembership = SM_MEMBERSHIP_TIERS_M.includes(tier);
+  const showTierCards = !showMyMembership && unlockedTiers.length > 0;
   const burgerRefM = useRefM(null);
   useEffectM(() => {
     if (!open) return;
@@ -1286,9 +1363,9 @@ function SideMenu({
     color: "var(--gray-800)"
   })), /*#__PURE__*/React.createElement("div", {
     className: "sm-body"
-  }, showUpgrade && nextTier && /*#__PURE__*/React.createElement("button", {
+  }, nextTier && /*#__PURE__*/React.createElement("button", {
     className: "sm-upgrade",
-    onClick: () => go("MembershipTier.html")
+    onClick: () => go("SubscriptionMobile.html")
   }, /*#__PURE__*/React.createElement("span", {
     className: "sm-upgrade-icon"
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
@@ -1299,21 +1376,23 @@ function SideMenu({
     className: "sm-upgrade-main"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sm-upgrade-title"
-  }, "Upgrade to ", SM_TIER_META_M[nextTier].name), /*#__PURE__*/React.createElement("span", {
+  }, "Upgrade to ", SM_UPGRADE_LABEL_M[tier]), /*#__PURE__*/React.createElement("span", {
     className: "sm-upgrade-sub"
   }, "Unlock more premium channels & courses")), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 20,
     color: "#fff"
-  })), unlockedTiers.length > 0 && /*#__PURE__*/React.createElement("div", {
+  })), showMyMembership && /*#__PURE__*/React.createElement(SmMembershipCard, {
+    tier: tier
+  }), showTierCards && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SmSection, {
+    title: "My Membership"
+  }), /*#__PURE__*/React.createElement("div", {
     className: "smt-list"
   }, unlockedTiers.map(tKey => /*#__PURE__*/React.createElement(SmTierCard, {
     key: tKey,
     tierKey: tKey,
-    isOwn: tKey === tier,
-    open: openTierKey === tKey,
-    onToggle: () => setOpenTierKey(k => k === tKey ? null : tKey)
-  }))), /*#__PURE__*/React.createElement("button", {
+    isOwn: tKey === tier
+  })))), /*#__PURE__*/React.createElement("button", {
     className: "sm-primary-card",
     onClick: () => go("LearningMobile.html")
   }, /*#__PURE__*/React.createElement("span", {
@@ -1329,6 +1408,25 @@ function SideMenu({
   }, "My Learning"), /*#__PURE__*/React.createElement("span", {
     className: "sm-primary-sub"
   }, "Courses, protocols & certificates")), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "var(--gray-450)"
+  })), showMyMembership && /*#__PURE__*/React.createElement("button", {
+    className: "sm-primary-card",
+    onClick: () => go("CommunityMobile.html")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-primary-icon"
+  }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: "lucide:message-circle",
+    size: 22,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sm-primary-main"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-primary-title"
+  }, SM_CHAT_LABEL_M[tier]), /*#__PURE__*/React.createElement("span", {
+    className: "sm-primary-sub"
+  }, "Discuss, connect & ask questions")), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 20,
     color: "var(--gray-450)"
@@ -1348,29 +1446,49 @@ function SideMenu({
     className: "sm-event-name"
   }, e.label), /*#__PURE__*/React.createElement("span", {
     className: "sm-event-time"
-  }, e.t)), /*#__PURE__*/React.createElement("span", {
+  }, e.t), e.hosts && /*#__PURE__*/React.createElement("span", {
+    className: "sm-event-hosts"
+  }, /*#__PURE__*/React.createElement(GroupAvatarStackM, {
+    members: e.hosts,
+    size: 26
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "sm-event-hosts-label"
+  }, "Dr Tim Pearce & Miranda Pearce"))), /*#__PURE__*/React.createElement("span", {
     className: "sm-event-access" + (e.access === "members" ? " sm-event-access-members" : " sm-event-access-open")
   }, e.access === "members" ? "Members only" : "Open to all")))), /*#__PURE__*/React.createElement(SmSection, {
     title: "My Profile"
-  }), /*#__PURE__*/React.createElement("nav", {
-    className: "sm-list"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "sm-row",
-    onClick: () => go("NotificationSettings.html")
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "sm-row sm-verify",
+    onClick: () => go("ProfileMobile.html")
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: "lucide:bell",
+    name: "lucide:book-open",
+    size: 23,
+    color: "var(--premium-orange)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "sm-row-label"
+  }, "Verify Profile"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-verify-pill"
+  }, "Not Verified")), /*#__PURE__*/React.createElement("nav", {
+    className: "sm-list"
+  }, SM_PROFILE_BEFORE_M.map(c => c.label === "Display Settings" ? /*#__PURE__*/React.createElement(SmDisplayCard, {
+    key: c.label,
+    dark: dark,
+    onToggle: toggleDark
+  }) : /*#__PURE__*/React.createElement("button", {
+    key: c.label,
+    className: "sm-row",
+    onClick: () => c.href && go(c.href)
+  }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: c.icon,
     size: 23,
     color: "var(--gray-900)"
   }), /*#__PURE__*/React.createElement("span", {
     className: "sm-row-label"
-  }, "Notifications"), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+  }, c.label), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 20,
     color: "var(--gray-450)"
-  }))), /*#__PURE__*/React.createElement(SmDisplayCard, {
-    dark: dark,
-    onToggle: toggleDark
-  }), /*#__PURE__*/React.createElement("button", {
+  })))), /*#__PURE__*/React.createElement("button", {
     className: "m-drawer-logout",
     onClick: onClose
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {

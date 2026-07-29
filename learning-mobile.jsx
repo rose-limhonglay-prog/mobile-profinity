@@ -194,7 +194,7 @@ function YourMembership({ onOpen }) {
       <button className="lm-mem-simple" onClick={onOpen}>
         <span className="lm-mem-tier">
           <DSL.IconifyIcon name="fluent:crown-16-filled" size={15} color="#fff" />
-          Confidence Path
+          My Membership - Mastery Path
         </span>
         <span className="lm-mem-simple-text">Your Membership <b>Active</b></span>
         <DSL.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
@@ -210,7 +210,7 @@ function MembershipModal({ open, onClose }) {
         <div className="lm-mem-top">
           <span className="lm-mem-tier">
             <DSL.IconifyIcon name="fluent:crown-16-filled" size={15} color="#fff" />
-            Confidence Path
+            My Membership - Mastery Path
           </span>
           <span className="lm-mem-active">
             <span className="lm-mem-dot" />
@@ -560,6 +560,7 @@ function LearningHome() {
         <div style={{ height: 20 }} />
       </div>
       <AICoachFab bottom={tabsH + 34} onClick={() => setCoachOpen(true)} />
+      <div className="lm-tabs-scrim" aria-hidden="true" />
       <LMTabBar ref={tabsRef} compact={chromeHidden} />
       <SurveyMobile open={surveyOpen} onClose={() => setSurveyOpen(false)} onComplete={handleSurveyComplete} />
       <MembershipModal open={membershipOpen} onClose={() => setMembershipOpen(false)} />

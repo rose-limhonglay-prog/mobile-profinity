@@ -101,12 +101,34 @@ const SM_TIER_META_M = {
   freedom:    { name: "Freedom" },
   sovereign:  { name: "Sovereign" }
 };
+
+/* Tiers that get the single "My Membership" summary card + dedicated chat
+   card in the drawer, as opposed to sovereign's stacked tier-card ladder
+   (SmTierCard), which shows every tier a sovereign viewer has unlocked. */
+const SM_MEMBERSHIP_TIERS_M = ["confidence", "mastery", "freedom"];
+
+/* Rows inside the "My Membership" card — identical across confidence/mastery/
+   freedom; freedom appends one extra row (SM_FREEDOM_LECTURE_ROW_M). */
+const SM_MEMBERSHIP_ROWS_M = [
+{ label: "Membership Training", icon: "lucide:graduation-cap", href: "LearningMobile.html" },
+{ label: "Technique Tuesday",   icon: "lucide:calendar-check", href: "EventsMobile.html" },
+{ label: "Complications Help",  icon: "lucide:shield-alert",   href: "DirectMessage.html" },
+{ label: "AI Coach",            icon: "lucide:sparkles",       href: "LearningMobile.html" }];
+const SM_FREEDOM_LECTURE_ROW_M = { label: "Freedom Path Lectures", icon: "lucide:video", href: "LearningMobile.html" };
+
+/* Upgrade-CTA label keyed by the viewer's CURRENT tier — not derivable from
+   the next tier's own display name, since mastery's target reads "Freedom
+   Path" while freedom's target reads plain "Sovereign". */
+const SM_UPGRADE_LABEL_M = { free: "Confidence", confidence: "Mastery", mastery: "Freedom Path", freedom: "Sovereign" };
+
+/* Accent color per tier, used for the tier-card "YOUR TIER" pill. */
+const SM_TIER_COLOR_M = { confidence: "var(--info)", mastery: "var(--level-intermediate)", freedom: "var(--ai-purple)", sovereign: "var(--premium-gold-deep)" };
+
+/* Chat-card label per tier — always routes to CommunityMobile.html. */
+const SM_CHAT_LABEL_M = { confidence: "Community Chat", mastery: "Mastery Chat", freedom: "Freedom Path Chat" };
+
 const SM_TIER_RESOURCES_M = {
-  confidence: [
-  { label: "Confidence channel",  icon: "lucide:message-circle", n: 3,  href: "CommunityMobile.html" },
-  { label: "Foundation courses",  icon: "lucide:graduation-cap", n: 6,  href: "LearningMobile.html" },
-  { label: "Chairside protocols", icon: "lucide:file-text",      n: 12, href: "LearningMobile.html" },
-  { label: "Member webinars",     icon: "lucide:calendar",       n: 2,  href: "EventsMobile.html" }],
+  confidence: SM_MEMBERSHIP_ROWS_M,
 
   mastery: [
   { label: "Mastery lounge",          icon: "lucide:message-circle", n: 6,  href: "CommunityMobile.html" },
@@ -152,9 +174,16 @@ function smReadTierM() {
 }
 
 const SM_EVENTS = [
-{ d: "30", m: "JUN", label: "Technique Tuesday Webinar", t: "8:00 PM", access: "open" },
-{ d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM", access: "members" },
-{ d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM", access: "members" }];
+{ d: "30", m: "JUN", label: "Technique Tuesday Webinar", t: "8:00 PM", access: "open",
+  hosts: [{ name: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png" }, { name: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg" }] },
+{ d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM", access: "members" }];
+
+const SM_PROFILE_BEFORE_M = [
+{ label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
+{ label: "Account Settings",   icon: "lucide:graduation-cap",  href: null },
+{ label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" },
+{ label: "Privacy & Security", icon: "lucide:book-open",       href: null },
+{ label: "Display Settings",   icon: "lucide:cpu",             href: "DisplaySettings.html" }];
 
 const NOTIFS = {
   "New": [
@@ -619,27 +648,43 @@ function SmTierResourceRow({ r }) {
     <button className="smt-resource" onClick={() => go(r.href)}>
       <DSM.IconifyIcon name={r.icon} size={20} color="var(--gray-900)" />
       <span className="smt-resource-label">{r.label}</span>
-      <span className="smt-count">{r.n}</span>
+      <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
     </button>);
 
 }
 
-function SmTierCard({ tierKey, isOwn, open, onToggle }) {
+function SmTierCard({ tierKey, isOwn }) {
   const resources = SM_TIER_RESOURCES_M[tierKey];
+  const color = SM_TIER_COLOR_M[tierKey];
   return (
     <div className="smt-card">
-      <button className="smt-head" aria-expanded={open} onClick={onToggle}>
+      <div className="smt-head">
         <span className="smt-top">
           <span className="smt-name">{SM_TIER_META_M[tierKey].name} Path</span>
-          {!isOwn && <span className="smt-pill">INCLUDED</span>}
         </span>
-        <DSM.IconifyIcon name={open ? "lucide:chevron-up" : "lucide:chevron-down"} size={20} color="var(--gray-450)" />
-      </button>
-      {open &&
+        {isOwn ?
+        <span className="smt-pill smt-pill-yours" style={{ color, borderColor: color }}>YOUR TIER</span> :
+        <span className="smt-pill">INCLUDED</span>
+        }
+      </div>
       <div className="smt-resources">
-          {resources.map((r) => <SmTierResourceRow key={r.label} r={r} />)}
-        </div>
-      }
+        {resources.map((r) => <SmTierResourceRow key={r.label} r={r} />)}
+      </div>
+    </div>);
+
+}
+
+function SmMembershipCard({ tier }) {
+  const rows = tier === "freedom" ? [...SM_MEMBERSHIP_ROWS_M, SM_FREEDOM_LECTURE_ROW_M] : SM_MEMBERSHIP_ROWS_M;
+  return (
+    <div className="smt-card sm-membership-card">
+      <div className="smt-head sm-membership-head">
+        <span className="sm-membership-eyebrow">MY MEMBERSHIP</span>
+        <span className="sm-membership-tier">{SM_TIER_META_M[tier].name} Path</span>
+      </div>
+      <div className="smt-resources">
+        {rows.map((r) => <SmTierResourceRow key={r.label} r={r} />)}
+      </div>
     </div>);
 
 }
@@ -649,8 +694,8 @@ function SideMenu({ open, onClose }) {
   const tier = smReadTierM();
   const unlockedTiers = smUnlockedTiersM(tier);
   const nextTier = smNextTierM(tier);
-  const showUpgrade = tier === "free" || tier === "confidence" || tier === "mastery";
-  const [openTierKey, setOpenTierKey] = useStateM(() => unlockedTiers[0] || null);
+  const showMyMembership = SM_MEMBERSHIP_TIERS_M.includes(tier);
+  const showTierCards = !showMyMembership && unlockedTiers.length > 0;
   const burgerRefM = useRefM(null);
 
   useEffectM(() => {
@@ -682,27 +727,32 @@ function SideMenu({ open, onClose }) {
         </button>
 
         <div className="sm-body">
-          {showUpgrade && nextTier &&
-          <button className="sm-upgrade" onClick={() => go("MembershipTier.html")}>
+          {nextTier &&
+          <button className="sm-upgrade" onClick={() => go("SubscriptionMobile.html")}>
               <span className="sm-upgrade-icon">
                 <DSM.IconifyIcon name="lucide:gem" size={20} color="#fff" />
               </span>
               <span className="sm-upgrade-main">
-                <span className="sm-upgrade-title">Upgrade to {SM_TIER_META_M[nextTier].name}</span>
+                <span className="sm-upgrade-title">Upgrade to {SM_UPGRADE_LABEL_M[tier]}</span>
                 <span className="sm-upgrade-sub">Unlock more premium channels &amp; courses</span>
               </span>
               <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
             </button>
           }
 
-          {unlockedTiers.length > 0 &&
-          <div className="smt-list">
+          {showMyMembership &&
+          <SmMembershipCard tier={tier} />
+          }
+
+          {showTierCards &&
+          <>
+            <SmSection title="My Membership" />
+            <div className="smt-list">
               {unlockedTiers.map((tKey) =>
-            <SmTierCard key={tKey} tierKey={tKey} isOwn={tKey === tier}
-              open={openTierKey === tKey}
-              onToggle={() => setOpenTierKey((k) => k === tKey ? null : tKey)} />
-            )}
+              <SmTierCard key={tKey} tierKey={tKey} isOwn={tKey === tier} />
+              )}
             </div>
+          </>
           }
 
           <button className="sm-primary-card" onClick={() => go("LearningMobile.html")}>
@@ -716,6 +766,19 @@ function SideMenu({ open, onClose }) {
             <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
           </button>
 
+          {showMyMembership &&
+          <button className="sm-primary-card" onClick={() => go("CommunityMobile.html")}>
+              <span className="sm-primary-icon">
+                <DSM.IconifyIcon name="lucide:message-circle" size={22} color="var(--brand-navy)" />
+              </span>
+              <span className="sm-primary-main">
+                <span className="sm-primary-title">{SM_CHAT_LABEL_M[tier]}</span>
+                <span className="sm-primary-sub">Discuss, connect &amp; ask questions</span>
+              </span>
+              <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+            </button>
+          }
+
           <SmSection title="Upcoming Events" />
           <div className="sm-events">
             {SM_EVENTS.map((e) =>
@@ -724,6 +787,12 @@ function SideMenu({ open, onClose }) {
                 <span className="sm-event-main">
                   <span className="sm-event-name">{e.label}</span>
                   <span className="sm-event-time">{e.t}</span>
+                  {e.hosts &&
+                  <span className="sm-event-hosts">
+                    <GroupAvatarStackM members={e.hosts} size={26} />
+                    <span className="sm-event-hosts-label">Dr Tim Pearce &amp; Miranda Pearce</span>
+                  </span>
+                  }
                 </span>
                 <span className={"sm-event-access" + (e.access === "members" ? " sm-event-access-members" : " sm-event-access-open")}>
                   {e.access === "members" ? "Members only" : "Open to all"}
@@ -733,15 +802,22 @@ function SideMenu({ open, onClose }) {
           </div>
 
           <SmSection title="My Profile" />
+          <button className="sm-row sm-verify" onClick={() => go("ProfileMobile.html")}>
+            <DSM.IconifyIcon name="lucide:book-open" size={23} color="var(--premium-orange)" />
+            <span className="sm-row-label">Verify Profile</span>
+            <span className="sm-verify-pill">Not Verified</span>
+          </button>
           <nav className="sm-list">
-            <button className="sm-row" onClick={() => go("NotificationSettings.html")}>
-              <DSM.IconifyIcon name="lucide:bell" size={23} color="var(--gray-900)" />
-              <span className="sm-row-label">Notifications</span>
-              <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
-            </button>
+            {SM_PROFILE_BEFORE_M.map((c) =>
+            c.label === "Display Settings" ?
+            <SmDisplayCard key={c.label} dark={dark} onToggle={toggleDark} /> :
+            <button key={c.label} className="sm-row" onClick={() => c.href && go(c.href)}>
+                <DSM.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
+                <span className="sm-row-label">{c.label}</span>
+                <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+              </button>
+            )}
           </nav>
-
-          <SmDisplayCard dark={dark} onToggle={toggleDark} />
 
           <button className="m-drawer-logout" onClick={onClose}>
             <DSM.IconifyIcon name="lucide:log-out" size={22} color="var(--error)" />

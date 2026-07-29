@@ -7089,6 +7089,69 @@ function FeedEventCard({
   }, /*#__PURE__*/React.createElement("span", null, post.time)))), /*#__PURE__*/React.createElement(EventCard, event));
 }
 
+/* Event-registration social proof — "{Name} has registered for {Event}."
+   Author header (avatar/name/seals/time) + an EVENT tag, then a linked event
+   summary card (title, date · time, attendee count) with its own Register
+   CTA. Distinct from FeedEventCard: that one is an editorial "upcoming
+   event" post; this one narrates a specific person's registration action. */
+function EventRegPostCard({
+  post
+}) {
+  const author = post.author;
+  const ev = post.eventReg;
+  const goToEvent = () => (window.pfGo || function (u) {
+    window.location.href = u;
+  })("EventsMobile.html");
+  return /*#__PURE__*/React.createElement("div", {
+    className: "post-wrap pf-event-feed",
+    style: {
+      background: "var(--surface-card)",
+      borderRadius: "var(--r-md)",
+      overflow: "hidden",
+      padding: "0px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-teaser-head"
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: author.name,
+    src: author.avatar,
+    size: 44
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pf-teaser-head-main"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-teaser-head-name"
+  }, /*#__PURE__*/React.createElement("span", null, author.name), author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+    seals: author.seals,
+    size: 16
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pf-teaser-head-sub"
+  }, /*#__PURE__*/React.createElement("span", null, post.time)))), /*#__PURE__*/React.createElement("div", {
+    className: "pf-event-feed-label"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:calendar-check",
+    size: 14,
+    color: "var(--premium-gold-deep)"
+  }), /*#__PURE__*/React.createElement("span", null, "EVENT")), /*#__PURE__*/React.createElement("p", {
+    className: "pf-event-reg-headline"
+  }, /*#__PURE__*/React.createElement("b", null, author.name), " has registered for ", /*#__PURE__*/React.createElement("b", null, ev.title), "."), /*#__PURE__*/React.createElement("div", {
+    className: "pf-event-reg-card"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-event-reg-main",
+    onClick: goToEvent
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-event-reg-title"
+  }, ev.title), /*#__PURE__*/React.createElement("span", {
+    className: "pf-event-reg-sub"
+  }, ev.date, " · ", ev.time), /*#__PURE__*/React.createElement("span", {
+    className: "pf-event-reg-going"
+  }, ev.going, " clinicians attending")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-event-reg-cta",
+    onClick: goToEvent
+  }, "Register for this event")));
+}
+
 /* Compact community-channel post — how a paid member's channel content
    (Confidence/Mastery/Freedom/Inner Circle) surfaces merged into the main
    newsfeed: avatar + name + tier tag, body, then React/Reply/Save actions.
@@ -7632,15 +7695,59 @@ function readUserPosts() {
   }
 }
 
+/* Event-registration social proof — one seed post (Rose Lim, a fixture
+   clinician) plus this session's own registrations, written by
+   EventsMobile's Register Now / Join Waitlist flow to "pf-event-regs"
+   ({title, date, time, going}, newest first, capped at 3). */
+const PF_EVENT_REGS_KEY = "pf-event-regs";
+const EVENT_REG_SEED = [{
+  id: "evreg_seed1",
+  author: {
+    name: "Rose Lim",
+    avatar: null,
+    seals: ["verified"]
+  },
+  time: "1d",
+  eventReg: {
+    title: "Technique Tuesday",
+    date: EVENTS[0].date,
+    time: EVENTS[0].time,
+    going: "342"
+  }
+}];
+function readEventRegPosts() {
+  try {
+    const list = JSON.parse(localStorage.getItem(PF_EVENT_REGS_KEY)) || [];
+    return list.filter(r => r && r.title).map((r, i) => ({
+      id: "evreg_" + i + "_" + r.title.replace(/\s+/g, ""),
+      author: {
+        name: ME.name,
+        avatar: ME.avatar,
+        seals: ["gb", "verified"]
+      },
+      time: "Just now",
+      eventReg: {
+        title: r.title,
+        date: r.date,
+        time: r.time,
+        going: r.going || "0"
+      }
+    }));
+  } catch (e) {
+    return [];
+  }
+}
+
 /* All posts across the app (own + editorial + gated) — used by Search to
    find posts by hashtag. */
 function getAllPosts() {
-  return [...readUserPosts(), ...FEED_SEQUENCE, ...BUCKET_POSTS];
+  return [...readUserPosts(), ...EVENT_REG_SEED, ...readEventRegPosts(), ...FEED_SEQUENCE, ...BUCKET_POSTS];
 }
 function Feed({
   channel
 } = {}) {
   const [userPosts, setUserPosts] = useState(() => readUserPosts());
+  const [eventRegPosts] = useState(() => [...EVENT_REG_SEED, ...readEventRegPosts()]);
   const [state, setState] = useState(() => {
     const m = {};
     [...readUserPosts(), ...FEED_SEQUENCE, ...BUCKET_POSTS].forEach(p => {
@@ -7753,6 +7860,9 @@ function Feed({
   const feedItems = [...userPosts.map(p => ({
     item: p,
     mode: "full"
+  })), ...eventRegPosts.map(p => ({
+    item: p,
+    mode: "full"
   })), ...sequenceBase.map(p => {
     if (p.bucket && TEASABLE_BUCKETS.has(p.bucket)) {
       const unlocked = viewerCurrent.admin || (p.bucket === "course" || p.bucket === "coursecomment" ? viewerCurrent.paid : viewerCurrent.channels.includes(p.bucket));
@@ -7803,6 +7913,12 @@ function Feed({
         key: p.id,
         post: p,
         onUpgrade: () => setUpgradeFor(p)
+      });
+    }
+    if (p.eventReg) {
+      return /*#__PURE__*/React.createElement(EventRegPostCard, {
+        key: p.id,
+        post: p
       });
     }
     if (p.eventData) {
@@ -8100,7 +8216,8 @@ window.PFApp = {
   CommentComposer,
   ReactTrigger,
   getUserTier,
-  setUserTier
+  setUserTier,
+  readEventRegPosts
 };
 if (!window.PF_EMBED) {
   ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(App, null));
