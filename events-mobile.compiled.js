@@ -1049,7 +1049,7 @@ function EventDetail({
     active: "Home"
   }), gate && /*#__PURE__*/React.createElement(MembersGate, {
     onClose: () => setGate(false),
-    onUpgrade: () => goEV("SubscriptionMobile.html")
+    onUpgrade: () => goEV("MembershipTier.html")
   }), invite && /*#__PURE__*/React.createElement(InviteSheet, {
     title: d.title,
     event: d,

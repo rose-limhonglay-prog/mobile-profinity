@@ -554,7 +554,7 @@ function EventDetail({ onBack, onJoin, event }) {
         </div>
       </div>
       <EvTabBar active="Home" />
-      {gate && <MembersGate onClose={() => setGate(false)} onUpgrade={() => goEV("SubscriptionMobile.html")} />}
+      {gate && <MembersGate onClose={() => setGate(false)} onUpgrade={() => goEV("MembershipTier.html")} />}
       {invite && <InviteSheet title={d.title} event={d} onClose={() => setInvite(false)} />}
       {toast &&
       <div className="ev-toast" role="status">
