@@ -64,7 +64,8 @@
   background: rgba(13, 12, 29, .72);
   border-color: var(--border-default);
 }
-[data-theme="dark"] .m-screen.chrome-float .m-top {
+[data-theme="dark"] .m-screen.chrome-float .m-top,
+[data-theme="dark"] .lm-screen.chrome-float .m-top {
   background: transparent;
 }
 [data-theme="dark"] .m-tabs {

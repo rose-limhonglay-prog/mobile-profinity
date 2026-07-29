@@ -1,12 +1,19 @@
 /* ===========================================================================
    PROfinity — My Learning (mobile) · iPhone 17 Pro Max
-   Composed on the bound DS bundle. Suffixed -L to avoid global-scope clashes.
+   Ported from the bound claude.ai/design source (Confidence Engine dashboard:
+   Vision, weekly focus ring, domain confidence, daily targets) onto the DS
+   bundle. Suffixed -L to avoid global-scope clashes.
    =========================================================================== */
 const {
-  useState: useStateL,
-  useEffect: useEffectL
+  useState: useStateL
 } = React;
 const DSL = window.ProfinityDesignSystem_c2b5cc;
+const {
+  CourseTile: CourseTileL,
+  LevelBadge: LevelBadgeL,
+  IconifyIcon: IconifyL,
+  Icon: IconL
+} = DSL;
 const MobileChromeC = window.MobileChromeC;
 const SurveyMobile = window.SurveyMobile;
 function goL(url) {
@@ -14,147 +21,181 @@ function goL(url) {
     window.location.href = u;
   })(url);
 }
-const LM_STATUS_BAR_H = 52; // matches .m-top's status-bar/notch clearance
-
-const LM_MINE = [{
-  title: "Advanced Lip Techniques",
-  dur: "4h 12m",
-  rating: "4.8",
-  reviews: "1,240",
-  instr: "Dr. Tim Pearce",
-  pct: 68,
-  grad: "linear-gradient(140deg,#6172f3 0%,#3b82f6 100%)"
+const TUTOR_L = "Dr Tim Pearce";
+const IMG_L = {
+  lip: "assets/clinic-lip-design.png",
+  protox: "assets/clinic-toxin-guide.png",
+  temple: "assets/clinic-treatment-collage.png",
+  logo: "assets/profinity-academy-logo-full.png"
+};
+const LM_VISION = "Boutique clinic with lips + skin treatments, £80k/month revenue, team of 3 professionals";
+const LM_DOMAINS = [{
+  key: "Clinical",
+  pct: 62,
+  color: "#2E86FF"
 }, {
+  key: "Marketing",
+  pct: 52,
+  color: "#CE9957"
+}, {
+  key: "Sales",
+  pct: 31,
+  color: "#BE1E2D"
+}, {
+  key: "Business",
+  pct: 41,
+  color: "#E58F0C"
+}];
+const LM_FOCUS = {
+  domain: "Marketing",
+  line: "You need visibility. You aren't known yet.",
+  pct: 52
+};
+const LM_TARGETS = [{
+  t: "Write 3 LinkedIn posts about treatments",
+  tag: "MKT",
+  rung: "DO",
+  pts: 15,
+  done: true
+}, {
+  t: "Record 30-second TikTok intro to clinic",
+  tag: "MKT",
+  rung: "DO",
+  pts: 15
+}, {
+  t: "Engage on 5 local business Instagram posts",
+  tag: "MKT",
+  rung: "LEARN",
+  pts: 5
+}, {
+  t: "Document 3 common side effects and care",
+  tag: "CLIN",
+  rung: "LEARN",
+  pts: 15
+}, {
+  t: "Follow up with 3 warm enquiries within 24h",
+  tag: "SALE",
+  rung: "DO",
+  pts: 15
+}];
+const LM_TABS_TOP = ["All Courses", "Free Resources", "New Courses", "Recommended", "Upcoming Webinars", "Certification"];
+const MY_COURSES_L = [{
+  image: IMG_L.lip,
+  level: "Beginner",
+  title: "8D Lip Design",
+  description: "Discover a complete view of human anatomy for deeper learning.",
+  progress: 20,
+  cta: "Continue learning",
+  active: true
+}, {
+  image: IMG_L.temple,
+  level: "Intermediate",
   title: "Temple Filler",
-  dur: "2h 45m",
-  rating: "4.7",
-  reviews: "820",
-  instr: "Dr. Tim Pearce",
-  pct: 45,
-  grad: "linear-gradient(140deg,#f59e0b 0%,#f0617a 100%)"
-}];
-const LM_REC = [{
-  title: "Toxin Battle with Julie Bass Kaplan",
-  slug: "toxin-battle",
-  cat: "Masterclass",
-  rating: "4.9",
-  price: "REPLAY",
-  enrolled: "2h 36m replay",
-  grad: "linear-gradient(150deg,#1a1550 0%,#292569 45%,#7c2d3f 100%)"
+  description: "Confidently Inject Temples & add YOUTH back into your patients.",
+  progress: 0,
+  cta: "Start learning"
 }, {
-  title: "Facial Anatomy for Artists",
-  cat: "Design",
-  rating: "4.9",
-  price: "£ 129",
-  enrolled: "12.4k enrolled",
-  grad: "linear-gradient(140deg,#0fb6a3 0%,#28d3a0 100%)"
-}, {
-  title: "Marketing Strategy Foundations",
-  cat: "Business",
-  rating: "4.8",
-  price: "£ 99",
-  enrolled: "8.1k enrolled",
-  grad: "linear-gradient(140deg,#a855f7 0%,#d946ef 100%)"
+  image: IMG_L.protox,
+  level: "Advance",
+  title: "Protox Course",
+  description: "Elevate Your Botulinum Toxin Skills, 10x Your Confidence, and more.",
+  progress: 0,
+  cta: "Start learning"
 }];
-const LM_FREE = [{
+const RESOURCES_L = [{
+  image: IMG_L.temple,
   title: "13 Risky Injection Areas",
-  dur: "1h 20m",
-  instr: "Dr. Tim Pearce",
-  grad: "linear-gradient(140deg,#0fb6a3 0%,#28d3a0 100%)"
+  lines: ["Facial Vein Mapping", "Navigating Risky Zones"]
 }, {
+  image: IMG_L.protox,
+  title: "Aspirating Experiment",
+  lines: ["Sample Analysis", "Essential Lab Techniques"]
+}, {
+  image: IMG_L.lip,
   title: "Bruising Checklist",
-  dur: "45m",
-  instr: "Dr. Tim Pearce",
-  grad: "linear-gradient(140deg,#f59e0b 0%,#f0617a 100%)"
+  lines: ["Injection Site Prep", "Minimize Bruising"]
 }];
-const LM_RESOURCES = [{
-  title: "Lip Anatomy Basics",
-  tag: "Beginner",
-  instr: "Dr. Tim Pearce",
-  dur: "18 min",
-  grad: "linear-gradient(135deg,#1a1550 0%,#3730a3 100%)"
+const PATHS_L = [{
+  image: IMG_L.protox,
+  title: "Botox",
+  description: "Discover a complete view of human anatomy for deeper learning.",
+  price: "£1,998"
 }, {
-  title: "Safe Injection Zones Guide",
-  tag: "Intermediate",
-  instr: "Dr. Tim Pearce",
-  dur: "24 min",
-  grad: "linear-gradient(135deg,#f59e0b 0%,#fbbf24 100%)"
+  image: IMG_L.temple,
+  title: "Filler",
+  description: "Elevate Your Botulinum Toxin Skills, 10x Your Confidence, and more.",
+  price: "£794"
+}, {
+  image: IMG_L.lip,
+  title: "Lips",
+  description: "Confidently Inject Temples & add YOUTH back into your patients.",
+  price: "£1,234"
 }];
-function lmCourseUrl(c) {
-  if (c.slug) return "CourseDetail.html?course=" + c.slug;
-  const p = new URLSearchParams({
-    title: c.title,
-    instr: c.instr || "Dr. Tim Pearce",
-    dur: c.dur || "45m",
-    grad: c.grad || "",
-    pct: c.pct || 0
-  });
-  return "CourseDetail.html?" + p.toString();
-}
-function lmPriceValue(price) {
-  const n = parseInt(String(price || "").replace(/[^0-9]/g, ""), 10);
-  return Number.isFinite(n) ? n : 0;
-}
-function lmCheckoutUrl(c) {
-  const p = new URLSearchParams({
-    title: c.title,
-    instr: c.instr || "Dr. Tim Pearce",
-    grad: c.grad || "",
-    price: lmPriceValue(c.price)
-  });
-  if (c.slug) p.set("course", c.slug);
-  return "CourseCheckout.html?" + p.toString();
-}
-function lmEnrollUrl(c) {
-  return c.price === "REPLAY" ? lmCourseUrl(c) : lmCheckoutUrl(c);
-}
-function lmResourceUrl(r) {
-  const p = new URLSearchParams({
-    title: r.title,
-    instr: r.instr || "Dr. Tim Pearce",
-    dur: r.dur || "20 min",
-    grad: r.grad || ""
-  });
-  return "CourseDetail.html?" + p.toString();
-}
-const LM_MEMBERSHIP = [{
-  icon: "lucide:graduation-cap",
-  iconBg: "#E8F5E9",
-  iconColor: "#2E7D32",
-  label: "Foundation Courses",
-  sub: "8 courses",
-  href: "MyLearning.html"
+const RECOMMENDED_L = [{
+  image: IMG_L.lip,
+  level: "Beginner",
+  title: "Dynamic Facial Structures",
+  description: "Explore intricate facial anatomy to enhance artistry.",
+  by: "Dr Emily Carter",
+  price: "£1,245"
 }, {
-  icon: "lucide:play-circle",
-  iconBg: "#EDE7F6",
-  iconColor: "#7B1FA2",
-  label: "Live Masterclasses",
-  sub: "5 replays",
-  href: "CourseDetail.html?course=toxin-battle"
+  image: IMG_L.protox,
+  level: "Intermediate",
+  title: "Advanced Lip Techniques",
+  description: "Master the nuances of lip anatomy for precise techniques.",
+  by: "Prof. Jonah Lee",
+  price: "£1,300"
 }, {
-  icon: "lucide:file-text",
-  iconBg: "#FFF3E0",
-  iconColor: "#CE9957",
-  label: "Protocols & Guides",
-  sub: "12 files",
-  href: "MyLearning.html"
-}, {
-  icon: "lucide:users",
-  iconBg: "#E3F2FD",
-  iconColor: "#1565C0",
-  label: "Confidence Channel",
-  sub: "Community",
-  href: "MyLearning.html"
+  image: IMG_L.temple,
+  level: "Intermediate",
+  title: "Comprehensive Facial Anatomy",
+  description: "A thorough exploration of facial structures.",
+  by: "Dr Lisa Huang",
+  price: "£1,550"
 }];
-const LM_COACH_ACTIONS = [{
-  label: "Build my study plan",
-  reply: "On it — I'll map out a study plan for this week around finishing 8D Lip Design and starting Facial Anatomy for Artists next."
+const NEW_COURSES_L = [{
+  image: IMG_L.lip,
+  level: "Intermediate",
+  title: "8D Lip Design",
+  description: "Discover a complete view of human anatomy for deeper learning.",
+  by: TUTOR_L,
+  price: "£112"
 }, {
-  label: "What should I learn next?",
-  reply: "You're 68% through 8D Lip Design, so I'd wrap that up first, then move into Facial Anatomy for Artists to round out your technique."
+  image: IMG_L.protox,
+  level: "Intermediate",
+  title: "Protox Course",
+  description: "Elevate Your Botulinum Toxin Skills, 10x Your Confidence.",
+  by: TUTOR_L,
+  price: "£99"
 }, {
-  label: "Explain my confidence score",
-  reply: "Your confidence score blends quiz accuracy, course completion, and practical assessments. Finishing your current course is the fastest way to raise it."
+  image: IMG_L.temple,
+  level: "Intermediate",
+  title: "Temple Filler",
+  description: "Confidently Inject Temples & add YOUTH back into your patients.",
+  by: TUTOR_L,
+  price: "£100"
+}];
+const POPULAR_L = [{
+  image: IMG_L.lip,
+  level: "Advance",
+  title: "8D Lip Design",
+  description: "Discover a complete view of human anatomy for deeper learning.",
+  by: TUTOR_L,
+  price: "£112"
+}, {
+  image: IMG_L.protox,
+  level: "Advance",
+  title: "Protox Course",
+  description: "Elevate Your Botulinum Toxin Skills, 10x Your Confidence.",
+  by: TUTOR_L,
+  price: "£99"
+}, {
+  image: IMG_L.temple,
+  level: "Advance",
+  title: "Brow Lift Training",
+  description: "Learn expert techniques for achieving flawless brow lifts.",
+  by: TUTOR_L,
+  price: "£99"
 }];
 const LM_TABS = [{
   key: "Home",
@@ -162,93 +203,28 @@ const LM_TABS = [{
   icon: "lucide:home",
   href: "NewsfeedMobile.html"
 }, {
-  key: "Profile",
-  label: "Profile",
-  icon: "lucide:user",
-  href: "ProfileMobile.html"
-}, {
-  key: "Learning",
-  label: "My Learning",
-  icon: "lucide:book-open",
-  href: null
-}, {
   key: "Community",
   label: "Community",
   icon: "lucide:users",
   href: "CommunityMobile.html",
   dot: "12"
 }, {
+  key: "Learning",
+  label: "My Learning",
+  icon: "lucide:book-open",
+  href: null
+}, {
+  key: "Profile",
+  label: "Profile",
+  icon: "lucide:user",
+  href: "ProfileMobile.html"
+}, {
   key: "Agent",
   label: "Agent",
   icon: "lucide:sparkles",
   href: "AgentMobile.html"
 }];
-function useDeviceScaleL() {
-  const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
-  const [scale, setScale] = useStateL(calc);
-  useEffectL(() => {
-    const update = () => setScale(calc());
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
-  return scale;
-}
-function useIsMobileL() {
-  const [mobile, setMobile] = useStateL(() => window.matchMedia('(max-width:768px)').matches);
-  useEffectL(() => {
-    const mq = window.matchMedia('(max-width:768px)');
-    const h = e => setMobile(e.matches);
-    mq.addEventListener('change', h);
-    return () => mq.removeEventListener('change', h);
-  }, []);
-  return mobile;
-}
-function useHeaderHideL(scrollRef) {
-  const [hidden, setHidden] = useStateL(false);
-  useEffectL(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    let lastY = el.scrollTop;
-    const onScroll = () => {
-      const y = el.scrollTop;
-      const delta = y - lastY;
-      if (y < 24) setHidden(false);else if (delta > 6) setHidden(true);else if (delta < -6) setHidden(false);
-      lastY = y;
-    };
-    el.addEventListener("scroll", onScroll, {
-      passive: true
-    });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, []);
-  return hidden;
-}
-function LMGreeting() {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "lm-greeting"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "lm-greeting-hi"
-  }, "Good morning,"), /*#__PURE__*/React.createElement("h1", {
-    className: "lm-greeting-name"
-  }, "Katy!")), /*#__PURE__*/React.createElement("div", {
-    className: "lm-greeting-right"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "lm-mysave",
-    onClick: () => goL("MySaved.html?from=learning")
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:bookmark",
-    size: 18,
-    color: "var(--brand-navy)"
-  }), "My Save")));
-}
-function LMSearch({
-  autoFocus,
-  collapsible,
-  onCollapse
-}) {
-  const inputRef = React.useRef(null);
-  useEffectL(() => {
-    if (autoFocus && inputRef.current) inputRef.current.focus();
-  }, [autoFocus]);
+function LMSearch() {
   return /*#__PURE__*/React.createElement("div", {
     className: "lm-search"
   }, /*#__PURE__*/React.createElement(DSL.Icon, {
@@ -256,722 +232,423 @@ function LMSearch({
     size: 21,
     color: "var(--gray-450)"
   }), /*#__PURE__*/React.createElement("input", {
-    ref: inputRef,
     type: "text",
-    placeholder: "Search courses, topics, instructors…",
-    "aria-label": "Search courses",
-    onBlur: e => {
-      if (collapsible && !e.target.value) onCollapse && onCollapse();
-    }
+    placeholder: "Search course…",
+    "aria-label": "Search course"
   }), /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
     name: "lucide:sliders-horizontal",
     size: 21,
     color: "var(--gray-500)"
   }));
 }
-function LMSearchFab({
-  onClick
-}) {
+function LMSaveFab() {
   return /*#__PURE__*/React.createElement("button", {
-    className: "lm-search-fab",
-    "aria-label": "Open search",
-    onClick: onClick
-  }, /*#__PURE__*/React.createElement(DSL.Icon, {
-    name: "search",
-    size: 20,
-    color: "var(--gray-500)"
-  }));
-}
-function LMBookmarkFab({
-  onClick
-}) {
-  return /*#__PURE__*/React.createElement("button", {
-    className: "lm-bookmark-fab",
-    "aria-label": "Saved courses",
-    onClick: onClick
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    className: "lm-savefab",
+    "aria-label": "Saved",
+    onClick: () => goL("MySaved.html?from=learning")
+  }, /*#__PURE__*/React.createElement(IconifyL, {
     name: "lucide:bookmark",
     size: 20,
-    color: "var(--gray-500)"
+    color: "var(--brand-navy)"
   }));
 }
-function LMCurrent() {
-  const url = lmCourseUrl({
-    title: "8D Lip Design",
-    instr: "Dr. Tim Pearce",
-    dur: "4h 30m",
-    pct: 68
-  });
-  return /*#__PURE__*/React.createElement("div", {
-    className: "lm-current",
-    role: "button",
-    tabIndex: 0,
-    onClick: () => goL(url),
-    onKeyDown: e => {
-      if (e.key === "Enter") goL(url);
-    },
-    style: {
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lbl"
-  }, "Current course"), /*#__PURE__*/React.createElement("div", {
-    className: "lm-current-row",
-    style: {
-      gap: "65px"
-    }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "ttl"
-  }, "8D Lip Design"), /*#__PURE__*/React.createElement("div", {
-    className: "ins"
-  }, "with Dr. Tim Pearce")), /*#__PURE__*/React.createElement("button", {
-    className: "lm-continue",
-    onClick: e => {
-      e.stopPropagation();
-      goL(url);
-    }
-  }, "Continue", /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:arrow-right",
-    size: 18,
-    color: "#fff"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "lm-current-meta"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "l"
-  }, "Lesson 6 of 12"), /*#__PURE__*/React.createElement("span", {
-    className: "p"
-  }, "68%")), /*#__PURE__*/React.createElement("div", {
-    className: "lm-bar"
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: "68%"
-    }
-  })));
-}
-function YourMembership({
-  onOpen
-}) {
+const LM_TIER_CONTENT = [{
+  label: "Foundation Courses",
+  n: "8 courses",
+  icon: "lucide:graduation-cap",
+  tint: "#2A9568",
+  href: "MyLearning.html"
+}, {
+  label: "Live Masterclasses",
+  n: "5 replays",
+  icon: "lucide:play-circle",
+  tint: "#6C63FF",
+  href: "MyLearning.html"
+}, {
+  label: "Protocols & Guides",
+  n: "12 files",
+  icon: "lucide:file-text",
+  tint: "#CE9957",
+  href: "MyLearning.html"
+}, {
+  label: "Confidence Channel",
+  n: "Community",
+  icon: "lucide:users",
+  tint: "#2E86FF",
+  href: "CommunityMobile.html"
+}];
+function MembershipTier() {
+  const [open, setOpen] = useStateL(false);
   return /*#__PURE__*/React.createElement("section", {
-    className: "lm-mem-section"
+    className: "lm-tier",
+    "data-screen-label": "Your Membership"
   }, /*#__PURE__*/React.createElement("button", {
-    className: "lm-mem-simple",
-    onClick: onOpen
+    className: "lm-tier-mini",
+    onClick: () => setOpen(true),
+    "aria-haspopup": "dialog"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "lm-mem-tier"
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "fluent:crown-16-filled",
-    size: 15,
+    className: "lm-tier-badge"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:crown",
+    size: 16,
     color: "#fff"
-  }), "My Membership - Mastery Path"), /*#__PURE__*/React.createElement("span", {
-    className: "lm-mem-simple-text"
-  }, "Your Membership ", /*#__PURE__*/React.createElement("b", null, "Active")), /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+  }), " Confidence Path"), /*#__PURE__*/React.createElement("span", {
+    className: "lm-tier-mini-tx"
+  }, "Your Membership · ", /*#__PURE__*/React.createElement("b", null, "Active")), /*#__PURE__*/React.createElement(IconifyL, {
     name: "lucide:chevron-right",
     size: 20,
-    color: "var(--gray-400)"
-  })));
-}
-function MembershipModal({
-  open,
-  onClose
-}) {
-  if (!open) return null;
-  return /*#__PURE__*/React.createElement("div", {
-    className: "lm-mem-overlay",
+    color: "var(--gray-450)"
+  })), open && /*#__PURE__*/React.createElement("div", {
+    className: "lm-tier-overlay",
     role: "dialog",
     "aria-modal": "true",
-    "aria-label": "Your Membership",
-    onClick: onClose
+    "aria-labelledby": "lm-tier-h",
+    onClick: () => setOpen(false)
   }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-mem-card",
+    className: "lm-tier-sheet",
     onClick: e => e.stopPropagation()
   }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-mem-top"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lm-mem-tier"
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "fluent:crown-16-filled",
-    size: 15,
-    color: "#fff"
-  }), "My Membership - Mastery Path"), /*#__PURE__*/React.createElement("span", {
-    className: "lm-mem-active"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lm-mem-dot"
-  }), "Active")), /*#__PURE__*/React.createElement("p", {
-    className: "lm-mem-desc"
-  }, "Jump straight into everything included in your plan."), /*#__PURE__*/React.createElement("div", {
-    className: "lm-mem-rows"
-  }, LM_MEMBERSHIP.map((item, i) => /*#__PURE__*/React.createElement("button", {
-    key: i,
-    className: "lm-mem-row",
-    onClick: () => goL(item.href)
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lm-mem-icon",
-    style: {
-      background: item.iconBg
-    }
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: item.icon,
-    size: 22,
-    color: item.iconColor
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "lm-mem-info"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lm-mem-label"
-  }, item.label), /*#__PURE__*/React.createElement("span", {
-    className: "lm-mem-sub"
-  }, item.sub)), /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 20,
-    color: "var(--gray-400)"
-  }))))));
-}
-function AICoachFab({
-  onClick,
-  bottom
-}) {
-  return /*#__PURE__*/React.createElement("button", {
-    className: "lm-coach-fab",
-    style: {
-      bottom
-    },
-    onClick: onClick
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lm-coach-fab-ic"
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:sparkles",
-    size: 15,
-    color: "var(--ai-purple)"
-  })), "AI Coach");
-}
-function AICoachModal({
-  open,
-  onClose
-}) {
-  const [messages, setMessages] = useStateL([{
-    role: "coach",
-    text: "Hi Katy! \u{1F44B} Based on your progress in 8D Lip Design, want me to build a study plan for this week?"
-  }]);
-  const [input, setInput] = useStateL("");
-  const bodyRef = React.useRef(null);
-  const [rendered, setRendered] = useStateL(open);
-  const [closing, setClosing] = useStateL(false);
-  useEffectL(() => {
-    if (open) {
-      setMessages([{
-        role: "coach",
-        text: "Hi Katy! \u{1F44B} Based on your progress in 8D Lip Design, want me to build a study plan for this week?"
-      }]);
-      setInput("");
-      setClosing(false);
-      setRendered(true);
-    } else if (rendered) {
-      setClosing(true);
-      const t = setTimeout(() => {
-        setRendered(false);
-        setClosing(false);
-      }, 260);
-      return () => clearTimeout(t);
-    }
-  }, [open]);
-  useEffectL(() => {
-    const el = bodyRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [messages]);
-  function sendMessage(text, reply) {
-    if (!text.trim()) return;
-    setMessages(m => [...m, {
-      role: "me",
-      text
-    }]);
-    setInput("");
-    setTimeout(() => {
-      setMessages(m => [...m, {
-        role: "coach",
-        text: reply || "Thanks for asking! Try one of the quick actions above, or check back soon as I learn more."
-      }]);
-    }, 500);
-  }
-  if (!rendered) return null;
-  return /*#__PURE__*/React.createElement("div", {
-    className: "lm-coach-overlay" + (closing ? " lm-coach-overlay-closing" : ""),
-    role: "dialog",
-    "aria-modal": "true",
-    "aria-label": "Profinity Coach",
-    onClick: onClose
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-coach-card" + (closing ? " lm-coach-card-closing" : ""),
-    onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-coach-head"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lm-coach-avatar"
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:sparkles",
-    size: 22,
-    color: "var(--ai-purple)"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "lm-coach-title-wrap"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-coach-title"
-  }, "Profinity Coach"), /*#__PURE__*/React.createElement("div", {
-    className: "lm-coach-sub"
-  }, "Your learning companion")), /*#__PURE__*/React.createElement("button", {
-    className: "lm-coach-x",
+    className: "lm-tier-sheet-hd"
+  }, /*#__PURE__*/React.createElement("h2", {
+    id: "lm-tier-h"
+  }, "Your Membership"), /*#__PURE__*/React.createElement("button", {
+    className: "lm-tier-close",
     "aria-label": "Close",
-    onClick: onClose
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    onClick: () => setOpen(false)
+  }, /*#__PURE__*/React.createElement(IconifyL, {
     name: "lucide:x",
-    size: 18,
+    size: 22,
     color: "var(--gray-600)"
   }))), /*#__PURE__*/React.createElement("div", {
-    className: "lm-coach-body",
-    ref: bodyRef
-  }, messages.map((m, i) => /*#__PURE__*/React.createElement("div", {
-    className: "lm-coach-msg" + (m.role === "me" ? " me" : ""),
-    key: i
-  }, m.text)), messages.length === 1 && /*#__PURE__*/React.createElement("div", {
-    className: "lm-coach-actions"
-  }, LM_COACH_ACTIONS.map((a, i) => /*#__PURE__*/React.createElement("button", {
-    key: i,
-    className: "lm-coach-action",
-    onClick: () => sendMessage(a.label, a.reply)
-  }, a.label)))), /*#__PURE__*/React.createElement("div", {
-    className: "lm-coach-input-row"
-  }, /*#__PURE__*/React.createElement("input", {
-    className: "lm-coach-input",
-    type: "text",
-    placeholder: "Ask your coach anything…",
-    "aria-label": "Ask your coach anything",
-    value: input,
-    onChange: e => setInput(e.target.value),
-    onKeyDown: e => {
-      if (e.key === "Enter") sendMessage(input);
-    }
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "lm-coach-send",
-    "aria-label": "Send",
-    disabled: !input.trim(),
-    onClick: () => sendMessage(input)
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:arrow-up",
-    size: 19,
+    className: "lm-tier-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-tier-badge"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:crown",
+    size: 16,
     color: "#fff"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "lm-coach-disclaimer"
-  }, "AI can make mistakes. Verify important outputs.")));
-}
-function MyCourses({
-  loading
-}) {
-  return /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("div", {
-    className: "lm-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "My Courses"), /*#__PURE__*/React.createElement("a", {
-    href: "#",
-    onClick: e => {
-      e.preventDefault();
-      goL("MyLearning.html");
-    },
-    style: {
-      color: "rgb(41, 37, 105)"
-    }
-  }, "View all")), /*#__PURE__*/React.createElement("div", {
-    className: "lm-rail"
-  }, loading ? Array.from({
-    length: 2
-  }).map((_, i) => /*#__PURE__*/React.createElement(LMSkeletonCourse, {
-    key: i
-  })) : LM_MINE.map((c, i) => /*#__PURE__*/React.createElement("article", {
-    className: "lm-mc",
+  }), " Confidence Path"), /*#__PURE__*/React.createElement("span", {
+    className: "lm-tier-note"
+  }, "Active")), /*#__PURE__*/React.createElement("p", {
+    className: "lm-tier-sub"
+  }, "Jump straight into everything included in your plan."), /*#__PURE__*/React.createElement("div", {
+    className: "lm-tier-grid"
+  }, LM_TIER_CONTENT.map((c, i) => /*#__PURE__*/React.createElement("button", {
+    className: "lm-tier-item",
     key: i,
-    role: "button",
-    tabIndex: 0,
-    onClick: () => goL(lmCourseUrl(c)),
-    onKeyDown: e => {
-      if (e.key === "Enter") goL(lmCourseUrl(c));
-    },
-    style: {
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-mc-img",
-    style: {
-      background: c.grad
-    }
+    onClick: () => goL(c.href)
   }, /*#__PURE__*/React.createElement("span", {
-    className: "lm-mc-dur"
-  }, c.dur)), /*#__PURE__*/React.createElement("div", {
-    className: "lm-mc-body"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-mc-ttl"
-  }, c.title), /*#__PURE__*/React.createElement("div", {
-    className: "lm-rate"
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "fluent:star-16-filled",
-    size: 17,
-    color: "var(--premium-gold)"
-  }), c.rating, " ", /*#__PURE__*/React.createElement("span", {
-    className: "rv"
-  }, "(", c.reviews, ")")), /*#__PURE__*/React.createElement("div", {
-    className: "ins"
-  }, c.instr), /*#__PURE__*/React.createElement("div", {
-    className: "lm-bar gold"
-  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic",
     style: {
-      width: c.pct + "%"
+      background: c.tint + "1f"
     }
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "pct"
-  }, c.pct, "% complete"))))));
-}
-function Recommended({
-  loading
-}) {
-  return /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("div", {
-    className: "lm-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Recommended For You"), /*#__PURE__*/React.createElement("a", {
-    href: "#",
-    onClick: e => {
-      e.preventDefault();
-      goL("MyLearning.html");
-    },
-    style: {
-      color: "rgb(41, 37, 105)"
-    }
-  }, "See all")), /*#__PURE__*/React.createElement("div", {
-    className: "lm-rail",
-    style: {
-      padding: "0px 24px",
-      justifyContent: "flex-start"
-    }
-  }, loading ? Array.from({
-    length: 2
-  }).map((_, i) => /*#__PURE__*/React.createElement(LMSkeletonRec, {
-    key: i
-  })) : LM_REC.map((c, i) => /*#__PURE__*/React.createElement("article", {
-    className: "lm-rc",
-    key: i,
-    role: "button",
-    tabIndex: 0,
-    onClick: () => goL(lmCourseUrl(c)),
-    onKeyDown: e => {
-      if (e.key === "Enter") goL(lmCourseUrl(c));
-    },
-    style: {
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-rc-img",
-    style: {
-      background: c.grad
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lm-rc-cat"
-  }, c.cat)), /*#__PURE__*/React.createElement("div", {
-    className: "lm-rc-body"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-rc-ttl"
-  }, c.title), /*#__PURE__*/React.createElement("div", {
-    className: "lm-rc-row"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-rate"
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "fluent:star-16-filled",
-    size: 17,
-    color: "var(--premium-gold)"
-  }), c.rating), /*#__PURE__*/React.createElement("div", {
-    className: "lm-rc-price"
-  }, c.price)), /*#__PURE__*/React.createElement("div", {
-    className: "lm-rc-enr"
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:users",
-    size: 17,
-    color: "var(--gray-450)"
-  }), c.enrolled), /*#__PURE__*/React.createElement("button", {
-    className: "lm-enroll",
-    onClick: e => {
-      e.stopPropagation();
-      goL(lmEnrollUrl(c));
-    }
-  }, "Enroll", /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:arrow-right",
-    size: 17,
-    color: "#fff"
-  })))))));
-}
-function FreeResources() {
-  return /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("div", {
-    className: "lm-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Free Resources"), /*#__PURE__*/React.createElement("a", {
-    href: "#",
-    onClick: e => {
-      e.preventDefault();
-      goL("MyLearning.html");
-    },
-    style: {
-      color: "rgb(41, 37, 105)"
-    }
-  }, "View All")), /*#__PURE__*/React.createElement("div", {
-    className: "lm-res-grid"
-  }, LM_RESOURCES.map((r, i) => /*#__PURE__*/React.createElement("article", {
-    className: "lm-res",
-    key: i,
-    role: "button",
-    tabIndex: 0,
-    onClick: () => goL(lmResourceUrl(r)),
-    onKeyDown: e => {
-      if (e.key === "Enter") goL(lmResourceUrl(r));
-    },
-    style: {
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-res-img",
-    style: {
-      background: r.grad
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lm-res-tag"
-  }, r.tag), /*#__PURE__*/React.createElement("span", {
-    className: "lm-res-play"
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:play",
-    size: 18,
-    color: "var(--brand-navy)"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "lm-res-body"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-res-ttl"
-  }, r.title), /*#__PURE__*/React.createElement("div", {
-    className: "ins"
-  }, r.instr), /*#__PURE__*/React.createElement("div", {
-    className: "lm-res-dur"
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:clock",
-    size: 15,
-    color: "var(--gray-450)"
-  }), r.dur))))));
-}
-function FreeCourses({
-  onQuiz,
-  unlocked
-}) {
-  return /*#__PURE__*/React.createElement("section", null, /*#__PURE__*/React.createElement("div", {
-    className: "lm-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Free Courses"), /*#__PURE__*/React.createElement("a", {
-    className: "muted",
-    href: "#",
-    onClick: e => e.preventDefault()
-  }, "See all")), unlocked ? /*#__PURE__*/React.createElement("div", {
-    className: "lm-rail"
-  }, LM_FREE.map((c, i) => /*#__PURE__*/React.createElement("article", {
-    className: "lm-mc",
-    key: i,
-    role: "button",
-    tabIndex: 0,
-    onClick: () => goL(lmCourseUrl(c)),
-    onKeyDown: e => {
-      if (e.key === "Enter") goL(lmCourseUrl(c));
-    },
-    style: {
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-mc-img",
-    style: {
-      background: c.grad
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lm-mc-dur"
-  }, c.dur), /*#__PURE__*/React.createElement("span", {
-    className: "lm-free-badge"
-  }, "Free")), /*#__PURE__*/React.createElement("div", {
-    className: "lm-mc-body"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-mc-ttl"
-  }, c.title), /*#__PURE__*/React.createElement("div", {
-    className: "ins"
-  }, c.instr), /*#__PURE__*/React.createElement("button", {
-    className: "lm-enroll",
-    style: {
-      marginTop: 14
-    },
-    onClick: e => {
-      e.stopPropagation();
-      goL(lmCourseUrl(c));
-    }
-  }, "Start", /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:arrow-right",
-    size: 17,
-    color: "#fff"
-  })))))) : /*#__PURE__*/React.createElement("div", {
-    className: "lm-free"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-free-ghosts"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-ghost a"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "free"
-  }, "Free")), /*#__PURE__*/React.createElement("div", {
-    className: "lm-ghost b"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "free"
-  }, "Free"))), /*#__PURE__*/React.createElement("div", {
-    className: "lm-unlock",
-    style: {
-      padding: "12px"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lock"
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
-    name: "lucide:lock",
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: c.icon,
     size: 22,
+    color: c.tint
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ti"
+  }, c.label), /*#__PURE__*/React.createElement("span", {
+    className: "su"
+  }, c.n)), /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "var(--gray-450)"
+  })))), /*#__PURE__*/React.createElement("button", {
+    className: "lm-tier-manage",
+    onClick: () => goL("MyLearning.html")
+  }, "Manage membership"))));
+}
+function ConfidenceEngine() {
+  const [targets, setTargets] = useStateL(LM_TARGETS.map(t => !!t.done));
+  const toggle = i => setTargets(s => s.map((v, j) => j === i ? !v : v));
+  return /*#__PURE__*/React.createElement("section", {
+    className: "lm-engine",
+    "data-screen-label": "Confidence Engine"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-vision"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-vision-k"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:target",
+    size: 16,
+    color: "var(--brand-gold)"
+  }), " Your Vision"), /*#__PURE__*/React.createElement("span", {
+    className: "lm-vision-tx"
+  }, LM_VISION)), /*#__PURE__*/React.createElement("div", {
+    className: "lm-focus"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-focus-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-focus-eyebrow"
+  }, "Your focus this week"), /*#__PURE__*/React.createElement("span", {
+    className: "lm-focus-domain"
+  }, LM_FOCUS.domain), /*#__PURE__*/React.createElement("span", {
+    className: "lm-focus-line"
+  }, LM_FOCUS.line)), /*#__PURE__*/React.createElement("div", {
+    className: "lm-focus-ring",
+    style: {
+      "--pct": LM_FOCUS.pct
+    },
+    role: "img",
+    "aria-label": LM_FOCUS.pct + "% confident in " + LM_FOCUS.domain
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, LM_FOCUS.pct, /*#__PURE__*/React.createElement("i", null, "%")))), /*#__PURE__*/React.createElement("div", {
+    className: "lm-sec-h"
+  }, /*#__PURE__*/React.createElement("h2", null, "Your Domain Confidence")), /*#__PURE__*/React.createElement("div", {
+    className: "lm-domains"
+  }, LM_DOMAINS.map(d => /*#__PURE__*/React.createElement("div", {
+    className: "lm-domain",
+    key: d.key
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-domain-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "k"
+  }, d.key.toUpperCase()), /*#__PURE__*/React.createElement("span", {
+    className: "v"
+  }, d.pct, "%")), /*#__PURE__*/React.createElement("span", {
+    className: "lm-domain-track"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-domain-fill",
+    style: {
+      width: d.pct + "%",
+      background: d.color
+    }
+  }))))), /*#__PURE__*/React.createElement("div", {
+    className: "lm-sec-h"
+  }, /*#__PURE__*/React.createElement("h2", null, "Today's Targets")), /*#__PURE__*/React.createElement("div", {
+    className: "lm-targets"
+  }, LM_TARGETS.map((t, i) => /*#__PURE__*/React.createElement("button", {
+    key: i,
+    type: "button",
+    className: "lm-target" + (targets[i] ? " done" : ""),
+    onClick: () => toggle(i),
+    role: "checkbox",
+    "aria-checked": targets[i]
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-target-box"
+  }, targets[i] && /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:check",
+    size: 15,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lm-target-main"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-target-t"
+  }, t.t), /*#__PURE__*/React.createElement("span", {
+    className: "lm-target-meta"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-target-tag"
+  }, t.tag), " Rung: ", t.rung)), /*#__PURE__*/React.createElement("span", {
+    className: "lm-target-pts"
+  }, "+", t.pts, " pts")))));
+}
+function LMTopTabs({
+  active,
+  onPick
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lm-toptabs",
+    role: "tablist",
+    "aria-label": "Course categories"
+  }, LM_TABS_TOP.map(c => /*#__PURE__*/React.createElement("button", {
+    key: c,
+    role: "tab",
+    "aria-selected": active === c,
+    className: "lm-tt" + (active === c ? " on" : ""),
+    onClick: () => onPick(c)
+  }, c)));
+}
+function SecHead({
+  title,
+  viewAll = true
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lm-sec-h"
+  }, /*#__PURE__*/React.createElement("h2", null, title), viewAll && /*#__PURE__*/React.createElement("a", {
+    href: "#",
+    onClick: e => {
+      e.preventDefault();
+      goL("MyLearning.html");
+    }
+  }, "View All"));
+}
+function ResourceCardL({
+  r,
+  locked = true
+}) {
+  return /*#__PURE__*/React.createElement("article", {
+    className: "lm-res"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "thumb",
+    style: {
+      backgroundImage: "url(" + r.image + ")"
+    }
+  }, /*#__PURE__*/React.createElement(LevelBadgeL, {
+    level: "Intermediate",
+    className: "lvl"
+  }), locked && /*#__PURE__*/React.createElement("span", {
+    className: "lock"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:lock",
+    size: 18,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, r.title), r.lines.map((l, i) => /*#__PURE__*/React.createElement("div", {
+    className: "ds",
+    key: i
+  }, l)), /*#__PURE__*/React.createElement("div", {
+    className: "by"
+  }, TUTOR_L), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm-ghost",
+    onClick: () => goL("CourseDetail.html")
+  }, locked ? "Learn More" : "Start course")));
+}
+function PriceCardL({
+  c
+}) {
+  return /*#__PURE__*/React.createElement("article", {
+    className: "lm-price"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "thumb",
+    style: {
+      backgroundImage: "url(" + c.image + ")"
+    }
+  }, c.level && /*#__PURE__*/React.createElement(LevelBadgeL, {
+    level: c.level,
+    className: "lvl"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "play"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "fluent:play-16-filled",
+    size: 18,
+    color: "var(--ai-purple)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, c.title), /*#__PURE__*/React.createElement("div", {
+    className: "ds"
+  }, c.description), /*#__PURE__*/React.createElement("div", {
+    className: "by"
+  }, c.by), /*#__PURE__*/React.createElement("div", {
+    className: "foot"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "price"
+  }, c.price), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm-ghost",
+    onClick: () => goL("CourseDetail.html")
+  }, "Learn More"))));
+}
+function PathCardL({
+  c
+}) {
+  return /*#__PURE__*/React.createElement("article", {
+    className: "lm-price"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "thumb",
+    style: {
+      backgroundImage: "url(" + c.image + ")"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "badge-path"
+  }, "Success Path")), /*#__PURE__*/React.createElement("div", {
+    className: "body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, c.title), /*#__PURE__*/React.createElement("div", {
+    className: "ds"
+  }, c.description), /*#__PURE__*/React.createElement("div", {
+    className: "by"
+  }, TUTOR_L), /*#__PURE__*/React.createElement("div", {
+    className: "foot"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "price"
+  }, c.price), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm-ghost",
+    onClick: () => goL("CourseDetail.html")
+  }, "Learn More"))));
+}
+function PathIntroL() {
+  return /*#__PURE__*/React.createElement("article", {
+    className: "lm-intro"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: IMG_L.logo,
+    alt: "PROfinity Academy"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, "Profinity Success Paths Certificates"), /*#__PURE__*/React.createElement("div", {
+    className: "ds"
+  }, "Learn more about success paths, and build your journey towards achieving your goals with tailored strategies and resources."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm-out",
+    onClick: () => goL("MyLearning.html")
+  }, "Learn More"));
+}
+function FreeResourcesL({
+  unlocked,
+  onStart
+}) {
+  return /*#__PURE__*/React.createElement("section", {
+    "data-screen-label": "Free Resources"
+  }, /*#__PURE__*/React.createElement(SecHead, {
+    title: "Free Resources",
+    viewAll: unlocked
+  }), unlocked ? /*#__PURE__*/React.createElement("div", {
+    className: "lm-rail"
+  }, RESOURCES_L.map((r, i) => /*#__PURE__*/React.createElement(ResourceCardL, {
+    key: i,
+    r: r,
+    locked: false
+  }))) : /*#__PURE__*/React.createElement("div", {
+    className: "lm-locked"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-locked-rail",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-rail"
+  }, RESOURCES_L.map((r, i) => /*#__PURE__*/React.createElement(ResourceCardL, {
+    key: i,
+    r: r
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "lm-locked-veil"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-locked-card",
+    role: "group",
+    "aria-label": "Free Resources locked"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-locked-ic"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:lock",
+    size: 26,
     color: "var(--brand-navy)"
   })), /*#__PURE__*/React.createElement("div", {
-    className: "uc"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ut",
-    style: {
-      fontSize: "14px",
-      fontWeight: "600"
-    }
-  }, "Complete your profile to unlock"), /*#__PURE__*/React.createElement("div", {
-    className: "us",
-    style: {
-      fontSize: "12px"
-    }
-  }, "Take a quick onboarding quiz to get free access to all courses")), /*#__PURE__*/React.createElement("button", {
-    className: "lm-quiz",
-    onClick: onQuiz,
-    "aria-label": "Start Questionnaire",
-    style: {
-      width: "24px",
-      height: "24px"
-    }
-  }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
+    className: "lm-locked-ti"
+  }, "Resources archive is locked"), /*#__PURE__*/React.createElement("div", {
+    className: "lm-locked-sub"
+  }, "Complete a short onboarding survey to unlock the full free resources archive."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm-locked-btn",
+    onClick: onStart
+  }, "Complete survey to unlock", /*#__PURE__*/React.createElement(IconifyL, {
     name: "lucide:arrow-right",
-    size: 20,
+    size: 17,
     color: "#fff"
-  })))));
+  }))))));
 }
-function LMSkeletonCourse() {
-  return /*#__PURE__*/React.createElement("article", {
-    className: "lm-mc"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-skel",
-    style: {
-      height: 132
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "lm-mc-body",
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 10
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-skel",
-    style: {
-      height: 20,
-      width: "85%",
-      borderRadius: "var(--r-sm)"
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "lm-skel",
-    style: {
-      height: 14,
-      width: "50%",
-      borderRadius: "var(--r-sm)"
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "lm-skel",
-    style: {
-      height: 13,
-      width: "60%",
-      borderRadius: "var(--r-sm)"
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "lm-skel",
-    style: {
-      height: 8,
-      width: "100%",
-      borderRadius: "var(--r-pill)",
-      marginTop: 6
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "lm-skel",
-    style: {
-      height: 13,
-      width: "40%",
-      borderRadius: "var(--r-sm)"
-    }
-  })));
-}
-function LMSkeletonRec() {
-  return /*#__PURE__*/React.createElement("article", {
-    className: "lm-rc"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-skel",
-    style: {
-      height: 188
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "lm-rc-body",
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 10
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-skel",
-    style: {
-      height: 20,
-      width: "85%",
-      borderRadius: "var(--r-sm)"
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginTop: 4
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm-skel",
-    style: {
-      height: 16,
-      width: 60,
-      borderRadius: "var(--r-sm)"
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "lm-skel",
-    style: {
-      height: 16,
-      width: 60,
-      borderRadius: "var(--r-sm)"
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "lm-skel",
-    style: {
-      height: 14,
-      width: "60%",
-      borderRadius: "var(--r-sm)"
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "lm-skel",
-    style: {
-      height: 42,
-      width: 110,
-      borderRadius: "var(--r-md)",
-      marginTop: 4
-    }
-  })));
-}
-const LMTabBar = React.forwardRef(function LMTabBar({
-  compact
-}, ref) {
+const LMTabBar = React.forwardRef(function LMTabBar(_props, ref) {
   return /*#__PURE__*/React.createElement("nav", {
     ref: ref,
-    className: "lm-tabs" + (compact ? " lm-tabs-compact" : ""),
+    className: "lm-tabs",
     "aria-label": "Primary"
   }, LM_TABS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
@@ -982,127 +659,237 @@ const LMTabBar = React.forwardRef(function LMTabBar({
     className: "ic"
   }, /*#__PURE__*/React.createElement(DSL.IconifyIcon, {
     name: t.icon,
-    size: 20,
-    color: t.key === "Learning" ? "#fff" : "var(--gray-450)"
+    size: 24,
+    color: t.key === "Learning" ? "#fff" : "#000"
   }), t.dot && /*#__PURE__*/React.createElement("span", {
     className: "dot"
-  }, t.dot)), /*#__PURE__*/React.createElement("span", {
-    className: "lbl"
-  }, t.label))));
+  }, t.dot)), t.label)));
 });
-function LearningHome() {
-  const [loading, setLoading] = useStateL(true);
-  const [surveyOpen, setSurveyOpen] = useStateL(false);
-  const [membershipOpen, setMembershipOpen] = useStateL(false);
-  const [coachOpen, setCoachOpen] = useStateL(false);
-  const [coursesUnlocked, setCoursesUnlocked] = useStateL(false);
-  useEffectL(() => {
-    const t = setTimeout(() => setLoading(false), 1800);
-    return () => clearTimeout(t);
-  }, []);
-  const scrollRef = React.useRef(null);
-  const headerRef = React.useRef(null);
-  const searchRef = React.useRef(null);
-  const tabsRef = React.useRef(null);
-  const [headerH, setHeaderH] = useStateL(0);
-  const [searchH, setSearchH] = useStateL(0);
-  const [tabsH, setTabsH] = useStateL(0);
-  const chromeHidden = useHeaderHideL(scrollRef);
-  const [searchOpen, setSearchOpen] = useStateL(false);
+function AICoachFab() {
+  const [open, setOpen] = useStateL(false);
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    className: "lm-coach-fab" + (open ? " on" : ""),
+    onClick: () => setOpen(v => !v),
+    "aria-label": "AI Coach",
+    "aria-expanded": open
+  }, /*#__PURE__*/React.createElement(DSL.Spark, {
+    size: 22,
+    color: "#fff"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "lm-coach-fab-tx"
+  }, "AI Coach")), open && /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-sheet",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "AI Coach"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "lm-coach-scrim",
+    "aria-label": "Close",
+    onClick: () => setOpen(false)
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm-coach-av"
+  }, /*#__PURE__*/React.createElement(DSL.Spark, {
+    size: 20
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-hd-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ti"
+  }, "Profinity Coach"), /*#__PURE__*/React.createElement("span", {
+    className: "su"
+  }, "Your learning companion")), /*#__PURE__*/React.createElement("button", {
+    className: "lm-coach-x",
+    "aria-label": "Close",
+    onClick: () => setOpen(false)
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:x",
+    size: 20,
+    color: "var(--gray-500)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-msg"
+  }, "Hi Katy! 👋 Based on your ", /*#__PURE__*/React.createElement("b", null, "Marketing"), " focus, I'd suggest starting with today's targets. Want me to build a study plan for this week?"), /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-chips"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "lm-coach-chip"
+  }, "Build my study plan"), /*#__PURE__*/React.createElement("button", {
+    className: "lm-coach-chip"
+  }, "What should I learn next?"), /*#__PURE__*/React.createElement("button", {
+    className: "lm-coach-chip"
+  }, "Explain my confidence score")), /*#__PURE__*/React.createElement("div", {
+    className: "lm-coach-input"
+  }, /*#__PURE__*/React.createElement("input", {
+    placeholder: "Ask your coach anything…",
+    "aria-label": "Message"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "lm-coach-send",
+    "aria-label": "Send"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-up",
+    size: 18,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("p", {
+    className: "lm-coach-disc"
+  }, "AI can make mistakes. Verify important outputs."))));
+}
+function useScrollChromeL(scrollRef) {
+  const [state, setState] = useStateL({
+    hidden: false,
+    floating: false
+  });
   React.useEffect(() => {
-    if (!chromeHidden) setSearchOpen(false);
-  }, [chromeHidden]);
-  React.useLayoutEffect(() => {
-    const el = headerRef.current;
+    const el = scrollRef.current;
     if (!el) return;
-    const measure = () => setHeaderH(el.offsetHeight);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
+    let lastY = el.scrollTop;
+    const onScroll = () => {
+      const y = el.scrollTop;
+      const delta = y - lastY;
+      setState(prev => {
+        let hidden = prev.hidden;
+        if (y < 40) hidden = false;else if (delta > 6) hidden = true;else if (delta < -6) hidden = false;
+        return {
+          hidden,
+          floating: y > 40
+        };
+      });
+      lastY = y;
+    };
+    el.addEventListener("scroll", onScroll, {
+      passive: true
+    });
+    return () => el.removeEventListener("scroll", onScroll);
   }, []);
-  React.useLayoutEffect(() => {
-    const el = searchRef.current;
-    if (!el) return;
-    const measure = () => setSearchH(el.offsetHeight);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  React.useLayoutEffect(() => {
-    const el = tabsRef.current;
-    if (!el) return;
-    const measure = () => setTabsH(el.offsetHeight);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-  function handleSurveyComplete() {
-    setCoursesUnlocked(true);
-    setSurveyOpen(false);
+  return state;
+}
+function LearningHome() {
+  const [unlocked, setUnlocked] = useStateL(() => {
+    try {
+      return localStorage.getItem("pf-free-unlocked") === "1";
+    } catch (e) {
+      return false;
+    }
+  });
+  const [surveyOpen, setSurveyOpen] = useStateL(false);
+  const [topTab, setTopTab] = useStateL("All Courses");
+  const scrollRef = React.useRef(null);
+  const {
+    hidden: chromeHidden,
+    floating: chromeFloat
+  } = useScrollChromeL(scrollRef);
+  function completeSurvey() {
+    setUnlocked(true);
+    try {
+      localStorage.setItem("pf-free-unlocked", "1");
+    } catch (e) {}
   }
   return /*#__PURE__*/React.createElement("div", {
-    className: "lm-screen",
+    className: "lm-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : ""),
     "data-screen-label": "My Learning (mobile)"
-  }, /*#__PURE__*/React.createElement("div", {
-    ref: headerRef,
-    className: "lm-header-wrap" + (chromeHidden ? " lm-header-hidden" : "")
-  }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement(LMGreeting, null)), /*#__PURE__*/React.createElement("div", {
-    ref: searchRef,
-    className: "lm-search-wrap" + (chromeHidden && !searchOpen ? " lm-search-collapsed" : ""),
-    style: {
-      top: chromeHidden ? LM_STATUS_BAR_H : headerH
-    }
-  }, chromeHidden && !searchOpen ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(LMSearchFab, {
-    onClick: () => setSearchOpen(true)
-  }), /*#__PURE__*/React.createElement(LMBookmarkFab, {
-    onClick: () => goL("MySaved.html?from=learning")
-  })) : /*#__PURE__*/React.createElement(LMSearch, {
-    autoFocus: chromeHidden && searchOpen,
-    collapsible: chromeHidden,
-    onCollapse: () => setSearchOpen(false)
-  })), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement(LMSaveFab, null), /*#__PURE__*/React.createElement(LMSearch, null), /*#__PURE__*/React.createElement("div", {
     className: "lm-scroll",
-    ref: scrollRef,
-    style: {
-      paddingTop: (chromeHidden ? LM_STATUS_BAR_H : headerH) + searchH,
-      paddingBottom: tabsH + 34
-    }
-  }, /*#__PURE__*/React.createElement(LMCurrent, null), /*#__PURE__*/React.createElement(MyCourses, {
-    loading: loading
-  }), /*#__PURE__*/React.createElement(YourMembership, {
-    onOpen: () => setMembershipOpen(true)
-  }), /*#__PURE__*/React.createElement(Recommended, {
-    loading: loading
-  }), /*#__PURE__*/React.createElement(FreeResources, null), /*#__PURE__*/React.createElement(FreeCourses, {
-    onQuiz: () => setSurveyOpen(true),
-    unlocked: coursesUnlocked
+    ref: scrollRef
+  }, /*#__PURE__*/React.createElement(ConfidenceEngine, null), /*#__PURE__*/React.createElement(LMTopTabs, {
+    active: topTab,
+    onPick: setTopTab
+  }), /*#__PURE__*/React.createElement("section", {
+    "data-screen-label": "My Courses"
+  }, /*#__PURE__*/React.createElement(SecHead, {
+    title: "My Courses",
+    viewAll: false
   }), /*#__PURE__*/React.createElement("div", {
+    className: "lm-rail"
+  }, MY_COURSES_L.map((c, i) => /*#__PURE__*/React.createElement(CourseTileL, {
+    key: i,
+    ...c,
+    style: {
+      width: 268,
+      flex: "none",
+      scrollSnapAlign: "start"
+    }
+  })))), /*#__PURE__*/React.createElement(MembershipTier, null), /*#__PURE__*/React.createElement(FreeResourcesL, {
+    unlocked: unlocked,
+    onStart: () => setSurveyOpen(true)
+  }), /*#__PURE__*/React.createElement("section", {
+    "data-screen-label": "Success Path"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-sec-h"
+  }, /*#__PURE__*/React.createElement("h2", null, "Success Path")), /*#__PURE__*/React.createElement("div", {
+    className: "lm-cream"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-rail"
+  }, /*#__PURE__*/React.createElement(PathIntroL, null), PATHS_L.map((c, i) => /*#__PURE__*/React.createElement(PathCardL, {
+    key: i,
+    c: c
+  }))))), /*#__PURE__*/React.createElement("section", {
+    "data-screen-label": "Recommended Course"
+  }, /*#__PURE__*/React.createElement(SecHead, {
+    title: "Recommended Course"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm-pill gold",
+    onClick: () => goL("MyLearning.html")
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "fluent:crown-16-filled",
+    size: 15,
+    color: "#fff"
+  }), "Upgrade to Premium for 15% OFF all products", /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-right",
+    size: 15,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "lm-rail"
+  }, RECOMMENDED_L.map((c, i) => /*#__PURE__*/React.createElement(PriceCardL, {
+    key: i,
+    c: c
+  })))), /*#__PURE__*/React.createElement("section", {
+    "data-screen-label": "New Courses"
+  }, /*#__PURE__*/React.createElement(SecHead, {
+    title: "New Courses"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm-rail"
+  }, NEW_COURSES_L.map((c, i) => /*#__PURE__*/React.createElement(PriceCardL, {
+    key: i,
+    c: c
+  })))), /*#__PURE__*/React.createElement("section", {
+    "data-screen-label": "Popular Courses"
+  }, /*#__PURE__*/React.createElement(SecHead, {
+    title: "Popular Courses"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm-rail"
+  }, POPULAR_L.map((c, i) => /*#__PURE__*/React.createElement(PriceCardL, {
+    key: i,
+    c: c
+  })))), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 20
     }
-  })), /*#__PURE__*/React.createElement(AICoachFab, {
-    bottom: tabsH + 34,
-    onClick: () => setCoachOpen(true)
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "lm-tabs-scrim",
-    "aria-hidden": "true"
-  }), /*#__PURE__*/React.createElement(LMTabBar, {
-    ref: tabsRef,
-    compact: chromeHidden
-  }), /*#__PURE__*/React.createElement(SurveyMobile, {
+  })), /*#__PURE__*/React.createElement(LMTabBar, null), /*#__PURE__*/React.createElement(AICoachFab, null), /*#__PURE__*/React.createElement(SurveyMobile, {
     open: surveyOpen,
     onClose: () => setSurveyOpen(false),
-    onComplete: handleSurveyComplete
-  }), /*#__PURE__*/React.createElement(MembershipModal, {
-    open: membershipOpen,
-    onClose: () => setMembershipOpen(false)
-  }), /*#__PURE__*/React.createElement(AICoachModal, {
-    open: coachOpen,
-    onClose: () => setCoachOpen(false)
+    onComplete: completeSurvey
   }));
+}
+function useDeviceScaleL() {
+  const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
+  const [scale, setScale] = useStateL(calc);
+  React.useEffect(() => {
+    const update = () => setScale(calc());
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return scale;
+}
+function useIsMobileL() {
+  const [mobile, setMobile] = useStateL(() => window.matchMedia('(max-width:768px)').matches);
+  React.useEffect(() => {
+    const mq = window.matchMedia('(max-width:768px)');
+    const h = e => setMobile(e.matches);
+    mq.addEventListener('change', h);
+    return () => mq.removeEventListener('change', h);
+  }, []);
+  return mobile;
 }
 function LearningMobileApp() {
   const mobile = useIsMobileL();
