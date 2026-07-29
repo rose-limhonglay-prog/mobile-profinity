@@ -4512,23 +4512,20 @@ function Feed({ channel } = {}) {
      own tag plus every tag below it (see tierTagPostsFor). */
   const tierTagItems = tierTagPostsFor(viewerPersona).map((p) => ({ item: p, mode: "full" }));
 
-  /* The main newsfeed is FEED_SEQUENCE's fixed, designed post-type order —
-     any locally composed posts show up first, then the sequence plays out
-     exactly as authored: four repeating cycles (text / square image /
-     portrait image / carousel / square video / portrait video / quiz /
-     [event + masterclass on cycle 1] / poll). The per-tier ChannelFeedCard
-     "Hidden Post" teaser has been removed from the newsfeed — membership
-     tiers are now featured via the tier-tagged posts (tierTagItems) instead.
-     The course-comment slot (COURSE_COMMENT_2) is the only remaining item
-     whose mode isn't a fixed "full" — it still resolves teaser-vs-full from
-     the current viewing persona, so the persona-preview switcher still
-     demonstrates unlocking. */
-  const sequenceBase = typeof window !== "undefined" && window.PF_OFFICIAL_ONLY ? officialize(FEED_SEQUENCE) : FEED_SEQUENCE;
-  /* The feed shows at most ONE locked-post paywall card, full stop — if more
-     than one teasable bucket post ever appears in the sequence again, only
-     the first renders as a teaser; the rest are simply omitted rather than
-     adding another blocker. */
-  let teaserShown = false;
+  /* The main newsfeed is tier-aware: TIER_FEED_SEQUENCES picks the designed
+     post-type sequence for the current viewer (see cycleSlots() and
+     FREE/CONFIDENCE/MASTERY_FEED_SEQUENCE above) — any locally composed
+     posts show up first, then that sequence plays out exactly as authored.
+     Each sequence carries its own two paywall Lock slots (teasing the next
+     tier up, then the tier after that); Freedom/Inner Circle/Admin viewers
+     get the Mastery sequence, since its Lock slots resolve to "full" for
+     them automatically once their channels include that bucket. */
+  const rawSequence = TIER_FEED_SEQUENCES[viewerPersona] || FREE_FEED_SEQUENCE;
+  const sequenceBase = typeof window !== "undefined" && window.PF_OFFICIAL_ONLY ? officialize(rawSequence) : rawSequence;
+  /* Every deliberate Lock slot renders its own teaser when the viewer
+     doesn't hold that tier — each tier's sequence has exactly two Lock
+     posts by design (first cycle + repeat cycle), so no single-teaser cap
+     is needed here the way the old random Hidden Post rotation required. */
   const feedItems = [
   ...userPosts.map((p) => ({ item: p, mode: "full" })),
   ...eventRegPosts.map((p) => ({ item: p, mode: "full" })),
@@ -4540,12 +4537,10 @@ function Feed({ channel } = {}) {
       viewerCurrent.paid :
       viewerCurrent.channels.includes(p.bucket));
       if (unlocked) return { item: { ...p, unlockBadge: true }, mode: "full" };
-      if (teaserShown) return null;
-      teaserShown = true;
       return { item: p, mode: "teaser" };
     }
     return { item: p, mode: "full" };
-  }).filter(Boolean)];
+  })];
 
   /* a channel (Confidence/Mastery/Freedom/Inner Circle) narrows the feed
      down to just that bucket's posts — used by the Community page's channel
