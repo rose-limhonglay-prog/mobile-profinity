@@ -449,7 +449,7 @@ function pickRandomAuthor(id) {
 }
 function officialize(list) {
   return list.map(p => {
-    if (p.channel || p.keepAuthor) return p;
+    if (p.channel || p.keepAuthor || p.bucket === "follow") return p;
     if (p.questionnaire || p.poll) return {
       ...p,
       author: PROFINITY,
@@ -2675,31 +2675,31 @@ const TEASER_PILL = {
    tier rather than the course purchase itself. */
 const TEASER_CTA = {
   confidence: {
-    title: "Unlock Confidence",
+    title: "Start Your Trial",
     sub: "Join the expert network"
   },
   mastery: {
-    title: "Upgrade to unlock Mastery",
+    title: "Start Your Trial",
     sub: "Elite mentorship & networking"
   },
   freedom: {
-    title: "Upgrade to unlock Freedom",
+    title: "Start Your Trial",
     sub: "The Freedom Path — for the injector ready to build a business, not just a skill set."
   },
   inner: {
-    title: "Upgrade to unlock Inner Circle",
+    title: "Start Your Trial",
     sub: "Join the top-tier roundtable and mentorship"
   },
   course: {
-    title: "Unlock Confidence",
+    title: "Start Your Trial",
     sub: "Join the expert network"
   },
   coursecomment: {
-    title: "Unlock Confidence",
+    title: "Start Your Trial",
     sub: "Join the expert network"
   },
   general: {
-    title: "Unlock Confidence",
+    title: "Start Your Trial",
     sub: "Join the expert network"
   }
 };
@@ -2838,7 +2838,10 @@ function resolveBucketFeed(personaKey, toggles) {
       case "inner":
         if (persona.admin || persona.channels.includes(x.bucket)) {
           out.push({
-            item: x,
+            item: {
+              ...x,
+              unlockBadge: true
+            },
             mode: "full"
           });
         } else {
@@ -3002,13 +3005,18 @@ const REPLY_A = {
     n: "3"
   }]
 };
+
+/* Cycles through RANDOM_AUTHOR_POOL for each thread()'s first commenter (see
+   pickRandomAuthor above) so the ~50 case-study posts that share this thread
+   don't all read as "Miranda P. commented on everything". Plain incrementing
+   counter is safe here (not a per-post hash) because thread() only ever runs
+   once, in file order, while the post arrays are built at module load. */
+let threadAuthorIndex = 0;
 function thread(extra) {
+  const firstAuthor = RANDOM_AUTHOR_POOL[threadAuthorIndex % RANDOM_AUTHOR_POOL.length];
+  threadAuthorIndex++;
   return [{
-    author: {
-      name: "Miranda P.",
-      avatar: "assets/avatar-miranda.jpg",
-      seals: ["gb", "verified", "skinfluencer"]
-    },
+    author: firstAuthor,
     text: "This is an amazing protocol! It has helped us a lot in our research.",
     likes: "1.1K",
     comments: "300",
@@ -3653,8 +3661,7 @@ const POLL_POST_2 = {
   commentList: thread("Vascular occlusion, please — always worth another deep dive.")
 };
 
-/* Cycle 3 — same post-type shape as cycle 2, ending on the Freedom Hidden
-   Post instead of Mastery. */
+/* Cycle 3 — same post-type shape as cycle 2. */
 const TEXT_POST_3 = {
   id: "ff_text3",
   author: PROFINITY,
@@ -3758,7 +3765,7 @@ const POLL_POST_3 = {
   commentList: thread("Guest specialist sessions, please — would love an outside perspective.")
 };
 
-/* Cycle 4 — same shape again, ending on the Inner Circle Hidden Post. */
+/* Cycle 4 — same shape again. */
 const TEXT_POST_4 = {
   id: "ff_text4",
   author: PROFINITY,
@@ -4037,16 +4044,15 @@ const EXTRA_VIDEO_POST_10 = {
 };
 
 /* The free-newsfeed's fixed post-type sequence — four designed cycles (cycle
-   1 ends with the Upcoming Event + Masterclass Unlock, cycles 2-4 end with a
-   tier's Hidden Post — Mastery, Freedom, Inner Circle in turn) instead of a
-   random interleave, so every post format shows up in a deliberate order and
-   every subscriber tier gets featured. Each cycle's Hidden Post is the only
-   slot whose mode isn't fixed "full" — Feed() still resolves it teaser-vs-full
-   from the current viewing persona, exactly like every other gated bucket
-   post, so the persona-preview switcher still demonstrates unlocking. */
+   1 ends with the Upcoming Event + Masterclass Unlock) instead of a random
+   interleave, so every post format shows up in a deliberate order. The
+   per-cycle tier "Hidden Post" (Confidence/Mastery/Freedom/Inner Circle
+   ChannelFeedCard teaser) has been removed from the newsfeed entirely —
+   membership tiers still get featured via the tier-tagged posts
+   (tierTagPostsFor) instead. */
 const FEED_SEQUENCE = [
 // Cycle 1
-TEXT_POST_1, SQUARE_IMG_POST_1, PORTRAIT_IMG_POST_1, EDITORIAL_POSTS[2] /* p1: carousel */, EDITORIAL_POSTS[6] /* p5: square video */, EDITORIAL_POSTS[1] /* p6: portrait reel */, PINNED_POSTS[0] /* p_quiz */, CONFIDENCE_POST_2 /* Confidence Hidden */, COURSE_COMMENT_2 /* Course discussion — PROTOX, seen by enrolled + commenting members */, PINNED_POSTS[1] /* p8: poll */, {
+TEXT_POST_1, SQUARE_IMG_POST_1, PORTRAIT_IMG_POST_1, EDITORIAL_POSTS[2] /* p1: carousel */, EDITORIAL_POSTS[6] /* p5: square video */, EDITORIAL_POSTS[1] /* p6: portrait reel */, PINNED_POSTS[0] /* p_quiz */, COURSE_COMMENT_2 /* Course discussion — PROTOX, seen by enrolled + commenting members */, PINNED_POSTS[1] /* p8: poll */, {
   id: "ff_event1",
   author: PROFINITY,
   keepAuthor: true,
@@ -4059,13 +4065,91 @@ TEXT_POST_1, SQUARE_IMG_POST_1, PORTRAIT_IMG_POST_1, EDITORIAL_POSTS[2] /* p1: c
   commentList: []
 }, MASTERCLASS_UNLOCK_POST,
 // Cycle 2
-TEXT_POST_2, SQUARE_IMG_POST_2, PORTRAIT_IMG_POST_2, EDITORIAL_POSTS[3] /* p2: carousel */, SQUARE_VIDEO_POST_2, PORTRAIT_VIDEO_POST_2, QUIZ_POSTS[0] /* p_quiz2 */, POLL_POST_2, MASTERY_POST_2 /* Mastery Hidden */,
+TEXT_POST_2, SQUARE_IMG_POST_2, PORTRAIT_IMG_POST_2, EDITORIAL_POSTS[3] /* p2: carousel */, SQUARE_VIDEO_POST_2, PORTRAIT_VIDEO_POST_2, QUIZ_POSTS[0] /* p_quiz2 */, POLL_POST_2,
 // Cycle 3
-TEXT_POST_3, SQUARE_IMG_POST_3, PORTRAIT_IMG_POST_3, EDITORIAL_POSTS[4] /* p3: carousel */, SQUARE_VIDEO_POST_3, PORTRAIT_VIDEO_POST_3, QUIZ_POSTS[1] /* p_quiz3 */, POLL_POST_3, FREEDOM_POST_2 /* Freedom Hidden */,
+TEXT_POST_3, SQUARE_IMG_POST_3, PORTRAIT_IMG_POST_3, EDITORIAL_POSTS[4] /* p3: carousel */, SQUARE_VIDEO_POST_3, PORTRAIT_VIDEO_POST_3, QUIZ_POSTS[1] /* p_quiz3 */, POLL_POST_3,
 // Cycle 4
-TEXT_POST_4, SQUARE_IMG_POST_4, PORTRAIT_IMG_POST_4, EDITORIAL_POSTS[5] /* p4: carousel */, SQUARE_VIDEO_POST_4, PORTRAIT_VIDEO_POST_4, QUIZ_POSTS[2] /* p_quiz4 */, POLL_POST_4, INNER_POST_2 /* Inner Circle Hidden */,
+TEXT_POST_4, SQUARE_IMG_POST_4, PORTRAIT_IMG_POST_4, EDITORIAL_POSTS[5] /* p4: carousel */, SQUARE_VIDEO_POST_4, PORTRAIT_VIDEO_POST_4, QUIZ_POSTS[2] /* p_quiz4 */, POLL_POST_4,
 // Extra video library — extra variety to scroll through
 EXTRA_VIDEO_POST_1, EXTRA_VIDEO_POST_2, EXTRA_VIDEO_POST_3, EXTRA_VIDEO_POST_4, EXTRA_VIDEO_POST_5, EXTRA_VIDEO_POST_6, EXTRA_VIDEO_POST_7, EXTRA_VIDEO_POST_8, EXTRA_VIDEO_POST_9, EXTRA_VIDEO_POST_10];
+
+/* Tier-tagged posts — genuine member activity carrying a coloured tierTag
+   chip (see TierTagChip), stacked on top of the membership ladder: each
+   tier sees its own tag plus every tag below it (tierTagPostsFor below).
+   bucket:"follow" opts these out of officialize()'s author-swap so the real
+   author shows, same as a channel post or keepAuthor, without also routing
+   through resolveBucketFeed/TEASABLE_BUCKETS the way a channel post does. */
+const TIER_TAG_POSTS = [{
+  id: "tt_confidence",
+  author: {
+    name: "Dr. Sarah Collins",
+    avatar: "assets/avatar-sarah-collins.jpg",
+    seals: ["gb", "verified", "skinfluencer"]
+  },
+  bucket: "follow",
+  tierTag: "confidence",
+  time: "3h",
+  hashtags: ["protocol", "case-study", "patient"],
+  media: [IMG.toxin],
+  aspect: "portrait",
+  body: "Early vascular compromise doesn't always look dramatic — blanching can be subtle, and pain out of proportion on injection is often the first real signal, well before any change in skin colour. My chairside rule: if the pain doesn't match the injection, stop and reassess before you go any further. Hyaluronidase, a warm compress and your emergency protocol sheet should be within arm's reach on every filler list, not just the ones you're nervous about.",
+  likes: "612",
+  comments: "58",
+  shares: "34",
+  actioned: false,
+  commentList: thread("Printing this out for the treatment room today — thank you.")
+}, {
+  id: "tt_mastery",
+  author: {
+    name: "Dr Amir Khan",
+    avatar: "assets/avatar-amir-khan.jpg",
+    seals: ["gb", "verified"]
+  },
+  bucket: "follow",
+  tierTag: "mastery",
+  time: "6h",
+  hashtags: ["masterclass", "anatomy", "case-study"],
+  media: [IMG.collage],
+  aspect: "portrait",
+  body: "The order you treat a full face in changes the result as much as the products do. My sequence: structure first (temples, cheeks, jawline), volume second (mid-face, tear troughs), finesse last (lips, perioral, skin quality) — never the reverse. Treating lips before you've restored cheek support is the single most common reason a 'good' full-face plan reads as overfilled six weeks later.",
+  likes: "845",
+  comments: "76",
+  shares: "52",
+  actioned: false,
+  commentList: thread("This sequencing logic just reorganised how I plan every full-face consult.")
+}, {
+  id: "tt_freedom",
+  author: MIRANDA,
+  bucket: "follow",
+  tierTag: "freedom",
+  time: "1d",
+  hashtags: ["business", "discussion", "update"],
+  body: "Rebuilt our rate card this quarter around treatment time rather than treatment type — a 45-minute full-face consult and plan is priced the same whether it ends in filler, toxin or both. It's simplified our front-desk conversations no end, and patients understand exactly what they're paying for. Happy to share the framework if it's useful — the numbers will vary by clinic, but the model behind them travels well.",
+  likes: "1.2K",
+  comments: "84",
+  shares: "66",
+  actioned: false,
+  commentList: thread("Switching our card over to time-based pricing next quarter — makes so much sense.")
+}];
+
+/* Richest tier first — each tier below sees its own tag plus every tag
+   below it (Confidence -> [confidence]; Mastery -> [mastery, confidence];
+   Freedom/Inner Circle/Admin -> [freedom, mastery, confidence]). Free (or
+   any unrecognised persona key) gets no tier-tagged posts at all. */
+const TIER_TAG_LADDER = ["freedom", "mastery", "confidence"];
+const TIER_TAG_RANK = {
+  confidence: 0,
+  mastery: 1,
+  freedom: 2,
+  inner: 2,
+  admin: 2
+};
+function tierTagPostsFor(tier) {
+  const rank = TIER_TAG_RANK[tier];
+  if (rank === undefined) return [];
+  const allowedTags = TIER_TAG_LADDER.slice(TIER_TAG_LADDER.length - 1 - rank);
+  return allowedTags.map(tag => TIER_TAG_POSTS.find(p => p.tierTag === tag)).filter(Boolean);
+}
 
 /* ============================ SHARED BITS ================================ */
 function SectionHead({
@@ -6620,6 +6704,25 @@ function goToHashtag(tag) {
     window.location.href = u;
   })(url);
 }
+
+/* Coloured tier chip shown next to a post's timestamp (see post.tierTag) —
+   reuses ChannelFeedCard's pf-chcard-tag pill + BUCKET_META's per-tier
+   colour rather than introducing a new visual pattern. */
+function TierTagChip({
+  tag
+}) {
+  const meta = BUCKET_META[tag];
+  if (!meta) return null;
+  return /*#__PURE__*/React.createElement("span", {
+    className: "pf-chcard-tag",
+    style: {
+      color: meta.color,
+      background: `color-mix(in srgb, ${meta.color} 15%, transparent)`,
+      marginTop: 0,
+      marginLeft: 8
+    }
+  }, meta.label);
+}
 function FeedPost({
   post,
   st,
@@ -6726,6 +6829,9 @@ function FeedPost({
   }), /*#__PURE__*/React.createElement(PostCard, {
     ...post,
     commentList: [],
+    time: post.tierTag ? /*#__PURE__*/React.createElement(React.Fragment, null, post.time, /*#__PURE__*/React.createElement(TierTagChip, {
+      tag: post.tierTag
+    })) : post.time,
     hashtags: hideTags || post.questionnaire || post.poll ? [] : resolveHashtags(post.hashtags),
     title: post.title,
     body: post.questionnaire || post.poll ? null : post.bg ? /*#__PURE__*/React.createElement("div", {
@@ -7212,13 +7318,21 @@ function ChannelFeedCard({
     size: 40
   }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     className: "pf-chcard-name"
-  }, post.channel.by), /*#__PURE__*/React.createElement("span", {
+  }, post.channel.by), /*#__PURE__*/React.createElement("div", {
+    className: "pf-chcard-tags"
+  }, /*#__PURE__*/React.createElement("span", {
     className: "pf-chcard-tag",
     style: {
       color: meta.color,
       background: `color-mix(in srgb, ${meta.color} 15%, transparent)`
     }
-  }, meta.label)), /*#__PURE__*/React.createElement(PostMoreMenu, {
+  }, meta.label), post.unlockBadge && /*#__PURE__*/React.createElement("span", {
+    className: "pf-chcard-unlock"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:lock-open",
+    size: 12,
+    color: "var(--brand-navy)"
+  }), "Unlocked"))), /*#__PURE__*/React.createElement(PostMoreMenu, {
     saved: st.saved,
     onSave: onSave,
     onReport: () => setReportedOpen(true)
@@ -7373,8 +7487,16 @@ function CourseCommentCard({
     seals: post.author.seals,
     size: 16
   })), /*#__PURE__*/React.createElement("div", {
+    className: "pf-chcard-tags"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "pf-ccard-head-time"
-  }, post.time)), /*#__PURE__*/React.createElement(PostMoreMenu, {
+  }, post.time), post.unlockBadge && /*#__PURE__*/React.createElement("span", {
+    className: "pf-chcard-unlock"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:lock-open",
+    size: 12,
+    color: "var(--brand-navy)"
+  }), "Unlocked"))), /*#__PURE__*/React.createElement(PostMoreMenu, {
     saved: st.saved,
     onSave: onSave,
     onReport: () => setReportedOpen(true)
@@ -7741,7 +7863,7 @@ function readEventRegPosts() {
 /* All posts across the app (own + editorial + gated) — used by Search to
    find posts by hashtag. */
 function getAllPosts() {
-  return [...readUserPosts(), ...EVENT_REG_SEED, ...readEventRegPosts(), ...FEED_SEQUENCE, ...BUCKET_POSTS];
+  return [...readUserPosts(), ...EVENT_REG_SEED, ...readEventRegPosts(), ...FEED_SEQUENCE, ...BUCKET_POSTS, ...TIER_TAG_POSTS];
 }
 function Feed({
   channel
@@ -7750,7 +7872,7 @@ function Feed({
   const [eventRegPosts] = useState(() => [...EVENT_REG_SEED, ...readEventRegPosts()]);
   const [state, setState] = useState(() => {
     const m = {};
-    [...readUserPosts(), ...FEED_SEQUENCE, ...BUCKET_POSTS].forEach(p => {
+    [...readUserPosts(), ...FEED_SEQUENCE, ...BUCKET_POSTS, ...TIER_TAG_POSTS].forEach(p => {
       m[p.id] = {
         liked: false,
         saved: false,
@@ -7839,23 +7961,29 @@ function Feed({
   };
   const viewerCurrent = PERSONA_MAP[viewerPersona] || PERSONA_MAP.confidence;
   const bucketResolved = resolveBucketFeed(viewerPersona, bucketToggles);
+  /* Tier-tagged posts stack with the membership ladder: each tier sees its
+     own tag plus every tag below it (see tierTagPostsFor). */
+  const tierTagItems = tierTagPostsFor(viewerPersona).map(p => ({
+    item: p,
+    mode: "full"
+  }));
 
   /* The main newsfeed is FEED_SEQUENCE's fixed, designed post-type order —
      any locally composed posts show up first, then the sequence plays out
      exactly as authored: four repeating cycles (text / square image /
      portrait image / carousel / square video / portrait video / quiz /
-     [event + masterclass on cycle 1] / poll / one tier's Hidden Post),
-     cycling through Confidence, Mastery, Freedom and Inner Circle so every
-     subscriber tier gets featured in the rotation. Each cycle's Hidden Post
-     is the only slot whose mode isn't a fixed "full" — like every other
-     gated bucket post, it resolves teaser-vs-full from the current viewing
-     persona, so the persona-preview switcher still demonstrates unlocking. */
+     [event + masterclass on cycle 1] / poll). The per-tier ChannelFeedCard
+     "Hidden Post" teaser has been removed from the newsfeed — membership
+     tiers are now featured via the tier-tagged posts (tierTagItems) instead.
+     The course-comment slot (COURSE_COMMENT_2) is the only remaining item
+     whose mode isn't a fixed "full" — it still resolves teaser-vs-full from
+     the current viewing persona, so the persona-preview switcher still
+     demonstrates unlocking. */
   const sequenceBase = typeof window !== "undefined" && window.PF_OFFICIAL_ONLY ? officialize(FEED_SEQUENCE) : FEED_SEQUENCE;
-  /* The feed shows at most ONE locked-post paywall card, full stop — with a
-     Hidden Post in every cycle, a viewer locked out of all four tiers would
-     otherwise see four separate "premium members only" blockers stacked
-     through the feed. Once the first one renders, every later Hidden Post
-     is simply omitted rather than adding another blocker. */
+  /* The feed shows at most ONE locked-post paywall card, full stop — if more
+     than one teasable bucket post ever appears in the sequence again, only
+     the first renders as a teaser; the rest are simply omitted rather than
+     adding another blocker. */
   let teaserShown = false;
   const feedItems = [...userPosts.map(p => ({
     item: p,
@@ -7863,11 +7991,14 @@ function Feed({
   })), ...eventRegPosts.map(p => ({
     item: p,
     mode: "full"
-  })), ...sequenceBase.map(p => {
+  })), ...tierTagItems, ...sequenceBase.map(p => {
     if (p.bucket && TEASABLE_BUCKETS.has(p.bucket)) {
       const unlocked = viewerCurrent.admin || (p.bucket === "course" || p.bucket === "coursecomment" ? viewerCurrent.paid : viewerCurrent.channels.includes(p.bucket));
       if (unlocked) return {
-        item: p,
+        item: {
+          ...p,
+          unlockBadge: true
+        },
         mode: "full"
       };
       if (teaserShown) return null;

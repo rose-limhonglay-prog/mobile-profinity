@@ -492,6 +492,10 @@ img{max-width:100%}
 .pf-chcard-tag{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-sans);
   font-weight:var(--fw-semibold);font-size:13px;border-radius:var(--r-pill);padding:3px 12px;margin-top:4px}
 .pf-chcard-dot{width:6px;height:6px;border-radius:50%;flex:none}
+.pf-chcard-tags{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pf-chcard-unlock{display:inline-flex;align-items:center;gap:4px;font-family:var(--font-sans);
+  font-weight:var(--fw-semibold);font-size:12px;border-radius:var(--r-pill);padding:3px 10px;margin-top:4px;
+  background:var(--brand-gold-100);color:var(--brand-navy)}
 .pf-chcard-body{font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--text-primary);
   line-height:1.5;margin:0 0 14px}
 .pf-chcard-media{border-radius:var(--r-md);overflow:hidden;margin:0 0 14px}
