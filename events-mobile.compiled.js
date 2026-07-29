@@ -189,7 +189,6 @@ const EV_DETAIL = {
   attendees: "380",
   about: "Join Dr. Tim Pearce every week for Technique Tuesday, a live, interactive session where he shares his expert knowledge, answers your burning questions, and demonstrates the latest techniques in aesthetic medicine. Don't miss this opportunity to enhance your skills and stay ahead of the curve!",
   membersOnly: true,
-  cohost: "Miranda Pearce",
   state: "live",
   learn: ["Step-by-Step Technique demonstration", "Interactive Group Exercise", "Individual Feedback Sessions", "Real-world Case Studies", "Q&A Panel Discussion"],
   stats: [{
@@ -820,7 +819,9 @@ function EventDetail({
   onJoin,
   event
 }) {
-  const d = Object.assign({}, EV_DETAIL, event || {});
+  const d = Object.assign({}, EV_DETAIL, event || {}, {
+    banner: event && event.banner || EV_DETAIL.banner
+  });
   const [tab, setTab] = useStateEV("Overview");
   const [attending, setAttending] = useStateEV(() => evStatusOf(d, evStore()).registered);
   const [inCal, setInCal] = useStateEV(() => evStatusOf(d, evStore()).calendar);
