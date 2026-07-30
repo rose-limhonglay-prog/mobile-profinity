@@ -75,6 +75,7 @@ const TIERS_MT = [{
   yearly: 970,
   dark: false,
   highlight: false,
+  metal: "bronze",
   icon: "shield-check",
   badge: null,
   features: ["Full access to membership library", "Expert complications support", "Live Technique Tuesday training", "Clinician directory listing"],
@@ -88,6 +89,7 @@ const TIERS_MT = [{
   yearly: 3970,
   dark: false,
   highlight: true,
+  metal: "silver",
   icon: "crown",
   badge: "MOST POPULAR",
   includesPrev: "Confidence",
@@ -101,6 +103,7 @@ const TIERS_MT = [{
   yearly: null,
   dark: true,
   highlight: false,
+  metal: "gold",
   icon: null,
   badge: null,
   includesPrev: "Mastery",
@@ -114,6 +117,7 @@ const TIERS_MT = [{
   yearly: null,
   dark: true,
   highlight: false,
+  metal: "gold",
   icon: "crown",
   badge: null,
   includesPrev: "Builder",
@@ -245,14 +249,17 @@ function TierCard({
   const badgeText = isCurrent ? "YOUR CURRENT PLAN" : isIncluded ? "INCLUDED IN YOUR PLAN" : tier.badge;
   const ctaLabel = isCurrent ? "Current Plan" : isIncluded ? "Included" : isUpgrade ? "Upgrade to " + tier.name : tier.cta;
   const ctaDisabled = isCurrent || isIncluded;
+  // "MOST POPULAR" retints silver on the Mastery card; the current/included
+  // badge states keep their own success/gray treatment regardless of metal.
+  const badgeIsPop = tier.highlight && !isCurrent && !isIncluded;
   return /*#__PURE__*/React.createElement("div", {
-    className: "mt-tier" + (tier.dark ? " dark" : "") + (tier.highlight ? " highlight" : "") + (isCurrent ? " current" : "")
+    className: "mt-tier" + (tier.metal ? " metal " + tier.metal : "") + (tier.dark ? " dark" : "") + (tier.highlight ? " pop" : "") + (isCurrent ? " current" : "")
   }, badgeText && /*#__PURE__*/React.createElement("span", {
     className: "mt-tier-badge" + (isCurrent ? " current" : "") + (isIncluded ? " included" : "")
   }, /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
     name: isCurrent ? "lucide:check" : "lucide:star",
     size: 13,
-    color: "#fff"
+    color: badgeIsPop ? "#3F4650" : "#fff"
   }), " ", badgeText), /*#__PURE__*/React.createElement("div", {
     className: "mt-tier-head"
   }, tier.icon && /*#__PURE__*/React.createElement("span", {

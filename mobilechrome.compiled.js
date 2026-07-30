@@ -1017,6 +1017,10 @@
     const unlockedTiers = smUnlockedTiersC(tier);
     const nextTier = smNextTierC(tier);
     const showUpgrade = tier === "free" || tier === "confidence" || tier === "mastery";
+    /* Bronze by default; silver once the next rung is Mastery; gold for
+       Freedom / Inner Circle. */
+    const upgradeMetal = nextTier === "mastery" ? "silver" : nextTier === "freedom" || nextTier === "inner" ? "gold" : "bronze";
+    const upgradeIconColor = upgradeMetal === "silver" ? "#3F4650" : upgradeMetal === "gold" ? "#5A3A00" : "#fff";
     return /*#__PURE__*/React.createElement("div", {
       className: "m-drawer-wrap" + (open ? " open" : ""),
       "aria-hidden": !open
@@ -1052,14 +1056,14 @@
     })), /*#__PURE__*/React.createElement("div", {
       className: "sm-body"
     }, showUpgrade && nextTier && /*#__PURE__*/React.createElement("button", {
-      className: "sm-upgrade",
+      className: "sm-upgrade metal-" + upgradeMetal,
       onClick: () => goC("MembershipTier.html")
     }, /*#__PURE__*/React.createElement("span", {
       className: "sm-upgrade-icon"
     }, /*#__PURE__*/React.createElement(DSC.IconifyIcon, {
       name: "lucide:gem",
       size: 20,
-      color: "#fff"
+      color: upgradeIconColor
     })), /*#__PURE__*/React.createElement("span", {
       className: "sm-upgrade-main"
     }, /*#__PURE__*/React.createElement("span", {
@@ -1069,7 +1073,7 @@
     }, "Unlock more premium channels & courses")), /*#__PURE__*/React.createElement(DSC.IconifyIcon, {
       name: "lucide:chevron-right",
       size: 20,
-      color: "#fff"
+      color: upgradeIconColor
     })), unlockedTiers.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SmSectionC, {
       title: "My Membership"
     }), /*#__PURE__*/React.createElement("div", {

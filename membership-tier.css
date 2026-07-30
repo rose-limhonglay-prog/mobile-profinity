@@ -69,15 +69,31 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 /* ---------- tier cards ---------- */
 .mt-tier { position: relative; background: var(--surface-card); border: 1px solid var(--border-default);
   border-radius: var(--r-lg); padding: 22px 20px; margin-bottom: 20px; box-shadow: var(--shadow-card); }
-.mt-tier.highlight { border-color: var(--brand-gold-soft); border-width: 2px; box-shadow: 0 4px 16px rgba(206,153,87,.18); }
+.mt-tier.pop { border-width: 2px; }
 .mt-tier.dark { background: var(--brand-navy-900); border-color: var(--brand-navy-900); }
 .mt-tier.current { border-color: var(--success); border-width: 2px; box-shadow: 0 4px 16px rgba(16,185,129,.18); }
+
+/* metal accent bar — 5px band across the top of every subscription tier
+   card, plus a matching border/shadow. Confidence=bronze, Mastery=silver
+   (also the "pop"/most-popular card), Builder & Sovereign=gold. */
+.mt-tier.metal::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px;
+  border-radius: 18px 18px 0 0; }
+.mt-tier.metal.bronze::before { background: linear-gradient(100deg,#6B3F1C,#B87333 50%,#7C4A22); }
+.mt-tier.metal.silver::before { background: linear-gradient(100deg,#7C848E,#D7DBE0 52%,#A8AEB6); }
+.mt-tier.metal.gold::before { background: linear-gradient(100deg,#A26301,#F2D08A 50%,#CE9957); }
+.mt-tier.metal.bronze { border-color: #B87333; box-shadow: 0 4px 16px rgba(184,115,51,.18); }
+.mt-tier.metal.silver { border-color: #A8AEB6; box-shadow: 0 4px 16px rgba(168,174,182,.22); }
+.mt-tier.metal.gold { border-color: #CE9957; box-shadow: 0 4px 16px rgba(206,153,87,.22); }
+.mt-tier.metal.current { border-color: var(--success); box-shadow: 0 4px 16px rgba(16,185,129,.18); }
 
 .mt-tier-badge { position: absolute; top: -12px; left: 20px; display: inline-flex; align-items: center; gap: 5px;
   background: var(--premium-badge); color: #fff; font-family: var(--font-sans); font-weight: var(--fw-bold);
   font-size: 11px; letter-spacing: .04em; text-transform: uppercase; padding: 5px 12px; border-radius: var(--r-pill); }
 .mt-tier-badge.current { background: var(--success); }
 .mt-tier-badge.included { background: var(--gray-500); }
+/* "MOST POPULAR" flag on the Mastery card retints to the silver metal. */
+.mt-tier.pop .mt-tier-badge:not(.current):not(.included) {
+  background: linear-gradient(100deg,#7C848E,#D7DBE0 52%,#A8AEB6); color: #3F4650; }
 
 .mt-tier-head { display: flex; align-items: center; gap: 10px; }
 .mt-tier-head h3 { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 20px; margin: 0;

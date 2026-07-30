@@ -58,7 +58,7 @@ function useIsMobileMT() {
 const TIERS_MT = [
   {
     key: "confidence", name: "Confidence", tagline: "Build your skills as an injector",
-    price: 97, yearly: 970, dark: false, highlight: false, icon: "shield-check", badge: null,
+    price: 97, yearly: 970, dark: false, highlight: false, metal: "bronze", icon: "shield-check", badge: null,
     features: [
       "Full access to membership library",
       "Expert complications support",
@@ -70,7 +70,7 @@ const TIERS_MT = [
   },
   {
     key: "mastery", name: "Mastery", tagline: "Become a recognised member",
-    price: 397, yearly: 3970, dark: false, highlight: true, icon: "crown", badge: "MOST POPULAR",
+    price: 397, yearly: 3970, dark: false, highlight: true, metal: "silver", icon: "crown", badge: "MOST POPULAR",
     includesPrev: "Confidence",
     features: [
       "Entire e-learning catalogue",
@@ -83,7 +83,7 @@ const TIERS_MT = [
   },
   {
     key: "builder", name: "Builder", tagline: null,
-    price: 747, yearly: null, dark: true, highlight: false, icon: null, badge: null,
+    price: 747, yearly: null, dark: true, highlight: false, metal: "gold", icon: null, badge: null,
     includesPrev: "Mastery",
     features: [
       "Profinity Hub CRM access",
@@ -95,7 +95,7 @@ const TIERS_MT = [
   },
   {
     key: "sovereign", name: "Sovereign", tagline: null,
-    price: 1497, yearly: null, dark: true, highlight: false, icon: "crown", badge: null,
+    price: 1497, yearly: null, dark: true, highlight: false, metal: "gold", icon: "crown", badge: null,
     includesPrev: "Builder",
     features: [
       "Done-for-you growth engine",
@@ -166,11 +166,14 @@ function TierCard({ tier, status, onSelect }) {
   const badgeText = isCurrent ? "YOUR CURRENT PLAN" : isIncluded ? "INCLUDED IN YOUR PLAN" : tier.badge;
   const ctaLabel = isCurrent ? "Current Plan" : isIncluded ? "Included" : isUpgrade ? "Upgrade to " + tier.name : tier.cta;
   const ctaDisabled = isCurrent || isIncluded;
+  // "MOST POPULAR" retints silver on the Mastery card; the current/included
+  // badge states keep their own success/gray treatment regardless of metal.
+  const badgeIsPop = tier.highlight && !isCurrent && !isIncluded;
   return (
-    <div className={"mt-tier" + (tier.dark ? " dark" : "") + (tier.highlight ? " highlight" : "") + (isCurrent ? " current" : "")}>
+    <div className={"mt-tier" + (tier.metal ? " metal " + tier.metal : "") + (tier.dark ? " dark" : "") + (tier.highlight ? " pop" : "") + (isCurrent ? " current" : "")}>
       {badgeText &&
       <span className={"mt-tier-badge" + (isCurrent ? " current" : "") + (isIncluded ? " included" : "")}>
-          <DSMT.IconifyIcon name={isCurrent ? "lucide:check" : "lucide:star"} size={13} color="#fff" /> {badgeText}
+          <DSMT.IconifyIcon name={isCurrent ? "lucide:check" : "lucide:star"} size={13} color={badgeIsPop ? "#3F4650" : "#fff"} /> {badgeText}
         </span>
       }
       <div className="mt-tier-head">

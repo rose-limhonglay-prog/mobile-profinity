@@ -491,6 +491,10 @@
     const unlockedTiers = smUnlockedTiersC(tier);
     const nextTier = smNextTierC(tier);
     const showUpgrade = tier === "free" || tier === "confidence" || tier === "mastery";
+    /* Bronze by default; silver once the next rung is Mastery; gold for
+       Freedom / Inner Circle. */
+    const upgradeMetal = nextTier === "mastery" ? "silver" : nextTier === "freedom" || nextTier === "inner" ? "gold" : "bronze";
+    const upgradeIconColor = upgradeMetal === "silver" ? "#3F4650" : upgradeMetal === "gold" ? "#5A3A00" : "#fff";
     return (
       <div className={"m-drawer-wrap" + (open ? " open" : "")} aria-hidden={!open}>
         <div className="m-drawer-scrim" onClick={onClose} />
@@ -507,15 +511,15 @@
           </button>
           <div className="sm-body">
             {showUpgrade && nextTier &&
-            <button className="sm-upgrade" onClick={() => goC("MembershipTier.html")}>
+            <button className={"sm-upgrade metal-" + upgradeMetal} onClick={() => goC("MembershipTier.html")}>
                 <span className="sm-upgrade-icon">
-                  <DSC.IconifyIcon name="lucide:gem" size={20} color="#fff" />
+                  <DSC.IconifyIcon name="lucide:gem" size={20} color={upgradeIconColor} />
                 </span>
                 <span className="sm-upgrade-main">
                   <span className="sm-upgrade-title">Upgrade to {SM_TIER_META_C[nextTier].name}</span>
                   <span className="sm-upgrade-sub">Unlock more premium channels &amp; courses</span>
                 </span>
-                <DSC.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
+                <DSC.IconifyIcon name="lucide:chevron-right" size={20} color={upgradeIconColor} />
               </button>
             }
 

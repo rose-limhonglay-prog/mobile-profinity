@@ -57,16 +57,45 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
 .sm-sec-h{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px;letter-spacing:.08em;
   text-transform:uppercase;color:var(--gray-400);margin:22px 2px 12px}
 
-/* gold upgrade CTA — top of drawer, hidden once a viewer is at the top tier */
+/* metal upgrade CTA — top of drawer, hidden once a viewer is at the top tier.
+   Bronze by default; silver/gold once the next rung up is Mastery / Freedom
+   Path / Sovereign (SM_UPGRADE_METAL_M). Drifting gradient + sweeping sheen +
+   pulsing icon signal "premium", opted out under reduced motion. */
 .sm-upgrade{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
-  background:linear-gradient(90deg,var(--premium-orange),#d6a45f);border:none;border-radius:14px;
-  padding:16px 16px;margin:2px 0 6px;box-shadow:0 8px 20px rgba(184,124,45,.28);min-height:44px}
+  position:relative;overflow:hidden;border:none;border-radius:14px;
+  padding:16px 16px;margin:2px 0 6px;min-height:44px;
+  background:linear-gradient(100deg,#6B3F1C,#B87333 50%,#7C4A22);background-size:220% 100%;
+  box-shadow:0 8px 20px rgba(107,63,28,.28);
+  animation:sm-upg-drift 6s ease-in-out infinite}
+.sm-upgrade.metal-silver{background:linear-gradient(100deg,#7C848E,#D7DBE0 52%,#A8AEB6);background-size:220% 100%;
+  box-shadow:0 8px 20px rgba(124,132,142,.28)}
+.sm-upgrade.metal-gold{background:linear-gradient(100deg,#A26301,#F2D08A 50%,#CE9957);background-size:220% 100%;
+  box-shadow:0 8px 20px rgba(162,99,1,.28)}
 .sm-upgrade:active{transform:scale(.98)}
+.sm-upgrade::after{content:"";position:absolute;top:0;left:0;width:40%;height:100%;
+  background:linear-gradient(115deg,transparent,rgba(255,255,255,.55),transparent);
+  transform:skewX(-20deg) translateX(-150%);pointer-events:none;
+  animation:sm-upg-sheen 4.4s ease-in-out infinite}
 .sm-upgrade-icon{flex:none;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.22);
-  display:flex;align-items:center;justify-content:center}
-.sm-upgrade-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  display:flex;align-items:center;justify-content:center;position:relative;z-index:1;
+  animation:sm-upg-icon-pulse 2.6s ease-in-out infinite}
+.sm-upgrade.metal-silver .sm-upgrade-icon,.sm-upgrade.metal-gold .sm-upgrade-icon{background:rgba(255,255,255,.35)}
+.sm-upgrade-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;position:relative;z-index:1}
 .sm-upgrade-title{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;color:#fff}
 .sm-upgrade-sub{font-family:var(--font-sans);font-size:13px;color:rgba(255,255,255,.9)}
+.sm-upgrade.metal-silver .sm-upgrade-title{color:#3F4650}
+.sm-upgrade.metal-gold .sm-upgrade-title{color:#5A3A00}
+.sm-upgrade.metal-silver .sm-upgrade-sub{color:rgba(63,70,80,.78)}
+.sm-upgrade.metal-gold .sm-upgrade-sub{color:rgba(90,58,0,.78)}
+.sm-upgrade>iconify-icon:last-child{position:relative;z-index:1}
+
+@keyframes sm-upg-drift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes sm-upg-sheen{0%,62%{transform:skewX(-20deg) translateX(-150%)}100%{transform:skewX(-20deg) translateX(350%)}}
+@keyframes sm-upg-icon-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+
+@media (prefers-reduced-motion:reduce){
+  .sm-upgrade,.sm-upgrade::after,.sm-upgrade-icon{animation:none}
+}
 
 /* tier cards — expandable, one per unlocked tier */
 .smt-list{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
@@ -83,12 +112,25 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
 
 /* "My Membership" summary card (confidence/mastery/freedom) — replaces the
    stacked tier-card ladder those viewers would otherwise see for themselves.
-   Carries its own eyebrow label, so it renders without an .sm-sec-h divider above it. */
+   Carries its own title, so it renders without an .sm-sec-h divider above it. */
 .sm-membership-card{margin:16px 0 6px}
-.smt-head.sm-membership-head{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:4px}
-.sm-membership-eyebrow{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:11px;letter-spacing:.08em;
-  text-transform:uppercase;color:var(--gray-450)}
-.sm-membership-tier{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--brand-navy)}
+.smt-head.sm-membership-head{flex-direction:row;align-items:center;justify-content:flex-start;flex-wrap:nowrap;gap:10px}
+.sm-membership-title{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;letter-spacing:.02em;
+  text-transform:uppercase;color:var(--brand-navy);white-space:nowrap;flex:none}
+
+/* metal ribbon banner (assets/ribbon-bronze.png) — same graphic reused for
+   every tier, recoloured via CSS filter on a background-only layer so the
+   label text keeps its exact spec'd colour instead of being filtered too. */
+.sm-memb-ribbon{position:relative;display:inline-flex;align-items:center;justify-content:center;
+  flex:none;min-width:0}
+.sm-memb-ribbon::before{content:"";position:absolute;inset:0;
+  background-image:url('assets/ribbon-bronze.png');background-size:100% 100%;background-repeat:no-repeat}
+.sm-memb-ribbon-silver::before{filter:grayscale(1) brightness(1.35) contrast(.92)}
+.sm-memb-ribbon-gold::before{filter:hue-rotate(-18deg) saturate(1.35) brightness(1.15)}
+.sm-memb-ribbon-text{position:relative;font-family:var(--font-sans);font-weight:var(--fw-bold);
+  font-size:12px;white-space:nowrap;padding:5px 34px;color:#fff}
+.sm-memb-ribbon-silver .sm-memb-ribbon-text{color:#3F4650}
+.sm-memb-ribbon-gold .sm-memb-ribbon-text{color:#5A3A00}
 
 /* indented resource rows, revealed on expand */
 .smt-resources{display:flex;flex-direction:column;padding:2px 18px 14px}

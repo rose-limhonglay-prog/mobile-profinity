@@ -2313,14 +2313,15 @@ function tierTagPostsFor(tier) {
 }
 
 /* ============================ SHARED BITS ================================ */
-function SectionHead({ children, action }) {
+function SectionHead({ children, action, onAction }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
       <span style={{ fontFamily: "var(--font-sans)", fontWeight: "var(--fw-bold)", fontSize: "var(--fs-h2)", color: "var(--text-primary)" }}>
         {children}
       </span>
       {action &&
-      <a style={{ fontFamily: "var(--font-sans)", fontWeight: "var(--fw-semibold)", fontSize: "var(--fs-body)", color: "var(--action-primary)", cursor: "pointer" }}>
+      <a style={{ fontFamily: "var(--font-sans)", fontWeight: "var(--fw-semibold)", fontSize: "var(--fs-body)", color: "var(--action-primary)", cursor: "pointer" }}
+      onClick={onAction}>
           {action}
         </a>
       }
@@ -2466,12 +2467,13 @@ function AddToFeed() {
 }
 
 function RightRail() {
+  const goToEvents = () => (window.pfGo || function (u) { window.location.href = u; })("EventsMobile.html");
   return (
     <aside className="rail" data-screen-label="Right sidebar">
       <Card padding={20}>
-        <SectionHead action="See all">My Events</SectionHead>
+        <SectionHead action="See all" onAction={goToEvents}>My Events</SectionHead>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {EVENTS.map((e, i) => <EventCard key={i} {...e} />)}
+          {EVENTS.map((e, i) => <EventCard key={i} {...e} onCta={goToEvents} />)}
         </div>
       </Card>
       <AddToFeed />
@@ -3784,14 +3786,21 @@ function goToHashtag(tag) {
   (window.pfGo || function (u) { window.location.href = u; })(url);
 }
 
+/* Tags carrying the bronze/silver/gold metal system — everything else on
+   BUCKET_META (course, general, mylearning, …) keeps its plain accent color. */
+const METAL_TIER_TAGS = ["confidence", "mastery", "freedom", "inner"];
+
 /* Coloured tier chip shown next to a post's timestamp (see post.tierTag) —
    reuses ChannelFeedCard's pf-chcard-tag pill + BUCKET_META's per-tier
-   colour rather than introducing a new visual pattern. */
+   colour rather than introducing a new visual pattern. Confidence/Mastery/
+   Freedom render in their metal (bronze/silver/gold); Inner Circle stays navy. */
 function TierTagChip({ tag }) {
   const meta = BUCKET_META[tag];
   if (!meta) return null;
+  const isMetal = METAL_TIER_TAGS.includes(tag);
   return (
-    <span className="pf-chcard-tag" style={{ color: meta.color, background: `color-mix(in srgb, ${meta.color} 15%, transparent)`, marginTop: 0, marginLeft: 8 }}>
+    <span className={"pf-chcard-tag pf-lock-chan" + (isMetal ? " tier-" + tag : "")}
+      style={isMetal ? { marginTop: 0, marginLeft: 8 } : { color: meta.color, background: `color-mix(in srgb, ${meta.color} 15%, transparent)`, marginTop: 0, marginLeft: 8 }}>
       {meta.label}
     </span>);
 
@@ -4151,7 +4160,7 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onDoubleTapLove, onS
         <div>
           <div className="pf-chcard-name">{post.channel.by}</div>
           <div className="pf-chcard-tags">
-            <span className="pf-chcard-tag" style={{ color: meta.color, background: `color-mix(in srgb, ${meta.color} 15%, transparent)` }}>
+            <span className="pf-chcard-tag pf-inline-chan">
               {meta.label}
             </span>
             {post.unlockBadge &&

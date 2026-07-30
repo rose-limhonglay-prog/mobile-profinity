@@ -121,6 +121,14 @@ const SM_FREEDOM_LECTURE_ROW_M = { label: "Freedom Path Lectures", icon: "lucide
    Path" while freedom's target reads plain "Sovereign". */
 const SM_UPGRADE_LABEL_M = { free: "Confidence", confidence: "Mastery", mastery: "Freedom Path", freedom: "Sovereign" };
 
+/* Metal keyed by the viewer's CURRENT tier — which metal the upgrade CTA
+   (next rung up) renders in. Bronze by default; silver once the next rung
+   is Mastery; gold for Freedom Path / Sovereign. */
+const SM_UPGRADE_METAL_M = { free: "bronze", confidence: "silver", mastery: "gold", freedom: "gold" };
+/* Metal keyed by a viewer's OWN tier — drives the "My Membership" ribbon. */
+const SM_TIER_METAL_M = { confidence: "bronze", mastery: "silver", freedom: "gold" };
+const SM_METAL_ICON_COLOR_M = { bronze: "#fff", silver: "#3F4650", gold: "#5A3A00" };
+
 /* Accent color per tier, used for the tier-card "YOUR TIER" pill. */
 const SM_TIER_COLOR_M = { confidence: "var(--info)", mastery: "var(--level-intermediate)", freedom: "var(--ai-purple)", sovereign: "var(--premium-gold-deep)" };
 
@@ -676,11 +684,14 @@ function SmTierCard({ tierKey, isOwn }) {
 
 function SmMembershipCard({ tier }) {
   const rows = tier === "freedom" ? [...SM_MEMBERSHIP_ROWS_M, SM_FREEDOM_LECTURE_ROW_M] : SM_MEMBERSHIP_ROWS_M;
+  const metal = SM_TIER_METAL_M[tier];
   return (
     <div className="smt-card sm-membership-card">
       <div className="smt-head sm-membership-head">
-        <span className="sm-membership-eyebrow">MY MEMBERSHIP</span>
-        <span className="sm-membership-tier">{SM_TIER_META_M[tier].name} Path</span>
+        <span className="sm-membership-title">MY MEMBERSHIP</span>
+        <span className={"sm-memb-ribbon sm-memb-ribbon-" + metal}>
+          <span className="sm-memb-ribbon-text">{SM_TIER_META_M[tier].name} Path</span>
+        </span>
       </div>
       <div className="smt-resources">
         {rows.map((r) => <SmTierResourceRow key={r.label} r={r} />)}
@@ -728,16 +739,22 @@ function SideMenu({ open, onClose }) {
 
         <div className="sm-body">
           {nextTier &&
-          <button className="sm-upgrade" onClick={() => go("SubscriptionMobile.html")}>
-              <span className="sm-upgrade-icon">
-                <DSM.IconifyIcon name="lucide:gem" size={20} color="#fff" />
-              </span>
-              <span className="sm-upgrade-main">
-                <span className="sm-upgrade-title">Upgrade to {SM_UPGRADE_LABEL_M[tier]}</span>
-                <span className="sm-upgrade-sub">Unlock more premium channels &amp; courses</span>
-              </span>
-              <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="#fff" />
-            </button>
+          (() => {
+            const upgradeMetal = SM_UPGRADE_METAL_M[tier] || "bronze";
+            const upgradeIconColor = SM_METAL_ICON_COLOR_M[upgradeMetal];
+            return (
+              <button className={"sm-upgrade metal-" + upgradeMetal} onClick={() => go("MembershipTier.html")}>
+                <span className="sm-upgrade-icon">
+                  <DSM.IconifyIcon name="lucide:gem" size={20} color={upgradeIconColor} />
+                </span>
+                <span className="sm-upgrade-main">
+                  <span className="sm-upgrade-title">Upgrade to {SM_UPGRADE_LABEL_M[tier]}</span>
+                  <span className="sm-upgrade-sub">Unlock more premium channels &amp; courses</span>
+                </span>
+                <DSM.IconifyIcon name="lucide:chevron-right" size={20} color={upgradeIconColor} />
+              </button>);
+
+          })()
           }
 
           {showMyMembership &&

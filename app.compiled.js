@@ -4710,7 +4710,8 @@ function tierTagPostsFor(tier) {
 /* ============================ SHARED BITS ================================ */
 function SectionHead({
   children,
-  action
+  action,
+  onAction
 }) {
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -4733,7 +4734,8 @@ function SectionHead({
       fontSize: "var(--fs-body)",
       color: "var(--action-primary)",
       cursor: "pointer"
-    }
+    },
+    onClick: onAction
   }, action));
 }
 
@@ -5054,13 +5056,17 @@ function AddToFeed() {
   }))));
 }
 function RightRail() {
+  const goToEvents = () => (window.pfGo || function (u) {
+    window.location.href = u;
+  })("EventsMobile.html");
   return /*#__PURE__*/React.createElement("aside", {
     className: "rail",
     "data-screen-label": "Right sidebar"
   }, /*#__PURE__*/React.createElement(Card, {
     padding: 20
   }, /*#__PURE__*/React.createElement(SectionHead, {
-    action: "See all"
+    action: "See all",
+    onAction: goToEvents
   }, "My Events"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
@@ -5069,7 +5075,8 @@ function RightRail() {
     }
   }, EVENTS.map((e, i) => /*#__PURE__*/React.createElement(EventCard, {
     key: i,
-    ...e
+    ...e,
+    onCta: goToEvents
   })))), /*#__PURE__*/React.createElement(AddToFeed, null), /*#__PURE__*/React.createElement(MembershipCard, null));
 }
 
@@ -7261,17 +7268,26 @@ function goToHashtag(tag) {
   })(url);
 }
 
+/* Tags carrying the bronze/silver/gold metal system — everything else on
+   BUCKET_META (course, general, mylearning, …) keeps its plain accent color. */
+const METAL_TIER_TAGS = ["confidence", "mastery", "freedom", "inner"];
+
 /* Coloured tier chip shown next to a post's timestamp (see post.tierTag) —
    reuses ChannelFeedCard's pf-chcard-tag pill + BUCKET_META's per-tier
-   colour rather than introducing a new visual pattern. */
+   colour rather than introducing a new visual pattern. Confidence/Mastery/
+   Freedom render in their metal (bronze/silver/gold); Inner Circle stays navy. */
 function TierTagChip({
   tag
 }) {
   const meta = BUCKET_META[tag];
   if (!meta) return null;
+  const isMetal = METAL_TIER_TAGS.includes(tag);
   return /*#__PURE__*/React.createElement("span", {
-    className: "pf-chcard-tag",
-    style: {
+    className: "pf-chcard-tag pf-lock-chan" + (isMetal ? " tier-" + tag : ""),
+    style: isMetal ? {
+      marginTop: 0,
+      marginLeft: 8
+    } : {
       color: meta.color,
       background: `color-mix(in srgb, ${meta.color} 15%, transparent)`,
       marginTop: 0,
@@ -7863,11 +7879,7 @@ function ChannelFeedCard({
   }, post.channel.by), /*#__PURE__*/React.createElement("div", {
     className: "pf-chcard-tags"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "pf-chcard-tag",
-    style: {
-      color: meta.color,
-      background: `color-mix(in srgb, ${meta.color} 15%, transparent)`
-    }
+    className: "pf-chcard-tag pf-inline-chan"
   }, meta.label), post.unlockBadge && /*#__PURE__*/React.createElement("span", {
     className: "pf-chcard-unlock"
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
