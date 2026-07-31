@@ -419,6 +419,7 @@ const APM_EMPTY_DRAFT = () => ({
   photos: [],
   video: null,
   qpType: "Poll",
+  qpThumb: null,
   question: "",
   options: ["", ""],
   correctIndex: 0
@@ -608,6 +609,16 @@ function APMCreateModal({
     if (!file) return;
     addPhoto(await readAsDataUrl(file));
   };
+  const handleQpThumbPick = async () => {
+    const file = await pickFile("image/*");
+    if (!file) return;
+    set({
+      qpThumb: await readAsDataUrl(file)
+    });
+  };
+  const removeQpThumb = () => set({
+    qpThumb: null
+  });
   const handleVideoPick = async () => {
     const file = await pickFile("video/*");
     if (!file) return;
@@ -795,6 +806,29 @@ function APMCreateModal({
   }, "Quiz"), /*#__PURE__*/React.createElement("span", {
     className: "apm-qp-type-sub"
   }, "One correct answer"))), /*#__PURE__*/React.createElement("label", {
+    className: "apm-field-label"
+  }, "Photo / thumbnail ", /*#__PURE__*/React.createElement("span", {
+    className: "apm-optional"
+  }, "(optional)")), draft.qpThumb ? /*#__PURE__*/React.createElement("div", {
+    className: "apm-attach-preview"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "apm-attach-thumb"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: draft.qpThumb,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    "aria-label": "Remove photo",
+    onClick: removeQpThumb
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:x"
+  })))) : /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "apm-qp-thumb-upload",
+    onClick: handleQpThumbPick
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:image"
+  }), /*#__PURE__*/React.createElement("span", null, "Upload photo")), /*#__PURE__*/React.createElement("label", {
     className: "apm-field-label"
   }, "Question"), /*#__PURE__*/React.createElement("input", {
     className: "apm-input",

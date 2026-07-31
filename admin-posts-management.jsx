@@ -158,6 +158,7 @@ const APM_EMPTY_DRAFT = () => ({
   photos: [],
   video: null,
   qpType: "Poll",
+  qpThumb: null,
   question: "",
   options: ["", ""],
   correctIndex: 0,
@@ -306,6 +307,14 @@ function APMCreateModal({ onClose, onCreate }) {
     addPhoto(await readAsDataUrl(file));
   };
 
+  const handleQpThumbPick = async () => {
+    const file = await pickFile("image/*");
+    if (!file) return;
+    set({ qpThumb: await readAsDataUrl(file) });
+  };
+
+  const removeQpThumb = () => set({ qpThumb: null });
+
   const handleVideoPick = async () => {
     const file = await pickFile("video/*");
     if (!file) return;
@@ -420,6 +429,21 @@ function APMCreateModal({ onClose, onCreate }) {
                 <span className="apm-qp-type-sub">One correct answer</span>
               </button>
             </div>
+
+            <label className="apm-field-label">Photo / thumbnail <span className="apm-optional">(optional)</span></label>
+            {draft.qpThumb ? (
+              <div className="apm-attach-preview">
+                <div className="apm-attach-thumb">
+                  <img src={draft.qpThumb} alt="" />
+                  <button type="button" aria-label="Remove photo" onClick={removeQpThumb}><iconify-icon icon="lucide:x"></iconify-icon></button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" className="apm-qp-thumb-upload" onClick={handleQpThumbPick}>
+                <iconify-icon icon="lucide:image"></iconify-icon>
+                <span>Upload photo</span>
+              </button>
+            )}
 
             <label className="apm-field-label">Question</label>
             <input
