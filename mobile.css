@@ -118,21 +118,21 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
 .sm-membership-title{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;letter-spacing:.02em;
   text-transform:uppercase;color:var(--brand-navy);white-space:nowrap;flex:none}
 
-/* metal ribbon banner (assets/ribbon-bronze.png) — same graphic reused for
-   every tier, recoloured via CSS filter on a background-only layer so the
-   label text keeps its exact spec'd colour instead of being filtered too. */
+/* metal ribbon banner — takes its chevron shape from assets/ribbon-bronze.png's
+   alpha channel via a mask, then fills it with the same metal gradients used
+   on the drawer's .sm-upgrade CTA, so all three tiers read as clean metal
+   instead of the raw (over-saturated) bronze bitmap. */
 .sm-memb-ribbon{position:relative;display:inline-flex;align-items:center;justify-content:center;
   flex:none;min-width:0}
 .sm-memb-ribbon::before{content:"";position:absolute;inset:0;
-  background-image:url('assets/ribbon-bronze.png');background-size:100% 100%;background-repeat:no-repeat}
-.sm-memb-ribbon-silver::before{background-image:linear-gradient(100deg,#7C848E,#EDF0F2 52%,#A8AEB6);
+  background-image:linear-gradient(100deg,#6B3F1C,#B87333 50%,#7C4A22);background-size:100% 100%;
   -webkit-mask-image:url('assets/ribbon-bronze.png');-webkit-mask-size:100% 100%;-webkit-mask-repeat:no-repeat;
   mask-image:url('assets/ribbon-bronze.png');mask-size:100% 100%;mask-repeat:no-repeat}
-.sm-memb-ribbon-gold::before{filter:hue-rotate(-18deg) saturate(1.35) brightness(1.15)}
+.sm-memb-ribbon-silver::before{background-image:linear-gradient(100deg,#7C848E,#EDF0F2 52%,#A8AEB6)}
+.sm-memb-ribbon-gold::before{background-image:linear-gradient(100deg,#976A00,#E9B01F 50%,#CE9957)}
 .sm-memb-ribbon-text{position:relative;font-family:var(--font-sans);font-weight:var(--fw-bold);
   font-size:12px;white-space:nowrap;padding:5px 34px;color:#fff}
 .sm-memb-ribbon-silver .sm-memb-ribbon-text{color:#3F4650}
-.sm-memb-ribbon-gold .sm-memb-ribbon-text{color:#5A3A00}
 
 /* indented resource rows, revealed on expand */
 .smt-resources{display:flex;flex-direction:column;padding:2px 18px 14px}
