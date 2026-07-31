@@ -195,19 +195,6 @@ const EV_DETAIL = {
   membersOnly: true,
   state: "live",
   learn: ["Step-by-Step Technique demonstration", "Interactive Group Exercise", "Individual Feedback Sessions", "Real-world Case Studies", "Q&A Panel Discussion"],
-  stats: [{
-    n: "342",
-    l: "Attendees",
-    s: "Joined"
-  }, {
-    n: "45",
-    l: "Pending",
-    s: "Awaiting"
-  }, {
-    n: "12",
-    l: "Cancelled",
-    s: "Withdrawn"
-  }],
   status: [{
     icon: "lucide:calendar",
     t: "17 August 2026"
@@ -232,21 +219,21 @@ const EV_TABS = [{
   icon: "lucide:home",
   href: "NewsfeedMobile.html"
 }, {
-  key: "Profile",
-  label: "Profile",
-  icon: "lucide:user",
-  href: "ProfileMobile.html"
+  key: "Community",
+  label: "Community",
+  icon: "lucide:users",
+  href: "CommunityMobile.html",
+  dot: "12"
 }, {
   key: "Learning",
   label: "My Learning",
   icon: "lucide:book-open",
   href: "LearningMobile.html"
 }, {
-  key: "Community",
-  label: "Community",
-  icon: "lucide:users",
-  href: "CommunityMobile.html",
-  dot: "12"
+  key: "Profile",
+  label: "Profile",
+  icon: "lucide:user",
+  href: "ProfileMobile.html"
 }, {
   key: "Agent",
   label: "Agent",
@@ -689,7 +676,7 @@ function MembersGate({
   }, "You can browse the full details any time. To attend live, join a membership tier — it includes every weekly session, replays and the Q&A."), /*#__PURE__*/React.createElement("button", {
     className: "ev-detail-cta",
     onClick: onUpgrade
-  }, "See membership tiers"), /*#__PURE__*/React.createElement("button", {
+  }, "Upgrade"), /*#__PURE__*/React.createElement("button", {
     className: "ev-detail-cta ghost",
     onClick: onClose
   }, "Not now")));
@@ -1005,18 +992,7 @@ function EventDetail({
     name: "lucide:check",
     size: 19,
     color: "var(--brand-navy)"
-  }), l))), /*#__PURE__*/React.createElement("div", {
-    className: "ev-stats"
-  }, d.stats.map((s, i) => /*#__PURE__*/React.createElement("div", {
-    className: "ev-stat",
-    key: i
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "l"
-  }, s.l), /*#__PURE__*/React.createElement("span", {
-    className: "n"
-  }, s.n), /*#__PURE__*/React.createElement("span", {
-    className: "s"
-  }, s.s)))), /*#__PURE__*/React.createElement("h2", {
+  }), l))), /*#__PURE__*/React.createElement("h2", {
     className: "ev-sec-h"
   }, "Event Status"), /*#__PURE__*/React.createElement("div", {
     className: "ev-status"

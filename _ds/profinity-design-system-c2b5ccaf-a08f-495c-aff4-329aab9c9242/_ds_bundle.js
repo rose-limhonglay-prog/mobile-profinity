@@ -2246,11 +2246,12 @@ function TopNav({
       active: active === "Home"
     })
   }, {
-    label: "Profile",
+    label: "Community",
     icon: /*#__PURE__*/React.createElement(NavIcon, {
-      d: I.profile,
-      active: active === "Profile"
-    })
+      d: I.community,
+      active: active === "Community"
+    }),
+    badge: communityBadge
   }, {
     label: "My Learning",
     icon: /*#__PURE__*/React.createElement(NavIcon, {
@@ -2258,12 +2259,11 @@ function TopNav({
       active: active === "My Learning"
     })
   }, {
-    label: "Community",
+    label: "Profile",
     icon: /*#__PURE__*/React.createElement(NavIcon, {
-      d: I.community,
-      active: active === "Community"
-    }),
-    badge: communityBadge
+      d: I.profile,
+      active: active === "Profile"
+    })
   }, {
     label: "Agent",
     icon: /*#__PURE__*/React.createElement(AgentIcon, {

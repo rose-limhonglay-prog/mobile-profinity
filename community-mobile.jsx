@@ -34,9 +34,9 @@ function useIsMobileCM() {
 
 const CM_TABS = [
 { key: "Home", label: "Home", icon: "lucide:home", href: "NewsfeedMobile.html" },
-{ key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
-{ key: "Learning", label: "My Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
 { key: "Community", label: "Community", icon: "lucide:users", href: null },
+{ key: "Learning", label: "My Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
+{ key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
 { key: "Agent", label: "Agent", icon: "lucide:sparkles", href: "AgentMobile.html" }];
 
 /* Same tier keys as app.jsx's TIER_LADDER, with the resource lists the
@@ -564,7 +564,6 @@ const CM_PREMIUM_CHANNELS = new Set(["Confidence", "Freedom", "Mastery", "Inner 
 const CM_CHANNEL_BUCKET = { Confidence: "confidence", Mastery: "mastery", Freedom: "freedom", "Inner Circle": "inner" };
 
 function CMHeader({ channel, setChannel }) {
-  const [following, setFollowing] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   React.useEffect(() => {
     if (!open) return;
@@ -578,8 +577,9 @@ function CMHeader({ channel, setChannel }) {
         <button type="button" className="ch cm-chbtn" aria-haspopup="listbox" aria-expanded={open}
         onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}>
           {channel}
-          <DSCM.IconifyIcon name="lucide:chevron-down" size={20} color="var(--brand-navy)"
-            className={"cm-chchev" + (open ? " open" : "")} />
+          <span className={"cm-chchev" + (open ? " open" : "")}>
+            <DSCM.IconifyIcon name="lucide:chevron-down" size={18} color="#fff" />
+          </span>
         </button>
         {open &&
         <div className="cm-chmenu" role="listbox" onClick={(e) => e.stopPropagation()}>
@@ -599,28 +599,12 @@ function CMHeader({ channel, setChannel }) {
           </div>
         }
       </div>
-      <button type="button" className={"cm-follow" + (following ? " on" : "")}
-      onClick={() => setFollowing((f) => !f)}>
-        {following ? "Following" : "Follow"}
-        {following && <DSCM.IconifyIcon name="lucide:check" size={16} color="var(--gray-450)" />}
+      <button type="button" className="cm-dir" aria-label="Clinician directory" title="Clinician directory"
+        onClick={() => goCM("ClinicianDirectory.html")}>
+        <DSCM.IconifyIcon name="lucide:map" size={22} color="var(--brand-navy)" />
       </button>
     </div>);
 
-}
-
-function CMComposer({ channel }) {
-  const nav = () => {
-    try { sessionStorage.setItem("pf_post_channels", JSON.stringify([channel])); } catch (e) {}
-    goCM("CreatePostMobile.html");
-  };
-  return (
-    <div className="cm-compose">
-      <DSCM.Avatar name={PFACM.ME.name} src={PFACM.ME.avatar} size={40} />
-      <button className="pill" onClick={nav}>Share something…</button>
-      <button className="imgbtn" aria-label="Add photo" onClick={nav}>
-        <DSCM.IconifyIcon name="lucide:image" size={21} color="var(--brand-navy)" />
-      </button>
-    </div>);
 }
 
 const CMTabBar = React.forwardRef(function CMTabBar({ compact }, ref) {
@@ -692,9 +676,8 @@ function CMScreen({ scrollRef, newPosts, dismiss }) {
       <div ref={headerRef} className={"cm-header-wrap" + (chromeHidden ? " cm-header-hidden" : "")}>
         <CMTopBar onMenu={() => setMenuOpen(true)} onMessages={() => setMsgOpen(true)} />
         <CMHeader channel={channel} setChannel={setChannel} />
-        <CMComposer channel={channel} />
       </div>
-      <div className="cm-scroll" ref={scrollRef} style={{ paddingTop: chromeHidden ? 0 : headerH, paddingBottom: tabsH + 34 }}>
+      <div className="cm-scroll" ref={scrollRef} style={{ paddingTop: headerH, paddingBottom: tabsH + 34 }}>
         {newPosts > 0 &&
         <button type="button" className="cm-newposts" onClick={dismiss}
         aria-label={newPosts + " new posts, tap to see them"}>
@@ -705,10 +688,12 @@ function CMScreen({ scrollRef, newPosts, dismiss }) {
         <PFACM.Feed channel={CM_CHANNEL_BUCKET[channel]} />
         <div className="cm-end">End of newsfeed</div>
       </div>
-      <button type="button" className="cm-clindir-fab" aria-label="Clinician Directory"
-        onClick={() => goCM("ClinicianDirectory.html")}>
-        <DSCM.IconifyIcon name="lucide:book-open" size={15} color="var(--white)" />
-        Clinician Directory
+      <button type="button" className={"m-fab" + (chromeHidden ? " m-fab-compact" : "")} aria-label="Share a Post" onClick={() => {
+        try { sessionStorage.setItem("pf_post_channels", JSON.stringify([channel])); } catch (e) {}
+        goCM("CreatePostMobile.html?from=community");
+      }}>
+        <DSCM.IconifyIcon name="lucide:plus" size={20} color="#fff" />
+        <span className="lbl">Share a Post</span>
       </button>
       <CMTabBar ref={tabsRef} compact={chromeHidden} />
       <MessagesPanelCM open={msgOpen} onClose={() => setMsgOpen(false)} />

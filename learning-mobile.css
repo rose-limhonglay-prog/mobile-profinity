@@ -136,8 +136,8 @@ img { max-width: 100%; }
 .lm-tier-manage { width: 100%; margin-top: 16px; padding: 15px 0; border-radius: 12px; border: 1px solid var(--border-default);
   background: var(--surface-card); font-family: var(--font-sans); font-size: 16px; font-weight: var(--fw-semibold); color: var(--brand-navy); cursor: pointer; }
 .lm-tier-head { display: flex; align-items: center; justify-content: space-between; }
-.lm-tier-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: var(--r-pill);
-  background: linear-gradient(135deg, #292569, #453f9e); color: #fff; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; }
+.lm-tier-badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: var(--r-pill);
+  background: linear-gradient(135deg, #292569, #453f9e); color: #fff; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 11px; }
 .lm-tier-note { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-sans); font-weight: var(--fw-semibold);
   font-size: 13px; color: var(--success); }
 .lm-tier-note::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--success); }

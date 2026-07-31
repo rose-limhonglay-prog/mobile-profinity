@@ -115,7 +115,7 @@ function MembershipTier() {
   return (
     <section className="lm-tier" data-screen-label="Your Membership">
       <button className="lm-tier-mini" onClick={() => setOpen(true)} aria-haspopup="dialog">
-        <span className="lm-tier-badge"><IconifyL name="lucide:crown" size={16} color="#fff" /> Confidence Path</span>
+        <span className="lm-tier-badge"><IconifyL name="lucide:crown" size={12} color="#fff" /> Confidence Path</span>
         <span className="lm-tier-mini-tx">Your Membership · <b>Active</b></span>
         <IconifyL name="lucide:chevron-right" size={20} color="var(--gray-450)" />
       </button>
@@ -128,7 +128,7 @@ function MembershipTier() {
               <button className="lm-tier-close" aria-label="Close" onClick={() => setOpen(false)}><IconifyL name="lucide:x" size={22} color="var(--gray-600)" /></button>
             </div>
             <div className="lm-tier-head">
-              <span className="lm-tier-badge"><IconifyL name="lucide:crown" size={16} color="#fff" /> Confidence Path</span>
+              <span className="lm-tier-badge"><IconifyL name="lucide:crown" size={12} color="#fff" /> Confidence Path</span>
               <span className="lm-tier-note">Active</span>
             </div>
             <p className="lm-tier-sub">Jump straight into everything included in your plan.</p>

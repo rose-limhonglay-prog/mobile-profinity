@@ -13,15 +13,17 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 /* screen column inside the bezel */
 .cm-screen{height:100%;display:flex;flex-direction:column;background:var(--surface-card);position:relative;overflow-anchor:none}
 
-/* ===== header group (top bar + channel row + composer) — overlays the feed,
-   slides up out of view on scroll-down and back in on scroll-up ===== */
-.cm-header-wrap{position:absolute;top:0;left:0;right:0;z-index:5;background:var(--surface-card);
-  transition:transform .28s cubic-bezier(.22,.61,.36,1)}
-.cm-header-wrap.cm-header-hidden{transform:translateY(-100%)}
+/* ===== header group (top bar + channel row) — overlays the feed. On
+   scroll-down the top bar (logo/search/bell/messages) collapses away while
+   the channel row stays pinned as a compact bar; both restore on scroll-up. ===== */
+.cm-header-wrap{position:absolute;top:0;left:0;right:0;z-index:5;background:var(--surface-card)}
 
 /* ===== top bar (clears status bar + Dynamic Island) ===== */
 .cm-top{flex:none;z-index:5;background:var(--surface-card);
-  padding:54px 16px 10px;display:flex;align-items:center;gap:14px}
+  padding:54px 16px 10px;display:flex;align-items:center;gap:14px;overflow:hidden;
+  transition:max-height .3s cubic-bezier(.22,.61,.36,1),opacity .22s ease,padding .3s cubic-bezier(.22,.61,.36,1);
+  max-height:100px}
+.cm-header-wrap.cm-header-hidden .cm-top{max-height:0;padding-top:0;padding-bottom:0;opacity:0;pointer-events:none}
 .cm-burger{background:none;border:none;cursor:pointer;padding:4px;display:flex;color:var(--gray-700)}
 .cm-top img{height:46px;width:auto;object-fit:contain}
 .cm-top .grow{flex:1}
@@ -33,16 +35,24 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
   display:flex;align-items:center;justify-content:center;border:2px solid var(--surface-card)}
 
 /* ===== channel header row ===== */
-.cm-head{flex:none;display:flex;align-items:center;justify-content:space-between;padding:6px 18px 12px;background:var(--surface-card)}
+.cm-head{flex:none;display:flex;align-items:center;justify-content:space-between;padding:6px 18px 12px;background:var(--surface-card);
+  transition:padding-top .3s cubic-bezier(.22,.61,.36,1)}
 .cm-head .ch{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:24px;color:var(--brand-navy)}
+/* once the top bar collapses, the channel row inherits its status-bar clearance */
+.cm-header-wrap.cm-header-hidden .cm-head{padding-top:52px}
 
 /* channel selector w/ chevron + dropdown */
 .cm-chsel{position:relative}
 .cm-chbtn{display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;
   padding:4px 0;font-family:var(--font-sans)!important;font-weight:600!important;font-size:20px!important;color:var(--brand-navy)}
 .cm-chbtn:active{opacity:.7}
-.cm-chchev{transition:transform .2s ease}
+.cm-chchev{transition:transform .2s ease;flex:none;width:26px;height:26px;border-radius:50%;background:var(--brand-navy);
+  display:inline-flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(41,37,105,.28)}
 .cm-chchev.open{transform:rotate(180deg)}
+.cm-dir{flex:none;width:44px;height:44px;border-radius:50%;border:1px solid var(--border-default);cursor:pointer;
+  background:var(--surface-card);display:flex;align-items:center;justify-content:center;transition:background .15s ease,border-color .15s ease}
+.cm-dir:hover{background:var(--surface-sunken);border-color:var(--brand-navy)}
+.cm-dir:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
 .cm-chmenu{position:absolute;top:calc(100% + 6px);left:0;z-index:50;min-width:218px;
   background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;
   box-shadow:0 12px 34px rgba(16,24,40,.22);padding:6px;
@@ -58,23 +68,6 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 .cm-sort b{color:var(--text-primary);font-weight:var(--fw-semibold)}
 .cm-sort button{display:inline-flex;align-items:center;gap:4px;background:none;border:none;cursor:pointer;
   font:inherit;color:var(--text-primary);font-weight:var(--fw-semibold)}
-.cm-follow{display:inline-flex;align-items:center;gap:7px;padding:9px 26px;border-radius:var(--r-sm);
-  border:none;cursor:pointer;background:var(--brand-navy);color:var(--white);
-  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px}
-.cm-follow:active{filter:brightness(1.1)}
-.cm-follow.on{background:var(--surface-sunken);color:var(--gray-450)}
-
-/* ===== composer pill ===== */
-.cm-compose{flex:none;display:flex;align-items:center;gap:12px;padding:4px 16px 14px;background:var(--surface-card)}
-.cm-compose .pill{flex:1;display:flex;align-items:center;height:44px;padding:0 16px;border-radius:var(--r-pill);
-  background:var(--surface-sunken);color:var(--gray-450);font-family:var(--font-sans);font-size:15px;
-  border:none;cursor:pointer;text-align:left}
-.cm-compose .pill:active{background:var(--gray-200)}
-.cm-compose .imgbtn{width:38px;height:38px;border-radius:10px;border:none;cursor:pointer;background:var(--surface-sunken);
-  display:flex;align-items:center;justify-content:center;color:var(--brand-navy)}
-.cm-compose .imgbtn:active{background:var(--gray-200)}
-
-
 /* ===== scrollable feed ===== */
 .cm-scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--surface-page)}
 .cm-scroll::-webkit-scrollbar{width:0}
@@ -113,37 +106,21 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 @keyframes cm-newposts-in{from{opacity:0;transform:translateY(-12px) scale(.9)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.cm-newposts{animation:none}}
 
-/* ===== Clinician Directory floating action button ===== */
-.cm-clindir-fab {
-  position: absolute;
-  bottom: 104px;
-  right: 20px;
-  z-index: 10;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 9px 16px;
-  border-radius: var(--r-pill);
-  border: none;
-  cursor: pointer;
-  background: var(--brand-navy);
-  color: var(--white);
-  font-family: var(--font-sans);
-  font-weight: var(--fw-semibold);
-  font-size: 13px;
-  white-space: nowrap;
-  box-shadow: 0 8px 28px rgba(41, 37, 105, 0.38);
-  transition: transform .28s cubic-bezier(.22,.61,.36,1), opacity .28s cubic-bezier(.22,.61,.36,1), box-shadow .15s ease;
-}
-.cm-clindir-fab:active {
-  transform: scale(0.96);
-  box-shadow: 0 4px 14px rgba(41, 37, 105, 0.28);
-}
-.cm-clindir-fab.cm-clindir-fab-hidden {
-  transform: translateY(160%);
-  opacity: 0;
-  pointer-events: none;
-}
+/* ===== floating "Share a Post" action button — collapses to a round "+"
+   in sync with the compact tab dock while scrolling ===== */
+.m-fab{position:absolute;left:50%;transform:translateX(-50%);bottom:104px;z-index:10;
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 20px;border:none;cursor:pointer;
+  background:var(--brand-navy);border-radius:var(--r-pill);color:var(--white);
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14px;line-height:1;
+  box-shadow:0 8px 24px rgba(41,37,105,.34),inset 0 1px 0 rgba(255,255,255,.22);
+  transition:transform .28s cubic-bezier(.22,.61,.36,1),width .28s cubic-bezier(.22,.61,.36,1),
+    height .28s cubic-bezier(.22,.61,.36,1),padding .28s cubic-bezier(.22,.61,.36,1),
+    gap .28s ease,border-radius .28s ease,bottom .28s cubic-bezier(.22,.61,.36,1)}
+.m-fab:active{transform:translateX(-50%) scale(.96)}
+.m-fab:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.m-fab .lbl{transition:font-size .22s ease,opacity .18s ease,margin-left .22s ease;overflow:hidden;white-space:nowrap}
+.m-fab.m-fab-compact{gap:0;padding:0;width:52px;height:52px;border-radius:50%;bottom:76px}
+.m-fab.m-fab-compact .lbl{font-size:0;opacity:0;margin-left:-7px}
 
 /* ===== floating glass navigation dock ===== */
 .cm-tabs{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:30;

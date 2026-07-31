@@ -21,21 +21,21 @@ const AG_TABS = [{
   icon: "lucide:home",
   href: "NewsfeedMobile.html"
 }, {
-  key: "Profile",
-  label: "Profile",
-  icon: "lucide:user",
-  href: "ProfileMobile.html"
+  key: "Community",
+  label: "Community",
+  icon: "lucide:users",
+  href: "CommunityMobile.html",
+  dot: "12"
 }, {
   key: "Learning",
   label: "My Learning",
   icon: "lucide:book-open",
   href: "LearningMobile.html"
 }, {
-  key: "Community",
-  label: "Community",
-  icon: "lucide:users",
-  href: "CommunityMobile.html",
-  dot: "12"
+  key: "Profile",
+  label: "Profile",
+  icon: "lucide:user",
+  href: "ProfileMobile.html"
 }, {
   key: "Agent",
   label: "Agent",

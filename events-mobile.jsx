@@ -95,7 +95,6 @@ const EV_DETAIL = {
   membersOnly: true,
   state: "live",
   learn: ["Step-by-Step Technique demonstration", "Interactive Group Exercise", "Individual Feedback Sessions", "Real-world Case Studies", "Q&A Panel Discussion"],
-  stats: [{ n: "342", l: "Attendees", s: "Joined" }, { n: "45", l: "Pending", s: "Awaiting" }, { n: "12", l: "Cancelled", s: "Withdrawn" }],
   status: [
     { icon: "lucide:calendar", t: "17 August 2026" },
     { icon: "lucide:clock", t: "20:00 GMT | 16:00 ET" },
@@ -108,9 +107,9 @@ const EV_DETAIL = {
 
 const EV_TABS = [
   { key: "Home", label: "Home", icon: "lucide:home", href: "NewsfeedMobile.html" },
-  { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
-  { key: "Learning", label: "My Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
   { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
+  { key: "Learning", label: "My Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
+  { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
   { key: "Agent", label: "Agent", icon: "lucide:sparkles", href: "AgentMobile.html" },
 ];
 
@@ -348,7 +347,7 @@ function MembersGate({ onClose, onUpgrade }) {
         <span className="ev-gate-ic"><DSEV.IconifyIcon name="lucide:lock" size={26} color="var(--brand-gold)" /></span>
         <h3 className="ev-sheet-ttl">This event is for members</h3>
         <p className="ev-sheet-p">You can browse the full details any time. To attend live, join a membership tier — it includes every weekly session, replays and the Q&amp;A.</p>
-        <button className="ev-detail-cta" onClick={onUpgrade}>See membership tiers</button>
+        <button className="ev-detail-cta" onClick={onUpgrade}>Upgrade</button>
         <button className="ev-detail-cta ghost" onClick={onClose}>Not now</button>
       </div>
     </div>
@@ -527,12 +526,6 @@ function EventDetail({ onBack, onJoin, event }) {
           <ul className="ev-checklist">
             {d.learn.map((l, i) => <li key={i}><DSEV.IconifyIcon name="lucide:check" size={19} color="var(--brand-navy)" />{l}</li>)}
           </ul>
-
-          <div className="ev-stats">
-            {d.stats.map((s, i) => (
-              <div className="ev-stat" key={i}><span className="l">{s.l}</span><span className="n">{s.n}</span><span className="s">{s.s}</span></div>
-            ))}
-          </div>
 
           <h2 className="ev-sec-h">Event Status</h2>
           <div className="ev-status">

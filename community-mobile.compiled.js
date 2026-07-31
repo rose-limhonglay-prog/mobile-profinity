@@ -38,20 +38,20 @@ const CM_TABS = [{
   icon: "lucide:home",
   href: "NewsfeedMobile.html"
 }, {
-  key: "Profile",
-  label: "Profile",
-  icon: "lucide:user",
-  href: "ProfileMobile.html"
+  key: "Community",
+  label: "Community",
+  icon: "lucide:users",
+  href: null
 }, {
   key: "Learning",
   label: "My Learning",
   icon: "lucide:book-open",
   href: "LearningMobile.html"
 }, {
-  key: "Community",
-  label: "Community",
-  icon: "lucide:users",
-  href: null
+  key: "Profile",
+  label: "Profile",
+  icon: "lucide:user",
+  href: "ProfileMobile.html"
 }, {
   key: "Agent",
   label: "Agent",
@@ -1014,7 +1014,6 @@ function CMHeader({
   channel,
   setChannel
 }) {
-  const [following, setFollowing] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   React.useEffect(() => {
     if (!open) return;
@@ -1035,12 +1034,13 @@ function CMHeader({
       e.stopPropagation();
       setOpen(o => !o);
     }
-  }, channel, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
-    name: "lucide:chevron-down",
-    size: 20,
-    color: "var(--brand-navy)",
+  }, channel, /*#__PURE__*/React.createElement("span", {
     className: "cm-chchev" + (open ? " open" : "")
-  })), open && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
+    name: "lucide:chevron-down",
+    size: 18,
+    color: "#fff"
+  }))), open && /*#__PURE__*/React.createElement("div", {
     className: "cm-chmenu",
     role: "listbox",
     onClick: e => e.stopPropagation()
@@ -1065,39 +1065,13 @@ function CMHeader({
     color: "var(--brand-navy)"
   }))))), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "cm-follow" + (following ? " on" : ""),
-    onClick: () => setFollowing(f => !f)
-  }, following ? "Following" : "Follow", following && /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
-    name: "lucide:check",
-    size: 16,
-    color: "var(--gray-450)"
-  })));
-}
-function CMComposer({
-  channel
-}) {
-  const nav = () => {
-    try {
-      sessionStorage.setItem("pf_post_channels", JSON.stringify([channel]));
-    } catch (e) {}
-    goCM("CreatePostMobile.html");
-  };
-  return /*#__PURE__*/React.createElement("div", {
-    className: "cm-compose"
-  }, /*#__PURE__*/React.createElement(DSCM.Avatar, {
-    name: PFACM.ME.name,
-    src: PFACM.ME.avatar,
-    size: 40
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "pill",
-    onClick: nav
-  }, "Share something…"), /*#__PURE__*/React.createElement("button", {
-    className: "imgbtn",
-    "aria-label": "Add photo",
-    onClick: nav
+    className: "cm-dir",
+    "aria-label": "Clinician directory",
+    title: "Clinician directory",
+    onClick: () => goCM("ClinicianDirectory.html")
   }, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
-    name: "lucide:image",
-    size: 21,
+    name: "lucide:map",
+    size: 22,
     color: "var(--brand-navy)"
   })));
 }
@@ -1185,13 +1159,11 @@ function CMScreen({
   }), /*#__PURE__*/React.createElement(CMHeader, {
     channel: channel,
     setChannel: setChannel
-  }), /*#__PURE__*/React.createElement(CMComposer, {
-    channel: channel
   })), /*#__PURE__*/React.createElement("div", {
     className: "cm-scroll",
     ref: scrollRef,
     style: {
-      paddingTop: chromeHidden ? 0 : headerH,
+      paddingTop: headerH,
       paddingBottom: tabsH + 34
     }
   }, newPosts > 0 && /*#__PURE__*/React.createElement("button", {
@@ -1209,14 +1181,21 @@ function CMScreen({
     className: "cm-end"
   }, "End of newsfeed")), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "cm-clindir-fab",
-    "aria-label": "Clinician Directory",
-    onClick: () => goCM("ClinicianDirectory.html")
+    className: "m-fab" + (chromeHidden ? " m-fab-compact" : ""),
+    "aria-label": "Share a Post",
+    onClick: () => {
+      try {
+        sessionStorage.setItem("pf_post_channels", JSON.stringify([channel]));
+      } catch (e) {}
+      goCM("CreatePostMobile.html?from=community");
+    }
   }, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
-    name: "lucide:book-open",
-    size: 15,
-    color: "var(--white)"
-  }), "Clinician Directory"), /*#__PURE__*/React.createElement(CMTabBar, {
+    name: "lucide:plus",
+    size: 20,
+    color: "#fff"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, "Share a Post")), /*#__PURE__*/React.createElement(CMTabBar, {
     ref: tabsRef,
     compact: chromeHidden
   }), /*#__PURE__*/React.createElement(MessagesPanelCM, {
