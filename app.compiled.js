@@ -5058,7 +5058,7 @@ function AddToFeed() {
 function RightRail() {
   const goToEvents = () => (window.pfGo || function (u) {
     window.location.href = u;
-  })("EventsMobile.html");
+  })("EventsWeb.html");
   return /*#__PURE__*/React.createElement("aside", {
     className: "rail",
     "data-screen-label": "Right sidebar"
@@ -7765,7 +7765,7 @@ function EventRegPostCard({
   const ev = post.eventReg;
   const goToEvent = () => (window.pfGo || function (u) {
     window.location.href = u;
-  })("EventsMobile.html");
+  })("EventsWeb.html");
   return /*#__PURE__*/React.createElement("div", {
     className: "post-wrap pf-event-feed",
     style: {
@@ -8421,11 +8421,42 @@ function readEventRegPosts() {
 function getAllPosts() {
   return [...readUserPosts(), ...EVENT_REG_SEED, ...readEventRegPosts(), ...ALL_FEED_SEQUENCE_POSTS, ...BUCKET_POSTS, ...TIER_TAG_POSTS];
 }
+
+/* Event-registration cards ("X people going" teasers plus the two designed
+   eventReg slots per tier sequence) otherwise stack at the very top of the
+   feed (seed + up to 3 of your own registrations) and repeat every cycle —
+   redundant well past what a single post type should occupy. Every tier's
+   feed gets the same treatment: pull eventReg posts out of their natural
+   slot and re-spread them every 10-20 posts instead, keeping relative order
+   for everything else untouched. Any events that don't fit that spacing
+   (feed shorter than events*minGap) spill to the end rather than being
+   dropped, so a registration confirmation is never silently lost. */
+function spreadEventPosts(items, minGap = 10, maxGap = 20) {
+  const isEvent = ({
+    item
+  }) => !!item.eventReg;
+  const events = items.filter(isEvent);
+  const rest = items.filter(x => !isEvent(x));
+  if (!events.length) return rest;
+  const gap = Math.min(maxGap, Math.max(minGap, Math.floor(rest.length / (events.length + 1)) || minGap));
+  const result = [];
+  let ei = 0;
+  rest.forEach((it, i) => {
+    result.push(it);
+    if (ei < events.length && (i + 1) % gap === 0) result.push(events[ei++]);
+  });
+  while (ei < events.length) result.push(events[ei++]);
+  return result;
+}
 function Feed({
   channel
 } = {}) {
   const [userPosts, setUserPosts] = useState(() => readUserPosts());
-  const [eventRegPosts] = useState(() => [...EVENT_REG_SEED, ...readEventRegPosts()]);
+  /* Capped at 2 (newest first): the seed plus up to 3 of your own
+     registrations could otherwise pin 4 eventReg cards in a row before
+     spreadEventPosts even runs — 2 is enough "you're going" social proof
+     without needing more events than a 40-60 post feed can spread thinly. */
+  const [eventRegPosts] = useState(() => [...EVENT_REG_SEED, ...readEventRegPosts()].slice(0, 2));
   const [state, setState] = useState(() => {
     const m = {};
     /* Seeded from the union of every tier's sequence (not just the one the
@@ -8541,7 +8572,11 @@ function Feed({
      doesn't hold that tier — each tier's sequence has exactly two Lock
      posts by design (first cycle + repeat cycle), so no single-teaser cap
      is needed here the way the old random Hidden Post rotation required. */
-  const feedItems = [...userPosts.map(p => ({
+  /* eventReg posts (top-pinned social proof + each tier sequence's two
+     designed slots) are re-spread to a ~1-in-10-to-20 cadence by
+     spreadEventPosts below, rather than left to stack at the top and repeat
+     every cycle — see its comment for why. */
+  const feedItems = spreadEventPosts([...userPosts.map(p => ({
     item: p,
     mode: "full"
   })), ...eventRegPosts.map(p => ({
@@ -8566,7 +8601,7 @@ function Feed({
       item: p,
       mode: "full"
     };
-  })];
+  })]);
 
   /* a channel (Confidence/Mastery/Freedom/Inner Circle) narrows the feed
      down to just that bucket's posts — used by the Community page's channel
