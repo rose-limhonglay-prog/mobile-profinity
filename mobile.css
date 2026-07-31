@@ -125,7 +125,9 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
   flex:none;min-width:0}
 .sm-memb-ribbon::before{content:"";position:absolute;inset:0;
   background-image:url('assets/ribbon-bronze.png');background-size:100% 100%;background-repeat:no-repeat}
-.sm-memb-ribbon-silver::before{filter:grayscale(1) brightness(1.35) contrast(.92)}
+.sm-memb-ribbon-silver::before{background-image:linear-gradient(100deg,#7C848E,#EDF0F2 52%,#A8AEB6);
+  -webkit-mask-image:url('assets/ribbon-bronze.png');-webkit-mask-size:100% 100%;-webkit-mask-repeat:no-repeat;
+  mask-image:url('assets/ribbon-bronze.png');mask-size:100% 100%;mask-repeat:no-repeat}
 .sm-memb-ribbon-gold::before{filter:hue-rotate(-18deg) saturate(1.35) brightness(1.15)}
 .sm-memb-ribbon-text{position:relative;font-family:var(--font-sans);font-weight:var(--fw-bold);
   font-size:12px;white-space:nowrap;padding:5px 34px;color:#fff}
@@ -138,6 +140,9 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
   background:none;border:none;padding:10px 4px}
 .smt-resource:active{background:var(--surface-sunken);border-radius:9px}
 .smt-resource-label{flex:1;min-width:0;font-family:var(--font-sans);font-weight:500;font-size:16px;color:var(--text-heading)}
+.smt-badge{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;
+  padding:0 7px;border-radius:var(--r-pill);font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;
+  background:var(--gray-200);color:var(--gray-600)}
 
 /* My Learning — primary destination card, same weight as tier cards */
 .sm-primary-card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;

@@ -24,21 +24,21 @@ const M_TABS = [{
   icon: "lucide:home",
   href: null
 }, {
-  key: "Profile",
-  label: "Profile",
-  icon: "lucide:user",
-  href: "ProfileMobile.html"
+  key: "Community",
+  label: "Community",
+  icon: "lucide:users",
+  href: "CommunityMobile.html",
+  dot: "12"
 }, {
   key: "Learning",
   label: "Learning",
   icon: "lucide:book-open",
   href: "LearningMobile.html"
 }, {
-  key: "Community",
-  label: "Community",
-  icon: "lucide:users",
-  href: "CommunityMobile.html",
-  dot: "12"
+  key: "Profile",
+  label: "Profile",
+  icon: "lucide:user",
+  href: "ProfileMobile.html"
 }, {
   key: "Agent",
   label: "Agent",
@@ -242,7 +242,7 @@ const SM_MEMBERSHIP_ROWS_M = [{
 }];
 const SM_FREEDOM_LECTURE_ROW_M = {
   label: "Freedom Path Lectures",
-  icon: "lucide:video",
+  icon: "lucide:presentation",
   href: "LearningMobile.html"
 };
 
@@ -285,11 +285,19 @@ const SM_TIER_COLOR_M = {
   sovereign: "var(--premium-gold-deep)"
 };
 
-/* Chat-card label per tier — always routes to CommunityMobile.html. */
+/* Chat-card label per tier — always routes to CommunityMobile.html. Rendered
+   as the first row inside SmMembershipCard, not a separate card. */
 const SM_CHAT_LABEL_M = {
   confidence: "Community Chat",
   mastery: "Mastery Chat",
   freedom: "Freedom Path Chat"
+};
+/* Unread-count badge for that same chat row. Mastery/freedom reuse the counts
+   already spec'd for their SM_TIER_RESOURCES_M lounge/circle equivalents. */
+const SM_CHAT_BADGE_M = {
+  confidence: "10+",
+  mastery: 6,
+  freedom: "10+"
 };
 const SM_TIER_RESOURCES_M = {
   confidence: SM_MEMBERSHIP_ROWS_M,
@@ -1271,7 +1279,9 @@ function SmTierResourceRow({
     color: "var(--gray-900)"
   }), /*#__PURE__*/React.createElement("span", {
     className: "smt-resource-label"
-  }, r.label), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+  }, r.label), r.n != null && /*#__PURE__*/React.createElement("span", {
+    className: "smt-badge"
+  }, r.n), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 20,
     color: "var(--gray-450)"
@@ -1309,7 +1319,13 @@ function SmTierCard({
 function SmMembershipCard({
   tier
 }) {
-  const rows = tier === "freedom" ? [...SM_MEMBERSHIP_ROWS_M, SM_FREEDOM_LECTURE_ROW_M] : SM_MEMBERSHIP_ROWS_M;
+  const chatRow = {
+    label: SM_CHAT_LABEL_M[tier],
+    icon: "lucide:message-circle",
+    href: "CommunityMobile.html",
+    n: SM_CHAT_BADGE_M[tier]
+  };
+  const rows = tier === "freedom" ? [SM_FREEDOM_LECTURE_ROW_M, chatRow, ...SM_MEMBERSHIP_ROWS_M] : [chatRow, ...SM_MEMBERSHIP_ROWS_M];
   const metal = SM_TIER_METAL_M[tier];
   return /*#__PURE__*/React.createElement("div", {
     className: "smt-card sm-membership-card"
@@ -1436,25 +1452,6 @@ function SideMenu({
   }, "My Learning"), /*#__PURE__*/React.createElement("span", {
     className: "sm-primary-sub"
   }, "Courses, protocols & certificates")), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 20,
-    color: "var(--gray-450)"
-  })), showMyMembership && /*#__PURE__*/React.createElement("button", {
-    className: "sm-primary-card",
-    onClick: () => go("CommunityMobile.html")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-primary-icon"
-  }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: "lucide:message-circle",
-    size: 22,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "sm-primary-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-primary-title"
-  }, SM_CHAT_LABEL_M[tier]), /*#__PURE__*/React.createElement("span", {
-    className: "sm-primary-sub"
-  }, "Discuss, connect & ask questions")), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 20,
     color: "var(--gray-450)"

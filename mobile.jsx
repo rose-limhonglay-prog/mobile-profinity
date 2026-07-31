@@ -12,9 +12,9 @@ function go(url) {(window.pfGo || function (u) {window.location.href = u;})(url)
 
 const M_TABS = [
 { key: "Home", label: "Home", icon: "lucide:home", href: null },
-{ key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
-{ key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
 { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
+{ key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
+{ key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
 { key: "Agent", label: "Agent", icon: "lucide:sparkles", href: "AgentMobile.html" }];
 
 
@@ -114,7 +114,7 @@ const SM_MEMBERSHIP_ROWS_M = [
 { label: "Technique Tuesday",   icon: "lucide:calendar-check", href: "EventsMobile.html" },
 { label: "Complications Help",  icon: "lucide:shield-alert",   href: "DirectMessage.html" },
 { label: "AI Coach",            icon: "lucide:sparkles",       href: "LearningMobile.html" }];
-const SM_FREEDOM_LECTURE_ROW_M = { label: "Freedom Path Lectures", icon: "lucide:video", href: "LearningMobile.html" };
+const SM_FREEDOM_LECTURE_ROW_M = { label: "Freedom Path Lectures", icon: "lucide:presentation", href: "LearningMobile.html" };
 
 /* Upgrade-CTA label keyed by the viewer's CURRENT tier — not derivable from
    the next tier's own display name, since mastery's target reads "Freedom
@@ -132,8 +132,12 @@ const SM_METAL_ICON_COLOR_M = { bronze: "#fff", silver: "#3F4650", gold: "#5A3A0
 /* Accent color per tier, used for the tier-card "YOUR TIER" pill. */
 const SM_TIER_COLOR_M = { confidence: "var(--info)", mastery: "var(--level-intermediate)", freedom: "var(--ai-purple)", sovereign: "var(--premium-gold-deep)" };
 
-/* Chat-card label per tier — always routes to CommunityMobile.html. */
+/* Chat-card label per tier — always routes to CommunityMobile.html. Rendered
+   as the first row inside SmMembershipCard, not a separate card. */
 const SM_CHAT_LABEL_M = { confidence: "Community Chat", mastery: "Mastery Chat", freedom: "Freedom Path Chat" };
+/* Unread-count badge for that same chat row. Mastery/freedom reuse the counts
+   already spec'd for their SM_TIER_RESOURCES_M lounge/circle equivalents. */
+const SM_CHAT_BADGE_M = { confidence: "10+", mastery: 6, freedom: "10+" };
 
 const SM_TIER_RESOURCES_M = {
   confidence: SM_MEMBERSHIP_ROWS_M,
@@ -656,6 +660,7 @@ function SmTierResourceRow({ r }) {
     <button className="smt-resource" onClick={() => go(r.href)}>
       <DSM.IconifyIcon name={r.icon} size={20} color="var(--gray-900)" />
       <span className="smt-resource-label">{r.label}</span>
+      {r.n != null && <span className="smt-badge">{r.n}</span>}
       <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
     </button>);
 
@@ -683,7 +688,10 @@ function SmTierCard({ tierKey, isOwn }) {
 }
 
 function SmMembershipCard({ tier }) {
-  const rows = tier === "freedom" ? [...SM_MEMBERSHIP_ROWS_M, SM_FREEDOM_LECTURE_ROW_M] : SM_MEMBERSHIP_ROWS_M;
+  const chatRow = { label: SM_CHAT_LABEL_M[tier], icon: "lucide:message-circle", href: "CommunityMobile.html", n: SM_CHAT_BADGE_M[tier] };
+  const rows = tier === "freedom" ?
+  [SM_FREEDOM_LECTURE_ROW_M, chatRow, ...SM_MEMBERSHIP_ROWS_M] :
+  [chatRow, ...SM_MEMBERSHIP_ROWS_M];
   const metal = SM_TIER_METAL_M[tier];
   return (
     <div className="smt-card sm-membership-card">
@@ -782,19 +790,6 @@ function SideMenu({ open, onClose }) {
             </span>
             <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
           </button>
-
-          {showMyMembership &&
-          <button className="sm-primary-card" onClick={() => go("CommunityMobile.html")}>
-              <span className="sm-primary-icon">
-                <DSM.IconifyIcon name="lucide:message-circle" size={22} color="var(--brand-navy)" />
-              </span>
-              <span className="sm-primary-main">
-                <span className="sm-primary-title">{SM_CHAT_LABEL_M[tier]}</span>
-                <span className="sm-primary-sub">Discuss, connect &amp; ask questions</span>
-              </span>
-              <DSM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
-            </button>
-          }
 
           <SmSection title="Upcoming Events" />
           <div className="sm-events">
