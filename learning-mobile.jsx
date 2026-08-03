@@ -1,12 +1,13 @@
 /* ===========================================================================
    PROfinity — My Learning (mobile) · iPhone 17 Pro Max
-   Ported from the bound claude.ai/design source (Confidence Engine dashboard:
-   Vision, weekly focus ring, domain confidence, daily targets) onto the DS
-   bundle. Suffixed -L to avoid global-scope clashes.
+   Ported from the bound claude.ai/design source (Clinic Growth dashboard:
+   stats + On Track ring, Continue Learning, Next Best Action, Clinic Growth
+   Score, Today's Target, My Courses, action cards) onto the DS bundle.
+   Suffixed -L to avoid global-scope clashes.
    =========================================================================== */
 const { useState: useStateL } = React;
 const DSL = window.ProfinityDesignSystem_c2b5cc;
-const { CourseTile: CourseTileL, LevelBadge: LevelBadgeL, IconifyIcon: IconifyL, Icon: IconL } = DSL;
+const { LevelBadge: LevelBadgeL, IconifyIcon: IconifyL } = DSL;
 const MobileChromeC = window.MobileChromeC;
 const SurveyMobile = window.SurveyMobile;
 
@@ -14,187 +15,128 @@ function goL(url) {(window.pfGo || function (u) {window.location.href = u;})(url
 
 const TUTOR_L = "Dr Tim Pearce";
 const IMG_L = {
-  lip: "assets/clinic-lip-design.png",
-  protox: "assets/clinic-toxin-guide.png",
-  temple: "assets/clinic-treatment-collage.png",
-  logo: "assets/profinity-academy-logo-full.png"
+  lip: "assets/clinic-lip-design.png"
 };
 
-const LM_VISION = "Boutique clinic with lips + skin treatments, £80k/month revenue, team of 3 professionals";
-
-const LM_DOMAINS = [
-{ key: "Clinical", pct: 62, color: "#2E86FF" },
-{ key: "Marketing", pct: 52, color: "#CE9957" },
-{ key: "Sales", pct: 31, color: "#BE1E2D" },
-{ key: "Business", pct: 41, color: "#E58F0C" }];
+const LM2_STATS = [
+{ icon: "lucide:banknote", text: "£80k/month" },
+{ icon: "lucide:image", text: "Boutique Lips & Skin Clinic" },
+{ icon: "lucide:users", text: "Team of 3" }];
 
 
-const LM_FOCUS = { domain: "Marketing", line: "You need visibility. You aren't known yet.", pct: 52 };
+const LM2_TRACK_PCT = 52;
 
-const LM_TARGETS = [
-{ t: "Write 3 LinkedIn posts about treatments", tag: "MKT", rung: "DO", pts: 15, done: true },
-{ t: "Record 30-second TikTok intro to clinic", tag: "MKT", rung: "DO", pts: 15 },
-{ t: "Engage on 5 local business Instagram posts", tag: "MKT", rung: "LEARN", pts: 5 },
-{ t: "Document 3 common side effects and care", tag: "CLIN", rung: "LEARN", pts: 15 },
-{ t: "Follow up with 3 warm enquiries within 24h", tag: "SALE", rung: "DO", pts: 15 }];
+const LM2_CONTINUE = {
+  image: IMG_L.lip,
+  level: "Intermediate",
+  title: "8D Lip Design",
+  progress: 20,
+  note: "Only 6 more modules until you get your certificate",
+  cta: "Resume Lesson 4",
+  href: "Lesson.html"
+};
 
+const LM2_NEXT_ACTION = {
+  image: IMG_L.lip,
+  level: "Intermediate",
+  title: "Marketing",
+  progress: 52,
+  note: "Complete 3 lessons to reach 70%",
+  cta: "Work on your goal",
+  href: "CourseDetail.html"
+};
 
-const LM_TABS_TOP = ["All Courses", "Free Resources", "New Courses", "Recommended", "Upcoming Webinars", "Certification"];
+const LM2_REASONING = "Based on your goal of building an £80k/month boutique clinic, and because Marketing is currently your weakest growth area, today's lesson has been selected to improve patient acquisition.";
 
-const MY_COURSES_L = [
-{ image: IMG_L.lip, level: "Beginner", title: "8D Lip Design", description: "Discover a complete view of human anatomy for deeper learning.", progress: 20, cta: "Continue learning", active: true },
-{ image: IMG_L.temple, level: "Intermediate", title: "Temple Filler", description: "Confidently Inject Temples & add YOUTH back into your patients.", progress: 0, cta: "Start learning" },
-{ image: IMG_L.protox, level: "Advance", title: "Protox Course", description: "Elevate Your Botulinum Toxin Skills, 10x Your Confidence, and more.", progress: 0, cta: "Start learning" }];
-
-
-const RESOURCES_L = [
-{ image: IMG_L.temple, title: "13 Risky Injection Areas", lines: ["Facial Vein Mapping", "Navigating Risky Zones"] },
-{ image: IMG_L.protox, title: "Aspirating Experiment", lines: ["Sample Analysis", "Essential Lab Techniques"] },
-{ image: IMG_L.lip, title: "Bruising Checklist", lines: ["Injection Site Prep", "Minimize Bruising"] }];
-
-
-const PATHS_L = [
-{ image: IMG_L.protox, title: "Botox", description: "Discover a complete view of human anatomy for deeper learning.", price: "£1,998" },
-{ image: IMG_L.temple, title: "Filler", description: "Elevate Your Botulinum Toxin Skills, 10x Your Confidence, and more.", price: "£794" },
-{ image: IMG_L.lip, title: "Lips", description: "Confidently Inject Temples & add YOUTH back into your patients.", price: "£1,234" }];
-
-
-const RECOMMENDED_L = [
-{ image: IMG_L.lip, level: "Beginner", title: "Dynamic Facial Structures", description: "Explore intricate facial anatomy to enhance artistry.", by: "Dr Emily Carter", price: "£1,245" },
-{ image: IMG_L.protox, level: "Intermediate", title: "Advanced Lip Techniques", description: "Master the nuances of lip anatomy for precise techniques.", by: "Prof. Jonah Lee", price: "£1,300" },
-{ image: IMG_L.temple, level: "Intermediate", title: "Comprehensive Facial Anatomy", description: "A thorough exploration of facial structures.", by: "Dr Lisa Huang", price: "£1,550" }];
+const LM2_GROWTH = [
+{ key: "Marketing", pct: 52 },
+{ key: "Clinical", pct: 85 },
+{ key: "Business", pct: 64 },
+{ key: "Patient Care", pct: 78 }];
 
 
-const NEW_COURSES_L = [
-{ image: IMG_L.lip, level: "Intermediate", title: "8D Lip Design", description: "Discover a complete view of human anatomy for deeper learning.", by: TUTOR_L, price: "£112" },
-{ image: IMG_L.protox, level: "Intermediate", title: "Protox Course", description: "Elevate Your Botulinum Toxin Skills, 10x Your Confidence.", by: TUTOR_L, price: "£99" },
-{ image: IMG_L.temple, level: "Intermediate", title: "Temple Filler", description: "Confidently Inject Temples & add YOUTH back into your patients.", by: TUTOR_L, price: "£100" }];
+const LM2_TARGETS = [
+"Complete Lesson 4: Lip Anatomy",
+"Watch: Patient Consultation Tips",
+"Quiz: Safety Protocols"];
 
 
-const POPULAR_L = [
-{ image: IMG_L.lip, level: "Advance", title: "8D Lip Design", description: "Discover a complete view of human anatomy for deeper learning.", by: TUTOR_L, price: "£112" },
-{ image: IMG_L.protox, level: "Advance", title: "Protox Course", description: "Elevate Your Botulinum Toxin Skills, 10x Your Confidence.", by: TUTOR_L, price: "£99" },
-{ image: IMG_L.temple, level: "Advance", title: "Brow Lift Training", description: "Learn expert techniques for achieving flawless brow lifts.", by: TUTOR_L, price: "£99" }];
+const LM2_MY_COURSES = [
+{ image: IMG_L.lip, level: "Intermediate", title: "8D Lip Design", description: "Discover a complete view of lip anatomy for deeper learning.", price: "£112" },
+{ image: IMG_L.lip, level: "Advanced", title: "Temple Filler", description: "Master safe injection techniques with anatomical precision.", price: "£89" }];
 
 
 const LM_TABS = [
 { key: "Home", label: "Home", icon: "lucide:home", href: "NewsfeedMobile.html" },
-{ key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
-{ key: "Learning", label: "My Learning", icon: "lucide:book-open", href: null },
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
+{ key: "Learning", label: "My Learning", icon: "lucide:book-open", href: null },
+{ key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
 { key: "Agent", label: "Agent", icon: "lucide:sparkles", href: "AgentMobile.html" }];
 
 
-function LMSearch() {
+function LM2Header() {
   return (
-    <div className="lm-search">
-      <DSL.Icon name="search" size={21} color="var(--gray-450)" />
-      <input type="text" placeholder="Search course…" aria-label="Search course" />
-      <DSL.IconifyIcon name="lucide:sliders-horizontal" size={21} color="var(--gray-500)" />
+    <div className="lm2-head" data-screen-label="Header">
+      <div className="lm2-head-row">
+        <div className="lm2-head-greet">Good morning, Katy! <span className="lm2-sun" role="img" aria-label="sun">☀️</span></div>
+        <span className="lm2-tierpill"><IconifyL name="lucide:crown" size={12} color="#fff" /> Confidence Path</span>
+      </div>
+      <div className="lm2-headcard">
+        <ul className="lm2-stats">
+          {LM2_STATS.map((s) =>
+          <li key={s.text}><IconifyL name={s.icon} size={17} color="var(--gray-500)" />{s.text}</li>
+          )}
+        </ul>
+        <div className="lm2-ring" style={{ "--pct": LM2_TRACK_PCT }} role="img" aria-label={LM2_TRACK_PCT + "% on track"}>
+          <span className="n">{LM2_TRACK_PCT}%</span>
+          <span className="lbl">On Track</span>
+        </div>
+      </div>
     </div>);
 
 }
 
-function LMSaveFab() {
+function LM2HeroCard({ title, data, reasoning }) {
   return (
-    <button className="lm-savefab" aria-label="Saved" onClick={() => goL("MySaved.html?from=learning")}>
-      <IconifyL name="lucide:bookmark" size={20} color="var(--brand-navy)" />
-    </button>);
-
-}
-
-const LM_TIER_CONTENT = [
-{ label: "Foundation Courses", n: "8 courses", icon: "lucide:graduation-cap", tint: "#2A9568", href: "MyLearning.html" },
-{ label: "Live Masterclasses", n: "5 replays", icon: "lucide:play-circle", tint: "#6C63FF", href: "MyLearning.html" },
-{ label: "Protocols & Guides", n: "12 files", icon: "lucide:file-text", tint: "#CE9957", href: "MyLearning.html" },
-{ label: "Confidence Channel", n: "Community", icon: "lucide:users", tint: "#2E86FF", href: "CommunityMobile.html" }];
-
-
-function MembershipTier() {
-  const [open, setOpen] = useStateL(false);
-  return (
-    <section className="lm-tier" data-screen-label="Your Membership">
-      <button className="lm-tier-mini" onClick={() => setOpen(true)} aria-haspopup="dialog">
-        <span className="lm-tier-badge"><IconifyL name="lucide:crown" size={12} color="#fff" /> Confidence Path</span>
-        <span className="lm-tier-mini-tx">Your Membership · <b>Active</b></span>
-        <IconifyL name="lucide:chevron-right" size={20} color="var(--gray-450)" />
-      </button>
-
-      {open &&
-      <div className="lm-tier-overlay" role="dialog" aria-modal="true" aria-labelledby="lm-tier-h" onClick={() => setOpen(false)}>
-          <div className="lm-tier-sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="lm-tier-sheet-hd">
-              <h2 id="lm-tier-h">Your Membership</h2>
-              <button className="lm-tier-close" aria-label="Close" onClick={() => setOpen(false)}><IconifyL name="lucide:x" size={22} color="var(--gray-600)" /></button>
-            </div>
-            <div className="lm-tier-head">
-              <span className="lm-tier-badge"><IconifyL name="lucide:crown" size={12} color="#fff" /> Confidence Path</span>
-              <span className="lm-tier-note">Active</span>
-            </div>
-            <p className="lm-tier-sub">Jump straight into everything included in your plan.</p>
-            <div className="lm-tier-grid">
-              {LM_TIER_CONTENT.map((c, i) =>
-            <button className="lm-tier-item" key={i} onClick={() => goL(c.href)}>
-                  <span className="ic" style={{ background: c.tint + "1f" }}>
-                    <IconifyL name={c.icon} size={22} color={c.tint} />
-                  </span>
-                  <span className="tx">
-                    <span className="ti">{c.label}</span>
-                    <span className="su">{c.n}</span>
-                  </span>
-                  <IconifyL name="lucide:chevron-right" size={20} color="var(--gray-450)" />
-                </button>
-            )}
-            </div>
-            <button className="lm-tier-manage" onClick={() => goL("MyLearning.html")}>Manage membership</button>
-          </div>
+    <section className="lm2-hero" data-screen-label={title}>
+      <div className="lm2-sec-h"><h2>{title}</h2></div>
+      {reasoning && <p className="lm2-reasoning">{reasoning}</p>}
+      <article className="lm2-herocard">
+        <div className="thumb" style={{ backgroundImage: "url(" + data.image + ")" }}>
+          <LevelBadgeL level={data.level} className="lvl" />
         </div>
-      }
+        <div className="body">
+          <div className="ti">{data.title}</div>
+          <div className="lm2-progrow">
+            <span className="bar"><span style={{ width: data.progress + "%" }} /></span>
+            <span className="pct">{data.progress}% Complete</span>
+          </div>
+          <p className="note">{data.note}</p>
+          <button type="button" className="lm2-cta" onClick={() => goL(data.href)}>
+            {data.cta}<IconifyL name="lucide:arrow-up-right" size={17} color="#fff" />
+          </button>
+        </div>
+      </article>
     </section>);
 
 }
 
-function ConfidenceEngine() {
-  const [targets, setTargets] = useStateL(LM_TARGETS.map((t) => !!t.done));
-  const toggle = (i) => setTargets((s) => s.map((v, j) => j === i ? !v : v));
+function LM2GrowthCard() {
   return (
-    <section className="lm-engine" data-screen-label="Confidence Engine">
-      <div className="lm-vision">
-        <span className="lm-vision-k"><IconifyL name="lucide:target" size={16} color="var(--brand-gold)" /> Your Vision</span>
-        <span className="lm-vision-tx">{LM_VISION}</span>
+    <section className="lm2-card" data-screen-label="Clinic Growth Score">
+      <div className="lm2-card-hd">
+        <h2>Clinic Growth Score</h2>
+        <span className="lm2-chip">+6 this month</span>
       </div>
-
-      <div className="lm-focus">
-        <div className="lm-focus-tx">
-          <span className="lm-focus-eyebrow">Your focus this week</span>
-          <span className="lm-focus-domain">{LM_FOCUS.domain}</span>
-          <span className="lm-focus-line">{LM_FOCUS.line}</span>
-        </div>
-        <div className="lm-focus-ring" style={{ "--pct": LM_FOCUS.pct }} role="img" aria-label={LM_FOCUS.pct + "% confident in " + LM_FOCUS.domain}>
-          <span className="n">{LM_FOCUS.pct}<i>%</i></span>
-        </div>
-      </div>
-
-      <div className="lm-sec-h"><h2>Your Domain Confidence</h2></div>
-      <div className="lm-domains">
-        {LM_DOMAINS.map((d) =>
-        <div className="lm-domain" key={d.key}>
-            <div className="lm-domain-top"><span className="k">{d.key.toUpperCase()}</span><span className="v">{d.pct}%</span></div>
-            <span className="lm-domain-track"><span className="lm-domain-fill" style={{ width: d.pct + "%", background: d.color }} /></span>
-          </div>
-        )}
-      </div>
-
-      <div className="lm-sec-h"><h2>Today's Targets</h2></div>
-      <div className="lm-targets">
-        {LM_TARGETS.map((t, i) =>
-        <button key={i} type="button" className={"lm-target" + (targets[i] ? " done" : "")} onClick={() => toggle(i)} role="checkbox" aria-checked={targets[i]}>
-            <span className="lm-target-box">{targets[i] && <IconifyL name="lucide:check" size={15} color="#fff" />}</span>
-            <span className="lm-target-main">
-              <span className="lm-target-t">{t.t}</span>
-              <span className="lm-target-meta"><span className="lm-target-tag">{t.tag}</span> Rung: {t.rung}</span>
+      <div className="lm2-growth-rows">
+        {LM2_GROWTH.map((g) =>
+        <button key={g.key} type="button" className="lm2-growth-row" onClick={() => goL("MyLearning.html")}>
+            <span className="top">
+              <span className="k">{g.key}</span>
+              <span className="v">{g.pct}%</span>
+              <IconifyL name="lucide:chevron-right" size={18} color="var(--gray-400)" />
             </span>
-            <span className="lm-target-pts">+{t.pts} pts</span>
+            <span className="bar"><span style={{ width: g.pct + "%" }} /></span>
           </button>
         )}
       </div>
@@ -202,67 +144,39 @@ function ConfidenceEngine() {
 
 }
 
-function LMTopTabs({ active, onPick }) {
+function LM2TargetsCard() {
+  const [done, setDone] = useStateL(LM2_TARGETS.map(() => false));
+  const toggle = (i) => setDone((s) => s.map((v, j) => j === i ? !v : v));
   return (
-    <div className="lm-toptabs" role="tablist" aria-label="Course categories">
-      {LM_TABS_TOP.map((c) =>
-      <button key={c} role="tab" aria-selected={active === c} className={"lm-tt" + (active === c ? " on" : "")} onClick={() => onPick(c)}>{c}</button>
-      )}
-    </div>);
+    <section className="lm2-card" data-screen-label="Today's Target">
+      <div className="lm2-card-hd"><h2>Today's Target</h2></div>
+      <div className="lm2-target-rows">
+        {LM2_TARGETS.map((t, i) =>
+        <button key={i} type="button" className={"lm2-target-row" + (done[i] ? " done" : "")} onClick={() => toggle(i)} role="checkbox" aria-checked={done[i]}>
+            <span className="circle">{done[i] && <IconifyL name="lucide:check" size={12} color="#fff" />}</span>
+            <span className="tx">{t}</span>
+          </button>
+        )}
+      </div>
+      <p className="lm2-target-note">Completing these will increase your Clinical score</p>
+    </section>);
 
 }
 
 function SecHead({ title, viewAll = true }) {
   return (
-    <div className="lm-sec-h">
+    <div className="lm2-sec-h">
       <h2>{title}</h2>
-      {viewAll && <a href="#" onClick={(e) => { e.preventDefault(); goL("MyLearning.html"); }}>View All</a>}
+      {viewAll && <a href="#" onClick={(e) => { e.preventDefault(); goL("MyLearning.html"); }}>See All</a>}
     </div>);
 
 }
 
-function ResourceCardL({ r, locked = true }) {
+function LM2CourseCard({ c }) {
   return (
-    <article className="lm-res">
-      <div className="thumb" style={{ backgroundImage: "url(" + r.image + ")" }}>
-        <LevelBadgeL level="Intermediate" className="lvl" />
-        {locked && <span className="lock"><IconifyL name="lucide:lock" size={18} color="#fff" /></span>}
-      </div>
-      <div className="body">
-        <div className="ti">{r.title}</div>
-        {r.lines.map((l, i) => <div className="ds" key={i}>{l}</div>)}
-        <div className="by">{TUTOR_L}</div>
-        <button type="button" className="lm-ghost" onClick={() => goL("CourseDetail.html")}>{locked ? "Learn More" : "Start course"}</button>
-      </div>
-    </article>);
-
-}
-
-function PriceCardL({ c }) {
-  return (
-    <article className="lm-price">
+    <article className="lm2-coursecard">
       <div className="thumb" style={{ backgroundImage: "url(" + c.image + ")" }}>
-        {c.level && <LevelBadgeL level={c.level} className="lvl" />}
-        <span className="play"><IconifyL name="fluent:play-16-filled" size={18} color="var(--ai-purple)" /></span>
-      </div>
-      <div className="body">
-        <div className="ti">{c.title}</div>
-        <div className="ds">{c.description}</div>
-        <div className="by">{c.by}</div>
-        <div className="foot">
-          <span className="price">{c.price}</span>
-          <button type="button" className="lm-ghost" onClick={() => goL("CourseDetail.html")}>Learn More</button>
-        </div>
-      </div>
-    </article>);
-
-}
-
-function PathCardL({ c }) {
-  return (
-    <article className="lm-price">
-      <div className="thumb" style={{ backgroundImage: "url(" + c.image + ")" }}>
-        <span className="badge-path">Success Path</span>
+        <LevelBadgeL level={c.level} className="lvl" />
       </div>
       <div className="body">
         <div className="ti">{c.title}</div>
@@ -277,46 +191,17 @@ function PathCardL({ c }) {
 
 }
 
-function PathIntroL() {
+function LM2ActionCard({ icon, title, sub, onClick }) {
   return (
-    <article className="lm-intro">
-      <img src={IMG_L.logo} alt="PROfinity Academy" />
-      <div className="ti">Profinity Success Paths Certificates</div>
-      <div className="ds">Learn more about success paths, and build your journey towards achieving your goals with tailored strategies and resources.</div>
-      <button type="button" className="lm-out" onClick={() => goL("MyLearning.html")}>Learn More</button>
-    </article>);
-
-}
-
-function FreeResourcesL({ unlocked, onStart }) {
-  return (
-    <section data-screen-label="Free Resources">
-      <SecHead title="Free Resources" viewAll={unlocked} />
-      {unlocked ?
-      <div className="lm-rail">
-          {RESOURCES_L.map((r, i) => <ResourceCardL key={i} r={r} locked={false} />)}
-        </div> :
-
-      <div className="lm-locked">
-          <div className="lm-locked-rail" aria-hidden="true">
-            <div className="lm-rail">
-              {RESOURCES_L.map((r, i) => <ResourceCardL key={i} r={r} />)}
-            </div>
-          </div>
-          <div className="lm-locked-veil">
-            <div className="lm-locked-card" role="group" aria-label="Free Resources locked">
-              <span className="lm-locked-ic"><IconifyL name="lucide:lock" size={26} color="var(--brand-navy)" /></span>
-              <div className="lm-locked-ti">Resources archive is locked</div>
-              <div className="lm-locked-sub">Complete a short onboarding survey to unlock the full free resources archive.</div>
-              <button type="button" className="lm-locked-btn" onClick={onStart}>
-                Complete survey to unlock
-                <IconifyL name="lucide:arrow-right" size={17} color="#fff" />
-              </button>
-            </div>
-          </div>
-        </div>
-      }
-    </section>);
+    <div className="lm-unlock" data-screen-label={title}>
+      <div className="lm-unlock-tx">
+        <span className="ti">{icon && <IconifyL name={icon} size={15} color="var(--brand-navy)" style={{ marginRight: 6, verticalAlign: -2 }} />}{title}</span>
+        <span className="su">{sub}</span>
+      </div>
+      <button type="button" className="lm-unlock-btn" aria-label={title} onClick={onClick}>
+        <IconifyL name="lucide:arrow-right" size={20} color="#fff" />
+      </button>
+    </div>);
 
 }
 
@@ -336,49 +221,6 @@ const LMTabBar = React.forwardRef(function LMTabBar(_props, ref) {
     </nav>);
 
 });
-
-function AICoachFab() {
-  const [open, setOpen] = useStateL(false);
-  return (
-    <React.Fragment>
-      <button className={"lm-coach-fab" + (open ? " on" : "")} onClick={() => setOpen((v) => !v)}
-        aria-label="AI Coach" aria-expanded={open}>
-        <DSL.Spark size={22} color="#fff" />
-        <span className="lm-coach-fab-tx">AI Coach</span>
-      </button>
-      {open &&
-      <div className="lm-coach-sheet" role="dialog" aria-modal="true" aria-label="AI Coach">
-          <button className="lm-coach-scrim" aria-label="Close" onClick={() => setOpen(false)} />
-          <div className="lm-coach-card">
-            <div className="lm-coach-hd">
-              <span className="lm-coach-av"><DSL.Spark size={20} /></span>
-              <div className="lm-coach-hd-tx">
-                <span className="ti">Profinity Coach</span>
-                <span className="su">Your learning companion</span>
-              </div>
-              <button className="lm-coach-x" aria-label="Close" onClick={() => setOpen(false)}>
-                <IconifyL name="lucide:x" size={20} color="var(--gray-500)" />
-              </button>
-            </div>
-            <div className="lm-coach-msg">
-              Hi Katy! 👋 Based on your <b>Marketing</b> focus, I'd suggest starting with today's targets. Want me to build a study plan for this week?
-            </div>
-            <div className="lm-coach-chips">
-              <button className="lm-coach-chip">Build my study plan</button>
-              <button className="lm-coach-chip">What should I learn next?</button>
-              <button className="lm-coach-chip">Explain my confidence score</button>
-            </div>
-            <div className="lm-coach-input">
-              <input placeholder="Ask your coach anything…" aria-label="Message" />
-              <button className="lm-coach-send" aria-label="Send"><IconifyL name="lucide:arrow-up" size={18} color="#fff" /></button>
-            </div>
-            <p className="lm-coach-disc">AI can make mistakes. Verify important outputs.</p>
-          </div>
-        </div>
-      }
-    </React.Fragment>);
-
-}
 
 function useScrollChromeL(scrollRef) {
   const [state, setState] = useStateL({ hidden: false, floating: false });
@@ -405,84 +247,42 @@ function useScrollChromeL(scrollRef) {
 }
 
 function LearningHome() {
-  const [unlocked, setUnlocked] = useStateL(() => {
-    try { return localStorage.getItem("pf-free-unlocked") === "1"; } catch (e) { return false; }
-  });
   const [surveyOpen, setSurveyOpen] = useStateL(false);
-  const [topTab, setTopTab] = useStateL("All Courses");
   const scrollRef = React.useRef(null);
   const { hidden: chromeHidden, floating: chromeFloat } = useScrollChromeL(scrollRef);
-
-  function completeSurvey() {
-    setUnlocked(true);
-    try { localStorage.setItem("pf-free-unlocked", "1"); } catch (e) {}
-  }
 
   return (
     <div className={"lm-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="My Learning (mobile)">
       <MobileChromeC />
-      <LMSaveFab />
-      <LMSearch />
       <div className="lm-scroll" ref={scrollRef}>
 
-        <ConfidenceEngine />
+        <LM2Header />
 
-        <LMTopTabs active={topTab} onPick={setTopTab} />
+        <LM2HeroCard title="Continue Learning" data={LM2_CONTINUE} />
+
+        <LM2HeroCard title="Next Best Action" data={LM2_NEXT_ACTION} reasoning={LM2_REASONING} />
+
+        <LM2GrowthCard />
+
+        <LM2TargetsCard />
 
         <section data-screen-label="My Courses">
-          <SecHead title="My Courses" viewAll={false} />
-          <div className="lm-rail">
-            {MY_COURSES_L.map((c, i) =>
-            <CourseTileL key={i} {...c} style={{ width: 268, flex: "none", scrollSnapAlign: "start" }} />
-            )}
+          <SecHead title="My Courses" />
+          <div className="lm2-coursegrid">
+            {LM2_MY_COURSES.map((c, i) => <LM2CourseCard key={i} c={c} />)}
           </div>
         </section>
 
-        <MembershipTier />
-
-        <FreeResourcesL unlocked={unlocked} onStart={() => setSurveyOpen(true)} />
-
-        <section data-screen-label="Success Path">
-          <div className="lm-sec-h"><h2>Success Path</h2></div>
-          <div className="lm-cream">
-            <div className="lm-rail">
-              <PathIntroL />
-              {PATHS_L.map((c, i) => <PathCardL key={i} c={c} />)}
-            </div>
-          </div>
-        </section>
-
-        <section data-screen-label="Recommended Course">
-          <SecHead title="Recommended Course" />
-          <button type="button" className="lm-pill gold" onClick={() => goL("MyLearning.html")}>
-            <IconifyL name="fluent:crown-16-filled" size={15} color="#fff" />
-            Upgrade to Premium for 15% OFF all products
-            <IconifyL name="lucide:arrow-right" size={15} color="#fff" />
-          </button>
-          <div className="lm-rail">
-            {RECOMMENDED_L.map((c, i) => <PriceCardL key={i} c={c} />)}
-          </div>
-        </section>
-
-        <section data-screen-label="New Courses">
-          <SecHead title="New Courses" />
-          <div className="lm-rail">
-            {NEW_COURSES_L.map((c, i) => <PriceCardL key={i} c={c} />)}
-          </div>
-        </section>
-
-        <section data-screen-label="Popular Courses">
-          <SecHead title="Popular Courses" />
-          <div className="lm-rail">
-            {POPULAR_L.map((c, i) => <PriceCardL key={i} c={c} />)}
-          </div>
-        </section>
+        <div className="lm2-actions">
+          <LM2ActionCard icon="lucide:lock" title="Free Resources" sub="Complete a quick survey to unlock free resources tailored to your clinic goals" onClick={() => setSurveyOpen(true)} />
+          <LM2ActionCard title="Your Success Path" sub="A personalised learning journey designed to help you reach your £80k/month clinic goal" onClick={() => goL("MyLearning.html")} />
+          <LM2ActionCard title="Browse All Courses" sub="Recommended, New & Popular courses" onClick={() => goL("MyLearning.html")} />
+        </div>
 
         <div style={{ height: 20 }} />
       </div>
       <LMTabBar />
-      <AICoachFab />
-      <SurveyMobile open={surveyOpen} onClose={() => setSurveyOpen(false)} onComplete={completeSurvey} />
+      <SurveyMobile open={surveyOpen} onClose={() => setSurveyOpen(false)} onComplete={() => setSurveyOpen(false)} />
     </div>);
 
 }
