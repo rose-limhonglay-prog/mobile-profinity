@@ -106,8 +106,8 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 @keyframes cm-newposts-in{from{opacity:0;transform:translateY(-12px) scale(.9)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.cm-newposts{animation:none}}
 
-/* ===== floating "Share a Post" action button — collapses to a round "+"
-   in sync with the compact tab dock while scrolling ===== */
+/* ===== floating "Share a Post" action button — stays a labelled pill,
+   just tucks closer to the compact tab dock while scrolling ===== */
 .m-fab{position:absolute;left:50%;transform:translateX(-50%);bottom:104px;z-index:10;
   display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 20px;border:none;cursor:pointer;
   background:var(--brand-navy);border-radius:var(--r-pill);color:var(--white);
@@ -119,8 +119,7 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 .m-fab:active{transform:translateX(-50%) scale(.96)}
 .m-fab:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .m-fab .lbl{transition:font-size .22s ease,opacity .18s ease,margin-left .22s ease;overflow:hidden;white-space:nowrap}
-.m-fab.m-fab-compact{gap:0;padding:0;width:52px;height:52px;border-radius:50%;bottom:76px}
-.m-fab.m-fab-compact .lbl{font-size:0;opacity:0;margin-left:-7px}
+.m-fab.m-fab-compact{bottom:76px}
 
 /* ===== floating glass navigation dock ===== */
 .cm-tabs{position:absolute;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:30;

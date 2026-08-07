@@ -18,13 +18,11 @@ const IMG_L = {
   lip: "assets/clinic-lip-design.png"
 };
 
-const LM2_STATS = [
-{ icon: "lucide:banknote", text: "£80k/month" },
-{ icon: "lucide:image", text: "Boutique Lips & Skin Clinic" },
-{ icon: "lucide:users", text: "Team of 3" }];
-
-
-const LM2_TRACK_PCT = 52;
+const LM2_GOAL = {
+  title: "My Goal & Dream Clinic",
+  vision: "Boutique clinic with lips + skin treatments, £80k/month revenue, team of 3 professionals",
+  clarifier: "Where you're heading — not where you are today."
+};
 
 const LM2_CONTINUE = {
   image: IMG_L.lip,
@@ -36,29 +34,36 @@ const LM2_CONTINUE = {
   href: "Lesson.html"
 };
 
-const LM2_NEXT_ACTION = {
-  image: IMG_L.lip,
-  level: "Intermediate",
-  title: "Marketing",
+const LM2_PROGRESS_SPOTLIGHT = {
+  pillar: "Marketing",
   progress: 52,
-  note: "Complete 3 lessons to reach 70%",
+  note: "You need visibility. You aren't known yet.",
   cta: "Work on your goal",
   href: "CourseDetail.html"
 };
 
-const LM2_REASONING = "Based on your goal of building an £80k/month boutique clinic, and because Marketing is currently your weakest growth area, today's lesson has been selected to improve patient acquisition.";
+const LM2_REASONING = "Based on your goal of building an £80k/month boutique clinic, Marketing has been chosen as today's focus — better visibility is the fastest lever to fill your books.";
 
-const LM2_GROWTH = [
-{ key: "Marketing", pct: 52 },
-{ key: "Clinical", pct: 85 },
-{ key: "Business", pct: 64 },
-{ key: "Patient Care", pct: 78 }];
+/* The Prosperity Spiral — exactly these four pillars, no abbreviation, no "Patient Care" */
+const LM2_PILLARS = [
+{ key: "Sales", pct: 31, color: "var(--error)" },
+{ key: "Marketing", pct: 52, color: "linear-gradient(90deg, #f4ad3d, #e7820a)" },
+{ key: "Clinical Skills", pct: 62, color: "var(--info)" },
+{ key: "Business Systems", pct: 41, color: "var(--premium-orange)" }];
 
+
+const LM2_TARGET_TAGS = {
+  MKT: { label: "MKT", color: "#e7820a" },
+  CLIN: { label: "CLIN", color: "#0088de" },
+  SALE: { label: "SALE", color: "var(--error)" },
+  SYS: { label: "SYS", color: "var(--premium-orange)" }
+};
 
 const LM2_TARGETS = [
-"Complete Lesson 4: Lip Anatomy",
-"Watch: Patient Consultation Tips",
-"Quiz: Safety Protocols"];
+{ text: "Complete Lesson 4: Lip Anatomy", tag: "CLIN" },
+{ text: "Post 2 before/after case studies", tag: "MKT" },
+{ text: "Follow up with 3 lapsed patients", tag: "SALE" },
+{ text: "Log this week's expenses in your tracker", tag: "SYS" }];
 
 
 const LM2_MY_COURSES = [
@@ -71,7 +76,7 @@ const LM_TABS = [
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
 { key: "Learning", label: "My Learning", icon: "lucide:book-open", href: null },
 { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
-{ key: "Agent", label: "Agent", icon: "lucide:sparkles", href: "AgentMobile.html" }];
+{ key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" }];
 
 
 function LM2Header() {
@@ -81,18 +86,44 @@ function LM2Header() {
         <div className="lm2-head-greet">Good morning, Katy! <span className="lm2-sun" role="img" aria-label="sun">☀️</span></div>
         <span className="lm2-tierpill"><IconifyL name="lucide:crown" size={12} color="#fff" /> Confidence Path</span>
       </div>
-      <div className="lm2-headcard">
-        <ul className="lm2-stats">
-          {LM2_STATS.map((s) =>
-          <li key={s.text}><IconifyL name={s.icon} size={17} color="var(--gray-500)" />{s.text}</li>
-          )}
-        </ul>
-        <div className="lm2-ring" style={{ "--pct": LM2_TRACK_PCT }} role="img" aria-label={LM2_TRACK_PCT + "% on track"}>
-          <span className="n">{LM2_TRACK_PCT}%</span>
-          <span className="lbl">On Track</span>
-        </div>
-      </div>
     </div>);
+
+}
+
+function LM2GoalBanner({ data }) {
+  return (
+    <section className="lm2-goalcard" data-screen-label={data.title}>
+      <div className="lm2-goal-head">
+        <span className="lm2-goal-icon"><IconifyL name="lucide:target" size={18} color="#fff" /></span>
+        {data.title}
+      </div>
+      <p className="lm2-goal-vision">{data.vision}</p>
+      <p className="lm2-goal-clarifier">{data.clarifier}</p>
+    </section>);
+
+}
+
+function LM2ProgressSpotlight({ data, reasoning }) {
+  return (
+    <section className="lm2-hero" data-screen-label="Your Progress">
+      <div className="lm2-card lm2-progress-card">
+        <div className="lm2-progress-top">
+          <div className="lm2-progress-main">
+            <span className="eyebrow">Your Progress</span>
+            <div className="ti">{data.pillar}</div>
+            <p className="note">{data.note}</p>
+          </div>
+          <div className="lm2-progress-ring" style={{ "--pct": data.progress }} role="img" aria-label={data.progress + " progress"}>
+            <span className="n">{data.progress}</span>
+            <span className="lbl">Progress</span>
+          </div>
+        </div>
+        {reasoning && <p className="lm2-reasoning">{reasoning}</p>}
+        <button type="button" className="lm2-cta" onClick={() => goL(data.href)}>
+          {data.cta}<IconifyL name="lucide:arrow-up-right" size={17} color="#fff" />
+        </button>
+      </div>
+    </section>);
 
 }
 
@@ -123,20 +154,21 @@ function LM2HeroCard({ title, data, reasoning }) {
 
 function LM2GrowthCard() {
   return (
-    <section className="lm2-card" data-screen-label="Clinic Growth Score">
+    <section className="lm2-card" data-screen-label="The Prosperity Spiral">
       <div className="lm2-card-hd">
-        <h2>Clinic Growth Score</h2>
-        <span className="lm2-chip">+6 this month</span>
+        <h2>The Prosperity Spiral</h2>
+        <button type="button" className="pf-coach-link" data-coach="Discuss my Prosperity Spiral — Sales, Marketing, Clinical Skills and Business Systems — and tell me what to prioritise.">
+          <IconifyL name="lucide:sparkles" size={14} color="var(--ai-purple)" />Discuss with Ava
+        </button>
       </div>
-      <div className="lm2-growth-rows">
-        {LM2_GROWTH.map((g) =>
-        <button key={g.key} type="button" className="lm2-growth-row" onClick={() => goL("MyLearning.html")}>
+      <div className="lm2-pillar-grid">
+        {LM2_PILLARS.map((g) =>
+        <button key={g.key} type="button" className="lm2-pillar-card" onClick={() => goL("MyLearning.html")}>
             <span className="top">
               <span className="k">{g.key}</span>
-              <span className="v">{g.pct}%</span>
-              <IconifyL name="lucide:chevron-right" size={18} color="var(--gray-400)" />
+              <span className="v">{g.pct}</span>
             </span>
-            <span className="bar"><span style={{ width: g.pct + "%" }} /></span>
+            <span className="bar"><span style={{ width: g.pct + "%", background: g.color }} /></span>
           </button>
         )}
       </div>
@@ -145,20 +177,39 @@ function LM2GrowthCard() {
 }
 
 function LM2TargetsCard() {
-  const [done, setDone] = useStateL(LM2_TARGETS.map(() => false));
-  const toggle = (i) => setDone((s) => s.map((v, j) => j === i ? !v : v));
+  const [extra, setExtra] = useStateL([]);
+  React.useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("pf-coach-targets")) || [];
+      setExtra(stored.map((t) => ({ text: t.text, tag: null })));
+    } catch (e) {}
+  }, []);
+  const all = LM2_TARGETS.concat(extra);
+  const [done, setDone] = useStateL([]);
+  const toggle = (i) => setDone((s) => {
+    const next = s.slice();
+    while (next.length <= i) next.push(false);
+    next[i] = !next[i];
+    return next;
+  });
   return (
-    <section className="lm2-card" data-screen-label="Today's Target">
-      <div className="lm2-card-hd"><h2>Today's Target</h2></div>
+    <section className="lm2-card" data-screen-label="Today's Targets">
+      <div className="lm2-card-hd">
+        <h2>Today's Targets</h2>
+        <button type="button" className="pf-coach-link" data-coach="Help me plan today's targets to make progress on my clinic goal.">
+          <IconifyL name="lucide:sparkles" size={14} color="var(--ai-purple)" />Discuss with Ava
+        </button>
+      </div>
       <div className="lm2-target-rows">
-        {LM2_TARGETS.map((t, i) =>
-        <button key={i} type="button" className={"lm2-target-row" + (done[i] ? " done" : "")} onClick={() => toggle(i)} role="checkbox" aria-checked={done[i]}>
+        {all.map((t, i) =>
+        <button key={i} type="button" className={"lm2-target-row" + (done[i] ? " done" : "")} onClick={() => toggle(i)} role="checkbox" aria-checked={!!done[i]}>
             <span className="circle">{done[i] && <IconifyL name="lucide:check" size={12} color="#fff" />}</span>
-            <span className="tx">{t}</span>
+            {t.tag && <span className="lm2-target-tag" style={{ background: LM2_TARGET_TAGS[t.tag].color }}>{LM2_TARGET_TAGS[t.tag].label}</span>}
+            <span className="tx">{t.text}</span>
           </button>
         )}
       </div>
-      <p className="lm2-target-note">Completing these will increase your Clinical score</p>
+      <p className="lm2-target-note">Completing these will move your Prosperity Spiral forward</p>
     </section>);
 
 }
@@ -258,9 +309,11 @@ function LearningHome() {
 
         <LM2Header />
 
+        <LM2GoalBanner data={LM2_GOAL} />
+
         <LM2HeroCard title="Continue Learning" data={LM2_CONTINUE} />
 
-        <LM2HeroCard title="Next Best Action" data={LM2_NEXT_ACTION} reasoning={LM2_REASONING} />
+        <LM2ProgressSpotlight data={LM2_PROGRESS_SPOTLIGHT} reasoning={LM2_REASONING} />
 
         <LM2GrowthCard />
 

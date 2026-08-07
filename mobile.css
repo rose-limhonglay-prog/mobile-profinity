@@ -491,8 +491,7 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
 .m-fab:active{transform:translateX(-50%) scale(.96)}
 .m-fab.m-fab-hidden{transform:translateX(-50%) translateY(160%);opacity:0;pointer-events:none}
 .m-fab .lbl{overflow:hidden;white-space:nowrap;max-width:160px;transition:opacity .2s ease,max-width .3s ease}
-.m-fab.m-fab-compact{bottom:70px;width:44px;padding:0;gap:0}
-.m-fab.m-fab-compact .lbl{opacity:0;max-width:0}
+.m-fab.m-fab-compact{bottom:70px}
 
 /* keep reaction bar above device chrome */
 .pf-react-bar{z-index:300 !important}

@@ -193,7 +193,7 @@ const PM_TABS = [{
   href: null
 }, {
   key: "Agent",
-  label: "Agent",
+  label: "Ava",
   icon: "lucide:sparkles",
   href: "AgentMobile.html"
 }];

@@ -24,17 +24,11 @@ const TUTOR_L = "Dr Tim Pearce";
 const IMG_L = {
   lip: "assets/clinic-lip-design.png"
 };
-const LM2_STATS = [{
-  icon: "lucide:banknote",
-  text: "£80k/month"
-}, {
-  icon: "lucide:image",
-  text: "Boutique Lips & Skin Clinic"
-}, {
-  icon: "lucide:users",
-  text: "Team of 3"
-}];
-const LM2_TRACK_PCT = 52;
+const LM2_GOAL = {
+  title: "My Goal & Dream Clinic",
+  vision: "Boutique clinic with lips + skin treatments, £80k/month revenue, team of 3 professionals",
+  clarifier: "Where you're heading — not where you are today."
+};
 const LM2_CONTINUE = {
   image: IMG_L.lip,
   level: "Intermediate",
@@ -44,30 +38,64 @@ const LM2_CONTINUE = {
   cta: "Resume Lesson 4",
   href: "Lesson.html"
 };
-const LM2_NEXT_ACTION = {
-  image: IMG_L.lip,
-  level: "Intermediate",
-  title: "Marketing",
+const LM2_PROGRESS_SPOTLIGHT = {
+  pillar: "Marketing",
   progress: 52,
-  note: "Complete 3 lessons to reach 70%",
+  note: "You need visibility. You aren't known yet.",
   cta: "Work on your goal",
   href: "CourseDetail.html"
 };
-const LM2_REASONING = "Based on your goal of building an £80k/month boutique clinic, and because Marketing is currently your weakest growth area, today's lesson has been selected to improve patient acquisition.";
-const LM2_GROWTH = [{
+const LM2_REASONING = "Based on your goal of building an £80k/month boutique clinic, Marketing has been chosen as today's focus — better visibility is the fastest lever to fill your books.";
+
+/* The Prosperity Spiral — exactly these four pillars, no abbreviation, no "Patient Care" */
+const LM2_PILLARS = [{
+  key: "Sales",
+  pct: 31,
+  color: "var(--error)"
+}, {
   key: "Marketing",
-  pct: 52
+  pct: 52,
+  color: "linear-gradient(90deg, #f4ad3d, #e7820a)"
 }, {
-  key: "Clinical",
-  pct: 85
+  key: "Clinical Skills",
+  pct: 62,
+  color: "var(--info)"
 }, {
-  key: "Business",
-  pct: 64
-}, {
-  key: "Patient Care",
-  pct: 78
+  key: "Business Systems",
+  pct: 41,
+  color: "var(--premium-orange)"
 }];
-const LM2_TARGETS = ["Complete Lesson 4: Lip Anatomy", "Watch: Patient Consultation Tips", "Quiz: Safety Protocols"];
+const LM2_TARGET_TAGS = {
+  MKT: {
+    label: "MKT",
+    color: "#e7820a"
+  },
+  CLIN: {
+    label: "CLIN",
+    color: "#0088de"
+  },
+  SALE: {
+    label: "SALE",
+    color: "var(--error)"
+  },
+  SYS: {
+    label: "SYS",
+    color: "var(--premium-orange)"
+  }
+};
+const LM2_TARGETS = [{
+  text: "Complete Lesson 4: Lip Anatomy",
+  tag: "CLIN"
+}, {
+  text: "Post 2 before/after case studies",
+  tag: "MKT"
+}, {
+  text: "Follow up with 3 lapsed patients",
+  tag: "SALE"
+}, {
+  text: "Log this week's expenses in your tracker",
+  tag: "SYS"
+}];
 const LM2_MY_COURSES = [{
   image: IMG_L.lip,
   level: "Intermediate",
@@ -104,7 +132,7 @@ const LM_TABS = [{
   dot: "12"
 }, {
   key: "Agent",
-  label: "Agent",
+  label: "Ava",
   icon: "lucide:sparkles",
   href: "AgentMobile.html"
 }];
@@ -126,28 +154,69 @@ function LM2Header() {
     name: "lucide:crown",
     size: 12,
     color: "#fff"
-  }), " Confidence Path")), /*#__PURE__*/React.createElement("div", {
-    className: "lm2-headcard"
-  }, /*#__PURE__*/React.createElement("ul", {
-    className: "lm2-stats"
-  }, LM2_STATS.map(s => /*#__PURE__*/React.createElement("li", {
-    key: s.text
+  }), " Confidence Path")));
+}
+function LM2GoalBanner({
+  data
+}) {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "lm2-goalcard",
+    "data-screen-label": data.title
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-goal-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-goal-icon"
   }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: s.icon,
-    size: 17,
-    color: "var(--gray-500)"
-  }), s.text))), /*#__PURE__*/React.createElement("div", {
-    className: "lm2-ring",
+    name: "lucide:target",
+    size: 18,
+    color: "#fff"
+  })), data.title), /*#__PURE__*/React.createElement("p", {
+    className: "lm2-goal-vision"
+  }, data.vision), /*#__PURE__*/React.createElement("p", {
+    className: "lm2-goal-clarifier"
+  }, data.clarifier));
+}
+function LM2ProgressSpotlight({
+  data,
+  reasoning
+}) {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "lm2-hero",
+    "data-screen-label": "Your Progress"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-card lm2-progress-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-progress-top"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-progress-main"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "eyebrow"
+  }, "Your Progress"), /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, data.pillar), /*#__PURE__*/React.createElement("p", {
+    className: "note"
+  }, data.note)), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-progress-ring",
     style: {
-      "--pct": LM2_TRACK_PCT
+      "--pct": data.progress
     },
     role: "img",
-    "aria-label": LM2_TRACK_PCT + "% on track"
+    "aria-label": data.progress + " progress"
   }, /*#__PURE__*/React.createElement("span", {
     className: "n"
-  }, LM2_TRACK_PCT, "%"), /*#__PURE__*/React.createElement("span", {
+  }, data.progress), /*#__PURE__*/React.createElement("span", {
     className: "lbl"
-  }, "On Track"))));
+  }, "Progress"))), reasoning && /*#__PURE__*/React.createElement("p", {
+    className: "lm2-reasoning"
+  }, reasoning), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-cta",
+    onClick: () => goL(data.href)
+  }, data.cta, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-up-right",
+    size: 17,
+    color: "#fff"
+  }))));
 }
 function LM2HeroCard({
   title,
@@ -200,17 +269,23 @@ function LM2HeroCard({
 function LM2GrowthCard() {
   return /*#__PURE__*/React.createElement("section", {
     className: "lm2-card",
-    "data-screen-label": "Clinic Growth Score"
+    "data-screen-label": "The Prosperity Spiral"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm2-card-hd"
-  }, /*#__PURE__*/React.createElement("h2", null, "Clinic Growth Score"), /*#__PURE__*/React.createElement("span", {
-    className: "lm2-chip"
-  }, "+6 this month")), /*#__PURE__*/React.createElement("div", {
-    className: "lm2-growth-rows"
-  }, LM2_GROWTH.map(g => /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("h2", null, "The Prosperity Spiral"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-coach-link",
+    "data-coach": "Discuss my Prosperity Spiral — Sales, Marketing, Clinical Skills and Business Systems — and tell me what to prioritise."
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "var(--ai-purple)"
+  }), "Discuss with Ava")), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-pillar-grid"
+  }, LM2_PILLARS.map(g => /*#__PURE__*/React.createElement("button", {
     key: g.key,
     type: "button",
-    className: "lm2-growth-row",
+    className: "lm2-pillar-card",
     onClick: () => goL("MyLearning.html")
   }, /*#__PURE__*/React.createElement("span", {
     className: "top"
@@ -218,46 +293,72 @@ function LM2GrowthCard() {
     className: "k"
   }, g.key), /*#__PURE__*/React.createElement("span", {
     className: "v"
-  }, g.pct, "%"), /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:chevron-right",
-    size: 18,
-    color: "var(--gray-400)"
-  })), /*#__PURE__*/React.createElement("span", {
+  }, g.pct)), /*#__PURE__*/React.createElement("span", {
     className: "bar"
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      width: g.pct + "%"
+      width: g.pct + "%",
+      background: g.color
     }
   }))))));
 }
 function LM2TargetsCard() {
-  const [done, setDone] = useStateL(LM2_TARGETS.map(() => false));
-  const toggle = i => setDone(s => s.map((v, j) => j === i ? !v : v));
+  const [extra, setExtra] = useStateL([]);
+  React.useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("pf-coach-targets")) || [];
+      setExtra(stored.map(t => ({
+        text: t.text,
+        tag: null
+      })));
+    } catch (e) {}
+  }, []);
+  const all = LM2_TARGETS.concat(extra);
+  const [done, setDone] = useStateL([]);
+  const toggle = i => setDone(s => {
+    const next = s.slice();
+    while (next.length <= i) next.push(false);
+    next[i] = !next[i];
+    return next;
+  });
   return /*#__PURE__*/React.createElement("section", {
     className: "lm2-card",
-    "data-screen-label": "Today's Target"
+    "data-screen-label": "Today's Targets"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm2-card-hd"
-  }, /*#__PURE__*/React.createElement("h2", null, "Today's Target")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("h2", null, "Today's Targets"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-coach-link",
+    "data-coach": "Help me plan today's targets to make progress on my clinic goal."
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "var(--ai-purple)"
+  }), "Discuss with Ava")), /*#__PURE__*/React.createElement("div", {
     className: "lm2-target-rows"
-  }, LM2_TARGETS.map((t, i) => /*#__PURE__*/React.createElement("button", {
+  }, all.map((t, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
     type: "button",
     className: "lm2-target-row" + (done[i] ? " done" : ""),
     onClick: () => toggle(i),
     role: "checkbox",
-    "aria-checked": done[i]
+    "aria-checked": !!done[i]
   }, /*#__PURE__*/React.createElement("span", {
     className: "circle"
   }, done[i] && /*#__PURE__*/React.createElement(IconifyL, {
     name: "lucide:check",
     size: 12,
     color: "#fff"
-  })), /*#__PURE__*/React.createElement("span", {
+  })), t.tag && /*#__PURE__*/React.createElement("span", {
+    className: "lm2-target-tag",
+    style: {
+      background: LM2_TARGET_TAGS[t.tag].color
+    }
+  }, LM2_TARGET_TAGS[t.tag].label), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, t)))), /*#__PURE__*/React.createElement("p", {
+  }, t.text)))), /*#__PURE__*/React.createElement("p", {
     className: "lm2-target-note"
-  }, "Completing these will increase your Clinical score"));
+  }, "Completing these will move your Prosperity Spiral forward"));
 }
 function SecHead({
   title,
@@ -400,12 +501,13 @@ function LearningHome() {
   }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement("div", {
     className: "lm-scroll",
     ref: scrollRef
-  }, /*#__PURE__*/React.createElement(LM2Header, null), /*#__PURE__*/React.createElement(LM2HeroCard, {
+  }, /*#__PURE__*/React.createElement(LM2Header, null), /*#__PURE__*/React.createElement(LM2GoalBanner, {
+    data: LM2_GOAL
+  }), /*#__PURE__*/React.createElement(LM2HeroCard, {
     title: "Continue Learning",
     data: LM2_CONTINUE
-  }), /*#__PURE__*/React.createElement(LM2HeroCard, {
-    title: "Next Best Action",
-    data: LM2_NEXT_ACTION,
+  }), /*#__PURE__*/React.createElement(LM2ProgressSpotlight, {
+    data: LM2_PROGRESS_SPOTLIGHT,
     reasoning: LM2_REASONING
   }), /*#__PURE__*/React.createElement(LM2GrowthCard, null), /*#__PURE__*/React.createElement(LM2TargetsCard, null), /*#__PURE__*/React.createElement("section", {
     "data-screen-label": "My Courses"

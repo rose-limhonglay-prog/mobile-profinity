@@ -236,7 +236,7 @@ const EV_TABS = [{
   href: "ProfileMobile.html"
 }, {
   key: "Agent",
-  label: "Agent",
+  label: "Ava",
   icon: "lucide:sparkles",
   href: "AgentMobile.html"
 }];

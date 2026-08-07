@@ -34,7 +34,7 @@ const CD_TABS = [
   { key: "Profile",   label: "Profile",     icon: "lucide:user",      href: "ProfileMobile.html" },
   { key: "Learning",  label: "My Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
   { key: "Community", label: "Community",   icon: "lucide:users",     href: "CommunityMobile.html" },
-  { key: "Agent",     label: "Agent",       icon: "lucide:sparkles",  href: "Agent.html" },
+  { key: "Agent",     label: "Ava",       icon: "lucide:sparkles",  href: "Agent.html" },
 ];
 
 const CD_CLINICIANS = [

@@ -117,6 +117,19 @@ img{max-width:100%}
   border-radius:var(--r-sm);cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);color:var(--text-primary)}
 .intro .out:hover{background:var(--surface-sunken)}
 
+/* "Find out more" outro blocks — Recommended / Popular Courses (matches
+   Your Success Path / Browse All Courses on the mobile My Learning page:
+   informational, not a priced upsell). */
+.lrn-outro{display:flex;flex-direction:column;background:var(--surface-card);border:1px solid var(--border-default);
+  border-radius:var(--r-md);box-shadow:var(--shadow-card);padding:22px;gap:6px;width:100%}
+.lrn-outro .ti{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-h3);color:var(--text-heading)}
+.lrn-outro .ds{font-family:var(--font-sans);font-size:var(--fs-body);color:var(--gray-500);line-height:var(--lh-normal)}
+.lrn-outro-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:50px;margin-top:12px;
+  border:none;border-radius:var(--r-sm);background:var(--brand-navy);color:var(--white);cursor:pointer;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);transition:background .15s ease}
+.lrn-outro-btn:hover{background:var(--action-brand-hover)}
+.lrn-outro-btn:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+
 /* accessibility: visible focus ring + reduced motion */
 #pf-root :focus-visible{outline:3px solid var(--brand-navy);outline-offset:2px;border-radius:6px}
 #pf-root :focus:not(:focus-visible){outline:none}

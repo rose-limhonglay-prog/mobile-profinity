@@ -51,7 +51,7 @@ const CD_TABS = [{
   href: "CommunityMobile.html"
 }, {
   key: "Agent",
-  label: "Agent",
+  label: "Ava",
   icon: "lucide:sparkles",
   href: "Agent.html"
 }];

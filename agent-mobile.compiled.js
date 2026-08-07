@@ -38,7 +38,7 @@ const AG_TABS = [{
   href: "ProfileMobile.html"
 }, {
   key: "Agent",
-  label: "Agent",
+  label: "Ava",
   icon: "lucide:sparkles",
   href: null
 }];

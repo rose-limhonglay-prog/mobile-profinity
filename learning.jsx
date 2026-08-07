@@ -18,7 +18,6 @@ const IMG = {
   temple: "assets/clinic-treatment-collage.png",
   gold: "assets/texture-gold.png",
   logo: "assets/profinity-icon-purple-gold.png",
-  advancedLip: "assets/course-advanced-lip-techniques.jpg",
 };
 
 const TABS = ["All Courses", "Free Resources", "New Courses", "Recommended Courses", "Upcoming Webinars", "Certification Programs"];
@@ -50,25 +49,11 @@ const PATHS = [
   { image: IMG.lip, title: "Lips", description: "Confidently Inject Temples & add YOUTH back into your patients.", price: "£1,234" },
 ];
 
-const RECOMMENDED = [
-  { image: IMG.lip, level: "Beginner", title: "Dynamic Facial Structures", description: "Explore intricate facial anatomy to enhance artistry and understanding.", by: "Dr Emily Carter", price: "£1,245" },
-  { image: IMG.advancedLip, level: "Intermediate", title: "Advanced Lip Techniques", description: "Master the nuances of lip anatomy for precise techniques.", by: "Prof. Jonah Lee", price: "£1,300" },
-  { image: IMG.temple, level: "Intermediate", title: "Comprehensive Facial Anatomy", description: "A thorough exploration of facial structures for artists and medics.", by: "Dr Lisa Huang", price: "£1,550" },
-  { image: IMG.protox, level: "Intermediate", title: "Expert Lip Modelling", description: "Gain insights into the craft of lip modelling with expert guidance.", by: "Dr James Smith", price: "£1,250" },
-];
-
 const NEW_COURSES = [
   { image: IMG.lip, level: "Intermediate", title: "8D Lip Design", description: "Discover a complete view of human anatomy for deeper learning.", by: TUTOR, price: "£112" },
   { image: IMG.protox, level: "Intermediate", title: "Protox Course", description: "Elevate Your Botulinum Toxin Skills, 10x Your Confidence, and more.", by: TUTOR, price: "£99" },
   { image: IMG.temple, level: "Intermediate", title: "Temple Filler", description: "Confidently Inject Temples & add YOUTH back into your patients.", by: TUTOR, price: "£100" },
   { image: IMG.temple, level: "Intermediate", title: "Brow Lift Training", description: "Learn expert techniques for achieving flawless brow lifts.", by: TUTOR, price: "£99" },
-];
-
-const POPULAR = [
-  { image: IMG.lip, level: "Advance", title: "8D Lip Design", description: "Discover a complete view of human anatomy for deeper learning.", by: TUTOR, price: "£112" },
-  { image: IMG.protox, level: "Advance", title: "Protox Course", description: "Elevate Your Botulinum Toxin Skills, 10x Your Confidence, and more.", by: TUTOR, price: "£99" },
-  { image: IMG.temple, level: "Advance", title: "Temple Filler", description: "Confidently Inject Temples & add YOUTH back into your patients.", by: TUTOR, price: "£100" },
-  { image: IMG.temple, level: "Advance", title: "Brow Lift Training", description: "Learn expert techniques for achieving flawless brow lifts.", by: TUTOR, price: "£99" },
 ];
 
 /* ---------------------------------------------------------------- pieces -- */
@@ -135,6 +120,18 @@ function PathCard({ c }) {
           <button type="button" className="ghost">Learn More</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function OutroBlock({ title, description, onClick }) {
+  return (
+    <div className="lrn-outro w-card">
+      <div className="ti">{title}</div>
+      <div className="ds">{description}</div>
+      <button type="button" className="lrn-outro-btn" onClick={onClick}>
+        Find out more<IconifyIcon name="lucide:arrow-up-right" size={18} color="var(--white)" />
+      </button>
     </div>
   );
 }
@@ -277,13 +274,9 @@ function MyLearningApp() {
 
         {/* Recommended */}
         <section className="sec" data-screen-label="Recommended Course">
-          <SectionHead title="Recommended Course"
-            pill={<button type="button" className="pill gold"><IconifyIcon name="fluent:crown-16-filled" size={16} color="var(--white)" />Upgrade to Premium for 15% OFF all products <IconifyIcon name="lucide:arrow-right" size={16} color="var(--white)" /></button>} />
-          <div className="row">
-            {loading
-              ? Array.from({ length: 4 }).map((_, i) => <SkeletonPriceCard key={i} />)
-              : RECOMMENDED.map((c, i) => <PriceCard key={i} c={c} />)}
-          </div>
+          <SectionHead title="Recommended Course" viewAll={false} />
+          <OutroBlock title="Recommended For You" description="Courses picked for your goal, hand-picked by Ava based on your Prosperity Spiral."
+            onClick={() => (window.pfGo || function (u) { window.location.href = u; })("MembershipTier.html")} />
           <div className="sec-divider" />
         </section>
 
@@ -300,12 +293,9 @@ function MyLearningApp() {
 
         {/* Popular Courses */}
         <section className="sec" data-screen-label="Popular Courses">
-          <SectionHead title="Popular Courses" />
-          <div className="row">
-            {loading
-              ? Array.from({ length: 4 }).map((_, i) => <SkeletonPriceCard key={i} />)
-              : POPULAR.map((c, i) => <PriceCard key={i} c={c} />)}
-          </div>
+          <SectionHead title="Popular Courses" viewAll={false} />
+          <OutroBlock title="Popular With Members" description="See what the wider PROfinity community is learning right now."
+            onClick={() => (window.pfGo || function (u) { window.location.href = u; })("MembershipTier.html")} />
         </section>
       </div>
     </div>

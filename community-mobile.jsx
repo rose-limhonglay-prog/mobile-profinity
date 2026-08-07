@@ -37,7 +37,7 @@ const CM_TABS = [
 { key: "Community", label: "Community", icon: "lucide:users", href: null },
 { key: "Learning", label: "My Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
-{ key: "Agent", label: "Agent", icon: "lucide:sparkles", href: "AgentMobile.html" }];
+{ key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" }];
 
 /* Same tier keys as app.jsx's TIER_LADDER, with the resource lists the
    expandable Communities cards in the side menu need — app.jsx's ladder only
