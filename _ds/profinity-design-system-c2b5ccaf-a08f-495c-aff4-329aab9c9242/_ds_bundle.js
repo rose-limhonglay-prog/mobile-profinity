@@ -2202,10 +2202,14 @@ function NavItem({
 function IconButton({
   glyph,
   badge,
-  onClick
+  onClick,
+  id,
+  ariaLabel
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
+    id: id,
+    "aria-label": ariaLabel,
     onClick: onClick,
     style: {
       position: "relative",
@@ -2321,7 +2325,9 @@ function TopNav({
     }
   }, /*#__PURE__*/React.createElement(IconButton, {
     glyph: "notification",
-    badge: notifications
+    badge: notifications,
+    id: "pf-notif-bell",
+    ariaLabel: "Notifications"
   }), /*#__PURE__*/React.createElement(IconButton, {
     glyph: "comment",
     badge: messages
