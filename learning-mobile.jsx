@@ -1,8 +1,7 @@
 /* ===========================================================================
    PROfinity — My Learning (mobile) · iPhone 17 Pro Max
-   Ported from the bound claude.ai/design source (Clinic Growth dashboard:
-   stats + On Track ring, Continue Learning, Next Best Action, Clinic Growth
-   Score, Today's Target, My Courses, action cards) onto the DS bundle.
+   Goal-first flow: goal header → focus card → Continue Learning → Today's
+   Targets → My Courses → Free Resources → Your next best courses.
    Suffixed -L to avoid global-scope clashes.
    =========================================================================== */
 const { useState: useStateL } = React;
@@ -12,6 +11,12 @@ const MobileChromeC = window.MobileChromeC;
 const SurveyMobile = window.SurveyMobile;
 
 function goL(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
+
+function lmReadTierL() {
+  if (window.PF_TIER) return window.PF_TIER;
+  try { return localStorage.getItem("pf-preview-tier") || "confidence"; } catch (e) { return "confidence"; }
+}
+const LM_FREE = lmReadTierL() === "free";
 
 const TUTOR_L = "Dr Tim Pearce";
 const IMG_L = {
@@ -26,31 +31,18 @@ const LM2_GOAL = {
 
 const LM2_CONTINUE = {
   image: IMG_L.lip,
-  level: "Intermediate",
   title: "8D Lip Design",
-  progress: 20,
-  note: "Only 6 more modules until you get your certificate",
-  cta: "Resume Lesson 4",
+  moduleText: "Module 4 · Lesson 2 — Landmark mapping",
+  progress: 62,
+  total: 100,
   href: "Lesson.html"
 };
 
 const LM2_PROGRESS_SPOTLIGHT = {
   pillar: "Marketing",
   progress: 52,
-  note: "You need visibility. You aren't known yet.",
-  cta: "Work on your goal",
-  href: "CourseDetail.html"
+  note: "You need visibility. You aren't known yet."
 };
-
-const LM2_REASONING = "Based on your goal of building an £80k/month boutique clinic, Marketing has been chosen as today's focus — better visibility is the fastest lever to fill your books.";
-
-/* The Prosperity Spiral — exactly these four pillars, no abbreviation, no "Patient Care" */
-const LM2_PILLARS = [
-{ key: "Sales", pct: 31, color: "var(--error)" },
-{ key: "Marketing", pct: 52, color: "linear-gradient(90deg, #f4ad3d, #e7820a)" },
-{ key: "Clinical Skills", pct: 62, color: "var(--info)" },
-{ key: "Business Systems", pct: 41, color: "var(--premium-orange)" }];
-
 
 const LM2_TARGET_TAGS = {
   MKT: { label: "MKT", color: "#e7820a" },
@@ -67,8 +59,22 @@ const LM2_TARGETS = [
 
 
 const LM2_MY_COURSES = [
-{ image: IMG_L.lip, level: "Intermediate", title: "8D Lip Design", description: "Discover a complete view of lip anatomy for deeper learning.", price: "£112" },
-{ image: IMG_L.lip, level: "Advanced", title: "Temple Filler", description: "Master safe injection techniques with anatomical precision.", price: "£89" }];
+{ image: IMG_L.lip, level: "Intermediate", title: "8D Lip Design", description: "Discover a complete view of lip anatomy for deeper learning." },
+{ image: IMG_L.lip, level: "Advanced", title: "Temple Filler", description: "Master safe injection techniques with anatomical precision." }];
+
+
+const LM2_NEXT_BEST = [
+{ status: "in-progress", title: "8D Lip Design", reason: "Directly serves your £80k/month goal", href: "CourseDetail.html" },
+{ status: "next", title: "Consultation & Sales Scripts", reason: "Turns visibility into booked consultations", href: "CourseDetail.html" },
+{ status: "later", title: "Clinic Systems & SOPs", reason: "Keeps your team consistent as you scale", href: "CourseDetail.html" }];
+
+
+const LM2_HOWITWORKS = [
+{ icon: "lucide:target", title: "Your goal", body: "This is the clinic and income you're building towards — not where you are today. Everything on this page is chosen to move you closer to it." },
+{ icon: "lucide:trophy", title: "Progress", body: "A single 0–100 score for the one area we think matters most for your goal right now." },
+{ icon: "lucide:list-checks", title: "Today's targets", body: "A short daily checklist of small actions. Tick them off as you go — they're picked to build momentum on your goal." },
+{ icon: "lucide:route", title: "Next best courses", body: "Your courses in the order that gets you to your goal fastest, not just the order you enrolled in them." },
+{ icon: "lucide:sparkles", title: "Ava", body: "Your AI coach. Ask her anything about your goal, your targets, or what to do next — she knows your progress." }];
 
 
 const LM_TABS = [
@@ -79,23 +85,31 @@ const LM_TABS = [
 { key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" }];
 
 
-function LM2Header() {
+function LM2Header({ freeTier }) {
   return (
-    <div className="lm2-head" data-screen-label="Header">
+    <div className={"lm2-head" + (freeTier ? " has-sub" : "")} data-screen-label="Header">
       <div className="lm2-head-row">
-        <div className="lm2-head-greet">Good morning, Katy! <span className="lm2-sun" role="img" aria-label="sun">☀️</span></div>
+        <div className="lm2-head-greet">Good morning, Katy! {!freeTier && <span className="lm2-sun" role="img" aria-label="sun">☀️</span>}</div>
+        {freeTier ?
+        <img className="lm2-head-avatar" src="assets/avatar-katy.jpg" alt="Katy" /> :
+
         <span className="lm2-tierpill"><IconifyL name="lucide:crown" size={12} color="#fff" /> Confidence Path</span>
+        }
       </div>
+      {freeTier && <p className="lm2-head-sub">Your goal is to grow in aesthetics or medical school</p>}
     </div>);
 
 }
 
-function LM2GoalBanner({ data }) {
+function LM2GoalBanner({ data, onHelp }) {
   return (
     <section className="lm2-goalcard" data-screen-label={data.title}>
       <div className="lm2-goal-head">
         <span className="lm2-goal-icon"><IconifyL name="lucide:target" size={18} color="#fff" /></span>
-        {data.title}
+        <span className="lm2-goal-title">{data.title}</span>
+        <button type="button" className="lm2-goal-help" aria-label="How this page works" onClick={onHelp}>
+          <IconifyL name="lucide:help-circle" size={19} color="rgba(255,255,255,.85)" />
+        </button>
       </div>
       <p className="lm2-goal-vision">{data.vision}</p>
       <p className="lm2-goal-clarifier">{data.clarifier}</p>
@@ -103,75 +117,53 @@ function LM2GoalBanner({ data }) {
 
 }
 
-function LM2ProgressSpotlight({ data, reasoning }) {
+function LM2ProgressSpotlight({ data }) {
+  const [saved, setSaved] = useStateL(false);
   return (
-    <section className="lm2-hero" data-screen-label="Your Progress">
+    <section className="lm2-hero" data-screen-label="Let's work on your goal">
       <div className="lm2-card lm2-progress-card">
         <div className="lm2-progress-top">
           <div className="lm2-progress-main">
-            <span className="eyebrow">Your Progress</span>
+            <span className="eyebrow"><IconifyL name="lucide:trophy" size={13} color="var(--brand-gold)" />Let's work on your goal</span>
             <div className="ti">{data.pillar}</div>
             <p className="note">{data.note}</p>
+            <a href="#" className="lm2-spiral-link" onClick={(e) => { e.preventDefault(); goL("MyLearning.html"); }}>
+              See my full Prosperity Spiral<IconifyL name="lucide:arrow-up-right" size={14} color="var(--ai-purple)" />
+            </a>
           </div>
-          <div className="lm2-progress-ring" style={{ "--pct": data.progress }} role="img" aria-label={data.progress + " progress"}>
-            <span className="n">{data.progress}</span>
-            <span className="lbl">Progress</span>
+          <div className="lm2-progress-side">
+            <button type="button" className={"lm2-save-btn" + (saved ? " saved" : "")}
+            aria-pressed={saved} aria-label={saved ? "Remove from saved" : "Save this recommendation"}
+            onClick={() => setSaved((s) => !s)}>
+              <IconifyL name={saved ? "lucide:bookmark-check" : "lucide:bookmark"} size={16} color="var(--brand-navy)" />
+            </button>
+            <div className="lm2-progress-ring" style={{ "--pct": data.progress }} role="img" aria-label={data.progress + " progress"}>
+              <span className="n">{data.progress}</span>
+              <span className="lbl">Progress</span>
+            </div>
           </div>
         </div>
-        {reasoning && <p className="lm2-reasoning">{reasoning}</p>}
-        <button type="button" className="lm2-cta" onClick={() => goL(data.href)}>
-          {data.cta}<IconifyL name="lucide:arrow-up-right" size={17} color="#fff" />
-        </button>
       </div>
     </section>);
 
 }
 
-function LM2HeroCard({ title, data, reasoning }) {
+function LM2ContinueCard({ data }) {
+  const pct = Math.round(data.progress / data.total * 100);
   return (
-    <section className="lm2-hero" data-screen-label={title}>
-      <div className="lm2-sec-h"><h2>{title}</h2></div>
-      {reasoning && <p className="lm2-reasoning">{reasoning}</p>}
-      <article className="lm2-herocard">
-        <div className="thumb" style={{ backgroundImage: "url(" + data.image + ")" }}>
-          <LevelBadgeL level={data.level} className="lvl" />
-        </div>
-        <div className="body">
-          <div className="ti">{data.title}</div>
-          <div className="lm2-progrow">
-            <span className="bar"><span style={{ width: data.progress + "%" }} /></span>
-            <span className="pct">{data.progress}% Complete</span>
-          </div>
-          <p className="note">{data.note}</p>
-          <button type="button" className="lm2-cta" onClick={() => goL(data.href)}>
-            {data.cta}<IconifyL name="lucide:arrow-up-right" size={17} color="#fff" />
-          </button>
-        </div>
-      </article>
-    </section>);
-
-}
-
-function LM2GrowthCard() {
-  return (
-    <section className="lm2-card" data-screen-label="The Prosperity Spiral">
-      <div className="lm2-card-hd">
-        <h2>The Prosperity Spiral</h2>
-        <button type="button" className="pf-coach-link" data-coach="Discuss my Prosperity Spiral — Sales, Marketing, Clinical Skills and Business Systems — and tell me what to prioritise.">
-          <IconifyL name="lucide:sparkles" size={14} color="var(--ai-purple)" />Discuss with Ava
-        </button>
-      </div>
-      <div className="lm2-pillar-grid">
-        {LM2_PILLARS.map((g) =>
-        <button key={g.key} type="button" className="lm2-pillar-card" onClick={() => goL("MyLearning.html")}>
-            <span className="top">
-              <span className="k">{g.key}</span>
-              <span className="v">{g.pct}</span>
-            </span>
-            <span className="bar"><span style={{ width: g.pct + "%", background: g.color }} /></span>
-          </button>
-        )}
-      </div>
+    <section className="lm2-continue" data-screen-label="Continue Learning">
+      <button type="button" className="lm2-continue-card" onClick={() => goL(data.href)}
+      aria-label={"Resume " + data.title + ", " + data.moduleText}>
+        <span className="thumb" style={{ backgroundImage: "url(" + data.image + ")" }}>
+          <span className="play" aria-hidden="true"><IconifyL name="lucide:play" size={16} color="#fff" /></span>
+        </span>
+        <span className="body">
+          <span className="ti">{data.title}</span>
+          <span className="mod">{data.moduleText}</span>
+          <span className="bar"><span style={{ width: pct + "%" }} /></span>
+          <span className="pct">{data.progress} of {data.total} complete</span>
+        </span>
+      </button>
     </section>);
 
 }
@@ -192,33 +184,51 @@ function LM2TargetsCard() {
     next[i] = !next[i];
     return next;
   });
+  const nextIdx = all.findIndex((_, i) => !done[i]);
+  const nextUp = nextIdx !== -1 ? all[nextIdx] : null;
   return (
-    <section className="lm2-card" data-screen-label="Today's Targets">
-      <div className="lm2-card-hd">
-        <h2>Today's Targets</h2>
-        <button type="button" className="pf-coach-link" data-coach="Help me plan today's targets to make progress on my clinic goal.">
-          <IconifyL name="lucide:sparkles" size={14} color="var(--ai-purple)" />Discuss with Ava
-        </button>
-      </div>
-      <div className="lm2-target-rows">
-        {all.map((t, i) =>
-        <button key={i} type="button" className={"lm2-target-row" + (done[i] ? " done" : "")} onClick={() => toggle(i)} role="checkbox" aria-checked={!!done[i]}>
-            <span className="circle">{done[i] && <IconifyL name="lucide:check" size={12} color="#fff" />}</span>
-            {t.tag && <span className="lm2-target-tag" style={{ background: LM2_TARGET_TAGS[t.tag].color }}>{LM2_TARGET_TAGS[t.tag].label}</span>}
-            <span className="tx">{t.text}</span>
+    <section className="lm2-targets-sec" data-screen-label="Today's Targets">
+      {nextUp && <p className="lm2-nextup">Next up: <b>{nextUp.text}</b></p>}
+      <div className="lm2-card">
+        <div className="lm2-card-hd">
+          <h2>Today's Targets</h2>
+          <button type="button" className="pf-coach-link" data-coach="Help me plan today's targets to make progress on my clinic goal.">
+            <IconifyL name="lucide:sparkles" size={14} color="var(--ai-purple)" />Discuss with Ava
           </button>
-        )}
+        </div>
+        <div className="lm2-target-rows">
+          {all.map((t, i) =>
+          <button key={i} type="button" className={"lm2-target-row" + (done[i] ? " done" : "")} onClick={() => toggle(i)} role="checkbox" aria-checked={!!done[i]}>
+              <span className="circle">{done[i] && <IconifyL name="lucide:check" size={12} color="#fff" />}</span>
+              {t.tag && <span className="lm2-target-tag" style={{ background: LM2_TARGET_TAGS[t.tag].color }}>{LM2_TARGET_TAGS[t.tag].label}</span>}
+              <span className="tx">{t.text}</span>
+            </button>
+          )}
+        </div>
+        <p className="lm2-target-note">Completing these will move you closer to your goal</p>
       </div>
-      <p className="lm2-target-note">Completing these will move your Prosperity Spiral forward</p>
     </section>);
 
 }
 
-function SecHead({ title, viewAll = true }) {
+function SecHead({ title, viewAll = true, linkLabel = "See All" }) {
   return (
     <div className="lm2-sec-h">
       <h2>{title}</h2>
-      {viewAll && <a href="#" onClick={(e) => { e.preventDefault(); goL("MyLearning.html"); }}>See All</a>}
+      {viewAll && <a href="#" onClick={(e) => { e.preventDefault(); goL("MyLearning.html"); }}>{linkLabel}</a>}
+    </div>);
+
+}
+
+function LM2LockedCard({ title, body, onUpgrade }) {
+  return (
+    <div className="lm2-locked">
+      <span className="ic"><IconifyL name="lucide:lock" size={20} color="#fff" /></span>
+      <h3>{title}</h3>
+      <p>{body}</p>
+      <button type="button" className="lm2-upgrade-btn" onClick={onUpgrade}>
+        Upgrade<IconifyL name="lucide:arrow-up-right" size={16} color="#fff" />
+      </button>
     </div>);
 
 }
@@ -234,7 +244,6 @@ function LM2CourseCard({ c }) {
         <div className="ds">{c.description}</div>
         <div className="by">{TUTOR_L}</div>
         <div className="foot">
-          <span className="price">{c.price}</span>
           <button type="button" className="lm-ghost" onClick={() => goL("CourseDetail.html")}>Learn More</button>
         </div>
       </div>
@@ -252,6 +261,101 @@ function LM2ActionCard({ icon, title, sub, onClick }) {
       <button type="button" className="lm-unlock-btn" aria-label={title} onClick={onClick}>
         <IconifyL name="lucide:arrow-right" size={20} color="#fff" />
       </button>
+    </div>);
+
+}
+
+function LM2FreeResources({ unlocked, onStartSurvey }) {
+  return (
+    <section className="lm2-freeres" data-screen-label="Free Resources">
+      <SecHead title="Free Resources" linkLabel="View All" />
+      {unlocked ?
+      <div className="lm2-freeres-open">
+          <p>Your free resources are unlocked — guides, checklists and vein maps tailored to your clinic goals.</p>
+          <button type="button" className="lm2-outline-btn" onClick={() => goL("MySaved.html")}>
+            View free resources<IconifyL name="lucide:arrow-up-right" size={16} color="var(--brand-navy)" />
+          </button>
+        </div> :
+
+      <div className="lm2-actions">
+          <LM2ActionCard icon="lucide:lock" title="Free Resources" sub="Complete a quick survey to unlock free resources tailored to your clinic goals" onClick={onStartSurvey} />
+        </div>
+      }
+    </section>);
+
+}
+
+function LM2NextBestSection({ freeTier }) {
+  return (
+    <section className="lm2-nextsec" data-screen-label="Your next best courses">
+      <div className="lm2-sec-h">
+        <h2>Your next best courses</h2>
+        <button type="button" className="pf-coach-link" data-coach="Explain why these are my next best courses for reaching my clinic goal.">
+          <IconifyL name="lucide:sparkles" size={14} color="var(--ai-purple)" />Ask Ava why
+        </button>
+      </div>
+      <p className="lm2-nextsec-sub">Sequenced for your goal — work through them in order</p>
+      <ol className="lm2-nextlist">
+        {LM2_NEXT_BEST.map((c, i) =>
+        <li key={i}>
+            <button type="button" className={"lm2-nextrow " + c.status} onClick={() => goL(c.href)}>
+              <span className="num" aria-hidden="true">
+                {c.status === "in-progress" ? <IconifyL name="lucide:play" size={13} color="#fff" /> : i + 1}
+              </span>
+              <span className="tx">
+                <span className="ti">{c.title}</span>
+                <span className="reason">{c.reason}</span>
+              </span>
+            </button>
+          </li>
+        )}
+      </ol>
+      <button type="button" className="lm2-outline-btn" onClick={() => goL("MyLearning.html")}>
+        {freeTier ? "See what's included" : "Browse the full library"}
+      </button>
+    </section>);
+
+}
+
+function LM2HelpSheet({ open, onClose }) {
+  const closeRef = React.useRef(null);
+  const lastFocused = React.useRef(null);
+  React.useEffect(() => {
+    if (!open) return;
+    lastFocused.current = document.activeElement;
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    closeRef.current && closeRef.current.focus();
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      if (lastFocused.current && lastFocused.current.focus) { try { lastFocused.current.focus(); } catch (e) {} }
+    };
+  }, [open]);
+  if (!open) return null;
+  return (
+    <div className="lm2-help-wrap">
+      <div className="lm2-help-scrim" onClick={onClose} />
+      <div className="lm2-help-sheet" role="dialog" aria-modal="true" aria-label="How this page works">
+        <span className="lm2-help-handle" aria-hidden="true" />
+        <header className="lm2-help-head">
+          <h2>How this page works</h2>
+          <button type="button" ref={closeRef} className="lm2-help-close" aria-label="Close" onClick={onClose}>
+            <IconifyL name="lucide:x" size={20} color="var(--gray-700)" />
+          </button>
+        </header>
+        <div className="lm2-help-body">
+          {LM2_HOWITWORKS.map((h, i) =>
+          <div className="lm2-help-item" key={i}>
+              <span className="ic"><IconifyL name={h.icon} size={17} color="var(--brand-navy)" /></span>
+              <div className="tx">
+                <b>{h.title}</b>
+                <p>{h.body}</p>
+              </div>
+            </div>
+          )}
+        </div>
+        <button type="button" className="lm2-help-gotit" onClick={onClose}>Got it</button>
+      </div>
     </div>);
 
 }
@@ -297,45 +401,66 @@ function useScrollChromeL(scrollRef) {
   return state;
 }
 
+function lmReadResourcesUnlockedL() {
+  try { return localStorage.getItem("pf-resources-unlocked") === "1"; } catch (e) { return false; }
+}
+
 function LearningHome() {
   const [surveyOpen, setSurveyOpen] = useStateL(false);
+  const [helpOpen, setHelpOpen] = useStateL(false);
+  const [resourcesUnlocked, setResourcesUnlocked] = useStateL(lmReadResourcesUnlockedL);
   const scrollRef = React.useRef(null);
   const { hidden: chromeHidden, floating: chromeFloat } = useScrollChromeL(scrollRef);
+
+  const unlockResources = () => {
+    setResourcesUnlocked(true);
+    try { localStorage.setItem("pf-resources-unlocked", "1"); } catch (e) {}
+  };
 
   return (
     <div className={"lm-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="My Learning (mobile)">
       <MobileChromeC />
       <div className="lm-scroll" ref={scrollRef}>
 
-        <LM2Header />
+        <LM2Header freeTier={LM_FREE} />
 
-        <LM2GoalBanner data={LM2_GOAL} />
+        <LM2GoalBanner data={LM2_GOAL} onHelp={() => setHelpOpen(true)} />
 
-        <LM2HeroCard title="Continue Learning" data={LM2_CONTINUE} />
+        <LM2ProgressSpotlight data={LM2_PROGRESS_SPOTLIGHT} />
 
-        <LM2ProgressSpotlight data={LM2_PROGRESS_SPOTLIGHT} reasoning={LM2_REASONING} />
+        <section className="lm2-continue-sec" data-screen-label="Continue Learning">
+          {LM_FREE ?
+          <React.Fragment>
+              <div className="lm2-sec-h"><h2>Continue Learning</h2></div>
+              <LM2LockedCard title="Unlock Continue Learning" body="Upgrade to start a course and track your progress toward your goal." onUpgrade={() => goL("MembershipTier.html")} />
+            </React.Fragment> :
 
-        <LM2GrowthCard />
+          <LM2ContinueCard data={LM2_CONTINUE} />
+          }
+        </section>
 
         <LM2TargetsCard />
 
-        <section data-screen-label="My Courses">
+        <section className="lm2-courseband" data-screen-label="My Courses">
           <SecHead title="My Courses" />
+          {LM_FREE ?
+          <LM2LockedCard title="Unlock My Courses" body="Upgrade to purchase courses and they'll live here for easy access." onUpgrade={() => goL("MembershipTier.html")} /> :
+
           <div className="lm2-coursegrid">
-            {LM2_MY_COURSES.map((c, i) => <LM2CourseCard key={i} c={c} />)}
-          </div>
+              {LM2_MY_COURSES.map((c, i) => <LM2CourseCard key={i} c={c} />)}
+            </div>
+          }
         </section>
 
-        <div className="lm2-actions">
-          <LM2ActionCard icon="lucide:lock" title="Free Resources" sub="Complete a quick survey to unlock free resources tailored to your clinic goals" onClick={() => setSurveyOpen(true)} />
-          <LM2ActionCard title="Your Success Path" sub="A personalised learning journey designed to help you reach your £80k/month clinic goal" onClick={() => goL("MyLearning.html")} />
-          <LM2ActionCard title="Browse All Courses" sub="Recommended, New & Popular courses" onClick={() => goL("MyLearning.html")} />
-        </div>
+        <LM2FreeResources unlocked={resourcesUnlocked} onStartSurvey={() => setSurveyOpen(true)} />
+
+        <LM2NextBestSection freeTier={LM_FREE} />
 
         <div style={{ height: 20 }} />
       </div>
       <LMTabBar />
-      <SurveyMobile open={surveyOpen} onClose={() => setSurveyOpen(false)} onComplete={() => setSurveyOpen(false)} />
+      <SurveyMobile open={surveyOpen} onClose={() => setSurveyOpen(false)} onComplete={unlockResources} />
+      <LM2HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>);
 
 }

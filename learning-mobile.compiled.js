@@ -1,8 +1,7 @@
 /* ===========================================================================
    PROfinity — My Learning (mobile) · iPhone 17 Pro Max
-   Ported from the bound claude.ai/design source (Clinic Growth dashboard:
-   stats + On Track ring, Continue Learning, Next Best Action, Clinic Growth
-   Score, Today's Target, My Courses, action cards) onto the DS bundle.
+   Goal-first flow: goal header → focus card → Continue Learning → Today's
+   Targets → My Courses → Free Resources → Your next best courses.
    Suffixed -L to avoid global-scope clashes.
    =========================================================================== */
 const {
@@ -20,6 +19,15 @@ function goL(url) {
     window.location.href = u;
   })(url);
 }
+function lmReadTierL() {
+  if (window.PF_TIER) return window.PF_TIER;
+  try {
+    return localStorage.getItem("pf-preview-tier") || "confidence";
+  } catch (e) {
+    return "confidence";
+  }
+}
+const LM_FREE = lmReadTierL() === "free";
 const TUTOR_L = "Dr Tim Pearce";
 const IMG_L = {
   lip: "assets/clinic-lip-design.png"
@@ -31,40 +39,17 @@ const LM2_GOAL = {
 };
 const LM2_CONTINUE = {
   image: IMG_L.lip,
-  level: "Intermediate",
   title: "8D Lip Design",
-  progress: 20,
-  note: "Only 6 more modules until you get your certificate",
-  cta: "Resume Lesson 4",
+  moduleText: "Module 4 · Lesson 2 — Landmark mapping",
+  progress: 62,
+  total: 100,
   href: "Lesson.html"
 };
 const LM2_PROGRESS_SPOTLIGHT = {
   pillar: "Marketing",
   progress: 52,
-  note: "You need visibility. You aren't known yet.",
-  cta: "Work on your goal",
-  href: "CourseDetail.html"
+  note: "You need visibility. You aren't known yet."
 };
-const LM2_REASONING = "Based on your goal of building an £80k/month boutique clinic, Marketing has been chosen as today's focus — better visibility is the fastest lever to fill your books.";
-
-/* The Prosperity Spiral — exactly these four pillars, no abbreviation, no "Patient Care" */
-const LM2_PILLARS = [{
-  key: "Sales",
-  pct: 31,
-  color: "var(--error)"
-}, {
-  key: "Marketing",
-  pct: 52,
-  color: "linear-gradient(90deg, #f4ad3d, #e7820a)"
-}, {
-  key: "Clinical Skills",
-  pct: 62,
-  color: "var(--info)"
-}, {
-  key: "Business Systems",
-  pct: 41,
-  color: "var(--premium-orange)"
-}];
 const LM2_TARGET_TAGS = {
   MKT: {
     label: "MKT",
@@ -100,14 +85,49 @@ const LM2_MY_COURSES = [{
   image: IMG_L.lip,
   level: "Intermediate",
   title: "8D Lip Design",
-  description: "Discover a complete view of lip anatomy for deeper learning.",
-  price: "£112"
+  description: "Discover a complete view of lip anatomy for deeper learning."
 }, {
   image: IMG_L.lip,
   level: "Advanced",
   title: "Temple Filler",
-  description: "Master safe injection techniques with anatomical precision.",
-  price: "£89"
+  description: "Master safe injection techniques with anatomical precision."
+}];
+const LM2_NEXT_BEST = [{
+  status: "in-progress",
+  title: "8D Lip Design",
+  reason: "Directly serves your £80k/month goal",
+  href: "CourseDetail.html"
+}, {
+  status: "next",
+  title: "Consultation & Sales Scripts",
+  reason: "Turns visibility into booked consultations",
+  href: "CourseDetail.html"
+}, {
+  status: "later",
+  title: "Clinic Systems & SOPs",
+  reason: "Keeps your team consistent as you scale",
+  href: "CourseDetail.html"
+}];
+const LM2_HOWITWORKS = [{
+  icon: "lucide:target",
+  title: "Your goal",
+  body: "This is the clinic and income you're building towards — not where you are today. Everything on this page is chosen to move you closer to it."
+}, {
+  icon: "lucide:trophy",
+  title: "Progress",
+  body: "A single 0–100 score for the one area we think matters most for your goal right now."
+}, {
+  icon: "lucide:list-checks",
+  title: "Today's targets",
+  body: "A short daily checklist of small actions. Tick them off as you go — they're picked to build momentum on your goal."
+}, {
+  icon: "lucide:route",
+  title: "Next best courses",
+  body: "Your courses in the order that gets you to your goal fastest, not just the order you enrolled in them."
+}, {
+  icon: "lucide:sparkles",
+  title: "Ava",
+  body: "Your AI coach. Ask her anything about your goal, your targets, or what to do next — she knows your progress."
 }];
 const LM_TABS = [{
   key: "Home",
@@ -136,28 +156,37 @@ const LM_TABS = [{
   icon: "lucide:sparkles",
   href: "AgentMobile.html"
 }];
-function LM2Header() {
+function LM2Header({
+  freeTier
+}) {
   return /*#__PURE__*/React.createElement("div", {
-    className: "lm2-head",
+    className: "lm2-head" + (freeTier ? " has-sub" : ""),
     "data-screen-label": "Header"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm2-head-row"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm2-head-greet"
-  }, "Good morning, Katy! ", /*#__PURE__*/React.createElement("span", {
+  }, "Good morning, Katy! ", !freeTier && /*#__PURE__*/React.createElement("span", {
     className: "lm2-sun",
     role: "img",
     "aria-label": "sun"
-  }, "☀️")), /*#__PURE__*/React.createElement("span", {
+  }, "☀️")), freeTier ? /*#__PURE__*/React.createElement("img", {
+    className: "lm2-head-avatar",
+    src: "assets/avatar-katy.jpg",
+    alt: "Katy"
+  }) : /*#__PURE__*/React.createElement("span", {
     className: "lm2-tierpill"
   }, /*#__PURE__*/React.createElement(IconifyL, {
     name: "lucide:crown",
     size: 12,
     color: "#fff"
-  }), " Confidence Path")));
+  }), " Confidence Path")), freeTier && /*#__PURE__*/React.createElement("p", {
+    className: "lm2-head-sub"
+  }, "Your goal is to grow in aesthetics or medical school"));
 }
 function LM2GoalBanner({
-  data
+  data,
+  onHelp
 }) {
   return /*#__PURE__*/React.createElement("section", {
     className: "lm2-goalcard",
@@ -170,19 +199,30 @@ function LM2GoalBanner({
     name: "lucide:target",
     size: 18,
     color: "#fff"
-  })), data.title), /*#__PURE__*/React.createElement("p", {
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-goal-title"
+  }, data.title), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-goal-help",
+    "aria-label": "How this page works",
+    onClick: onHelp
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:help-circle",
+    size: 19,
+    color: "rgba(255,255,255,.85)"
+  }))), /*#__PURE__*/React.createElement("p", {
     className: "lm2-goal-vision"
   }, data.vision), /*#__PURE__*/React.createElement("p", {
     className: "lm2-goal-clarifier"
   }, data.clarifier));
 }
 function LM2ProgressSpotlight({
-  data,
-  reasoning
+  data
 }) {
+  const [saved, setSaved] = useStateL(false);
   return /*#__PURE__*/React.createElement("section", {
     className: "lm2-hero",
-    "data-screen-label": "Your Progress"
+    "data-screen-label": "Let's work on your goal"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm2-card lm2-progress-card"
   }, /*#__PURE__*/React.createElement("div", {
@@ -191,11 +231,38 @@ function LM2ProgressSpotlight({
     className: "lm2-progress-main"
   }, /*#__PURE__*/React.createElement("span", {
     className: "eyebrow"
-  }, "Your Progress"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:trophy",
+    size: 13,
+    color: "var(--brand-gold)"
+  }), "Let's work on your goal"), /*#__PURE__*/React.createElement("div", {
     className: "ti"
   }, data.pillar), /*#__PURE__*/React.createElement("p", {
     className: "note"
-  }, data.note)), /*#__PURE__*/React.createElement("div", {
+  }, data.note), /*#__PURE__*/React.createElement("a", {
+    href: "#",
+    className: "lm2-spiral-link",
+    onClick: e => {
+      e.preventDefault();
+      goL("MyLearning.html");
+    }
+  }, "See my full Prosperity Spiral", /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-up-right",
+    size: 14,
+    color: "var(--ai-purple)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-progress-side"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-save-btn" + (saved ? " saved" : ""),
+    "aria-pressed": saved,
+    "aria-label": saved ? "Remove from saved" : "Save this recommendation",
+    onClick: () => setSaved(s => !s)
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: saved ? "lucide:bookmark-check" : "lucide:bookmark",
+    size: 16,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("div", {
     className: "lm2-progress-ring",
     style: {
       "--pct": data.progress
@@ -206,101 +273,47 @@ function LM2ProgressSpotlight({
     className: "n"
   }, data.progress), /*#__PURE__*/React.createElement("span", {
     className: "lbl"
-  }, "Progress"))), reasoning && /*#__PURE__*/React.createElement("p", {
-    className: "lm2-reasoning"
-  }, reasoning), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lm2-cta",
-    onClick: () => goL(data.href)
-  }, data.cta, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:arrow-up-right",
-    size: 17,
-    color: "#fff"
-  }))));
+  }, "Progress"))))));
 }
-function LM2HeroCard({
-  title,
-  data,
-  reasoning
+function LM2ContinueCard({
+  data
 }) {
+  const pct = Math.round(data.progress / data.total * 100);
   return /*#__PURE__*/React.createElement("section", {
-    className: "lm2-hero",
-    "data-screen-label": title
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm2-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, title)), reasoning && /*#__PURE__*/React.createElement("p", {
-    className: "lm2-reasoning"
-  }, reasoning), /*#__PURE__*/React.createElement("article", {
-    className: "lm2-herocard"
-  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-continue",
+    "data-screen-label": "Continue Learning"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-continue-card",
+    onClick: () => goL(data.href),
+    "aria-label": "Resume " + data.title + ", " + data.moduleText
+  }, /*#__PURE__*/React.createElement("span", {
     className: "thumb",
     style: {
       backgroundImage: "url(" + data.image + ")"
     }
-  }, /*#__PURE__*/React.createElement(LevelBadgeL, {
-    level: data.level,
-    className: "lvl"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "body"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ti"
-  }, data.title), /*#__PURE__*/React.createElement("div", {
-    className: "lm2-progrow"
   }, /*#__PURE__*/React.createElement("span", {
+    className: "play",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:play",
+    size: 16,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("span", {
+    className: "body"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ti"
+  }, data.title), /*#__PURE__*/React.createElement("span", {
+    className: "mod"
+  }, data.moduleText), /*#__PURE__*/React.createElement("span", {
     className: "bar"
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      width: data.progress + "%"
+      width: pct + "%"
     }
   })), /*#__PURE__*/React.createElement("span", {
     className: "pct"
-  }, data.progress, "% Complete")), /*#__PURE__*/React.createElement("p", {
-    className: "note"
-  }, data.note), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lm2-cta",
-    onClick: () => goL(data.href)
-  }, data.cta, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:arrow-up-right",
-    size: 17,
-    color: "#fff"
-  })))));
-}
-function LM2GrowthCard() {
-  return /*#__PURE__*/React.createElement("section", {
-    className: "lm2-card",
-    "data-screen-label": "The Prosperity Spiral"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm2-card-hd"
-  }, /*#__PURE__*/React.createElement("h2", null, "The Prosperity Spiral"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pf-coach-link",
-    "data-coach": "Discuss my Prosperity Spiral — Sales, Marketing, Clinical Skills and Business Systems — and tell me what to prioritise."
-  }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:sparkles",
-    size: 14,
-    color: "var(--ai-purple)"
-  }), "Discuss with Ava")), /*#__PURE__*/React.createElement("div", {
-    className: "lm2-pillar-grid"
-  }, LM2_PILLARS.map(g => /*#__PURE__*/React.createElement("button", {
-    key: g.key,
-    type: "button",
-    className: "lm2-pillar-card",
-    onClick: () => goL("MyLearning.html")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "top"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "k"
-  }, g.key), /*#__PURE__*/React.createElement("span", {
-    className: "v"
-  }, g.pct)), /*#__PURE__*/React.createElement("span", {
-    className: "bar"
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: g.pct + "%",
-      background: g.color
-    }
-  }))))));
+  }, data.progress, " of ", data.total, " complete"))));
 }
 function LM2TargetsCard() {
   const [extra, setExtra] = useStateL([]);
@@ -321,9 +334,15 @@ function LM2TargetsCard() {
     next[i] = !next[i];
     return next;
   });
+  const nextIdx = all.findIndex((_, i) => !done[i]);
+  const nextUp = nextIdx !== -1 ? all[nextIdx] : null;
   return /*#__PURE__*/React.createElement("section", {
-    className: "lm2-card",
+    className: "lm2-targets-sec",
     "data-screen-label": "Today's Targets"
+  }, nextUp && /*#__PURE__*/React.createElement("p", {
+    className: "lm2-nextup"
+  }, "Next up: ", /*#__PURE__*/React.createElement("b", null, nextUp.text)), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm2-card-hd"
   }, /*#__PURE__*/React.createElement("h2", null, "Today's Targets"), /*#__PURE__*/React.createElement("button", {
@@ -358,11 +377,12 @@ function LM2TargetsCard() {
     className: "tx"
   }, t.text)))), /*#__PURE__*/React.createElement("p", {
     className: "lm2-target-note"
-  }, "Completing these will move your Prosperity Spiral forward"));
+  }, "Completing these will move you closer to your goal")));
 }
 function SecHead({
   title,
-  viewAll = true
+  viewAll = true,
+  linkLabel = "See All"
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "lm2-sec-h"
@@ -372,7 +392,30 @@ function SecHead({
       e.preventDefault();
       goL("MyLearning.html");
     }
-  }, "See All"));
+  }, linkLabel));
+}
+function LM2LockedCard({
+  title,
+  body,
+  onUpgrade
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lm2-locked"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:lock",
+    size: 20,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("h3", null, title), /*#__PURE__*/React.createElement("p", null, body), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-upgrade-btn",
+    onClick: onUpgrade
+  }, "Upgrade", /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-up-right",
+    size: 16,
+    color: "#fff"
+  })));
 }
 function LM2CourseCard({
   c
@@ -397,9 +440,7 @@ function LM2CourseCard({
     className: "by"
   }, TUTOR_L), /*#__PURE__*/React.createElement("div", {
     className: "foot"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "price"
-  }, c.price), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lm-ghost",
     onClick: () => goL("CourseDetail.html")
@@ -438,6 +479,148 @@ function LM2ActionCard({
     size: 20,
     color: "#fff"
   })));
+}
+function LM2FreeResources({
+  unlocked,
+  onStartSurvey
+}) {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "lm2-freeres",
+    "data-screen-label": "Free Resources"
+  }, /*#__PURE__*/React.createElement(SecHead, {
+    title: "Free Resources",
+    linkLabel: "View All"
+  }), unlocked ? /*#__PURE__*/React.createElement("div", {
+    className: "lm2-freeres-open"
+  }, /*#__PURE__*/React.createElement("p", null, "Your free resources are unlocked — guides, checklists and vein maps tailored to your clinic goals."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-outline-btn",
+    onClick: () => goL("MySaved.html")
+  }, "View free resources", /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-up-right",
+    size: 16,
+    color: "var(--brand-navy)"
+  }))) : /*#__PURE__*/React.createElement("div", {
+    className: "lm2-actions"
+  }, /*#__PURE__*/React.createElement(LM2ActionCard, {
+    icon: "lucide:lock",
+    title: "Free Resources",
+    sub: "Complete a quick survey to unlock free resources tailored to your clinic goals",
+    onClick: onStartSurvey
+  })));
+}
+function LM2NextBestSection({
+  freeTier
+}) {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "lm2-nextsec",
+    "data-screen-label": "Your next best courses"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-sec-h"
+  }, /*#__PURE__*/React.createElement("h2", null, "Your next best courses"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-coach-link",
+    "data-coach": "Explain why these are my next best courses for reaching my clinic goal."
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "var(--ai-purple)"
+  }), "Ask Ava why")), /*#__PURE__*/React.createElement("p", {
+    className: "lm2-nextsec-sub"
+  }, "Sequenced for your goal — work through them in order"), /*#__PURE__*/React.createElement("ol", {
+    className: "lm2-nextlist"
+  }, LM2_NEXT_BEST.map((c, i) => /*#__PURE__*/React.createElement("li", {
+    key: i
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-nextrow " + c.status,
+    onClick: () => goL(c.href)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "num",
+    "aria-hidden": "true"
+  }, c.status === "in-progress" ? /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:play",
+    size: 13,
+    color: "#fff"
+  }) : i + 1), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ti"
+  }, c.title), /*#__PURE__*/React.createElement("span", {
+    className: "reason"
+  }, c.reason)))))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-outline-btn",
+    onClick: () => goL("MyLearning.html")
+  }, freeTier ? "See what's included" : "Browse the full library"));
+}
+function LM2HelpSheet({
+  open,
+  onClose
+}) {
+  const closeRef = React.useRef(null);
+  const lastFocused = React.useRef(null);
+  React.useEffect(() => {
+    if (!open) return;
+    lastFocused.current = document.activeElement;
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    closeRef.current && closeRef.current.focus();
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      if (lastFocused.current && lastFocused.current.focus) {
+        try {
+          lastFocused.current.focus();
+        } catch (e) {}
+      }
+    };
+  }, [open]);
+  if (!open) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lm2-help-wrap"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-help-scrim",
+    onClick: onClose
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-help-sheet",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "How this page works"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-help-handle",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("header", {
+    className: "lm2-help-head"
+  }, /*#__PURE__*/React.createElement("h2", null, "How this page works"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    ref: closeRef,
+    className: "lm2-help-close",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:x",
+    size: 20,
+    color: "var(--gray-700)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-help-body"
+  }, LM2_HOWITWORKS.map((h, i) => /*#__PURE__*/React.createElement("div", {
+    className: "lm2-help-item",
+    key: i
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: h.icon,
+    size: 17,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, h.title), /*#__PURE__*/React.createElement("p", null, h.body))))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-help-gotit",
+    onClick: onClose
+  }, "Got it")));
 }
 const LMTabBar = React.forwardRef(function LMTabBar(_props, ref) {
   return /*#__PURE__*/React.createElement("nav", {
@@ -488,59 +671,82 @@ function useScrollChromeL(scrollRef) {
   }, []);
   return state;
 }
+function lmReadResourcesUnlockedL() {
+  try {
+    return localStorage.getItem("pf-resources-unlocked") === "1";
+  } catch (e) {
+    return false;
+  }
+}
 function LearningHome() {
   const [surveyOpen, setSurveyOpen] = useStateL(false);
+  const [helpOpen, setHelpOpen] = useStateL(false);
+  const [resourcesUnlocked, setResourcesUnlocked] = useStateL(lmReadResourcesUnlockedL);
   const scrollRef = React.useRef(null);
   const {
     hidden: chromeHidden,
     floating: chromeFloat
   } = useScrollChromeL(scrollRef);
+  const unlockResources = () => {
+    setResourcesUnlocked(true);
+    try {
+      localStorage.setItem("pf-resources-unlocked", "1");
+    } catch (e) {}
+  };
   return /*#__PURE__*/React.createElement("div", {
     className: "lm-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : ""),
     "data-screen-label": "My Learning (mobile)"
   }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement("div", {
     className: "lm-scroll",
     ref: scrollRef
-  }, /*#__PURE__*/React.createElement(LM2Header, null), /*#__PURE__*/React.createElement(LM2GoalBanner, {
-    data: LM2_GOAL
-  }), /*#__PURE__*/React.createElement(LM2HeroCard, {
-    title: "Continue Learning",
-    data: LM2_CONTINUE
+  }, /*#__PURE__*/React.createElement(LM2Header, {
+    freeTier: LM_FREE
+  }), /*#__PURE__*/React.createElement(LM2GoalBanner, {
+    data: LM2_GOAL,
+    onHelp: () => setHelpOpen(true)
   }), /*#__PURE__*/React.createElement(LM2ProgressSpotlight, {
-    data: LM2_PROGRESS_SPOTLIGHT,
-    reasoning: LM2_REASONING
-  }), /*#__PURE__*/React.createElement(LM2GrowthCard, null), /*#__PURE__*/React.createElement(LM2TargetsCard, null), /*#__PURE__*/React.createElement("section", {
+    data: LM2_PROGRESS_SPOTLIGHT
+  }), /*#__PURE__*/React.createElement("section", {
+    className: "lm2-continue-sec",
+    "data-screen-label": "Continue Learning"
+  }, LM_FREE ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-sec-h"
+  }, /*#__PURE__*/React.createElement("h2", null, "Continue Learning")), /*#__PURE__*/React.createElement(LM2LockedCard, {
+    title: "Unlock Continue Learning",
+    body: "Upgrade to start a course and track your progress toward your goal.",
+    onUpgrade: () => goL("MembershipTier.html")
+  })) : /*#__PURE__*/React.createElement(LM2ContinueCard, {
+    data: LM2_CONTINUE
+  })), /*#__PURE__*/React.createElement(LM2TargetsCard, null), /*#__PURE__*/React.createElement("section", {
+    className: "lm2-courseband",
     "data-screen-label": "My Courses"
   }, /*#__PURE__*/React.createElement(SecHead, {
     title: "My Courses"
-  }), /*#__PURE__*/React.createElement("div", {
+  }), LM_FREE ? /*#__PURE__*/React.createElement(LM2LockedCard, {
+    title: "Unlock My Courses",
+    body: "Upgrade to purchase courses and they'll live here for easy access.",
+    onUpgrade: () => goL("MembershipTier.html")
+  }) : /*#__PURE__*/React.createElement("div", {
     className: "lm2-coursegrid"
   }, LM2_MY_COURSES.map((c, i) => /*#__PURE__*/React.createElement(LM2CourseCard, {
     key: i,
     c: c
-  })))), /*#__PURE__*/React.createElement("div", {
-    className: "lm2-actions"
-  }, /*#__PURE__*/React.createElement(LM2ActionCard, {
-    icon: "lucide:lock",
-    title: "Free Resources",
-    sub: "Complete a quick survey to unlock free resources tailored to your clinic goals",
-    onClick: () => setSurveyOpen(true)
-  }), /*#__PURE__*/React.createElement(LM2ActionCard, {
-    title: "Your Success Path",
-    sub: "A personalised learning journey designed to help you reach your £80k/month clinic goal",
-    onClick: () => goL("MyLearning.html")
-  }), /*#__PURE__*/React.createElement(LM2ActionCard, {
-    title: "Browse All Courses",
-    sub: "Recommended, New & Popular courses",
-    onClick: () => goL("MyLearning.html")
-  })), /*#__PURE__*/React.createElement("div", {
+  })))), /*#__PURE__*/React.createElement(LM2FreeResources, {
+    unlocked: resourcesUnlocked,
+    onStartSurvey: () => setSurveyOpen(true)
+  }), /*#__PURE__*/React.createElement(LM2NextBestSection, {
+    freeTier: LM_FREE
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 20
     }
   })), /*#__PURE__*/React.createElement(LMTabBar, null), /*#__PURE__*/React.createElement(SurveyMobile, {
     open: surveyOpen,
     onClose: () => setSurveyOpen(false),
-    onComplete: () => setSurveyOpen(false)
+    onComplete: unlockResources
+  }), /*#__PURE__*/React.createElement(LM2HelpSheet, {
+    open: helpOpen,
+    onClose: () => setHelpOpen(false)
   }));
 }
 function useDeviceScaleL() {

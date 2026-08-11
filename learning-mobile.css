@@ -47,10 +47,14 @@ img { max-width: 100%; }
 /* ===== header: greeting, tier pill, stats + On Track ring ===== */
 .lm2-head { flex: none; padding: 18px 20px 4px; }
 .lm2-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.lm2-head.has-sub .lm2-head-row { margin-bottom: 6px; }
 .lm2-head-greet { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 21px; color: var(--text-heading); line-height: 1.2; }
 .lm2-sun { font-size: 18px; }
 .lm2-tierpill { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: var(--r-pill);
   background: linear-gradient(135deg, #292569, #453f9e); color: #fff; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 12px; white-space: nowrap; }
+.lm2-head-avatar { flex: none; width: 46px; height: 46px; border-radius: 50%; object-fit: cover;
+  box-shadow: 0 1px 4px rgba(12,12,13,.14); }
+.lm2-head-sub { margin: 0 0 14px; font-family: var(--font-sans); font-size: 14.5px; color: var(--gray-500); }
 
 /* ===== My Goal & Dream Clinic — aspirational banner, not current state ===== */
 .lm2-goalcard { margin: 14px 20px 0; padding: 18px 20px; border-radius: var(--r-lg);
@@ -58,6 +62,11 @@ img { max-width: 100%; }
 .lm2-goal-head { display: flex; align-items: center; gap: 10px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 16px; }
 .lm2-goal-icon { flex: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   background: rgba(255,255,255,.16); }
+.lm2-goal-title { flex: 1; min-width: 0; }
+.lm2-goal-help { flex: none; width: 44px; height: 44px; margin: -11px -8px -11px 0; border: none; border-radius: 50%;
+  background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.lm2-goal-help:hover { background: rgba(255,255,255,.14); }
+.lm2-goal-help:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .lm2-goal-vision { margin: 10px 0 0; font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: rgba(255,255,255,.92); }
 .lm2-goal-clarifier { margin: 8px 0 0; font-family: var(--font-sans); font-style: italic; font-size: 12.5px; color: rgba(255,255,255,.68); }
 
@@ -65,43 +74,50 @@ img { max-width: 100%; }
 .lm2-progress-card { display: flex; flex-direction: column; gap: 4px; }
 .lm2-progress-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .lm2-progress-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.lm2-progress-main .eyebrow { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 11.5px; letter-spacing: .04em;
+.lm2-progress-main .eyebrow { display: flex; align-items: center; gap: 6px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 11.5px; letter-spacing: .04em;
   text-transform: uppercase; color: var(--premium-orange); }
 .lm2-progress-main .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 19px; color: var(--text-heading); }
 .lm2-progress-main .note { margin: 0; font-family: var(--font-sans); font-size: 13.5px; line-height: 1.4; color: var(--gray-500); }
+.lm2-spiral-link { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin-top: 4px; min-height: 44px; padding: 4px 0;
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 14px; color: var(--ai-purple); text-decoration: none; }
+.lm2-spiral-link:hover { text-decoration: underline; }
+.lm2-spiral-link:focus-visible { outline: 2px solid var(--ai-purple); outline-offset: 2px; border-radius: 6px; }
+.lm2-progress-side { flex: none; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.lm2-save-btn { flex: none; width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid var(--border-default);
+  background: var(--surface-card); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.lm2-save-btn:hover { background: var(--surface-sunken); }
+.lm2-save-btn.saved { border-color: var(--brand-navy); background: color-mix(in srgb, var(--brand-navy) 8%, #fff); }
+.lm2-save-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
 .lm2-progress-ring { position: relative; flex: none; width: 92px; height: 92px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: conic-gradient(#e7820a calc(var(--pct) * 1%), var(--surface-sunken) 0); }
 .lm2-progress-ring::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: var(--surface-card); }
 .lm2-progress-ring .n { position: relative; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 22px; color: var(--premium-orange); line-height: 1.1; font-variant-numeric: tabular-nums; }
 .lm2-progress-ring .lbl { position: relative; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 10.5px; letter-spacing: .03em; text-transform: uppercase; color: var(--gray-500); }
-.lm2-progress-card .lm2-reasoning { margin: 12px 0 0; padding: 0; }
-.lm2-progress-card .lm2-cta { margin-top: 14px; }
 
 /* section header (used before the two hero cards and My Courses) */
 .lm2-sec-h { display: flex; align-items: baseline; justify-content: space-between; padding: 22px 20px 12px; }
 .lm2-sec-h h2 { margin: 0; font-family: var(--font-sans); font-size: 20px; font-weight: var(--fw-bold); color: var(--brand-navy); }
 .lm2-sec-h a { font-family: var(--font-sans); font-size: 14.5px; font-weight: var(--fw-semibold); color: var(--ai-purple); text-decoration: none; }
 
-/* Continue Learning / Next Best Action */
-.lm2-reasoning { margin: 0 20px 14px; font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--gray-500); }
-.lm2-herocard { margin: 0 20px; border: 1px solid var(--border-default); border-radius: var(--r-lg); overflow: hidden;
+/* ===== Continue Learning — resume card, violet left border marks it as "the active thing" ===== */
+.lm2-continue-sec { margin-top: 20px; }
+.lm2-continue { margin: 0 20px; }
+.lm2-continue-card { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; cursor: pointer;
+  padding: 14px; border: none; border-left: 4px solid var(--ai-purple); border-radius: var(--r-lg);
   background: var(--surface-card); box-shadow: 0 1px 3px rgba(12,12,13,.05); }
-.lm2-herocard .thumb { position: relative; height: 168px; background-size: cover; background-position: center; }
-.lm2-herocard .thumb .lvl { position: absolute; left: 12px; top: 12px; }
-.lm2-herocard .body { padding: 16px; }
-.lm2-herocard .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 18px; color: var(--text-heading); margin-bottom: 12px; }
-.lm2-progrow { display: flex; align-items: center; gap: 10px; }
-.lm2-progrow .bar { flex: 1; min-width: 0; height: 7px; border-radius: var(--r-pill); background: var(--gray-150); overflow: hidden; }
-.lm2-progrow .bar > span { display: block; height: 100%; border-radius: var(--r-pill); background: linear-gradient(90deg, #f4ad3d, #e7820a); }
-.lm2-progrow .pct { flex: none; font-family: var(--font-sans); font-size: 13px; color: var(--gray-500); }
-.lm2-herocard .note { margin: 10px 0 0; font-family: var(--font-sans); font-size: 14px; line-height: 1.4; color: var(--gray-600); }
-.lm2-cta { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; min-height: 50px; margin-top: 14px; cursor: pointer;
-  border: none; border-radius: 10px; background: var(--brand-navy); color: #fff;
-  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15.5px; transition: background .15s ease; }
-.lm2-cta:hover { background: var(--brand-navy-700, #201d54); }
-.lm2-cta:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+.lm2-continue-card:focus-visible { outline: 2px solid var(--ai-purple); outline-offset: 2px; }
+.lm2-continue-card .thumb { position: relative; flex: none; width: 76px; height: 76px; border-radius: 12px;
+  background-size: cover; background-position: center; overflow: hidden; }
+.lm2-continue-card .thumb .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(16,24,40,.36); }
+.lm2-continue-card .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.lm2-continue-card .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15.5px; color: var(--text-heading); }
+.lm2-continue-card .mod { font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); }
+.lm2-continue-card .bar { display: block; height: 6px; border-radius: var(--r-pill); background: var(--gray-150); overflow: hidden; }
+.lm2-continue-card .bar > span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--ai-purple); }
+.lm2-continue-card .pct { font-family: var(--font-sans); font-size: 12px; color: var(--gray-500); }
 
-/* white cards: Clinic Growth Score / Today's Target */
+/* white cards: Today's Targets */
 .lm2-card { margin: 20px 20px 0; padding: 18px; border-radius: var(--r-lg); background: var(--surface-card);
   border: 1px solid var(--border-default); box-shadow: 0 1px 3px rgba(12,12,13,.05); }
 .lm2-card-hd { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
@@ -109,14 +125,11 @@ img { max-width: 100%; }
 .lm2-chip { flex: none; padding: 5px 12px; border-radius: var(--r-pill); background: var(--surface-sunken);
   font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 12px; color: var(--gray-600); }
 
-/* The Prosperity Spiral — 2x2 pillar grid, Progress numbers (no %) */
-.lm2-pillar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.lm2-pillar-card { display: flex; flex-direction: column; gap: 8px; border: none; background: none; padding: 0; cursor: pointer; text-align: left; }
-.lm2-pillar-card .top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
-.lm2-pillar-card .k { flex: 1; min-width: 0; font-family: var(--font-sans); font-weight: var(--fw-medium); font-size: 13px; color: var(--text-primary); }
-.lm2-pillar-card .v { flex: none; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 16px; color: var(--text-heading); font-variant-numeric: tabular-nums; }
-.lm2-pillar-card .bar { display: block; height: 7px; border-radius: var(--r-pill); background: var(--gray-150); overflow: hidden; }
-.lm2-pillar-card .bar > span { display: block; height: 100%; border-radius: var(--r-pill); transition: width .5s cubic-bezier(.22,.61,.36,1); }
+/* Today's Targets section: "Next up" lead line sits above the card, so the card itself needs no top margin */
+.lm2-targets-sec { margin-top: 20px; }
+.lm2-targets-sec .lm2-card { margin-top: 0; }
+.lm2-nextup { margin: 0 20px 10px; font-family: var(--font-sans); font-size: 13.5px; color: var(--gray-600); }
+.lm2-nextup b { color: var(--text-heading); font-weight: var(--fw-semibold); }
 
 .lm2-target-rows { display: flex; flex-direction: column; gap: 10px; }
 .lm2-target-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer;
@@ -130,6 +143,23 @@ img { max-width: 100%; }
 .lm2-target-row.done .tx { color: var(--gray-500); text-decoration: line-through; }
 .lm2-target-note { margin: 14px 0 0; font-family: var(--font-sans); font-size: 13px; color: var(--gray-500); }
 
+/* My Courses — sunken band with hairline borders, breaks up the run of white cards */
+.lm2-courseband { margin-top: 20px; padding: 4px 0 24px; background: var(--surface-sunken);
+  border-top: 1px solid var(--border-default); border-bottom: 1px solid var(--border-default); }
+
+/* Free-tier "Unlock …" upsell card — reused for Continue Learning and My Courses */
+.lm2-locked { margin: 0 20px; padding: 28px 20px; border-radius: var(--r-lg); background: var(--surface-sunken);
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+.lm2-courseband .lm2-locked { background: var(--surface-card); border: 1px solid var(--border-default); }
+.lm2-locked .ic { flex: none; width: 48px; height: 48px; border-radius: 50%; background: var(--brand-navy);
+  display: flex; align-items: center; justify-content: center; margin-bottom: 2px; }
+.lm2-locked h3 { margin: 0; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 17px; color: var(--text-heading); }
+.lm2-locked p { margin: 0; max-width: 280px; font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--gray-500); }
+.lm2-upgrade-btn { margin-top: 6px; display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 26px; border: none; cursor: pointer;
+  background: var(--brand-navy); color: #fff; border-radius: 10px; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; }
+.lm2-upgrade-btn:hover { background: var(--brand-navy-700); }
+.lm2-upgrade-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+
 /* My Courses — 2-col grid */
 .lm2-coursegrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 20px; }
 .lm2-coursecard { border: 1px solid var(--border-default); border-radius: var(--r-lg); overflow: hidden;
@@ -140,8 +170,7 @@ img { max-width: 100%; }
 .lm2-coursecard .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--text-heading); line-height: 1.25; }
 .lm2-coursecard .ds { font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); line-height: 1.4; }
 .lm2-coursecard .by { font-family: var(--font-sans); font-size: 12.5px; font-weight: var(--fw-semibold); color: var(--brand-navy); }
-.lm2-coursecard .foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 6px; }
-.lm2-coursecard .price { font-family: var(--font-sans); font-size: 15px; font-weight: var(--fw-bold); color: var(--text-heading); }
+.lm2-coursecard .foot { margin-top: auto; display: flex; align-items: center; justify-content: flex-end; padding-top: 6px; }
 
 /* ghost button — "Learn More" */
 .lm-ghost { display: inline-flex; align-items: center; padding: 8px 14px; cursor: pointer;
@@ -149,8 +178,11 @@ img { max-width: 100%; }
   font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 12.5px; color: var(--ai-purple); white-space: nowrap; }
 .lm-ghost:active { background: rgba(108,99,255,.08); }
 
-/* simple action cards — Free Resources / Your Success Path / Browse All Courses */
-.lm2-actions { display: flex; flex-direction: column; gap: 12px; margin-top: 20px; padding: 0 20px; }
+/* Free Resources — locked (survey gate) or unlocked (already completed the survey) */
+.lm2-freeres { margin-top: 20px; }
+.lm2-freeres-open { margin: 0 20px; }
+.lm2-freeres-open p { margin: 0 0 14px; font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--gray-500); }
+.lm2-actions { display: flex; flex-direction: column; gap: 12px; padding: 0 20px; }
 .lm-unlock { display: flex; align-items: center; gap: 14px; padding: 18px; border-radius: var(--r-lg);
   background: var(--surface-card); border: 1px solid var(--border-default); box-shadow: 0 1px 3px rgba(12,12,13,.05); }
 .lm-unlock-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -160,6 +192,56 @@ img { max-width: 100%; }
   display: flex; align-items: center; justify-content: center; transition: background .15s ease; }
 .lm-unlock-btn:hover { background: var(--brand-navy-700); }
 .lm-unlock-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+
+/* ===== Your next best courses — single consolidated course entry point ===== */
+.lm2-nextsec { margin-top: 24px; }
+.lm2-nextsec-sub { margin: 0 20px 14px; font-family: var(--font-sans); font-size: 13.5px; color: var(--gray-500); }
+.lm2-nextlist { list-style: none; margin: 0 20px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.lm2-nextlist li { list-style: none; margin: 0; padding: 0; }
+.lm2-nextrow { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; cursor: pointer;
+  border: 1px solid var(--border-default); border-radius: var(--r-lg); padding: 14px; background: var(--surface-card); }
+.lm2-nextrow:focus-visible { outline: 2px solid var(--ai-purple); outline-offset: 2px; }
+.lm2-nextrow .num { flex: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 14px; background: var(--gray-150); color: var(--gray-600); }
+.lm2-nextrow.in-progress .num { background: var(--ai-purple); color: #fff; }
+.lm2-nextrow.next .num { background: var(--brand-gold-100); color: var(--brand-gold); }
+.lm2-nextrow .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.lm2-nextrow .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--text-heading); }
+.lm2-nextrow .reason { font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); }
+.lm2-outline-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: calc(100% - 40px); margin: 14px 20px 0; min-height: 48px;
+  border: 1.5px solid var(--brand-navy); border-radius: 10px; background: var(--surface-card); cursor: pointer;
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; color: var(--brand-navy); }
+.lm2-outline-btn:hover { background: var(--surface-sunken); }
+.lm2-outline-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+/* .lm2-freeres-open already provides the 20px gutter, so the button must not add its own */
+.lm2-freeres-open .lm2-outline-btn { width: 100%; margin: 0; }
+
+/* ===== "How this page works" help sheet ===== */
+.lm2-help-wrap { position: absolute; inset: 0; z-index: 200; }
+.lm2-help-scrim { position: absolute; inset: 0; background: rgba(16,24,40,.5); }
+.lm2-help-sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 82%; display: flex; flex-direction: column;
+  background: var(--surface-card); border-radius: 22px 22px 0 0; box-shadow: 0 -14px 40px rgba(16,24,40,.3);
+  animation: lm2-help-up .26s cubic-bezier(.22,.61,.36,1); }
+@keyframes lm2-help-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.lm2-help-handle { flex: none; width: 40px; height: 5px; border-radius: 3px; background: var(--gray-300); margin: 10px auto 2px; }
+.lm2-help-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 18px 12px; border-bottom: 1px solid var(--border-default); }
+.lm2-help-head h2 { margin: 0; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 17px; color: var(--text-heading); }
+.lm2-help-close { flex: none; width: 44px; height: 44px; border: none; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+.lm2-help-close:hover { background: var(--surface-sunken); }
+.lm2-help-close:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+.lm2-help-body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 18px; display: flex; flex-direction: column; gap: 16px; }
+.lm2-help-item { display: flex; gap: 12px; align-items: flex-start; }
+.lm2-help-item .ic { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--surface-sunken);
+  display: flex; align-items: center; justify-content: center; }
+.lm2-help-item .tx { flex: 1; min-width: 0; }
+.lm2-help-item .tx b { display: block; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 14.5px; color: var(--text-heading); margin-bottom: 3px; }
+.lm2-help-item .tx p { margin: 0; font-family: var(--font-sans); font-size: 13.5px; line-height: 1.45; color: var(--gray-500); }
+.lm2-help-gotit { flex: none; margin: 4px 18px calc(16px + env(safe-area-inset-bottom, 0px)); min-height: 50px; border: none; cursor: pointer;
+  background: var(--brand-navy); color: #fff; border-radius: 10px; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15.5px; }
+.lm2-help-gotit:hover { background: var(--brand-navy-700); }
+.lm2-help-gotit:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .lm2-help-sheet { animation: none; } }
 
 /* bottom tab bar — iOS 26 floating "liquid glass" dock */
 .lm-tabs { position: absolute; left: 16px; right: 16px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 30; display: flex; align-items: stretch; gap: 2px; border-radius: 34px;
