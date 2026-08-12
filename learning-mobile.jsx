@@ -272,7 +272,7 @@ function LM2FreeResources({ unlocked, onStartSurvey }) {
       {unlocked ?
       <div className="lm2-freeres-open">
           <p>Your free resources are unlocked — guides, checklists and vein maps tailored to your clinic goals.</p>
-          <button type="button" className="lm2-outline-btn" onClick={() => goL("MySaved.html")}>
+          <button type="button" className="lm2-outline-btn" onClick={() => goL("SavedMobile.html")}>
             View free resources<IconifyL name="lucide:arrow-up-right" size={16} color="var(--brand-navy)" />
           </button>
         </div> :
@@ -432,7 +432,7 @@ function LearningHome() {
           {LM_FREE ?
           <React.Fragment>
               <div className="lm2-sec-h"><h2>Continue Learning</h2></div>
-              <LM2LockedCard title="Unlock Continue Learning" body="Upgrade to start a course and track your progress toward your goal." onUpgrade={() => goL("MembershipTier.html")} />
+              <LM2LockedCard title="Unlock Continue Learning" body="Upgrade to start a course and track your progress toward your goal." onUpgrade={() => goL("SubscriptionMobile.html")} />
             </React.Fragment> :
 
           <LM2ContinueCard data={LM2_CONTINUE} />
@@ -444,7 +444,7 @@ function LearningHome() {
         <section className="lm2-courseband" data-screen-label="My Courses">
           <SecHead title="My Courses" />
           {LM_FREE ?
-          <LM2LockedCard title="Unlock My Courses" body="Upgrade to purchase courses and they'll live here for easy access." onUpgrade={() => goL("MembershipTier.html")} /> :
+          <LM2LockedCard title="Unlock My Courses" body="Upgrade to purchase courses and they'll live here for easy access." onUpgrade={() => goL("SubscriptionMobile.html")} /> :
 
           <div className="lm2-coursegrid">
               {LM2_MY_COURSES.map((c, i) => <LM2CourseCard key={i} c={c} />)}

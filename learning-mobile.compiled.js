@@ -495,7 +495,7 @@ function LM2FreeResources({
   }, /*#__PURE__*/React.createElement("p", null, "Your free resources are unlocked — guides, checklists and vein maps tailored to your clinic goals."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lm2-outline-btn",
-    onClick: () => goL("MySaved.html")
+    onClick: () => goL("SavedMobile.html")
   }, "View free resources", /*#__PURE__*/React.createElement(IconifyL, {
     name: "lucide:arrow-up-right",
     size: 16,
@@ -714,7 +714,7 @@ function LearningHome() {
   }, /*#__PURE__*/React.createElement("h2", null, "Continue Learning")), /*#__PURE__*/React.createElement(LM2LockedCard, {
     title: "Unlock Continue Learning",
     body: "Upgrade to start a course and track your progress toward your goal.",
-    onUpgrade: () => goL("MembershipTier.html")
+    onUpgrade: () => goL("SubscriptionMobile.html")
   })) : /*#__PURE__*/React.createElement(LM2ContinueCard, {
     data: LM2_CONTINUE
   })), /*#__PURE__*/React.createElement(LM2TargetsCard, null), /*#__PURE__*/React.createElement("section", {
@@ -725,7 +725,7 @@ function LearningHome() {
   }), LM_FREE ? /*#__PURE__*/React.createElement(LM2LockedCard, {
     title: "Unlock My Courses",
     body: "Upgrade to purchase courses and they'll live here for easy access.",
-    onUpgrade: () => goL("MembershipTier.html")
+    onUpgrade: () => goL("SubscriptionMobile.html")
   }) : /*#__PURE__*/React.createElement("div", {
     className: "lm2-coursegrid"
   }, LM2_MY_COURSES.map((c, i) => /*#__PURE__*/React.createElement(LM2CourseCard, {
