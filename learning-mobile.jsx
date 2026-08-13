@@ -12,9 +12,12 @@ const SurveyMobile = window.SurveyMobile;
 
 function goL(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
 
+/* Same "pf-subscription-tier" key the newsfeed/community/membership pages
+   read and write — this file doesn't load app.jsx, so it keeps its own tiny
+   copy rather than depending on window.PFApp. */
 function lmReadTierL() {
   if (window.PF_TIER) return window.PF_TIER;
-  try { return localStorage.getItem("pf-preview-tier") || "confidence"; } catch (e) { return "confidence"; }
+  try { return localStorage.getItem("pf-subscription-tier") || "free"; } catch (e) { return "free"; }
 }
 const LM_FREE = lmReadTierL() === "free";
 
@@ -64,9 +67,9 @@ const LM2_MY_COURSES = [
 
 
 const LM2_NEXT_BEST = [
-{ status: "in-progress", title: "8D Lip Design", reason: "Directly serves your £80k/month goal", href: "CourseDetail.html" },
-{ status: "next", title: "Consultation & Sales Scripts", reason: "Turns visibility into booked consultations", href: "CourseDetail.html" },
-{ status: "later", title: "Clinic Systems & SOPs", reason: "Keeps your team consistent as you scale", href: "CourseDetail.html" }];
+{ status: "in-progress", title: "8D Lip Design", reason: "Sharpens the technique you use most", href: "CourseDetail.html" },
+{ status: "next", title: "Pro Tox Masterclass", reason: "Builds the safety framework for your next tier", href: "CourseDetail.html" },
+{ status: "later", title: "Marketing Your Clinic", reason: "Directly serves your £80k/month goal", href: "CourseDetail.html" }];
 
 
 const LM2_HOWITWORKS = [
@@ -272,7 +275,7 @@ function LM2FreeResources({ unlocked, onStartSurvey }) {
       {unlocked ?
       <div className="lm2-freeres-open">
           <p>Your free resources are unlocked — guides, checklists and vein maps tailored to your clinic goals.</p>
-          <button type="button" className="lm2-outline-btn" onClick={() => goL("SavedMobile.html")}>
+          <button type="button" className="lm2-outline-btn" onClick={() => goL("MySaved.html")}>
             View free resources<IconifyL name="lucide:arrow-up-right" size={16} color="var(--brand-navy)" />
           </button>
         </div> :
@@ -313,6 +316,10 @@ function LM2NextBestSection({ freeTier }) {
       <button type="button" className="lm2-outline-btn" onClick={() => goL("MyLearning.html")}>
         {freeTier ? "See what's included" : "Browse the full library"}
       </button>
+      <div className="lm2-actions lm2-nextsec-actions">
+        <LM2ActionCard title="Your Success Path" sub="A personalised learning journey designed to help you reach your £80k/month clinic goal" onClick={() => goL("MyLearning.html")} />
+        <LM2ActionCard title="Browse All Courses" sub="Recommended, New & Popular courses" onClick={() => goL("MyLearning.html")} />
+      </div>
     </section>);
 
 }
@@ -370,12 +377,25 @@ const LMTabBar = React.forwardRef(function LMTabBar(_props, ref) {
             <DSL.IconifyIcon name={t.icon} size={24} color={t.key === "Learning" ? "#fff" : "#000"} />
             {t.dot && <span className="dot">{t.dot}</span>}
           </span>
-          {t.label}
+          <span className="lbl">{t.label}</span>
         </button>
       )}
     </nav>);
 
 });
+
+function LM2FloatChrome() {
+  return (
+    <div className="lm2-float-icons">
+      <button type="button" className="fi" aria-label="Search">
+        <IconifyL name="lucide:search" size={18} color="var(--brand-navy)" />
+      </button>
+      <button type="button" className="fi" aria-label="Saved" onClick={() => goL("MySaved.html")}>
+        <IconifyL name="lucide:bookmark" size={18} color="var(--brand-navy)" />
+      </button>
+    </div>);
+
+}
 
 function useScrollChromeL(scrollRef) {
   const [state, setState] = useStateL({ hidden: false, floating: false });
@@ -420,6 +440,7 @@ function LearningHome() {
   return (
     <div className={"lm-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="My Learning (mobile)">
       <MobileChromeC />
+      <LM2FloatChrome />
       <div className="lm-scroll" ref={scrollRef}>
 
         <LM2Header freeTier={LM_FREE} />
@@ -432,7 +453,7 @@ function LearningHome() {
           {LM_FREE ?
           <React.Fragment>
               <div className="lm2-sec-h"><h2>Continue Learning</h2></div>
-              <LM2LockedCard title="Unlock Continue Learning" body="Upgrade to start a course and track your progress toward your goal." onUpgrade={() => goL("SubscriptionMobile.html")} />
+              <LM2LockedCard title="Unlock Continue Learning" body="Upgrade to start a course and track your progress toward your goal." onUpgrade={() => goL("MembershipTier.html")} />
             </React.Fragment> :
 
           <LM2ContinueCard data={LM2_CONTINUE} />
@@ -444,7 +465,7 @@ function LearningHome() {
         <section className="lm2-courseband" data-screen-label="My Courses">
           <SecHead title="My Courses" />
           {LM_FREE ?
-          <LM2LockedCard title="Unlock My Courses" body="Upgrade to purchase courses and they'll live here for easy access." onUpgrade={() => goL("SubscriptionMobile.html")} /> :
+          <LM2LockedCard title="Unlock My Courses" body="Upgrade to purchase courses and they'll live here for easy access." onUpgrade={() => goL("MembershipTier.html")} /> :
 
           <div className="lm2-coursegrid">
               {LM2_MY_COURSES.map((c, i) => <LM2CourseCard key={i} c={c} />)}

@@ -27,16 +27,28 @@ img { max-width: 100%; }
 
 /* ===== hide-on-scroll chrome (matches the newsfeed) ===== */
 .lm-screen .m-top { transition: background .28s ease, border-color .28s ease; }
-.lm-screen .m-top img, .lm-screen .m-burger { transition: opacity .28s ease, transform .3s cubic-bezier(.4,0,.2,1); }
-/* once scrolled, drop the bar container — the glass icon circles keep floating over the content */
+.lm-screen .m-top img, .lm-screen .m-burger, .lm-screen .m-iconbtn { transition: opacity .28s ease, transform .3s cubic-bezier(.4,0,.2,1); }
+/* once scrolled, drop the bar container — a dedicated Search/Saved pair floats over the content instead */
 .lm-screen.chrome-float .m-top { position: absolute; top: 0; left: 0; right: 0; z-index: 20; background: transparent;
   -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom-color: transparent; }
-/* collapsed: only the burger + logo fade out; the glass icon buttons stay put */
-.lm-screen.chrome-hidden .m-top img,
-.lm-screen.chrome-hidden .m-burger { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+.lm-screen.chrome-float .m-top img,
+.lm-screen.chrome-float .m-burger { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+.lm-screen.chrome-float .m-top .m-iconbtn { opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
-  .lm-screen .m-top, .lm-screen .m-top img, .lm-screen .m-burger, .lm-tabs, .lm-tab { transition: none; }
+  .lm-screen .m-top, .lm-screen .m-top img, .lm-screen .m-burger, .lm-screen .m-iconbtn,
+  .lm-tabs, .lm-tab, .lm2-float-icons { transition: none; }
 }
+
+/* floating Search + Saved circles — replace the header's icons once collapsed; hide/show follows
+   the same up/down scroll signal that used to drive the logo/burger fade */
+.lm2-float-icons { position: absolute; top: 85px; left: 0; right: 0; z-index: 21; display: flex; justify-content: space-between;
+  padding: 0 20px; opacity: 0; pointer-events: none; transition: opacity .28s ease, transform .3s cubic-bezier(.4,0,.2,1); }
+.lm-screen.chrome-float .lm2-float-icons { opacity: 1; pointer-events: auto; }
+.lm-screen.chrome-hidden .lm2-float-icons { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+.lm2-float-icons .fi { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,.6); cursor: pointer;
+  background: rgba(255,255,255,.72); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 4px 14px rgba(16,24,40,.12); display: flex; align-items: center; justify-content: center; }
+.lm2-float-icons .fi:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
 
 /* scroll */
 .lm-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 96px; }
@@ -57,10 +69,10 @@ img { max-width: 100%; }
 .lm2-head-sub { margin: 0 0 14px; font-family: var(--font-sans); font-size: 14.5px; color: var(--gray-500); }
 
 /* ===== My Goal & Dream Clinic — aspirational banner, not current state ===== */
-.lm2-goalcard { margin: 14px 20px 0; padding: 18px 20px; border-radius: var(--r-lg);
-  background: linear-gradient(135deg, #292569, #3a3491); color: #fff; }
+.lm2-goalcard { margin: 14px 20px 0; padding: 22px; border-radius: 18px;
+  background: #2E2A75; color: #fff; }
 .lm2-goal-head { display: flex; align-items: center; gap: 10px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 16px; }
-.lm2-goal-icon { flex: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+.lm2-goal-icon { flex: none; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
   background: rgba(255,255,255,.16); }
 .lm2-goal-title { flex: 1; min-width: 0; }
 .lm2-goal-help { flex: none; width: 44px; height: 44px; margin: -11px -8px -11px 0; border: none; border-radius: 50%;
@@ -75,7 +87,7 @@ img { max-width: 100%; }
 .lm2-progress-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .lm2-progress-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .lm2-progress-main .eyebrow { display: flex; align-items: center; gap: 6px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 11.5px; letter-spacing: .04em;
-  text-transform: uppercase; color: var(--premium-orange); }
+  text-transform: uppercase; color: var(--brand-gold); }
 .lm2-progress-main .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 19px; color: var(--text-heading); }
 .lm2-progress-main .note { margin: 0; font-family: var(--font-sans); font-size: 13.5px; line-height: 1.4; color: var(--gray-500); }
 .lm2-spiral-link { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin-top: 4px; min-height: 44px; padding: 4px 0;
@@ -89,9 +101,9 @@ img { max-width: 100%; }
 .lm2-save-btn.saved { border-color: var(--brand-navy); background: color-mix(in srgb, var(--brand-navy) 8%, #fff); }
 .lm2-save-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
 .lm2-progress-ring { position: relative; flex: none; width: 92px; height: 92px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  background: conic-gradient(#e7820a calc(var(--pct) * 1%), var(--surface-sunken) 0); }
+  background: conic-gradient(var(--brand-gold) calc(var(--pct) * 1%), var(--surface-sunken) 0); }
 .lm2-progress-ring::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: var(--surface-card); }
-.lm2-progress-ring .n { position: relative; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 22px; color: var(--premium-orange); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.lm2-progress-ring .n { position: relative; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 22px; color: var(--brand-gold); line-height: 1.1; font-variant-numeric: tabular-nums; }
 .lm2-progress-ring .lbl { position: relative; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 10.5px; letter-spacing: .03em; text-transform: uppercase; color: var(--gray-500); }
 
 /* section header (used before the two hero cards and My Courses) */
@@ -156,7 +168,7 @@ img { max-width: 100%; }
 .lm2-locked h3 { margin: 0; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 17px; color: var(--text-heading); }
 .lm2-locked p { margin: 0; max-width: 280px; font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--gray-500); }
 .lm2-upgrade-btn { margin-top: 6px; display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 26px; border: none; cursor: pointer;
-  background: var(--brand-navy); color: #fff; border-radius: 10px; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; }
+  background: var(--brand-navy); color: #fff; border-radius: var(--r-pill); font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; }
 .lm2-upgrade-btn:hover { background: var(--brand-navy-700); }
 .lm2-upgrade-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
 
@@ -216,6 +228,9 @@ img { max-width: 100%; }
 /* .lm2-freeres-open already provides the 20px gutter, so the button must not add its own */
 .lm2-freeres-open .lm2-outline-btn { width: 100%; margin: 0; }
 
+/* Your Success Path / Browse All Courses — generic catalogue entry points below the sequenced list */
+.lm2-nextsec-actions { margin-top: 20px; }
+
 /* ===== "How this page works" help sheet ===== */
 .lm2-help-wrap { position: absolute; inset: 0; z-index: 200; }
 .lm2-help-scrim { position: absolute; inset: 0; background: rgba(16,24,40,.5); }
@@ -258,6 +273,9 @@ img { max-width: 100%; }
 .lm-tab.on .ic svg [stroke]:not([stroke="none"]) { stroke: #fff !important; }
 .lm-tab.on .ic svg [fill]:not([fill="none"]) { fill: #fff !important; }
 .lm-tab:active { transform: scale(.9); }
+/* collapse the dock to icons-only once the header chrome is floating */
+.lm-tab .lbl { transition: opacity .2s ease, max-height .2s ease; }
+.lm-screen.chrome-float .lm-tab .lbl { opacity: 0; max-height: 0; overflow: hidden; }
 
 .twk-panel { font-family: ui-sans-serif, system-ui, sans-serif; }
 
