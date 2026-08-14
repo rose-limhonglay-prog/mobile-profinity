@@ -1,7 +1,7 @@
 /* ===========================================================================
    PROfinity — My Learning (mobile) · iPhone 17 Pro Max
-   Goal-first flow: goal header → focus card → Continue Learning → Today's
-   Targets → My Courses → Free Resources → Your next best courses.
+   Goal-first flow: goal header → goal banner → Continue Learning → progress
+   spotlight → My Courses → Free Resources → Your Learning Path.
    Suffixed -L to avoid global-scope clashes.
    =========================================================================== */
 const {
@@ -19,6 +19,10 @@ function goL(url) {
     window.location.href = u;
   })(url);
 }
+
+/* Same "pf-subscription-tier" key the newsfeed/community/membership pages
+   read and write — this file doesn't load app.jsx, so it keeps its own tiny
+   copy rather than depending on window.PFApp. */
 function lmReadTierL() {
   if (window.PF_TIER) return window.PF_TIER;
   try {
@@ -50,37 +54,6 @@ const LM2_PROGRESS_SPOTLIGHT = {
   progress: 52,
   note: "You need visibility. You aren't known yet."
 };
-const LM2_TARGET_TAGS = {
-  MKT: {
-    label: "MKT",
-    color: "#e7820a"
-  },
-  CLIN: {
-    label: "CLIN",
-    color: "#0088de"
-  },
-  SALE: {
-    label: "SALE",
-    color: "var(--error)"
-  },
-  SYS: {
-    label: "SYS",
-    color: "var(--premium-orange)"
-  }
-};
-const LM2_TARGETS = [{
-  text: "Complete Lesson 4: Lip Anatomy",
-  tag: "CLIN"
-}, {
-  text: "Post 2 before/after case studies",
-  tag: "MKT"
-}, {
-  text: "Follow up with 3 lapsed patients",
-  tag: "SALE"
-}, {
-  text: "Log this week's expenses in your tracker",
-  tag: "SYS"
-}];
 const LM2_MY_COURSES = [{
   image: IMG_L.lip,
   level: "Intermediate",
@@ -91,22 +64,6 @@ const LM2_MY_COURSES = [{
   level: "Advanced",
   title: "Temple Filler",
   description: "Master safe injection techniques with anatomical precision."
-}];
-const LM2_NEXT_BEST = [{
-  status: "in-progress",
-  title: "8D Lip Design",
-  reason: "Sharpens the technique you use most",
-  href: "CourseDetail.html"
-}, {
-  status: "next",
-  title: "Pro Tox Masterclass",
-  reason: "Builds the safety framework for your next tier",
-  href: "CourseDetail.html"
-}, {
-  status: "later",
-  title: "Marketing Your Clinic",
-  reason: "Directly serves your £80k/month goal",
-  href: "CourseDetail.html"
 }];
 const LM2_HOWITWORKS = [{
   icon: "lucide:target",
@@ -166,7 +123,7 @@ function LM2Header({
     className: "lm2-head-row"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm2-head-greet"
-  }, "Good morning, Katy! ", !freeTier && /*#__PURE__*/React.createElement("span", {
+  }, "Good morning, Katy! ", /*#__PURE__*/React.createElement("span", {
     className: "lm2-sun",
     role: "img",
     "aria-label": "sun"
@@ -315,70 +272,6 @@ function LM2ContinueCard({
     className: "pct"
   }, data.progress, " of ", data.total, " complete"))));
 }
-function LM2TargetsCard() {
-  const [extra, setExtra] = useStateL([]);
-  React.useEffect(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("pf-coach-targets")) || [];
-      setExtra(stored.map(t => ({
-        text: t.text,
-        tag: null
-      })));
-    } catch (e) {}
-  }, []);
-  const all = LM2_TARGETS.concat(extra);
-  const [done, setDone] = useStateL([]);
-  const toggle = i => setDone(s => {
-    const next = s.slice();
-    while (next.length <= i) next.push(false);
-    next[i] = !next[i];
-    return next;
-  });
-  const nextIdx = all.findIndex((_, i) => !done[i]);
-  const nextUp = nextIdx !== -1 ? all[nextIdx] : null;
-  return /*#__PURE__*/React.createElement("section", {
-    className: "lm2-targets-sec",
-    "data-screen-label": "Today's Targets"
-  }, nextUp && /*#__PURE__*/React.createElement("p", {
-    className: "lm2-nextup"
-  }, "Next up: ", /*#__PURE__*/React.createElement("b", null, nextUp.text)), /*#__PURE__*/React.createElement("div", {
-    className: "lm2-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm2-card-hd"
-  }, /*#__PURE__*/React.createElement("h2", null, "Today's Targets"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pf-coach-link",
-    "data-coach": "Help me plan today's targets to make progress on my clinic goal."
-  }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:sparkles",
-    size: 14,
-    color: "var(--ai-purple)"
-  }), "Discuss with Ava")), /*#__PURE__*/React.createElement("div", {
-    className: "lm2-target-rows"
-  }, all.map((t, i) => /*#__PURE__*/React.createElement("button", {
-    key: i,
-    type: "button",
-    className: "lm2-target-row" + (done[i] ? " done" : ""),
-    onClick: () => toggle(i),
-    role: "checkbox",
-    "aria-checked": !!done[i]
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "circle"
-  }, done[i] && /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:check",
-    size: 12,
-    color: "#fff"
-  })), t.tag && /*#__PURE__*/React.createElement("span", {
-    className: "lm2-target-tag",
-    style: {
-      background: LM2_TARGET_TAGS[t.tag].color
-    }
-  }, LM2_TARGET_TAGS[t.tag].label), /*#__PURE__*/React.createElement("span", {
-    className: "tx"
-  }, t.text)))), /*#__PURE__*/React.createElement("p", {
-    className: "lm2-target-note"
-  }, "Completing these will move you closer to your goal")));
-}
 function SecHead({
   title,
   viewAll = true,
@@ -509,60 +402,34 @@ function LM2FreeResources({
     onClick: onStartSurvey
   })));
 }
-function LM2NextBestSection({
-  freeTier
-}) {
+function LM2LearningPathCard() {
   return /*#__PURE__*/React.createElement("section", {
-    className: "lm2-nextsec",
-    "data-screen-label": "Your next best courses"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm2-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Your next best courses"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pf-coach-link",
-    "data-coach": "Explain why these are my next best courses for reaching my clinic goal."
-  }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:sparkles",
-    size: 14,
-    color: "var(--ai-purple)"
-  }), "Ask Ava why")), /*#__PURE__*/React.createElement("p", {
-    className: "lm2-nextsec-sub"
-  }, "Sequenced for your goal — work through them in order"), /*#__PURE__*/React.createElement("ol", {
-    className: "lm2-nextlist"
-  }, LM2_NEXT_BEST.map((c, i) => /*#__PURE__*/React.createElement("li", {
-    key: i
+    className: "lm2-pathsec",
+    "data-screen-label": "Your Learning Path"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lm2-nextrow " + c.status,
-    onClick: () => goL(c.href)
+    className: "lm2-pathcard",
+    onClick: () => goL("MyLearning.html")
   }, /*#__PURE__*/React.createElement("span", {
-    className: "num",
-    "aria-hidden": "true"
-  }, c.status === "in-progress" ? /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:play",
-    size: 13,
+    className: "chip"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:route",
+    size: 22,
     color: "#fff"
-  }) : i + 1), /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ti"
-  }, c.title), /*#__PURE__*/React.createElement("span", {
-    className: "reason"
-  }, c.reason)))))), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lm2-outline-btn",
-    onClick: () => goL("MyLearning.html")
-  }, freeTier ? "See what's included" : "Browse the full library"), /*#__PURE__*/React.createElement("div", {
-    className: "lm2-actions lm2-nextsec-actions"
-  }, /*#__PURE__*/React.createElement(LM2ActionCard, {
-    title: "Your Success Path",
-    sub: "A personalised learning journey designed to help you reach your £80k/month clinic goal",
-    onClick: () => goL("MyLearning.html")
-  }), /*#__PURE__*/React.createElement(LM2ActionCard, {
-    title: "Browse All Courses",
-    sub: "Recommended, New & Popular courses",
-    onClick: () => goL("MyLearning.html")
-  })));
+  }, "Your Learning Path"), /*#__PURE__*/React.createElement("span", {
+    className: "body"
+  }, "We sequence your next-best courses — one clear step at a time toward your goal.")), /*#__PURE__*/React.createElement("span", {
+    className: "arrow",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-right",
+    size: 19,
+    color: "#fff"
+  }))));
 }
 function LM2HelpSheet({
   open,
@@ -738,8 +605,6 @@ function LearningHome() {
   }), /*#__PURE__*/React.createElement(LM2GoalBanner, {
     data: LM2_GOAL,
     onHelp: () => setHelpOpen(true)
-  }), /*#__PURE__*/React.createElement(LM2ProgressSpotlight, {
-    data: LM2_PROGRESS_SPOTLIGHT
   }), /*#__PURE__*/React.createElement("section", {
     className: "lm2-continue-sec",
     "data-screen-label": "Continue Learning"
@@ -751,7 +616,9 @@ function LearningHome() {
     onUpgrade: () => goL("MembershipTier.html")
   })) : /*#__PURE__*/React.createElement(LM2ContinueCard, {
     data: LM2_CONTINUE
-  })), /*#__PURE__*/React.createElement(LM2TargetsCard, null), /*#__PURE__*/React.createElement("section", {
+  })), /*#__PURE__*/React.createElement(LM2ProgressSpotlight, {
+    data: LM2_PROGRESS_SPOTLIGHT
+  }), /*#__PURE__*/React.createElement("section", {
     className: "lm2-courseband",
     "data-screen-label": "My Courses"
   }, /*#__PURE__*/React.createElement(SecHead, {
@@ -768,9 +635,7 @@ function LearningHome() {
   })))), /*#__PURE__*/React.createElement(LM2FreeResources, {
     unlocked: resourcesUnlocked,
     onStartSurvey: () => setSurveyOpen(true)
-  }), /*#__PURE__*/React.createElement(LM2NextBestSection, {
-    freeTier: LM_FREE
-  }), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement(LM2LearningPathCard, null), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 20
     }
