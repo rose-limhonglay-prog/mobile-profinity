@@ -303,6 +303,10 @@ const SM_PROFILE_BEFORE_PM = [{
   icon: "lucide:graduation-cap",
   href: "AccountSettings.html"
 }, {
+  label: "My Saved",
+  icon: "lucide:bookmark",
+  href: "MySaved.html"
+}, {
   label: "Notifications",
   icon: "lucide:calendar",
   href: "NotificationSettings.html"

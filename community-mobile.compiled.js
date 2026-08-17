@@ -198,6 +198,10 @@ const SM_PROFILE_BEFORE_CM = [{
   icon: "lucide:graduation-cap",
   href: null
 }, {
+  label: "My Saved",
+  icon: "lucide:bookmark",
+  href: "MySaved.html"
+}, {
   label: "Notifications",
   icon: "lucide:calendar",
   href: "NotificationSettings.html"

@@ -154,6 +154,7 @@ const SM_EVENTS_PM = [
 const SM_PROFILE_BEFORE_PM = [
 { label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
 { label: "Account Settings",   icon: "lucide:graduation-cap",  href: "AccountSettings.html" },
+{ label: "My Saved",           icon: "lucide:bookmark",        href: "MySaved.html" },
 { label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" },
 { label: "Privacy & Security", icon: "lucide:book-open",       href: null }];
 
