@@ -75,6 +75,7 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
 .bdg-btn-outline:hover { background: var(--gray-50); }
 .bdg-btn-ghost { background: var(--white); color: var(--gray-600); border: 1px solid var(--border-strong); }
 .bdg-btn-ghost:hover { background: var(--gray-50); }
+.bdg-btn-sm { height: 38px; padding: 0 16px; font-size: 13px; }
 .bdg-btn:disabled { cursor: not-allowed; opacity: .5; }
 
 .bdg-link { border: none; background: none; padding: 0; font-family: inherit; font-size: 14px;
@@ -164,7 +165,8 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
   background: var(--brand-navy); color: #fff; font-weight: 700; }
 
 /* --------------------------------------------------------------- badge icon */
-.bdg-badge-icon { border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.bdg-badge-icon { border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.bdg-badge-icon-custom img { width: 100%; height: 100%; object-fit: cover; }
 
 /* -------------------------------------------------------------------- pills */
 .bdg-cat-pill { display: inline-flex; align-items: center; padding: 5px 12px; border-radius: 999px;
@@ -323,6 +325,16 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
   color: var(--text-primary); outline: none; appearance: none; cursor: pointer; }
 .bdg-select-wrap iconify-icon { position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
   color: var(--gray-400); font-size: 16px; pointer-events: none; }
+
+.bdg-icon-upload-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.bdg-icon-upload-preview { width: 56px; height: 56px; border-radius: 12px; border: 1px dashed var(--border-strong);
+  background: var(--gray-50); color: var(--gray-400); display: flex; align-items: center; justify-content: center;
+  font-size: 22px; flex-shrink: 0; overflow: hidden; }
+.bdg-icon-upload-preview img { width: 100%; height: 100%; object-fit: cover; }
+.bdg-icon-upload-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.bdg-icon-upload-clear { background: none; border: none; color: var(--error); font-size: 13px; font-weight: 600; cursor: pointer; padding: 0; }
+.bdg-icon-upload-clear:hover { text-decoration: underline; }
+.bdg-icon-upload-hint { font-size: 12px; color: var(--gray-400); }
 
 .bdg-icon-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8px; margin-bottom: 4px; }
 .bdg-icon-opt { width: 100%; aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--border-default);

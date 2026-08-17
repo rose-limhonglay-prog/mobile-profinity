@@ -605,6 +605,9 @@ function BDGAvatar({
     }
   }, initials);
 }
+function bdgIsCustomIcon(icon) {
+  return typeof icon === "string" && icon.startsWith("data:");
+}
 function BDGBadgeIcon({
   badge,
   size
@@ -614,6 +617,23 @@ function BDGBadgeIcon({
     fg: "var(--gray-500)"
   };
   const s = size || 40;
+  if (bdgIsCustomIcon(badge.icon)) {
+    return /*#__PURE__*/React.createElement("span", {
+      className: "bdg-badge-icon bdg-badge-icon-custom",
+      style: {
+        width: s,
+        height: s,
+        background: tone.bg
+      }
+    }, /*#__PURE__*/React.createElement("img", {
+      src: badge.icon,
+      alt: "",
+      style: {
+        width: s,
+        height: s
+      }
+    }));
+  }
   return /*#__PURE__*/React.createElement("span", {
     className: "bdg-badge-icon",
     style: {
@@ -1287,6 +1307,19 @@ function BDGCreateModal({
       notify
     });
   };
+  const handleUploadIcon = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = e => {
+      const file = (e.target.files || [])[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => setIcon(reader.result);
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
   return /*#__PURE__*/React.createElement("div", {
     className: "bdg-modal-overlay",
     onClick: onClose
@@ -1306,6 +1339,29 @@ function BDGCreateModal({
   }, "Badge Icon ", /*#__PURE__*/React.createElement("span", {
     className: "bdg-req"
   }, "*")), /*#__PURE__*/React.createElement("div", {
+    className: "bdg-icon-upload-row"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "bdg-icon-upload-preview"
+  }, bdgIsCustomIcon(icon) ? /*#__PURE__*/React.createElement("img", {
+    src: icon,
+    alt: ""
+  }) : /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:image"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "bdg-icon-upload-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "bdg-btn bdg-btn-outline bdg-btn-sm",
+    type: "button",
+    onClick: handleUploadIcon
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:upload"
+  }), "Upload custom icon"), bdgIsCustomIcon(icon) && /*#__PURE__*/React.createElement("button", {
+    className: "bdg-icon-upload-clear",
+    type: "button",
+    onClick: () => setIcon(null)
+  }, "Remove"), /*#__PURE__*/React.createElement("span", {
+    className: "bdg-icon-upload-hint"
+  }, "PNG, JPG or SVG"))), /*#__PURE__*/React.createElement("div", {
     className: "bdg-icon-grid"
   }, BDG_ICON_OPTIONS.map(ic => /*#__PURE__*/React.createElement("button", {
     key: ic,

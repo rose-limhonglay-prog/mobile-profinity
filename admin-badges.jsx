@@ -224,9 +224,20 @@ function BDGAvatar({ name, avatar, size }) {
   return <span className="bdg-avatar bdg-avatar-fallback" style={{ width: s, height: s, fontSize: s * 0.36 }}>{initials}</span>;
 }
 
+function bdgIsCustomIcon(icon) {
+  return typeof icon === "string" && icon.startsWith("data:");
+}
+
 function BDGBadgeIcon({ badge, size }) {
   const tone = BDG_CATEGORY_TONE[badge.category] || { bg: "var(--gray-100)", fg: "var(--gray-500)" };
   const s = size || 40;
+  if (bdgIsCustomIcon(badge.icon)) {
+    return (
+      <span className="bdg-badge-icon bdg-badge-icon-custom" style={{ width: s, height: s, background: tone.bg }}>
+        <img src={badge.icon} alt="" style={{ width: s, height: s }} />
+      </span>
+    );
+  }
   return (
     <span className="bdg-badge-icon" style={{ width: s, height: s, background: tone.bg, color: tone.fg, fontSize: s * 0.5 }}>
       <iconify-icon icon={badge.icon}></iconify-icon>
@@ -657,6 +668,20 @@ function BDGCreateModal({ editing, onClose, onSave }) {
     onSave({ name: name.trim(), description: description.trim(), icon, category, notify });
   };
 
+  const handleUploadIcon = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = (e) => {
+      const file = (e.target.files || [])[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => setIcon(reader.result);
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+
   return (
     <div className="bdg-modal-overlay" onClick={onClose}>
       <div className="bdg-modal" onClick={(e) => e.stopPropagation()}>
@@ -666,6 +691,20 @@ function BDGCreateModal({ editing, onClose, onSave }) {
         </div>
 
         <label className="bdg-field-label">Badge Icon <span className="bdg-req">*</span></label>
+        <div className="bdg-icon-upload-row">
+          <span className="bdg-icon-upload-preview">
+            {bdgIsCustomIcon(icon) ? <img src={icon} alt="" /> : <iconify-icon icon="lucide:image"></iconify-icon>}
+          </span>
+          <div className="bdg-icon-upload-actions">
+            <button className="bdg-btn bdg-btn-outline bdg-btn-sm" type="button" onClick={handleUploadIcon}>
+              <iconify-icon icon="lucide:upload"></iconify-icon>Upload custom icon
+            </button>
+            {bdgIsCustomIcon(icon) && (
+              <button className="bdg-icon-upload-clear" type="button" onClick={() => setIcon(null)}>Remove</button>
+            )}
+            <span className="bdg-icon-upload-hint">PNG, JPG or SVG</span>
+          </div>
+        </div>
         <div className="bdg-icon-grid">
           {BDG_ICON_OPTIONS.map((ic) => (
             <button key={ic} type="button" className={"bdg-icon-opt" + (icon === ic ? " is-selected" : "")} onClick={() => setIcon(ic)}>
