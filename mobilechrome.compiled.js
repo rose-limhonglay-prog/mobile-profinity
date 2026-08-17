@@ -233,59 +233,18 @@
     icon: "lucide:cpu",
     href: "DisplaySettings.html"
   }];
-  const NOTIFS_C = {
-    "New": [{
-      who: "PROfinity Academy",
-      avatar: "assets/profinity-icon.jpg",
-      action: "Weekly Rewards are here! 🎉",
-      detail: "Your weekly rewards have been calculated — claim your bonuses before they expire this Sunday.",
-      t: "Just now",
-      type: "reward",
-      cta: "Claim Rewards"
-    }, {
-      who: "Dr Tim Pearce",
-      avatar: "assets/avatar-drtim.png",
-      action: "commented on your post",
-      detail: "“This is a nice article Katy!”",
-      t: "Just now",
-      type: "comment"
-    }, {
-      who: "Miranda Pearce",
-      avatar: "assets/avatar-miranda.jpg",
-      action: "liked on your comment",
-      detail: "“Full-Face Rejuvenation Increased Patient Satisfaction +64%”",
-      t: "2h",
-      type: "love"
-    }],
-    "Yesterday": [{
-      who: "Jane Harries",
-      avatar: null,
-      action: "booked new appointment",
-      detail: "February 12, 2026, 6:00 PM",
-      t: "1d",
-      rsvp: true,
-      type: "appointment"
-    }],
-    "Older": [{
-      who: "Dr Tim Pearce",
-      avatar: "assets/avatar-drtim.png",
-      action: "commented on your post",
-      detail: "“This is a nice article Katy!”",
-      t: "3w",
-      type: "comment"
-    }, {
-      who: "Miranda Pearce",
-      avatar: "assets/avatar-miranda.jpg",
-      action: "liked on your comment",
-      detail: "“Full-Face Rejuvenation Increased Patient Satisfaction +64%”",
-      t: "4w",
-      type: "love"
-    }]
-  };
   const NT_BADGE_C = {
     comment: {
       icon: "fluent:chat-16-filled",
       bg: "var(--brand-navy)"
+    },
+    reply: {
+      icon: "fluent:arrow-reply-16-filled",
+      bg: "var(--ai-purple)"
+    },
+    pinned: {
+      icon: "fluent:pin-16-filled",
+      bg: "var(--brand-gold)"
     },
     love: {
       icon: "fluent:heart-16-filled",
@@ -302,12 +261,98 @@
     appointment: {
       icon: "fluent:calendar-checkmark-16-filled",
       bg: "var(--success)"
-    },
-    reward: {
-      icon: "fluent:gift-16-filled",
-      bg: "var(--premium-orange)"
     }
   };
+  const NT_CATEGORIES_C = [{
+    key: "comments",
+    label: "Comments",
+    count: 3,
+    items: [{
+      who: "Dr Tim Pearce",
+      avatar: "assets/avatar-drtim.png",
+      action: "commented on your post",
+      detail: "“This is a nice article Katy!”",
+      t: "2d ago",
+      type: "comment"
+    }, {
+      who: "Miranda Pearce",
+      avatar: "assets/avatar-miranda.jpg",
+      action: "commented on your post",
+      detail: "“This is exactly what we needed”",
+      t: "3d ago",
+      type: "comment"
+    }, {
+      who: "Dr. Sarah Collins",
+      avatar: "assets/avatar-sarah-collins.jpg",
+      action: "commented on your post",
+      detail: "“Love the new protocol direction”",
+      t: "5d ago",
+      type: "comment"
+    }]
+  }, {
+    key: "replies",
+    label: "Replies",
+    count: 3,
+    items: [{
+      who: "Dr Tim Pearce",
+      avatar: "assets/avatar-drtim.png",
+      action: "replied to your comment",
+      detail: "“Agreed, the results speak for themselves”",
+      t: "1d ago",
+      type: "reply"
+    }, {
+      who: "Miranda Pearce",
+      avatar: "assets/avatar-miranda.jpg",
+      action: "replied to your comment",
+      detail: "“Thanks for clarifying the protocol!”",
+      t: "4d ago",
+      type: "reply"
+    }]
+  }, {
+    key: "pinned",
+    label: "Pinned Posts",
+    count: 2,
+    items: [{
+      who: "Dr Tim Pearce",
+      avatar: "assets/avatar-drtim.png",
+      action: "pinned your post",
+      detail: "“Full-Face Rejuvenation Increased Patient Satisfaction +64%”",
+      t: "1w ago",
+      type: "pinned"
+    }]
+  }, {
+    key: "likes",
+    label: "Likes",
+    count: 12,
+    items: [{
+      who: "Miranda Pearce",
+      avatar: "assets/avatar-miranda.jpg",
+      action: "liked on your comment",
+      detail: "“Full-Face Rejuvenation Increased Patient Satisfaction +64%”",
+      t: "2h ago",
+      type: "love"
+    }, {
+      who: "Dr. Sarah Collins",
+      avatar: "assets/avatar-sarah-collins.jpg",
+      action: "liked your post",
+      detail: null,
+      t: "6h ago",
+      type: "like"
+    }]
+  }, {
+    key: "appointments",
+    label: "Appointments",
+    count: 1,
+    items: [{
+      who: "Jane Harries",
+      avatar: null,
+      action: "booked new appointment",
+      detail: "February 12, 2026, 6:00 PM",
+      t: "1d ago",
+      rsvp: true,
+      type: "appointment"
+    }]
+  }];
   const NT_MENU_C = [{
     label: "Turn off notifications like this",
     icon: "lucide:bell-off"
@@ -342,7 +387,7 @@
     }, /*#__PURE__*/React.createElement(DSC.Avatar, {
       name: n.who,
       src: n.avatar,
-      size: 58
+      size: 56
     }), b && /*#__PURE__*/React.createElement("span", {
       className: "nt-badge",
       style: {
@@ -350,7 +395,7 @@
       }
     }, /*#__PURE__*/React.createElement(DSC.IconifyIcon, {
       name: b.icon,
-      size: 15,
+      size: 14,
       color: "#fff"
     }))), /*#__PURE__*/React.createElement("div", {
       className: "nt-main"
@@ -368,11 +413,7 @@
       className: "nt-reject"
     }, "Reject"), /*#__PURE__*/React.createElement("button", {
       className: "nt-accept"
-    }, "Accept")), n.cta && /*#__PURE__*/React.createElement("div", {
-      className: "nt-rsvp"
-    }, /*#__PURE__*/React.createElement("button", {
-      className: "nt-accept"
-    }, n.cta))), /*#__PURE__*/React.createElement("div", {
+    }, "Accept"))), /*#__PURE__*/React.createElement("div", {
       className: "nt-more-wrap"
     }, /*#__PURE__*/React.createElement("button", {
       className: "nt-more",
@@ -402,10 +443,49 @@
       color: "var(--gray-700)"
     }), m.label)))));
   }
+  function NotifCategoryC({
+    cat,
+    open,
+    onToggle
+  }) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "nt-cat-wrap"
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "nt-cat",
+      "aria-expanded": open,
+      onClick: onToggle
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nt-cat-label"
+    }, cat.label, " ", /*#__PURE__*/React.createElement("span", {
+      className: "nt-cat-count"
+    }, cat.count)), /*#__PURE__*/React.createElement(DSC.IconifyIcon, {
+      name: open ? "lucide:chevron-down" : "lucide:chevron-right",
+      size: 20,
+      color: "var(--gray-700)"
+    })), open && /*#__PURE__*/React.createElement("div", {
+      className: "nt-cat-items"
+    }, cat.items.map((n, i) => /*#__PURE__*/React.createElement(NotifRowC, {
+      key: i,
+      n: n
+    }))));
+  }
   function NotificationsPanelC({
     open,
     onClose
   }) {
+    const [openCats, setOpenCats] = useStateC(() => {
+      const all = {};
+      NT_CATEGORIES_C.forEach(cat => {
+        all[cat.key] = true;
+      });
+      return all;
+    });
+    function toggleCat(key) {
+      setOpenCats(s => ({
+        ...s,
+        [key]: !s[key]
+      }));
+    }
     return /*#__PURE__*/React.createElement("div", {
       className: "m-drawer-wrap" + (open ? " open" : ""),
       "aria-hidden": !open
@@ -427,34 +507,14 @@
       name: "lucide:arrow-left",
       size: 24,
       color: "var(--gray-900)"
-    })), /*#__PURE__*/React.createElement("h2", {
-      style: {
-        fontSize: "26px",
-        fontWeight: "700"
-      }
-    }, "Notifications")), /*#__PURE__*/React.createElement("div", {
-      className: "nt-search"
-    }, /*#__PURE__*/React.createElement(DSC.Icon, {
-      name: "search",
-      size: 20,
-      color: "var(--gray-450)"
-    }), /*#__PURE__*/React.createElement("input", {
-      type: "text",
-      placeholder: "Search notifications",
-      "aria-label": "Search notifications"
-    })), /*#__PURE__*/React.createElement("div", {
+    })), /*#__PURE__*/React.createElement("h2", null, "Notifications")), /*#__PURE__*/React.createElement("div", {
       className: "nt-body"
-    }, Object.keys(NOTIFS_C).map(sec => /*#__PURE__*/React.createElement("div", {
-      key: sec,
-      className: "nt-group"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "nt-sec-h"
-    }, sec.toUpperCase(), sec === "New" && /*#__PURE__*/React.createElement("span", {
-      className: "nt-sec-dot"
-    })), NOTIFS_C[sec].map((n, i) => /*#__PURE__*/React.createElement(NotifRowC, {
-      key: i,
-      n: n
-    })))))));
+    }, NT_CATEGORIES_C.map(cat => /*#__PURE__*/React.createElement(NotifCategoryC, {
+      key: cat.key,
+      cat: cat,
+      open: !!openCats[cat.key],
+      onToggle: () => toggleCat(cat.key)
+    })))));
   }
   const DM_THREADS_SEED_C = [{
     id: "tim",

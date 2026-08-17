@@ -427,87 +427,18 @@ const SM_PROFILE_BEFORE_M = [{
   icon: "lucide:cpu",
   href: "DisplaySettings.html"
 }];
-const NOTIFS = {
-  "New": [{
-    who: "PROfinity Academy",
-    avatar: "assets/profinity-icon.jpg",
-    action: "Weekly Rewards are here! 🎉",
-    detail: "Your weekly rewards have been calculated — claim your bonuses before they expire this Sunday.",
-    t: "Just now",
-    type: "reward",
-    cta: "Claim Rewards"
-  }, {
-    who: "Dr Tim Pearce",
-    avatar: "assets/avatar-drtim.png",
-    action: "commented on your post",
-    detail: "\"This is a nice article Katy!\"",
-    t: "Just now",
-    type: "comment"
-  }, {
-    who: "Miranda Pearce",
-    avatar: "assets/avatar-miranda.jpg",
-    action: "liked on your comment",
-    detail: "\"Full-Face Rejuvenation Increased Patient Satisfaction +64%\"",
-    t: "2h",
-    type: "love"
-  }],
-  "Yesterday": [{
-    who: "Jane Harries",
-    avatar: null,
-    action: "booked new appointment",
-    detail: "February 12, 2026, 6:00 PM",
-    t: "1d",
-    rsvp: true,
-    type: "appointment"
-  }],
-  "Older": [{
-    who: "Dr Tim Pearce",
-    avatar: "assets/avatar-drtim.png",
-    action: "commented on your post",
-    detail: "\"This is a nice article Katy!\"",
-    t: "3w",
-    type: "comment"
-  }, {
-    who: "Miranda Pearce",
-    avatar: "assets/avatar-miranda.jpg",
-    action: "liked on your comment",
-    detail: "\"Full-Face Rejuvenation Increased Patient Satisfaction +64%\"",
-    t: "4w",
-    type: "love"
-  }]
-};
-const SUGGESTED_POSTS = [{
-  who: "Dr Tim Pearce",
-  avatar: "assets/avatar-drtim.png",
-  t: "1h",
-  text: "The 3 biggest mistakes injectors make with lip filler — and how to fix them fast.",
-  img: "assets/post1-img1.png",
-  likes: 142,
-  comments: 38,
-  tag: "Technique"
-}, {
-  who: "Miranda Pearce",
-  avatar: "assets/avatar-miranda.jpg",
-  t: "3h",
-  text: "Patient confidence scores went up 64% after full-face rejuvenation. Here's what changed.",
-  img: null,
-  likes: 89,
-  comments: 22,
-  tag: "Case Study"
-}, {
-  who: "Jane Harries",
-  avatar: null,
-  t: "5h",
-  text: "Just finished the Advanced Botox Training module. The dosing charts are absolute game-changers.",
-  img: "assets/post2-img1.png",
-  likes: 54,
-  comments: 11,
-  tag: "Learning"
-}];
 const NT_BADGE = {
   comment: {
     icon: "fluent:chat-16-filled",
     bg: "var(--brand-navy)"
+  },
+  reply: {
+    icon: "fluent:arrow-reply-16-filled",
+    bg: "var(--ai-purple)"
+  },
+  pinned: {
+    icon: "fluent:pin-16-filled",
+    bg: "var(--brand-gold)"
   },
   love: {
     icon: "fluent:heart-16-filled",
@@ -524,12 +455,98 @@ const NT_BADGE = {
   appointment: {
     icon: "fluent:calendar-checkmark-16-filled",
     bg: "var(--success)"
-  },
-  reward: {
-    icon: "fluent:gift-16-filled",
-    bg: "var(--premium-orange)"
   }
 };
+const NT_CATEGORIES = [{
+  key: "comments",
+  label: "Comments",
+  count: 3,
+  items: [{
+    who: "Dr Tim Pearce",
+    avatar: "assets/avatar-drtim.png",
+    action: "commented on your post",
+    detail: "“This is a nice article Katy!”",
+    t: "2d ago",
+    type: "comment"
+  }, {
+    who: "Miranda Pearce",
+    avatar: "assets/avatar-miranda.jpg",
+    action: "commented on your post",
+    detail: "“This is exactly what we needed”",
+    t: "3d ago",
+    type: "comment"
+  }, {
+    who: "Dr. Sarah Collins",
+    avatar: "assets/avatar-sarah-collins.jpg",
+    action: "commented on your post",
+    detail: "“Love the new protocol direction”",
+    t: "5d ago",
+    type: "comment"
+  }]
+}, {
+  key: "replies",
+  label: "Replies",
+  count: 3,
+  items: [{
+    who: "Dr Tim Pearce",
+    avatar: "assets/avatar-drtim.png",
+    action: "replied to your comment",
+    detail: "“Agreed, the results speak for themselves”",
+    t: "1d ago",
+    type: "reply"
+  }, {
+    who: "Miranda Pearce",
+    avatar: "assets/avatar-miranda.jpg",
+    action: "replied to your comment",
+    detail: "“Thanks for clarifying the protocol!”",
+    t: "4d ago",
+    type: "reply"
+  }]
+}, {
+  key: "pinned",
+  label: "Pinned Posts",
+  count: 2,
+  items: [{
+    who: "Dr Tim Pearce",
+    avatar: "assets/avatar-drtim.png",
+    action: "pinned your post",
+    detail: "“Full-Face Rejuvenation Increased Patient Satisfaction +64%”",
+    t: "1w ago",
+    type: "pinned"
+  }]
+}, {
+  key: "likes",
+  label: "Likes",
+  count: 12,
+  items: [{
+    who: "Miranda Pearce",
+    avatar: "assets/avatar-miranda.jpg",
+    action: "liked on your comment",
+    detail: "“Full-Face Rejuvenation Increased Patient Satisfaction +64%”",
+    t: "2h ago",
+    type: "love"
+  }, {
+    who: "Dr. Sarah Collins",
+    avatar: "assets/avatar-sarah-collins.jpg",
+    action: "liked your post",
+    detail: null,
+    t: "6h ago",
+    type: "like"
+  }]
+}, {
+  key: "appointments",
+  label: "Appointments",
+  count: 1,
+  items: [{
+    who: "Jane Harries",
+    avatar: null,
+    action: "booked new appointment",
+    detail: "February 12, 2026, 6:00 PM",
+    t: "1d ago",
+    rsvp: true,
+    type: "appointment"
+  }]
+}];
 const NT_MENU = [{
   label: "Turn off notifications like this",
   icon: "lucide:bell-off"
@@ -564,7 +581,7 @@ function NotifRow({
   }, /*#__PURE__*/React.createElement(DSM.Avatar, {
     name: n.who,
     src: n.avatar,
-    size: 58
+    size: 56
   }), b && /*#__PURE__*/React.createElement("span", {
     className: "nt-badge",
     style: {
@@ -572,7 +589,7 @@ function NotifRow({
     }
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: b.icon,
-    size: 15,
+    size: 14,
     color: "#fff"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "nt-main"
@@ -590,11 +607,7 @@ function NotifRow({
     className: "nt-reject"
   }, "Reject"), /*#__PURE__*/React.createElement("button", {
     className: "nt-accept"
-  }, "Accept")), n.cta && /*#__PURE__*/React.createElement("div", {
-    className: "nt-rsvp"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "nt-accept"
-  }, n.cta))), /*#__PURE__*/React.createElement("div", {
+  }, "Accept"))), /*#__PURE__*/React.createElement("div", {
     className: "nt-more-wrap"
   }, /*#__PURE__*/React.createElement("button", {
     className: "nt-more",
@@ -624,50 +637,49 @@ function NotifRow({
     color: "var(--gray-700)"
   }), m.label)))));
 }
-function SuggestedPostCard({
-  p
+function NotifCategory({
+  cat,
+  open,
+  onToggle
 }) {
   return /*#__PURE__*/React.createElement("div", {
-    className: "nt-sp-card"
-  }, p.img && /*#__PURE__*/React.createElement("div", {
-    className: "nt-sp-thumb"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: p.img,
-    alt: ""
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "nt-sp-body"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "nt-sp-author"
-  }, /*#__PURE__*/React.createElement(DSM.Avatar, {
-    name: p.who,
-    src: p.avatar,
-    size: 22
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "nt-sp-name"
-  }, p.who), /*#__PURE__*/React.createElement("span", {
-    className: "nt-sp-time"
-  }, p.t)), /*#__PURE__*/React.createElement("p", {
-    className: "nt-sp-text"
-  }, p.text), /*#__PURE__*/React.createElement("div", {
-    className: "nt-sp-meta"
+    className: "nt-cat-wrap"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "nt-cat",
+    "aria-expanded": open,
+    onClick: onToggle
   }, /*#__PURE__*/React.createElement("span", {
-    className: "nt-sp-tag"
-  }, p.tag), /*#__PURE__*/React.createElement("span", {
-    className: "nt-sp-stats"
-  }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: "fluent:heart-16-filled",
-    size: 13,
-    color: "var(--reaction-love)"
-  }), p.likes, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
-    name: "fluent:chat-16-filled",
-    size: 13,
-    color: "var(--gray-400)"
-  }), p.comments))));
+    className: "nt-cat-label"
+  }, cat.label, " ", /*#__PURE__*/React.createElement("span", {
+    className: "nt-cat-count"
+  }, cat.count)), /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
+    name: open ? "lucide:chevron-down" : "lucide:chevron-right",
+    size: 20,
+    color: "var(--gray-700)"
+  })), open && /*#__PURE__*/React.createElement("div", {
+    className: "nt-cat-items"
+  }, cat.items.map((n, i) => /*#__PURE__*/React.createElement(NotifRow, {
+    key: i,
+    n: n
+  }))));
 }
 function NotificationsPanel({
   open,
   onClose
 }) {
+  const [openCats, setOpenCats] = useStateM(() => {
+    const all = {};
+    NT_CATEGORIES.forEach(cat => {
+      all[cat.key] = true;
+    });
+    return all;
+  });
+  function toggleCat(key) {
+    setOpenCats(s => ({
+      ...s,
+      [key]: !s[key]
+    }));
+  }
   return /*#__PURE__*/React.createElement("div", {
     className: "m-drawer-wrap" + (open ? " open" : ""),
     "aria-hidden": !open
@@ -689,45 +701,14 @@ function NotificationsPanel({
     name: "lucide:arrow-left",
     size: 24,
     color: "var(--gray-900)"
-  })), /*#__PURE__*/React.createElement("h2", {
-    style: {
-      fontSize: "26px",
-      fontWeight: "700"
-    }
-  }, "Notifications")), /*#__PURE__*/React.createElement("div", {
-    className: "nt-search"
-  }, /*#__PURE__*/React.createElement(DSM.Icon, {
-    name: "search",
-    size: 20,
-    color: "var(--gray-450)"
-  }), /*#__PURE__*/React.createElement("input", {
-    type: "text",
-    placeholder: "Search notifications",
-    "aria-label": "Search notifications"
-  })), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("h2", null, "Notifications")), /*#__PURE__*/React.createElement("div", {
     className: "nt-body"
-  }, Object.keys(NOTIFS).map(sec => /*#__PURE__*/React.createElement("div", {
-    key: sec,
-    className: "nt-group"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "nt-sec-h"
-  }, sec.toUpperCase(), sec === "New" && /*#__PURE__*/React.createElement("span", {
-    className: "nt-sec-dot"
-  })), NOTIFS[sec].map((n, i) => /*#__PURE__*/React.createElement(NotifRow, {
-    key: i,
-    n: n
-  })))), /*#__PURE__*/React.createElement("div", {
-    className: "nt-suggested"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "nt-suggested-head"
-  }, /*#__PURE__*/React.createElement("span", null, "SUGGESTED FOR YOU"), /*#__PURE__*/React.createElement("button", {
-    className: "nt-suggested-see"
-  }, "See all")), /*#__PURE__*/React.createElement("div", {
-    className: "nt-sp-scroll"
-  }, SUGGESTED_POSTS.map((p, i) => /*#__PURE__*/React.createElement(SuggestedPostCard, {
-    key: i,
-    p: p
-  })))))));
+  }, NT_CATEGORIES.map(cat => /*#__PURE__*/React.createElement(NotifCategory, {
+    key: cat.key,
+    cat: cat,
+    open: !!openCats[cat.key],
+    onToggle: () => toggleCat(cat.key)
+  })))));
 }
 const DM_THREADS_SEED = [{
   id: "tim",
