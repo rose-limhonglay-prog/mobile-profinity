@@ -68,12 +68,6 @@ const LM2_CONTINUE = {
   href: "Lesson.html"
 };
 
-const LM2_PROGRESS_SPOTLIGHT = {
-  pillar: "Marketing",
-  progress: 52,
-  note: "You need visibility. You aren't known yet."
-};
-
 const LM2_MY_COURSES = [
 { image: IMG_L.eightDLip, level: "Intermediate", title: "8D Lip Design", description: "Discover a complete view of lip anatomy for deeper learning.", progress: 20, lesson: 4, modulesLeft: 6 },
 { image: IMG_L.templeFiller, level: "Advanced", title: "Temple Filler", description: "Master safe injection techniques with anatomical precision." },
@@ -142,37 +136,6 @@ function LM2GoalBanner({ data, onHelp }) {
       </div>
       <p className="lm2-goal-vision">{data.vision}</p>
       <p className="lm2-goal-clarifier">{data.clarifier}</p>
-    </section>);
-
-}
-
-function LM2ProgressSpotlight({ data }) {
-  const [saved, setSaved] = useStateL(false);
-  return (
-    <section className="lm2-hero" data-screen-label="Let's work on your goal">
-      <div className="lm2-card lm2-progress-card">
-        <div className="lm2-progress-top">
-          <div className="lm2-progress-main">
-            <span className="eyebrow"><IconifyL name="lucide:trophy" size={13} color="var(--brand-gold)" />Let's work on your goal</span>
-            <div className="ti">{data.pillar}</div>
-            <p className="note">{data.note}</p>
-            <a href="#" className="lm2-spiral-link" onClick={(e) => { e.preventDefault(); goL("MyLearning.html"); }}>
-              See my full Prosperity Spiral<IconifyL name="lucide:arrow-up-right" size={14} color="var(--ai-purple)" />
-            </a>
-          </div>
-          <div className="lm2-progress-side">
-            <button type="button" className={"lm2-save-btn" + (saved ? " saved" : "")}
-            aria-pressed={saved} aria-label={saved ? "Remove from saved" : "Save this recommendation"}
-            onClick={() => setSaved((s) => !s)}>
-              <IconifyL name={saved ? "lucide:bookmark-check" : "lucide:bookmark"} size={16} color="var(--brand-navy)" />
-            </button>
-            <div className="lm2-progress-ring" style={{ "--pct": data.progress }} role="img" aria-label={data.progress + " progress"}>
-              <span className="n">{data.progress}</span>
-              <span className="lbl">Progress</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </section>);
 
 }
@@ -473,8 +436,6 @@ function LearningHome() {
           <LM2ContinueCard data={LM2_CONTINUE} />
           }
         </section>
-
-        <LM2ProgressSpotlight data={LM2_PROGRESS_SPOTLIGHT} />
 
         <section className="lm2-courseband" data-screen-label="My Courses">
           <SecHead title="My Courses" />

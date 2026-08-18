@@ -101,30 +101,6 @@ img { max-width: 100%; }
 .lm2-subscribe-btn:hover { background: rgba(255,255,255,.26); }
 .lm2-subscribe-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
-/* ===== Your Progress ring — gold conic-gradient, 0-100 metric, no % ===== */
-.lm2-progress-card { display: flex; flex-direction: column; gap: 4px; }
-.lm2-progress-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
-.lm2-progress-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.lm2-progress-main .eyebrow { display: flex; align-items: center; gap: 6px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 11.5px; letter-spacing: .04em;
-  text-transform: uppercase; color: var(--premium-orange); }
-.lm2-progress-main .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 19px; color: var(--text-heading); }
-.lm2-progress-main .note { margin: 0; font-family: var(--font-sans); font-size: 13.5px; line-height: 1.4; color: var(--gray-500); }
-.lm2-spiral-link { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin-top: 4px; min-height: 44px; padding: 4px 0;
-  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 14px; color: var(--ai-purple); text-decoration: none; }
-.lm2-spiral-link:hover { text-decoration: underline; }
-.lm2-spiral-link:focus-visible { outline: 2px solid var(--ai-purple); outline-offset: 2px; border-radius: 6px; }
-.lm2-progress-side { flex: none; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.lm2-save-btn { flex: none; width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid var(--border-default);
-  background: var(--surface-card); cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.lm2-save-btn:hover { background: var(--surface-sunken); }
-.lm2-save-btn.saved { border-color: var(--brand-navy); background: color-mix(in srgb, var(--brand-navy) 8%, #fff); }
-.lm2-save-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
-.lm2-progress-ring { position: relative; flex: none; width: 92px; height: 92px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  background: conic-gradient(#e7820a calc(var(--pct) * 1%), var(--surface-sunken) 0); }
-.lm2-progress-ring::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: var(--surface-card); }
-.lm2-progress-ring .n { position: relative; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 22px; color: var(--premium-orange); line-height: 1.1; font-variant-numeric: tabular-nums; }
-.lm2-progress-ring .lbl { position: relative; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 10.5px; letter-spacing: .03em; text-transform: uppercase; color: var(--gray-500); }
-
 .lm2-sec-h { display: flex; align-items: baseline; justify-content: space-between; padding: 22px 20px 12px; }
 .lm2-sec-h h2 { margin: 0; font-family: var(--font-sans); font-size: 20px; font-weight: var(--fw-bold); color: var(--brand-navy); }
 .lm2-sec-h a { font-family: var(--font-sans); font-size: 14.5px; font-weight: var(--fw-semibold); color: var(--ai-purple); text-decoration: none; }

@@ -81,11 +81,6 @@ const LM2_CONTINUE = {
   total: 100,
   href: "Lesson.html"
 };
-const LM2_PROGRESS_SPOTLIGHT = {
-  pillar: "Marketing",
-  progress: 52,
-  note: "You need visibility. You aren't known yet."
-};
 const LM2_MY_COURSES = [{
   image: IMG_L.eightDLip,
   level: "Intermediate",
@@ -285,65 +280,6 @@ function LM2GoalBanner({
   }, data.vision), /*#__PURE__*/React.createElement("p", {
     className: "lm2-goal-clarifier"
   }, data.clarifier));
-}
-function LM2ProgressSpotlight({
-  data
-}) {
-  const [saved, setSaved] = useStateL(false);
-  return /*#__PURE__*/React.createElement("section", {
-    className: "lm2-hero",
-    "data-screen-label": "Let's work on your goal"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm2-card lm2-progress-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm2-progress-top"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm2-progress-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "eyebrow"
-  }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:trophy",
-    size: 13,
-    color: "var(--brand-gold)"
-  }), "Let's work on your goal"), /*#__PURE__*/React.createElement("div", {
-    className: "ti"
-  }, data.pillar), /*#__PURE__*/React.createElement("p", {
-    className: "note"
-  }, data.note), /*#__PURE__*/React.createElement("a", {
-    href: "#",
-    className: "lm2-spiral-link",
-    onClick: e => {
-      e.preventDefault();
-      goL("MyLearning.html");
-    }
-  }, "See my full Prosperity Spiral", /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:arrow-up-right",
-    size: 14,
-    color: "var(--ai-purple)"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "lm2-progress-side"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lm2-save-btn" + (saved ? " saved" : ""),
-    "aria-pressed": saved,
-    "aria-label": saved ? "Remove from saved" : "Save this recommendation",
-    onClick: () => setSaved(s => !s)
-  }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: saved ? "lucide:bookmark-check" : "lucide:bookmark",
-    size: 16,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "lm2-progress-ring",
-    style: {
-      "--pct": data.progress
-    },
-    role: "img",
-    "aria-label": data.progress + " progress"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "n"
-  }, data.progress), /*#__PURE__*/React.createElement("span", {
-    className: "lbl"
-  }, "Progress"))))));
 }
 function LM2ContinueCard({
   data
@@ -809,9 +745,7 @@ function LearningHome() {
     onUpgrade: () => goL("MembershipTier.html")
   })) : /*#__PURE__*/React.createElement(LM2ContinueCard, {
     data: LM2_CONTINUE
-  })), /*#__PURE__*/React.createElement(LM2ProgressSpotlight, {
-    data: LM2_PROGRESS_SPOTLIGHT
-  }), /*#__PURE__*/React.createElement("section", {
+  })), /*#__PURE__*/React.createElement("section", {
     className: "lm2-courseband",
     "data-screen-label": "My Courses"
   }, /*#__PURE__*/React.createElement(SecHead, {
