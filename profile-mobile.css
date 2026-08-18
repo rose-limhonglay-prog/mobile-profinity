@@ -155,6 +155,55 @@ img{max-width:100%}
 .pm-mentor-act .yes{color:var(--success)}
 .pm-mentor-act button:active{background:var(--gray-100)}
 
+/* ===== Prosperity Spiral + Today's Targets boards (moved from Learning) =====
+   Boxed "card" treatment (border + radius + shadow), distinct from the plain
+   divider-only .pm-sec rows below/above them — these are the two
+   assessment/gamification boards, so they read as a set. */
+.pm-card{margin:16px 20px 0;padding:18px;border:1px solid var(--border-default);border-radius:16px;background:var(--surface-card);
+  box-shadow:0 1px 3px rgba(12,12,13,.05)}
+.pm-card-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.pm-card-hd h2{margin:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--text-heading)}
+.pm-card-hd-ti{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.pm-help-link{display:inline-flex;align-items:center;gap:4px;border:none;background:none;cursor:pointer;padding:0;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px;color:var(--gray-500)}
+.pm-help-link:active{opacity:.7}
+
+/* pillar grid — Sales / Marketing / Clinical Skills / Business Systems */
+.pm-pillar-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pm-pillar-card{display:flex;flex-direction:column;gap:8px;border:none;background:none;padding:0;cursor:pointer;text-align:left}
+.pm-pillar-card .top{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.pm-pillar-card .k{flex:1;min-width:0;font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:13px;color:var(--text-primary)}
+.pm-pillar-card .v{flex:none;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;color:var(--text-heading);font-variant-numeric:tabular-nums}
+.pm-pillar-card .bar{display:block;height:7px;border-radius:var(--r-pill);background:var(--gray-150);overflow:hidden}
+.pm-pillar-card .bar>span{display:block;height:100%;border-radius:var(--r-pill);transition:width .5s cubic-bezier(.22,.61,.36,1)}
+
+/* today's targets checklist */
+.pm-target-rows{display:flex;flex-direction:column;gap:10px}
+.pm-target-row{display:flex;align-items:center;gap:10px;width:100%;text-align:left;cursor:pointer;border:none;background:none;padding:4px 0}
+.pm-target-row .circle{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--gray-300);
+  display:flex;align-items:center;justify-content:center;transition:background .15s ease,border-color .15s ease}
+.pm-target-row.done .circle{background:var(--brand-navy);border-color:var(--brand-navy)}
+.pm-target-tag{flex:none;padding:3px 8px;border-radius:6px;color:#fff;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:10px;letter-spacing:.02em}
+.pm-target-row .tx{font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:15px;color:var(--text-primary)}
+.pm-target-row.done .tx{color:var(--gray-500);text-decoration:line-through}
+.pm-target-note{margin:14px 0 0;font-family:var(--font-sans);font-size:13px;color:var(--gray-500)}
+
+/* "How it works" modal — explains the Spiral Score in plain language */
+.pm-help-overlay{position:absolute;inset:0;z-index:500;display:flex;align-items:flex-end;justify-content:center;
+  background:rgba(16,24,40,.5);animation:pm-help-fade .18s ease-out}
+@keyframes pm-help-fade{from{opacity:0}to{opacity:1}}
+.pm-help-card{width:100%;max-height:80%;display:flex;flex-direction:column;background:var(--surface-card);
+  border-radius:20px 20px 0 0;overflow:hidden;box-shadow:0 -8px 30px rgba(16,24,40,.28);animation:pm-help-pop .22s cubic-bezier(.22,.61,.36,1)}
+@keyframes pm-help-pop{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.pm-help-hd{flex:none;display:flex;align-items:center;gap:10px;padding:18px 18px 4px}
+.pm-help-icon{flex:none;width:34px;height:34px;border-radius:50%;background:rgba(108,99,255,.12);display:flex;align-items:center;justify-content:center}
+.pm-help-hd h3{flex:1;min-width:0;margin:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:17px;color:var(--text-heading)}
+.pm-help-x{flex:none;border:none;background:none;cursor:pointer;padding:4px}
+.pm-help-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 20px 26px}
+.pm-help-body p{margin:0 0 12px;font-family:var(--font-sans);font-size:14.5px;line-height:1.55;color:var(--gray-600)}
+.pm-help-body p:last-of-type{margin-bottom:18px}
+.pm-help-coach{width:100%;justify-content:center;padding:12px;border:1px solid var(--ai-purple);border-radius:var(--r-md)}
+
 /* activity posts */
 .pm-activity{display:flex;flex-direction:column;gap:0}
 .pm-post{padding:16px 0;border-top:1px solid var(--border-default)}
@@ -530,3 +579,150 @@ img{max-width:100%}
 .mp-vc-live{flex:none;font-family:var(--font-sans);font-weight:700;font-size:11px;letter-spacing:.05em;color:var(--error);
   background:var(--error-bg);border-radius:var(--r-pill);padding:3px 8px}
 .mp-vc-time{font-family:var(--font-sans);font-size:13px;color:var(--gray-450)}
+
+/* ===========================================================================
+   Self-Assessment — "Get to know you" (PRD: Prosperity Spiral & Self-
+   Assessment Experience Updates, Aug 2026)
+   =========================================================================== */
+
+/* "Get to know you" is now rendered as a regular step row inside the
+   checklist (see .pm-step / .pm-step.priority below) rather than a
+   standalone CTA — no dedicated styling needed here. */
+
+/* assessment hub + question wizard — full-screen overlay */
+.pm-wiz-overlay{position:absolute;inset:0;z-index:600;display:flex;align-items:stretch;justify-content:center;
+  background:rgba(16,24,40,.5);animation:pm-fade-in .18s ease-out}
+.pm-wiz-card{width:100%;display:flex;flex-direction:column;background:var(--surface-page);overflow:hidden}
+.pm-wiz-hd{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:18px 16px 14px;background:var(--surface-card);border-bottom:1px solid var(--border-default)}
+.pm-wiz-hd-ti{flex:1;text-align:center;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;color:var(--text-heading)}
+.pm-wiz-close{flex:none;width:22px;height:22px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+.pm-wiz-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px 20px 32px;display:flex;flex-direction:column}
+.pm-wiz-body::-webkit-scrollbar{width:0}
+.pm-wiz-sub{margin:0 0 16px;font-family:var(--font-sans);font-size:13.5px;line-height:1.45;color:var(--gray-500)}
+
+.pm-wiz-progress{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.pm-wiz-track{flex:1;height:7px;border-radius:100px;background:var(--gray-150);overflow:hidden}
+.pm-wiz-track>span{display:block;height:100%;border-radius:100px;background:var(--brand-gold);transition:width .3s ease}
+.pm-wiz-count{flex:none;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12.5px;color:var(--gray-500)}
+
+.pm-wiz-q{font-family:var(--font-sans);font-size:17px;font-weight:var(--fw-bold);color:var(--text-heading);line-height:1.35;margin-bottom:14px}
+.pm-wiz-opts{display:flex;flex-direction:column;gap:10px}
+.pm-wiz-opt{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;cursor:pointer;
+  background:var(--surface-card);border:1.5px solid var(--border-default);border-radius:var(--r-md);padding:14px 16px}
+.pm-wiz-opt:active{background:var(--gray-50)}
+.pm-wiz-opt.on{border-color:var(--brand-gold);background:color-mix(in srgb,var(--brand-gold) 8%,#fff)}
+.pm-wiz-opt-letter{flex:none;width:24px;height:24px;border-radius:50%;border:1.5px solid var(--gray-300);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-sans);font-weight:var(--fw-bold);
+  font-size:12px;color:var(--gray-500)}
+.pm-wiz-opt.on .pm-wiz-opt-letter{border-color:var(--brand-gold);background:var(--brand-gold);color:#fff}
+.pm-wiz-opt-tx{flex:1;min-width:0;font-family:var(--font-sans);font-size:14.5px;line-height:1.4;font-weight:var(--fw-medium);color:var(--text-heading)}
+
+.pm-wiz-nav{display:flex;gap:10px;margin-top:22px}
+.pm-wiz-back{flex:none;padding:14px 20px;border:1.5px solid var(--border-default);border-radius:var(--r-md);
+  background:none;cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px;color:var(--text-heading)}
+.pm-wiz-next{flex:1;padding:14px;border:none;border-radius:var(--r-md);cursor:pointer;background:var(--brand-navy);
+  color:#fff;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15.5px}
+.pm-wiz-next:disabled{opacity:.4;cursor:not-allowed}
+.pm-wiz-next:not(:disabled):active{filter:brightness(1.12)}
+
+/* result / reveal screens */
+.pm-wiz-result{align-items:center;text-align:center;padding-top:24px}
+.pm-wiz-result-icon{width:72px;height:72px;border-radius:50%;background:var(--success);display:flex;
+  align-items:center;justify-content:center;margin-bottom:16px;animation:pm-pop-in .45s cubic-bezier(.34,1.56,.64,1)}
+.pm-wiz-result-icon--vision{background:linear-gradient(135deg,var(--brand-navy),var(--ai-purple))}
+.pm-wiz-result h3{margin:0 0 8px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:20px;color:var(--text-heading)}
+.pm-wiz-result-score{margin:0 0 4px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:28px;color:var(--brand-navy)}
+.pm-wiz-result-arch{margin:0 0 10px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:19px;color:var(--ai-purple)}
+.pm-wiz-result-note{margin:0 0 6px;font-family:var(--font-sans);font-size:14px;line-height:1.5;color:var(--gray-600);max-width:320px}
+.pm-wiz-result-note--muted{font-size:12.5px;color:var(--gray-500);font-style:italic}
+.pm-wiz-done-btn{margin-top:20px;padding:14px 28px;border:none;border-radius:var(--r-pill);cursor:pointer;
+  background:var(--brand-navy);color:#fff;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px}
+.pm-wiz-done-btn:active{filter:brightness(1.12)}
+
+/* hub grid */
+.pm-hub-intro{display:flex;gap:10px;align-items:flex-start;padding:14px 16px;margin-bottom:18px;
+  background:color-mix(in srgb,var(--ai-purple) 7%,var(--surface-card));border:1px solid color-mix(in srgb,var(--ai-purple) 22%,var(--border-default));
+  border-radius:var(--r-md)}
+.pm-hub-intro p{margin:0;font-family:var(--font-sans);font-size:13.5px;line-height:1.5;color:var(--gray-600)}
+.pm-hub-grid{display:flex;flex-direction:column;gap:12px}
+.pm-hub-tile{display:flex;flex-direction:column;gap:8px;width:100%;text-align:left;cursor:pointer;
+  background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--r-md);padding:16px}
+.pm-hub-tile:active{background:var(--gray-50)}
+.pm-hub-tile--completed{border-color:var(--success)}
+.pm-hub-tile-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pm-hub-tile-top .ti{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15.5px;color:var(--text-heading)}
+.pm-hub-badge{flex:none;padding:3px 10px;border-radius:100px;font-family:var(--font-sans);font-weight:var(--fw-semibold);
+  font-size:11px;letter-spacing:.02em;text-transform:uppercase;background:var(--gray-150);color:var(--gray-600)}
+.pm-hub-badge--in_progress{background:color-mix(in srgb,var(--brand-gold) 20%,#fff);color:#8a6400}
+.pm-hub-badge--completed{background:color-mix(in srgb,var(--success) 18%,#fff);color:var(--success)}
+.pm-hub-tile-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pm-hub-tile-bottom .su{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-sans);font-size:12.5px;color:var(--gray-500)}
+.pm-hub-score{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:13px;color:var(--brand-navy)}
+
+/* ===== Goal Focus — "Let's work on your goal" (relocated from My Learning,
+   sits above the Prosperity Spiral; ported/adapted from lm2-progress-*) ===== */
+.pm-goal-card{display:flex;flex-direction:column;gap:4px;
+  background:linear-gradient(180deg,color-mix(in srgb,var(--premium-orange) 7%,var(--surface-card)),var(--surface-card));
+  border-color:color-mix(in srgb,var(--premium-orange) 28%,var(--border-default))}
+.pm-goal-top{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.pm-goal-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.pm-goal-main .eyebrow{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-sans);font-weight:var(--fw-bold);
+  font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--premium-orange)}
+.pm-goal-main .ti{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:19px;color:var(--text-heading)}
+.pm-goal-main .note{margin:0;font-family:var(--font-sans);font-size:13.5px;line-height:1.4;color:var(--gray-500)}
+.pm-goal-ring{position:relative;flex:none;width:92px;height:92px;border-radius:50%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;background:conic-gradient(#e7820a calc(var(--pct) * 1%),var(--surface-sunken) 0)}
+.pm-goal-ring::before{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--surface-card)}
+.pm-goal-ring .n{position:relative;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:22px;color:var(--premium-orange);
+  line-height:1.1;font-variant-numeric:tabular-nums}
+.pm-goal-ring .lbl{position:relative;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:10.5px;
+  letter-spacing:.03em;text-transform:uppercase;color:var(--gray-500)}
+.pm-goal-reasoning{margin:12px 0 0;font-family:var(--font-sans);font-size:14px;line-height:1.5;color:var(--gray-500)}
+.pm-goal-cta{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:50px;margin-top:14px;
+  cursor:pointer;border:none;border-radius:10px;background:var(--brand-navy);color:#fff;font-family:var(--font-sans);
+  font-weight:var(--fw-semibold);font-size:15.5px;transition:background .15s ease}
+.pm-goal-cta:hover{background:var(--brand-navy-700,#201d54)}
+
+/* ===== Complete Your Profile — collapse/expand slide-over panel =====
+   Two horizontally-stacked panes ("collapsed" summary + "expanded"
+   checklist) inside a clipped viewport; toggling .expanded slides the
+   whole slider left by 50%, i.e. a right-to-left swipe reveal. */
+.pm-steps-viewport{margin:16px 16px 4px;overflow:hidden;border-radius:16px;transition:height .38s cubic-bezier(.22,.61,.36,1)}
+.pm-steps-slider{display:flex;align-items:flex-start;width:200%;transition:transform .38s cubic-bezier(.22,.61,.36,1)}
+.pm-steps-slider.expanded{transform:translateX(-50%)}
+.pm-steps.pm-steps-pane{width:50%;flex:none;box-sizing:border-box;margin:0;border-radius:0}
+
+.pm-steps-collapsed{display:block;width:50%;border:none;cursor:pointer;font:inherit;color:inherit;
+  -webkit-tap-highlight-color:transparent}
+.pm-steps-collapsed:active{background:var(--surface-sunken)}
+.pm-steps-collapsed-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+
+.pm-steps-expanded{display:flex;flex-direction:column}
+.pm-steps-back{display:flex;align-items:center;gap:4px;align-self:flex-start;margin:0 0 14px;padding:0;
+  border:none;background:none;cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-bold);
+  font-size:19px;color:var(--text-heading);-webkit-tap-highlight-color:transparent}
+.pm-steps-back:active{opacity:.7}
+
+/* ===== "How it works" — self-assessment explainer inside the hub ===== */
+.pm-hub-help{display:inline-flex;align-items:center;gap:5px;margin:-10px 0 16px;border:none;background:none;
+  cursor:pointer;padding:0;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;color:var(--gray-500)}
+.pm-hub-help:active{opacity:.7}
+
+/* ===== "Track your goals" — collapse/expand slide-over, mirrors the
+   "Complete your profile" pattern: a collapsed summary row that expands
+   into Goal Focus + the Prosperity Spiral + Today's Targets together. ===== */
+.pm-goals-viewport{margin:16px 16px 4px;overflow:hidden;border-radius:16px;transition:height .38s cubic-bezier(.22,.61,.36,1)}
+.pm-goals-slider{display:flex;align-items:flex-start;width:200%;transition:transform .38s cubic-bezier(.22,.61,.36,1)}
+.pm-goals-slider.expanded{transform:translateX(-50%)}
+.pm-goals-pane{width:50%;flex:none;box-sizing:border-box;margin:0}
+.pm-goals-collapsed{display:block;width:50%;padding:18px 16px;background:var(--surface-sunken);
+  border:none;border-radius:16px;cursor:pointer;font:inherit;color:inherit;text-align:left;
+  -webkit-tap-highlight-color:transparent}
+.pm-goals-collapsed:active{background:var(--gray-150)}
+.pm-goals-collapsed-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pm-goals-expanded{display:flex;flex-direction:column}
+.pm-goals-back{display:flex;align-items:center;gap:4px;align-self:flex-start;margin:0 0 4px 20px;padding:0;
+  border:none;background:none;cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-bold);
+  font-size:19px;color:var(--text-heading);-webkit-tap-highlight-color:transparent}
+.pm-goals-back:active{opacity:.7}
