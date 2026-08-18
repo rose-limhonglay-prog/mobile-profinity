@@ -19,7 +19,21 @@ function lmReadTierL() {
   if (window.PF_TIER) return window.PF_TIER;
   try { return localStorage.getItem("pf-subscription-tier") || "free"; } catch (e) { return "free"; }
 }
-const LM_FREE = lmReadTierL() === "free";
+const LM_TIER = lmReadTierL();
+const LM_FREE = LM_TIER === "free";
+
+/* Membership ladder — mirrors mobilechrome.jsx's SM_TIER_LADDER_C /
+   profile-mobile.jsx's SM_TIER_LADDER_PM, so a Confidence/Mastery/Freedom
+   member sees their actual tier here instead of this page's old hardcoded
+   "Confidence Path" for every paid viewer. */
+const LM_TIER_LADDER = ["confidence", "mastery", "freedom", "inner"];
+const LM_TIER_DISPLAY_NAME = { confidence: "Confidence", mastery: "Mastery", freedom: "Freedom", inner: "Inner Circle" };
+function lmNextTierL(tier) {
+  const i = LM_TIER_LADDER.indexOf(tier);
+  if (i === -1) return LM_TIER_LADDER[0];
+  if (i === LM_TIER_LADDER.length - 1) return null;
+  return LM_TIER_LADDER[i + 1];
+}
 
 const TUTOR_L = "Dr Tim Pearce";
 const IMG_L = {
@@ -91,7 +105,7 @@ const LM_TABS = [
 { key: "Rewards", label: "Rewards", icon: "lucide:gift", href: null }];
 
 
-function LM2Header({ freeTier }) {
+function LM2Header({ freeTier, tier }) {
   return (
     <div className={"lm2-head" + (freeTier ? " has-sub" : "")} data-screen-label="Header">
       <div className="lm2-head-row">
@@ -99,7 +113,7 @@ function LM2Header({ freeTier }) {
         {freeTier ?
         <img className="lm2-head-avatar" src="assets/avatar-katy.jpg" alt="Katy" /> :
 
-        <span className="lm2-tierpill"><IconifyL name="lucide:crown" size={12} color="#fff" /> Confidence Path</span>
+        <span className="lm2-tierpill"><IconifyL name="lucide:crown" size={12} color="#fff" /> {LM_TIER_DISPLAY_NAME[tier]} Path</span>
         }
       </div>
       {freeTier && <p className="lm2-head-sub">Your goal is to grow in aesthetics or medical school</p>}
@@ -180,6 +194,22 @@ function SecHead({ title, viewAll = true, linkLabel = "See All" }) {
       <h2>{title}</h2>
       {viewAll && <a href="#" onClick={(e) => { e.preventDefault(); goL("MyLearning.html"); }}>{linkLabel}</a>}
     </div>);
+
+}
+
+function LM2SubscribeCard({ isFree, nextTier, onSubscribe }) {
+  const nextName = LM_TIER_DISPLAY_NAME[nextTier];
+  return (
+    <section className="lm2-subscribe" data-screen-label={"Unlock more with " + nextName}>
+      <span className="ic"><IconifyL name="lucide:sparkles" size={22} color="var(--premium-orange)" /></span>
+      <div className="tx">
+        <h3>Unlock more with {nextName}</h3>
+        <p>More courses, live events &amp; community perks.</p>
+      </div>
+      <button type="button" className="lm2-subscribe-btn" onClick={onSubscribe}>
+        {isFree ? "Subscribe" : "Upgrade"}<IconifyL name="lucide:arrow-up-right" size={15} color="#fff" />
+      </button>
+    </section>);
 
 }
 
@@ -372,6 +402,7 @@ function LearningHome() {
   const [resourcesUnlocked, setResourcesUnlocked] = useStateL(lmReadResourcesUnlockedL);
   const scrollRef = React.useRef(null);
   const { hidden: chromeHidden, floating: chromeFloat } = useScrollChromeL(scrollRef);
+  const nextTier = lmNextTierL(LM_TIER);
 
   const unlockResources = () => {
     setResourcesUnlocked(true);
@@ -384,7 +415,7 @@ function LearningHome() {
       <LM2FloatChrome />
       <div className="lm-scroll" ref={scrollRef}>
 
-        <LM2Header freeTier={LM_FREE} />
+        <LM2Header freeTier={LM_FREE} tier={LM_TIER} />
 
         <LM2GoalBanner data={LM2_GOAL} onHelp={() => setHelpOpen(true)} />
 
@@ -415,6 +446,8 @@ function LearningHome() {
         <LM2FreeResources unlocked={resourcesUnlocked} onStartSurvey={() => setSurveyOpen(true)} />
 
         <LM2LearningPathCard />
+
+        {nextTier && <LM2SubscribeCard isFree={LM_FREE} nextTier={nextTier} onSubscribe={() => goL("MembershipTier.html")} />}
 
         <div style={{ height: 20 }} />
       </div>

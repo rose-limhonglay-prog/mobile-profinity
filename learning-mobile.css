@@ -86,6 +86,21 @@ img { max-width: 100%; }
 .lm2-goal-vision { margin: 10px 0 0; font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: rgba(255,255,255,.92); }
 .lm2-goal-clarifier { margin: 8px 0 0; font-family: var(--font-sans); font-style: italic; font-size: 12.5px; color: rgba(255,255,255,.68); }
 
+/* ===== Free-tier "Unlock more with Confidence" subscribe upsell ===== */
+.lm2-subscribe { display: flex; align-items: center; gap: 14px; margin: 14px 20px 0; padding: 20px;
+  border-radius: var(--r-lg); background: linear-gradient(135deg, #2d2872, #4038a3);
+  box-shadow: 0 10px 28px rgba(28,24,72,.28); }
+.lm2-subscribe .ic { flex: none; width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.16);
+  display: flex; align-items: center; justify-content: center; }
+.lm2-subscribe .tx { flex: 1; min-width: 0; }
+.lm2-subscribe .tx h3 { margin: 0 0 6px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 18px; line-height: 1.2; color: #fff; }
+.lm2-subscribe .tx p { margin: 0; font-family: var(--font-sans); font-size: 13px; line-height: 1.4; color: rgba(255,255,255,.72); }
+.lm2-subscribe-btn { flex: none; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 18px; border: none; cursor: pointer;
+  border-radius: var(--r-pill); background: rgba(255,255,255,.18); color: #fff;
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 14px; white-space: nowrap; }
+.lm2-subscribe-btn:hover { background: rgba(255,255,255,.26); }
+.lm2-subscribe-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
 /* ===== Your Progress ring — gold conic-gradient, 0-100 metric, no % ===== */
 .lm2-progress-card { display: flex; flex-direction: column; gap: 4px; }
 .lm2-progress-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }

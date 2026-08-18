@@ -31,7 +31,26 @@ function lmReadTierL() {
     return "free";
   }
 }
-const LM_FREE = lmReadTierL() === "free";
+const LM_TIER = lmReadTierL();
+const LM_FREE = LM_TIER === "free";
+
+/* Membership ladder — mirrors mobilechrome.jsx's SM_TIER_LADDER_C /
+   profile-mobile.jsx's SM_TIER_LADDER_PM, so a Confidence/Mastery/Freedom
+   member sees their actual tier here instead of this page's old hardcoded
+   "Confidence Path" for every paid viewer. */
+const LM_TIER_LADDER = ["confidence", "mastery", "freedom", "inner"];
+const LM_TIER_DISPLAY_NAME = {
+  confidence: "Confidence",
+  mastery: "Mastery",
+  freedom: "Freedom",
+  inner: "Inner Circle"
+};
+function lmNextTierL(tier) {
+  const i = LM_TIER_LADDER.indexOf(tier);
+  if (i === -1) return LM_TIER_LADDER[0];
+  if (i === LM_TIER_LADDER.length - 1) return null;
+  return LM_TIER_LADDER[i + 1];
+}
 const TUTOR_L = "Dr Tim Pearce";
 const IMG_L = {
   lip: "assets/clinic-lip-design.png",
@@ -181,7 +200,8 @@ const LM_TABS = [{
   href: null
 }];
 function LM2Header({
-  freeTier
+  freeTier,
+  tier
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "lm2-head" + (freeTier ? " has-sub" : ""),
@@ -204,7 +224,7 @@ function LM2Header({
     name: "lucide:crown",
     size: 12,
     color: "#fff"
-  }), " Confidence Path")), freeTier && /*#__PURE__*/React.createElement("p", {
+  }), " ", LM_TIER_DISPLAY_NAME[tier], " Path")), freeTier && /*#__PURE__*/React.createElement("p", {
     className: "lm2-head-sub"
   }, "Your goal is to grow in aesthetics or medical school"));
 }
@@ -353,6 +373,33 @@ function SecHead({
       goL("MyLearning.html");
     }
   }, linkLabel));
+}
+function LM2SubscribeCard({
+  isFree,
+  nextTier,
+  onSubscribe
+}) {
+  const nextName = LM_TIER_DISPLAY_NAME[nextTier];
+  return /*#__PURE__*/React.createElement("section", {
+    className: "lm2-subscribe",
+    "data-screen-label": "Unlock more with " + nextName
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:sparkles",
+    size: 22,
+    color: "var(--premium-orange)"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("h3", null, "Unlock more with ", nextName), /*#__PURE__*/React.createElement("p", null, "More courses, live events & community perks.")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-subscribe-btn",
+    onClick: onSubscribe
+  }, isFree ? "Subscribe" : "Upgrade", /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-up-right",
+    size: 15,
+    color: "#fff"
+  })));
 }
 function LM2LockedCard({
   title,
@@ -655,6 +702,7 @@ function LearningHome() {
     hidden: chromeHidden,
     floating: chromeFloat
   } = useScrollChromeL(scrollRef);
+  const nextTier = lmNextTierL(LM_TIER);
   const unlockResources = () => {
     setResourcesUnlocked(true);
     try {
@@ -668,7 +716,8 @@ function LearningHome() {
     className: "lm-scroll",
     ref: scrollRef
   }, /*#__PURE__*/React.createElement(LM2Header, {
-    freeTier: LM_FREE
+    freeTier: LM_FREE,
+    tier: LM_TIER
   }), /*#__PURE__*/React.createElement(LM2GoalBanner, {
     data: LM2_GOAL,
     onHelp: () => setHelpOpen(true)
@@ -702,7 +751,11 @@ function LearningHome() {
   })))), /*#__PURE__*/React.createElement(LM2FreeResources, {
     unlocked: resourcesUnlocked,
     onStartSurvey: () => setSurveyOpen(true)
-  }), /*#__PURE__*/React.createElement(LM2LearningPathCard, null), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement(LM2LearningPathCard, null), nextTier && /*#__PURE__*/React.createElement(LM2SubscribeCard, {
+    isFree: LM_FREE,
+    nextTier: nextTier,
+    onSubscribe: () => goL("MembershipTier.html")
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 20
     }
