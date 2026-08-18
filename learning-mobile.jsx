@@ -23,7 +23,19 @@ const LM_FREE = lmReadTierL() === "free";
 
 const TUTOR_L = "Dr Tim Pearce";
 const IMG_L = {
-  lip: "assets/clinic-lip-design.png"
+  lip: "assets/clinic-lip-design.png",
+  protox: "assets/course-protox.png",
+  eightDLip: "assets/course-8d-lip-design.jpg",
+  templeFiller: "assets/course-temple-filler.webp",
+  browLift: "assets/course-brow-lift.jpg",
+  fullFace: "assets/course-full-face-rejuvenation.jpg",
+  cheekContouring: "assets/course-cheek-contouring.jpg",
+  rhinoplasty: "assets/course-rhinoplasty.jpg",
+  jawlineSculpting: "assets/course-jawline-sculpting.jpg",
+  tearTrough: "assets/course-tear-trough.jpg",
+  skinBoosters: "assets/course-skin-boosters.jpg",
+  complications: "assets/course-complications.jpg",
+  consultation: "assets/course-consultation.jpg",
 };
 
 const LM2_GOAL = {
@@ -48,8 +60,18 @@ const LM2_PROGRESS_SPOTLIGHT = {
 };
 
 const LM2_MY_COURSES = [
-{ image: IMG_L.lip, level: "Intermediate", title: "8D Lip Design", description: "Discover a complete view of lip anatomy for deeper learning." },
-{ image: IMG_L.lip, level: "Advanced", title: "Temple Filler", description: "Master safe injection techniques with anatomical precision." }];
+{ image: IMG_L.eightDLip, level: "Intermediate", title: "8D Lip Design", description: "Discover a complete view of lip anatomy for deeper learning." },
+{ image: IMG_L.templeFiller, level: "Advanced", title: "Temple Filler", description: "Master safe injection techniques with anatomical precision." },
+{ image: IMG_L.protox, level: "Advanced", title: "Protox Course", description: "Elevate your botulinum toxin skills and refine your technique." },
+{ image: IMG_L.browLift, level: "Intermediate", title: "Brow Lift Training", description: "Learn expert techniques for achieving flawless, natural brow lifts." },
+{ image: IMG_L.fullFace, level: "Advanced", title: "Full-Face Rejuvenation Protocol", description: "A complete framework for combination treatments across the face." },
+{ image: IMG_L.cheekContouring, level: "Intermediate", title: "Cheek & Midface Contouring", description: "Master volumising techniques for natural-looking cheek definition." },
+{ image: IMG_L.rhinoplasty, level: "Advanced", title: "Non-Surgical Rhinoplasty", description: "Reshape and refine the nose using dermal filler with confidence." },
+{ image: IMG_L.jawlineSculpting, level: "Advanced", title: "Jawline Sculpting Masterclass", description: "Define and balance the lower face with precision filler technique." },
+{ image: IMG_L.tearTrough, level: "Advanced", title: "Tear Trough Correction", description: "Safely treat under-eye hollowing with anatomically-guided technique." },
+{ image: IMG_L.skinBoosters, level: "Beginner", title: "Skin Boosters & Hydration Therapy", description: "Introduce biorevitalisation treatments to improve skin quality." },
+{ image: IMG_L.complications, level: "Advanced", title: "Complications Management", description: "Recognise, prevent and manage vascular and other complications." },
+{ image: IMG_L.consultation, level: "Beginner", title: "Consultation & Patient Assessment", description: "Build trust and plan safe, effective treatments from the first visit." }];
 
 
 const LM2_HOWITWORKS = [
@@ -62,10 +84,11 @@ const LM2_HOWITWORKS = [
 
 const LM_TABS = [
 { key: "Home", label: "Home", icon: "lucide:home", href: "NewsfeedMobile.html" },
-{ key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
-{ key: "Learning", label: "My Learning", icon: "lucide:book-open", href: null },
 { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
-{ key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" }];
+{ key: "Learning", label: "Learning", icon: "lucide:book-open", href: null },
+{ key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
+{ key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" },
+{ key: "Rewards", label: "Rewards", icon: "lucide:gift", href: null }];
 
 
 function LM2Header({ freeTier }) {
@@ -227,12 +250,12 @@ function LM2FreeResources({ unlocked, onStartSurvey }) {
 
 function LM2LearningPathCard() {
   return (
-    <section className="lm2-pathsec" data-screen-label="Your Learning Path">
-      <button type="button" className="lm2-pathcard" onClick={() => goL("MyLearning.html")}>
+    <section className="lm2-pathsec" data-screen-label="Discover your journey">
+      <button type="button" className="lm2-pathcard" onClick={() => goL("AllCoursesMobile.html")}>
         <span className="chip"><IconifyL name="lucide:route" size={22} color="#fff" /></span>
         <span className="tx">
-          <span className="ti">Your Learning Path</span>
-          <span className="body">We sequence your next-best courses — one clear step at a time toward your goal.</span>
+          <span className="ti">Discover your journey</span>
+          <span className="body">We sequence your next-best courses from Recommended, New &amp; Popular — one clear step at a time toward your goal.</span>
         </span>
         <span className="arrow" aria-hidden="true">
           <IconifyL name="lucide:arrow-right" size={19} color="#fff" />

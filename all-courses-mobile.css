@@ -1,0 +1,43 @@
+/* ===========================================================================
+   PROfinity — All Courses (mobile) · iPhone 17 Pro Max
+   Course-card chrome (.lm2-coursecard) and the bottom tab bar (.lm-tabs) are
+   shared with learning-mobile.css — link that file alongside this one.
+   =========================================================================== */
+.ac-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-page); position: relative; }
+@media (max-width: 768px) {
+  html, body { height: 100%; overflow: hidden; margin: 0; padding: 0; }
+  .app.device-stage { display: none !important; }
+  .app:not(.device-stage) { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+  .app:not(.device-stage) .ac-screen { height: 100vh; height: 100dvh; overflow: hidden; }
+}
+
+/* ===== header: back + title ===== */
+.ac-head { flex: none; z-index: 5; background: var(--surface-card); border-bottom: 1px solid var(--border-default);
+  padding: 54px 16px 12px; display: flex; align-items: center; gap: 14px; }
+.ac-back { width: 44px; height: 44px; border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+.ac-back:hover { background: var(--surface-sunken); }
+.ac-back:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+.ac-title { flex: 1; text-align: center; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 19px; color: var(--brand-navy); }
+.ac-head .spacer { width: 44px; }
+
+.ac-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 96px; }
+.ac-scroll::-webkit-scrollbar { width: 0; }
+
+/* ===== search ===== */
+.ac-search { display: flex; align-items: center; gap: 10px; height: 48px; margin: 16px 20px 0; padding: 0 16px;
+  background: var(--surface-card); border: 1px solid var(--border-strong); border-radius: var(--r-md); color: var(--gray-450); }
+.ac-search input { flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+  font-family: var(--font-sans); font-size: 15px; color: var(--text-primary); }
+
+/* ===== Recommended / New / Popular filter pills ===== */
+.ac-filters { display: flex; gap: 8px; margin: 14px 20px 0; overflow-x: auto; }
+.ac-filters::-webkit-scrollbar { display: none; }
+.ac-filter { flex: none; border: 1.5px solid var(--border-default); border-radius: var(--r-pill); padding: 9px 16px; cursor: pointer;
+  background: var(--surface-card); font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13.5px; color: var(--gray-600); }
+.ac-filter.on { border-color: var(--brand-navy); background: var(--brand-navy); color: #fff; }
+.ac-filter:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+
+/* ===== two-column course grid (contrasts with the horizontal-scroll rail on My Learning) ===== */
+.ac-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 18px 20px 6px; }
+.ac-coursecard { width: auto; }
+.ac-empty { margin: 40px 20px; text-align: center; font-family: var(--font-sans); font-size: 14.5px; color: var(--gray-500); }

@@ -73,10 +73,10 @@ img { max-width: 100%; }
 .lm2-head-sub { margin: 0 0 14px; font-family: var(--font-sans); font-size: 14.5px; color: var(--gray-500); }
 
 /* ===== My Goal & Dream Clinic — aspirational banner, not current state ===== */
-.lm2-goalcard { margin: 14px 20px 0; padding: 22px; border-radius: 18px;
-  background: #2E2A75; color: #fff; }
+.lm2-goalcard { margin: 14px 20px 0; padding: 18px 20px; border-radius: var(--r-lg);
+  background: linear-gradient(135deg, #292569, #3a3491); color: #fff; }
 .lm2-goal-head { display: flex; align-items: center; gap: 10px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 16px; }
-.lm2-goal-icon { flex: none; width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+.lm2-goal-icon { flex: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   background: rgba(255,255,255,.16); }
 .lm2-goal-title { flex: 1; min-width: 0; }
 .lm2-goal-help { flex: none; width: 44px; height: 44px; margin: -11px -8px -11px 0; border: none; border-radius: 50%;
@@ -91,7 +91,7 @@ img { max-width: 100%; }
 .lm2-progress-top { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .lm2-progress-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .lm2-progress-main .eyebrow { display: flex; align-items: center; gap: 6px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 11.5px; letter-spacing: .04em;
-  text-transform: uppercase; color: var(--brand-gold); }
+  text-transform: uppercase; color: var(--premium-orange); }
 .lm2-progress-main .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 19px; color: var(--text-heading); }
 .lm2-progress-main .note { margin: 0; font-family: var(--font-sans); font-size: 13.5px; line-height: 1.4; color: var(--gray-500); }
 .lm2-spiral-link { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; margin-top: 4px; min-height: 44px; padding: 4px 0;
@@ -105,12 +105,11 @@ img { max-width: 100%; }
 .lm2-save-btn.saved { border-color: var(--brand-navy); background: color-mix(in srgb, var(--brand-navy) 8%, #fff); }
 .lm2-save-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
 .lm2-progress-ring { position: relative; flex: none; width: 92px; height: 92px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  background: conic-gradient(var(--brand-gold) calc(var(--pct) * 1%), var(--surface-sunken) 0); }
+  background: conic-gradient(#e7820a calc(var(--pct) * 1%), var(--surface-sunken) 0); }
 .lm2-progress-ring::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: var(--surface-card); }
-.lm2-progress-ring .n { position: relative; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 22px; color: var(--brand-gold); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.lm2-progress-ring .n { position: relative; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 22px; color: var(--premium-orange); line-height: 1.1; font-variant-numeric: tabular-nums; }
 .lm2-progress-ring .lbl { position: relative; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 10.5px; letter-spacing: .03em; text-transform: uppercase; color: var(--gray-500); }
 
-/* section header (used before My Courses and Free Resources) */
 .lm2-sec-h { display: flex; align-items: baseline; justify-content: space-between; padding: 22px 20px 12px; }
 .lm2-sec-h h2 { margin: 0; font-family: var(--font-sans); font-size: 20px; font-weight: var(--fw-bold); color: var(--brand-navy); }
 .lm2-sec-h a { font-family: var(--font-sans); font-size: 14.5px; font-weight: var(--fw-semibold); color: var(--ai-purple); text-decoration: none; }
@@ -133,13 +132,8 @@ img { max-width: 100%; }
 .lm2-continue-card .bar > span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--ai-purple); }
 .lm2-continue-card .pct { font-family: var(--font-sans); font-size: 12px; color: var(--gray-500); }
 
-/* white cards: Today's Targets */
 .lm2-card { margin: 20px 20px 0; padding: 18px; border-radius: var(--r-lg); background: var(--surface-card);
   border: 1px solid var(--border-default); box-shadow: 0 1px 3px rgba(12,12,13,.05); }
-.lm2-card-hd { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
-.lm2-card-hd h2 { margin: 0; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 18px; color: var(--text-heading); }
-.lm2-chip { flex: none; padding: 5px 12px; border-radius: var(--r-pill); background: var(--surface-sunken);
-  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 12px; color: var(--gray-600); }
 
 /* My Courses — sunken band with hairline borders, breaks up the run of white cards */
 .lm2-courseband { margin-top: 20px; padding: 4px 0 24px; background: var(--surface-sunken);
@@ -154,19 +148,23 @@ img { max-width: 100%; }
 .lm2-locked h3 { margin: 0; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 17px; color: var(--text-heading); }
 .lm2-locked p { margin: 0; max-width: 280px; font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--gray-500); }
 .lm2-upgrade-btn { margin-top: 6px; display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 26px; border: none; cursor: pointer;
-  background: var(--brand-navy); color: #fff; border-radius: var(--r-pill); font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; }
+  background: var(--brand-navy); color: #fff; border-radius: 10px; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; }
 .lm2-upgrade-btn:hover { background: var(--brand-navy-700); }
 .lm2-upgrade-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
 
-/* My Courses — 2-col grid */
-.lm2-coursegrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 0 20px; }
-.lm2-coursecard { border: 1px solid var(--border-default); border-radius: var(--r-lg); overflow: hidden;
+/* My Courses — horizontally-scrolling rail */
+.lm2-coursegrid { display: flex; gap: 12px; padding: 0 20px 6px; overflow-x: auto; scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.lm2-coursegrid::-webkit-scrollbar { display: none; }
+.lm2-coursecard { flex: none; width: 168px; scroll-snap-align: start; border: 1px solid var(--border-default); border-radius: var(--r-lg); overflow: hidden;
   background: var(--surface-card); box-shadow: 0 1px 3px rgba(12,12,13,.05); display: flex; flex-direction: column; }
 .lm2-coursecard .thumb { position: relative; height: 108px; background-size: cover; background-position: center; }
 .lm2-coursecard .thumb .lvl { position: absolute; left: 10px; top: 10px; font-size: 11px !important; padding: 4px 10px !important; }
 .lm2-coursecard .body { padding: 13px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
-.lm2-coursecard .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--text-heading); line-height: 1.25; }
-.lm2-coursecard .ds { font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); line-height: 1.4; }
+.lm2-coursecard .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--text-heading); line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lm2-coursecard .ds { font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .lm2-coursecard .by { font-family: var(--font-sans); font-size: 12.5px; font-weight: var(--fw-semibold); color: var(--brand-navy); }
 .lm2-coursecard .foot { margin-top: auto; display: flex; align-items: center; justify-content: flex-end; padding-top: 6px; }
 
@@ -191,15 +189,7 @@ img { max-width: 100%; }
 .lm-unlock-btn:hover { background: var(--brand-navy-700); }
 .lm-unlock-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
 
-.lm2-outline-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: calc(100% - 40px); margin: 14px 20px 0; min-height: 48px;
-  border: 1.5px solid var(--brand-navy); border-radius: 10px; background: var(--surface-card); cursor: pointer;
-  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; color: var(--brand-navy); }
-.lm2-outline-btn:hover { background: var(--surface-sunken); }
-.lm2-outline-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
-/* .lm2-freeres-open already provides the 20px gutter, so the button must not add its own */
-.lm2-freeres-open .lm2-outline-btn { width: 100%; margin: 0; }
-
-/* ===== Your Learning Path — single brand-navy gradient CTA card ===== */
+/* ---- Your Learning Path card ---- */
 .lm2-pathsec { margin: 24px 20px 0; }
 .lm2-pathcard { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; cursor: pointer;
   border: none; border-radius: 18px; padding: 22px;
@@ -216,6 +206,14 @@ img { max-width: 100%; }
 .lm2-pathcard .arrow { flex: none; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.16);
   display: flex; align-items: center; justify-content: center; }
 @media (prefers-reduced-motion: reduce) { .lm2-pathcard { transition: none; } }
+
+.lm2-outline-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: calc(100% - 40px); margin: 14px 20px 0; min-height: 48px;
+  border: 1.5px solid var(--brand-navy); border-radius: 10px; background: var(--surface-card); cursor: pointer;
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; color: var(--brand-navy); }
+.lm2-outline-btn:hover { background: var(--surface-sunken); }
+.lm2-outline-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+/* .lm2-freeres-open already provides the 20px gutter, so the button must not add its own */
+.lm2-freeres-open .lm2-outline-btn { width: 100%; margin: 0; }
 
 /* ===== "How this page works" help sheet ===== */
 .lm2-help-wrap { position: absolute; inset: 0; z-index: 200; }
@@ -259,9 +257,6 @@ img { max-width: 100%; }
 .lm-tab.on .ic svg [stroke]:not([stroke="none"]) { stroke: #fff !important; }
 .lm-tab.on .ic svg [fill]:not([fill="none"]) { fill: #fff !important; }
 .lm-tab:active { transform: scale(.9); }
-/* collapse the dock to icons-only once the header chrome is floating */
-.lm-tab .lbl { transition: opacity .2s ease, max-height .2s ease; }
-.lm-screen.chrome-float .lm-tab .lbl { opacity: 0; max-height: 0; overflow: hidden; }
 
 .twk-panel { font-family: ui-sans-serif, system-ui, sans-serif; }
 
