@@ -45,6 +45,11 @@
 .lm-screen .pf-ava-tab { max-width: 208px; padding-right: 16px; }
 .lm-screen .pf-ava-tab .pf-ava-label { opacity: 1; }
 
+/* Profile: bottom nav already has a dedicated Ava tab, and the page's own
+   "Discuss with Ava" buttons open the chat sheet directly — the floating
+   orb would just duplicate both entry points. */
+.pm-screen .pf-ava-tab { display: none; }
+
 @media (prefers-reduced-motion: reduce) {
   .pf-ava-tab, .pf-ava-label { transition: none; }
   .pf-ava-halo { animation: none; opacity: .5; }
@@ -114,12 +119,13 @@
 
 /* ===== contextual "Discuss with Ava" deep links ===== */
 .pf-coach-link {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 4px;
-  border: none; background: none; cursor: pointer;
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px;
+  border: 1.5px solid var(--ai-purple); border-radius: var(--r-pill); background: var(--ai-purple-100); cursor: pointer;
   font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13.5px; color: var(--ai-purple);
+  transition: background .15s ease;
 }
-.pf-coach-link:hover { color: var(--ai-purple-700); text-decoration: underline; }
-.pf-coach-link:focus-visible { outline: 2px solid var(--ai-purple); outline-offset: 2px; border-radius: 6px; }
+.pf-coach-link:hover { background: var(--ai-purple-200); }
+.pf-coach-link:focus-visible { outline: 2px solid var(--ai-purple); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   .pf-ava-sheet, .pf-ava-tab, .pf-ava-label, .pf-ava-halo { transition: none; animation: none; }
