@@ -129,7 +129,7 @@ function AccountSettings() {
           )}
         </nav>
 
-        <button className="as-logout" onClick={() => goAS("NewsfeedMobile.html")}>
+        <button className="as-logout" onClick={() => goAS("AuthMobile.html?view=signin")}>
           Logout
           <DSAS.IconifyIcon name="lucide:log-out" size={20} color="var(--text-heading)" />
         </button>

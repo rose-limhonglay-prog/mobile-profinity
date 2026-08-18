@@ -31,10 +31,11 @@ function useIsMobileCD() {
 
 const CD_TABS = [
   { key: "Home",      label: "Home",        icon: "lucide:home",      href: "NewsfeedMobile.html" },
-  { key: "Profile",   label: "Profile",     icon: "lucide:user",      href: "ProfileMobile.html" },
-  { key: "Learning",  label: "My Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
   { key: "Community", label: "Community",   icon: "lucide:users",     href: "CommunityMobile.html" },
+  { key: "Learning",  label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
+  { key: "Profile",   label: "Profile",     icon: "lucide:user",      href: "ProfileMobile.html" },
   { key: "Agent",     label: "Ava",       icon: "lucide:sparkles",  href: "Agent.html" },
+  { key: "Rewards",   label: "Rewards",   icon: "lucide:gift",     href: null },
 ];
 
 const CD_CLINICIANS = [

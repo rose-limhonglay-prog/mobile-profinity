@@ -226,7 +226,7 @@ const EV_TABS = [{
   dot: "12"
 }, {
   key: "Learning",
-  label: "My Learning",
+  label: "Learning",
   icon: "lucide:book-open",
   href: "LearningMobile.html"
 }, {
@@ -239,6 +239,11 @@ const EV_TABS = [{
   label: "Ava",
   icon: "lucide:sparkles",
   href: "AgentMobile.html"
+}, {
+  key: "Rewards",
+  label: "Rewards",
+  icon: "lucide:gift",
+  href: null
 }];
 const CALL_PEOPLE = [{
   name: "Sarah",
@@ -275,7 +280,7 @@ function EvTabBar({
   }, EV_TABS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
     className: "ev-tab" + (t.key === active ? " on" : ""),
-    onClick: () => goEV(t.href)
+    onClick: () => t.href && goEV(t.href)
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
   }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {

@@ -608,7 +608,7 @@
                   </button>
               )}
             </nav>
-            <button className="m-drawer-logout" onClick={onClose}>
+            <button className="m-drawer-logout" onClick={() => goC("AuthMobile.html?view=signin")}>
               <DSC.IconifyIcon name="lucide:log-out" size={22} color="var(--error)" />
               Logout
             </button>

@@ -44,6 +44,11 @@ const M_TABS = [{
   label: "Ava",
   icon: "lucide:sparkles",
   href: "AgentMobile.html"
+}, {
+  key: "Rewards",
+  label: "Rewards",
+  icon: "lucide:gift",
+  href: null
 }];
 const PUSH_NOTIF = {
   app: "PROfinity Academy",
@@ -1500,7 +1505,7 @@ function SideMenu({
     color: "var(--gray-450)"
   })))), /*#__PURE__*/React.createElement("button", {
     className: "m-drawer-logout",
-    onClick: onClose
+    onClick: () => go("AuthMobile.html?view=signin")
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: "lucide:log-out",
     size: 22,

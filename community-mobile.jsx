@@ -35,9 +35,10 @@ function useIsMobileCM() {
 const CM_TABS = [
 { key: "Home", label: "Home", icon: "lucide:home", href: "NewsfeedMobile.html" },
 { key: "Community", label: "Community", icon: "lucide:users", href: null },
-{ key: "Learning", label: "My Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
+{ key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
-{ key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" }];
+{ key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" },
+{ key: "Rewards", label: "Rewards", icon: "lucide:gift", href: null }];
 
 /* Same tier keys as app.jsx's TIER_LADDER, with the resource lists the
    expandable Communities cards in the side menu need — app.jsx's ladder only
@@ -277,7 +278,7 @@ function SideMenuCM({ open, onClose }) {
 
           <SmDisplayCardCM dark={dark} onToggle={toggleDark} />
 
-          <button className="m-drawer-logout" onClick={onClose}>
+          <button className="m-drawer-logout" onClick={() => goCM("AuthMobile.html?view=signin")}>
             <DSCM.IconifyIcon name="lucide:log-out" size={22} color="var(--error)" />
             Logout
           </button>

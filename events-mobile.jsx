@@ -108,9 +108,10 @@ const EV_DETAIL = {
 const EV_TABS = [
   { key: "Home", label: "Home", icon: "lucide:home", href: "NewsfeedMobile.html" },
   { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
-  { key: "Learning", label: "My Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
+  { key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
   { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
   { key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" },
+  { key: "Rewards", label: "Rewards", icon: "lucide:gift", href: null },
 ];
 
 const CALL_PEOPLE = [
@@ -130,7 +131,7 @@ function EvTabBar({ active }) {
   return (
     <nav className="ev-tabs" aria-label="Primary">
       {EV_TABS.map((t) => (
-        <button key={t.key} className={"ev-tab" + (t.key === active ? " on" : "")} onClick={() => goEV(t.href)}>
+        <button key={t.key} className={"ev-tab" + (t.key === active ? " on" : "")} onClick={() => t.href && goEV(t.href)}>
           <span className="ic">
             <DSEV.IconifyIcon name={t.icon} size={23} color={t.key === active ? "#fff" : "var(--gray-450)"} />
             {t.dot && <span className="dot">{t.dot}</span>}

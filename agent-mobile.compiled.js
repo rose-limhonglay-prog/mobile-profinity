@@ -28,7 +28,7 @@ const AG_TABS = [{
   dot: "12"
 }, {
   key: "Learning",
-  label: "My Learning",
+  label: "Learning",
   icon: "lucide:book-open",
   href: "LearningMobile.html"
 }, {
@@ -40,6 +40,11 @@ const AG_TABS = [{
   key: "Agent",
   label: "Ava",
   icon: "lucide:sparkles",
+  href: null
+}, {
+  key: "Rewards",
+  label: "Rewards",
+  icon: "lucide:gift",
   href: null
 }];
 const AG_AGENTS = [{

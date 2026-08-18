@@ -176,7 +176,7 @@ function AccountSettings() {
     href: item.href
   }))), /*#__PURE__*/React.createElement("button", {
     className: "as-logout",
-    onClick: () => goAS("NewsfeedMobile.html")
+    onClick: () => goAS("AuthMobile.html?view=signin")
   }, "Logout", /*#__PURE__*/React.createElement(DSAS.IconifyIcon, {
     name: "lucide:log-out",
     size: 20,

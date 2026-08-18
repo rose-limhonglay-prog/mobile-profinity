@@ -13,9 +13,10 @@ function goAG(url) {(window.pfGo || function (u) {window.location.href = u;})(ur
 const AG_TABS = [
 { key: "Home", label: "Home", icon: "lucide:home", href: "NewsfeedMobile.html" },
 { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
-{ key: "Learning", label: "My Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
+{ key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
-{ key: "Agent", label: "Ava", icon: "lucide:sparkles", href: null }];
+{ key: "Agent", label: "Ava", icon: "lucide:sparkles", href: null },
+{ key: "Rewards", label: "Rewards", icon: "lucide:gift", href: null }];
 
 const AG_AGENTS = [
 {

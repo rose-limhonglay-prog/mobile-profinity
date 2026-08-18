@@ -1240,7 +1240,7 @@
       color: "var(--gray-450)"
     })))), /*#__PURE__*/React.createElement("button", {
       className: "m-drawer-logout",
-      onClick: onClose
+      onClick: () => goC("AuthMobile.html?view=signin")
     }, /*#__PURE__*/React.createElement(DSC.IconifyIcon, {
       name: "lucide:log-out",
       size: 22,

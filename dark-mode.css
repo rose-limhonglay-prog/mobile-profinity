@@ -224,6 +224,12 @@
 }
 
 /* ============================================================
+   Auth Mobile — success icon + selected user-type tint
+   ============================================================ */
+[data-theme="dark"] .au-done-ic { background: rgba(52,199,89,.18); }
+[data-theme="dark"] .au-type.on .au-type-ic { background: rgba(206,153,87,.14); }
+
+/* ============================================================
    Agent — floating glass navigation dock
    ============================================================ */
 [data-theme="dark"] .ag-tabs {

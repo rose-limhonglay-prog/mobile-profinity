@@ -44,7 +44,7 @@ const CM_TABS = [{
   href: null
 }, {
   key: "Learning",
-  label: "My Learning",
+  label: "Learning",
   icon: "lucide:book-open",
   href: "LearningMobile.html"
 }, {
@@ -57,6 +57,11 @@ const CM_TABS = [{
   label: "Ava",
   icon: "lucide:sparkles",
   href: "AgentMobile.html"
+}, {
+  key: "Rewards",
+  label: "Rewards",
+  icon: "lucide:gift",
+  href: null
 }];
 
 /* Same tier keys as app.jsx's TIER_LADDER, with the resource lists the
@@ -474,7 +479,7 @@ function SideMenuCM({
     onToggle: toggleDark
   }), /*#__PURE__*/React.createElement("button", {
     className: "m-drawer-logout",
-    onClick: onClose
+    onClick: () => goCM("AuthMobile.html?view=signin")
   }, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
     name: "lucide:log-out",
     size: 22,
