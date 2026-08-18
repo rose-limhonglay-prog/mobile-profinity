@@ -531,6 +531,25 @@ const PM_EXPERIENCE = [{
   loc: "London, United Kingdom"
 }];
 const PM_LICENSES = ["The Ultimate Toxin Eye Complications Masterclass", "Anatomy360", "Pro Tox Course", "8D Lips Course", "Botox Foundations"];
+
+/* Education + Language — pulled out of inline markup into data so the
+   "Professional Information" menu (below) can render the same rows for
+   either the owner's profile or another member's, from props. */
+const PM_EDUCATION = [{
+  logo: "JH",
+  school: "Johns Hopkins University of USA",
+  program: "Clinical Foundations of Medicine",
+  years: "1990 - 2020"
+}];
+const PM_LANGUAGES = [{
+  flag: "🇬🇧",
+  name: "English (UK)",
+  level: "Primary"
+}, {
+  flag: "🇮🇹",
+  name: "Italian",
+  level: "Secondary"
+}];
 const PM_ACTIVITY = [{
   name: "Katy Wilson",
   loc: "London, United Kingdom",
@@ -546,6 +565,10 @@ const PM_ACTIVITY = [{
   loc: "Sydney, Australia",
   time: "Yesterday",
   avatar: null,
+  /* "id" links a post's author to their profile — see PMPost + ProfileMobile's
+     "?id=" viewer mode (PM_OTHER_USERS) below. Katy is the profile owner, so
+     her own posts don't need a link back to this same page. */
+  id: "james-lee",
   title: "Advanced Suturing Techniques",
   body: "In my surgical practice, time is precious. That's why I was thrilled to discover the ease of digital record-keeping with PROfinity. Documentation has never been simpler — everything I need is just a few taps away.\n#Surgery #PatientSafety #MedicalTech #PROfinity",
   likes: "850",
@@ -556,12 +579,202 @@ const PM_ACTIVITY = [{
   loc: "Toronto, Canada",
   time: "Last Week",
   avatar: null,
+  id: "linda-garcia",
   title: "Emerging Technologies in Dentistry",
   body: "The dental field is evolving rapidly, and so should our approach to documentation. From treatment plans to follow-up notes, everything is handled digitally — less clutter, more focus on patient interactions.\n#DentalCare #TechInDentistry #PROfinity #FutureOfHealthcare",
   likes: "1.5K",
   comments: "120",
   shares: "200"
 }];
+
+/* ===========================================================================
+   Viewing someone else's profile (ProfileMobile.html?id=<key>) — a lighter,
+   read-only take on the same page: shared context + a summarised activity
+   feed instead of the owner-only "Complete your profile" / "Track your
+   goals" checklists. Keyed by the same ids PMPost links out to. Mock data
+   only — a real build would fetch this by id.
+   =========================================================================== */
+const PM_OTHER_USERS = {
+  "james-lee": {
+    name: "James Lee",
+    role: "Surgical Nurse Practitioner",
+    avatar: null,
+    seals: ["verified"],
+    bio: "Surgical nurse practitioner specialising in advanced suturing and post-operative care. Sharing what I learn, one case at a time.",
+    location: "Sydney, Australia",
+    clinic: "Sydney Aesthetic Group",
+    posts: "34",
+    followers: "612",
+    following: "205",
+    shared: {
+      mutualConnections: 8,
+      community: "Confidence Path",
+      courses: ["8D Lip Design"]
+    },
+    activity: {
+      lastActive: "1h ago",
+      highlights: [{
+        icon: "lucide:file-text",
+        text: "Posted “Advanced Suturing Techniques”",
+        time: "Yesterday"
+      }, {
+        icon: "lucide:message-circle",
+        text: "Commented on 3 posts this week",
+        time: "2d"
+      }, {
+        icon: "lucide:thumbs-up",
+        text: "Liked your “Temple Filler Techniques” post",
+        time: "3d"
+      }]
+    },
+    services: [{
+      ti: "Advanced Suturing",
+      su: "Career Academy: Dr Tim Pearce"
+    }, {
+      ti: "Post-Operative Wound Care",
+      su: "Career Academy: Dr Tim Pearce"
+    }],
+    experience: [{
+      ti: "Surgical Nurse Practitioner",
+      yrs: "9 years",
+      org: "Sydney Aesthetic Group",
+      loc: "Sydney, Australia"
+    }],
+    education: [{
+      logo: "UoS",
+      school: "University of Sydney",
+      program: "Bachelor of Nursing",
+      years: "2011 - 2015"
+    }],
+    licenses: ["Advanced Suturing Certification", "Anatomy360"],
+    languages: [{
+      flag: "🇦🇺",
+      name: "English (AU)",
+      level: "Primary"
+    }]
+  },
+  "linda-garcia": {
+    name: "Linda Garcia",
+    role: "Dental Practitioner",
+    avatar: null,
+    seals: ["verified"],
+    bio: "Dentist exploring emerging technologies in digital dentistry and paperless patient care.",
+    location: "Toronto, Canada",
+    clinic: "Garcia Dental Studio",
+    posts: "21",
+    followers: "398",
+    following: "150",
+    shared: {
+      mutualConnections: 5,
+      community: "Confidence Path",
+      courses: []
+    },
+    activity: {
+      lastActive: "5h ago",
+      highlights: [{
+        icon: "lucide:file-text",
+        text: "Posted “Emerging Technologies in Dentistry”",
+        time: "Last week"
+      }, {
+        icon: "lucide:thumbs-up",
+        text: "Liked 2 of your posts",
+        time: "1w"
+      }]
+    },
+    services: [{
+      ti: "Digital Treatment Planning",
+      su: "Career Academy: Dr Tim Pearce"
+    }],
+    experience: [{
+      ti: "Dental Practitioner",
+      yrs: "7 years",
+      org: "Garcia Dental Studio",
+      loc: "Toronto, Canada"
+    }],
+    education: [{
+      logo: "UoT",
+      school: "University of Toronto",
+      program: "Doctor of Dental Surgery",
+      years: "2013 - 2017"
+    }],
+    licenses: ["Botox Foundations"],
+    languages: [{
+      flag: "🇨🇦",
+      name: "English (CA)",
+      level: "Primary"
+    }, {
+      flag: "🇪🇸",
+      name: "Spanish",
+      level: "Secondary"
+    }]
+  },
+  "dr-tim-pearce": {
+    name: "Dr Tim Pearce",
+    role: "Founder & Lead Trainer, PROfinity Academy",
+    avatar: "assets/avatar-drtim.png",
+    seals: ["verified", "crown", "gold"],
+    bio: "Founder of PROfinity Academy — training the next generation of aesthetic practitioners in safe, confident injectable technique.",
+    location: "London, United Kingdom",
+    clinic: "PROfinity Academy",
+    posts: "212",
+    followers: "18.4K",
+    following: "310",
+    shared: {
+      mutualConnections: 24,
+      community: "Confidence Path",
+      courses: ["8D Lip Design", "Protox Course", "Temple Filler"]
+    },
+    activity: {
+      lastActive: "Just now",
+      highlights: [{
+        icon: "lucide:file-text",
+        text: "Posted a new Technique Tuesday recap",
+        time: "Today"
+      }, {
+        icon: "lucide:message-circle",
+        text: "Commented on your “Temple Filler Techniques” post",
+        time: "Today"
+      }, {
+        icon: "lucide:calendar-check",
+        text: "Hosting Technique Tuesday Webinar",
+        time: "30 Jun"
+      }]
+    },
+    services: [{
+      ti: "Botox (Anti-Wrinkle Injections)",
+      su: "Career Academy: Dr Tim Pearce"
+    }, {
+      ti: "Dermal Fillers",
+      su: "Career Academy: Dr Tim Pearce"
+    }, {
+      ti: "Full-Face Rejuvenation",
+      su: "Career Academy: Dr Tim Pearce"
+    }],
+    experience: [{
+      ti: "Founder & Lead Trainer",
+      yrs: "15 years",
+      org: "PROfinity Academy",
+      loc: "London, United Kingdom"
+    }, {
+      ti: "Consultant Aesthetic Practitioner",
+      yrs: "20 years",
+      org: "Allcare Medical",
+      loc: "London, United Kingdom"
+    }],
+    education: [{
+      logo: "UCL",
+      school: "University College London",
+      program: "MBBS Medicine",
+      years: "1998 - 2004"
+    }],
+    licenses: ["Anatomy360", "Pro Tox Course", "8D Lips Course", "Botox Foundations", "The Ultimate Toxin Eye Complications Masterclass"],
+    languages: [{
+      flag: "🇬🇧",
+      name: "English (UK)",
+      level: "Primary"
+    }]
+  }
+};
 const PM_TABS = [{
   key: "Home",
   label: "Home",
@@ -2651,11 +2864,21 @@ function PMPost({
   p
 }) {
   const lines = p.body.split("\n");
+  const openAuthor = () => p.id && goPM("ProfileMobile.html?id=" + p.id);
   return /*#__PURE__*/React.createElement("article", {
     className: "pm-post"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-post-hd"
+  }, p.id ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-post-avbtn",
+    "aria-label": "View " + p.name + "'s profile",
+    onClick: openAuthor
   }, /*#__PURE__*/React.createElement(DSPM.Avatar, {
+    name: p.name,
+    src: p.avatar,
+    size: 42
+  })) : /*#__PURE__*/React.createElement(DSPM.Avatar, {
     name: p.name,
     src: p.avatar,
     size: 42
@@ -2663,7 +2886,11 @@ function PMPost({
     className: "pm-post-by"
   }, /*#__PURE__*/React.createElement("span", {
     className: "nm"
-  }, p.name, /*#__PURE__*/React.createElement("span", {
+  }, p.id ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-post-namebtn",
+    onClick: openAuthor
+  }, p.name) : p.name, /*#__PURE__*/React.createElement("span", {
     className: "loc"
   }, p.loc)), /*#__PURE__*/React.createElement("span", {
     className: "tm"
@@ -2696,16 +2923,65 @@ function PMPost({
     color: "var(--gray-500)"
   }), p.shares)));
 }
-function PMActivity() {
-  return /*#__PURE__*/React.createElement("section", {
-    className: "pm-sec"
+
+/* "Activity" — encloses the post feed behind the same collapse/expand
+   slide-over used by "Complete your profile" / "Track your goals" (shared
+   .pm-menu-* classes; see profile-mobile.css). */
+function PMActivityMenu() {
+  const [expanded, setExpanded] = useStatePM(false);
+  const {
+    collapsedRef,
+    expandedRef,
+    height: viewportH
+  } = usePMSlidePaneHeight(expanded, []);
+  const latest = PM_ACTIVITY[0];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-menu-viewport",
+    style: viewportH != null ? {
+      height: viewportH + "px"
+    } : undefined
   }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", {
-    style: {
-      fontSize: "20px"
-    }
-  }, "Activity")), /*#__PURE__*/React.createElement("div", {
+    className: "pm-menu-slider" + (expanded ? " expanded" : "")
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    ref: collapsedRef,
+    className: "pm-menu-pane pm-menu-collapsed",
+    "aria-label": "Activity — tap to view",
+    onClick: () => setExpanded(true)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-menu-collapsed-top"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "pm-steps-h"
+  }, "Activity"), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "var(--gray-400)"
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "pm-steps-sub"
+  }, PM_ACTIVITY.length, " recent posts & updates"), latest && /*#__PURE__*/React.createElement("div", {
+    className: "pm-menu-preview"
+  }, /*#__PURE__*/React.createElement(DSPM.Avatar, {
+    name: latest.name,
+    src: latest.avatar,
+    size: 28
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pm-menu-preview-tx"
+  }, /*#__PURE__*/React.createElement("b", null, latest.name), " · ", latest.title), /*#__PURE__*/React.createElement("span", {
+    className: "pm-menu-preview-time"
+  }, latest.time))), /*#__PURE__*/React.createElement("div", {
+    ref: expandedRef,
+    className: "pm-menu-pane pm-menu-expanded"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-menu-back",
+    onClick: () => setExpanded(false)
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-left",
+    size: 20,
+    color: "var(--text-heading)"
+  }), "Activity"), /*#__PURE__*/React.createElement("div", {
+    className: "pm-menu-content"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "pm-activity"
   }, PM_ACTIVITY.map((p, i) => /*#__PURE__*/React.createElement(PMPost, {
     key: i,
@@ -2713,7 +2989,439 @@ function PMActivity() {
   }))), /*#__PURE__*/React.createElement("button", {
     className: "pm-showall",
     onClick: () => goPM("NewsfeedMobile.html")
-  }, "Show all posts"));
+  }, "Show all posts")))));
+}
+
+/* "Professional Information" — encloses Services, Experience, Education,
+   Licenses & Certifications and Language behind the same collapse/expand
+   pattern. Accepts data via props so the exact same component renders a
+   member's own info (defaults) or another member's (OtherProfileScreen). */
+function PMProfessionalInfoMenu({
+  services = PM_SERVICES,
+  experience = PM_EXPERIENCE,
+  education = PM_EDUCATION,
+  licenses = PM_LICENSES,
+  languages = PM_LANGUAGES
+}) {
+  const [expanded, setExpanded] = useStatePM(false);
+  const {
+    collapsedRef,
+    expandedRef,
+    height: viewportH
+  } = usePMSlidePaneHeight(expanded, [services, experience, education, licenses, languages]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-menu-viewport",
+    style: viewportH != null ? {
+      height: viewportH + "px"
+    } : undefined
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-menu-slider" + (expanded ? " expanded" : "")
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    ref: collapsedRef,
+    className: "pm-menu-pane pm-menu-collapsed",
+    "aria-label": "Professional Information — tap to view",
+    onClick: () => setExpanded(true)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-menu-collapsed-top"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "pm-steps-h"
+  }, "Professional Information"), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "var(--gray-400)"
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "pm-steps-sub"
+  }, "Services, Experience, Education, Licenses & Languages"), /*#__PURE__*/React.createElement("div", {
+    className: "pm-menu-tags"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-menu-tag"
+  }, services.length, " Services"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-menu-tag"
+  }, experience.length, " Experience"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-menu-tag"
+  }, licenses.length, " Certifications"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-menu-tag"
+  }, languages.length, " Languages"))), /*#__PURE__*/React.createElement("div", {
+    ref: expandedRef,
+    className: "pm-menu-pane pm-menu-expanded"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-menu-back",
+    onClick: () => setExpanded(false)
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-left",
+    size: 20,
+    color: "var(--text-heading)"
+  }), "Professional Information"), /*#__PURE__*/React.createElement(PMSection, {
+    title: "Services"
+  }, services.map((s, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pm-lrow",
+    key: i
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, s.ti), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, s.su)))), /*#__PURE__*/React.createElement(PMSection, {
+    title: "Experience"
+  }, experience.map((e, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pm-lrow",
+    key: i
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, e.ti), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, e.yrs), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, e.org), /*#__PURE__*/React.createElement("div", {
+    className: "su flag"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "fl"
+  }, "🇬🇧"), e.loc)))), /*#__PURE__*/React.createElement(PMSection, {
+    title: "Education"
+  }, education.map((ed, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pm-lrow media",
+    key: i
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-logo"
+  }, ed.logo), /*#__PURE__*/React.createElement("div", {
+    className: "meta"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, ed.school), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, ed.program), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, ed.years))))), /*#__PURE__*/React.createElement(PMSection, {
+    title: "Licenses & Certifications"
+  }, licenses.map((l, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pm-lrow media",
+    key: i
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-logo cert"
+  }, "P"), /*#__PURE__*/React.createElement("div", {
+    className: "meta"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, l), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, "Profinity Academy"), /*#__PURE__*/React.createElement("div", {
+    className: "su muted"
+  }, "Issued January 2008"))))), /*#__PURE__*/React.createElement(PMSection, {
+    title: "Language"
+  }, languages.map((lg, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pm-lrow",
+    key: i
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-lang"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "fl"
+  }, lg.flag), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, lg.name), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, lg.level)))))))));
+}
+
+/* ===========================================================================
+   Viewing someone else's profile — ProfileMobile.html?id=<key>. A shorter,
+   read-only take on the same page: identity header with Follow/Message
+   (instead of Edit/Share), then everything laid out as scannable cards —
+   what you share with them, a summarised recent-activity card, and their
+   Professional Information behind the same enclosed menu used above.
+   =========================================================================== */
+function OtherProfileTopBar({
+  name,
+  onBack,
+  onMessage
+}) {
+  return /*#__PURE__*/React.createElement("header", {
+    className: "pm-top"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "pm-burger",
+    "aria-label": "Back",
+    onClick: onBack
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:arrow-left",
+    size: 24,
+    color: "var(--gray-700)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pm-top-other-name"
+  }, name), /*#__PURE__*/React.createElement("span", {
+    className: "grow"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "pm-iconbtn",
+    "aria-label": "Message",
+    onClick: onMessage
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:message-circle",
+    size: 21,
+    color: "var(--brand-navy)"
+  })));
+}
+function PMSharedInfoCard({
+  user
+}) {
+  const shared = user.shared || {};
+  const courses = shared.courses || [];
+  return /*#__PURE__*/React.createElement("section", {
+    className: "pm-sec pm-card",
+    "data-screen-label": "Shared with you"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-card-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-card-hd-ti"
+  }, /*#__PURE__*/React.createElement("h2", null, "Shared with you"))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-shared-grid"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-shared-item"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:users",
+    size: 18,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, shared.mutualConnections != null ? shared.mutualConnections : "—"), /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "Mutual connections")), /*#__PURE__*/React.createElement("div", {
+    className: "pm-shared-item"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:crown",
+    size: 18,
+    color: "var(--brand-gold)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, shared.community || "—"), /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "Shared community")), /*#__PURE__*/React.createElement("div", {
+    className: "pm-shared-item"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:book-open",
+    size: 18,
+    color: "var(--ai-purple)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, courses.length), /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "Shared courses"))), courses.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "pm-shared-courses"
+  }, courses.map((c, i) => /*#__PURE__*/React.createElement("span", {
+    className: "pm-shared-course-chip",
+    key: i
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:book-open",
+    size: 13,
+    color: "var(--brand-navy)"
+  }), c))));
+}
+function PMActivitySummaryCard({
+  user
+}) {
+  const activity = user.activity || {};
+  const highlights = activity.highlights || [];
+  return /*#__PURE__*/React.createElement("section", {
+    className: "pm-sec pm-card",
+    "data-screen-label": "Recent activity"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-card-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-card-hd-ti"
+  }, /*#__PURE__*/React.createElement("h2", null, "Recent Activity")), activity.lastActive && /*#__PURE__*/React.createElement("span", {
+    className: "pm-activity-lastactive"
+  }, "Active ", activity.lastActive)), /*#__PURE__*/React.createElement("div", {
+    className: "pm-activity-summary-rows"
+  }, highlights.map((h, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pm-activity-summary-row",
+    key: i
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: h.icon,
+    size: 16,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, h.text), /*#__PURE__*/React.createElement("span", {
+    className: "tm"
+  }, h.time))), highlights.length === 0 && /*#__PURE__*/React.createElement("p", {
+    className: "pm-steps-sub"
+  }, "No recent activity to show yet.")), /*#__PURE__*/React.createElement("button", {
+    className: "pm-showall",
+    onClick: () => goPM("NewsfeedMobile.html")
+  }, "View full activity"));
+}
+function OtherProfileScreen({
+  user
+}) {
+  const [msgOpen, setMsgOpen] = useStatePM(false);
+  const [following, setFollowing] = useStatePM(false);
+  const scrollRef = React.useRef(null);
+  const chromeHidden = useHeaderHidePM(scrollRef);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-screen",
+    "data-screen-label": "Profile — " + user.name
+  }, /*#__PURE__*/React.createElement(OtherProfileTopBar, {
+    name: user.name,
+    onBack: () => goPM("NewsfeedMobile.html"),
+    onMessage: () => setMsgOpen(true)
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pm-scroll",
+    ref: scrollRef
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-top"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-avwrap"
+  }, /*#__PURE__*/React.createElement(DSPM.Avatar, {
+    name: user.name,
+    src: user.avatar,
+    size: 92,
+    className: "pm-ig-av"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-stats"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-stat"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, user.posts), /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "posts")), /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-stat"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, user.followers), /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "followers")), /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-stat"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, user.following), /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "following")))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-name"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nm"
+  }, user.name), /*#__PURE__*/React.createElement("span", {
+    className: "pn"
+  }, user.role), user.seals && /*#__PURE__*/React.createElement(DSPM.VerificationSeals, {
+    seals: user.seals,
+    size: 20
+  })), user.bio && /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-bio"
+  }, /*#__PURE__*/React.createElement("p", null, user.bio)), /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-chips"
+  }, user.location && /*#__PURE__*/React.createElement("span", {
+    className: "pm-chip"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:map-pin",
+    size: 16,
+    color: "var(--brand-navy)"
+  }), user.location), user.clinic && /*#__PURE__*/React.createElement("span", {
+    className: "pm-chip"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:building-2",
+    size: 16,
+    color: "var(--brand-navy)"
+  }), user.clinic)), /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "pm-ig-btn" + (following ? "" : " navy"),
+    onClick: () => setFollowing(f => !f)
+  }, following ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:check",
+    size: 16,
+    color: "var(--text-heading)"
+  }), "Following") : "Follow"), /*#__PURE__*/React.createElement("button", {
+    className: "pm-ig-btn",
+    onClick: () => setMsgOpen(true)
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:message-circle",
+    size: 16,
+    color: "var(--text-heading)"
+  }), "Message"))), /*#__PURE__*/React.createElement(PMSharedInfoCard, {
+    user: user
+  }), /*#__PURE__*/React.createElement(PMActivitySummaryCard, {
+    user: user
+  }), /*#__PURE__*/React.createElement(PMProfessionalInfoMenu, {
+    services: user.services,
+    experience: user.experience,
+    education: user.education,
+    licenses: user.licenses,
+    languages: user.languages
+  })), /*#__PURE__*/React.createElement(PMTabBar, {
+    compact: chromeHidden
+  }), /*#__PURE__*/React.createElement(MessagesPanelPM, {
+    open: msgOpen,
+    onClose: () => setMsgOpen(false)
+  }));
+}
+function ProfileNotFoundScreen() {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-screen",
+    "data-screen-label": "Profile not found"
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "pm-top"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "pm-burger",
+    "aria-label": "Back",
+    onClick: () => goPM("NewsfeedMobile.html")
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:arrow-left",
+    size: 24,
+    color: "var(--gray-700)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-empty-state"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:user-x",
+    size: 40,
+    color: "var(--gray-400)"
+  }), /*#__PURE__*/React.createElement("h2", null, "Profile not found"), /*#__PURE__*/React.createElement("p", null, "This profile may have been removed, or the link is out of date."), /*#__PURE__*/React.createElement("button", {
+    className: "pm-ig-btn navy",
+    onClick: () => goPM("NewsfeedMobile.html")
+  }, "Back to Home")));
+}
+function readProfileIdParamPM() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      id: params.get("id"),
+      name: params.get("name"),
+      avatar: params.get("avatar")
+    };
+  } catch (e) {
+    return {
+      id: null,
+      name: null,
+      avatar: null
+    };
+  }
+}
+
+/* Fallback profile for the seeded post/comment authors across the Newsfeed
+   and Community that don't have a curated PM_OTHER_USERS entry — every post
+   author is clickable, so anyone not on the curated list still lands
+   somewhere real rather than a dead-end "not found" page. Deliberately
+   light: explicit empty arrays (not undefined) for services/experience/
+   education/licenses/languages, so PMProfessionalInfoMenu's own defaults —
+   which fall back to the signed-in member's own info — never leak onto a
+   stranger's profile. */
+function buildMinimalProfilePM(name, avatar) {
+  return {
+    name,
+    avatar: avatar || undefined,
+    role: "Profinity Community Member",
+    posts: "—",
+    followers: "—",
+    following: "—",
+    shared: {},
+    activity: {},
+    services: [],
+    experience: [],
+    education: [],
+    licenses: [],
+    languages: []
+  };
 }
 function useDeviceScalePM() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
@@ -2894,82 +3602,7 @@ function PMScreen() {
     onAssessPatch: patchAssessState
   }), /*#__PURE__*/React.createElement(PMGoalsMenu, {
     assessState: assessState
-  }), /*#__PURE__*/React.createElement(PMMentor, null), /*#__PURE__*/React.createElement(PMActivity, null), /*#__PURE__*/React.createElement(PMSection, {
-    title: "Services"
-  }, PM_SERVICES.map((s, i) => /*#__PURE__*/React.createElement("div", {
-    className: "pm-lrow",
-    key: i
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ti"
-  }, s.ti), /*#__PURE__*/React.createElement("div", {
-    className: "su"
-  }, s.su)))), /*#__PURE__*/React.createElement(PMSection, {
-    title: "Experience"
-  }, PM_EXPERIENCE.map((e, i) => /*#__PURE__*/React.createElement("div", {
-    className: "pm-lrow",
-    key: i
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ti"
-  }, e.ti), /*#__PURE__*/React.createElement("div", {
-    className: "su"
-  }, e.yrs), /*#__PURE__*/React.createElement("div", {
-    className: "su"
-  }, e.org), /*#__PURE__*/React.createElement("div", {
-    className: "su flag"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "fl"
-  }, "🇬🇧"), e.loc)))), /*#__PURE__*/React.createElement(PMSection, {
-    title: "Education"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-lrow media"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-logo"
-  }, "JH"), /*#__PURE__*/React.createElement("div", {
-    className: "meta"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ti"
-  }, "Johns Hopkins University of USA"), /*#__PURE__*/React.createElement("div", {
-    className: "su"
-  }, "Clinical Foundations of Medicine"), /*#__PURE__*/React.createElement("div", {
-    className: "su"
-  }, "1990 - 2020")))), /*#__PURE__*/React.createElement(PMSection, {
-    title: "Licenses & Certifications"
-  }, PM_LICENSES.map((l, i) => /*#__PURE__*/React.createElement("div", {
-    className: "pm-lrow media",
-    key: i
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-logo cert"
-  }, "P"), /*#__PURE__*/React.createElement("div", {
-    className: "meta"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ti"
-  }, l), /*#__PURE__*/React.createElement("div", {
-    className: "su"
-  }, "Profinity Academy"), /*#__PURE__*/React.createElement("div", {
-    className: "su muted"
-  }, "Issued January 2008"))))), /*#__PURE__*/React.createElement(PMSection, {
-    title: "Language"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-lrow"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-lang"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "fl"
-  }, "🇬🇧"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "ti"
-  }, "English (UK)"), /*#__PURE__*/React.createElement("div", {
-    className: "su"
-  }, "Primary")))), /*#__PURE__*/React.createElement("div", {
-    className: "pm-lrow"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-lang"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "fl"
-  }, "🇮🇹"), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "ti"
-  }, "Italian"), /*#__PURE__*/React.createElement("div", {
-    className: "su"
-  }, "Secondary"))))), /*#__PURE__*/React.createElement("button", {
+  }), /*#__PURE__*/React.createElement(PMMentor, null), /*#__PURE__*/React.createElement(PMActivityMenu, null), /*#__PURE__*/React.createElement(PMProfessionalInfoMenu, null), /*#__PURE__*/React.createElement("button", {
     className: "pm-logout",
     onClick: () => goPM("NewsfeedMobile.html")
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
@@ -2993,6 +3626,15 @@ function ProfileMobileApp() {
     "--action-primary": "var(--brand-navy)",
     "--action-primary-hover": "var(--brand-navy-700)"
   };
+  const {
+    id: idParam,
+    name: nameParam,
+    avatar: avatarParam
+  } = readProfileIdParamPM();
+  const otherUser = idParam ? PM_OTHER_USERS[idParam] || (nameParam ? buildMinimalProfilePM(nameParam, avatarParam) : null) : null;
+  const content = idParam ? otherUser ? /*#__PURE__*/React.createElement(OtherProfileScreen, {
+    user: otherUser
+  }) : /*#__PURE__*/React.createElement(ProfileNotFoundScreen, null) : /*#__PURE__*/React.createElement(PMScreen, null);
   if (mobile) {
     return /*#__PURE__*/React.createElement("div", {
       className: "app",
@@ -3000,7 +3642,7 @@ function ProfileMobileApp() {
         ...vars,
         background: "var(--surface-card)"
       }
-    }, /*#__PURE__*/React.createElement(PMScreen, null));
+    }, content);
   }
   return /*#__PURE__*/React.createElement("div", {
     className: "app device-stage",
@@ -3013,6 +3655,6 @@ function ProfileMobileApp() {
   }, /*#__PURE__*/React.createElement(IOSDevice, {
     width: 440,
     height: 956
-  }, /*#__PURE__*/React.createElement(PMScreen, null))));
+  }, content)));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(ProfileMobileApp, null));

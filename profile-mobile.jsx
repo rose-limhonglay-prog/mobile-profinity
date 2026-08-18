@@ -330,6 +330,18 @@ const PM_LICENSES = [
 "Botox Foundations"];
 
 
+/* Education + Language — pulled out of inline markup into data so the
+   "Professional Information" menu (below) can render the same rows for
+   either the owner's profile or another member's, from props. */
+const PM_EDUCATION = [
+{ logo: "JH", school: "Johns Hopkins University of USA", program: "Clinical Foundations of Medicine", years: "1990 - 2020" }];
+
+
+const PM_LANGUAGES = [
+{ flag: "🇬🇧", name: "English (UK)", level: "Primary" },
+{ flag: "🇮🇹", name: "Italian", level: "Secondary" }];
+
+
 const PM_ACTIVITY = [
 {
   name: "Katy Wilson", loc: "London, United Kingdom", time: "Today", avatar: "assets/avatar-katy.jpg",
@@ -339,16 +351,89 @@ const PM_ACTIVITY = [
 },
 {
   name: "James Lee", loc: "Sydney, Australia", time: "Yesterday", avatar: null,
+  /* "id" links a post's author to their profile — see PMPost + ProfileMobile's
+     "?id=" viewer mode (PM_OTHER_USERS) below. Katy is the profile owner, so
+     her own posts don't need a link back to this same page. */
+  id: "james-lee",
   title: "Advanced Suturing Techniques",
   body: "In my surgical practice, time is precious. That's why I was thrilled to discover the ease of digital record-keeping with PROfinity. Documentation has never been simpler — everything I need is just a few taps away.\n#Surgery #PatientSafety #MedicalTech #PROfinity",
   likes: "850", comments: "200", shares: "180"
 },
 {
   name: "Linda Garcia", loc: "Toronto, Canada", time: "Last Week", avatar: null,
+  id: "linda-garcia",
   title: "Emerging Technologies in Dentistry",
   body: "The dental field is evolving rapidly, and so should our approach to documentation. From treatment plans to follow-up notes, everything is handled digitally — less clutter, more focus on patient interactions.\n#DentalCare #TechInDentistry #PROfinity #FutureOfHealthcare",
   likes: "1.5K", comments: "120", shares: "200"
 }];
+
+/* ===========================================================================
+   Viewing someone else's profile (ProfileMobile.html?id=<key>) — a lighter,
+   read-only take on the same page: shared context + a summarised activity
+   feed instead of the owner-only "Complete your profile" / "Track your
+   goals" checklists. Keyed by the same ids PMPost links out to. Mock data
+   only — a real build would fetch this by id.
+   =========================================================================== */
+const PM_OTHER_USERS = {
+  "james-lee": {
+    name: "James Lee", role: "Surgical Nurse Practitioner", avatar: null, seals: ["verified"],
+    bio: "Surgical nurse practitioner specialising in advanced suturing and post-operative care. Sharing what I learn, one case at a time.",
+    location: "Sydney, Australia", clinic: "Sydney Aesthetic Group",
+    posts: "34", followers: "612", following: "205",
+    shared: { mutualConnections: 8, community: "Confidence Path", courses: ["8D Lip Design"] },
+    activity: { lastActive: "1h ago", highlights: [
+      { icon: "lucide:file-text", text: "Posted “Advanced Suturing Techniques”", time: "Yesterday" },
+      { icon: "lucide:message-circle", text: "Commented on 3 posts this week", time: "2d" },
+      { icon: "lucide:thumbs-up", text: "Liked your “Temple Filler Techniques” post", time: "3d" }] },
+    services: [
+      { ti: "Advanced Suturing", su: "Career Academy: Dr Tim Pearce" },
+      { ti: "Post-Operative Wound Care", su: "Career Academy: Dr Tim Pearce" }],
+    experience: [
+      { ti: "Surgical Nurse Practitioner", yrs: "9 years", org: "Sydney Aesthetic Group", loc: "Sydney, Australia" }],
+    education: [
+      { logo: "UoS", school: "University of Sydney", program: "Bachelor of Nursing", years: "2011 - 2015" }],
+    licenses: ["Advanced Suturing Certification", "Anatomy360"],
+    languages: [{ flag: "🇦🇺", name: "English (AU)", level: "Primary" }]
+  },
+  "linda-garcia": {
+    name: "Linda Garcia", role: "Dental Practitioner", avatar: null, seals: ["verified"],
+    bio: "Dentist exploring emerging technologies in digital dentistry and paperless patient care.",
+    location: "Toronto, Canada", clinic: "Garcia Dental Studio",
+    posts: "21", followers: "398", following: "150",
+    shared: { mutualConnections: 5, community: "Confidence Path", courses: [] },
+    activity: { lastActive: "5h ago", highlights: [
+      { icon: "lucide:file-text", text: "Posted “Emerging Technologies in Dentistry”", time: "Last week" },
+      { icon: "lucide:thumbs-up", text: "Liked 2 of your posts", time: "1w" }] },
+    services: [{ ti: "Digital Treatment Planning", su: "Career Academy: Dr Tim Pearce" }],
+    experience: [{ ti: "Dental Practitioner", yrs: "7 years", org: "Garcia Dental Studio", loc: "Toronto, Canada" }],
+    education: [{ logo: "UoT", school: "University of Toronto", program: "Doctor of Dental Surgery", years: "2013 - 2017" }],
+    licenses: ["Botox Foundations"],
+    languages: [
+    { flag: "🇨🇦", name: "English (CA)", level: "Primary" },
+    { flag: "🇪🇸", name: "Spanish", level: "Secondary" }]
+  },
+  "dr-tim-pearce": {
+    name: "Dr Tim Pearce", role: "Founder & Lead Trainer, PROfinity Academy", avatar: "assets/avatar-drtim.png", seals: ["verified", "crown", "gold"],
+    bio: "Founder of PROfinity Academy — training the next generation of aesthetic practitioners in safe, confident injectable technique.",
+    location: "London, United Kingdom", clinic: "PROfinity Academy",
+    posts: "212", followers: "18.4K", following: "310",
+    shared: { mutualConnections: 24, community: "Confidence Path", courses: ["8D Lip Design", "Protox Course", "Temple Filler"] },
+    activity: { lastActive: "Just now", highlights: [
+      { icon: "lucide:file-text", text: "Posted a new Technique Tuesday recap", time: "Today" },
+      { icon: "lucide:message-circle", text: "Commented on your “Temple Filler Techniques” post", time: "Today" },
+      { icon: "lucide:calendar-check", text: "Hosting Technique Tuesday Webinar", time: "30 Jun" }] },
+    services: [
+      { ti: "Botox (Anti-Wrinkle Injections)", su: "Career Academy: Dr Tim Pearce" },
+      { ti: "Dermal Fillers", su: "Career Academy: Dr Tim Pearce" },
+      { ti: "Full-Face Rejuvenation", su: "Career Academy: Dr Tim Pearce" }],
+    experience: [
+      { ti: "Founder & Lead Trainer", yrs: "15 years", org: "PROfinity Academy", loc: "London, United Kingdom" },
+      { ti: "Consultant Aesthetic Practitioner", yrs: "20 years", org: "Allcare Medical", loc: "London, United Kingdom" }],
+    education: [{ logo: "UCL", school: "University College London", program: "MBBS Medicine", years: "1998 - 2004" }],
+    licenses: ["Anatomy360", "Pro Tox Course", "8D Lips Course", "Botox Foundations", "The Ultimate Toxin Eye Complications Masterclass"],
+    languages: [{ flag: "🇬🇧", name: "English (UK)", level: "Primary" }]
+  }
+};
 
 
 const PM_TABS = [
@@ -1707,12 +1792,23 @@ function PMMentor() {
 
 function PMPost({ p }) {
   const lines = p.body.split("\n");
+  const openAuthor = () => p.id && goPM("ProfileMobile.html?id=" + p.id);
   return (
     <article className="pm-post">
       <div className="pm-post-hd">
+        {p.id ?
+        <button type="button" className="pm-post-avbtn" aria-label={"View " + p.name + "'s profile"} onClick={openAuthor}>
+            <DSPM.Avatar name={p.name} src={p.avatar} size={42} />
+          </button> :
         <DSPM.Avatar name={p.name} src={p.avatar} size={42} />
+        }
         <div className="pm-post-by">
-          <span className="nm">{p.name}<span className="loc">{p.loc}</span></span>
+          <span className="nm">
+            {p.id ?
+            <button type="button" className="pm-post-namebtn" onClick={openAuthor}>{p.name}</button> :
+            p.name}
+            <span className="loc">{p.loc}</span>
+          </span>
           <span className="tm">{p.time}</span>
         </div>
         <button className="pm-post-more" aria-label="More options"><DSPM.IconifyIcon name="lucide:more-horizontal" size={20} color="var(--gray-450)" /></button>
@@ -1728,16 +1824,332 @@ function PMPost({ p }) {
 
 }
 
-function PMActivity() {
+/* "Activity" — encloses the post feed behind the same collapse/expand
+   slide-over used by "Complete your profile" / "Track your goals" (shared
+   .pm-menu-* classes; see profile-mobile.css). */
+function PMActivityMenu() {
+  const [expanded, setExpanded] = useStatePM(false);
+  const { collapsedRef, expandedRef, height: viewportH } = usePMSlidePaneHeight(expanded, []);
+  const latest = PM_ACTIVITY[0];
   return (
-    <section className="pm-sec">
-      <div className="pm-sec-h"><h2 style={{ fontSize: "20px" }}>Activity</h2></div>
-      <div className="pm-activity">
-        {PM_ACTIVITY.map((p, i) => <PMPost key={i} p={p} />)}
+    <div className="pm-menu-viewport" style={viewportH != null ? { height: viewportH + "px" } : undefined}>
+      <div className={"pm-menu-slider" + (expanded ? " expanded" : "")}>
+        <button type="button" ref={collapsedRef} className="pm-menu-pane pm-menu-collapsed" aria-label="Activity — tap to view" onClick={() => setExpanded(true)}>
+          <div className="pm-menu-collapsed-top">
+            <h3 className="pm-steps-h">Activity</h3>
+            <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
+          </div>
+          <p className="pm-steps-sub">{PM_ACTIVITY.length} recent posts &amp; updates</p>
+          {latest &&
+          <div className="pm-menu-preview">
+              <DSPM.Avatar name={latest.name} src={latest.avatar} size={28} />
+              <span className="pm-menu-preview-tx"><b>{latest.name}</b> · {latest.title}</span>
+              <span className="pm-menu-preview-time">{latest.time}</span>
+            </div>
+          }
+        </button>
+
+        <div ref={expandedRef} className="pm-menu-pane pm-menu-expanded">
+          <button type="button" className="pm-menu-back" onClick={() => setExpanded(false)}>
+            <DSPM.IconifyIcon name="lucide:chevron-left" size={20} color="var(--text-heading)" />Activity
+          </button>
+          <div className="pm-menu-content">
+            <div className="pm-activity">
+              {PM_ACTIVITY.map((p, i) => <PMPost key={i} p={p} />)}
+            </div>
+            <button className="pm-showall" onClick={() => goPM("NewsfeedMobile.html")}>Show all posts</button>
+          </div>
+        </div>
       </div>
-      <button className="pm-showall" onClick={() => goPM("NewsfeedMobile.html")}>Show all posts</button>
+    </div>);
+
+}
+
+/* "Professional Information" — encloses Services, Experience, Education,
+   Licenses & Certifications and Language behind the same collapse/expand
+   pattern. Accepts data via props so the exact same component renders a
+   member's own info (defaults) or another member's (OtherProfileScreen). */
+function PMProfessionalInfoMenu({
+  services = PM_SERVICES,
+  experience = PM_EXPERIENCE,
+  education = PM_EDUCATION,
+  licenses = PM_LICENSES,
+  languages = PM_LANGUAGES
+}) {
+  const [expanded, setExpanded] = useStatePM(false);
+  const { collapsedRef, expandedRef, height: viewportH } = usePMSlidePaneHeight(expanded, [services, experience, education, licenses, languages]);
+  return (
+    <div className="pm-menu-viewport" style={viewportH != null ? { height: viewportH + "px" } : undefined}>
+      <div className={"pm-menu-slider" + (expanded ? " expanded" : "")}>
+        <button type="button" ref={collapsedRef} className="pm-menu-pane pm-menu-collapsed" aria-label="Professional Information — tap to view" onClick={() => setExpanded(true)}>
+          <div className="pm-menu-collapsed-top">
+            <h3 className="pm-steps-h">Professional Information</h3>
+            <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
+          </div>
+          <p className="pm-steps-sub">Services, Experience, Education, Licenses &amp; Languages</p>
+          <div className="pm-menu-tags">
+            <span className="pm-menu-tag">{services.length} Services</span>
+            <span className="pm-menu-tag">{experience.length} Experience</span>
+            <span className="pm-menu-tag">{licenses.length} Certifications</span>
+            <span className="pm-menu-tag">{languages.length} Languages</span>
+          </div>
+        </button>
+
+        <div ref={expandedRef} className="pm-menu-pane pm-menu-expanded">
+          <button type="button" className="pm-menu-back" onClick={() => setExpanded(false)}>
+            <DSPM.IconifyIcon name="lucide:chevron-left" size={20} color="var(--text-heading)" />Professional Information
+          </button>
+
+          <PMSection title="Services">
+            {services.map((s, i) =>
+            <div className="pm-lrow" key={i}>
+                <div className="ti">{s.ti}</div>
+                <div className="su">{s.su}</div>
+              </div>
+            )}
+          </PMSection>
+
+          <PMSection title="Experience">
+            {experience.map((e, i) =>
+            <div className="pm-lrow" key={i}>
+                <div className="ti">{e.ti}</div>
+                <div className="su">{e.yrs}</div>
+                <div className="su">{e.org}</div>
+                <div className="su flag"><span className="fl">🇬🇧</span>{e.loc}</div>
+              </div>
+            )}
+          </PMSection>
+
+          <PMSection title="Education">
+            {education.map((ed, i) =>
+            <div className="pm-lrow media" key={i}>
+                <div className="pm-logo">{ed.logo}</div>
+                <div className="meta">
+                  <div className="ti">{ed.school}</div>
+                  <div className="su">{ed.program}</div>
+                  <div className="su">{ed.years}</div>
+                </div>
+              </div>
+            )}
+          </PMSection>
+
+          <PMSection title="Licenses & Certifications">
+            {licenses.map((l, i) =>
+            <div className="pm-lrow media" key={i}>
+                <div className="pm-logo cert">P</div>
+                <div className="meta">
+                  <div className="ti">{l}</div>
+                  <div className="su">Profinity Academy</div>
+                  <div className="su muted">Issued January 2008</div>
+                </div>
+              </div>
+            )}
+          </PMSection>
+
+          <PMSection title="Language">
+            {languages.map((lg, i) =>
+            <div className="pm-lrow" key={i}>
+                <div className="pm-lang"><span className="fl">{lg.flag}</span><div><div className="ti">{lg.name}</div><div className="su">{lg.level}</div></div></div>
+              </div>
+            )}
+          </PMSection>
+        </div>
+      </div>
+    </div>);
+
+}
+
+/* ===========================================================================
+   Viewing someone else's profile — ProfileMobile.html?id=<key>. A shorter,
+   read-only take on the same page: identity header with Follow/Message
+   (instead of Edit/Share), then everything laid out as scannable cards —
+   what you share with them, a summarised recent-activity card, and their
+   Professional Information behind the same enclosed menu used above.
+   =========================================================================== */
+function OtherProfileTopBar({ name, onBack, onMessage }) {
+  return (
+    <header className="pm-top">
+      <button className="pm-burger" aria-label="Back" onClick={onBack}><DSPM.IconifyIcon name="lucide:arrow-left" size={24} color="var(--gray-700)" /></button>
+      <span className="pm-top-other-name">{name}</span>
+      <span className="grow" />
+      <button className="pm-iconbtn" aria-label="Message" onClick={onMessage}>
+        <DSPM.IconifyIcon name="lucide:message-circle" size={21} color="var(--brand-navy)" />
+      </button>
+    </header>);
+
+}
+
+function PMSharedInfoCard({ user }) {
+  const shared = user.shared || {};
+  const courses = shared.courses || [];
+  return (
+    <section className="pm-sec pm-card" data-screen-label="Shared with you">
+      <div className="pm-card-hd">
+        <span className="pm-card-hd-ti"><h2>Shared with you</h2></span>
+      </div>
+      <div className="pm-shared-grid">
+        <div className="pm-shared-item">
+          <DSPM.IconifyIcon name="lucide:users" size={18} color="var(--brand-navy)" />
+          <span className="n">{shared.mutualConnections != null ? shared.mutualConnections : "—"}</span>
+          <span className="l">Mutual connections</span>
+        </div>
+        <div className="pm-shared-item">
+          <DSPM.IconifyIcon name="lucide:crown" size={18} color="var(--brand-gold)" />
+          <span className="n">{shared.community || "—"}</span>
+          <span className="l">Shared community</span>
+        </div>
+        <div className="pm-shared-item">
+          <DSPM.IconifyIcon name="lucide:book-open" size={18} color="var(--ai-purple)" />
+          <span className="n">{courses.length}</span>
+          <span className="l">Shared courses</span>
+        </div>
+      </div>
+      {courses.length > 0 &&
+      <div className="pm-shared-courses">
+          {courses.map((c, i) =>
+          <span className="pm-shared-course-chip" key={i}>
+              <DSPM.IconifyIcon name="lucide:book-open" size={13} color="var(--brand-navy)" />{c}
+            </span>
+          )}
+        </div>
+      }
     </section>);
 
+}
+
+function PMActivitySummaryCard({ user }) {
+  const activity = user.activity || {};
+  const highlights = activity.highlights || [];
+  return (
+    <section className="pm-sec pm-card" data-screen-label="Recent activity">
+      <div className="pm-card-hd">
+        <span className="pm-card-hd-ti"><h2>Recent Activity</h2></span>
+        {activity.lastActive && <span className="pm-activity-lastactive">Active {activity.lastActive}</span>}
+      </div>
+      <div className="pm-activity-summary-rows">
+        {highlights.map((h, i) =>
+        <div className="pm-activity-summary-row" key={i}>
+            <span className="ic"><DSPM.IconifyIcon name={h.icon} size={16} color="var(--brand-navy)" /></span>
+            <span className="tx">{h.text}</span>
+            <span className="tm">{h.time}</span>
+          </div>
+        )}
+        {highlights.length === 0 && <p className="pm-steps-sub">No recent activity to show yet.</p>}
+      </div>
+      <button className="pm-showall" onClick={() => goPM("NewsfeedMobile.html")}>View full activity</button>
+    </section>);
+
+}
+
+function OtherProfileScreen({ user }) {
+  const [msgOpen, setMsgOpen] = useStatePM(false);
+  const [following, setFollowing] = useStatePM(false);
+  const scrollRef = React.useRef(null);
+  const chromeHidden = useHeaderHidePM(scrollRef);
+  return (
+    <div className="pm-screen" data-screen-label={"Profile — " + user.name}>
+      <OtherProfileTopBar name={user.name} onBack={() => goPM("NewsfeedMobile.html")} onMessage={() => setMsgOpen(true)} />
+      <div className="pm-scroll" ref={scrollRef}>
+        <div className="pm-ig">
+          <div className="pm-ig-top">
+            <div className="pm-ig-avwrap">
+              <DSPM.Avatar name={user.name} src={user.avatar} size={92} className="pm-ig-av" />
+            </div>
+            <div className="pm-ig-stats">
+              <div className="pm-ig-stat"><span className="n">{user.posts}</span><span className="l">posts</span></div>
+              <div className="pm-ig-stat"><span className="n">{user.followers}</span><span className="l">followers</span></div>
+              <div className="pm-ig-stat"><span className="n">{user.following}</span><span className="l">following</span></div>
+            </div>
+          </div>
+
+          <div className="pm-ig-name">
+            <span className="nm">{user.name}</span>
+            <span className="pn">{user.role}</span>
+            {user.seals && <DSPM.VerificationSeals seals={user.seals} size={20} />}
+          </div>
+
+          {user.bio && <div className="pm-ig-bio"><p>{user.bio}</p></div>}
+
+          <div className="pm-ig-chips">
+            {user.location && <span className="pm-chip"><DSPM.IconifyIcon name="lucide:map-pin" size={16} color="var(--brand-navy)" />{user.location}</span>}
+            {user.clinic && <span className="pm-chip"><DSPM.IconifyIcon name="lucide:building-2" size={16} color="var(--brand-navy)" />{user.clinic}</span>}
+          </div>
+
+          <div className="pm-ig-actions">
+            <button className={"pm-ig-btn" + (following ? "" : " navy")} onClick={() => setFollowing((f) => !f)}>
+              {following ?
+              <><DSPM.IconifyIcon name="lucide:check" size={16} color="var(--text-heading)" />Following</> :
+
+              "Follow"}
+            </button>
+            <button className="pm-ig-btn" onClick={() => setMsgOpen(true)}>
+              <DSPM.IconifyIcon name="lucide:message-circle" size={16} color="var(--text-heading)" />Message
+            </button>
+          </div>
+        </div>
+
+        <PMSharedInfoCard user={user} />
+        <PMActivitySummaryCard user={user} />
+        <PMProfessionalInfoMenu
+          services={user.services} experience={user.experience} education={user.education}
+          licenses={user.licenses} languages={user.languages} />
+
+      </div>
+      <PMTabBar compact={chromeHidden} />
+      <MessagesPanelPM open={msgOpen} onClose={() => setMsgOpen(false)} />
+    </div>);
+
+}
+
+function ProfileNotFoundScreen() {
+  return (
+    <div className="pm-screen" data-screen-label="Profile not found">
+      <header className="pm-top">
+        <button className="pm-burger" aria-label="Back" onClick={() => goPM("NewsfeedMobile.html")}>
+          <DSPM.IconifyIcon name="lucide:arrow-left" size={24} color="var(--gray-700)" />
+        </button>
+      </header>
+      <div className="pm-empty-state">
+        <DSPM.IconifyIcon name="lucide:user-x" size={40} color="var(--gray-400)" />
+        <h2>Profile not found</h2>
+        <p>This profile may have been removed, or the link is out of date.</p>
+        <button className="pm-ig-btn navy" onClick={() => goPM("NewsfeedMobile.html")}>Back to Home</button>
+      </div>
+    </div>);
+
+}
+
+function readProfileIdParamPM() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return { id: params.get("id"), name: params.get("name"), avatar: params.get("avatar") };
+  } catch (e) { return { id: null, name: null, avatar: null }; }
+}
+
+/* Fallback profile for the seeded post/comment authors across the Newsfeed
+   and Community that don't have a curated PM_OTHER_USERS entry — every post
+   author is clickable, so anyone not on the curated list still lands
+   somewhere real rather than a dead-end "not found" page. Deliberately
+   light: explicit empty arrays (not undefined) for services/experience/
+   education/licenses/languages, so PMProfessionalInfoMenu's own defaults —
+   which fall back to the signed-in member's own info — never leak onto a
+   stranger's profile. */
+function buildMinimalProfilePM(name, avatar) {
+  return {
+    name,
+    avatar: avatar || undefined,
+    role: "Profinity Community Member",
+    posts: "—",
+    followers: "—",
+    following: "—",
+    shared: {},
+    activity: {},
+    services: [],
+    experience: [],
+    education: [],
+    licenses: [],
+    languages: []
+  };
 }
 
 function useDeviceScalePM() {
@@ -1842,60 +2254,8 @@ function PMScreen() {
             <ProfileSteps assessState={assessState} onAssessPatch={patchAssessState} />
             <PMGoalsMenu assessState={assessState} />
             <PMMentor />
-            <PMActivity />
-
-            <PMSection title="Services">
-              {PM_SERVICES.map((s, i) =>
-              <div className="pm-lrow" key={i}>
-                  <div className="ti">{s.ti}</div>
-                  <div className="su">{s.su}</div>
-                </div>
-              )}
-            </PMSection>
-
-            <PMSection title="Experience">
-              {PM_EXPERIENCE.map((e, i) =>
-              <div className="pm-lrow" key={i}>
-                  <div className="ti">{e.ti}</div>
-                  <div className="su">{e.yrs}</div>
-                  <div className="su">{e.org}</div>
-                  <div className="su flag"><span className="fl">🇬🇧</span>{e.loc}</div>
-                </div>
-              )}
-            </PMSection>
-
-            <PMSection title="Education">
-              <div className="pm-lrow media">
-                <div className="pm-logo">JH</div>
-                <div className="meta">
-                  <div className="ti">Johns Hopkins University of USA</div>
-                  <div className="su">Clinical Foundations of Medicine</div>
-                  <div className="su">1990 - 2020</div>
-                </div>
-              </div>
-            </PMSection>
-
-            <PMSection title="Licenses & Certifications">
-              {PM_LICENSES.map((l, i) =>
-              <div className="pm-lrow media" key={i}>
-                  <div className="pm-logo cert">P</div>
-                  <div className="meta">
-                    <div className="ti">{l}</div>
-                    <div className="su">Profinity Academy</div>
-                    <div className="su muted">Issued January 2008</div>
-                  </div>
-                </div>
-              )}
-            </PMSection>
-
-            <PMSection title="Language">
-              <div className="pm-lrow">
-                <div className="pm-lang"><span className="fl">🇬🇧</span><div><div className="ti">English (UK)</div><div className="su">Primary</div></div></div>
-              </div>
-              <div className="pm-lrow">
-                <div className="pm-lang"><span className="fl">🇮🇹</span><div><div className="ti">Italian</div><div className="su">Secondary</div></div></div>
-              </div>
-            </PMSection>
+            <PMActivityMenu />
+            <PMProfessionalInfoMenu />
 
             <button className="pm-logout" onClick={() => goPM("NewsfeedMobile.html")}>
               <DSPM.IconifyIcon name="lucide:log-out" size={20} color="var(--error)" />Logout
@@ -1912,13 +2272,22 @@ function ProfileMobileApp() {
   const mobile = useIsMobilePM();
   const scale = useDeviceScalePM();
   const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
+  const { id: idParam, name: nameParam, avatar: avatarParam } = readProfileIdParamPM();
+  const otherUser = idParam ?
+  PM_OTHER_USERS[idParam] || (nameParam ? buildMinimalProfilePM(nameParam, avatarParam) : null) :
+  null;
+  const content = idParam ?
+  otherUser ? <OtherProfileScreen user={otherUser} /> : <ProfileNotFoundScreen /> :
+
+  <PMScreen />;
+
   if (mobile) {
-    return <div className="app" style={{ ...vars, background: "var(--surface-card)" }}><PMScreen /></div>;
+    return <div className="app" style={{ ...vars, background: "var(--surface-card)" }}>{content}</div>;
   }
   return (
     <div className="app device-stage" style={vars}>
       <div style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
-        <IOSDevice width={440} height={956}><PMScreen /></IOSDevice>
+        <IOSDevice width={440} height={956}>{content}</IOSDevice>
       </div>
     </div>);
 }

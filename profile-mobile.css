@@ -318,6 +318,69 @@ img{max-width:100%}
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:16px;color:var(--error)}
 .pm-logout:active{background:rgba(190,30,45,.12)}
 
+/* ===== "Activity" / "Professional Information" — enclosed collapse/expand
+   menus, generic .pm-menu-* shell mirroring the "Track your goals" pattern
+   above (.pm-goals-*) so any future section can reuse the same shell. ===== */
+.pm-menu-viewport{margin:16px 16px 4px;overflow:hidden;border-radius:16px;transition:height .38s cubic-bezier(.22,.61,.36,1)}
+.pm-menu-slider{display:flex;align-items:flex-start;width:200%;transition:transform .38s cubic-bezier(.22,.61,.36,1)}
+.pm-menu-slider.expanded{transform:translateX(-50%)}
+.pm-menu-pane{width:50%;flex:none;box-sizing:border-box;margin:0}
+.pm-menu-collapsed{display:block;width:50%;padding:18px 16px;background:var(--surface-sunken);
+  border:none;border-radius:16px;cursor:pointer;font:inherit;color:inherit;text-align:left;
+  -webkit-tap-highlight-color:transparent}
+.pm-menu-collapsed:active{background:var(--gray-150)}
+.pm-menu-collapsed-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pm-menu-expanded{display:flex;flex-direction:column}
+.pm-menu-back{display:flex;align-items:center;gap:4px;align-self:flex-start;margin:0 0 4px 20px;padding:0;
+  border:none;background:none;cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-bold);
+  font-size:19px;color:var(--text-heading);-webkit-tap-highlight-color:transparent}
+.pm-menu-back:active{opacity:.7}
+.pm-menu-content{padding:4px 20px 18px}
+
+/* collapsed-row preview bits — a latest-post strip for Activity, tag chips
+   for Professional Information */
+.pm-menu-preview{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border-default)}
+.pm-menu-preview-tx{flex:1;min-width:0;font-family:var(--font-sans);font-size:13.5px;color:var(--text-primary);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pm-menu-preview-tx b{color:var(--text-heading)}
+.pm-menu-preview-time{flex:none;font-family:var(--font-sans);font-size:12px;color:var(--gray-450)}
+.pm-menu-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.pm-menu-tag{padding:4px 10px;border-radius:100px;background:#fff;font-family:var(--font-sans);font-weight:var(--fw-semibold);
+  font-size:11.5px;color:var(--gray-600)}
+
+/* clickable post author (links out to that person's profile) */
+.pm-post-avbtn{border:none;background:none;padding:0;cursor:pointer;display:flex;-webkit-tap-highlight-color:transparent}
+.pm-post-namebtn{border:none;background:none;padding:0;margin:0;cursor:pointer;font:inherit;font-weight:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+.pm-post-namebtn:active,.pm-post-avbtn:active{opacity:.7}
+
+/* ===== Other member's profile (ProfileMobile.html?id=…) ===== */
+.pm-top-other-name{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:17px;color:var(--text-heading);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.pm-shared-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pm-shared-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 8px;border-radius:12px;
+  background:var(--surface-sunken);text-align:center}
+.pm-shared-item .n{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15px;color:var(--text-heading);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.pm-shared-item .l{font-family:var(--font-sans);font-size:11.5px;color:var(--gray-500);line-height:1.3}
+.pm-shared-courses{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.pm-shared-course-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:100px;
+  border:1px solid var(--border-default);font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:12.5px;color:var(--text-heading)}
+
+.pm-activity-lastactive{flex:none;font-family:var(--font-sans);font-size:12.5px;color:var(--gray-500)}
+.pm-activity-summary-rows{display:flex;flex-direction:column;gap:12px}
+.pm-activity-summary-row{display:flex;align-items:center;gap:10px}
+.pm-activity-summary-row .ic{flex:none;width:30px;height:30px;border-radius:9px;background:var(--surface-sunken);
+  display:flex;align-items:center;justify-content:center}
+.pm-activity-summary-row .tx{flex:1;min-width:0;font-family:var(--font-sans);font-size:14px;line-height:1.4;color:var(--text-primary)}
+.pm-activity-summary-row .tm{flex:none;font-family:var(--font-sans);font-size:12px;color:var(--gray-450)}
+
+.pm-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  gap:10px;padding:32px 32px calc(80px + env(safe-area-inset-bottom,0px))}
+.pm-empty-state h2{margin:6px 0 0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:19px;color:var(--text-heading)}
+.pm-empty-state p{margin:0 0 8px;font-family:var(--font-sans);font-size:14.5px;line-height:1.5;color:var(--gray-500);max-width:280px}
+.pm-empty-state .pm-ig-btn{flex:none;padding:12px 28px}
+
 /* focus rings — WCAG 2.2 AA */
 .pm-screen :focus-visible{outline:3px solid var(--brand-navy);outline-offset:2px;border-radius:6px}
 .pm-screen :focus:not(:focus-visible){outline:none}
