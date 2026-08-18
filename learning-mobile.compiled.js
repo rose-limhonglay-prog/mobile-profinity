@@ -154,6 +154,11 @@ const LM2_MY_COURSES = [{
 /* Confidence tier only sees the courses included in that membership —
    the full catalogue above is for higher tiers. */
 const LM2_MY_COURSES_CONFIDENCE = [{
+  image: IMG_L.membership,
+  level: "Beginner",
+  title: "Profinity Membership",
+  description: "Your welcome course — get the most out of your Confidence membership."
+}, {
   image: IMG_L.eightDLip,
   level: "Intermediate",
   title: "8D Lip Design",
@@ -161,11 +166,6 @@ const LM2_MY_COURSES_CONFIDENCE = [{
   progress: 20,
   lesson: 4,
   modulesLeft: 6
-}, {
-  image: IMG_L.membership,
-  level: "Beginner",
-  title: "Profinity Membership",
-  description: "Your welcome course — get the most out of your Confidence membership."
 }, {
   image: IMG_L.templeFiller,
   level: "Advanced",
