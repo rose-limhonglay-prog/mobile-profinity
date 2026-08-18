@@ -167,13 +167,41 @@ img { max-width: 100%; }
 .lm2-upgrade-btn:hover { background: var(--brand-navy-700); }
 .lm2-upgrade-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
 
+/* My Courses — first course gets a wider "featured" card, in progress +
+   resume CTA (mirrors Continue Learning), sitting in the same scroll rail
+   as the rest so it scrolls horizontally alongside them. */
+.lm2-coursecard-wide { flex: none; width: 380px; display: flex; flex-direction: column;
+  border-radius: var(--r-lg); overflow: hidden; background: var(--surface-card); border: 1px solid var(--border-default);
+  box-shadow: 0 1px 3px rgba(12,12,13,.05); }
+.lm2-coursecard-wide .thumb { position: relative; width: 100%; height: 180px; background-size: cover; background-position: center; }
+.lm2-coursecard-wide .thumb .lvl { position: absolute; left: 10px; top: 10px; font-size: 11px !important; padding: 4px 10px !important; }
+.lm2-coursecard-wide .body { padding: 13px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.lm2-coursecard-wide .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 16px; color: var(--brand-navy); line-height: 1.25; }
+.lm2-coursecard-wide .prog { display: flex; align-items: center; gap: 8px; }
+.lm2-coursecard-wide .prog .bar { flex: 1; display: block; height: 6px; border-radius: var(--r-pill); background: var(--gray-150); overflow: hidden; }
+.lm2-coursecard-wide .prog .bar > span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--premium-orange); }
+.lm2-coursecard-wide .prog .pct { flex: none; font-family: var(--font-sans); font-size: 12px; color: var(--gray-500); white-space: nowrap; }
+.lm2-coursecard-wide .ds { font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); line-height: 1.4;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lm2-coursecard-wide .by { font-family: var(--font-sans); font-size: 12.5px; font-weight: var(--fw-semibold); color: var(--brand-navy); }
+.lm2-coursecard-wide .foot { margin-top: auto; display: flex; align-items: center; justify-content: flex-end; }
+.lm2-resume-btn { margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; min-height: 42px; border: none; cursor: pointer;
+  background: var(--brand-navy); color: #fff; border-radius: 10px; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13.5px; }
+.lm2-resume-btn:hover { background: var(--brand-navy-700); }
+.lm2-resume-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+
 /* My Courses — horizontally-scrolling rail */
-.lm2-coursegrid { display: flex; gap: 12px; padding: 0 20px 6px; overflow-x: auto; scroll-snap-type: x proximity;
+/* Real spacer elements (not container padding) hold the leading/trailing
+   inset. No scroll-snap here — mobile engines can snap a scroll-snap
+   container to the first snap-aligned item's border box on initial layout,
+   which skips right past a leading inset (padding or spacer alike). */
+.lm2-coursegrid { display: flex; gap: 12px; padding: 0 0 6px; overflow-x: auto;
   -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.lm2-coursegrid-pad { flex: none; width: 8px; }
 .lm2-coursegrid::-webkit-scrollbar { display: none; }
-.lm2-coursecard { flex: none; width: 168px; scroll-snap-align: start; border: 1px solid var(--border-default); border-radius: var(--r-lg); overflow: hidden;
+.lm2-coursecard { flex: none; width: 380px; border: 1px solid var(--border-default); border-radius: var(--r-lg); overflow: hidden;
   background: var(--surface-card); box-shadow: 0 1px 3px rgba(12,12,13,.05); display: flex; flex-direction: column; }
-.lm2-coursecard .thumb { position: relative; height: 108px; background-size: cover; background-position: center; }
+.lm2-coursecard .thumb { position: relative; height: 180px; background-size: cover; background-position: center; }
 .lm2-coursecard .thumb .lvl { position: absolute; left: 10px; top: 10px; font-size: 11px !important; padding: 4px 10px !important; }
 .lm2-coursecard .body { padding: 13px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
 .lm2-coursecard .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--text-heading); line-height: 1.25;
@@ -181,7 +209,9 @@ img { max-width: 100%; }
 .lm2-coursecard .ds { font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); line-height: 1.4;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .lm2-coursecard .by { font-family: var(--font-sans); font-size: 12.5px; font-weight: var(--fw-semibold); color: var(--brand-navy); }
-.lm2-coursecard .foot { margin-top: auto; display: flex; align-items: center; justify-content: flex-end; padding-top: 6px; }
+.lm2-coursecard .foot { margin-top: auto; display: flex; align-items: center; padding-top: 6px; }
+/* match the Resume Lesson button's footprint so both cards read as the same size */
+.lm2-coursecard .foot .lm-ghost { width: 100%; justify-content: center; min-height: 42px; border-radius: 10px; font-size: 13.5px; }
 
 /* ghost button — "Learn More" */
 .lm-ghost { display: inline-flex; align-items: center; padding: 8px 14px; cursor: pointer;

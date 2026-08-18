@@ -65,7 +65,8 @@ const IMG_L = {
   tearTrough: "assets/course-tear-trough.jpg",
   skinBoosters: "assets/course-skin-boosters.jpg",
   complications: "assets/course-complications.jpg",
-  consultation: "assets/course-consultation.jpg"
+  consultation: "assets/course-consultation.jpg",
+  membership: "https://prncpjnraanretzdeuou.supabase.co/storage/v1/object/public/course-content/courses/profinity-membership/poster.jpg"
 };
 const LM2_GOAL = {
   title: "My Goal & Dream Clinic",
@@ -89,7 +90,10 @@ const LM2_MY_COURSES = [{
   image: IMG_L.eightDLip,
   level: "Intermediate",
   title: "8D Lip Design",
-  description: "Discover a complete view of lip anatomy for deeper learning."
+  description: "Discover a complete view of lip anatomy for deeper learning.",
+  progress: 20,
+  lesson: 4,
+  modulesLeft: 6
 }, {
   image: IMG_L.templeFiller,
   level: "Advanced",
@@ -145,6 +149,28 @@ const LM2_MY_COURSES = [{
   level: "Beginner",
   title: "Consultation & Patient Assessment",
   description: "Build trust and plan safe, effective treatments from the first visit."
+}];
+
+/* Confidence tier only sees the courses included in that membership —
+   the full catalogue above is for higher tiers. */
+const LM2_MY_COURSES_CONFIDENCE = [{
+  image: IMG_L.eightDLip,
+  level: "Intermediate",
+  title: "8D Lip Design",
+  description: "Discover a complete view of lip anatomy for deeper learning.",
+  progress: 20,
+  lesson: 4,
+  modulesLeft: 6
+}, {
+  image: IMG_L.membership,
+  level: "Beginner",
+  title: "Profinity Membership",
+  description: "Your welcome course — get the most out of your Confidence membership."
+}, {
+  image: IMG_L.templeFiller,
+  level: "Advanced",
+  title: "Temple Filler",
+  description: "Master safe injection techniques with anatomical precision."
 }];
 const LM2_HOWITWORKS = [{
   icon: "lucide:target",
@@ -453,6 +479,56 @@ function LM2CourseCard({
     onClick: () => goL("CourseDetail.html")
   }, "Learn More"))));
 }
+function LM2CourseCardWide({
+  c
+}) {
+  const inProgress = typeof c.progress === "number";
+  return /*#__PURE__*/React.createElement("article", {
+    className: "lm2-coursecard-wide"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "thumb",
+    style: {
+      backgroundImage: "url(" + c.image + ")"
+    }
+  }, /*#__PURE__*/React.createElement(LevelBadgeL, {
+    level: c.level,
+    className: "lvl"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, c.title), inProgress ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "prog"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "bar"
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: c.progress + "%"
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pct"
+  }, c.progress, "% Complete")), /*#__PURE__*/React.createElement("div", {
+    className: "ds"
+  }, "Only ", c.modulesLeft, " more modules until you get your certificate"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-resume-btn",
+    onClick: () => goL("Lesson.html")
+  }, "Resume Lesson ", c.lesson, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-up-right",
+    size: 16,
+    color: "#fff"
+  }))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "ds"
+  }, c.description), /*#__PURE__*/React.createElement("div", {
+    className: "by"
+  }, TUTOR_L), /*#__PURE__*/React.createElement("div", {
+    className: "foot"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm-ghost",
+    onClick: () => goL("CourseDetail.html")
+  }, "Learn More")))));
+}
 function LM2ActionCard({
   icon,
   title,
@@ -703,6 +779,7 @@ function LearningHome() {
     floating: chromeFloat
   } = useScrollChromeL(scrollRef);
   const nextTier = lmNextTierL(LM_TIER);
+  const myCourses = LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES;
   const unlockResources = () => {
     setResourcesUnlocked(true);
     try {
@@ -745,10 +822,18 @@ function LearningHome() {
     onUpgrade: () => goL("MembershipTier.html")
   }) : /*#__PURE__*/React.createElement("div", {
     className: "lm2-coursegrid"
-  }, LM2_MY_COURSES.map((c, i) => /*#__PURE__*/React.createElement(LM2CourseCard, {
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-coursegrid-pad",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement(LM2CourseCardWide, {
+    c: myCourses[0]
+  }), myCourses.slice(1).map((c, i) => /*#__PURE__*/React.createElement(LM2CourseCard, {
     key: i,
     c: c
-  })))), /*#__PURE__*/React.createElement(LM2FreeResources, {
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-coursegrid-pad",
+    "aria-hidden": "true"
+  }))), /*#__PURE__*/React.createElement(LM2FreeResources, {
     unlocked: resourcesUnlocked,
     onStartSurvey: () => setSurveyOpen(true)
   }), /*#__PURE__*/React.createElement(LM2LearningPathCard, null), nextTier && /*#__PURE__*/React.createElement(LM2SubscribeCard, {

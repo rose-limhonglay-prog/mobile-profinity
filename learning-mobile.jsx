@@ -50,6 +50,7 @@ const IMG_L = {
   skinBoosters: "assets/course-skin-boosters.jpg",
   complications: "assets/course-complications.jpg",
   consultation: "assets/course-consultation.jpg",
+  membership: "https://prncpjnraanretzdeuou.supabase.co/storage/v1/object/public/course-content/courses/profinity-membership/poster.jpg",
 };
 
 const LM2_GOAL = {
@@ -74,7 +75,7 @@ const LM2_PROGRESS_SPOTLIGHT = {
 };
 
 const LM2_MY_COURSES = [
-{ image: IMG_L.eightDLip, level: "Intermediate", title: "8D Lip Design", description: "Discover a complete view of lip anatomy for deeper learning." },
+{ image: IMG_L.eightDLip, level: "Intermediate", title: "8D Lip Design", description: "Discover a complete view of lip anatomy for deeper learning.", progress: 20, lesson: 4, modulesLeft: 6 },
 { image: IMG_L.templeFiller, level: "Advanced", title: "Temple Filler", description: "Master safe injection techniques with anatomical precision." },
 { image: IMG_L.protox, level: "Advanced", title: "Protox Course", description: "Elevate your botulinum toxin skills and refine your technique." },
 { image: IMG_L.browLift, level: "Intermediate", title: "Brow Lift Training", description: "Learn expert techniques for achieving flawless, natural brow lifts." },
@@ -86,6 +87,14 @@ const LM2_MY_COURSES = [
 { image: IMG_L.skinBoosters, level: "Beginner", title: "Skin Boosters & Hydration Therapy", description: "Introduce biorevitalisation treatments to improve skin quality." },
 { image: IMG_L.complications, level: "Advanced", title: "Complications Management", description: "Recognise, prevent and manage vascular and other complications." },
 { image: IMG_L.consultation, level: "Beginner", title: "Consultation & Patient Assessment", description: "Build trust and plan safe, effective treatments from the first visit." }];
+
+
+/* Confidence tier only sees the courses included in that membership —
+   the full catalogue above is for higher tiers. */
+const LM2_MY_COURSES_CONFIDENCE = [
+{ image: IMG_L.eightDLip, level: "Intermediate", title: "8D Lip Design", description: "Discover a complete view of lip anatomy for deeper learning.", progress: 20, lesson: 4, modulesLeft: 6 },
+{ image: IMG_L.membership, level: "Beginner", title: "Profinity Membership", description: "Your welcome course — get the most out of your Confidence membership." },
+{ image: IMG_L.templeFiller, level: "Advanced", title: "Temple Filler", description: "Master safe injection techniques with anatomical precision." }];
 
 
 const LM2_HOWITWORKS = [
@@ -239,6 +248,40 @@ function LM2CourseCard({ c }) {
         <div className="foot">
           <button type="button" className="lm-ghost" onClick={() => goL("CourseDetail.html")}>Learn More</button>
         </div>
+      </div>
+    </article>);
+
+}
+
+function LM2CourseCardWide({ c }) {
+  const inProgress = typeof c.progress === "number";
+  return (
+    <article className="lm2-coursecard-wide">
+      <div className="thumb" style={{ backgroundImage: "url(" + c.image + ")" }}>
+        <LevelBadgeL level={c.level} className="lvl" />
+      </div>
+      <div className="body">
+        <div className="ti">{c.title}</div>
+        {inProgress ?
+        <React.Fragment>
+            <div className="prog">
+              <span className="bar"><span style={{ width: c.progress + "%" }} /></span>
+              <span className="pct">{c.progress}% Complete</span>
+            </div>
+            <div className="ds">Only {c.modulesLeft} more modules until you get your certificate</div>
+            <button type="button" className="lm2-resume-btn" onClick={() => goL("Lesson.html")}>
+              Resume Lesson {c.lesson}<IconifyL name="lucide:arrow-up-right" size={16} color="#fff" />
+            </button>
+          </React.Fragment> :
+
+        <React.Fragment>
+            <div className="ds">{c.description}</div>
+            <div className="by">{TUTOR_L}</div>
+            <div className="foot">
+              <button type="button" className="lm-ghost" onClick={() => goL("CourseDetail.html")}>Learn More</button>
+            </div>
+          </React.Fragment>
+        }
       </div>
     </article>);
 
@@ -403,6 +446,7 @@ function LearningHome() {
   const scrollRef = React.useRef(null);
   const { hidden: chromeHidden, floating: chromeFloat } = useScrollChromeL(scrollRef);
   const nextTier = lmNextTierL(LM_TIER);
+  const myCourses = LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES;
 
   const unlockResources = () => {
     setResourcesUnlocked(true);
@@ -438,7 +482,10 @@ function LearningHome() {
           <LM2LockedCard title="Unlock My Courses" body="Upgrade to purchase courses and they'll live here for easy access." onUpgrade={() => goL("MembershipTier.html")} /> :
 
           <div className="lm2-coursegrid">
-              {LM2_MY_COURSES.map((c, i) => <LM2CourseCard key={i} c={c} />)}
+              <span className="lm2-coursegrid-pad" aria-hidden="true" />
+              <LM2CourseCardWide c={myCourses[0]} />
+              {myCourses.slice(1).map((c, i) => <LM2CourseCard key={i} c={c} />)}
+              <span className="lm2-coursegrid-pad" aria-hidden="true" />
             </div>
           }
         </section>
