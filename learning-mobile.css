@@ -105,23 +105,24 @@ img { max-width: 100%; }
 .lm2-sec-h h2 { margin: 0; font-family: var(--font-sans); font-size: 20px; font-weight: var(--fw-bold); color: var(--brand-navy); }
 .lm2-sec-h a { font-family: var(--font-sans); font-size: 14.5px; font-weight: var(--fw-semibold); color: var(--ai-purple); text-decoration: none; }
 
-/* ===== Continue Learning — resume card, violet left border marks it as "the active thing" ===== */
-.lm2-continue-sec { margin-top: 20px; }
-.lm2-continue { margin: 0 20px; }
-.lm2-continue-card { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; cursor: pointer;
-  padding: 14px; border: none; border-left: 4px solid var(--ai-purple); border-radius: var(--r-lg);
+/* ===== Continue Learning — full-bleed hero card, navy top accent marks it as "the active thing" ===== */
+.lm2-hero { margin-top: 20px; }
+.lm2-herocard { margin: 0 20px; border: 1px solid var(--border-default); border-top: 3px solid var(--brand-navy); border-radius: var(--r-lg); overflow: hidden;
   background: var(--surface-card); box-shadow: 0 1px 3px rgba(12,12,13,.05); }
-.lm2-continue-card:focus-visible { outline: 2px solid var(--ai-purple); outline-offset: 2px; }
-.lm2-continue-card .thumb { position: relative; flex: none; width: 76px; height: 76px; border-radius: 12px;
-  background-size: cover; background-position: center; overflow: hidden; }
-.lm2-continue-card .thumb .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  background: rgba(16,24,40,.36); }
-.lm2-continue-card .body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
-.lm2-continue-card .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15.5px; color: var(--text-heading); }
-.lm2-continue-card .mod { font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); }
-.lm2-continue-card .bar { display: block; height: 6px; border-radius: var(--r-pill); background: var(--gray-150); overflow: hidden; }
-.lm2-continue-card .bar > span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--ai-purple); }
-.lm2-continue-card .pct { font-family: var(--font-sans); font-size: 12px; color: var(--gray-500); }
+.lm2-herocard .thumb { position: relative; height: 168px; background-size: cover; background-position: center; }
+.lm2-herocard .thumb .lvl { position: absolute; left: 12px; top: 12px; }
+.lm2-herocard .body { padding: 16px; }
+.lm2-herocard .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 18px; color: var(--text-heading); margin-bottom: 12px; }
+.lm2-progrow { display: flex; align-items: center; gap: 10px; }
+.lm2-progrow .bar { flex: 1; min-width: 0; height: 7px; border-radius: var(--r-pill); background: var(--gray-150); overflow: hidden; }
+.lm2-progrow .bar > span { display: block; height: 100%; border-radius: var(--r-pill); background: linear-gradient(90deg, #f4ad3d, #e7820a); }
+.lm2-progrow .pct { flex: none; font-family: var(--font-sans); font-size: 13px; color: var(--gray-500); }
+.lm2-herocard .note { margin: 10px 0 0; font-family: var(--font-sans); font-size: 14px; line-height: 1.4; color: var(--gray-600); }
+.lm2-cta { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; min-height: 50px; margin-top: 14px; cursor: pointer;
+  border: none; border-radius: 10px; background: var(--brand-navy); color: #fff;
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15.5px; transition: background .15s ease; }
+.lm2-cta:hover { background: var(--brand-navy-700, #201d54); }
+.lm2-cta:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
 
 .lm2-card { margin: 20px 20px 0; padding: 18px; border-radius: var(--r-lg); background: var(--surface-card);
   border: 1px solid var(--border-default); box-shadow: 0 1px 3px rgba(12,12,13,.05); }

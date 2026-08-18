@@ -61,10 +61,11 @@ const LM2_GOAL = {
 
 const LM2_CONTINUE = {
   image: IMG_L.lip,
+  level: "Intermediate",
   title: "8D Lip Design",
-  moduleText: "Module 4 · Lesson 2 — Landmark mapping",
-  progress: 62,
-  total: 100,
+  progress: 20,
+  note: "Only 6 more modules until you get your certificate",
+  cta: "Resume Lesson 4",
   href: "Lesson.html"
 };
 
@@ -141,21 +142,25 @@ function LM2GoalBanner({ data, onHelp }) {
 }
 
 function LM2ContinueCard({ data }) {
-  const pct = Math.round(data.progress / data.total * 100);
   return (
-    <section className="lm2-continue" data-screen-label="Continue Learning">
-      <button type="button" className="lm2-continue-card" onClick={() => goL(data.href)}
-      aria-label={"Resume " + data.title + ", " + data.moduleText}>
-        <span className="thumb" style={{ backgroundImage: "url(" + data.image + ")" }}>
-          <span className="play" aria-hidden="true"><IconifyL name="lucide:play" size={16} color="#fff" /></span>
-        </span>
-        <span className="body">
-          <span className="ti">{data.title}</span>
-          <span className="mod">{data.moduleText}</span>
-          <span className="bar"><span style={{ width: pct + "%" }} /></span>
-          <span className="pct">{data.progress} of {data.total} complete</span>
-        </span>
-      </button>
+    <section className="lm2-hero" data-screen-label="Continue Learning">
+      <div className="lm2-sec-h"><h2>Continue Learning</h2></div>
+      <article className="lm2-herocard">
+        <div className="thumb" style={{ backgroundImage: "url(" + data.image + ")" }}>
+          <LevelBadgeL level={data.level} className="lvl" />
+        </div>
+        <div className="body">
+          <div className="ti">{data.title}</div>
+          <div className="lm2-progrow">
+            <span className="bar"><span style={{ width: data.progress + "%" }} /></span>
+            <span className="pct">{data.progress}% Complete</span>
+          </div>
+          <p className="note">{data.note}</p>
+          <button type="button" className="lm2-cta" onClick={() => goL(data.href)}>
+            {data.cta}<IconifyL name="lucide:arrow-up-right" size={17} color="#fff" />
+          </button>
+        </div>
+      </article>
     </section>);
 
 }
@@ -426,16 +431,7 @@ function LearningHome() {
 
         <LM2GoalBanner data={LM2_GOAL} onHelp={() => setHelpOpen(true)} />
 
-        <section className="lm2-continue-sec" data-screen-label="Continue Learning">
-          {LM_FREE ?
-          <React.Fragment>
-              <div className="lm2-sec-h"><h2>Continue Learning</h2></div>
-              <LM2LockedCard title="Unlock Continue Learning" body="Upgrade to start a course and track your progress toward your goal." onUpgrade={() => goL("MembershipTier.html")} />
-            </React.Fragment> :
-
-          <LM2ContinueCard data={LM2_CONTINUE} />
-          }
-        </section>
+        {!LM_FREE && <LM2ContinueCard data={LM2_CONTINUE} />}
 
         <section className="lm2-courseband" data-screen-label="My Courses">
           <SecHead title="My Courses" />

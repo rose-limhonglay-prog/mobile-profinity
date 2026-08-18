@@ -75,10 +75,11 @@ const LM2_GOAL = {
 };
 const LM2_CONTINUE = {
   image: IMG_L.lip,
+  level: "Intermediate",
   title: "8D Lip Design",
-  moduleText: "Module 4 · Lesson 2 — Landmark mapping",
-  progress: 62,
-  total: 100,
+  progress: 20,
+  note: "Only 6 more modules until you get your certificate",
+  cta: "Resume Lesson 4",
   href: "Lesson.html"
 };
 const LM2_MY_COURSES = [{
@@ -284,42 +285,46 @@ function LM2GoalBanner({
 function LM2ContinueCard({
   data
 }) {
-  const pct = Math.round(data.progress / data.total * 100);
   return /*#__PURE__*/React.createElement("section", {
-    className: "lm2-continue",
+    className: "lm2-hero",
     "data-screen-label": "Continue Learning"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lm2-continue-card",
-    onClick: () => goL(data.href),
-    "aria-label": "Resume " + data.title + ", " + data.moduleText
-  }, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-sec-h"
+  }, /*#__PURE__*/React.createElement("h2", null, "Continue Learning")), /*#__PURE__*/React.createElement("article", {
+    className: "lm2-herocard"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "thumb",
     style: {
       backgroundImage: "url(" + data.image + ")"
     }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "play",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:play",
-    size: 16,
-    color: "#fff"
-  }))), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement(LevelBadgeL, {
+    level: data.level,
+    className: "lvl"
+  })), /*#__PURE__*/React.createElement("div", {
     className: "body"
-  }, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "ti"
-  }, data.title), /*#__PURE__*/React.createElement("span", {
-    className: "mod"
-  }, data.moduleText), /*#__PURE__*/React.createElement("span", {
+  }, data.title), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-progrow"
+  }, /*#__PURE__*/React.createElement("span", {
     className: "bar"
   }, /*#__PURE__*/React.createElement("span", {
     style: {
-      width: pct + "%"
+      width: data.progress + "%"
     }
   })), /*#__PURE__*/React.createElement("span", {
     className: "pct"
-  }, data.progress, " of ", data.total, " complete"))));
+  }, data.progress, "% Complete")), /*#__PURE__*/React.createElement("p", {
+    className: "note"
+  }, data.note), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-cta",
+    onClick: () => goL(data.href)
+  }, data.cta, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-up-right",
+    size: 17,
+    color: "#fff"
+  })))));
 }
 function SecHead({
   title,
@@ -734,18 +739,9 @@ function LearningHome() {
   }), /*#__PURE__*/React.createElement(LM2GoalBanner, {
     data: LM2_GOAL,
     onHelp: () => setHelpOpen(true)
-  }), /*#__PURE__*/React.createElement("section", {
-    className: "lm2-continue-sec",
-    "data-screen-label": "Continue Learning"
-  }, LM_FREE ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "lm2-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Continue Learning")), /*#__PURE__*/React.createElement(LM2LockedCard, {
-    title: "Unlock Continue Learning",
-    body: "Upgrade to start a course and track your progress toward your goal.",
-    onUpgrade: () => goL("MembershipTier.html")
-  })) : /*#__PURE__*/React.createElement(LM2ContinueCard, {
+  }), !LM_FREE && /*#__PURE__*/React.createElement(LM2ContinueCard, {
     data: LM2_CONTINUE
-  })), /*#__PURE__*/React.createElement("section", {
+  }), /*#__PURE__*/React.createElement("section", {
     className: "lm2-courseband",
     "data-screen-label": "My Courses"
   }, /*#__PURE__*/React.createElement(SecHead, {
