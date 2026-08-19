@@ -7348,6 +7348,7 @@ function ShareSheet({
     tier: 3
   }].filter(d => d.tier <= shRank);
   const [pick, setPick] = useState("feed");
+  const [caption, setCaption] = useState("");
   const cardRef = useRef(null);
   useEffect(() => {
     const onKey = e => {
@@ -7358,6 +7359,11 @@ function ShareSheet({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
   const chosen = dests.find(d => d.k === pick);
+  const submit = () => onShare({
+    destKey: chosen.k,
+    destLabel: chosen.label,
+    caption: caption.trim()
+  });
   const sheet = /*#__PURE__*/React.createElement("div", {
     className: "pf-share-overlay",
     role: "dialog",
@@ -7387,7 +7393,13 @@ function ShareSheet({
     color: "var(--gray-500)"
   }))), /*#__PURE__*/React.createElement("p", {
     className: "pf-share-p"
-  }, dests.length > 1 ? "Choose where this goes." : "This will go out to everyone who follows you."), dests.length > 1 && /*#__PURE__*/React.createElement("div", {
+  }, dests.length > 1 ? "Choose where this goes." : "This will go out to everyone who follows you."), /*#__PURE__*/React.createElement("textarea", {
+    className: "pf-share-caption",
+    placeholder: "Say something about this…",
+    rows: 2,
+    value: caption,
+    onChange: e => setCaption(e.target.value)
+  }), dests.length > 1 && /*#__PURE__*/React.createElement("div", {
     className: "pf-share-list",
     role: "radiogroup",
     "aria-label": "Destination"
@@ -7415,7 +7427,7 @@ function ShareSheet({
   }))))), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pf-share-cta",
-    onClick: () => onShare(chosen.label)
+    onClick: submit
   }, "Share to ", chosen.label)));
   const host = typeof document !== "undefined" && document.querySelector(".m-screen, .cm-screen, .lm-screen, .pm-screen, .ev-screen");
   return host ? ReactDOM.createPortal(sheet, host) : sheet;
@@ -7486,9 +7498,13 @@ function FeedPost({
       setComposerOpen(false);
     }
   };
-  const doShare = dest => {
+  const doShare = ({
+    destKey,
+    destLabel,
+    caption
+  }) => {
     setShareOpen(false);
-    onShare();
+    onShare(destKey === "feed" ? caption : "");
     const g = actionIcon(2);
     if (g && g.animate) {
       g.animate([{
@@ -7510,7 +7526,7 @@ function FeedPost({
         easing: "cubic-bezier(.34,1.56,.64,1)"
       });
     }
-    setToast("Shared to " + dest);
+    setToast("Shared to " + destLabel);
     setTimeout(() => setToast(null), 2200);
   };
   const handleShare = () => setShareOpen(true);
@@ -8946,16 +8962,21 @@ function Feed({
           }
         };
       }),
-      onShare: () => setState(s => {
-        const cur = s[p.id];
-        return {
-          ...s,
-          [p.id]: {
-            ...cur,
-            shares: bump(cur.sharesBase)
-          }
-        };
-      }),
+      onShare: caption => {
+        setState(s => {
+          const cur = s[p.id];
+          return {
+            ...s,
+            [p.id]: {
+              ...cur,
+              shares: bump(cur.sharesBase)
+            }
+          };
+        });
+        if (caption) addPost({
+          body: caption
+        });
+      },
       onSave: () => toggleSave(p.id)
     });
   }), upgradeFor && /*#__PURE__*/React.createElement(UpgradeModal, {

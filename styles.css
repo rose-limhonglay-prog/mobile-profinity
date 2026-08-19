@@ -627,6 +627,12 @@ img{max-width:100%}
 .pf-share-hd h3{flex:1;min-width:0;margin:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:19px;color:var(--brand-navy)}
 .pf-share-x{flex:none;width:36px;height:36px;border-radius:50%;border:none;background:var(--surface-sunken);cursor:pointer;display:flex;align-items:center;justify-content:center}
 .pf-share-p{margin:4px 0 16px;font-family:var(--font-sans);font-size:14px;color:var(--gray-500)}
+.pf-share-caption{width:100%;min-height:44px;max-height:120px;resize:none;box-sizing:border-box;
+  border:1.5px solid var(--border-default);border-radius:12px;padding:12px 14px;margin-bottom:16px;
+  font-family:var(--font-sans);font-size:15px;line-height:1.4;color:var(--text-primary);
+  background:var(--surface-card);outline:none;transition:border-color .15s ease}
+.pf-share-caption::placeholder{color:var(--gray-450)}
+.pf-share-caption:focus-visible{border-color:var(--brand-navy)}
 .pf-share-list{display:flex;flex-direction:column;gap:9px;margin-bottom:16px}
 .pf-share-opt{display:flex;align-items:center;gap:13px;width:100%;text-align:left;cursor:pointer;min-height:44px;
   border:1.5px solid var(--border-default);border-radius:12px;background:var(--surface-card);padding:12px 14px;

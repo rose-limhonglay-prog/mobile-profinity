@@ -3828,6 +3828,7 @@ function ShareSheet({ onClose, onShare }) {
     { k: "freedom", label: "Freedom Path Chat", sub: "Community channel", icon: "lucide:rocket", tier: 3 },
   ].filter((d) => d.tier <= shRank);
   const [pick, setPick] = useState("feed");
+  const [caption, setCaption] = useState("");
   const cardRef = useRef(null);
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -3836,6 +3837,7 @@ function ShareSheet({ onClose, onShare }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
   const chosen = dests.find((d) => d.k === pick);
+  const submit = () => onShare({ destKey: chosen.k, destLabel: chosen.label, caption: caption.trim() });
   const sheet = (
     <div className="pf-share-overlay" role="dialog" aria-modal="true" aria-label="Share this post">
       <button type="button" className="pf-share-scrim" aria-label="Close" onClick={onClose} />
@@ -3848,6 +3850,8 @@ function ShareSheet({ onClose, onShare }) {
           </button>
         </div>
         <p className="pf-share-p">{dests.length > 1 ? "Choose where this goes." : "This will go out to everyone who follows you."}</p>
+        <textarea className="pf-share-caption" placeholder="Say something about this…" rows={2}
+          value={caption} onChange={(e) => setCaption(e.target.value)} />
         {dests.length > 1 &&
         <div className="pf-share-list" role="radiogroup" aria-label="Destination">
           {dests.map((d) => (
@@ -3859,7 +3863,7 @@ function ShareSheet({ onClose, onShare }) {
             </button>
           ))}
         </div>}
-        <button type="button" className="pf-share-cta" onClick={() => onShare(chosen.label)}>
+        <button type="button" className="pf-share-cta" onClick={submit}>
           Share to {chosen.label}
         </button>
       </div>
@@ -3909,9 +3913,9 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
     setComposerOpen((o) => !o);
     if (commentSheet) {setSheetOpen(true);setComposerOpen(false);}
   };
-  const doShare = (dest) => {
+  const doShare = ({ destKey, destLabel, caption }) => {
     setShareOpen(false);
-    onShare();
+    onShare(destKey === "feed" ? caption : "");
     const g = actionIcon(2);
     if (g && g.animate) {
       g.animate(
@@ -3924,7 +3928,7 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
         { duration: 560, easing: "cubic-bezier(.34,1.56,.64,1)" }
       );
     }
-    setToast("Shared to " + dest);
+    setToast("Shared to " + destLabel);
     setTimeout(() => setToast(null), 2200);
   };
   const handleShare = () => setShareOpen(true);
@@ -4745,10 +4749,13 @@ function Feed({ channel } = {}) {
             c);
             return { ...s, [p.id]: { ...cur, comments, commentsCount: bump(cur.commentsCount) } };
           })}
-          onShare={() => setState((s) => {
-            const cur = s[p.id];
-            return { ...s, [p.id]: { ...cur, shares: bump(cur.sharesBase) } };
-          })}
+          onShare={(caption) => {
+            setState((s) => {
+              const cur = s[p.id];
+              return { ...s, [p.id]: { ...cur, shares: bump(cur.sharesBase) } };
+            });
+            if (caption) addPost({ body: caption });
+          }}
           onSave={() => toggleSave(p.id)} />);
 
 
