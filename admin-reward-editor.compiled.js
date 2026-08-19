@@ -273,6 +273,16 @@ function BadgesTab({
     })
   }))))))));
 }
+const RWD_CATEGORY_ICONS = {
+  Signature: "lucide:sparkles",
+  Experiences: "lucide:calendar",
+  Clinical: "lucide:stethoscope",
+  Vouchers: "lucide:ticket",
+  Merch: "lucide:shirt"
+};
+function rwdCategoryIcon(category) {
+  return RWD_CATEGORY_ICONS[category] || "lucide:gift";
+}
 function StoreTab({
   items,
   onUpdate,
@@ -304,60 +314,95 @@ function StoreTab({
     className: "rwd-store-list"
   }, items.map(it => /*#__PURE__*/React.createElement("div", {
     key: it.id,
-    className: "rwd-store-row"
+    className: "rwd-store-card"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "adl-field"
-  }, /*#__PURE__*/React.createElement("label", null, "Name"), /*#__PURE__*/React.createElement("input", {
+    className: "rwd-store-card-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rwd-store-icon"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: rwdCategoryIcon(it.category)
+  })), /*#__PURE__*/React.createElement("input", {
+    className: "rwd-store-name",
     value: it.name,
+    placeholder: "Item name",
     onChange: e => onUpdate(it.id, {
       name: e.target.value
     })
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "adl-field"
-  }, /*#__PURE__*/React.createElement("label", null, "Category"), /*#__PURE__*/React.createElement("input", {
-    value: it.category,
-    onChange: e => onUpdate(it.id, {
-      category: e.target.value
-    })
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "adl-field"
-  }, /*#__PURE__*/React.createElement("label", null, "Credit Cost"), /*#__PURE__*/React.createElement("input", {
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "rwd-store-cost-pill"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:coins"
+  }), /*#__PURE__*/React.createElement("input", {
     type: "number",
     value: it.cost,
     onChange: e => onUpdate(it.id, {
       cost: Number(e.target.value) || 0
     })
-  })), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("span", null, "credits")), /*#__PURE__*/React.createElement("button", {
+    className: "adl-btn adl-btn-danger adl-btn-sm rwd-remove-btn",
+    type: "button",
+    onClick: () => onRemove(it.id),
+    "aria-label": "Remove " + it.name
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:trash-2"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "rwd-store-fields"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "adl-field"
-  }, /*#__PURE__*/React.createElement("label", null, "Inventory"), /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("label", null, "Category"), /*#__PURE__*/React.createElement("div", {
+    className: "rwd-input-icon"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:tag"
+  }), /*#__PURE__*/React.createElement("input", {
+    value: it.category,
+    onChange: e => onUpdate(it.id, {
+      category: e.target.value
+    })
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "adl-field"
+  }, /*#__PURE__*/React.createElement("label", null, "Inventory"), /*#__PURE__*/React.createElement("div", {
+    className: "rwd-input-icon"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:package"
+  }), /*#__PURE__*/React.createElement("input", {
     type: "number",
     placeholder: "Unlimited",
     value: it.inventory ?? "",
     onChange: e => onUpdate(it.id, {
       inventory: e.target.value === "" ? null : Number(e.target.value)
     })
-  })), /*#__PURE__*/React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "adl-field"
-  }, /*#__PURE__*/React.createElement("label", null, "Delivery Method"), /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("label", null, "Delivery Method"), /*#__PURE__*/React.createElement("div", {
+    className: "rwd-input-icon"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:truck"
+  }), /*#__PURE__*/React.createElement("input", {
     value: it.delivery,
     onChange: e => onUpdate(it.id, {
       delivery: e.target.value
     })
-  })), /*#__PURE__*/React.createElement("button", {
-    className: "adl-btn adl-btn-danger adl-btn-sm rwd-remove-btn",
-    type: "button",
-    onClick: () => onRemove(it.id)
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:trash-2"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "adl-field rwd-desc-field"
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "adl-field"
   }, /*#__PURE__*/React.createElement("label", null, "Description"), /*#__PURE__*/React.createElement("textarea", {
     value: it.description,
     onChange: e => onUpdate(it.id, {
       description: e.target.value
     })
-  }))))));
+  })))), items.length === 0 && /*#__PURE__*/React.createElement("p", {
+    className: "adl-cell-muted rwd-empty"
+  }, "No store items yet — add one above.")));
 }
+const RWD_MEDAL_STYLES = [{
+  background: "linear-gradient(135deg, #f7d774, #c9962b)",
+  color: "#5b3d00"
+}, {
+  background: "linear-gradient(135deg, #e2e6ea, #adb5bd)",
+  color: "#3a3f44"
+}, {
+  background: "linear-gradient(135deg, #e3ac7b, #a9673a)",
+  color: "#4a2a10"
+}];
 function LeaderboardTab({
   prizes,
   onUpdate,
@@ -365,12 +410,21 @@ function LeaderboardTab({
   onRemove
 }) {
   return /*#__PURE__*/React.createElement("div", {
-    className: "adl-card"
+    className: "adl-card",
+    style: {
+      padding: 0
+    }
   }, /*#__PURE__*/React.createElement("div", {
-    className: "adl-card-head"
+    className: "adl-card-head",
+    style: {
+      padding: "24px 24px 0",
+      border: "none"
+    }
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
     className: "adl-card-title-text"
-  }, "Rolling 30-Day Leaderboard Prizes")), /*#__PURE__*/React.createElement("button", {
+  }, "Rolling 30-Day Leaderboard Prizes"), /*#__PURE__*/React.createElement("div", {
+    className: "adl-card-sub"
+  }, "Prize tiers awarded to the top point-earners each rolling 30-day period.")), /*#__PURE__*/React.createElement("button", {
     className: "adl-btn adl-btn-navy adl-btn-sm",
     type: "button",
     onClick: onAdd
@@ -381,33 +435,45 @@ function LeaderboardTab({
   }, prizes.map((p, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     className: "rwd-prize-row"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "adl-field",
-    style: {
-      maxWidth: 120
-    }
-  }, /*#__PURE__*/React.createElement("label", null, "Rank"), /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rwd-prize-medal",
+    style: RWD_MEDAL_STYLES[i]
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: i < 3 ? "lucide:trophy" : "lucide:award"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "adl-field rwd-prize-rank"
+  }, /*#__PURE__*/React.createElement("label", null, "Rank"), /*#__PURE__*/React.createElement("div", {
+    className: "rwd-input-icon"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:hash"
+  }), /*#__PURE__*/React.createElement("input", {
     value: p.rank,
+    placeholder: "e.g. 4–15",
     onChange: e => onUpdate(i, {
       rank: e.target.value
     })
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "adl-field",
-    style: {
-      flex: 1
-    }
-  }, /*#__PURE__*/React.createElement("label", null, "Prize"), /*#__PURE__*/React.createElement("input", {
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "adl-field rwd-prize-prize"
+  }, /*#__PURE__*/React.createElement("label", null, "Prize"), /*#__PURE__*/React.createElement("div", {
+    className: "rwd-input-icon"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:gift"
+  }), /*#__PURE__*/React.createElement("input", {
     value: p.prize,
+    placeholder: "Prize description",
     onChange: e => onUpdate(i, {
       prize: e.target.value
     })
-  })), /*#__PURE__*/React.createElement("button", {
+  }))), /*#__PURE__*/React.createElement("button", {
     className: "adl-btn adl-btn-danger adl-btn-sm",
     type: "button",
-    onClick: () => onRemove(i)
+    onClick: () => onRemove(i),
+    "aria-label": "Remove rank " + p.rank
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:trash-2"
-  }))))));
+  })))), prizes.length === 0 && /*#__PURE__*/React.createElement("p", {
+    className: "adl-cell-muted rwd-empty"
+  }, "No prize tiers yet — add one above.")));
 }
 function RewardEditorView() {
   const [config, setConfig] = useStateRWD(() => PF_RWD.getConfig());

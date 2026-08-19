@@ -123,6 +123,15 @@ function BadgesTab({ config, onUpdateLevel, onUpdateAchievement }) {
   );
 }
 
+const RWD_CATEGORY_ICONS = {
+  Signature: "lucide:sparkles",
+  Experiences: "lucide:calendar",
+  Clinical: "lucide:stethoscope",
+  Vouchers: "lucide:ticket",
+  Merch: "lucide:shirt"
+};
+function rwdCategoryIcon(category) { return RWD_CATEGORY_ICONS[category] || "lucide:gift"; }
+
 function StoreTab({ items, onUpdate, onAdd, onRemove }) {
   return (
     <div className="adl-card" style={{ padding: 0 }}>
@@ -132,36 +141,86 @@ function StoreTab({ items, onUpdate, onAdd, onRemove }) {
       </div>
       <div className="rwd-store-list">
         {items.map((it) => (
-          <div key={it.id} className="rwd-store-row">
-            <div className="adl-field"><label>Name</label><input value={it.name} onChange={(e) => onUpdate(it.id, { name: e.target.value })} /></div>
-            <div className="adl-field"><label>Category</label><input value={it.category} onChange={(e) => onUpdate(it.id, { category: e.target.value })} /></div>
-            <div className="adl-field"><label>Credit Cost</label><input type="number" value={it.cost} onChange={(e) => onUpdate(it.id, { cost: Number(e.target.value) || 0 })} /></div>
-            <div className="adl-field"><label>Inventory</label><input type="number" placeholder="Unlimited" value={it.inventory ?? ""} onChange={(e) => onUpdate(it.id, { inventory: e.target.value === "" ? null : Number(e.target.value) })} /></div>
-            <div className="adl-field"><label>Delivery Method</label><input value={it.delivery} onChange={(e) => onUpdate(it.id, { delivery: e.target.value })} /></div>
-            <button className="adl-btn adl-btn-danger adl-btn-sm rwd-remove-btn" type="button" onClick={() => onRemove(it.id)}><iconify-icon icon="lucide:trash-2"></iconify-icon></button>
-            <div className="adl-field rwd-desc-field"><label>Description</label><textarea value={it.description} onChange={(e) => onUpdate(it.id, { description: e.target.value })} /></div>
+          <div key={it.id} className="rwd-store-card">
+            <div className="rwd-store-card-head">
+              <span className="rwd-store-icon"><iconify-icon icon={rwdCategoryIcon(it.category)}></iconify-icon></span>
+              <input className="rwd-store-name" value={it.name} placeholder="Item name" onChange={(e) => onUpdate(it.id, { name: e.target.value })} />
+              <span className="rwd-store-cost-pill">
+                <iconify-icon icon="lucide:coins"></iconify-icon>
+                <input type="number" value={it.cost} onChange={(e) => onUpdate(it.id, { cost: Number(e.target.value) || 0 })} />
+                <span>credits</span>
+              </span>
+              <button className="adl-btn adl-btn-danger adl-btn-sm rwd-remove-btn" type="button" onClick={() => onRemove(it.id)} aria-label={"Remove " + it.name}><iconify-icon icon="lucide:trash-2"></iconify-icon></button>
+            </div>
+            <div className="rwd-store-fields">
+              <div className="adl-field">
+                <label>Category</label>
+                <div className="rwd-input-icon">
+                  <iconify-icon icon="lucide:tag"></iconify-icon>
+                  <input value={it.category} onChange={(e) => onUpdate(it.id, { category: e.target.value })} />
+                </div>
+              </div>
+              <div className="adl-field">
+                <label>Inventory</label>
+                <div className="rwd-input-icon">
+                  <iconify-icon icon="lucide:package"></iconify-icon>
+                  <input type="number" placeholder="Unlimited" value={it.inventory ?? ""} onChange={(e) => onUpdate(it.id, { inventory: e.target.value === "" ? null : Number(e.target.value) })} />
+                </div>
+              </div>
+              <div className="adl-field">
+                <label>Delivery Method</label>
+                <div className="rwd-input-icon">
+                  <iconify-icon icon="lucide:truck"></iconify-icon>
+                  <input value={it.delivery} onChange={(e) => onUpdate(it.id, { delivery: e.target.value })} />
+                </div>
+              </div>
+            </div>
+            <div className="adl-field"><label>Description</label><textarea value={it.description} onChange={(e) => onUpdate(it.id, { description: e.target.value })} /></div>
           </div>
         ))}
+        {items.length === 0 && <p className="adl-cell-muted rwd-empty">No store items yet — add one above.</p>}
       </div>
     </div>
   );
 }
 
+const RWD_MEDAL_STYLES = [
+  { background: "linear-gradient(135deg, #f7d774, #c9962b)", color: "#5b3d00" },
+  { background: "linear-gradient(135deg, #e2e6ea, #adb5bd)", color: "#3a3f44" },
+  { background: "linear-gradient(135deg, #e3ac7b, #a9673a)", color: "#4a2a10" }
+];
+
 function LeaderboardTab({ prizes, onUpdate, onAdd, onRemove }) {
   return (
-    <div className="adl-card">
-      <div className="adl-card-head">
-        <div><span className="adl-card-title-text">Rolling 30-Day Leaderboard Prizes</span></div>
+    <div className="adl-card" style={{ padding: 0 }}>
+      <div className="adl-card-head" style={{ padding: "24px 24px 0", border: "none" }}>
+        <div><span className="adl-card-title-text">Rolling 30-Day Leaderboard Prizes</span><div className="adl-card-sub">Prize tiers awarded to the top point-earners each rolling 30-day period.</div></div>
         <button className="adl-btn adl-btn-navy adl-btn-sm" type="button" onClick={onAdd}><iconify-icon icon="lucide:plus"></iconify-icon>Add Prize Tier</button>
       </div>
       <div className="rwd-prize-list">
         {prizes.map((p, i) => (
           <div key={i} className="rwd-prize-row">
-            <div className="adl-field" style={{ maxWidth: 120 }}><label>Rank</label><input value={p.rank} onChange={(e) => onUpdate(i, { rank: e.target.value })} /></div>
-            <div className="adl-field" style={{ flex: 1 }}><label>Prize</label><input value={p.prize} onChange={(e) => onUpdate(i, { prize: e.target.value })} /></div>
-            <button className="adl-btn adl-btn-danger adl-btn-sm" type="button" onClick={() => onRemove(i)}><iconify-icon icon="lucide:trash-2"></iconify-icon></button>
+            <span className="rwd-prize-medal" style={RWD_MEDAL_STYLES[i]}>
+              <iconify-icon icon={i < 3 ? "lucide:trophy" : "lucide:award"}></iconify-icon>
+            </span>
+            <div className="adl-field rwd-prize-rank">
+              <label>Rank</label>
+              <div className="rwd-input-icon">
+                <iconify-icon icon="lucide:hash"></iconify-icon>
+                <input value={p.rank} placeholder="e.g. 4–15" onChange={(e) => onUpdate(i, { rank: e.target.value })} />
+              </div>
+            </div>
+            <div className="adl-field rwd-prize-prize">
+              <label>Prize</label>
+              <div className="rwd-input-icon">
+                <iconify-icon icon="lucide:gift"></iconify-icon>
+                <input value={p.prize} placeholder="Prize description" onChange={(e) => onUpdate(i, { prize: e.target.value })} />
+              </div>
+            </div>
+            <button className="adl-btn adl-btn-danger adl-btn-sm" type="button" onClick={() => onRemove(i)} aria-label={"Remove rank " + p.rank}><iconify-icon icon="lucide:trash-2"></iconify-icon></button>
           </div>
         ))}
+        {prizes.length === 0 && <p className="adl-cell-muted rwd-empty">No prize tiers yet — add one above.</p>}
       </div>
     </div>
   );

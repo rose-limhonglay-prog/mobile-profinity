@@ -24,18 +24,67 @@
 .rwd-achievement-reward-row label { font-size: 12px; font-weight: 600; color: var(--gray-500); white-space: nowrap; }
 .rwd-achievement-reward-row input { flex: 1; height: 34px; border-radius: 8px; border: 1px solid var(--border-default); padding: 0 10px; font-family: inherit; font-size: 13px; }
 
-.rwd-store-list { display: flex; flex-direction: column; }
-.rwd-store-row { display: grid; grid-template-columns: 1.6fr 1fr 0.8fr 0.8fr 1fr 40px; gap: 14px; align-items: end;
-  padding: 18px 24px; border-top: 1px solid var(--border-default); position: relative; }
-.rwd-store-row:first-child { border-top: none; }
-.rwd-remove-btn { align-self: center; }
-.rwd-desc-field { grid-column: 1 / -1; }
+.rwd-empty { margin: 0; padding: 0 0 4px; }
 
-.rwd-prize-list { display: flex; flex-direction: column; gap: 12px; }
-.rwd-prize-row { display: flex; align-items: end; gap: 14px; }
+.rwd-store-list { display: flex; flex-direction: column; gap: 16px; padding: 20px 24px 24px; }
+.rwd-store-card { border: 1px solid var(--border-default); border-radius: 14px; padding: 18px;
+  background: var(--gray-50); display: flex; flex-direction: column; gap: 16px; }
+.rwd-store-card-head { display: flex; align-items: center; gap: 12px; }
+.rwd-store-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--brand-gold-100); color: var(--brand-navy);
+  display: flex; align-items: center; justify-content: center; font-size: 19px; flex-shrink: 0; }
+.rwd-store-name { flex: 1; min-width: 0; border: 1px solid transparent; background: none; font-family: inherit;
+  font-size: 16px; font-weight: 700; color: var(--gray-900); padding: 8px 10px; border-radius: 8px; }
+.rwd-store-name:hover { border-color: var(--border-default); }
+.rwd-store-name:focus { outline: none; background: var(--white); border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--focus-ring); }
+.rwd-store-cost-pill { display: flex; align-items: center; gap: 6px; background: var(--brand-navy); color: #fff;
+  padding: 8px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.rwd-store-cost-pill iconify-icon { font-size: 15px; color: var(--brand-gold-soft); }
+.rwd-store-cost-pill input { width: 48px; border: none; background: none; color: #fff; font-family: inherit;
+  font-size: 13px; font-weight: 700; text-align: right; padding: 0; }
+.rwd-store-cost-pill input:focus { outline: none; }
+.rwd-remove-btn { flex-shrink: 0; }
+
+.rwd-store-fields { display: grid; grid-template-columns: 1fr 0.7fr 1.2fr; gap: 24px;
+  padding-top: 16px; border-top: 1px solid var(--border-default); }
+.rwd-store-card .adl-field label,
+.rwd-prize-row .adl-field label { font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--gray-500); }
+.rwd-store-card .adl-field input, .rwd-store-card .adl-field textarea,
+.rwd-prize-row .adl-field input {
+  height: 44px; border-radius: 12px; border-color: var(--border-default);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+  transition: border-color .15s, box-shadow .15s; }
+.rwd-store-card .adl-field textarea { height: auto; }
+.rwd-store-card .adl-field input:hover, .rwd-store-card .adl-field textarea:hover,
+.rwd-prize-row .adl-field input:hover { border-color: var(--border-strong); }
+
+.rwd-input-icon { position: relative; display: block; }
+.rwd-input-icon input { width: 100%; display: block; }
+.rwd-input-icon > iconify-icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  font-size: 16px; color: var(--gray-400); pointer-events: none; transition: color .15s; }
+.rwd-input-icon:focus-within > iconify-icon { color: var(--brand-navy); }
+.adl-field .rwd-input-icon input[type="text"],
+.adl-field .rwd-input-icon input[type="number"],
+.adl-field .rwd-input-icon input:not([type]) { padding-left: 38px; }
+
+.rwd-prize-list { display: flex; flex-direction: column; gap: 14px; padding: 20px 24px 24px; }
+.rwd-prize-row { display: flex; align-items: end; gap: 14px; padding: 14px; border: 1px solid var(--border-default);
+  border-radius: 12px; background: var(--gray-50); }
+.rwd-prize-medal { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0; margin-bottom: 2px; background: var(--gray-150); color: var(--gray-500); }
+.rwd-prize-rank { max-width: 140px; }
+.rwd-prize-prize { flex: 1; }
 
 @media (max-width: 1180px) {
   .rwd-level-grid { grid-template-columns: repeat(2, 1fr); }
-  .rwd-store-row { grid-template-columns: 1fr 1fr; }
-  .rwd-remove-btn { grid-column: 2; justify-self: end; }
+  .rwd-store-fields { grid-template-columns: 1fr 1fr; gap: 16px 24px; }
+  .rwd-store-fields .adl-field:nth-child(3) { grid-column: 1 / -1; }
+}
+@media (max-width: 720px) {
+  .rwd-store-card-head { flex-wrap: wrap; }
+  .rwd-store-name { width: 100%; order: -1; }
+  .rwd-store-fields { grid-template-columns: 1fr; }
+  .rwd-prize-row { flex-wrap: wrap; }
+  .rwd-prize-rank { flex: 1; max-width: none; }
+  .rwd-prize-prize { min-width: 100%; order: 3; }
 }
