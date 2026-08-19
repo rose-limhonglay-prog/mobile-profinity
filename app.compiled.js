@@ -7311,124 +7311,220 @@ function shareTier() {
   } catch (e) {}
   return getUserTier();
 }
+const SHARE_DESTINATIONS = [{
+  k: "feed",
+  label: "My feed",
+  sub: "Everyone who follows you",
+  icon: "lucide:rss",
+  tier: 0
+}, {
+  k: "confidence",
+  label: "Confidence",
+  sub: "Community channel",
+  icon: "lucide:message-circle",
+  tier: 1
+}, {
+  k: "mastery",
+  label: "Mastery",
+  sub: "Community channel",
+  icon: "lucide:crown",
+  tier: 2
+}, {
+  k: "complications",
+  label: "Complications",
+  sub: "Community channel",
+  icon: "lucide:shield-alert",
+  tier: 2
+}, {
+  k: "freedom",
+  label: "Freedom Path",
+  sub: "Community channel",
+  icon: "lucide:rocket",
+  tier: 3
+}];
 function ShareSheet({
+  post,
   onClose,
   onShare
 }) {
   const shRank = Math.max(0, SHARE_TIER_ORDER.indexOf(shareTier()));
-  const dests = [{
-    k: "feed",
-    label: "My feed",
-    sub: "Everyone who follows you",
-    icon: "lucide:rss",
-    tier: 0
-  }, {
-    k: "confidence",
-    label: "Confidence Chat",
-    sub: "Community channel",
-    icon: "lucide:message-circle",
-    tier: 1
-  }, {
-    k: "mastery",
-    label: "Mastery Chat",
-    sub: "Community channel",
-    icon: "lucide:crown",
-    tier: 2
-  }, {
-    k: "complications",
-    label: "Complications Chat",
-    sub: "Community channel",
-    icon: "lucide:shield-alert",
-    tier: 2
-  }, {
-    k: "freedom",
-    label: "Freedom Path Chat",
-    sub: "Community channel",
-    icon: "lucide:rocket",
-    tier: 3
-  }].filter(d => d.tier <= shRank);
+  const dests = SHARE_DESTINATIONS.map(d => ({
+    ...d,
+    locked: d.tier > shRank
+  }));
+  const unlockedCount = dests.filter(d => !d.locked).length;
+  const [step, setStep] = useState("say"); // "say" | "where"
   const [pick, setPick] = useState("feed");
   const [caption, setCaption] = useState("");
   const cardRef = useRef(null);
   useEffect(() => {
+    const prev = document.activeElement;
+    if (cardRef.current) cardRef.current.focus();
     const onKey = e => {
-      if (e.key === "Escape") onClose();
+      if (e.key !== "Escape") return;
+      if (step === "where") setStep("say");else onClose();
     };
     window.addEventListener("keydown", onKey);
-    if (cardRef.current) cardRef.current.focus();
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      if (prev && prev.focus) prev.focus();
+    };
+  }, [step]);
   const chosen = dests.find(d => d.k === pick);
+  const destText = chosen.k === "feed" ? "Share to Newsfeed" : chosen.label;
   const submit = () => onShare({
     destKey: chosen.k,
     destLabel: chosen.label,
     caption: caption.trim()
   });
+  const images = post && post.media ? post.media.slice(0, 2) : [];
   const sheet = /*#__PURE__*/React.createElement("div", {
     className: "pf-share-overlay",
     role: "dialog",
     "aria-modal": "true",
-    "aria-label": "Share this post"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pf-share-scrim",
-    "aria-label": "Close",
-    onClick: onClose
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "pf-share-card",
+    "aria-label": "New post",
     ref: cardRef,
     tabIndex: -1
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pf-share-grab"
-  }), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "pf-share-hd"
-  }, /*#__PURE__*/React.createElement("h3", null, "Share this post"), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "pf-share-x",
-    "aria-label": "Close",
+    className: "pf-share-cancel",
     onClick: onClose
-  }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:x",
-    size: 20,
-    color: "var(--gray-500)"
-  }))), /*#__PURE__*/React.createElement("p", {
-    className: "pf-share-p"
-  }, dests.length > 1 ? "Choose where this goes." : "This will go out to everyone who follows you."), /*#__PURE__*/React.createElement("textarea", {
-    className: "pf-share-caption",
-    placeholder: "Say something about this…",
-    rows: 2,
-    value: caption,
-    onChange: e => setCaption(e.target.value)
-  }), dests.length > 1 && /*#__PURE__*/React.createElement("div", {
-    className: "pf-share-list",
+  }, "Cancel"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-share-title"
+  }, "New post"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-share-hd-spacer",
+    "aria-hidden": "true"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-crumb"
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: ME.name,
+    src: ME.avatar,
+    size: 40
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-crumb-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "me"
+  }, ME.name), /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 13,
+    color: "var(--gray-450)"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-share-dest-btn",
+    disabled: unlockedCount <= 1,
+    "aria-haspopup": "dialog",
+    "aria-expanded": step === "where",
+    onClick: () => setStep(s => s === "where" ? "say" : "where")
+  }, destText, unlockedCount > 1 && /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:chevron-down",
+    size: 14,
+    color: "#A26301"
+  }))), step === "where" && /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-dd",
     role: "radiogroup",
     "aria-label": "Destination"
   }, dests.map(d => /*#__PURE__*/React.createElement("button", {
     key: d.k,
     type: "button",
     role: "radio",
-    "aria-checked": pick === d.k,
-    className: "pf-share-opt" + (pick === d.k ? " on" : ""),
-    onClick: () => setPick(d.k)
+    "aria-checked": !d.locked && pick === d.k,
+    disabled: d.locked,
+    className: "pf-share-dd-opt" + (d.locked ? " locked" : "") + (!d.locked && pick === d.k ? " on" : ""),
+    onClick: () => {
+      if (d.locked) return;
+      setPick(d.k);
+      setStep("say");
+    }
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: d.icon,
-    size: 20,
-    color: "var(--brand-navy)"
+    name: d.locked ? "lucide:lock" : d.icon,
+    size: 18,
+    color: d.locked ? "var(--gray-450)" : "var(--brand-navy)"
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, d.label), /*#__PURE__*/React.createElement("i", null, d.sub)), /*#__PURE__*/React.createElement("span", {
-    className: "rd"
-  }, pick === d.k && /*#__PURE__*/React.createElement(IconifyIcon, {
+  }, /*#__PURE__*/React.createElement("b", null, d.label), /*#__PURE__*/React.createElement("i", null, d.locked ? "Upgrade to share here" : d.sub)), !d.locked && pick === d.k && /*#__PURE__*/React.createElement("span", {
+    className: "ck"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
     name: "lucide:check",
-    size: 14,
+    size: 12,
     color: "#fff"
-  }))))), /*#__PURE__*/React.createElement("button", {
+  })))))), /*#__PURE__*/React.createElement("textarea", {
+    className: "pf-share-caption",
+    placeholder: "Share your thoughts…",
+    rows: 3,
+    value: caption,
+    onChange: e => setCaption(e.target.value)
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-tools"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-share-tool",
+    "aria-label": "Add photo"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:image",
+    size: 20,
+    color: "var(--gray-500)"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-share-tool",
+    "aria-label": "Add sticker"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:sticker",
+    size: 20,
+    color: "var(--gray-500)"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-share-tool",
+    "aria-label": "More options"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:more-horizontal",
+    size: 20,
+    color: "var(--gray-500)"
+  }))), post && /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-quote"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-quote-hd"
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: post.author.name,
+    src: post.author.avatar,
+    size: 30
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "nm"
+  }, post.author.name), /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:badge-check",
+    size: 14,
+    color: "var(--info)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "tm"
+  }, post.time)), post.body && /*#__PURE__*/React.createElement("p", {
+    className: "pf-share-quote-body"
+  }, post.body), images.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-quote-imgs pf-share-quote-imgs-" + images.length
+  }, images.map((src, i) => /*#__PURE__*/React.createElement("img", {
+    key: i,
+    src: src,
+    alt: ""
+  }))))), /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-ft"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-share-ft-cancel",
+    onClick: onClose
+  }, "Cancel"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pf-share-cta",
     onClick: submit
-  }, "Share to ", chosen.label)));
+  }, "Post")), step === "where" && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-share-scrim2",
+    "aria-label": "Close",
+    onClick: () => setStep("say")
+  }));
   const host = typeof document !== "undefined" && document.querySelector(".m-screen, .cm-screen, .lm-screen, .pm-screen, .ev-screen");
   return host ? ReactDOM.createPortal(sheet, host) : sheet;
 }
@@ -7762,6 +7858,7 @@ function FeedPost({
   }), reportedOpen && /*#__PURE__*/React.createElement(ReportedModal, {
     onClose: () => setReportedOpen(false)
   }), shareOpen && /*#__PURE__*/React.createElement(ShareSheet, {
+    post: post,
     onClose: () => setShareOpen(false),
     onShare: doShare
   }), toast && /*#__PURE__*/React.createElement("div", {

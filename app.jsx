@@ -3818,55 +3818,116 @@ function shareTier() {
   try { const v = localStorage.getItem("pf-preview-tier"); if (v) return v; } catch (e) {}
   return getUserTier();
 }
-function ShareSheet({ onClose, onShare }) {
+const SHARE_DESTINATIONS = [
+  { k: "feed", label: "My feed", sub: "Everyone who follows you", icon: "lucide:rss", tier: 0 },
+  { k: "confidence", label: "Confidence", sub: "Community channel", icon: "lucide:message-circle", tier: 1 },
+  { k: "mastery", label: "Mastery", sub: "Community channel", icon: "lucide:crown", tier: 2 },
+  { k: "complications", label: "Complications", sub: "Community channel", icon: "lucide:shield-alert", tier: 2 },
+  { k: "freedom", label: "Freedom Path", sub: "Community channel", icon: "lucide:rocket", tier: 3 },
+];
+function ShareSheet({ post, onClose, onShare }) {
   const shRank = Math.max(0, SHARE_TIER_ORDER.indexOf(shareTier()));
-  const dests = [
-    { k: "feed", label: "My feed", sub: "Everyone who follows you", icon: "lucide:rss", tier: 0 },
-    { k: "confidence", label: "Confidence Chat", sub: "Community channel", icon: "lucide:message-circle", tier: 1 },
-    { k: "mastery", label: "Mastery Chat", sub: "Community channel", icon: "lucide:crown", tier: 2 },
-    { k: "complications", label: "Complications Chat", sub: "Community channel", icon: "lucide:shield-alert", tier: 2 },
-    { k: "freedom", label: "Freedom Path Chat", sub: "Community channel", icon: "lucide:rocket", tier: 3 },
-  ].filter((d) => d.tier <= shRank);
+  const dests = SHARE_DESTINATIONS.map((d) => ({ ...d, locked: d.tier > shRank }));
+  const unlockedCount = dests.filter((d) => !d.locked).length;
+  const [step, setStep] = useState("say"); // "say" | "where"
   const [pick, setPick] = useState("feed");
   const [caption, setCaption] = useState("");
   const cardRef = useRef(null);
   useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
+    const prev = document.activeElement;
     if (cardRef.current) cardRef.current.focus();
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+    const onKey = (e) => {
+      if (e.key !== "Escape") return;
+      if (step === "where") setStep("say");else
+      onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      if (prev && prev.focus) prev.focus();
+    };
+  }, [step]);
   const chosen = dests.find((d) => d.k === pick);
+  const destText = chosen.k === "feed" ? "Share to Newsfeed" : chosen.label;
   const submit = () => onShare({ destKey: chosen.k, destLabel: chosen.label, caption: caption.trim() });
+  const images = post && post.media ? post.media.slice(0, 2) : [];
   const sheet = (
-    <div className="pf-share-overlay" role="dialog" aria-modal="true" aria-label="Share this post">
-      <button type="button" className="pf-share-scrim" aria-label="Close" onClick={onClose} />
-      <div className="pf-share-card" ref={cardRef} tabIndex={-1}>
-        <span className="pf-share-grab" />
-        <div className="pf-share-hd">
-          <h3>Share this post</h3>
-          <button type="button" className="pf-share-x" aria-label="Close" onClick={onClose}>
-            <IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" />
+    <div className="pf-share-overlay" role="dialog" aria-modal="true" aria-label="New post" ref={cardRef} tabIndex={-1}>
+      <div className="pf-share-hd">
+        <button type="button" className="pf-share-cancel" onClick={onClose}>Cancel</button>
+        <span className="pf-share-title">New post</span>
+        <span className="pf-share-hd-spacer" aria-hidden="true" />
+      </div>
+      <div className="pf-share-body">
+        <div className="pf-share-crumb">
+          <Avatar name={ME.name} src={ME.avatar} size={40} />
+          <div className="pf-share-crumb-tx">
+            <span className="me">{ME.name}</span>
+            <IconifyIcon name="lucide:chevron-right" size={13} color="var(--gray-450)" />
+            <button type="button" className="pf-share-dest-btn" disabled={unlockedCount <= 1}
+              aria-haspopup="dialog" aria-expanded={step === "where"}
+              onClick={() => setStep((s) => s === "where" ? "say" : "where")}>
+              {destText}
+              {unlockedCount > 1 && <IconifyIcon name="lucide:chevron-down" size={14} color="#A26301" />}
+            </button>
+          </div>
+          {step === "where" &&
+          <div className="pf-share-dd" role="radiogroup" aria-label="Destination">
+            {dests.map((d) => (
+              <button key={d.k} type="button" role="radio" aria-checked={!d.locked && pick === d.k}
+                disabled={d.locked}
+                className={"pf-share-dd-opt" + (d.locked ? " locked" : "") + (!d.locked && pick === d.k ? " on" : "")}
+                onClick={() => { if (d.locked) return;setPick(d.k);setStep("say"); }}>
+                <span className="ic">
+                  <IconifyIcon name={d.locked ? "lucide:lock" : d.icon} size={18}
+                    color={d.locked ? "var(--gray-450)" : "var(--brand-navy)"} />
+                </span>
+                <span className="tx"><b>{d.label}</b><i>{d.locked ? "Upgrade to share here" : d.sub}</i></span>
+                {!d.locked && pick === d.k &&
+                <span className="ck"><IconifyIcon name="lucide:check" size={12} color="#fff" /></span>
+                }
+              </button>
+            ))}
+          </div>
+          }
+        </div>
+        <textarea className="pf-share-caption" placeholder="Share your thoughts…" rows={3}
+          value={caption} onChange={(e) => setCaption(e.target.value)} />
+        <div className="pf-share-tools">
+          <button type="button" className="pf-share-tool" aria-label="Add photo">
+            <IconifyIcon name="lucide:image" size={20} color="var(--gray-500)" />
+          </button>
+          <button type="button" className="pf-share-tool" aria-label="Add sticker">
+            <IconifyIcon name="lucide:sticker" size={20} color="var(--gray-500)" />
+          </button>
+          <button type="button" className="pf-share-tool" aria-label="More options">
+            <IconifyIcon name="lucide:more-horizontal" size={20} color="var(--gray-500)" />
           </button>
         </div>
-        <p className="pf-share-p">{dests.length > 1 ? "Choose where this goes." : "This will go out to everyone who follows you."}</p>
-        <textarea className="pf-share-caption" placeholder="Say something about this…" rows={2}
-          value={caption} onChange={(e) => setCaption(e.target.value)} />
-        {dests.length > 1 &&
-        <div className="pf-share-list" role="radiogroup" aria-label="Destination">
-          {dests.map((d) => (
-            <button key={d.k} type="button" role="radio" aria-checked={pick === d.k}
-              className={"pf-share-opt" + (pick === d.k ? " on" : "")} onClick={() => setPick(d.k)}>
-              <span className="ic"><IconifyIcon name={d.icon} size={20} color="var(--brand-navy)" /></span>
-              <span className="tx"><b>{d.label}</b><i>{d.sub}</i></span>
-              <span className="rd">{pick === d.k && <IconifyIcon name="lucide:check" size={14} color="#fff" />}</span>
-            </button>
-          ))}
-        </div>}
-        <button type="button" className="pf-share-cta" onClick={submit}>
-          Share to {chosen.label}
-        </button>
+        {post &&
+        <div className="pf-share-quote">
+          <div className="pf-share-quote-hd">
+            <Avatar name={post.author.name} src={post.author.avatar} size={30} />
+            <span className="nm">{post.author.name}</span>
+            <IconifyIcon name="lucide:badge-check" size={14} color="var(--info)" />
+            <span className="tm">{post.time}</span>
+          </div>
+          {post.body && <p className="pf-share-quote-body">{post.body}</p>}
+          {images.length > 0 &&
+          <div className={"pf-share-quote-imgs pf-share-quote-imgs-" + images.length}>
+            {images.map((src, i) => <img key={i} src={src} alt="" />)}
+          </div>
+          }
+        </div>
+        }
       </div>
+      <div className="pf-share-ft">
+        <button type="button" className="pf-share-ft-cancel" onClick={onClose}>Cancel</button>
+        <button type="button" className="pf-share-cta" onClick={submit}>Post</button>
+      </div>
+      {step === "where" &&
+      <button type="button" className="pf-share-scrim2" aria-label="Close" onClick={() => setStep("say")} />
+      }
     </div>
   );
   const host = typeof document !== "undefined" &&
@@ -4057,7 +4118,7 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
       onClose={() => setSheetOpen(false)} onAddComment={onAddComment} onAddReply={onAddReply} />
       }
       {reportedOpen && <ReportedModal onClose={() => setReportedOpen(false)} />}
-      {shareOpen && <ShareSheet onClose={() => setShareOpen(false)} onShare={doShare} />}
+      {shareOpen && <ShareSheet post={post} onClose={() => setShareOpen(false)} onShare={doShare} />}
       {toast && <div className="pf-share-toast" role="status">{toast}</div>}
     </div>);
 
