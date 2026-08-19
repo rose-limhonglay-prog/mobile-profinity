@@ -3806,6 +3806,68 @@ function TierTagChip({ tag }) {
 
 }
 
+/* Destinations unlock with the membership ladder: a viewer sees their own
+   channel and every one below. Read from window.PF_TIER, falling back to
+   the "pf-preview-tier" localStorage key used by the mobile preview pages. */
+const SHARE_TIER_ORDER = ["free", "confidence", "mastery", "freedom", "sovereign", "inner"];
+function shareTier() {
+  if (typeof window === "undefined") return "confidence";
+  if (window.PF_TIER) return window.PF_TIER;
+  try { const v = localStorage.getItem("pf-preview-tier"); if (v) return v; } catch (e) {}
+  return window.PF_FREE ? "free" : "confidence";
+}
+function ShareSheet({ onClose, onShare }) {
+  const shRank = Math.max(0, SHARE_TIER_ORDER.indexOf(shareTier()));
+  const dests = [
+    { k: "feed", label: "My feed", sub: "Everyone who follows you", icon: "lucide:rss", tier: 0 },
+    { k: "confidence", label: "Confidence Chat", sub: "Community channel", icon: "lucide:message-circle", tier: 1 },
+    { k: "mastery", label: "Mastery Chat", sub: "Community channel", icon: "lucide:crown", tier: 2 },
+    { k: "complications", label: "Complications Chat", sub: "Community channel", icon: "lucide:shield-alert", tier: 2 },
+    { k: "freedom", label: "Freedom Path Chat", sub: "Community channel", icon: "lucide:rocket", tier: 3 },
+  ].filter((d) => d.tier <= shRank);
+  const [pick, setPick] = useState("feed");
+  const cardRef = useRef(null);
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    if (cardRef.current) cardRef.current.focus();
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const chosen = dests.find((d) => d.k === pick);
+  const sheet = (
+    <div className="pf-share-overlay" role="dialog" aria-modal="true" aria-label="Share this post">
+      <button type="button" className="pf-share-scrim" aria-label="Close" onClick={onClose} />
+      <div className="pf-share-card" ref={cardRef} tabIndex={-1}>
+        <span className="pf-share-grab" />
+        <div className="pf-share-hd">
+          <h3>Share this post</h3>
+          <button type="button" className="pf-share-x" aria-label="Close" onClick={onClose}>
+            <IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" />
+          </button>
+        </div>
+        <p className="pf-share-p">{dests.length > 1 ? "Choose where this goes." : "This will go out to everyone who follows you."}</p>
+        {dests.length > 1 &&
+        <div className="pf-share-list" role="radiogroup" aria-label="Destination">
+          {dests.map((d) => (
+            <button key={d.k} type="button" role="radio" aria-checked={pick === d.k}
+              className={"pf-share-opt" + (pick === d.k ? " on" : "")} onClick={() => setPick(d.k)}>
+              <span className="ic"><IconifyIcon name={d.icon} size={20} color="var(--brand-navy)" /></span>
+              <span className="tx"><b>{d.label}</b><i>{d.sub}</i></span>
+              <span className="rd">{pick === d.k && <IconifyIcon name="lucide:check" size={14} color="#fff" />}</span>
+            </button>
+          ))}
+        </div>}
+        <button type="button" className="pf-share-cta" onClick={() => onShare(chosen.label)}>
+          Share to {chosen.label}
+        </button>
+      </div>
+    </div>
+  );
+  const host = typeof document !== "undefined" &&
+    document.querySelector(".m-screen, .cm-screen, .lm-screen, .pm-screen, .ev-screen");
+  return host ? ReactDOM.createPortal(sheet, host) : sheet;
+}
+
 function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, onShare, onSave, onAddComment, onAddReply }) {
   const ref = useRef(null);
   const [composerOpen, setComposerOpen] = useState(false);
@@ -3813,6 +3875,8 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
   const [likesOpen, setLikesOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [reportedOpen, setReportedOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [toast, setToast] = useState(null);
   const commentSheet = typeof window !== "undefined" && window.PF_COMMENT_SHEET;
   const { picker, pick, cancelHide, scheduleHide } = useReactionPicker(ref, st.reaction, onReact);
 
@@ -3843,7 +3907,8 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
     setComposerOpen((o) => !o);
     if (commentSheet) {setSheetOpen(true);setComposerOpen(false);}
   };
-  const handleShare = () => {
+  const doShare = (dest) => {
+    setShareOpen(false);
     onShare();
     const g = actionIcon(2);
     if (g && g.animate) {
@@ -3857,7 +3922,10 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
         { duration: 560, easing: "cubic-bezier(.34,1.56,.64,1)" }
       );
     }
+    setToast("Shared to " + dest);
+    setTimeout(() => setToast(null), 2200);
   };
+  const handleShare = () => setShareOpen(true);
 
   const comments = st.comments || [];
   const hasRegion = comments.length > 0 || composerOpen;
@@ -3983,6 +4051,8 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
       onClose={() => setSheetOpen(false)} onAddComment={onAddComment} onAddReply={onAddReply} />
       }
       {reportedOpen && <ReportedModal onClose={() => setReportedOpen(false)} />}
+      {shareOpen && <ShareSheet onClose={() => setShareOpen(false)} onShare={doShare} />}
+      {toast && <div className="pf-share-toast" role="status">{toast}</div>}
     </div>);
 
 }

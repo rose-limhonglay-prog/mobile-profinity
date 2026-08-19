@@ -7295,6 +7295,129 @@ function TierTagChip({
     }
   }, meta.label);
 }
+
+/* Destinations unlock with the membership ladder: a viewer sees their own
+   channel and every one below. Read from window.PF_TIER, falling back to
+   the "pf-preview-tier" localStorage key used by the mobile preview pages. */
+const SHARE_TIER_ORDER = ["free", "confidence", "mastery", "freedom", "sovereign", "inner"];
+function shareTier() {
+  if (typeof window === "undefined") return "confidence";
+  if (window.PF_TIER) return window.PF_TIER;
+  try {
+    const v = localStorage.getItem("pf-preview-tier");
+    if (v) return v;
+  } catch (e) {}
+  return window.PF_FREE ? "free" : "confidence";
+}
+function ShareSheet({
+  onClose,
+  onShare
+}) {
+  const shRank = Math.max(0, SHARE_TIER_ORDER.indexOf(shareTier()));
+  const dests = [{
+    k: "feed",
+    label: "My feed",
+    sub: "Everyone who follows you",
+    icon: "lucide:rss",
+    tier: 0
+  }, {
+    k: "confidence",
+    label: "Confidence Chat",
+    sub: "Community channel",
+    icon: "lucide:message-circle",
+    tier: 1
+  }, {
+    k: "mastery",
+    label: "Mastery Chat",
+    sub: "Community channel",
+    icon: "lucide:crown",
+    tier: 2
+  }, {
+    k: "complications",
+    label: "Complications Chat",
+    sub: "Community channel",
+    icon: "lucide:shield-alert",
+    tier: 2
+  }, {
+    k: "freedom",
+    label: "Freedom Path Chat",
+    sub: "Community channel",
+    icon: "lucide:rocket",
+    tier: 3
+  }].filter(d => d.tier <= shRank);
+  const [pick, setPick] = useState("feed");
+  const cardRef = useRef(null);
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    if (cardRef.current) cardRef.current.focus();
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const chosen = dests.find(d => d.k === pick);
+  const sheet = /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-overlay",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Share this post"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-share-scrim",
+    "aria-label": "Close",
+    onClick: onClose
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-card",
+    ref: cardRef,
+    tabIndex: -1
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-share-grab"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-hd"
+  }, /*#__PURE__*/React.createElement("h3", null, "Share this post"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-share-x",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 20,
+    color: "var(--gray-500)"
+  }))), /*#__PURE__*/React.createElement("p", {
+    className: "pf-share-p"
+  }, dests.length > 1 ? "Choose where this goes." : "This will go out to everyone who follows you."), dests.length > 1 && /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-list",
+    role: "radiogroup",
+    "aria-label": "Destination"
+  }, dests.map(d => /*#__PURE__*/React.createElement("button", {
+    key: d.k,
+    type: "button",
+    role: "radio",
+    "aria-checked": pick === d.k,
+    className: "pf-share-opt" + (pick === d.k ? " on" : ""),
+    onClick: () => setPick(d.k)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: d.icon,
+    size: 20,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, d.label), /*#__PURE__*/React.createElement("i", null, d.sub)), /*#__PURE__*/React.createElement("span", {
+    className: "rd"
+  }, pick === d.k && /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:check",
+    size: 14,
+    color: "#fff"
+  }))))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-share-cta",
+    onClick: () => onShare(chosen.label)
+  }, "Share to ", chosen.label)));
+  const host = typeof document !== "undefined" && document.querySelector(".m-screen, .cm-screen, .lm-screen, .pm-screen, .ev-screen");
+  return host ? ReactDOM.createPortal(sheet, host) : sheet;
+}
 function FeedPost({
   post,
   st,
@@ -7313,6 +7436,8 @@ function FeedPost({
   const [likesOpen, setLikesOpen] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [reportedOpen, setReportedOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [toast, setToast] = useState(null);
   const commentSheet = typeof window !== "undefined" && window.PF_COMMENT_SHEET;
   const {
     picker,
@@ -7359,7 +7484,8 @@ function FeedPost({
       setComposerOpen(false);
     }
   };
-  const handleShare = () => {
+  const doShare = dest => {
+    setShareOpen(false);
     onShare();
     const g = actionIcon(2);
     if (g && g.animate) {
@@ -7382,7 +7508,10 @@ function FeedPost({
         easing: "cubic-bezier(.34,1.56,.64,1)"
       });
     }
+    setToast("Shared to " + dest);
+    setTimeout(() => setToast(null), 2200);
   };
+  const handleShare = () => setShareOpen(true);
   const comments = st.comments || [];
   const hasRegion = comments.length > 0 || composerOpen;
   const inlineBubbles = typeof window !== "undefined" && window.PF_INLINE_BUBBLES;
@@ -7614,7 +7743,13 @@ function FeedPost({
     onAddReply: onAddReply
   }), reportedOpen && /*#__PURE__*/React.createElement(ReportedModal, {
     onClose: () => setReportedOpen(false)
-  }));
+  }), shareOpen && /*#__PURE__*/React.createElement(ShareSheet, {
+    onClose: () => setShareOpen(false),
+    onShare: doShare
+  }), toast && /*#__PURE__*/React.createElement("div", {
+    className: "pf-share-toast",
+    role: "status"
+  }, toast));
 }
 
 /* A free viewer only ever gets a short real excerpt of a locked post — long

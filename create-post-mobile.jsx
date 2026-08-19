@@ -134,6 +134,50 @@ function CPStyleSheet({ value, onPick, onClose }) {
     </div>);
 }
 
+/* Destinations unlock with the membership ladder: a viewer sees their own
+   channel and every one below. Read from window.PF_TIER, falling back to
+   the "pf-preview-tier" localStorage key used by the mobile preview pages. */
+const CP_TIER_ORDER = ["free", "confidence", "mastery", "freedom", "sovereign", "inner"];
+function cpTier() {
+  if (typeof window === "undefined") return "free";
+  if (window.PF_TIER) return window.PF_TIER;
+  try { return localStorage.getItem("pf-preview-tier") || "confidence"; } catch (e) { return "confidence"; }
+}
+const CP_DESTS = [
+  { k: "feed", label: "My feed", sub: "Everyone who follows you", icon: "lucide:rss", tier: 0 },
+  { k: "Confidence Chat", label: "Confidence Chat", sub: "Community channel", icon: "lucide:message-circle", tier: 1 },
+  { k: "Mastery Chat", label: "Mastery Chat", sub: "Community channel", icon: "lucide:crown", tier: 2 },
+  { k: "Complications Chat", label: "Complications Chat", sub: "Community channel", icon: "lucide:shield-alert", tier: 2 },
+  { k: "Freedom Path Chat", label: "Freedom Path Chat", sub: "Community channel", icon: "lucide:rocket", tier: 3 },
+];
+
+function CPChannelSheet({ dests, value, onPick, onClose }) {
+  React.useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  return (
+    <div className="cp-sheet-overlay" onClick={onClose}>
+      <div className="cp-sheet" role="dialog" aria-modal="true" aria-label="Post to"
+        onClick={(e) => e.stopPropagation()}>
+        <span className="cp-sheet-grip" aria-hidden="true"></span>
+        <h3>Post to</h3>
+        <div className="cp-sheet-list" role="radiogroup" aria-label="Destination">
+          {dests.map((d) => (
+            <button key={d.k} type="button" role="radio" aria-checked={value === d.k}
+              className={"cp-opt" + (value === d.k ? " on" : "")}
+              onClick={() => { onPick(d.k); onClose(); }}>
+              <span className="cp-opt-ic"><DSCP.IconifyIcon name={d.icon} size={20} color="var(--brand-navy)" /></span>
+              <span className="cp-opt-tx"><b>{d.label}</b><i>{d.sub}</i></span>
+              <span className="cp-opt-rd">{value === d.k && <DSCP.IconifyIcon name="lucide:check" size={14} color="#fff" />}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>);
+}
+
 function CPTopBar({ canPost, onPost, onCancel }) {
   return (
     <header className="cp-top">
@@ -175,7 +219,16 @@ function CPScreen() {
   const [styleSheetOpen, setStyleSheetOpen] = React.useState(false);
   const bg = CP_BACKGROUNDS.find((b) => b.id === bgId) || CP_BACKGROUNDS[0];
   const textareaRef = React.useRef(null);
-  const backTo = channels.length > 0 ? "CommunityMobile.html" : "NewsfeedMobile.html";
+  const cpRank = Math.max(0, CP_TIER_ORDER.indexOf(cpTier()));
+  const destOptions = CP_DESTS.filter((d) => d.tier <= cpRank);
+  const canPickChannel = destOptions.length > 1;
+  const [chanSheet, setChanSheet] = React.useState(false);
+  const [dest, setDest] = React.useState(() => {
+    if (channels.length === 0) return "feed";
+    const match = CP_DESTS.find((d) => d.k !== "feed" && d.label.toLowerCase() === channels[0].toLowerCase());
+    return match ? match.k : "feed";
+  });
+  const backTo = dest === "feed" ? "NewsfeedMobile.html" : "CommunityMobile.html";
 
   const pickBg = (id) => {
     setBgId(id);
@@ -193,7 +246,7 @@ function CPScreen() {
   const handlePost = () => {
     const body = text.trim();
     if (!body) return;
-    if (channels.length === 0) {
+    if (dest === "feed") {
       const post = {
         id: "u" + Date.now(),
         author: { name: PFACP.ME.name, avatar: PFACP.ME.avatar, seals: ["gb", "verified"] },
@@ -239,14 +292,17 @@ function CPScreen() {
               <span className="cp-author-name">{PFACP.ME.name}</span>
               <CPAudiencePicker value={audience} onChange={setAudience} />
             </div>
-            {channels.length > 0 && (
-              <div className="cp-channels">
-                <DSCP.IconifyIcon name="lucide:users" size={13} color="var(--gray-500)" />
-                {channels.map((ch) => (
-                  <span key={ch} className="cp-ch-chip">{ch}</span>
-                ))}
-              </div>
-            )}
+            <button type="button" className={"cp-channel-btn" + (canPickChannel ? "" : " static")}
+              onClick={() => canPickChannel && setChanSheet(true)}
+              aria-haspopup={canPickChannel ? "dialog" : undefined}
+              aria-expanded={canPickChannel ? chanSheet : undefined}
+              disabled={!canPickChannel}>
+              <DSCP.IconifyIcon name={dest === "feed" ? "lucide:rss" : "lucide:users"} size={14} color="var(--gray-500)" />
+              <span className={dest === "feed" ? "cp-channel-feed" : "cp-channel-chip"}>
+                {dest === "feed" ? "Post to Newsfeed" : dest}
+              </span>
+              {canPickChannel && <DSCP.IconifyIcon name="lucide:chevron-down" size={14} color="var(--gray-500)" />}
+            </button>
           </div>
         </div>
 
@@ -308,6 +364,10 @@ function CPScreen() {
 
       {styleSheetOpen && (
         <CPStyleSheet value={bgId} onPick={pickBg} onClose={() => setStyleSheetOpen(false)} />
+      )}
+
+      {chanSheet && (
+        <CPChannelSheet dests={destOptions} value={dest} onPick={setDest} onClose={() => setChanSheet(false)} />
       )}
     </div>);
 }

@@ -254,6 +254,106 @@ function CPStyleSheet({
     color: "var(--brand-navy)"
   })))))));
 }
+
+/* Destinations unlock with the membership ladder: a viewer sees their own
+   channel and every one below. Read from window.PF_TIER, falling back to
+   the "pf-preview-tier" localStorage key used by the mobile preview pages. */
+const CP_TIER_ORDER = ["free", "confidence", "mastery", "freedom", "sovereign", "inner"];
+function cpTier() {
+  if (typeof window === "undefined") return "free";
+  if (window.PF_TIER) return window.PF_TIER;
+  try {
+    return localStorage.getItem("pf-preview-tier") || "confidence";
+  } catch (e) {
+    return "confidence";
+  }
+}
+const CP_DESTS = [{
+  k: "feed",
+  label: "My feed",
+  sub: "Everyone who follows you",
+  icon: "lucide:rss",
+  tier: 0
+}, {
+  k: "Confidence Chat",
+  label: "Confidence Chat",
+  sub: "Community channel",
+  icon: "lucide:message-circle",
+  tier: 1
+}, {
+  k: "Mastery Chat",
+  label: "Mastery Chat",
+  sub: "Community channel",
+  icon: "lucide:crown",
+  tier: 2
+}, {
+  k: "Complications Chat",
+  label: "Complications Chat",
+  sub: "Community channel",
+  icon: "lucide:shield-alert",
+  tier: 2
+}, {
+  k: "Freedom Path Chat",
+  label: "Freedom Path Chat",
+  sub: "Community channel",
+  icon: "lucide:rocket",
+  tier: 3
+}];
+function CPChannelSheet({
+  dests,
+  value,
+  onPick,
+  onClose
+}) {
+  React.useEffect(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Post to",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-sheet-grip",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("h3", null, "Post to"), /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet-list",
+    role: "radiogroup",
+    "aria-label": "Destination"
+  }, dests.map(d => /*#__PURE__*/React.createElement("button", {
+    key: d.k,
+    type: "button",
+    role: "radio",
+    "aria-checked": value === d.k,
+    className: "cp-opt" + (value === d.k ? " on" : ""),
+    onClick: () => {
+      onPick(d.k);
+      onClose();
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-ic"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: d.icon,
+    size: 20,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-tx"
+  }, /*#__PURE__*/React.createElement("b", null, d.label), /*#__PURE__*/React.createElement("i", null, d.sub)), /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-rd"
+  }, value === d.k && /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:check",
+    size: 14,
+    color: "#fff"
+  })))))));
+}
 function CPTopBar({
   canPost,
   onPost,
@@ -308,7 +408,16 @@ function CPScreen() {
   const [styleSheetOpen, setStyleSheetOpen] = React.useState(false);
   const bg = CP_BACKGROUNDS.find(b => b.id === bgId) || CP_BACKGROUNDS[0];
   const textareaRef = React.useRef(null);
-  const backTo = channels.length > 0 ? "CommunityMobile.html" : "NewsfeedMobile.html";
+  const cpRank = Math.max(0, CP_TIER_ORDER.indexOf(cpTier()));
+  const destOptions = CP_DESTS.filter(d => d.tier <= cpRank);
+  const canPickChannel = destOptions.length > 1;
+  const [chanSheet, setChanSheet] = React.useState(false);
+  const [dest, setDest] = React.useState(() => {
+    if (channels.length === 0) return "feed";
+    const match = CP_DESTS.find(d => d.k !== "feed" && d.label.toLowerCase() === channels[0].toLowerCase());
+    return match ? match.k : "feed";
+  });
+  const backTo = dest === "feed" ? "NewsfeedMobile.html" : "CommunityMobile.html";
   const pickBg = id => {
     setBgId(id);
     if (id !== "none") setImages([]);
@@ -322,7 +431,7 @@ function CPScreen() {
   const handlePost = () => {
     const body = text.trim();
     if (!body) return;
-    if (channels.length === 0) {
+    if (dest === "feed") {
       const post = {
         id: "u" + Date.now(),
         author: {
@@ -393,16 +502,24 @@ function CPScreen() {
   }, PFACP.ME.name), /*#__PURE__*/React.createElement(CPAudiencePicker, {
     value: audience,
     onChange: setAudience
-  })), channels.length > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "cp-channels"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-channel-btn" + (canPickChannel ? "" : " static"),
+    onClick: () => canPickChannel && setChanSheet(true),
+    "aria-haspopup": canPickChannel ? "dialog" : undefined,
+    "aria-expanded": canPickChannel ? chanSheet : undefined,
+    disabled: !canPickChannel
   }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
-    name: "lucide:users",
-    size: 13,
+    name: dest === "feed" ? "lucide:rss" : "lucide:users",
+    size: 14,
     color: "var(--gray-500)"
-  }), channels.map(ch => /*#__PURE__*/React.createElement("span", {
-    key: ch,
-    className: "cp-ch-chip"
-  }, ch))))), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("span", {
+    className: dest === "feed" ? "cp-channel-feed" : "cp-channel-chip"
+  }, dest === "feed" ? "Post to Newsfeed" : dest), canPickChannel && /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:chevron-down",
+    size: 14,
+    color: "var(--gray-500)"
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "cp-compose" + (bg.css ? " cp-compose-bg" : ""),
     style: bg.css ? {
       background: bg.css
@@ -470,6 +587,11 @@ function CPScreen() {
     value: bgId,
     onPick: pickBg,
     onClose: () => setStyleSheetOpen(false)
+  }), chanSheet && /*#__PURE__*/React.createElement(CPChannelSheet, {
+    dests: destOptions,
+    value: dest,
+    onPick: setDest,
+    onClose: () => setChanSheet(false)
   }));
 }
 function CreatePostApp() {
