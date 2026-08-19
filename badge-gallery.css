@@ -1,0 +1,28 @@
+/* ===========================================================================
+   PROfinity — Katy · Badge Gallery · iPhone 17 Pro Max
+   Classes prefixed bgl- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+img { max-width: 100%; }
+
+.bgl-ladder { display: flex; justify-content: space-between; background: var(--white); border: 1px solid var(--border-default);
+  border-radius: 16px; padding: 16px 10px; }
+.bgl-ladder-item { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; position: relative; }
+.bgl-ladder-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.bgl-ladder-name { font-size: 10px; font-weight: 700; color: var(--gray-500); }
+.bgl-ladder-item.is-earned .bgl-ladder-name { color: var(--gray-900); }
+.bgl-ladder-current { position: absolute; top: -10px; background: var(--brand-navy); color: #fff; font-size: 8px; font-weight: 700;
+  padding: 2px 6px; border-radius: 999px; }
+
+.bgl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.bgl-tile { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 12px; border-radius: 16px;
+  border: 1px solid var(--border-default); background: var(--gray-50); cursor: pointer; font-family: inherit; text-align: center; }
+.bgl-tile.is-unlocked { background: var(--brand-gold-100); border-color: var(--brand-gold-soft); }
+.bgl-tile-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--white); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+.bgl-tile-name { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+.bgl-tile-progress { font-size: 11px; color: var(--gray-500); margin-top: 4px; }
+.bgl-tile-earned { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: var(--success); margin-top: 4px; }

@@ -1,0 +1,19 @@
+/* ===========================================================================
+   PROfinity — Katy · Ways to Earn · iPhone 17 Pro Max
+   Classes prefixed wte- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+img { max-width: 100%; }
+
+.wte-multiplier-banner { display: flex; align-items: center; gap: 10px; background: linear-gradient(135deg, var(--brand-navy), var(--brand-navy-700));
+  color: #fff; border-radius: 14px; padding: 14px 16px; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+
+.wte-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.wte-row-main { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.wte-row-main .ti { font-size: 14px; font-weight: 700; color: var(--gray-900); }
+.wte-row-main .su { font-size: 11px; color: var(--gray-500); }
+.wte-pts-label { font-weight: 500; opacity: .85; }

@@ -1,0 +1,38 @@
+/* ===========================================================================
+   PROfinity — Katy · Rewards Store · iPhone 17 Pro Max
+   Classes prefixed str- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+img { max-width: 100%; }
+
+.str-balance-chip { display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: 999px;
+  background: var(--brand-navy); color: #fff; font-size: 12px; font-weight: 700; }
+
+.str-tabs { display: flex; gap: 8px; padding: 4px 20px 14px; overflow-x: auto; }
+.str-tab { flex-shrink: 0; border: 1px solid var(--border-default); background: var(--white); border-radius: 999px; padding: 8px 14px;
+  font-family: inherit; font-size: 12px; font-weight: 700; color: var(--gray-600); cursor: pointer; }
+.str-tab.is-active { background: var(--brand-navy); border-color: var(--brand-navy); color: #fff; }
+
+.str-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.str-card { border: 1px solid var(--border-default); border-radius: 16px; overflow: hidden; background: var(--white); display: flex; flex-direction: column; }
+.str-card.is-locked .str-card-media { filter: grayscale(0.3); }
+.str-card-media { position: relative; height: 88px; background: var(--brand-gold-100); display: flex; align-items: center; justify-content: center; }
+.str-card-media img { width: 100%; height: 100%; object-fit: cover; }
+.str-lock-badge { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border-radius: 50%; background: rgba(16,24,40,.55);
+  display: flex; align-items: center; justify-content: center; }
+.str-card-body { padding: 12px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.str-card-name { font-size: 13px; font-weight: 700; color: var(--gray-900); line-height: 1.3; }
+.str-card-desc { font-size: 11px; color: var(--gray-500); line-height: 1.4; flex: 1; }
+.str-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
+.str-card-cost { display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--brand-navy); }
+
+.str-scrim { position: fixed; inset: 0; background: rgba(16,24,40,.45); z-index: 60; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.str-confirm { width: 100%; max-width: 300px; background: var(--white); border-radius: 18px; padding: 22px; text-align: center; }
+.str-confirm-icon { width: 52px; height: 52px; border-radius: 50%; background: var(--brand-gold-100); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+.str-confirm h2 { margin: 0 0 8px; font-size: 16px; font-weight: 700; color: var(--gray-900); }
+.str-confirm p { margin: 0 0 18px; font-size: 13px; color: var(--gray-500); }
+.str-confirm-ctas { display: flex; gap: 10px; }

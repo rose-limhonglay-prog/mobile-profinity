@@ -1,0 +1,22 @@
+/* ===========================================================================
+   PROfinity — Admin · Audit Ledger — page-specific layout
+   Shared shell/sidebar/header/card/form/stat/table/panel styles live in
+   admin-loyalty-shared.css. Classes prefixed ldg- to avoid clashes.
+   =========================================================================== */
+.ldg-row-grid { grid-template-columns: 1.1fr 1.1fr 1.6fr 1.3fr 0.7fr 0.7fr 1fr; }
+.ldg-admin-tag { color: var(--gray-500); font-size: 12px; }
+
+.ldg-user-results { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto;
+  border: 1px solid var(--border-default); border-radius: 10px; padding: 6px; }
+.ldg-user-result { display: flex; flex-direction: column; gap: 2px; padding: 9px 10px; border-radius: 8px;
+  border: none; background: none; text-align: left; cursor: pointer; font-family: inherit; }
+.ldg-user-result:hover { background: var(--gray-50); }
+.ldg-user-result.is-active { background: var(--brand-gold-100); }
+.ldg-user-result-name { font-size: 13px; font-weight: 700; color: var(--gray-800); display: flex; align-items: center; gap: 8px; }
+.ldg-user-result-email { font-size: 12px; color: var(--gray-500); }
+.ldg-live-pill { background: var(--success-bg); color: var(--success); font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .03em; }
+
+@media (max-width: 1180px) {
+  .ldg-row-grid { grid-template-columns: 1fr; gap: 4px; }
+}

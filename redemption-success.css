@@ -1,0 +1,23 @@
+/* ===========================================================================
+   PROfinity — Katy · Redemption Success · iPhone 17 Pro Max
+   Classes prefixed rsc- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+img { max-width: 100%; }
+
+.rsc-hero { text-align: center; padding: 46px 24px 24px; background: linear-gradient(180deg, var(--success-bg), var(--surface-page)); }
+.rsc-check { width: 64px; height: 64px; border-radius: 50%; background: var(--success); display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; }
+.rsc-hero h1 { margin: 0 0 4px; font-size: 20px; font-weight: 800; color: var(--gray-900); }
+.rsc-hero p { margin: 0; font-size: 13px; color: var(--gray-500); }
+
+.rsc-code-card { text-align: center; }
+.rsc-code-label { font-size: 12px; color: var(--gray-500); margin-bottom: 8px; }
+.rsc-code { font-family: ui-monospace, "SF Mono", monospace; font-size: 18px; font-weight: 700; letter-spacing: .04em; color: var(--brand-navy);
+  background: var(--gray-50); border: 1px dashed var(--border-strong); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+
+.rsc-next-row { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--gray-700); }
+.rsc-tool-row { display: flex; gap: 10px; margin-top: 8px; }

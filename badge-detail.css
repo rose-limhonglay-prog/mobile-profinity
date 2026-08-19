@@ -1,0 +1,27 @@
+/* ===========================================================================
+   PROfinity — Katy · Badge Detail · iPhone 17 Pro Max
+   Classes prefixed bdt- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+img { max-width: 100%; }
+
+.bdt-ring-wrap { display: flex; flex-direction: column; align-items: center; padding: 12px 20px 8px; text-align: center; }
+.bdt-ring { width: 128px; height: 128px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.bdt-ring-inner { width: 100px; height: 100px; border-radius: 50%; background: var(--white); display: flex; align-items: center; justify-content: center;
+  box-shadow: inset 0 0 0 1px var(--border-default); }
+.bdt-ring-pct { font-size: 15px; font-weight: 800; color: var(--gray-900); margin-top: 12px; }
+.bdt-desc { font-size: 13px; color: var(--gray-500); margin-top: 6px; max-width: 260px; }
+
+.bdt-checklist-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border-default);
+  font-size: 13px; color: var(--gray-500); }
+.bdt-checklist-row:last-child { border-bottom: none; }
+.bdt-checklist-row.is-done { color: var(--gray-900); font-weight: 600; }
+.bdt-checklist-check { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.bdt-checklist-row.is-done .bdt-checklist-check { background: var(--success); border-color: var(--success); }
+
+.bdt-reward-row { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 700; color: var(--gray-900); }
+.bdt-locked-note { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--gray-500); background: var(--gray-50); }

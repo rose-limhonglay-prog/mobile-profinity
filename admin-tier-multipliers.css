@@ -1,0 +1,25 @@
+/* ===========================================================================
+   PROfinity — Admin · Tier Multipliers — page-specific layout
+   Shared shell/sidebar/header/card/form styles live in admin-loyalty-shared.css.
+   Classes prefixed tier- to avoid clashes with other pages.
+   =========================================================================== */
+.tier-global-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.tier-global-cell { border: 1px solid var(--border-default); border-radius: 12px; padding: 16px; text-align: center; background: var(--gray-50); }
+.tier-global-name { font-size: 14px; font-weight: 700; color: var(--brand-navy); margin-bottom: 10px; }
+.tier-global-input-wrap { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.tier-global-input-wrap input { width: 90px; height: 42px; text-align: center; border-radius: 10px; border: 1px solid var(--border-default);
+  background: var(--white); font-family: inherit; font-size: 16px; font-weight: 700; color: var(--brand-navy); outline: none; }
+.tier-global-input-wrap span { font-size: 15px; font-weight: 700; color: var(--gray-500); }
+
+.tier-override-cell { display: flex; align-items: center; gap: 6px; }
+.tier-override-input { width: 74px; height: 34px; text-align: center; border-radius: 8px; border: 1px solid var(--border-strong);
+  background: var(--brand-gold-100); font-family: inherit; font-size: 13px; font-weight: 700; color: var(--brand-navy); outline: none; }
+.tier-override-add { border: 1px dashed var(--border-strong); background: none; border-radius: 8px; padding: 7px 10px;
+  font-family: inherit; font-size: 12px; font-weight: 600; color: var(--gray-500); cursor: pointer; }
+.tier-override-add:hover { color: var(--brand-navy); border-color: var(--brand-navy); }
+.tier-override-remove { border: none; background: none; color: var(--gray-400); cursor: pointer; display: flex; }
+.tier-override-remove:hover { color: var(--error); }
+
+@media (max-width: 1180px) {
+  .tier-global-grid { grid-template-columns: repeat(2, 1fr); }
+}

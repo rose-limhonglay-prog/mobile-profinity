@@ -1,0 +1,96 @@
+/* ===========================================================================
+   PROfinity — Katy · Rewards Dashboard · iPhone 17 Pro Max
+   Primary hub for the Loyalty & Gamification feature — 6th tab alongside
+   Home / Profile / My Learning / Community / Agent. Reuses the same
+   .app/.lm-screen/.lm-scroll/.lm-tabs device-frame conventions as the other
+   primary tab screens (see learning-mobile.css) so the tab bar and status
+   bar look identical. Classes prefixed rdb- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+img { max-width: 100%; }
+
+.lm-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-card); position: relative; }
+.lm-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 96px; }
+.lm-scroll::-webkit-scrollbar { width: 0; }
+.lm-screen.chrome-float .lm-scroll { padding-top: 52px; }
+
+.lm-tabs { position: absolute; left: 16px; right: 16px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 30; display: flex; align-items: stretch; gap: 2px; border-radius: 34px;
+  background: rgba(255,255,255,.82); -webkit-backdrop-filter: blur(28px) saturate(200%); backdrop-filter: blur(28px) saturate(200%);
+  border: 1px solid rgba(255,255,255,.6); box-shadow: 0 12px 34px rgba(16,24,40,.16), 0 2px 8px rgba(16,24,40,.06), inset 0 1px 0 rgba(255,255,255,.75); padding: 9px 10px; }
+.lm-tab { flex: 1; background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  padding: 4px 0; color: #000; font-family: var(--font-sans); font-weight: var(--fw-medium); font-size: 11px; }
+.lm-tab .ic { position: relative; width: 46px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 18px; transition: background .28s ease, box-shadow .28s ease; }
+.lm-tab .ic .dot { position: absolute; top: -1px; right: 6px; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 8px;
+  background: var(--premium-orange); color: #fff; font-weight: 700; font-size: 9px; display: flex; align-items: center; justify-content: center; }
+.lm-tab.on { color: var(--brand-navy); font-weight: var(--fw-semibold); }
+.lm-tab.on .ic { background: var(--brand-navy); box-shadow: 0 4px 12px rgba(41,37,105,.34), inset 0 1px 0 rgba(255,255,255,.28); }
+.lm-tab.on .ic iconify-icon { color: #fff !important; }
+.lm-tab:active { transform: scale(.9); }
+
+/* -------------------------------------------------------------- header */
+.rdb-head { padding: 4px 20px 18px; }
+.rdb-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.rdb-head-greet { font-size: 19px; font-weight: 700; color: var(--gray-900); }
+.rdb-wallet-chip { display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 999px;
+  background: var(--brand-navy); color: #fff; border: none; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.rdb-tierpill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: var(--brand-navy);
+  color: #fff; font-size: 11px; font-weight: 700; margin-bottom: 14px; }
+
+.rdb-progress-card { background: var(--white); border: 1px solid var(--border-default); border-radius: 16px; padding: 16px; }
+.rdb-progress-top { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--gray-600); margin-bottom: 8px; }
+.rdb-progress-note { font-size: 12px; color: var(--gray-500); margin-top: 8px; }
+
+/* --------------------------------------------------------- risk banner */
+.rdb-risk-banner { margin: 0 20px 16px; background: linear-gradient(135deg, #d91c3a, #a4132a); border-radius: 16px; padding: 16px 18px; color: #fff; }
+.rdb-risk-head { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; }
+.rdb-risk-clock { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; margin: 6px 0 12px; }
+.rdb-risk-ctas { display: flex; gap: 8px; }
+.rdb-notif-stack { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+
+.rdb-notif-preview { display: flex; gap: 10px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); border-radius: 12px; padding: 10px 12px; }
+.rdb-notif-icon { width: 26px; height: 26px; border-radius: 8px; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rdb-notif-title { font-size: 11px; font-weight: 700; }
+.rdb-notif-title span { font-weight: 500; opacity: .8; }
+.rdb-notif-text { font-size: 12px; margin-top: 2px; }
+
+/* ---------------------------------------------------------- engagement */
+.rdb-eng-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.rdb-eng-card { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 0; padding: 14px; }
+.rdb-eng-value { font-size: 17px; font-weight: 800; color: var(--gray-900); }
+.rdb-eng-label { font-size: 11px; color: var(--gray-500); }
+
+/* ------------------------------------------------------------ quicknav */
+.rdb-quicknav { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.rdb-quicknav-item { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 8px; border-radius: 14px;
+  border: 1px solid var(--border-default); background: var(--white); font-family: inherit; font-size: 11px; font-weight: 700; color: var(--gray-700); cursor: pointer; text-align: center; }
+.rdb-quicknav-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--brand-gold-100); display: flex; align-items: center; justify-content: center; }
+
+/* -------------------------------------------------------------- reward */
+.rdb-next-reward { display: flex; align-items: center; gap: 14px; width: 100%; border: none; text-align: left; cursor: pointer; padding: 16px 18px; background: var(--white); }
+.rdb-next-reward-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--brand-gold-100); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rdb-next-reward-main { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.rdb-next-reward-main .ti { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+.rdb-next-reward-main .su { font-size: 12px; color: var(--gray-500); }
+
+/* ------------------------------------------------------------- activity */
+.rdb-activity-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border-default); }
+.rdb-activity-row:last-child { border-bottom: none; }
+.rdb-activity-label { flex: 1; font-size: 13px; color: var(--gray-800); font-weight: 600; }
+.rdb-activity-time { font-size: 11px; color: var(--gray-400); }
+.rdb-activity-amt { font-size: 12px; font-weight: 700; }
+
+/* ------------------------------------------------------------- wallet dd */
+.rdb-wallet-scrim { position: fixed; inset: 0; background: rgba(16,24,40,.4); z-index: 50; display: flex; align-items: flex-start; justify-content: center; padding-top: 100px; }
+.rdb-wallet-dd { width: 88%; max-width: 360px; background: var(--white); border-radius: 18px; padding: 18px; box-shadow: 0 20px 50px rgba(16,24,40,.28); }
+.rdb-wallet-dd-head { display: flex; align-items: center; gap: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border-default); margin-bottom: 10px; }
+.rdb-wallet-dd-divider { width: 1px; height: 34px; background: var(--border-default); }
+.rdb-wallet-dd-label { font-size: 11px; color: var(--gray-500); }
+.rdb-wallet-dd-value { font-size: 20px; font-weight: 800; color: var(--brand-navy); }
+.rdb-wallet-dd-value-sm { font-size: 16px; }
+.rdb-wallet-dd-list { display: flex; flex-direction: column; margin-bottom: 14px; max-height: 180px; overflow-y: auto; }
+.rdb-wallet-dd-row { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; font-size: 12px; color: var(--gray-700); border-bottom: 1px solid var(--gray-100); }
+.rdb-wallet-dd-amt { font-weight: 700; }

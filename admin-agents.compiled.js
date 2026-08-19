@@ -53,8 +53,9 @@ const AGT_NAV = [{
   icon: "lucide:bell",
   label: "Push Notification"
 }, {
-  icon: "lucide:badge-check",
-  label: "Badges"
+  icon: "lucide:trophy",
+  label: "Loyalty & Gamification",
+  chevron: true
 }, {
   icon: "lucide:receipt-text",
   label: "Transactions",
@@ -81,7 +82,7 @@ const AGT_NAV_LINKS = {
   "Analytics": "AdminAnalytics.html",
   "App Versions": "AdminAppVersions.html",
   "Push Notification": "AdminPushNotifications.html",
-  "Badges": "AdminBadges.html",
+  "Loyalty & Gamification": "AdminActionsEditor.html",
   "Transactions": "AdminTransactions.html",
   "Courses": "AdminCourses.html",
   "Community": "AdminCommunity.html"
