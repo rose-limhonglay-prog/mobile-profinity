@@ -7298,16 +7298,18 @@ function TierTagChip({
 
 /* Destinations unlock with the membership ladder: a viewer sees their own
    channel and every one below. Read from window.PF_TIER, falling back to
-   the "pf-preview-tier" localStorage key used by the mobile preview pages. */
+   the "pf-preview-tier" localStorage key used by the mobile preview pages,
+   and finally to the viewer's real subscription tier so a genuinely free
+   member only ever sees "My feed". */
 const SHARE_TIER_ORDER = ["free", "confidence", "mastery", "freedom", "sovereign", "inner"];
 function shareTier() {
-  if (typeof window === "undefined") return "confidence";
+  if (typeof window === "undefined") return "free";
   if (window.PF_TIER) return window.PF_TIER;
   try {
     const v = localStorage.getItem("pf-preview-tier");
     if (v) return v;
   } catch (e) {}
-  return window.PF_FREE ? "free" : "confidence";
+  return getUserTier();
 }
 function ShareSheet({
   onClose,

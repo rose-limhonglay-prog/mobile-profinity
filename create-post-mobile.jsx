@@ -136,12 +136,15 @@ function CPStyleSheet({ value, onPick, onClose }) {
 
 /* Destinations unlock with the membership ladder: a viewer sees their own
    channel and every one below. Read from window.PF_TIER, falling back to
-   the "pf-preview-tier" localStorage key used by the mobile preview pages. */
+   the "pf-preview-tier" localStorage key used by the mobile preview pages,
+   and finally to the poster's real subscription tier so a genuinely free
+   member only ever sees "Post to Newsfeed". */
 const CP_TIER_ORDER = ["free", "confidence", "mastery", "freedom", "sovereign", "inner"];
 function cpTier() {
   if (typeof window === "undefined") return "free";
   if (window.PF_TIER) return window.PF_TIER;
-  try { return localStorage.getItem("pf-preview-tier") || "confidence"; } catch (e) { return "confidence"; }
+  try { const v = localStorage.getItem("pf-preview-tier"); if (v) return v; } catch (e) {}
+  return PFACP && PFACP.getUserTier ? PFACP.getUserTier() : "free";
 }
 const CP_DESTS = [
   { k: "feed", label: "My feed", sub: "Everyone who follows you", icon: "lucide:rss", tier: 0 },
