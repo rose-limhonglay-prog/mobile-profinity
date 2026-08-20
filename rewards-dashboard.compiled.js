@@ -1,10 +1,10 @@
 /* ===========================================================================
-   PROfinity — Katy · Rewards Dashboard (Screens 7 & 8) · iPhone 17 Pro Max
-   Main gamification hub: greeting + membership tier pill, progress toward
-   next badge, engagement cards (points/credits/streak/recent activity/next
-   reward), the Points Wallet dropdown from the top nav, and the loss-
-   aversion streak-at-risk banner with quick-earn CTAs + notification
-   preview simulator. Backed by window.PFLoyalty. Suffixed -RDB.
+   PROfinity — Katy · Rewards Dashboard · iPhone 17 Pro Max
+   Primary hub for the Loyalty & Gamification feature — 6th tab alongside
+   Home / Profile / My Learning / Community / Agent. Reuses the same
+   .app/.lm-screen/.lm-scroll/.lm-tabs device-frame conventions as the other
+   primary tab screens (see learning-mobile.css) so the tab bar and status
+   bar look identical. Classes prefixed rdb- to avoid clashes with other pages.
    =========================================================================== */
 const {
   useState: useStateRDB,
@@ -32,7 +32,7 @@ const RDB_TABS = [{
   dot: "12"
 }, {
   key: "Learning",
-  label: "My Learning",
+  label: "Learning",
   icon: "lucide:book-open",
   href: "LearningMobile.html"
 }, {
@@ -173,10 +173,6 @@ function StreakRiskBanner({
     className: "rdb-risk-ctas"
   }, /*#__PURE__*/React.createElement("button", {
     className: "ml-btn ml-btn-sm",
-    style: {
-      background: "#fff",
-      color: "var(--error)"
-    },
     type: "button",
     onClick: () => {
       PF_RDB.completeAction("evt_webinar_attend");
@@ -185,7 +181,7 @@ function StreakRiskBanner({
   }, "Read daily article"), /*#__PURE__*/React.createElement("button", {
     className: "ml-btn ml-btn-sm",
     style: {
-      background: "rgba(255,255,255,.18)",
+      background: "rgba(255,255,255,.22)",
       color: "#fff"
     },
     type: "button",
@@ -230,18 +226,42 @@ function RdbHeader({
     color: "#fff"
   }), " ", tier, " Membership"), /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-card"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rdb-lottie",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("iframe", {
+    src: "https://lottie.host/embed/6f0e55a1-dc57-49d4-b476-c3bf42c31413/GbttNIK744.json",
+    title: "",
+    scrolling: "no",
+    style: {
+      width: "88px",
+      height: "88px",
+      border: "none",
+      background: "transparent"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "rdb-progress-body"
   }, /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-top"
   }, /*#__PURE__*/React.createElement("span", null, progress.current ? progress.current.name : "Unranked"), /*#__PURE__*/React.createElement("span", null, progress.next ? progress.next.name : "Top tier")), /*#__PURE__*/React.createElement("div", {
-    className: "ml-progress-track"
+    className: "ml-progress-track rdb-progress-track"
   }, /*#__PURE__*/React.createElement("div", {
     className: "ml-progress-fill",
     style: {
       width: progress.pct + "%"
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  }), progress.next ? /*#__PURE__*/React.createElement("span", {
+    className: "rdb-progress-marker",
+    title: PF_RDB.formatNumber(progress.next.threshold || 0) + " pts"
+  }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
+    name: "lucide:star",
+    size: 11,
+    color: "#fff"
+  })) : null), progress.next ? /*#__PURE__*/React.createElement("div", {
+    className: "rdb-progress-scale"
+  }, /*#__PURE__*/React.createElement("span", null, PF_RDB.formatNumber(state.lifetimePoints), " pts"), /*#__PURE__*/React.createElement("span", null, PF_RDB.formatNumber((state.lifetimePoints || 0) + (progress.remaining || 0)), " pts")) : null, /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-note"
-  }, progress.next ? PF_RDB.formatNumber(progress.remaining) + " pts away from " + progress.next.name : "You've reached the top badge tier!")));
+  }, progress.next ? PF_RDB.formatNumber(progress.remaining) + " pts away from " + progress.next.name : "You've reached the top badge tier!"))));
 }
 function RdbEngagementCards({
   state
@@ -250,31 +270,58 @@ function RdbEngagementCards({
     className: "rdb-eng-grid"
   }, /*#__PURE__*/React.createElement("div", {
     className: "ml-card rdb-eng-card"
-  }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
-    name: "lucide:star",
-    size: 20,
-    color: "var(--brand-gold)"
-  }), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rdb-eng-lottie",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("iframe", {
+    src: "https://lottie.host/embed/c7c98875-fe8d-4de8-95c1-3e12acf7ad0a/fpeaeGfS64.json",
+    title: "",
+    scrolling: "no",
+    style: {
+      width: "34px",
+      height: "34px",
+      border: "none",
+      background: "transparent"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
     className: "rdb-eng-value"
   }, PF_RDB.formatNumber(state.lifetimePoints)), /*#__PURE__*/React.createElement("div", {
     className: "rdb-eng-label"
   }, "Lifetime Points")), /*#__PURE__*/React.createElement("div", {
     className: "ml-card rdb-eng-card"
-  }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
-    name: "lucide:wallet",
-    size: 20,
-    color: "var(--success)"
-  }), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rdb-eng-lottie",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("iframe", {
+    src: "https://lottie.host/embed/1470432e-8f5e-4eb4-a73c-75e6b6972d46/qk3KaEmMpz.json",
+    title: "",
+    scrolling: "no",
+    style: {
+      width: "52px",
+      height: "52px",
+      border: "none",
+      background: "transparent"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
     className: "rdb-eng-value"
   }, PF_RDB.formatNumber(state.spendableCredits)), /*#__PURE__*/React.createElement("div", {
     className: "rdb-eng-label"
   }, "Spendable Credits")), /*#__PURE__*/React.createElement("div", {
     className: "ml-card rdb-eng-card"
-  }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
-    name: "lucide:flame",
-    size: 20,
-    color: "#e7820a"
-  }), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rdb-eng-lottie",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("iframe", {
+    src: "https://lottie.host/embed/d7ce0087-b4ad-4b7a-b657-558f841da6e5/pSvC2r0DRZ.json",
+    title: "",
+    scrolling: "no",
+    style: {
+      width: "52px",
+      height: "52px",
+      border: "none",
+      background: "transparent"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
     className: "rdb-eng-value"
   }, state.streak.current, " Days"), /*#__PURE__*/React.createElement("div", {
     className: "rdb-eng-label"
@@ -288,11 +335,13 @@ function RdbQuickNav() {
   }, {
     label: "Rewards Store",
     icon: "lucide:shopping-bag",
-    href: "RewardsStore.html"
+    href: "RewardsStore.html",
+    dot: true
   }, {
     label: "Leaderboard",
     icon: "lucide:bar-chart-3",
-    href: "Leaderboard.html"
+    href: "Leaderboard.html",
+    note: "#12"
   }, {
     label: "Badge Gallery",
     icon: "lucide:award",
@@ -315,7 +364,14 @@ function RdbQuickNav() {
     name: it.icon,
     size: 20,
     color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("span", null, it.label))));
+  }), it.dot ? /*#__PURE__*/React.createElement("span", {
+    className: "rdb-quicknav-dot",
+    "aria-hidden": "true"
+  }) : null), /*#__PURE__*/React.createElement("span", null, it.label, it.note ? /*#__PURE__*/React.createElement("i", {
+    className: "rdb-quicknav-note"
+  }, it.note) : null, it.dot ? /*#__PURE__*/React.createElement("span", {
+    className: "sr-only"
+  }, " — new rewards available") : null))));
 }
 function RdbRecentActivity({
   state
@@ -331,10 +387,7 @@ function RdbRecentActivity({
   }, t.label), /*#__PURE__*/React.createElement("span", {
     className: "rdb-activity-time"
   }, fmtRelDate(t.ts)), /*#__PURE__*/React.createElement("span", {
-    className: "rdb-activity-amt",
-    style: {
-      color: t.pointsDelta > 0 ? "var(--success)" : "var(--gray-400)"
-    }
+    className: "rdb-activity-amt" + (t.pointsDelta > 0 ? "" : " is-spend")
   }, t.pointsDelta > 0 ? "+" + t.pointsDelta + " pts" : "—"))));
 }
 function RdbNextReward({
@@ -351,7 +404,7 @@ function RdbNextReward({
   }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
     name: "lucide:gift",
     size: 22,
-    color: "var(--brand-navy)"
+    color: "#fff"
   })), /*#__PURE__*/React.createElement("span", {
     className: "rdb-next-reward-main"
   }, /*#__PURE__*/React.createElement("span", {
@@ -400,7 +453,15 @@ function RewardsDashboardHome() {
     state: state
   }), /*#__PURE__*/React.createElement("div", {
     className: "ml-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Jump back in")), /*#__PURE__*/React.createElement(RdbQuickNav, null), /*#__PURE__*/React.createElement(RdbNextReward, {
+  }, /*#__PURE__*/React.createElement("h2", null, "Jump back in"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-coach-link",
+    "data-coach": "Help me find the fastest way to earn more points and reach the next reward tier."
+  }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "var(--ai-purple)"
+  }), "Discuss with Ava")), /*#__PURE__*/React.createElement(RdbQuickNav, null), /*#__PURE__*/React.createElement(RdbNextReward, {
     state: state,
     config: config
   }), /*#__PURE__*/React.createElement("div", {

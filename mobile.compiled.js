@@ -48,7 +48,7 @@ const M_TABS = [{
   key: "Rewards",
   label: "Rewards",
   icon: "lucide:gift",
-  href: null
+  href: "RewardsDashboard.html"
 }];
 const PUSH_NOTIF = {
   app: "PROfinity Academy",

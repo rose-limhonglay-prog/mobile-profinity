@@ -805,7 +805,7 @@ const PM_TABS = [{
   key: "Rewards",
   label: "Rewards",
   icon: "lucide:gift",
-  href: null
+  href: "RewardsDashboard.html"
 }];
 const SM_TIER_RESOURCES_PM = {
   Confidence: [{

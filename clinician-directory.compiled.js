@@ -58,7 +58,7 @@ const CD_TABS = [{
   key: "Rewards",
   label: "Rewards",
   icon: "lucide:gift",
-  href: null
+  href: "RewardsDashboard.html"
 }];
 const CD_CLINICIANS = [{
   id: 1,
@@ -575,6 +575,16 @@ function CDScreen() {
     value: query,
     onChange: e => setQuery(e.target.value)
   }))), /*#__PURE__*/React.createElement("div", {
+    className: "cd-coach-row"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-coach-link",
+    "data-coach": "How should I use the clinician directory to build referral relationships nearby?"
+  }, /*#__PURE__*/React.createElement(DSCD.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "var(--ai-purple)"
+  }), "Discuss with Ava")), /*#__PURE__*/React.createElement("div", {
     className: "cd-map-wrap"
   }, /*#__PURE__*/React.createElement(CDMapSVG, null), CD_CLINICIANS.map(c => /*#__PURE__*/React.createElement(CDPin, {
     key: c.id,

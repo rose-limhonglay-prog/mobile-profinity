@@ -35,7 +35,7 @@ const CD_TABS = [
   { key: "Learning",  label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
   { key: "Profile",   label: "Profile",     icon: "lucide:user",      href: "ProfileMobile.html" },
   { key: "Agent",     label: "Ava",       icon: "lucide:sparkles",  href: "Agent.html" },
-  { key: "Rewards",   label: "Rewards",   icon: "lucide:gift",     href: null },
+  { key: "Rewards",   label: "Rewards",   icon: "lucide:gift",     href: "RewardsDashboard.html" },
 ];
 
 const CD_CLINICIANS = [
@@ -255,6 +255,13 @@ function CDScreen() {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
+      </div>
+
+      {/* Coach deep link */}
+      <div className="cd-coach-row">
+        <button type="button" className="pf-coach-link" data-coach="How should I use the clinician directory to build referral relationships nearby?">
+          <DSCD.IconifyIcon name="lucide:sparkles" size={14} color="var(--ai-purple)" />Discuss with Ava
+        </button>
       </div>
 
       {/* Map */}

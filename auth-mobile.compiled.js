@@ -4,7 +4,8 @@
    =========================================================================== */
 const DSAU = window.ProfinityDesignSystem_c2b5cc;
 const {
-  useState: useStateAU
+  useState: useStateAU,
+  useEffect: useEffectAU
 } = React;
 const IOSDeviceAU = window.IOSDevice;
 const Ico = ({
@@ -210,14 +211,55 @@ function SignIn({
 }
 
 /* ------------------------------ STEP 1 · TYPE ----------------------------- */
+/* Raw-JSON Lottie (the /embed iframe caches aggressively). */
+function AULottie({
+  src,
+  size
+}) {
+  const host = React.useRef(null);
+  React.useEffect(() => {
+    let anim, iv;
+    const start = () => {
+      if (!window.lottie || !host.current) return;
+      anim = window.lottie.loadAnimation({
+        container: host.current,
+        renderer: "svg",
+        loop: true,
+        autoplay: true,
+        path: src
+      });
+    };
+    if (window.lottie) start();else {
+      iv = setInterval(() => {
+        if (window.lottie) {
+          clearInterval(iv);
+          start();
+        }
+      }, 120);
+      setTimeout(() => clearInterval(iv), 8000);
+    }
+    return () => {
+      if (iv) clearInterval(iv);
+      if (anim) anim.destroy();
+    };
+  }, [src]);
+  return /*#__PURE__*/React.createElement("span", {
+    ref: host,
+    style: {
+      display: "block",
+      width: size,
+      height: size
+    }
+  });
+}
 const AU_TYPES = [{
   k: "clinician",
-  ic: "fluent-emoji-flat:people-holding-hands",
+  lottie: "https://lottie.host/302e0f00-99b9-4be7-92cd-7318c6b76559/N7Cv2xlAcn.json",
   t: "Clinician",
   s: "Delivering expert care with confidence."
 }, {
   k: "patient",
-  ic: "fluent-emoji-flat:identification-card",
+  lottie: "https://lottie.host/6d606005-0f87-454f-8093-a754defbb877/32xh9U5eNK.json",
   t: "Patient",
   s: "Your journey to better health starts here."
 }];
@@ -255,10 +297,9 @@ function StepType({
     onClick: () => setType(t.k)
   }, /*#__PURE__*/React.createElement("span", {
     className: "au-type-ic"
-  }, /*#__PURE__*/React.createElement(Ico, {
-    n: t.ic,
-    s: 30,
-    c: "currentColor"
+  }, /*#__PURE__*/React.createElement(AULottie, {
+    src: t.lottie,
+    size: 68
   })), /*#__PURE__*/React.createElement("span", {
     className: "au-type-tx"
   }, /*#__PURE__*/React.createElement("span", {
@@ -685,18 +726,9 @@ function DailyReward({
     }
   }), /*#__PURE__*/React.createElement("span", {
     className: "au-rw-coin"
-  }, /*#__PURE__*/React.createElement("iframe", {
-    src: "https://lottie.host/embed/cc6c5973-9f61-481c-85ed-0fe2089a9176/CwHL9yTPJJ.json",
-    title: "",
-    "aria-hidden": "true",
-    scrolling: "no",
-    style: {
-      width: "168px",
-      height: "168px",
-      border: "none",
-      background: "transparent",
-      colorScheme: "normal"
-    }
+  }, /*#__PURE__*/React.createElement(AULottie, {
+    src: "https://lottie.host/cc6c5973-9f61-481c-85ed-0fe2089a9176/CwHL9yTPJJ.json",
+    size: 168
   }))), /*#__PURE__*/React.createElement("p", {
     className: "au-rw-kicker"
   }, "Daily login reward"), /*#__PURE__*/React.createElement("p", {
@@ -729,18 +761,35 @@ function Complete() {
   })), /*#__PURE__*/React.createElement("h1", null, "You're all set!"), /*#__PURE__*/React.createElement("p", null, "Your Prosperity Spiral is ready. Let's get you to your dream clinic."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "au-cta",
-    onClick: () => goAU("NewsfeedMobile.html")
-  }, "Go to my feed")));
+    onClick: () => {
+      try {
+        localStorage.setItem("pf-tour", "1");
+        localStorage.setItem("pf-tour-step", "welcome");
+      } catch (e) {}
+      goAU("NewsfeedMobile.html");
+    }
+  }, "Take the tour")));
 }
 
 /* ---------------------------------- APP ----------------------------------- */
 const AU_LINKABLE_VIEWS = ["splash", "signin", "type", "details", "otp", "verified", "goals", "done"];
+function useDeviceScaleAU() {
+  const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
+  const [scale, setScale] = useStateAU(calc);
+  useEffectAU(() => {
+    const update = () => setScale(calc());
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return scale;
+}
 function AuthMobileApp() {
   const requested = getParamAU("view");
   const [view, setView] = useStateAU(AU_LINKABLE_VIEWS.includes(requested) ? requested : "splash");
   const [type, setType] = useStateAU("clinician");
   const [email, setEmail] = useStateAU("");
   const [forgot, setForgot] = useStateAU(false);
+  const scale = useDeviceScaleAU();
   const go = v => setView(v);
   return /*#__PURE__*/React.createElement("div", {
     className: "app device-stage",
@@ -748,6 +797,11 @@ function AuthMobileApp() {
       "--action-primary": "var(--brand-navy)",
       "--action-primary-hover": "var(--brand-navy-700)",
       backgroundColor: "rgb(216, 218, 226)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      transform: `scale(${scale})`,
+      transformOrigin: "center center"
     }
   }, /*#__PURE__*/React.createElement(IOSDeviceAU, {
     width: 440,
@@ -759,7 +813,13 @@ function AuthMobileApp() {
     onForgot: () => {},
     onDone: () => {}
   }), /*#__PURE__*/React.createElement(DailyReward, {
-    onDone: () => goAU("NewsfeedMobile.html")
+    onDone: () => {
+      try {
+        localStorage.setItem("pf-tour", "1");
+        localStorage.setItem("pf-tour-step", "welcome");
+      } catch (e) {}
+      goAU("NewsfeedMobile.html");
+    }
   })), view === "signin" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SignIn, {
     onSignUp: () => go("type"),
     onForgot: () => setForgot(true),
@@ -791,6 +851,6 @@ function AuthMobileApp() {
   }), view === "goals" && /*#__PURE__*/React.createElement(StepGoals, {
     onBack: () => go("details"),
     onDone: () => go("done")
-  }), view === "done" && /*#__PURE__*/React.createElement(Complete, null)));
+  }), view === "done" && /*#__PURE__*/React.createElement(Complete, null))));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(AuthMobileApp, null));

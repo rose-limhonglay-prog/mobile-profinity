@@ -61,7 +61,7 @@ const CM_TABS = [{
   key: "Rewards",
   label: "Rewards",
   icon: "lucide:gift",
-  href: null
+  href: "RewardsDashboard.html"
 }];
 
 /* Same tier keys as app.jsx's TIER_LADDER, with the resource lists the
@@ -1126,9 +1126,7 @@ function useHeaderHideCM(scrollRef) {
   return hidden;
 }
 function CMScreen({
-  scrollRef,
-  newPosts,
-  dismiss
+  scrollRef
 }) {
   const [channel, setChannel] = React.useState("Confidence");
   const [msgOpen, setMsgOpen] = React.useState(false);
@@ -1175,16 +1173,7 @@ function CMScreen({
       paddingTop: headerH,
       paddingBottom: tabsH + 34
     }
-  }, newPosts > 0 && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "cm-newposts",
-    onClick: dismiss,
-    "aria-label": newPosts + " new posts, tap to see them"
-  }, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
-    name: "lucide:arrow-up",
-    size: 18,
-    color: "var(--white)"
-  }), newPosts, " New Posts"), /*#__PURE__*/React.createElement(PFACM.Feed, {
+  }, /*#__PURE__*/React.createElement(PFACM.Feed, {
     channel: CM_CHANNEL_BUCKET[channel]
   }), /*#__PURE__*/React.createElement("div", {
     className: "cm-end"
@@ -1217,25 +1206,14 @@ function CMScreen({
 }
 function CommunityMobileApp() {
   const mobile = useIsMobileCM();
-  const [newPosts, setNewPosts] = React.useState(3);
   const scrollRef = React.useRef(null);
-  const dismiss = () => {
-    const s = scrollRef.current;
-    if (s) s.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-    setNewPosts(0);
-  };
   const scale = useDeviceScaleCM();
   const vars = {
     "--action-primary": "var(--brand-navy)",
     "--action-primary-hover": "var(--brand-navy-700)"
   };
   const screen = /*#__PURE__*/React.createElement(CMScreen, {
-    scrollRef: scrollRef,
-    newPosts: newPosts,
-    dismiss: dismiss
+    scrollRef: scrollRef
   });
   if (mobile) {
     return /*#__PURE__*/React.createElement("div", {

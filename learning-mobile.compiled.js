@@ -219,7 +219,7 @@ const LM_TABS = [{
   key: "Rewards",
   label: "Rewards",
   icon: "lucide:gift",
-  href: null
+  href: "RewardsDashboard.html"
 }];
 function LM2Header({
   freeTier,
@@ -280,7 +280,15 @@ function LM2GoalBanner({
     className: "lm2-goal-vision"
   }, data.vision), /*#__PURE__*/React.createElement("p", {
     className: "lm2-goal-clarifier"
-  }, data.clarifier));
+  }, data.clarifier), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-coach-link lm2-goal-coach",
+    "data-coach": "Help me get closer to my £80k/month clinic goal — what should I focus on next?"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "#fff"
+  }), "Discuss with Ava"));
 }
 function LM2ContinueCard({
   data

@@ -1,4 +1,3 @@
-function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
 /* ===========================================================================
    PROfinity Academy — Agents page
    Composed from the bound Profinity Design System bundle (AgentHero + AgentCard).
@@ -65,9 +64,10 @@ function AgentTile({
 }) {
   const [waitlisted, setWaitlisted] = useStateA(!!a.waitlisted);
   if (a.available) {
-    return /*#__PURE__*/React.createElement(AgentCard, _extends({}, a, {
+    return /*#__PURE__*/React.createElement(AgentCard, {
+      ...a,
       onCta: () => {}
-    }));
+    });
   }
   return /*#__PURE__*/React.createElement(AgentCard, {
     icon: a.icon,
@@ -107,7 +107,7 @@ function navigate(label) {
 function AgentsApp() {
   useEffectA(() => pfTagActiveNav("Agent"));
   return /*#__PURE__*/React.createElement("div", {
-    className: "app",
+    className: "app wa-screen",
     style: {
       "--action-primary": "var(--ai-purple)",
       "--action-primary-hover": "var(--ai-purple-hover)"

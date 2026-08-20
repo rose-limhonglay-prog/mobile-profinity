@@ -38,7 +38,7 @@ const CM_TABS = [
 { key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
 { key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" },
-{ key: "Rewards", label: "Rewards", icon: "lucide:gift", href: null }];
+{ key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" }];
 
 /* Same tier keys as app.jsx's TIER_LADDER, with the resource lists the
    expandable Communities cards in the side menu need — app.jsx's ladder only
@@ -646,7 +646,7 @@ function useHeaderHideCM(scrollRef) {
   return hidden;
 }
 
-function CMScreen({ scrollRef, newPosts, dismiss }) {
+function CMScreen({ scrollRef }) {
   const [channel, setChannel] = React.useState("Confidence");
   const [msgOpen, setMsgOpen] = React.useState(false);
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -680,13 +680,6 @@ function CMScreen({ scrollRef, newPosts, dismiss }) {
         <CMHeader channel={channel} setChannel={setChannel} />
       </div>
       <div className="cm-scroll" ref={scrollRef} style={{ paddingTop: headerH, paddingBottom: tabsH + 34 }}>
-        {newPosts > 0 &&
-        <button type="button" className="cm-newposts" onClick={dismiss}
-        aria-label={newPosts + " new posts, tap to see them"}>
-            <DSCM.IconifyIcon name="lucide:arrow-up" size={18} color="var(--white)" />
-            {newPosts} New Posts
-          </button>
-        }
         <PFACM.Feed channel={CM_CHANNEL_BUCKET[channel]} />
         <div className="cm-end">End of newsfeed</div>
       </div>
@@ -705,16 +698,10 @@ function CMScreen({ scrollRef, newPosts, dismiss }) {
 
 function CommunityMobileApp() {
   const mobile = useIsMobileCM();
-  const [newPosts, setNewPosts] = React.useState(3);
   const scrollRef = React.useRef(null);
-  const dismiss = () => {
-    const s = scrollRef.current;
-    if (s) s.scrollTo({ top: 0, behavior: "smooth" });
-    setNewPosts(0);
-  };
   const scale = useDeviceScaleCM();
   const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
-  const screen = <CMScreen scrollRef={scrollRef} newPosts={newPosts} dismiss={dismiss} />;
+  const screen = <CMScreen scrollRef={scrollRef} />;
   if (mobile) {
     return <div className="app" style={{ ...vars, background: "var(--surface-card)" }}>{screen}</div>;
   }

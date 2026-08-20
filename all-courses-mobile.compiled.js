@@ -137,7 +137,7 @@ const AC_TABS = [{
   key: "Rewards",
   label: "Rewards",
   icon: "lucide:gift",
-  href: null
+  href: "RewardsDashboard.html"
 }];
 function ACTabBar() {
   return /*#__PURE__*/React.createElement("nav", {
@@ -240,7 +240,17 @@ function AllCoursesHome() {
     "aria-selected": filter === f,
     className: "ac-filter" + (filter === f ? " on" : ""),
     onClick: () => setFilter(f)
-  }, f))), courses.length === 0 ? /*#__PURE__*/React.createElement("p", {
+  }, f))), /*#__PURE__*/React.createElement("div", {
+    className: "ac-coach-row"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-coach-link",
+    "data-coach": "I'm looking at the course catalog — which course should I take next to grow my clinic?"
+  }, /*#__PURE__*/React.createElement(IconifyAC, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "var(--ai-purple)"
+  }), "Which course should I take next?")), courses.length === 0 ? /*#__PURE__*/React.createElement("p", {
     className: "ac-empty"
   }, "No courses match your search.") : /*#__PURE__*/React.createElement("div", {
     className: "ac-grid"

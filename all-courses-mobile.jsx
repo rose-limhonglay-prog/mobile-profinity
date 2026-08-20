@@ -49,7 +49,7 @@ const AC_TABS = [
 { key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
 { key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" },
-{ key: "Rewards", label: "Rewards", icon: "lucide:gift", href: null }];
+{ key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" }];
 
 
 function ACTabBar() {
@@ -119,6 +119,11 @@ function AllCoursesHome() {
               {f}
             </button>
           )}
+        </div>
+        <div className="ac-coach-row">
+          <button type="button" className="pf-coach-link" data-coach="I'm looking at the course catalog — which course should I take next to grow my clinic?">
+            <IconifyAC name="lucide:sparkles" size={14} color="var(--ai-purple)" />Which course should I take next?
+          </button>
         </div>
         {courses.length === 0 ?
         <p className="ac-empty">No courses match your search.</p> :

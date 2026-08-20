@@ -1,10 +1,10 @@
 /* ===========================================================================
-   PROfinity — Katy · Rewards Dashboard (Screens 7 & 8) · iPhone 17 Pro Max
-   Main gamification hub: greeting + membership tier pill, progress toward
-   next badge, engagement cards (points/credits/streak/recent activity/next
-   reward), the Points Wallet dropdown from the top nav, and the loss-
-   aversion streak-at-risk banner with quick-earn CTAs + notification
-   preview simulator. Backed by window.PFLoyalty. Suffixed -RDB.
+   PROfinity — Katy · Rewards Dashboard · iPhone 17 Pro Max
+   Primary hub for the Loyalty & Gamification feature — 6th tab alongside
+   Home / Profile / My Learning / Community / Agent. Reuses the same
+   .app/.lm-screen/.lm-scroll/.lm-tabs device-frame conventions as the other
+   primary tab screens (see learning-mobile.css) so the tab bar and status
+   bar look identical. Classes prefixed rdb- to avoid clashes with other pages.
    =========================================================================== */
 const { useState: useStateRDB, useEffect: useEffectRDB, useRef: useRefRDB } = React;
 const DSRDB = window.ProfinityDesignSystem_c2b5cc;
@@ -16,7 +16,7 @@ function goRDB(url) { (window.pfGo || function (u) { window.location.href = u; }
 const RDB_TABS = [
   { key: "Home", label: "Home", icon: "lucide:home", href: "NewsfeedMobile.html" },
   { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
-  { key: "Learning", label: "My Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
+  { key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
   { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
   { key: "Agent", label: "Agent", icon: "lucide:sparkles", href: "AgentMobile.html" },
   { key: "Rewards", label: "Rewards", icon: "lucide:gift", href: null }
@@ -91,8 +91,8 @@ function StreakRiskBanner({ state, onSimResolve }) {
       <div className="rdb-risk-head"><DSRDB.IconifyIcon name="lucide:flame" size={20} color="#fff" /><span>Your {state.streak.current}-Day Streak is at Risk!</span></div>
       <div className="rdb-risk-clock">Expires in {fmtClock(remaining)}</div>
       <div className="rdb-risk-ctas">
-        <button className="ml-btn ml-btn-sm" style={{ background: "#fff", color: "var(--error)" }} type="button" onClick={() => { PF_RDB.completeAction("evt_webinar_attend"); onSimResolve(); }}>Read daily article</button>
-        <button className="ml-btn ml-btn-sm" style={{ background: "rgba(255,255,255,.18)", color: "#fff" }} type="button" onClick={() => goRDB("RewardsStore.html")}>Share a reward</button>
+        <button className="ml-btn ml-btn-sm" type="button" onClick={() => { PF_RDB.completeAction("evt_webinar_attend"); onSimResolve(); }}>Read daily article</button>
+        <button className="ml-btn ml-btn-sm" style={{ background: "rgba(255,255,255,.22)", color: "#fff" }} type="button" onClick={() => goRDB("RewardsStore.html")}>Share a reward</button>
       </div>
       <div className="rdb-notif-stack">
         <NotificationPreview hoursLabel="· 6h before" body={"Don't lose your " + state.streak.current + "-day streak — check in before it expires!"} />
@@ -116,12 +116,26 @@ function RdbHeader({ state, tier, onOpenWallet }) {
       </div>
       <span className="rdb-tierpill"><DSRDB.IconifyIcon name="lucide:crown" size={12} color="#fff" /> {tier} Membership</span>
       <div className="rdb-progress-card">
-        <div className="rdb-progress-top">
-          <span>{progress.current ? progress.current.name : "Unranked"}</span>
-          <span>{progress.next ? progress.next.name : "Top tier"}</span>
+        <span className="rdb-lottie" aria-hidden="true">
+          <iframe src="https://lottie.host/embed/6f0e55a1-dc57-49d4-b476-c3bf42c31413/GbttNIK744.json" title="" scrolling="no" style={{ width: "88px", height: "88px", border: "none", background: "transparent" }} />
+        </span>
+        <div className="rdb-progress-body">
+          <div className="rdb-progress-top">
+            <span>{progress.current ? progress.current.name : "Unranked"}</span>
+            <span>{progress.next ? progress.next.name : "Top tier"}</span>
+          </div>
+          <div className="ml-progress-track rdb-progress-track">
+            <div className="ml-progress-fill" style={{ width: progress.pct + "%" }} />
+            {progress.next ? <span className="rdb-progress-marker" title={PF_RDB.formatNumber(progress.next.threshold || 0) + " pts"}><DSRDB.IconifyIcon name="lucide:star" size={11} color="#fff" /></span> : null}
+          </div>
+          {progress.next ? (
+            <div className="rdb-progress-scale">
+              <span>{PF_RDB.formatNumber(state.lifetimePoints)} pts</span>
+              <span>{PF_RDB.formatNumber((state.lifetimePoints || 0) + (progress.remaining || 0))} pts</span>
+            </div>
+          ) : null}
+          <div className="rdb-progress-note">{progress.next ? PF_RDB.formatNumber(progress.remaining) + " pts away from " + progress.next.name : "You've reached the top badge tier!"}</div>
         </div>
-        <div className="ml-progress-track"><div className="ml-progress-fill" style={{ width: progress.pct + "%" }} /></div>
-        <div className="rdb-progress-note">{progress.next ? PF_RDB.formatNumber(progress.remaining) + " pts away from " + progress.next.name : "You've reached the top badge tier!"}</div>
       </div>
     </div>
   );
@@ -130,9 +144,21 @@ function RdbHeader({ state, tier, onOpenWallet }) {
 function RdbEngagementCards({ state }) {
   return (
     <div className="rdb-eng-grid">
-      <div className="ml-card rdb-eng-card"><DSRDB.IconifyIcon name="lucide:star" size={20} color="var(--brand-gold)" /><div className="rdb-eng-value">{PF_RDB.formatNumber(state.lifetimePoints)}</div><div className="rdb-eng-label">Lifetime Points</div></div>
-      <div className="ml-card rdb-eng-card"><DSRDB.IconifyIcon name="lucide:wallet" size={20} color="var(--success)" /><div className="rdb-eng-value">{PF_RDB.formatNumber(state.spendableCredits)}</div><div className="rdb-eng-label">Spendable Credits</div></div>
-      <div className="ml-card rdb-eng-card"><DSRDB.IconifyIcon name="lucide:flame" size={20} color="#e7820a" /><div className="rdb-eng-value">{state.streak.current} Days</div><div className="rdb-eng-label">Active Streak</div></div>
+      <div className="ml-card rdb-eng-card">
+        <span className="rdb-eng-lottie" aria-hidden="true"><iframe src="https://lottie.host/embed/c7c98875-fe8d-4de8-95c1-3e12acf7ad0a/fpeaeGfS64.json" title="" scrolling="no" style={{ width: "34px", height: "34px", border: "none", background: "transparent" }} /></span>
+        <div className="rdb-eng-value">{PF_RDB.formatNumber(state.lifetimePoints)}</div>
+        <div className="rdb-eng-label">Lifetime Points</div>
+      </div>
+      <div className="ml-card rdb-eng-card">
+        <span className="rdb-eng-lottie" aria-hidden="true"><iframe src="https://lottie.host/embed/1470432e-8f5e-4eb4-a73c-75e6b6972d46/qk3KaEmMpz.json" title="" scrolling="no" style={{ width: "52px", height: "52px", border: "none", background: "transparent" }} /></span>
+        <div className="rdb-eng-value">{PF_RDB.formatNumber(state.spendableCredits)}</div>
+        <div className="rdb-eng-label">Spendable Credits</div>
+      </div>
+      <div className="ml-card rdb-eng-card">
+        <span className="rdb-eng-lottie" aria-hidden="true"><iframe src="https://lottie.host/embed/d7ce0087-b4ad-4b7a-b657-558f841da6e5/pSvC2r0DRZ.json" title="" scrolling="no" style={{ width: "52px", height: "52px", border: "none", background: "transparent" }} /></span>
+        <div className="rdb-eng-value">{state.streak.current} Days</div>
+        <div className="rdb-eng-label">Active Streak</div>
+      </div>
     </div>
   );
 }
@@ -140,8 +166,8 @@ function RdbEngagementCards({ state }) {
 function RdbQuickNav() {
   const items = [
     { label: "Badge Progress", icon: "lucide:target", href: "BadgeProgress.html" },
-    { label: "Rewards Store", icon: "lucide:shopping-bag", href: "RewardsStore.html" },
-    { label: "Leaderboard", icon: "lucide:bar-chart-3", href: "Leaderboard.html" },
+    { label: "Rewards Store", icon: "lucide:shopping-bag", href: "RewardsStore.html", dot: true },
+    { label: "Leaderboard", icon: "lucide:bar-chart-3", href: "Leaderboard.html", note: "#12" },
     { label: "Badge Gallery", icon: "lucide:award", href: "BadgeGallery.html" },
     { label: "Ways to Earn", icon: "lucide:sparkles", href: "WaysToEarn.html" }
   ];
@@ -149,8 +175,15 @@ function RdbQuickNav() {
     <div className="rdb-quicknav">
       {items.map((it) => (
         <button key={it.label} className="rdb-quicknav-item" type="button" onClick={() => goRDB(it.href)}>
-          <span className="rdb-quicknav-icon"><DSRDB.IconifyIcon name={it.icon} size={20} color="var(--brand-navy)" /></span>
-          <span>{it.label}</span>
+          <span className="rdb-quicknav-icon">
+            <DSRDB.IconifyIcon name={it.icon} size={20} color="var(--brand-navy)" />
+            {it.dot ? <span className="rdb-quicknav-dot" aria-hidden="true" /> : null}
+          </span>
+          <span>
+            {it.label}
+            {it.note ? <i className="rdb-quicknav-note">{it.note}</i> : null}
+            {it.dot ? <span className="sr-only"> — new rewards available</span> : null}
+          </span>
         </button>
       ))}
     </div>
@@ -165,7 +198,7 @@ function RdbRecentActivity({ state }) {
         <div key={t.id} className="rdb-activity-row">
           <span className="rdb-activity-label">{t.label}</span>
           <span className="rdb-activity-time">{fmtRelDate(t.ts)}</span>
-          <span className="rdb-activity-amt" style={{ color: t.pointsDelta > 0 ? "var(--success)" : "var(--gray-400)" }}>{t.pointsDelta > 0 ? "+" + t.pointsDelta + " pts" : "—"}</span>
+          <span className={"rdb-activity-amt" + (t.pointsDelta > 0 ? "" : " is-spend")}>{t.pointsDelta > 0 ? "+" + t.pointsDelta + " pts" : "—"}</span>
         </div>
       ))}
     </div>
@@ -176,7 +209,7 @@ function RdbNextReward({ state, config }) {
   const affordable = config.storeItems.filter((i) => i.cost <= state.spendableCredits + 500).sort((a, b) => a.cost - b.cost)[0] || config.storeItems[0];
   return (
     <button className="ml-card rdb-next-reward" type="button" onClick={() => goRDB("RewardsStore.html")}>
-      <span className="rdb-next-reward-icon"><DSRDB.IconifyIcon name="lucide:gift" size={22} color="var(--brand-navy)" /></span>
+      <span className="rdb-next-reward-icon"><DSRDB.IconifyIcon name="lucide:gift" size={22} color="#fff" /></span>
       <span className="rdb-next-reward-main"><span className="ti">Next Available Reward</span><span className="su">{affordable.name} · {PF_RDB.formatNumber(affordable.cost)} credits</span></span>
       <DSRDB.IconifyIcon name="lucide:chevron-right" size={18} color="var(--gray-400)" />
     </button>
@@ -199,7 +232,12 @@ function RewardsDashboardHome() {
         <StreakRiskBanner state={state} onSimResolve={() => { refresh(); flash("Nice — streak saved!"); }} />
         <div style={{ padding: "0 20px" }}>
           <RdbEngagementCards state={state} />
-          <div className="ml-sec-h"><h2>Jump back in</h2></div>
+          <div className="ml-sec-h">
+            <h2>Jump back in</h2>
+            <button type="button" className="pf-coach-link" data-coach="Help me find the fastest way to earn more points and reach the next reward tier.">
+              <DSRDB.IconifyIcon name="lucide:sparkles" size={14} color="var(--ai-purple)" />Discuss with Ava
+            </button>
+          </div>
           <RdbQuickNav />
           <RdbNextReward state={state} config={config} />
           <div className="ml-sec-h"><h2>Recent Activity</h2></div>

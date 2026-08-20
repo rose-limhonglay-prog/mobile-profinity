@@ -220,7 +220,7 @@ function MyLearningApp() {
   useEffectL(() => { const t = setTimeout(() => setLoading(false), 1800); return () => clearTimeout(t); }, []);
 
   return (
-    <div className="app" style={{ "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" }}>
+    <div className="app wa-screen" style={{ "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" }}>
       <TopNav active="My Learning" user={ME} logoSrc="assets/profinity-icon-purple-gold.png"
         onNavigate={navigate}
         style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />

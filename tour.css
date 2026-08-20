@@ -1,0 +1,78 @@
+/* PROfinity — post-signup virtual tour */
+.pf-tour-overlay{position:absolute;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;
+  padding:24px;background:rgba(16,20,48,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+  animation:pf-tr-fade .24s ease}
+.pf-tour-welcome{position:relative;width:100%;max-width:330px;max-height:100%;overflow-y:auto;text-align:center;
+  padding:30px 24px 24px;border-radius:20px;color:#fff;
+  background:linear-gradient(170deg,#3B3592,#292569 60%,#221E56);
+  box-shadow:0 26px 60px rgba(16,20,48,.44),inset 0 1px 0 rgba(255,255,255,.12);
+  animation:pf-tr-pop .3s cubic-bezier(.22,.61,.36,1)}
+.pf-tour-mark{display:block;width:52px;height:52px;object-fit:contain;margin:0 auto 16px}
+.pf-tour-welcome h2{margin:0 0 10px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:22px}
+.pf-tour-welcome p{margin:0 0 22px;font-family:var(--font-sans);font-size:14px;line-height:1.55;color:rgba(255,255,255,.8);text-wrap:pretty}
+
+.pf-tour-pills{list-style:none;margin:0 0 20px;padding:0;display:flex;flex-direction:column;gap:14px;text-align:left}
+.pf-tour-pills li{display:flex;align-items:flex-start;gap:12px}
+.pf-tour-pills .ic{flex:none;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.pf-tour-pills .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pf-tour-pills b{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15px}
+.pf-tour-pills i{font-style:normal;font-family:var(--font-sans);font-size:12.5px;line-height:1.45;color:rgba(255,255,255,.72)}
+
+.pf-tour-dots{display:flex;justify-content:center;gap:7px;margin-bottom:20px}
+.pf-tour-dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.28)}
+.pf-tour-dots span.on{background:var(--brand-gold);width:18px}
+.pf-tour-wfoot{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pf-tour-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;
+  background:var(--surface-sunken);display:flex;align-items:center;justify-content:center}
+.pf-tour-x.light{background:rgba(255,255,255,.14)}
+.pf-tour-skip{min-height:44px;padding:0 6px;border:none;background:none;cursor:pointer;white-space:nowrap;
+  font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:14px;color:var(--gray-500)}
+.pf-tour-skip.light{color:rgba(255,255,255,.72)}
+.pf-tour-next{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 22px;border:none;border-radius:10px;cursor:pointer;
+  background:var(--brand-navy);color:#fff;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px}
+.pf-tour-next.light{background:#fff;color:var(--brand-navy)}
+.pf-tour-go{width:100%;min-height:50px;border:none;border-radius:12px;cursor:pointer;background:#fff;color:var(--brand-navy);
+  font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px}
+
+.pf-tour-donek{display:block;margin-bottom:12px;text-align:left;font-family:var(--font-sans);font-weight:var(--fw-semibold);
+  font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--brand-gold)}
+.pf-tour-done{list-style:none;margin:0 0 22px;padding:0;display:flex;flex-direction:column;gap:11px;text-align:left}
+.pf-tour-done li{display:flex;align-items:center;gap:10px;font-family:var(--font-sans);font-size:14px;color:rgba(255,255,255,.92)}
+
+/* step card — anchored above the dock, page visible behind */
+.pf-tour-layer{position:absolute;inset:0;z-index:120;display:flex;flex-direction:column;justify-content:flex-end;
+  padding:0 16px calc(104px + env(safe-area-inset-bottom))}
+.pf-tour-scrim{position:absolute;inset:0;background:rgba(16,20,48,.32)}
+.pf-tour-card{position:relative;z-index:1;background:var(--surface-card);border-radius:16px;padding:18px;
+  box-shadow:0 20px 46px rgba(16,24,40,.28);animation:pf-tr-rise .3s cubic-bezier(.22,.61,.36,1)}
+.pf-tour-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.pf-tour-bar{display:flex;gap:5px;margin-bottom:14px}
+.pf-tour-bar span{flex:1;height:5px;border-radius:var(--r-pill);background:var(--gray-200);transition:background .3s ease}
+.pf-tour-bar span.on{background:var(--brand-gold)}
+@media (prefers-reduced-motion:reduce){.pf-tour-bar span{transition:none}}
+.pf-tour-step{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12.5px;color:var(--gray-500)}
+.pf-tour-card h3{margin:0 0 8px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:19px;color:var(--brand-navy);text-wrap:pretty}
+.pf-tour-card p{margin:0 0 16px;font-family:var(--font-sans);font-size:14.5px;line-height:1.5;color:var(--gray-600);text-wrap:pretty}
+.pf-tour-act{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:46px;margin-bottom:14px;cursor:pointer;
+  border:1px solid var(--border-strong);border-radius:10px;background:var(--surface-card);
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14.5px;color:var(--brand-navy)}
+.pf-tour-act:hover{background:var(--surface-sunken)}
+.pf-tour-prompt{margin-bottom:16px;padding:13px 14px;border-radius:10px;background:var(--surface-sunken)}
+.pf-tour-prompt .k{display:block;margin-bottom:6px;font-family:var(--font-sans);font-weight:var(--fw-semibold);
+  font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-500)}
+.pf-tour-prompt i{font-family:var(--font-sans);font-size:13.5px;line-height:1.5;color:var(--text-primary)}
+.pf-tour-foot{display:flex;align-items:center;justify-content:space-between;gap:12px}
+
+/* the dock tab for the current step gets a gold spotlight ring */
+.pf-tour-lift{z-index:130 !important}
+.pf-tour-spot{position:relative}
+.pf-tour-spot::after{content:"";position:absolute;inset:-6px -4px;border-radius:16px;pointer-events:none;
+  border:2px solid var(--brand-gold);animation:pf-tr-spot 1.8s ease-in-out infinite}
+@keyframes pf-tr-spot{0%,100%{box-shadow:0 0 0 4px rgba(206,153,87,.2)}50%{box-shadow:0 0 0 9px rgba(206,153,87,.08)}}
+@media (prefers-reduced-motion:reduce){.pf-tour-spot::after{animation:none}}
+
+@keyframes pf-tr-fade{from{opacity:0}to{opacity:1}}
+@keyframes pf-tr-pop{from{transform:translateY(16px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+@keyframes pf-tr-rise{from{transform:translateY(22px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.pf-tour-overlay,.pf-tour-welcome,.pf-tour-card{animation:none}}

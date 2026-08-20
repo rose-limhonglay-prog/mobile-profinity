@@ -22,6 +22,8 @@ img { max-width: 100%; }
 .ag-hero { background: var(--agent-hero-gradient); padding: 32px 24px 40px; color: var(--white); }
 .ag-hero h1 { margin: 0; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 30px; line-height: 1.15; letter-spacing: var(--ls-tight); }
 .ag-hero p { margin: 12px 0 0; font-family: var(--font-sans); font-size: 15px; line-height: var(--lh-normal); color: rgba(255,255,255,.92); }
+.ag-hero-coach { margin-top: 16px; background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.4); color: #fff; }
+.ag-hero-coach:hover { background: rgba(255,255,255,.22); }
 
 /* card list */
 .ag-list { display: flex; flex-direction: column; gap: 20px; padding: 24px 20px 8px; }

@@ -243,7 +243,7 @@ const EV_TABS = [{
   key: "Rewards",
   label: "Rewards",
   icon: "lucide:gift",
-  href: null
+  href: "RewardsDashboard.html"
 }];
 const CALL_PEOPLE = [{
   name: "Sarah",
@@ -534,7 +534,17 @@ function EventsList({
     name: v.i,
     size: 20,
     color: view === v.k ? "#fff" : "var(--gray-600)"
-  }))))), view === "calendar" && /*#__PURE__*/React.createElement(EvCalendar, {
+  }))))), /*#__PURE__*/React.createElement("div", {
+    className: "ev-coach-row"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-coach-link",
+    "data-coach": "Which upcoming event should I prioritise attending to grow my clinic?"
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "var(--ai-purple)"
+  }), "Which event should I prioritise?")), view === "calendar" && /*#__PURE__*/React.createElement(EvCalendar, {
     onOpen: onOpen,
     cur: cur,
     setCur: setCur

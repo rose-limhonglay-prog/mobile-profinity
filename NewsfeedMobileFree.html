@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <script src="dark-mode-init.js"></script>
-  <title>PROfinity — Home (iPhone 17 Pro Max)</title>
+  <title>PROfinity — Home · Free (iPhone 17 Pro Max)</title>
 
   <!-- Profinity Design System tokens -->
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fonts.css" />
@@ -38,7 +38,10 @@
 
   <script src="ios-frame.compiled.js"></script>
 
-  <script>window.PF_EMBED = true; window.PF_COMMENT_SHEET = true; window.PF_OFFICIAL_ONLY = true;</script>
+  <!-- Free-subscriber variation: same Home shell, but the feed resolves to the
+       "free" access tier (editorial + followed posts show; channel / course /
+       paid-tier posts render as locked teasers). PF_TIER wins over localStorage. -->
+  <script>window.PF_EMBED = true; window.PF_COMMENT_SHEET = true; window.PF_OFFICIAL_ONLY = true; window.PF_FREE = true; window.PF_TIER = "free";</script>
   <script src="app.compiled.js"></script>
   <script src="mobile.compiled.js"></script>
 

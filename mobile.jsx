@@ -16,7 +16,7 @@ const M_TABS = [
 { key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
 { key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" },
-{ key: "Rewards", label: "Rewards", icon: "lucide:gift", href: null }];
+{ key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" }];
 
 
 const PUSH_NOTIF = {

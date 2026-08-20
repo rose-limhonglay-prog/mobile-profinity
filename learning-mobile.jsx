@@ -106,7 +106,7 @@ const LM_TABS = [
 { key: "Learning", label: "Learning", icon: "lucide:book-open", href: null },
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
 { key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" },
-{ key: "Rewards", label: "Rewards", icon: "lucide:gift", href: null }];
+{ key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" }];
 
 
 function LM2Header({ freeTier, tier }) {
@@ -137,6 +137,9 @@ function LM2GoalBanner({ data, onHelp }) {
       </div>
       <p className="lm2-goal-vision">{data.vision}</p>
       <p className="lm2-goal-clarifier">{data.clarifier}</p>
+      <button type="button" className="pf-coach-link lm2-goal-coach" data-coach="Help me get closer to my £80k/month clinic goal — what should I focus on next?">
+        <IconifyL name="lucide:sparkles" size={14} color="#fff" />Discuss with Ava
+      </button>
     </section>);
 
 }

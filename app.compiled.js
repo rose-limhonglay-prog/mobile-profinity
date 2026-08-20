@@ -3526,6 +3526,22 @@ const SQUARE_IMG_POST_1 = {
   actioned: false,
   commentList: thread("Printed this for the treatment room already — thank you!")
 };
+
+/* Sample long-form text post — body runs well past the old 3-line clamp so
+   the "See more" toggle and the new 5-line default are easy to sanity-check
+   against a real post in the feed. */
+const SAMPLE_LONG_TEXT_POST = {
+  id: "ff_longtext1",
+  author: TIM,
+  time: "45m",
+  hashtags: ["technique", "mindset"],
+  body: "Something I tell every injector I mentor: the technique is only half the job. The other half is reading the room — knowing when a patient needs more numbing time, when they need you to slow down and explain each step out loud, and when they just need you to be quietly confident so they can relax. I still remember my first year, second-guessing every entry point even when the anatomy was textbook-perfect, because I hadn't yet learned to trust the plan I'd already made in consult. That trust only comes from reps, and from being honest with yourself about the cases that didn't go the way you wanted. Save this one if you're still building that muscle — it gets easier, but only if you let the hard cases teach you something instead of just moving on.",
+  likes: "301",
+  comments: "27",
+  shares: "11",
+  actioned: false,
+  commentList: thread("This is exactly the reminder I needed before my clinic day tomorrow.")
+};
 const PORTRAIT_IMG_POST_1 = {
   id: "ff_ptimg1",
   author: MIRANDA,
@@ -4624,7 +4640,7 @@ const TIER_FEED_SEQUENCES = {
    to seed interaction state and search so switching tiers via the live
    persona-preview switcher never loses a post's likes/comments state, and
    Search can still find posts that only some tiers' sequences contain. */
-const ALL_FEED_SEQUENCE_POSTS = Object.values([...FREE_FEED_SEQUENCE, ...CONFIDENCE_FEED_SEQUENCE, ...MASTERY_FEED_SEQUENCE].reduce((m, p) => {
+const ALL_FEED_SEQUENCE_POSTS = Object.values([SAMPLE_LONG_TEXT_POST, ...FREE_FEED_SEQUENCE, ...CONFIDENCE_FEED_SEQUENCE, ...MASTERY_FEED_SEQUENCE].reduce((m, p) => {
   m[p.id] = p;
   return m;
 }, {}));
@@ -6143,7 +6159,7 @@ function CommentsSheet({
    Passed as the `body` node to the DS PostCard (which renders {body} as-is). */
 function ClampText({
   text,
-  lines = 3,
+  lines = 5,
   more = "See more",
   color = "var(--text-primary)"
 }) {
@@ -7648,7 +7664,7 @@ function FeedPost({
       tag: post.tierTag
     })) : post.time,
     hashtags: hideTags || post.questionnaire || post.poll ? [] : resolveHashtags(post.hashtags),
-    title: post.title,
+    title: post.author === PROFINITY ? null : post.title,
     body: post.questionnaire || post.poll ? null : post.bg ? /*#__PURE__*/React.createElement("div", {
       className: "pf-post-bg",
       style: {
@@ -8826,7 +8842,10 @@ function Feed({
      designed slots) are re-spread to a ~1-in-10-to-20 cadence by
      spreadEventPosts below, rather than left to stack at the top and repeat
      every cycle — see its comment for why. */
-  const feedItems = spreadEventPosts([...userPosts.map(p => ({
+  const feedItems = spreadEventPosts([{
+    item: SAMPLE_LONG_TEXT_POST,
+    mode: "full"
+  }, ...userPosts.map(p => ({
     item: p,
     mode: "full"
   })), ...eventRegPosts.map(p => ({
@@ -9115,7 +9134,7 @@ function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
   useEffect(() => pfTagActiveNav("Home"));
   return /*#__PURE__*/React.createElement("div", {
-    className: "app",
+    className: "app wa-screen",
     style: {
       "--action-primary": t.accent,
       "--action-primary-hover": "color-mix(in srgb, " + t.accent + ", var(--black) 12%)",

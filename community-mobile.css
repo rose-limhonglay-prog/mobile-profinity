@@ -96,6 +96,7 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
   object-fit:cover !important;background:var(--gray-100);
   border-radius:var(--r-md);scroll-snap-align:start}
 
+.cm-coach-row{padding:14px 16px 0;display:flex}
 .cm-newposts{position:sticky;top:12px;z-index:40;margin:12px auto 0;display:flex;align-items:center;gap:9px;
   padding:11px 22px;border:none;border-radius:var(--r-pill);cursor:pointer;
   background:linear-gradient(90deg,#d6a45f,#c9974f);color:var(--white);

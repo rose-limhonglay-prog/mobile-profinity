@@ -16,7 +16,7 @@ const AG_TABS = [
 { key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
 { key: "Agent", label: "Ava", icon: "lucide:sparkles", href: null },
-{ key: "Rewards", label: "Rewards", icon: "lucide:gift", href: null }];
+{ key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" }];
 
 const AG_AGENTS = [
 {
@@ -66,6 +66,9 @@ function AgHero() {
     <div className="ag-hero">
       <h1>Profinity Agents</h1>
       <p>Manage and activate agents for your profile. Enhance your workflow with specialised AI assistants tailored to your needs.</p>
+      <button type="button" className="pf-coach-link ag-hero-coach" data-coach="Help me decide which Ava agent to activate for my clinic goals.">
+        <DSAG.IconifyIcon name="lucide:sparkles" size={14} color="#fff" />Discuss with Ava
+      </button>
     </div>);
 
 }

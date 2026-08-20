@@ -666,7 +666,7 @@ function EventsWebApp() {
   const [cur, setCur] = useStateEW({ y: EW_TODAY.getFullYear(), m: EW_TODAY.getMonth() });
   const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
   return (
-    <div className="app" style={vars}>
+    <div className="app wa-screen" style={vars}>
       {screen !== "call" &&
       <TopNavEW active="Home" user={ME_EW} logoSrc="assets/profinity-icon-purple-gold.png"
         onNavigate={navigateEW}

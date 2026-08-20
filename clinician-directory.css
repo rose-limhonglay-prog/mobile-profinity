@@ -51,6 +51,10 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .cd-search-pill input::placeholder { color: var(--gray-450); }
 
 /* ===== Map container ===== */
+.cd-coach-row {
+  flex: none; padding: 0 16px 12px; background: var(--surface-card);
+}
+
 .cd-map-wrap {
   flex: 1; position: relative; overflow: hidden;
   background: #e8e0d5;

@@ -3,7 +3,7 @@
    Names suffixed -AU so this file can share the global Babel scope.
    =========================================================================== */
 const DSAU = window.ProfinityDesignSystem_c2b5cc;
-const { useState: useStateAU } = React;
+const { useState: useStateAU, useEffect: useEffectAU } = React;
 const IOSDeviceAU = window.IOSDevice;
 const Ico = ({ n, s = 20, c = "var(--gray-450)" }) => <DSAU.IconifyIcon name={n} size={s} color={c} />;
 function goAU(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
@@ -127,9 +127,28 @@ function SignIn({ onSignUp, onDone, onForgot }) {
 }
 
 /* ------------------------------ STEP 1 · TYPE ----------------------------- */
+/* Raw-JSON Lottie (the /embed iframe caches aggressively). */
+function AULottie({ src, size }) {
+  const host = React.useRef(null);
+  React.useEffect(() => {
+    let anim, iv;
+    const start = () => {
+      if (!window.lottie || !host.current) return;
+      anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: true, autoplay: true, path: src });
+    };
+    if (window.lottie) start();
+    else {
+      iv = setInterval(() => { if (window.lottie) { clearInterval(iv); start(); } }, 120);
+      setTimeout(() => clearInterval(iv), 8000);
+    }
+    return () => { if (iv) clearInterval(iv); if (anim) anim.destroy(); };
+  }, [src]);
+  return <span ref={host} style={{ display: "block", width: size, height: size }} />;
+}
+
 const AU_TYPES = [
-  { k: "clinician", ic: "fluent-emoji-flat:people-holding-hands", t: "Clinician", s: "Delivering expert care with confidence." },
-  { k: "patient", ic: "fluent-emoji-flat:identification-card", t: "Patient", s: "Your journey to better health starts here." },
+  { k: "clinician", lottie: "https://lottie.host/302e0f00-99b9-4be7-92cd-7318c6b76559/N7Cv2xlAcn.json", t: "Clinician", s: "Delivering expert care with confidence." },
+  { k: "patient", lottie: "https://lottie.host/6d606005-0f87-454f-8093-a754defbb877/32xh9U5eNK.json", t: "Patient", s: "Your journey to better health starts here." },
 ];
 
 function StepType({ type, setType, onBack, onNext }) {
@@ -147,7 +166,7 @@ function StepType({ type, setType, onBack, onNext }) {
           {AU_TYPES.map((t) => (
             <button type="button" key={t.k} role="radio" aria-checked={type === t.k}
               className={"au-type" + (type === t.k ? " on" : "")} onClick={() => setType(t.k)}>
-              <span className="au-type-ic"><Ico n={t.ic} s={30} c="currentColor" /></span>
+              <span className="au-type-ic"><AULottie src={t.lottie} size={68} /></span>
               <span className="au-type-tx"><span className="t">{t.t}</span><span className="s">{t.s}</span></span>
             </button>
           ))}
@@ -383,9 +402,7 @@ function DailyReward({ onDone }) {
         <span className="au-rw-ring" style={{ display: "none" }} />
         <span className="au-rw-ring d2" style={{ display: "none" }} />
         <span className="au-rw-coin">
-          <iframe src="https://lottie.host/embed/cc6c5973-9f61-481c-85ed-0fe2089a9176/CwHL9yTPJJ.json"
-            title="" aria-hidden="true" scrolling="no"
-            style={{ width: "168px", height: "168px", border: "none", background: "transparent", colorScheme: "normal" }}></iframe>
+          <AULottie src="https://lottie.host/cc6c5973-9f61-481c-85ed-0fe2089a9176/CwHL9yTPJJ.json" size={168} />
         </span>
       </div>
       <p className="au-rw-kicker">Daily login reward</p>
@@ -408,8 +425,11 @@ function Complete() {
         <span className="au-done-ic"><Ico n="lucide:check" s={40} c="var(--success)" /></span>
         <h1>You're all set!</h1>
         <p>Your Prosperity Spiral is ready. Let's get you to your dream clinic.</p>
-        <button type="button" className="au-cta" onClick={() => goAU("NewsfeedMobile.html")}>
-          Go to my feed
+        <button type="button" className="au-cta" onClick={() => {
+          try { localStorage.setItem("pf-tour", "1"); localStorage.setItem("pf-tour-step", "welcome"); } catch (e) {}
+          goAU("NewsfeedMobile.html");
+        }}>
+          Take the tour
         </button>
       </div>
     </div>
@@ -419,21 +439,37 @@ function Complete() {
 /* ---------------------------------- APP ----------------------------------- */
 const AU_LINKABLE_VIEWS = ["splash", "signin", "type", "details", "otp", "verified", "goals", "done"];
 
+function useDeviceScaleAU() {
+  const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
+  const [scale, setScale] = useStateAU(calc);
+  useEffectAU(() => {
+    const update = () => setScale(calc());
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return scale;
+}
+
 function AuthMobileApp() {
   const requested = getParamAU("view");
   const [view, setView] = useStateAU(AU_LINKABLE_VIEWS.includes(requested) ? requested : "splash");
   const [type, setType] = useStateAU("clinician");
   const [email, setEmail] = useStateAU("");
   const [forgot, setForgot] = useStateAU(false);
+  const scale = useDeviceScaleAU();
   const go = (v) => setView(v);
   return (
     <div className="app device-stage" style={{ "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)", backgroundColor: "rgb(216, 218, 226)" }}>
+      <div style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
       <IOSDeviceAU width={440} height={956}>
         {view === "splash" && <Splash onGo={() => go("signin")} />}
         {view === "reward" &&
           <React.Fragment>
             <SignIn onSignUp={() => {}} onForgot={() => {}} onDone={() => {}} />
-            <DailyReward onDone={() => goAU("NewsfeedMobile.html")} />
+            <DailyReward onDone={() => {
+              try { localStorage.setItem("pf-tour", "1"); localStorage.setItem("pf-tour-step", "welcome"); } catch (e) {}
+              goAU("NewsfeedMobile.html");
+            }} />
           </React.Fragment>}
         {view === "signin" &&
           <React.Fragment>
@@ -449,6 +485,7 @@ function AuthMobileApp() {
         {view === "goals" && <StepGoals onBack={() => go("details")} onDone={() => go("done")} />}
         {view === "done" && <Complete />}
       </IOSDeviceAU>
+      </div>
     </div>
   );
 }

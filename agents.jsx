@@ -91,7 +91,7 @@ function navigate(label) {
 function AgentsApp() {
   useEffectA(() => pfTagActiveNav("Agent"));
   return (
-    <div className="app" style={{ "--action-primary": "var(--ai-purple)", "--action-primary-hover": "var(--ai-purple-hover)" }}>
+    <div className="app wa-screen" style={{ "--action-primary": "var(--ai-purple)", "--action-primary-hover": "var(--ai-purple-hover)" }}>
       <TopNav active="Agent" user={ME} logoSrc="assets/profinity-icon-purple-gold.png"
         onNavigate={navigate}
         style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />

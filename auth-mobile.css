@@ -2,7 +2,7 @@
    PROfinity — Login / Sign-up / Onboarding (mobile) · iPhone 17 Pro Max
    Composed on the bound Profinity DS: navy #292569, gold #CE9957, Poppins.
    =========================================================================== */
-.app.device-stage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.app.device-stage{display:flex;align-items:center;justify-content:center;min-height:100vh;height:100vh;overflow:hidden}
 html,body{margin:0}
 body{font-family:var(--font-sans);color:var(--text-primary)}
 
@@ -171,7 +171,7 @@ body{font-family:var(--font-sans);color:var(--text-primary)}
   box-shadow:0 1px 3px rgba(12,12,13,.05);transition:border-color .15s ease,box-shadow .15s ease,background .15s ease}
 .au-type:hover{border-color:var(--brand-navy)}
 .au-type.on{border-color:var(--brand-navy);box-shadow:0 4px 16px rgba(41,37,105,.14)}
-.au-type-ic{flex:none;width:52px;height:52px;border-radius:11px;background:var(--surface-sunken);display:flex;align-items:center;justify-content:center}
+.au-type-ic{flex:none;width:76px;height:76px;border-radius:14px;background:var(--surface-sunken);display:flex;align-items:center;justify-content:center}
 .au-type.on .au-type-ic{background:#EFEEFB}
 .au-type-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .au-type-tx .t{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:19px;color:var(--brand-navy)}

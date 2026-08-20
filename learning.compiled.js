@@ -449,7 +449,7 @@ function MyLearningApp() {
     return () => clearTimeout(t);
   }, []);
   return /*#__PURE__*/React.createElement("div", {
-    className: "app",
+    className: "app wa-screen",
     style: {
       "--action-primary": "var(--brand-navy)",
       "--action-primary-hover": "var(--brand-navy-700)"

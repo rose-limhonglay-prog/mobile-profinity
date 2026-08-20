@@ -41,9 +41,9 @@
 .pf-ava-label b { font-family: var(--font-sans); font-size: 13px; font-weight: var(--fw-bold); }
 .pf-ava-label span { font-family: var(--font-sans); font-size: 10.5px; font-weight: var(--fw-medium); opacity: .88; }
 
-/* My Learning: Ava renders permanently expanded */
-.lm-screen .pf-ava-tab { max-width: 208px; padding-right: 16px; }
-.lm-screen .pf-ava-tab .pf-ava-label { opacity: 1; }
+/* My Learning + desktop web app: Ava renders permanently expanded (open) */
+.lm-screen .pf-ava-tab, .wa-screen .pf-ava-tab { max-width: 208px; padding-right: 16px; }
+.lm-screen .pf-ava-tab .pf-ava-label, .wa-screen .pf-ava-tab .pf-ava-label { opacity: 1; }
 
 /* Profile: bottom nav already has a dedicated Ava tab, and the page's own
    "Discuss with Ava" buttons open the chat sheet directly — the floating
@@ -62,7 +62,7 @@
 .pf-ava-sheet {
   position: absolute; left: 0; right: 0; bottom: 0; max-height: 84%;
   display: flex; flex-direction: column; background: var(--surface-card);
-  border-radius: 22px 22px 0 0; box-shadow: 0 -14px 40px rgba(16,24,40,.3);
+  border-radius: 22px 22px 0 0; overflow: hidden; box-shadow: 0 -14px 40px rgba(16,24,40,.3);
   animation: pf-ava-sheet-up .26s cubic-bezier(.22,.61,.36,1);
 }
 @keyframes pf-ava-sheet-up { from { transform: translateY(24px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -70,24 +70,29 @@
 
 .pf-ava-handle { flex: none; width: 40px; height: 5px; border-radius: 3px; background: var(--gray-300); margin: 10px auto 2px; }
 
-.pf-ava-head { flex: none; display: flex; align-items: center; gap: 12px; padding: 10px 16px 14px; border-bottom: 1px solid var(--border-default); }
-.pf-ava-head-orb { flex: none; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #8B84FF, #4A40D6); }
+.pf-ava-head { flex: none; display: flex; align-items: center; gap: 14px; padding: 18px 18px 22px;
+  background: linear-gradient(135deg, #8B84FF, #4A40D6); border-bottom: none; }
+.pf-ava-head-orb { flex: none; width: 46px; height: 46px; border-radius: 50%; position: relative;
+  display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.22); }
+.pf-ava-head-orb::after { content: ""; position: absolute; right: -1px; bottom: -1px; width: 13px; height: 13px;
+  border-radius: 50%; background: #22c55e; border: 2px solid #6C63FF; }
 .pf-ava-head-main { flex: 1; min-width: 0; display: flex; flex-direction: column; font-family: var(--font-sans); }
-.pf-ava-head-main b { font-size: 16px; font-weight: var(--fw-bold); color: var(--text-heading); }
-.pf-ava-head-main span { font-size: 12.5px; color: var(--gray-500); }
+.pf-ava-head-main b { font-size: 17px; font-weight: var(--fw-bold); color: #fff; }
+.pf-ava-head-main span { font-size: 13px; color: rgba(255,255,255,.82); }
 .pf-ava-close { flex: none; width: 44px; height: 44px; border: none; background: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center; border-radius: 50%; }
-.pf-ava-close:hover { background: var(--surface-sunken); }
-.pf-ava-close:focus-visible { outline: 2px solid var(--ai-purple); outline-offset: 2px; }
+.pf-ava-close:hover { background: rgba(255,255,255,.18); }
+.pf-ava-close:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 .pf-ava-thread { flex: 1; min-height: 120px; overflow-y: auto; -webkit-overflow-scrolling: touch;
-  padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-.pf-ava-bubblerow { display: flex; flex-direction: column; max-width: 84%; gap: 8px; }
-.pf-ava-bubblerow.ava { align-items: flex-start; align-self: flex-start; }
+  padding: 18px 16px; display: flex; flex-direction: column; gap: 16px; }
+.pf-ava-bubblerow { display: flex; flex-direction: column; max-width: 84%; gap: 4px; }
+.pf-ava-bubblerow.ava { align-items: flex-start; align-self: flex-start; max-width: 100%; }
 .pf-ava-bubblerow.me { align-items: flex-end; align-self: flex-end; }
-.pf-ava-bubble { font-family: var(--font-sans); font-size: 14.5px; line-height: 1.45; padding: 12px 14px; border-radius: 16px; }
-.pf-ava-bubblerow.ava .pf-ava-bubble { background: var(--gray-100); color: var(--text-primary); border-bottom-left-radius: 4px; }
+.pf-ava-bubble-label { display: flex; align-items: center; gap: 6px; font-family: var(--font-sans); }
+.pf-ava-bubble-label b { font-size: 13.5px; font-weight: var(--fw-bold); color: var(--ai-purple); }
+.pf-ava-bubble { font-family: var(--font-sans); font-size: 15px; line-height: 1.5; padding: 12px 14px; border-radius: 16px; }
+.pf-ava-bubblerow.ava .pf-ava-bubble { background: none; color: var(--text-primary); padding: 0; border-radius: 0; }
 .pf-ava-bubblerow.me .pf-ava-bubble { background: var(--brand-navy); color: #fff; border-bottom-right-radius: 4px; }
 .pf-ava-bubble-actions { display: flex; }
 .pf-ava-addtarget { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 8px 14px; cursor: pointer;
@@ -97,11 +102,10 @@
 .pf-ava-addtarget:focus-visible { outline: 2px solid var(--ai-purple); outline-offset: 2px; }
 .pf-ava-addtarget:disabled { cursor: default; opacity: .75; border-color: var(--success); color: var(--success); }
 
-.pf-ava-chips { flex: none; display: flex; gap: 8px; overflow-x: auto; padding: 0 16px 12px; scrollbar-width: none; }
-.pf-ava-chips::-webkit-scrollbar { display: none; }
-.pf-ava-chip { flex: none; min-height: 40px; padding: 0 15px; cursor: pointer; white-space: nowrap;
-  border: 1.5px solid var(--ai-purple); border-radius: var(--r-pill); background: var(--surface-agent);
-  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13px; color: var(--ai-purple); }
+.pf-ava-chips { flex: none; display: flex; flex-wrap: wrap; gap: 10px; padding: 0 16px 14px; }
+.pf-ava-chip { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 42px; padding: 0 16px; cursor: pointer; white-space: nowrap;
+  border: none; border-radius: var(--r-pill); background: var(--ai-purple-100);
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13.5px; color: var(--ai-purple); }
 .pf-ava-chip:hover { background: var(--ai-purple-200); }
 .pf-ava-chip:focus-visible { outline: 2px solid var(--ai-purple); outline-offset: 2px; }
 
@@ -129,4 +133,29 @@
 
 @media (prefers-reduced-motion: reduce) {
   .pf-ava-sheet, .pf-ava-tab, .pf-ava-label, .pf-ava-halo { transition: none; animation: none; }
+}
+
+/* ===== desktop web app (.wa-screen host) =====
+   The web pages don't use a fixed-size phone frame — they're normal, tall,
+   scrolling documents laid out in a centered content column. Positioning
+   Ava relative to that host (as on mobile) would bury it at the bottom of
+   the whole page and scroll it out of view, so on desktop it's pinned to
+   the real browser viewport instead, like a standard floating chat widget. */
+.wa-screen .pf-ava-tab {
+  position: fixed; right: 28px; bottom: 28px;
+  border-radius: var(--r-pill);
+  box-shadow: 0 10px 28px rgba(74,64,214,.32), 0 2px 8px rgba(74,64,214,.2);
+}
+.wa-screen .pf-ava-sheet-wrap { position: fixed; }
+.wa-screen .pf-ava-scrim { display: none; }
+.wa-screen .pf-ava-sheet {
+  position: fixed; left: auto; right: 28px; bottom: 96px;
+  width: 380px; max-width: calc(100vw - 56px);
+  height: 600px; max-height: calc(100vh - 160px);
+  border-radius: 20px;
+  box-shadow: 0 24px 64px rgba(16,24,40,.28), 0 0 0 1px rgba(16,24,40,.04);
+}
+@media (max-width: 480px) {
+  .wa-screen .pf-ava-tab { right: 16px; bottom: 16px; }
+  .wa-screen .pf-ava-sheet { right: 16px; left: 16px; width: auto; bottom: 88px; }
 }

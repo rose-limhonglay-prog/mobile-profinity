@@ -10,12 +10,16 @@
 
   /* Every mobile page's outermost app screen carries one of these classes
      (named ones per spec, plus every other screen root discovered across the
-     mobile app) so Ava can mount on literally every screen, not just five. */
+     mobile app) so Ava can mount on literally every screen, not just five.
+     .wa-screen marks the true desktop web pages (app.jsx / events-web.jsx /
+     agents.jsx / notification-settings-web.jsx) — coach.css pins Ava to the
+     real browser viewport there instead of the mobile bottom-sheet behavior. */
   var PRIMARY_HOST_SELECTOR = [
     ".m-screen", ".lm-screen", ".cm-screen", ".pm-screen", ".ev-screen",
     ".ag-screen", ".cd-screen", ".rl-screen", ".sr-screen", ".cp-screen",
     ".ms-screen", ".as-screen", ".ns-screen", ".ds-screen", ".cc-screen",
-    ".sc-screen", ".ma-screen", ".mt-screen", ".dm-screen", ".ls-screen"
+    ".sc-screen", ".ma-screen", ".mt-screen", ".dm-screen", ".ls-screen",
+    ".wa-screen"
   ].join(", ");
   /* Any screen root not covered above still carries data-screen-label — last resort only. */
   var FALLBACK_HOST_SELECTOR = "[data-screen-label]";
@@ -89,9 +93,9 @@
           '<span class="pf-ava-handle" aria-hidden="true"></span>' +
           '<header class="pf-ava-head">' +
             '<span class="pf-ava-head-orb"><iconify-icon icon="lucide:sparkles" width="20" height="20" style="color:#fff"></iconify-icon></span>' +
-            '<span class="pf-ava-head-main"><b>Ava</b><span>Your AI coach</span></span>' +
+            '<span class="pf-ava-head-main"><b>Ava</b><span>Your coach &middot; Online</span></span>' +
             '<button type="button" class="pf-ava-close" id="pf-ava-close" aria-label="Close Ava">' +
-              '<iconify-icon icon="lucide:x" width="20" height="20" style="color:var(--gray-700)"></iconify-icon>' +
+              '<iconify-icon icon="lucide:x" width="20" height="20" style="color:#fff"></iconify-icon>' +
             '</button>' +
           '</header>' +
           '<div class="pf-ava-thread" id="pf-ava-thread"></div>' +
@@ -123,7 +127,7 @@
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "pf-ava-chip";
-      btn.textContent = c.label;
+      btn.innerHTML = '<iconify-icon icon="lucide:sparkles" width="14" height="14" style="color:var(--ai-purple)"></iconify-icon><span>' + c.label + '</span>';
       btn.addEventListener("click", function () { sendMessage(c.prompt); });
       el.chips.appendChild(btn);
     });
@@ -167,12 +171,18 @@
 
   function isForceExpandedHost() {
     var host = el.root && el.root.parentElement;
-    return !!(host && host.classList && host.classList.contains("lm-screen"));
+    return !!(host && host.classList && (host.classList.contains("lm-screen") || host.classList.contains("wa-screen")));
   }
 
   function addBubble(who, text, withActions) {
     var row = document.createElement("div");
     row.className = "pf-ava-bubblerow " + (who === "user" ? "me" : "ava");
+    if (who !== "user") {
+      var label = document.createElement("div");
+      label.className = "pf-ava-bubble-label";
+      label.innerHTML = '<iconify-icon icon="lucide:sparkles" width="14" height="14" style="color:var(--ai-purple)"></iconify-icon><b>Ava</b>';
+      row.appendChild(label);
+    }
     var bubble = document.createElement("div");
     bubble.className = "pf-ava-bubble";
     bubble.textContent = text;

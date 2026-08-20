@@ -45,7 +45,7 @@ const AG_TABS = [{
   key: "Rewards",
   label: "Rewards",
   icon: "lucide:gift",
-  href: null
+  href: "RewardsDashboard.html"
 }];
 const AG_AGENTS = [{
   icon: "assets/agent-assesspro.png",
@@ -88,7 +88,15 @@ const AG_AGENTS = [{
 function AgHero() {
   return /*#__PURE__*/React.createElement("div", {
     className: "ag-hero"
-  }, /*#__PURE__*/React.createElement("h1", null, "Profinity Agents"), /*#__PURE__*/React.createElement("p", null, "Manage and activate agents for your profile. Enhance your workflow with specialised AI assistants tailored to your needs."));
+  }, /*#__PURE__*/React.createElement("h1", null, "Profinity Agents"), /*#__PURE__*/React.createElement("p", null, "Manage and activate agents for your profile. Enhance your workflow with specialised AI assistants tailored to your needs."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-coach-link ag-hero-coach",
+    "data-coach": "Help me decide which Ava agent to activate for my clinic goals."
+  }, /*#__PURE__*/React.createElement(DSAG.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "#fff"
+  }), "Discuss with Ava"));
 }
 function AgentCardM({
   a

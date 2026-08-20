@@ -111,7 +111,7 @@ const EV_TABS = [
   { key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
   { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
   { key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" },
-  { key: "Rewards", label: "Rewards", icon: "lucide:gift", href: null },
+  { key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" },
 ];
 
 const CALL_PEOPLE = [
@@ -275,6 +275,11 @@ function EventsList({ onBack, onOpen, view, setView, cur, setCur }) {
               </button>
             ))}
           </div>
+        </div>
+        <div className="ev-coach-row">
+          <button type="button" className="pf-coach-link" data-coach="Which upcoming event should I prioritise attending to grow my clinic?">
+            <DSEV.IconifyIcon name="lucide:sparkles" size={14} color="var(--ai-purple)" />Which event should I prioritise?
+          </button>
         </div>
         {view === "calendar" && <EvCalendar onOpen={onOpen} cur={cur} setCur={setCur} />}
         {view === "list" && EVENTS_LIST.map((e, i) => {

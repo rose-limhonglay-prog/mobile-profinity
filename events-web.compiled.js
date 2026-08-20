@@ -1294,7 +1294,7 @@ function EventsWebApp() {
     "--action-primary-hover": "var(--brand-navy-700)"
   };
   return /*#__PURE__*/React.createElement("div", {
-    className: "app",
+    className: "app wa-screen",
     style: vars
   }, screen !== "call" && /*#__PURE__*/React.createElement(TopNavEW, {
     active: "Home",

@@ -39,6 +39,7 @@ img{max-width:100%}
 
 /* view toggle: List / Calendar */
 .ev-searchrow{display:flex;align-items:center;gap:10px;margin:14px 16px 16px}
+.ev-coach-row{margin:0 16px 16px}
 .ev-viewtoggle{flex:none;display:flex;gap:4px;padding:4px;border-radius:var(--r-pill);background:var(--surface-sunken)}
 .ev-viewbtn{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:none;cursor:pointer;
   border-radius:50%;background:none;transition:background .18s ease}
