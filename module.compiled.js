@@ -268,7 +268,15 @@ function ModuleHome() {
       size: 17,
       color: "#fff"
     }),
-    onClick: () => goMO(ctaHref)
+    onClick: () => goMO(ctaHref),
+    style: {
+      whiteSpace: "normal",
+      height: "auto",
+      minHeight: 52,
+      lineHeight: 1.3,
+      padding: "13px 18px",
+      textAlign: "center"
+    }
   }, ctaLabel)), /*#__PURE__*/React.createElement("div", {
     className: "mo-sec-h"
   }, /*#__PURE__*/React.createElement("h2", null, "Lessons in this module")), /*#__PURE__*/React.createElement(CardMO, {

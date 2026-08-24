@@ -173,7 +173,8 @@ function ModuleHome() {
           <ProgressBarMO value={pct} label={pct + "% Complete"} style={{ marginBottom: 16 }} />
           <ButtonMO variant="brand" size="lg" fullWidth
             iconTrailing={<IcoMO name="lucide:arrow-right" size={17} color="#fff" />}
-            onClick={() => goMO(ctaHref)}>
+            onClick={() => goMO(ctaHref)}
+            style={{ whiteSpace: "normal", height: "auto", minHeight: 52, lineHeight: 1.3, padding: "13px 18px", textAlign: "center" }}>
             {ctaLabel}
           </ButtonMO>
         </CardMO>
