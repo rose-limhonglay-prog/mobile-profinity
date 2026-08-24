@@ -156,7 +156,7 @@ function PMSpiralCard({ assessState }) {
         {PM_PILLARS.map((g) => {
           const pct = pmPillarScore(g.key, assessState);
           return (
-            <button key={g.key} type="button" className="pm-pillar-card" onClick={() => goPM("MyLearning.html")}>
+            <button key={g.key} type="button" className="pm-pillar-card" onClick={() => goPM("LearningMobile.html")}>
               <span className="top">
                 <span className="k">{g.key}</span>
                 <span className="v">{pct}</span>
@@ -190,7 +190,7 @@ function PMGoalFocusCard({ assessState }) {
         </div>
       </div>
       <p className="pm-goal-reasoning">{PM_GOAL_REASONING[pillarKey]}</p>
-      <button type="button" className="pm-goal-cta" onClick={() => goPM("MyLearning.html")}>
+      <button type="button" className="pm-goal-cta" onClick={() => goPM("LearningMobile.html")}>
         Work on your goal<DSPM.IconifyIcon name="lucide:arrow-up-right" size={17} color="#fff" />
       </button>
     </section>);

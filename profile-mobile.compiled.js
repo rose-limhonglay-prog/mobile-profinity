@@ -268,7 +268,7 @@ function PMSpiralCard({
       key: g.key,
       type: "button",
       className: "pm-pillar-card",
-      onClick: () => goPM("MyLearning.html")
+      onClick: () => goPM("LearningMobile.html")
     }, /*#__PURE__*/React.createElement("span", {
       className: "top"
     }, /*#__PURE__*/React.createElement("span", {
@@ -329,7 +329,7 @@ function PMGoalFocusCard({
   }, PM_GOAL_REASONING[pillarKey]), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-goal-cta",
-    onClick: () => goPM("MyLearning.html")
+    onClick: () => goPM("LearningMobile.html")
   }, "Work on your goal", /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:arrow-up-right",
     size: 17,
