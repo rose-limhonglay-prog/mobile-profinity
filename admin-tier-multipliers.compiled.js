@@ -65,6 +65,10 @@ const ADL_NAV_TOP = [{
   label: "Push Notification",
   href: "AdminPushNotifications.html"
 }, {
+  icon: "lucide:badge-check",
+  label: "Badges",
+  href: "AdminBadges.html"
+}, {
   icon: "lucide:receipt-text",
   label: "Transactions",
   href: "AdminTransactions.html",

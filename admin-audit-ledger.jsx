@@ -25,6 +25,7 @@ const ADL_NAV_TOP = [
   { icon: "lucide:bar-chart-3", label: "Analytics", href: "AdminAnalytics.html" },
   { icon: "lucide:smartphone", label: "App Versions", href: "AdminAppVersions.html" },
   { icon: "lucide:bell", label: "Push Notification", href: "AdminPushNotifications.html" },
+  { icon: "lucide:badge-check", label: "Badges", href: "AdminBadges.html" },
   { icon: "lucide:receipt-text", label: "Transactions", href: "AdminTransactions.html", chevron: true },
   { icon: "lucide:table-2", label: "Courses", href: "AdminCourses.html", chevron: true },
   { icon: "lucide:users", label: "Community", href: "AdminCommunity.html", chevron: true }

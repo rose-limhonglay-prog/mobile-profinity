@@ -288,6 +288,9 @@ const APN_NAV = [{
   label: "Push Notification",
   active: true
 }, {
+  icon: "lucide:badge-check",
+  label: "Badges"
+}, {
   icon: "lucide:trophy",
   label: "Loyalty & Gamification",
   chevron: true
@@ -317,6 +320,7 @@ const APN_NAV_LINKS = {
   "Analytics": "AdminAnalytics.html",
   "App Versions": "AdminAppVersions.html",
   "Push Notification": "AdminPushNotifications.html",
+  "Badges": "AdminBadges.html",
   "Loyalty & Gamification": "AdminActionsEditor.html",
   "Transactions": "AdminTransactions.html",
   "Courses": "AdminCourses.html",
