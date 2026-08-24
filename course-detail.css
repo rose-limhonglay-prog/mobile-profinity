@@ -115,6 +115,23 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
   text-decoration: underline; text-underline-offset: 2px; }
 .cd-lesson-dur { flex: none; font-family: var(--font-sans); font-size: 12px; color: var(--gray-450); }
 
+/* sub-modules: collapsible folders of lessons inside a module */
+.cd-sub { margin-top: 10px; border: 1px solid var(--border-default); border-radius: var(--r-md); overflow: hidden; background: var(--surface-card); }
+.cd-sub-hd { display: flex; align-items: center; gap: 11px; width: 100%; min-height: 48px; padding: 0 14px; cursor: pointer;
+  border: none; background: var(--surface-sunken); text-align: left; }
+.cd-sub-hd:hover { background: var(--gray-100); }
+.cd-sub-hd:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: -2px; }
+.cd-sub-ic { flex: none; display: flex; }
+.cd-sub-name { flex: 1; min-width: 0; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 14px; color: var(--brand-navy); }
+.cd-sub-n { flex: none; min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--r-pill); background: var(--surface-card);
+  display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-default);
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 11px; color: var(--gray-500); }
+.cd-sub-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 10px; }
+.cd-sub-about { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 42px; margin-top: 2px; cursor: pointer;
+  border: 1px solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface-card);
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13px; color: var(--brand-navy); }
+.cd-sub-about:hover { background: var(--surface-sunken); }
+
 /* ---------- instructor ---------- */
 .cd-instructor-row { display: flex; align-items: center; gap: 14px; }
 .cd-instructor-avatar { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex: none; }

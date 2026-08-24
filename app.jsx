@@ -4583,6 +4583,18 @@ function FeedPreviewPanel({ persona, onPersona, toggles, onToggle }) {
 }
 
 const PF_USER_POSTS_KEY = "pf-newsfeed-user-posts";
+/* A composed post pins to the top of the feed for as long as you're
+   navigating the app (creating a post and landing back on the newsfeed is a
+   normal page navigation), but an actual refresh of the page should drop it
+   back into the designed per-block sequence rather than leaving it pinned
+   forever. The Navigation Timing API tells reload apart from a regular
+   navigation, so we clear the stored posts only on reload. */
+(function clearUserPostsOnReload() {
+  try {
+    const nav = performance.getEntriesByType("navigation")[0];
+    if (nav && nav.type === "reload") localStorage.removeItem(PF_USER_POSTS_KEY);
+  } catch (e) {}
+})();
 function readUserPosts() {
   try {
     const list = JSON.parse(localStorage.getItem(PF_USER_POSTS_KEY)) || [];
@@ -4712,8 +4724,8 @@ function Feed({ channel } = {}) {
      spreadEventPosts below, rather than left to stack at the top and repeat
      every cycle — see its comment for why. */
   const feedItems = spreadEventPosts([
-  { item: SAMPLE_LONG_TEXT_POST, mode: "full" },
   ...userPosts.map((p) => ({ item: p, mode: "full" })),
+  { item: SAMPLE_LONG_TEXT_POST, mode: "full" },
   ...eventRegPosts.map((p) => ({ item: p, mode: "full" })),
   ...tierTagItems,
   ...sequenceBase.map((p) => {

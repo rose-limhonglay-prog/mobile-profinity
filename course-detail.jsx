@@ -116,6 +116,27 @@ const COURSES_CD = {
     {
       title: "Level 2", pct: 0, open: true, modules: [
       {
+        title: "Lip Filler Technique", free: false,
+        heading: "Start with the two orientation lessons, then work through the technique, case study and resource folders in order.",
+        bullets: [],
+        lessons: [
+        { name: "Welcome & how to use this module", dur: "2:10" },
+        { name: "Safety essentials (watch first)", dur: "6:48" }],
+
+        subs: [
+        { title: "Injection Techniques", open: true, lessons: [
+          { name: "Linear threading technique", dur: "4:32" },
+          { name: "Tenting technique", dur: "3:58" },
+          { name: "Cannula approach", dur: "6:11" }] },
+        { title: "Case Studies", lessons: [
+          { name: "Case 1: thin lips, first treatment", dur: "7:20" },
+          { name: "Case 2: correction of migrated filler", dur: "9:05" }] },
+        { title: "Downloads & Resources", lessons: [
+          { name: "Technique recipe cards (PDF)", dur: "PDF", kind: "pdf" },
+          { name: "Consent form templates (PDF)", dur: "PDF", kind: "pdf" }] }]
+
+      },
+      {
         title: "Upper Eyelid Lift", free: false,
         heading: "Indications and Surgical Techniques for Upper Eyelid Lift",
         bullets: [
@@ -260,6 +281,39 @@ function CDLessonRow({ lesson, course, levelIdx, moduleIdx, lessonIdx }) {
 
 }
 
+function CDSubLessonRow({ lesson }) {
+  const pdf = lesson.kind === "pdf";
+  return (
+    <div className="cd-lesson">
+      <DSCD.IconifyIcon name={pdf ? "lucide:file-text" : "fluent:play-16-filled"} size={15} color="var(--brand-navy)" />
+      <a href="Lesson.html" className="cd-lesson-name" onClick={(e) => { e.preventDefault(); goCD("Lesson.html"); }}>{lesson.name}</a>
+      <span className="cd-lesson-dur">{lesson.dur}</span>
+    </div>);
+
+}
+
+function CDSubModule({ sub }) {
+  const [open, setOpen] = useStateCD(!!sub.open);
+  return (
+    <div className={"cd-sub" + (open ? " open" : "")}>
+      <button type="button" className="cd-sub-hd" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <span className="cd-sub-ic"><DSCD.IconifyIcon name={open ? "lucide:folder-open" : "lucide:folder"} size={18} color="var(--brand-gold)" /></span>
+        <span className="cd-sub-name">{sub.title}</span>
+        <span className="cd-sub-n">{sub.lessons.length}</span>
+        <DSCD.IconifyIcon name={open ? "lucide:chevron-up" : "lucide:chevron-down"} size={18} color="var(--gray-450)" />
+      </button>
+      {open &&
+      <div className="cd-sub-body">
+          {sub.lessons.map((l, i) => <CDSubLessonRow lesson={l} key={i} />)}
+          <button type="button" className="cd-sub-about" onClick={() => goCD("SubModule.html?s=" + slugifyCD(sub.title))}>
+            About this sub-module
+            <DSCD.IconifyIcon name="lucide:arrow-up-right" size={16} color="var(--brand-navy)" />
+          </button>
+        </div>}
+    </div>);
+
+}
+
 function CDModuleCard({ mod, course, levelIdx, moduleIdx }) {
   return (
     <div className="cd-module">
@@ -276,6 +330,7 @@ function CDModuleCard({ mod, course, levelIdx, moduleIdx }) {
         <CDLessonRow lesson={l} course={course} levelIdx={levelIdx} moduleIdx={moduleIdx} lessonIdx={i} key={i} />
         )}
       </div>
+      {(mod.subs || []).map((s, i) => <CDSubModule sub={s} key={i} />)}
     </div>);
 
 }

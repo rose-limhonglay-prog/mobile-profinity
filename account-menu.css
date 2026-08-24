@@ -1,0 +1,53 @@
+/* PROfinity — web TopNav account menu (log out) */
+.pf-account-trigger {
+  cursor: pointer;
+  padding: 6px 8px;
+  margin: -6px -8px;
+  border-radius: var(--r-md, 12px);
+  transition: background .15s ease;
+}
+.pf-account-trigger:hover,
+.pf-account-trigger[aria-expanded="true"] { background: var(--surface-sunken, #F5F5F5); }
+.pf-account-trigger:focus-visible {
+  outline: 2px solid var(--focus-ring, rgba(108,99,255,.28));
+  outline-offset: 2px;
+}
+
+#pf-account-menu {
+  position: fixed;
+  z-index: 120;
+  min-width: 180px;
+  padding: 6px;
+  background: var(--surface-card, #fff);
+  border: 1px solid var(--border-default, #eaecf0);
+  border-radius: var(--r-md, 12px);
+  box-shadow: 0 16px 40px rgba(12, 12, 13, 0.18);
+  font-family: var(--font-sans, "Poppins", sans-serif);
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 150ms ease-out, transform 150ms ease-out;
+}
+#pf-account-menu.pf-account-menu-open { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) {
+  #pf-account-menu { transition: opacity 120ms linear; transform: none !important; }
+}
+
+.pf-account-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-radius: var(--r-sm, 8px);
+  background: none;
+  cursor: pointer;
+  font-family: var(--font-sans, "Poppins", sans-serif);
+  font-weight: var(--fw-medium, 500);
+  font-size: 14.5px;
+  color: var(--error, #BE1E2D);
+  text-align: left;
+}
+.pf-account-menu-item:hover,
+.pf-account-menu-item:focus-visible { background: var(--surface-sunken, #F5F5F5); }
+.pf-account-menu-item:focus-visible { outline: none; }

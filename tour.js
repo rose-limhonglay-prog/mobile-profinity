@@ -2,16 +2,20 @@
    PROfinity — post-signup virtual tour.
    A 5-step guided walkthrough that spans real pages: Home → Profile →
    My Learning → Community → AI Agents, then a completion summary.
+   Runs in two flavors over the same script/copy shape: "mobile" (phone-frame
+   screens, bottom tab dock) and "web" (desktop pages, TopNav header).
 
    State lives in localStorage so the tour survives navigation:
-     pf-tour       "1" while the tour is running
-     pf-tour-step  "welcome" | "1".."5" | "done"
-   Start it with:  window.PFTour.start()
+     pf-tour         "1" while the tour is running
+     pf-tour-step    "welcome" | "1".."5" | "done"
+     pf-tour-flavor  "mobile" | "web" (defaults to "mobile")
+   Start it with:  window.PFTour.start()          (mobile)
+                   window.PFTour.start("web")     (desktop)
    =========================================================================== */
 (function () {
-  var KEY = "pf-tour", STEP = "pf-tour-step";
+  var KEY = "pf-tour", STEP = "pf-tour-step", FLAVOR = "pf-tour-flavor";
 
-  var STEPS = [
+  var STEPS_MOBILE = [
     { n: 1, page: "NewsfeedMobile.html", tab: "Home", title: "Welcome to your Home!",
       body: "This is your dashboard where you can see updates from the community, upcoming events, and recommended content just for you." },
     { n: 2, page: "ProfileMobile.html", tab: "Profile", title: "Complete your Professional Profile",
@@ -28,6 +32,23 @@
       prompt: "Draft a polite follow-up email for a client who enquired about Botox last week but hasn't booked." },
   ];
 
+  var STEPS_WEB = [
+    { n: 1, page: "NewsfeedWeb.html", tab: "Home", title: "Welcome to your Home!",
+      body: "This is your dashboard where you can see updates from the community, upcoming events, and recommended content just for you." },
+    { n: 2, page: "Profile.html", tab: "Profile", title: "Complete your Professional Profile",
+      body: "Your profile is your digital handshake. Fill in your details to unlock personalised course recommendations, connect with peers, and build trust within the Profinity community.",
+      action: { label: "Edit my profile now", icon: "lucide:external-link" } },
+    { n: 3, page: "MyLearning.html", tab: "My Learning", title: "Level Up Your Practice",
+      body: "Access specialised pathways and expert-led content designed for medical aesthetics.",
+      action: { label: "View Course (Preview)", icon: "lucide:arrow-right" } },
+    { n: 4, page: "Community.html", tab: "Community", title: "Join the Conversation",
+      body: "Discover channels dedicated to specific specialties, procedures, and practice management. Find answers in Q&A or join circles to network with your peers.",
+      action: { label: "Explore Channels", icon: "lucide:arrow-right" } },
+    { n: 5, page: "Agent.html", tab: "Agent", title: "Meet Your AI Agents",
+      body: "Profinity's AI Agents are here to assist you. Use LeadGen to draft outreach messages or the AI Coach to simulate client consultations.",
+      prompt: "Draft a polite follow-up email for a client who enquired about Botox last week but hasn't booked." },
+  ];
+
   var DONE = [
     "Home Dashboard Overview",
     "Professional Profile Setup",
@@ -38,7 +59,10 @@
 
   function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function write(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
-  function clear() { try { localStorage.removeItem(KEY); localStorage.removeItem(STEP); } catch (e) {} }
+  function clear() { try { localStorage.removeItem(KEY); localStorage.removeItem(STEP); localStorage.removeItem(FLAVOR); } catch (e) {} }
+
+  function isWeb() { return read(FLAVOR) === "web"; }
+  function STEPS() { return isWeb() ? STEPS_WEB : STEPS_MOBILE; }
 
   function here() { return (location.pathname.split("/").pop() || "").toLowerCase().replace(/\.html$/, ""); }
   function onPage(p) { return here() === p.toLowerCase().replace(/\.html$/, ""); }
@@ -54,20 +78,47 @@
       '" style="color:' + (color || "currentColor") + ';display:inline-block;flex-shrink:0;line-height:0"></iconify-icon>';
   }
   var SCREEN_SEL = ".m-screen, .cm-screen, .lm-screen, .pm-screen, .ev-screen";
+  var WEB_READY_SEL = "header nav";
+  function readySel() { return isWeb() ? WEB_READY_SEL : SCREEN_SEL; }
   function host() { return document.querySelector(SCREEN_SEL) || document.body; }
+
+  var reduceMotion = false;
+  try { reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+  var LEAVE_MS = 200;
+
+  /* Cross-fades the outgoing panel out instead of yanking it, for the
+     same-page transitions (welcome → step 1, last step → finish summary,
+     skip/close) — cross-page steps get a fresh DOM anyway, so this only
+     ever matters when two tour panels share a page load. */
+  function retire(node) {
+    if (!node || !node.parentNode) return;
+    node.classList.add("pf-tour-leaving");
+    if (reduceMotion) { node.parentNode.removeChild(node); return; }
+    setTimeout(function () { if (node.parentNode) node.parentNode.removeChild(node); }, LEAVE_MS);
+  }
 
   var root;
   function mount(node) {
-    var h = host();
-    if (h !== document.body && getComputedStyle(h).position === "static") h.style.position = "relative";
-    if (root) root.remove();
+    var old = root;
     root = node;
-    h.appendChild(root);
+    /* Desktop pages scroll (unlike the bounded phone frame), so anchoring the
+       tour to a positioned ancestor would place the bottom-anchored step card
+       off past the fold. Attach straight to the viewport instead. */
+    if (isWeb()) {
+      node.classList.add("pf-tour-fixed");
+      document.body.appendChild(node);
+    } else {
+      var h = host();
+      if (h !== document.body && getComputedStyle(h).position === "static") h.style.position = "relative";
+      h.appendChild(node);
+    }
+    retire(old);
   }
 
-  /* Ring the dock tab this step is talking about, so the user sees where they are.
-     The dock itself must be raised: it is position:absolute;z-index:30, which forms
-     a stacking context that traps any z-index on its children below the tour layer. */
+  /* Ring the dock tab (mobile) or TopNav item (web) this step is talking
+     about, so the user sees where they are. The mobile dock itself must be
+     raised: it is position:absolute;z-index:30, which forms a stacking
+     context that traps any z-index on its children below the tour layer. */
   function spotlight(tab) {
     var prev = document.querySelectorAll(".pf-tour-spot, .pf-tour-lift");
     for (var i = 0; i < prev.length; i++) {
@@ -75,7 +126,7 @@
       prev[i].classList.remove("pf-tour-lift");
     }
     if (!tab) return;
-    var tabs = document.querySelectorAll(".m-tab, .lm-tab, .cm-tab, .pm-tab");
+    var tabs = document.querySelectorAll(".m-tab, .lm-tab, .cm-tab, .pm-tab, header nav button");
     for (var j = 0; j < tabs.length; j++) {
       if ((tabs[j].textContent || "").trim().toLowerCase().indexOf(tab.toLowerCase()) === 0) {
         tabs[j].classList.add("pf-tour-spot");
@@ -86,7 +137,7 @@
     }
   }
 
-  function skip() { clear(); spotlight(null); if (root) root.remove(); }
+  function skip() { clear(); spotlight(null); retire(root); root = null; }
 
   function go(page, step) {
     write(STEP, step);
@@ -132,7 +183,7 @@
         dots[0].classList.remove("on");
         dots[1].classList.add("on");
         next.textContent = "Let's Go";
-      } else go(STEPS[0].page, "1");
+      } else go(STEPS()[0].page, "1");
     });
   }
 
@@ -162,8 +213,8 @@
     wrap.querySelector(".pf-tour-x").addEventListener("click", skip);
     wrap.querySelector(".pf-tour-skip").addEventListener("click", skip);
     wrap.querySelector(".pf-tour-next").addEventListener("click", function () {
-      if (s.n === 5) go(STEPS[0].page, "done");
-      else go(STEPS[s.n].page, String(s.n + 1));
+      if (s.n === 5) go(STEPS()[0].page, "done");
+      else go(STEPS()[s.n].page, String(s.n + 1));
     });
     var act = wrap.querySelector(".pf-tour-act");
     if (act) act.addEventListener("click", function (e) { e.preventDefault(); });
@@ -195,14 +246,19 @@
   function render() {
     if (read(KEY) !== "1") return;
     var st = read(STEP) || "welcome";
-    if (st === "welcome") { if (onPage(STEPS[0].page)) welcome(); return; }
-    if (st === "done") { if (onPage(STEPS[0].page)) finish(); return; }
-    var s = STEPS[parseInt(st, 10) - 1];
+    if (st === "welcome") { if (onPage(STEPS()[0].page)) welcome(); return; }
+    if (st === "done") { if (onPage(STEPS()[0].page)) finish(); return; }
+    var s = STEPS()[parseInt(st, 10) - 1];
     if (s && onPage(s.page)) step(s);
   }
 
   window.PFTour = {
-    start: function () { write(KEY, "1"); write(STEP, "welcome"); go(STEPS[0].page, "welcome"); },
+    start: function (flavor) {
+      write(KEY, "1");
+      write(STEP, "welcome");
+      write(FLAVOR, flavor === "web" ? "web" : "mobile");
+      go(STEPS()[0].page, "welcome");
+    },
     stop: skip,
   };
 
@@ -210,11 +266,12 @@
      root before rendering — mounting to <body> escapes the phone bezel. */
   function boot() {
     if (read(KEY) !== "1") return;
-    if (document.querySelector(SCREEN_SEL)) { render(); return; }
+    var sel = readySel();
+    if (document.querySelector(sel)) { render(); return; }
     var tries = 0;
     var iv = setInterval(function () {
       tries++;
-      if (document.querySelector(SCREEN_SEL)) { clearInterval(iv); render(); }
+      if (document.querySelector(sel)) { clearInterval(iv); render(); }
       else if (tries > 80) { clearInterval(iv); render(); }
     }, 120);
   }

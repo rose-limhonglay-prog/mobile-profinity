@@ -1,0 +1,70 @@
+/* PROfinity — Sub-module page (mobile) */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+img { max-width: 100%; }
+
+@media (max-width: 768px) {
+  html, body { height: 100%; overflow: hidden; }
+  .app.device-stage { display: none !important; }
+  .app:not(.device-stage) { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+  .app:not(.device-stage) .sm-screen { height: 100vh; height: 100dvh; overflow: hidden; }
+}
+
+.sm-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-page); }
+
+/* header */
+.sm-top { flex: none; display: flex; align-items: center; gap: 12px; padding: 60px 18px 14px; background: var(--surface-card);
+  border-bottom: 1px solid var(--border-default); }
+.sm-back { flex: none; width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer; background: var(--surface-sunken);
+  display: flex; align-items: center; justify-content: center; }
+.sm-back:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+.sm-head-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.sm-head-tx .h { font-family: var(--font-sans); font-size: 12.5px; font-weight: var(--fw-medium); color: var(--gray-500);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sm-head-tx .s { font-family: var(--font-sans); font-size: 17px; font-weight: var(--fw-bold); color: var(--brand-navy);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sm-top-sp { flex: none; width: 44px; }
+
+.sm-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+/* hero — DS Card supplies the surface, hairline and shadow */
+.sm-hero { margin: 18px 20px 0; }
+.sm-hero-ic { width: 52px; height: 52px; border-radius: 14px; margin-bottom: 14px; display: flex; align-items: center; justify-content: center;
+  background: #FCF4E4; }
+.sm-kind { display: inline-block; margin-bottom: 8px; padding: 4px 11px; border-radius: var(--r-pill);
+  background: #FCF4E4; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 10.5px;
+  letter-spacing: .08em; text-transform: uppercase; color: #8A5303; }
+.sm-crumb { display: block; margin-bottom: 4px; font-family: var(--font-sans); font-size: 13px; color: var(--gray-500); }
+.sm-hero h1 { margin: 0 0 12px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 22px; color: var(--brand-navy); text-wrap: pretty; }
+.sm-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 16px; }
+.sm-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: var(--r-pill);
+  background: var(--surface-sunken); font-family: var(--font-sans); font-size: 12.5px; font-weight: var(--fw-medium); color: var(--gray-600); }
+.sm-desc { margin: 0 0 18px; font-family: var(--font-sans); font-size: 14.5px; line-height: 1.55; color: var(--gray-600); text-wrap: pretty; }
+
+/* sections */
+.sm-sec-h { padding: 26px 20px 12px; }
+.sm-sec-h h2 { margin: 0; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 18px; color: var(--brand-navy); }
+.sm-outcomes-card { margin: 0 20px; }
+.sm-outcomes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.sm-outcomes li { display: flex; align-items: flex-start; gap: 12px; font-family: var(--font-sans); font-size: 14.5px; line-height: 1.5;
+  color: var(--text-primary); text-wrap: pretty; }
+.sm-outcomes li iconify-icon { flex: none; margin-top: 1px; }
+
+/* lessons */
+.sm-lessons { margin: 0 20px; }
+.sm-lesson { display: flex; align-items: center; gap: 13px; width: 100%; min-height: 64px; padding: 12px 15px; cursor: pointer;
+  border: none; background: none; text-align: left; }
+.sm-lesson + .sm-lesson { border-top: 1px solid var(--border-default); }
+.sm-lesson:hover { background: var(--surface-sunken); }
+.sm-lesson-n { flex: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--surface-sunken); font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 13px; color: var(--gray-500); }
+.sm-lesson.done .sm-lesson-n { background: var(--success); color: #fff; }
+.sm-lesson-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.sm-lesson-tx .nm { font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; color: var(--brand-navy); text-wrap: pretty; }
+.sm-lesson-tx .mt { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-sans); font-size: 13px; color: var(--gray-450); }
+
+.sm-tomod-wrap { margin: 22px 20px 0; }
+@media (prefers-reduced-motion:reduce) { .sm-lesson { transition: none; } }

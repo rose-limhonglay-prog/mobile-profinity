@@ -137,6 +137,52 @@ const COURSES_CD = {
       pct: 0,
       open: true,
       modules: [{
+        title: "Lip Filler Technique",
+        free: false,
+        heading: "Start with the two orientation lessons, then work through the technique, case study and resource folders in order.",
+        bullets: [],
+        lessons: [{
+          name: "Welcome & how to use this module",
+          dur: "2:10"
+        }, {
+          name: "Safety essentials (watch first)",
+          dur: "6:48"
+        }],
+        subs: [{
+          title: "Injection Techniques",
+          open: true,
+          lessons: [{
+            name: "Linear threading technique",
+            dur: "4:32"
+          }, {
+            name: "Tenting technique",
+            dur: "3:58"
+          }, {
+            name: "Cannula approach",
+            dur: "6:11"
+          }]
+        }, {
+          title: "Case Studies",
+          lessons: [{
+            name: "Case 1: thin lips, first treatment",
+            dur: "7:20"
+          }, {
+            name: "Case 2: correction of migrated filler",
+            dur: "9:05"
+          }]
+        }, {
+          title: "Downloads & Resources",
+          lessons: [{
+            name: "Technique recipe cards (PDF)",
+            dur: "PDF",
+            kind: "pdf"
+          }, {
+            name: "Consent form templates (PDF)",
+            dur: "PDF",
+            kind: "pdf"
+          }]
+        }]
+      }, {
         title: "Upper Eyelid Lift",
         free: false,
         heading: "Indications and Surgical Techniques for Upper Eyelid Lift",
@@ -341,6 +387,67 @@ function CDLessonRow({
     className: "cd-lesson-dur"
   }, lesson.dur));
 }
+function CDSubLessonRow({
+  lesson
+}) {
+  const pdf = lesson.kind === "pdf";
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cd-lesson"
+  }, /*#__PURE__*/React.createElement(DSCD.IconifyIcon, {
+    name: pdf ? "lucide:file-text" : "fluent:play-16-filled",
+    size: 15,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("a", {
+    href: "Lesson.html",
+    className: "cd-lesson-name",
+    onClick: e => {
+      e.preventDefault();
+      goCD("Lesson.html");
+    }
+  }, lesson.name), /*#__PURE__*/React.createElement("span", {
+    className: "cd-lesson-dur"
+  }, lesson.dur));
+}
+function CDSubModule({
+  sub
+}) {
+  const [open, setOpen] = useStateCD(!!sub.open);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cd-sub" + (open ? " open" : "")
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-sub-hd",
+    onClick: () => setOpen(v => !v),
+    "aria-expanded": open
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-sub-ic"
+  }, /*#__PURE__*/React.createElement(DSCD.IconifyIcon, {
+    name: open ? "lucide:folder-open" : "lucide:folder",
+    size: 18,
+    color: "var(--brand-gold)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "cd-sub-name"
+  }, sub.title), /*#__PURE__*/React.createElement("span", {
+    className: "cd-sub-n"
+  }, sub.lessons.length), /*#__PURE__*/React.createElement(DSCD.IconifyIcon, {
+    name: open ? "lucide:chevron-up" : "lucide:chevron-down",
+    size: 18,
+    color: "var(--gray-450)"
+  })), open && /*#__PURE__*/React.createElement("div", {
+    className: "cd-sub-body"
+  }, sub.lessons.map((l, i) => /*#__PURE__*/React.createElement(CDSubLessonRow, {
+    lesson: l,
+    key: i
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-sub-about",
+    onClick: () => goCD("SubModule.html?s=" + slugifyCD(sub.title))
+  }, "About this sub-module", /*#__PURE__*/React.createElement(DSCD.IconifyIcon, {
+    name: "lucide:arrow-up-right",
+    size: 16,
+    color: "var(--brand-navy)"
+  }))));
+}
 function CDModuleCard({
   mod,
   course,
@@ -370,7 +477,10 @@ function CDModuleCard({
     moduleIdx: moduleIdx,
     lessonIdx: i,
     key: i
-  }))));
+  }))), (mod.subs || []).map((s, i) => /*#__PURE__*/React.createElement(CDSubModule, {
+    sub: s,
+    key: i
+  })));
 }
 function CDLevel({
   level,

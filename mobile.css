@@ -361,6 +361,14 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
   transition:padding-top .28s cubic-bezier(.22,.61,.36,1),padding-bottom .28s cubic-bezier(.22,.61,.36,1)}
 .m-scroll::-webkit-scrollbar{width:0}
 
+/* ===== pull-to-refresh indicator ===== */
+.m-pull-refresh{display:flex;align-items:center;justify-content:center;overflow:hidden}
+.m-pull-spinner{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--surface-card);box-shadow:var(--shadow-card)}
+.m-pull-spinner.is-spinning{animation:m-pull-spin .7s linear infinite}
+@keyframes m-pull-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.m-pull-spinner.is-spinning{animation:none}}
+
 /* single-column feed sizing (override desktop .page grid) — flat full-width
    posts with a 16px inset and a thick gray separator between them */
 .m-scroll .feed{display:flex;flex-direction:column;gap:0;padding:0}

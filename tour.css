@@ -1,4 +1,12 @@
 /* PROfinity — post-signup virtual tour */
+/* web flavor: desktop pages scroll, so pin the overlay to the viewport
+   instead of the (taller) document flow the mobile absolute-positioning relies on.
+   The step card also drops the mobile full-bleed-bottom-sheet treatment for a
+   compact corner card — there's no phone-width bottom dock to clear on desktop. */
+.pf-tour-fixed{position:fixed !important;inset:0 !important}
+/* left, not right: the Ava coach bubble is pinned bottom-right on every page */
+.pf-tour-layer.pf-tour-fixed{align-items:flex-start;padding:0 24px 24px}
+.pf-tour-fixed .pf-tour-card{width:100%;max-width:380px}
 .pf-tour-overlay{position:absolute;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;
   padding:24px;background:rgba(16,20,48,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
   animation:pf-tr-fade .24s ease}
@@ -20,7 +28,8 @@
 .pf-tour-pills i{font-style:normal;font-family:var(--font-sans);font-size:12.5px;line-height:1.45;color:rgba(255,255,255,.72)}
 
 .pf-tour-dots{display:flex;justify-content:center;gap:7px;margin-bottom:20px}
-.pf-tour-dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.28)}
+.pf-tour-dots span{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.28);
+  transition:background .2s ease,width .2s ease}
 .pf-tour-dots span.on{background:var(--brand-gold);width:18px}
 .pf-tour-wfoot{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .pf-tour-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;
@@ -43,9 +52,15 @@
 /* step card — anchored above the dock, page visible behind */
 .pf-tour-layer{position:absolute;inset:0;z-index:120;display:flex;flex-direction:column;justify-content:flex-end;
   padding:0 16px calc(104px + env(safe-area-inset-bottom))}
-.pf-tour-scrim{position:absolute;inset:0;background:rgba(16,20,48,.32)}
+.pf-tour-scrim{position:absolute;inset:0;background:rgba(16,20,48,.32);animation:pf-tr-fade .22s ease}
 .pf-tour-card{position:relative;z-index:1;background:var(--surface-card);border-radius:16px;padding:18px;
   box-shadow:0 20px 46px rgba(16,24,40,.28);animation:pf-tr-rise .3s cubic-bezier(.22,.61,.36,1)}
+
+/* outgoing panel (welcome → step 1, last step → finish, skip/close) fades
+   out as a unit — scrim and card together — instead of vanishing instantly.
+   Cross-page steps never see this: navigation gives them a fresh DOM. */
+.pf-tour-leaving{opacity:0;transition:opacity .2s ease}
+@media (prefers-reduced-motion:reduce){.pf-tour-leaving{transition:none}}
 .pf-tour-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
 .pf-tour-bar{display:flex;gap:5px;margin-bottom:14px}
 .pf-tour-bar span{flex:1;height:5px;border-radius:var(--r-pill);background:var(--gray-200);transition:background .3s ease}
@@ -75,4 +90,7 @@
 @keyframes pf-tr-fade{from{opacity:0}to{opacity:1}}
 @keyframes pf-tr-pop{from{transform:translateY(16px) scale(.97);opacity:0}to{transform:none;opacity:1}}
 @keyframes pf-tr-rise{from{transform:translateY(22px);opacity:0}to{transform:none;opacity:1}}
-@media (prefers-reduced-motion:reduce){.pf-tour-overlay,.pf-tour-welcome,.pf-tour-card{animation:none}}
+@media (prefers-reduced-motion:reduce){
+  .pf-tour-overlay,.pf-tour-welcome,.pf-tour-card,.pf-tour-scrim{animation:none}
+  .pf-tour-dots span{transition:none}
+}

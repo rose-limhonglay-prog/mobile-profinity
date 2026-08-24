@@ -859,6 +859,67 @@ function useHeaderHideM(scrollRef) {
   return state;
 }
 
+/* Pull-to-refresh: drag down from the top of a scroll container past
+   THRESHOLD to fire onRefresh. Tracks the finger with pointer events (works
+   for touch and mouse-drag alike) rather than native scroll, since a nested
+   .m-scroll div never sees the browser's own overscroll-triggered refresh.
+   onRefresh may return a promise — the spinner holds at THRESHOLD height
+   until it resolves, then the pulled content collapses back to 0. */
+function usePullToRefreshM(scrollRef, onRefresh) {
+  const THRESHOLD = 64;
+  const MAX = 90;
+  const [pull, setPullM] = useStateM(0);
+  const [dragging, setDraggingM] = useStateM(false);
+  const [refreshing, setRefreshingM] = useStateM(false);
+  const dragRefM = useRefM({ active: false, startY: 0 });
+  const busyRefM = useRefM(false);
+  const onRefreshRefM = useRefM(onRefresh);
+  onRefreshRefM.current = onRefresh;
+  useEffectM(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onDown = (e) => {
+      if (busyRefM.current || el.scrollTop > 0) return;
+      dragRefM.current = { active: true, startY: e.clientY };
+      setDraggingM(true);
+    };
+    const onMove = (e) => {
+      if (!dragRefM.current.active) return;
+      const dy = e.clientY - dragRefM.current.startY;
+      if (dy <= 0 || el.scrollTop > 0) { dragRefM.current.active = false; setDraggingM(false); setPullM(0); return; }
+      e.preventDefault();
+      setPullM(Math.min(MAX, dy * 0.45));
+    };
+    const onUp = () => {
+      if (!dragRefM.current.active) return;
+      dragRefM.current.active = false;
+      setDraggingM(false);
+      setPullM((p) => {
+        if (p < THRESHOLD) return 0;
+        busyRefM.current = true;
+        setRefreshingM(true);
+        Promise.resolve(onRefreshRefM.current()).then(() => {
+          busyRefM.current = false;
+          setRefreshingM(false);
+          setPullM(0);
+        });
+        return THRESHOLD;
+      });
+    };
+    el.addEventListener("pointerdown", onDown, { passive: true });
+    el.addEventListener("pointermove", onMove, { passive: false });
+    el.addEventListener("pointerup", onUp, { passive: true });
+    el.addEventListener("pointercancel", onUp, { passive: true });
+    return () => {
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onUp);
+    };
+  }, []);
+  return { pull, dragging, refreshing, threshold: THRESHOLD };
+}
+
 function MobileHome() {
   const [menuOpen, setMenuOpen] = useStateM(false);
   const [notifOpen, setNotifOpen] = useStateM(false);
@@ -868,7 +929,21 @@ function MobileHome() {
   const tabsRefM = useRefM(null);
   const [headerH, setHeaderH] = useStateM(0);
   const [tabsH, setTabsH] = useStateM(0);
+  const [feedKeyM, setFeedKeyM] = useStateM(0);
   const { hidden: chromeHidden, floating: chromeFloat } = useHeaderHideM(scrollRefM);
+  /* Same reset the newsfeed applies on an actual browser reload (see
+     app.jsx's clearUserPostsOnReload) — dropping the composed-post pin and
+     remounting Feed puts the designed per-block sequence back on top,
+     without a full page navigation. */
+  const handleRefreshM = () => new Promise((resolve) => {
+    try { localStorage.removeItem("pf-newsfeed-user-posts"); } catch (e) {}
+    setTimeout(() => {
+      setFeedKeyM((k) => k + 1);
+      if (scrollRefM.current) scrollRefM.current.scrollTop = 0;
+      resolve();
+    }, 600);
+  });
+  const { pull, dragging, refreshing } = usePullToRefreshM(scrollRefM, handleRefreshM);
   useEffectM(() => {
     const el = scrollRefM.current;
     if (!el || !window.pfRestoreScroll) return;
@@ -897,7 +972,12 @@ function MobileHome() {
       <PushNotifBanner />
       <MTopBar ref={headerRefM} onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} onMessages={() => setMsgOpen(true)} />
       <div className="m-scroll" ref={scrollRefM} style={{ paddingTop: chromeHidden ? 0 : headerH, paddingBottom: tabsH + 34 }}>
-        <PFAM.Feed />
+        <div className="m-pull-refresh" style={{ height: pull, transition: dragging ? "none" : "height .25s cubic-bezier(.22,.61,.36,1)" }}>
+          <div className={"m-pull-spinner" + (refreshing ? " is-spinning" : "")} style={!refreshing ? { transform: `rotate(${pull * 3.2}deg)` } : undefined}>
+            <DSM.IconifyIcon name="lucide:refresh-cw" size={18} color="var(--brand-navy)" />
+          </div>
+        </div>
+        <PFAM.Feed key={feedKeyM} />
       </div>
       <MTabBar ref={tabsRefM} compact={chromeHidden} />
       <button className={"m-fab" + (chromeHidden ? " m-fab-compact" : "")} aria-label="Share a Post" onClick={() => go("CreatePostMobile.html")}>

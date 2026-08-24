@@ -60,25 +60,29 @@ function withIdsLS(list) {
   return (list || []).map((c) => ({ ...c, _id: "lsc" + _lscseq++, replies: (c.replies || []).map((r) => ({ ...r })) }));
 }
 
-const LS_COMPLETED_KEY = "pf_ls_completed_lessons";
+/* Completion is shared across Lesson/Module/SubModule — a flat array of
+   lesson names in localStorage, broadcast on change so any open page's
+   progress (outline sheet, sub-module bar) stays in sync. */
+const LS_DONE_EVENT = "pf-lessons-done";
 
-function readCompletedSetLS() {
+function readDoneNamesLS() {
   try {
-    const raw = window.localStorage.getItem(LS_COMPLETED_KEY);
-    return new Set(raw ? JSON.parse(raw) : []);
+    const raw = window.localStorage.getItem(LS_DONE_EVENT);
+    return raw ? JSON.parse(raw) : [];
   } catch (e) {
-    return new Set();
+    return [];
   }
 }
 
-function writeCompletedSetLS(set) {
-  try {
-    window.localStorage.setItem(LS_COMPLETED_KEY, JSON.stringify([...set]));
-  } catch (e) {}
-}
-
-function lessonKeyLS(course, li, mi, ni) {
-  return `${course.slug}|${li}|${mi}|${ni}`;
+function markLessonDoneLS(name) {
+  const names = readDoneNamesLS();
+  if (names.indexOf(name) === -1) {
+    names.push(name);
+    try {
+      window.localStorage.setItem(LS_DONE_EVENT, JSON.stringify(names));
+      window.dispatchEvent(new CustomEvent(LS_DONE_EVENT));
+    } catch (e) {}
+  }
 }
 
 
@@ -86,7 +90,7 @@ function lessonKeyLS(course, li, mi, ni) {
 const LS_COURSES = {
   "toxin-battle": {
     slug: "toxin-battle",
-    title: "Botox Complications",
+    title: "Toxin Battle with Julie Bass Kaplan",
     levels: [
     {
       title: "Level 1", modules: [
@@ -98,7 +102,7 @@ const LS_COURSES = {
         pips: ["assets/avatar-mark-ellis.jpg", "assets/avatar-priya-shah.jpg"],
         lessons: [
         {
-          name: "Identifying & Treating Ptosis", dur: "18:36",
+          name: "Treatment", dur: "3:04",
           resources: [
           { name: "Eyelid Ptosis Diagnostic Checklist.pdf", size: "412 KB", ext: "pdf" },
           { name: "Contraindications Screening Form.pdf", size: "268 KB", ext: "pdf" },
@@ -114,10 +118,10 @@ const LS_COURSES = {
           { name: "Slide Deck – Diagnosis Overview.pdf", size: "2.1 MB", ext: "pdf" }]
 
         },
-        { name: "Brow & Forehead Assessment", dur: "12:10" },
-        { name: "Contraindication Screening", dur: "9:45" },
-        { name: "Patient Consultation Scripts", dur: "7:52" }]
+        { name: "Technique reducing the risk of Eyelid Ptosis", dur: "2:14" },
+        { name: "Treatment Avoidance", dur: "5:24" }],
 
+        subs: [],
       },
       {
         title: "Brow Ptosis",
@@ -131,13 +135,40 @@ const LS_COURSES = {
         lessons: [
         { name: "Consultation", dur: "3:04" },
         { name: "Avoiding Forehead Paralysis", dur: "2:14" },
-        { name: "Managing Asymmetries", dur: "5:24" }]
+        { name: "Managing Asymmetries", dur: "5:24" }],
 
+        subs: [],
       }]
 
     },
     {
       title: "Level 2", modules: [
+      {
+        title: "Lip Filler Technique",
+        heading: "Start with the two orientation lessons, then work through the technique, case study and resource folders in order.",
+        bullets: [
+        "Watch the two orientation lessons first — they set the safety baseline everything else assumes.",
+        "Work the Injection Techniques folder in order; each technique builds on the needle control before it.",
+        "Use the Case Studies to see the decisions in context, then keep the Downloads to hand in clinic."],
+
+        battle: null,
+        lessons: [
+        { name: "Welcome & how to use this module", dur: "2:10" },
+        { name: "Safety essentials (watch first)", dur: "6:48" }],
+
+        subs: [
+        { title: "Injection Techniques", open: true, lessons: [
+          { name: "Linear threading technique", dur: "4:32" },
+          { name: "Tenting technique", dur: "3:58" },
+          { name: "Cannula approach", dur: "6:11" }] },
+        { title: "Case Studies", lessons: [
+          { name: "Case 1: thin lips, first treatment", dur: "7:20" },
+          { name: "Case 2: correction of migrated filler", dur: "9:05" }] },
+        { title: "Downloads & Resources", lessons: [
+          { name: "Technique recipe cards (PDF)", dur: "PDF", kind: "pdf" },
+          { name: "Consent form templates (PDF)", dur: "PDF", kind: "pdf" }] }],
+
+      },
       {
         title: "Upper Eyelid Lift",
         heading: "Indications and surgical techniques for upper eyelid lift.",
@@ -150,14 +181,19 @@ const LS_COURSES = {
         lessons: [
         { name: "Preparation", dur: "1:42" },
         { name: "Glabellar Region Injections", dur: "3:22" },
-        { name: "Treating Marionette Lines", dur: "4:39" }]
+        { name: "Treating Marionette Lines", dur: "4:39" }],
 
+        subs: [],
       }]
 
     }]
 
   }
 };
+
+function smSlugLS(title) {
+  return title.toLowerCase().replace(/&/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
 
 function parseDurLS(dur) {
   const [m, s] = String(dur || "0:00").split(":").map(Number);
@@ -175,40 +211,172 @@ function getLessonLS() {
   const level = course.levels[li];
   const mi = Math.min(Math.max(Number(params.get("module") || 0), 0), level.modules.length - 1);
   const mod = level.modules[mi];
-  const ni = Math.min(Math.max(Number(params.get("lesson") || 0), 0), mod.lessons.length - 1);
-  const lesson = mod.lessons[ni];
+  const subs = mod.subs || [];
+  const siRaw = params.get("sub");
+  const si = siRaw !== null && subs[Number(siRaw)] ? Number(siRaw) : null;
+  const sub = si !== null ? subs[si] : null;
+  const container = sub || mod;
+  const ni = Math.min(Math.max(Number(params.get("lesson") || 0), 0), container.lessons.length - 1);
+  const lesson = container.lessons[ni];
   return {
-    course, levelIdx: li, level, moduleIdx: mi, module: mod, lessonIdx: ni, lesson,
-    resources: lesson.resources || LS_DEFAULT_RESOURCES
+    course, levelIdx: li, level, moduleIdx: mi, module: mod, subIdx: si, sub, container,
+    lessonIdx: ni, lesson, resources: lesson.resources || LS_DEFAULT_RESOURCES
   };
 }
 
-function lessonUrlLS(course, li, mi, ni) {
-  return `Lesson.html?course=${course.slug}&level=${li}&module=${mi}&lesson=${ni}`;
+function lessonUrlLS(course, li, mi, ni, si) {
+  let u = `Lesson.html?course=${course.slug}&level=${li}&module=${mi}`;
+  if (si != null) u += `&sub=${si}`;
+  return u + `&lesson=${ni}`;
+}
+function moduleUrlLS(course, li, mi) {
+  return `Module.html?course=${course.slug}&level=${li}&module=${mi}`;
+}
+function subModuleUrlLS(course, li, mi, si) {
+  return `SubModule.html?course=${course.slug}&level=${li}&module=${mi}&sub=${si}`;
+}
+
+/* Flat running order across every level/module in the course, so Next/Previous
+   and the outline sheet can walk straight through module (and level) boundaries.
+   A module's own lessons come first, then each of its sub-modules' lessons in order. */
+function flattenCourseLS(course) {
+  const out = [];
+  course.levels.forEach((level, li) => {
+    level.modules.forEach((mod, mi) => {
+      mod.lessons.forEach((lesson, ni) => {
+        out.push({ name: lesson.name, dur: lesson.dur, levelIdx: li, levelTitle: level.title, moduleIdx: mi, moduleTitle: mod.title, subIdx: null, subTitle: null, lessonIdx: ni });
+      });
+      (mod.subs || []).forEach((sub, si) => {
+        sub.lessons.forEach((lesson, ni) => {
+          out.push({ name: lesson.name, dur: lesson.dur, levelIdx: li, levelTitle: level.title, moduleIdx: mi, moduleTitle: mod.title, subIdx: si, subTitle: sub.title, lessonIdx: ni });
+        });
+      });
+    });
+  });
+  return out;
+}
+function flatIndexLS(flat, li, mi, ni, si) {
+  const want = si == null ? null : si;
+  for (let i = 0; i < flat.length; i++) {
+    const f = flat[i];
+    if (f.levelIdx === li && f.moduleIdx === mi && f.lessonIdx === ni && f.subIdx === want) return i;
+  }
+  return 0;
+}
+
+/* Module numbering runs across the whole course (Module 1, Module 2, …) rather
+   than restarting inside each level, matching how the outline sheet and
+   Module.html refer to a module. */
+function globalModuleIndexLS(course, li, mi) {
+  let n = 0;
+  for (let i = 0; i < li; i++) n += course.levels[i].modules.length;
+  return n + mi + 1;
 }
 
 /* ---------------------------------------------------------------- pieces -- */
-function LSPicker({ ctx }) {
-  const [open, setOpen] = useStateLS(false);
-  const total = ctx.module.lessons.length;
+function LSPicker({ ctx, onOpenOutline }) {
+  const total = ctx.container.lessons.length;
   return (
-    <div className="ls-picker">
-      <button type="button" className="ls-picker-btn" onClick={() => setOpen((o) => !o)} aria-expanded={open}>
-        {ctx.lessonIdx + 1} of {total}
-        <DSLS.IconifyIcon name={open ? "lucide:chevron-up" : "lucide:chevron-down"} size={15} color="#fff" />
-      </button>
-      {open &&
-      <div className="ls-picker-menu">
-          {ctx.module.lessons.map((l, i) =>
-        <button key={i} type="button" className={"ls-picker-item" + (i === ctx.lessonIdx ? " on" : "")}
-        onClick={() => goLS(lessonUrlLS(ctx.course, ctx.levelIdx, ctx.moduleIdx, i))}>
-              <span className="ls-picker-item-idx">{i + 1}</span>
-              <span className="ls-picker-item-name">{l.name}</span>
-              <span className="ls-picker-item-dur">{l.dur}</span>
-            </button>
-        )}
-        </div>}
+    <button type="button" className="ls-picker-btn" onClick={onOpenOutline} aria-haspopup="dialog">
+      {ctx.lessonIdx + 1} of {total}
+      <DSLS.IconifyIcon name="lucide:chevron-down" size={15} color="#fff" />
+    </button>);
 
+}
+
+function LSOutline({ ctx, doneNames, onClose }) {
+  useEffectLS(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const [openSubs, setOpenSubs] = useStateLS(() => {
+    const init = {};
+    ctx.course.levels.forEach((level, li) => (level.modules || []).forEach((mod, mi) => (mod.subs || []).forEach((s, si) => {
+      if (s.open) init[li + ":" + mi + ":" + si] = true;
+    })));
+    return init;
+  });
+  const toggleSub = (key) => setOpenSubs((o) => ({ ...o, [key]: !o[key] }));
+
+  return (
+    <div className="ls-ol" role="dialog" aria-modal="true" aria-label="Course outline">
+      <button type="button" className="ls-ol-scrim" aria-label="Close" onClick={onClose} />
+      <div className="ls-ol-card">
+        <span className="ls-ol-grab" />
+        <div className="ls-ol-hd">
+          <h3>{ctx.course.title}</h3>
+          <button type="button" className="ls-ol-x" aria-label="Close" onClick={onClose}>
+            <DSLS.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" />
+          </button>
+        </div>
+        <div className="ls-ol-body">
+          {ctx.course.levels.map((level, li) =>
+          <div className="ls-ol-level" key={li}>
+              <div className="ls-ol-level-hd">{level.title}</div>
+              {level.modules.map((mod, mi) =>
+            <div className="ls-ol-mod" key={mi}>
+                  <div className="ls-ol-mod-hd">Module {globalModuleIndexLS(ctx.course, li, mi)}: {mod.title}</div>
+                  {mod.lessons.map((l, ni) => {
+                const current = li === ctx.levelIdx && mi === ctx.moduleIdx && ni === ctx.lessonIdx && ctx.subIdx == null;
+                const finished = doneNames.indexOf(l.name) !== -1;
+                return (
+                  <button key={l.name} type="button"
+                  className={"ls-ol-lesson" + (current ? " on" : "") + (finished ? " done" : "")}
+                  onClick={() => goLS(lessonUrlLS(ctx.course, li, mi, ni))}>
+                        <DSLS.IconifyIcon
+                    name={finished ? "lucide:check-circle-2" : current ? "lucide:circle-play" : "lucide:play"}
+                    size={16} color={finished ? "var(--success)" : current ? "var(--brand-navy)" : "var(--gray-450)"} />
+                        <span className="nm">{l.name}</span>
+                        <span className="du">{l.dur}</span>
+                      </button>);
+
+              })}
+                  {(mod.subs || []).map((s, si) => {
+                const key = li + ":" + mi + ":" + si;
+                const isOpen = !!openSubs[key];
+                return (
+                  <div className="ls-ol-sub" key={s.title}>
+                      <div className="ls-ol-sub-hd">
+                        <button type="button" className="ls-ol-sub-open"
+                      onClick={() => goLS("SubModule.html?s=" + smSlugLS(s.title))}>
+                          <DSLS.IconifyIcon name={isOpen ? "lucide:folder-open" : "lucide:folder"} size={17} color="var(--brand-gold)" />
+                          <span className="nm">{s.title}</span>
+                          <span className="n">{s.lessons.length}</span>
+                          <DSLS.IconifyIcon name="lucide:arrow-up-right" size={15} color="var(--gray-450)" />
+                        </button>
+                        <button type="button" className="ls-ol-sub-toggle" aria-expanded={isOpen}
+                      aria-label={(isOpen ? "Collapse " : "Expand ") + s.title}
+                      onClick={() => toggleSub(key)}>
+                          <DSLS.IconifyIcon name={isOpen ? "lucide:chevron-up" : "lucide:chevron-down"} size={17} color="var(--gray-450)" />
+                        </button>
+                      </div>
+                      {isOpen &&
+                    <div className="ls-ol-sub-body">
+                        {s.lessons.map((l, ni) => {
+                      const current = li === ctx.levelIdx && mi === ctx.moduleIdx && si === ctx.subIdx && ni === ctx.lessonIdx;
+                      const finished = doneNames.indexOf(l.name) !== -1;
+                      const pdf = l.kind === "pdf";
+                      return (
+                        <button key={l.name} type="button" className={"ls-ol-lesson" + (current ? " on" : "") + (finished ? " done" : "")}
+                        onClick={() => goLS(lessonUrlLS(ctx.course, li, mi, ni, si))}>
+                              <DSLS.IconifyIcon name={finished ? "lucide:check-circle-2" : pdf ? "lucide:file-text" : "lucide:play"}
+                          size={16} color={finished ? "var(--success)" : "var(--gray-450)"} />
+                              <span className="nm">{l.name}</span>
+                              <span className="du">{l.dur}</span>
+                            </button>);
+
+                    })}
+                      </div>}
+                    </div>);
+
+              })}
+                </div>
+            )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>);
 
 }
@@ -289,8 +457,8 @@ function LSVideo({ ctx }) {
           <span className="ls-video-time end">{ctx.lesson.dur}</span>
           <button type="button" className="ls-video-btn" aria-label="Next lesson"
           onClick={() => {
-            const list = ctx.module.lessons;
-            if (ctx.lessonIdx < list.length - 1) goLS(lessonUrlLS(ctx.course, ctx.levelIdx, ctx.moduleIdx, ctx.lessonIdx + 1));
+            const list = ctx.container.lessons;
+            if (ctx.lessonIdx < list.length - 1) goLS(lessonUrlLS(ctx.course, ctx.levelIdx, ctx.moduleIdx, ctx.lessonIdx + 1, ctx.subIdx));
           }}>
             <DSLS.IconifyIcon name="lucide:skip-forward" size={16} color="#fff" />
           </button>
@@ -472,23 +640,56 @@ function LSResources({ ctx }) {
 function Lesson() {
   const ctx = getLessonLS();
   const [tab, setTab] = useStateLS("Overview");
-  const list = ctx.module.lessons;
-  const atFirst = ctx.lessonIdx === 0;
-  const atLast = ctx.lessonIdx === list.length - 1;
   const [noted, setNoted] = useStateLS(false);
   const [comments, setComments] = useStateLS(() => withIdsLS(LS_DEFAULT_COMMENTS));
   useEffectLS(() => { setComments(withIdsLS(LS_DEFAULT_COMMENTS)); }, [ctx.course.slug, ctx.levelIdx, ctx.moduleIdx, ctx.lessonIdx]);
 
-  const lessonKey = lessonKeyLS(ctx.course, ctx.levelIdx, ctx.moduleIdx, ctx.lessonIdx);
-  const [completed, setCompleted] = useStateLS(() => readCompletedSetLS().has(lessonKey));
-  useEffectLS(() => { setCompleted(readCompletedSetLS().has(lessonKey)); }, [lessonKey]);
+  const flat = React.useMemo(() => flattenCourseLS(ctx.course), [ctx.course.slug]);
+  const flatIdx = flatIndexLS(flat, ctx.levelIdx, ctx.moduleIdx, ctx.lessonIdx, ctx.subIdx);
+  const prevItem = flat[flatIdx - 1] || null;
+  const nextItem = flat[flatIdx + 1] || null;
+  const inSub = ctx.subIdx != null;
+  /* Finishing the last lesson of a sub-module lands back on that sub-module's
+     overview (100% complete); finishing the last lesson of the whole module
+     (its own lessons plus every sub) lands on the module overview instead —
+     these take priority over quietly auto-advancing into the next content. */
+  const lastOfModule = !nextItem || nextItem.moduleIdx !== ctx.moduleIdx || nextItem.levelIdx !== ctx.levelIdx;
+  const lastOfSub = inSub && (lastOfModule || nextItem.subIdx !== ctx.subIdx);
 
+  const [doneNames, setDoneNames] = useStateLS(readDoneNamesLS);
+  useEffectLS(() => {
+    const sync = () => setDoneNames(readDoneNamesLS());
+    window.addEventListener(LS_DONE_EVENT, sync);
+    return () => window.removeEventListener(LS_DONE_EVENT, sync);
+  }, []);
+  const completed = doneNames.indexOf(ctx.lesson.name) !== -1;
   function markLessonComplete() {
-    const set = readCompletedSetLS();
-    set.add(lessonKey);
-    writeCompletedSetLS(set);
-    setCompleted(true);
+    markLessonDoneLS(ctx.lesson.name);
+    setDoneNames(readDoneNamesLS());
   }
+
+  const [outlineOpen, setOutlineOpen] = useStateLS(false);
+  function goNext() {
+    if (lastOfModule) { goLS(moduleUrlLS(ctx.course, ctx.levelIdx, ctx.moduleIdx)); return; }
+    if (lastOfSub) { goLS(subModuleUrlLS(ctx.course, ctx.levelIdx, ctx.moduleIdx, ctx.subIdx)); return; }
+    goLS(lessonUrlLS(ctx.course, nextItem.levelIdx, nextItem.moduleIdx, nextItem.lessonIdx, nextItem.subIdx));
+  }
+
+  const [collapsed, setCollapsed] = useStateLS(false);
+  const scRef = useRefLS(null);
+  useEffectLS(() => {
+    const sc = scRef.current;
+    if (!sc) return;
+    let last = 0;
+    const onScroll = () => {
+      const y = sc.scrollTop;
+      if (y > last && y > 60) setCollapsed(true);
+      else if (y < last) setCollapsed(false);
+      last = y;
+    };
+    sc.addEventListener("scroll", onScroll, { passive: true });
+    return () => sc.removeEventListener("scroll", onScroll);
+  }, []);
 
   function addComment(text, sharedToNewsfeed) {
     setComments((all) => [...all, { author: { name: PFALS.ME.name, avatar: PFALS.ME.avatar }, time: "now", text, sharedToNewsfeed, _id: "lsc" + _lscseq++, replies: [] }]);
@@ -500,19 +701,20 @@ function Lesson() {
   }
 
   return (
-    <div className="ls-screen" data-screen-label="Lesson (mobile)">
+    <div className={"ls-screen" + (collapsed ? " ls-collapsed" : "")} data-screen-label="Lesson (mobile)">
       <header className="ls-top">
         <button className="ls-back" aria-label="Back" onClick={() => goLS(`CourseDetail.html?course=${ctx.course.slug}`)}>
           <DSLS.IconifyIcon name="lucide:chevron-left" size={22} color="var(--brand-navy)" />
         </button>
         <div className="ls-top-titles">
-          <p className="ls-top-eyebrow">Module {ctx.moduleIdx + 1}: {ctx.module.title}</p>
+          <p className="ls-top-eyebrow">Module {globalModuleIndexLS(ctx.course, ctx.levelIdx, ctx.moduleIdx)}: {ctx.module.title}</p>
           <h1 className="ls-top-title">{ctx.course.title}</h1>
         </div>
-        <LSPicker ctx={ctx} />
+        <LSPicker ctx={ctx} onOpenOutline={() => setOutlineOpen(true)} />
       </header>
+      {outlineOpen && <LSOutline ctx={ctx} doneNames={doneNames} onClose={() => setOutlineOpen(false)} />}
 
-      <div className="ls-scroll">
+      <div className="ls-scroll" ref={scRef}>
         <LSVideo ctx={ctx} />
 
         <div className="ls-tabs" role="tablist">
@@ -525,23 +727,23 @@ function Lesson() {
         <LSResources ctx={ctx} />}
       </div>
 
-      <div className="ls-bottom">
-        <button type="button" className="ls-nav-btn" disabled={atFirst}
-        onClick={() => !atFirst && goLS(lessonUrlLS(ctx.course, ctx.levelIdx, ctx.moduleIdx, ctx.lessonIdx - 1))}>
-          Previous
+      <div className="ls-bottom ls-bottom-stack">
+        <button type="button" className={"ls-complete" + (completed ? " on" : "")} onClick={markLessonComplete} disabled={completed}>
+          <DSLS.IconifyIcon name={completed ? "lucide:check-circle-2" : "lucide:check"} size={18} color={completed ? "var(--success)" : "#fff"} />
+          {completed ? "Completed" : "Mark as complete"}
         </button>
-        <button type="button" className={"ls-note-btn" + (noted ? " on" : "")} aria-label={noted ? "Remove bookmark" : "Bookmark lesson"} onClick={() => setNoted((n) => !n)}>
-          <DSLS.IconifyIcon name="lucide:book-open" size={19} color={noted ? "var(--brand-gold)" : "var(--brand-navy)"} />
-        </button>
-        {completed ?
-        <button type="button" className="ls-nav-btn primary" disabled={atLast}
-        onClick={() => !atLast && goLS(lessonUrlLS(ctx.course, ctx.levelIdx, ctx.moduleIdx, ctx.lessonIdx + 1))}>
-          {atLast ? "Completed" : "Next"}
-        </button> :
-
-        <button type="button" className="ls-nav-btn primary" onClick={markLessonComplete}>
-          Complete
-        </button>}
+        <div className="ls-bottom-row">
+          <button type="button" className="ls-nav-btn" disabled={!prevItem}
+          onClick={() => prevItem && goLS(lessonUrlLS(ctx.course, prevItem.levelIdx, prevItem.moduleIdx, prevItem.lessonIdx, prevItem.subIdx))}>
+            Previous
+          </button>
+          <button type="button" className={"ls-note-btn" + (noted ? " on" : "")} aria-label={noted ? "Remove bookmark" : "Bookmark lesson"} onClick={() => setNoted((n) => !n)}>
+            <DSLS.IconifyIcon name="lucide:book-open" size={19} color={noted ? "var(--brand-gold)" : "var(--brand-navy)"} />
+          </button>
+          <button type="button" className="ls-nav-btn primary" disabled={!completed} onClick={goNext}>
+            {!nextItem ? "Finish course" : lastOfModule ? "Finish module" : lastOfSub ? "Finish sub-module" : "Next lesson"}
+          </button>
+        </div>
       </div>
     </div>);
 
