@@ -1,9 +1,11 @@
 /* ===========================================================================
    PROfinity Academy — My Learning · layout shell
-   Component styling comes from the Profinity Design System bundle + tokens.
-   Full-width learning hub: welcome, tabs, search, and horizontally-scrolling
-   course rows (My Courses, Free Resources, Success Path, Recommended, New,
-   Popular). No raw hex — colours are DS tokens or token-derived color-mix.
+   Goal-first layout: welcome + tier pill, goal card, tabs/search, Continue
+   Learning, My Courses rail, and stacked promo cards (Free Resources /
+   Discover your journey / Unlock with next tier). Component styling comes
+   from the Profinity Design System bundle + tokens. No raw hex — colours
+   are DS tokens or token-derived color-mix, except the two navy gradient
+   stops already precedented in learning-mobile.css.
    =========================================================================== */
 
 *{box-sizing:border-box}
@@ -13,19 +15,32 @@ img{max-width:100%}
 
 .app{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-page);min-height:100vh}
 
-/* (page entrance fade removed — a backgrounded preview tab never runs the
-   animation, leaving opacity:0 content invisible.) */
-
 .page{max-width:1240px;margin:0 auto;padding:28px 24px 64px}
 
-/* welcome */
+/* welcome + tier pill */
+.lrn2-top{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
 .welcome{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-display);
   color:var(--brand-navy);margin:6px 0 6px}
-.welcome-sub{font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--gray-600);margin:0 0 22px}
-.welcome-sub u{text-decoration-color:var(--gray-400);text-underline-offset:2px}
+.welcome-sub{font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--brand-navy);margin:0}
+.lrn2-tierpill{display:inline-flex;align-items:center;gap:8px;flex-shrink:0;margin-top:10px;padding:9px 18px;
+  border-radius:var(--r-pill);background:var(--premium-badge,linear-gradient(180deg,#e09a3c,#db6905));
+  color:var(--white);font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);white-space:nowrap}
+
+/* goal card */
+.lrn2-goal{margin-top:22px;border-radius:var(--r-lg);padding:26px 30px;color:var(--white);
+  background:linear-gradient(120deg,#453f9e,var(--brand-navy) 65%,var(--brand-navy-700));
+  display:flex;align-items:flex-start;gap:20px}
+.lrn2-goal-icon{width:46px;height:46px;flex-shrink:0;border-radius:50%;background:rgba(255,255,255,.14);
+  display:inline-flex;align-items:center;justify-content:center}
+.lrn2-goal-body{flex:1;min-width:0}
+.lrn2-goal-body h2{margin:0 0 8px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-h2)}
+.lrn2-goal-body .vision{margin:0;font-family:var(--font-sans);font-size:var(--fs-body-lg);line-height:1.55;color:rgba(255,255,255,.88)}
+.lrn2-goal-body .clarifier{margin:8px 0 0;font-family:var(--font-sans);font-size:var(--fs-caption);color:rgba(255,255,255,.6)}
+.lrn2-goal-coach{flex-shrink:0;margin-top:2px;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.4);color:var(--white)}
+.lrn2-goal-coach:hover{background:rgba(255,255,255,.22)}
 
 /* tabs + search */
-.lrn-tabs{margin-bottom:22px;overflow-x:auto;scrollbar-width:none}
+.lrn-tabs{margin-top:32px;margin-bottom:22px;overflow-x:auto;scrollbar-width:none}
 .lrn-tabs::-webkit-scrollbar{display:none}
 .search{display:flex;align-items:center;gap:11px;height:54px;padding:0 20px;margin-bottom:28px;
   background:var(--surface-card);border:1px solid var(--border-strong);border-radius:var(--r-md)}
@@ -34,101 +49,99 @@ img{max-width:100%}
 .search input::placeholder{color:var(--gray-450)}
 
 /* section scaffolding */
-.sec{margin-top:30px}
 .sec-h{display:flex;align-items:center;gap:16px;margin-bottom:16px}
-.sec-h .t{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-h1);color:var(--text-primary)}
+.sec-h .t{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-h2);color:var(--text-primary)}
+.sec-h .t.big{font-weight:var(--fw-bold)}
 .sec-h .grow{flex:1}
-.sec-h .viewall{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);
-  color:var(--action-primary);text-decoration:underline;cursor:pointer;white-space:nowrap}
+.sec-h .viewall{font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:var(--fs-body);
+  color:var(--ai-purple);cursor:pointer;white-space:nowrap}
 
-/* pill callouts in section headers */
-.pill{display:inline-flex;align-items:center;gap:9px;padding:9px 16px;border-radius:var(--r-pill);
-  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);cursor:pointer;border:none;
-  transition:filter .15s ease}
-.pill:hover{filter:brightness(.96)}
-.pill.navy{background:var(--brand-navy);color:var(--white)}
-.pill.gold{background:linear-gradient(90deg,#f4ad3d,#e7820a);color:var(--white)}
+/* Continue Learning — single featured card */
+.lrn2-continue{margin-top:8px}
+.lrn2-continuecard{display:flex;gap:26px;background:var(--surface-card);border:1px solid var(--border-default);
+  border-radius:var(--r-lg);box-shadow:var(--shadow-card);overflow:hidden}
+.lrn2-continuecard .thumb{position:relative;width:380px;flex-shrink:0;min-height:240px;
+  background-size:cover;background-position:center;background-color:var(--brand-navy)}
+.lrn2-continuecard .thumb .lvl{position:absolute;top:12px;left:12px}
+.lrn2-continuecard .body{flex:1;min-width:0;padding:28px 30px 28px 4px;display:flex;flex-direction:column;gap:14px}
+.lrn2-continuecard .ti{margin:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-h1);color:var(--text-primary)}
+.lrn2-continuecard .note{margin:0;font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--gray-600)}
+.lrn2-resume-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;align-self:flex-start;
+  margin-top:auto;height:50px;padding:0 30px;border:none;border-radius:var(--r-sm);background:var(--brand-navy);
+  color:var(--white);cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body-lg);
+  transition:background .15s ease}
+.lrn2-resume-btn:hover{background:var(--brand-navy-700)}
 
-/* sunken panels */
-.panel{background:var(--surface-sunken);border-radius:var(--r-lg);padding:24px}
-.panel.cream{background:color-mix(in srgb, var(--brand-gold) 12%, var(--white))}
-.panel .sec-h{margin-bottom:18px}
-.panel .sec-h .t{font-size:var(--fs-h2)}
+/* progress row (shared: Continue Learning + in-progress course cards) */
+.progrow{display:flex;align-items:center;gap:16px}
+.progrow .bar{flex:1;height:8px;border-radius:var(--r-pill);background:var(--gray-200);overflow:hidden}
+.progrow .bar>span{display:block;height:100%;border-radius:var(--r-pill);background:linear-gradient(90deg,#f4ad3d,#e7820a)}
+.progrow .pct{font-family:var(--font-sans);font-size:var(--fs-body);font-weight:var(--fw-semibold);color:var(--text-primary);white-space:nowrap}
+
+/* sunken panel — My Courses */
+.panel{margin-top:36px;background:var(--surface-sunken);border-radius:var(--r-lg);padding:28px}
+.panel .sec-h .t{font-size:var(--fs-h1);font-weight:var(--fw-bold)}
 
 /* horizontal scroll row */
-.row{display:flex;gap:16px;overflow-x:auto;padding:4px 2px 14px;scroll-snap-type:x proximity;scrollbar-width:thin}
+.row{display:flex;gap:20px;overflow-x:auto;padding:4px 4px 14px;scroll-snap-type:x proximity;scrollbar-width:thin}
 .row::-webkit-scrollbar{height:8px}
 .row::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:var(--r-pill)}
 .row::-webkit-scrollbar-track{background:transparent}
-.row>*{scroll-snap-align:start;flex:0 0 auto}
-.w-course{width:264px}
-.w-card{width:280px}
-.w-intro{width:264px}
+.row>*{scroll-snap-align:start;flex:0 0 300px;width:300px}
 
-/* section divider with a short navy accent (matches the reference) */
-.sec-divider{position:relative;height:1px;background:var(--border-default);margin-top:26px}
-.sec-divider::before{content:"";position:absolute;top:0;left:0;width:56px;height:2px;background:var(--brand-navy)}
-
-/* ===== Resource card (locked) ===== */
-.rcard{display:flex;flex-direction:column;background:var(--surface-card);border:1px solid var(--border-default);
-  border-radius:var(--r-md);box-shadow:var(--shadow-card);overflow:hidden}
-.rcard .thumb{position:relative;height:150px;background-size:cover;background-position:center;background-color:var(--gray-200)}
-.rcard .thumb::after{content:"";position:absolute;inset:0;background:rgba(16,24,40,.18);backdrop-filter:blur(2px)}
-.rcard .lvl{position:absolute;top:12px;left:12px;z-index:2}
-.rcard .lock{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;
-  width:46px;height:46px;border-radius:50%;background:var(--brand-navy);display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 14px rgba(41,37,105,.4)}
-.rcard .body{padding:16px 18px;display:flex;flex-direction:column;gap:7px;flex:1}
-.rcard .ti{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-body-lg);color:var(--text-primary);line-height:1.25}
-.rcard .ds{font-family:var(--font-sans);font-size:var(--fs-body);color:var(--gray-500);line-height:var(--lh-snug)}
-.rcard .by{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-caption);color:var(--action-primary);margin-top:2px}
-.rcard .ghost{margin-top:14px}
-
-.ghost{width:100%;height:42px;border:1px solid var(--border-default);background:var(--surface-sunken);
-  border-radius:var(--r-sm);cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);
-  font-size:var(--fs-body);color:var(--text-heading);transition:background .15s ease}
-.ghost:hover{background:var(--gray-150)}
-
-/* ===== Price / path card ===== */
-.pcard{display:flex;flex-direction:column;background:var(--surface-card);border:1px solid var(--border-default);
-  border-radius:var(--r-md);box-shadow:var(--shadow-card);overflow:hidden}
-.pcard .thumb{position:relative;height:158px;background-size:cover;background-position:center;background-color:var(--brand-navy)}
-.pcard .lvl{position:absolute;top:12px;left:12px}
-.pcard .play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:44px;height:44px;border-radius:50%;
+/* ===== My Courses card ===== */
+.lrn2-coursecard{display:flex;flex-direction:column;background:var(--surface-card);border:1px solid var(--border-default);
+  border-radius:var(--r-md);box-shadow:var(--shadow-card);overflow:hidden;transition:box-shadow .18s ease,transform .18s ease}
+.lrn2-coursecard:hover{box-shadow:0 12px 28px rgba(12,12,13,.12);transform:translateY(-3px)}
+.lrn2-coursecard .thumb{position:relative;height:170px;background-size:cover;background-position:center;background-color:var(--brand-navy)}
+.lrn2-coursecard .lvl{position:absolute;top:12px;left:12px}
+.lrn2-coursecard .play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;
   background:rgba(255,255,255,.92);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm)}
-.pcard .body{padding:16px 18px;display:flex;flex-direction:column;gap:7px;flex:1}
-.pcard .ti{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-h3);color:var(--text-primary);line-height:1.25}
-.pcard .ds{font-family:var(--font-sans);font-size:var(--fs-body);color:var(--gray-500);line-height:var(--lh-snug)}
-.pcard .by{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-caption);color:var(--action-primary)}
-.pcard .foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto;padding-top:10px}
-.pcard .price{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-h2);color:var(--text-primary)}
-.pcard .ghost{width:auto;padding:0 18px}
-.badge-path{position:absolute;top:12px;left:12px;padding:5px 12px;border-radius:var(--r-sm);
-  background:linear-gradient(90deg,#f4ad3d,#e7820a);color:var(--white);
-  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-caption)}
+.lrn2-coursecard .body{padding:18px;display:flex;flex-direction:column;gap:8px;flex:1}
+.lrn2-coursecard .ti{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body-lg);color:var(--text-primary)}
+.lrn2-coursecard .ds{font-family:var(--font-sans);font-size:var(--fs-body);line-height:1.5;color:var(--gray-500)}
+.lrn2-coursecard .by{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);color:var(--text-primary)}
+.lrn2-coursecard .progrow{margin-top:6px}
+.lrn2-coursecard .lrn2-cta{margin-top:auto;padding-top:8px}
 
-/* Success Path intro brand card */
-.intro{display:flex;flex-direction:column;background:var(--surface-card);border:1px solid var(--border-default);
-  border-radius:var(--r-md);box-shadow:var(--shadow-card);padding:20px}
-.intro img{height:30px;width:auto;object-fit:contain;align-self:flex-start;margin-bottom:14px}
-.intro .ti{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-h3);color:var(--brand-navy);line-height:1.25;margin-bottom:10px}
-.intro .ds{font-family:var(--font-sans);font-size:var(--fs-body);color:var(--gray-600);line-height:var(--lh-normal);flex:1}
-.intro .out{margin-top:16px;align-self:flex-start;padding:11px 22px;border:1px solid var(--border-strong);background:var(--surface-card);
-  border-radius:var(--r-sm);cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);color:var(--text-primary)}
-.intro .out:hover{background:var(--surface-sunken)}
+.lrn2-cta{display:flex;align-items:center;justify-content:center;height:46px;margin-top:14px;border-radius:var(--r-sm);
+  cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);transition:opacity .15s ease}
+.lrn2-cta:hover{opacity:.9}
+.lrn2-cta.filled{border:none;background:var(--brand-navy);color:var(--white)}
+.lrn2-cta.ghost{border:1px solid var(--border-strong);background:var(--surface-card);color:var(--brand-navy)}
 
-/* "Find out more" outro blocks — Recommended / Popular Courses (matches
-   Your Success Path / Browse All Courses on the mobile My Learning page:
-   informational, not a priced upsell). */
-.lrn-outro{display:flex;flex-direction:column;background:var(--surface-card);border:1px solid var(--border-default);
-  border-radius:var(--r-md);box-shadow:var(--shadow-card);padding:22px;gap:6px;width:100%}
-.lrn-outro .ti{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-h3);color:var(--text-heading)}
-.lrn-outro .ds{font-family:var(--font-sans);font-size:var(--fs-body);color:var(--gray-500);line-height:var(--lh-normal)}
-.lrn-outro-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:50px;margin-top:12px;
-  border:none;border-radius:var(--r-sm);background:var(--brand-navy);color:var(--white);cursor:pointer;
-  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);transition:background .15s ease}
-.lrn-outro-btn:hover{background:var(--action-brand-hover)}
-.lrn-outro-btn:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+/* ===== bottom promo stack ===== */
+.lrn2-promos{margin-top:36px;display:flex;flex-direction:column;gap:24px}
+.lrn2-promo{display:flex;align-items:flex-start;gap:18px;border-radius:var(--r-lg);padding:26px;
+  border:none;text-align:left;font-family:var(--font-sans);cursor:pointer;width:100%}
+.lrn2-promo.card{background:var(--surface-card);border:1px solid var(--border-default)}
+.lrn2-promo.navy{background:linear-gradient(120deg,#453f9e,var(--brand-navy));color:var(--white)}
+.lrn2-promo .ic{width:48px;height:48px;flex-shrink:0;border-radius:var(--r-md);display:inline-flex;
+  align-items:center;justify-content:center;background:color-mix(in srgb, var(--brand-gold) 14%, var(--white))}
+.lrn2-promo.navy .ic{background:rgba(255,255,255,.14)}
+.lrn2-promo .ic.circle{border-radius:50%;width:56px;height:56px}
+.lrn2-promo .tx{flex:1;min-width:0}
+.lrn2-promo .tx h3{margin:0 0 6px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-h3);color:var(--brand-navy)}
+.lrn2-promo.navy .tx h3{color:var(--white)}
+.lrn2-promo.big .tx h3{font-size:var(--fs-h2)}
+.lrn2-promo .tx p{margin:0;font-family:var(--font-sans);font-size:var(--fs-body);line-height:1.55;color:var(--gray-600)}
+.lrn2-promo.navy .tx p{color:rgba(255,255,255,.78)}
+.lrn2-promo.big .tx p{font-size:var(--fs-body-lg)}
+
+.lrn2-outline-btn{display:inline-flex;align-items:center;gap:9px;height:46px;margin-top:16px;padding:0 22px;
+  border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--surface-card);cursor:pointer;
+  font-family:var(--font-sans);font-size:var(--fs-body);font-weight:var(--fw-semibold);color:var(--brand-navy);transition:background .15s ease}
+.lrn2-outline-btn:hover{background:var(--surface-sunken)}
+
+.lrn2-navy-btn{display:inline-flex;align-items:center;gap:9px;height:46px;margin-top:16px;padding:0 22px;
+  border-radius:var(--r-sm);background:var(--white);font-family:var(--font-sans);font-size:var(--fs-body);
+  font-weight:var(--fw-semibold);color:var(--brand-navy)}
+
+.lrn2-upgrade-btn{flex-shrink:0;align-self:center;display:inline-flex;align-items:center;gap:10px;height:56px;padding:0 30px;
+  border:none;border-radius:var(--r-md);background:rgba(255,255,255,.16);cursor:pointer;font-family:var(--font-sans);
+  font-size:var(--fs-h3);font-weight:var(--fw-semibold);color:var(--white);transition:background .15s ease}
+.lrn2-upgrade-btn:hover{background:rgba(255,255,255,.26)}
+.lrn2-promo.big{align-items:center}
 
 /* accessibility: visible focus ring + reduced motion */
 #pf-root :focus-visible{outline:3px solid var(--brand-navy);outline-offset:2px;border-radius:6px}
@@ -141,16 +154,23 @@ img{max-width:100%}
 
 .twk-panel{font-family:ui-sans-serif,system-ui,sans-serif}
 
+@media (max-width:900px){
+  .lrn2-continuecard{flex-direction:column}
+  .lrn2-continuecard .thumb{width:100%;min-height:200px}
+  .lrn2-promo.big{flex-direction:column;align-items:flex-start}
+  .lrn2-upgrade-btn{align-self:stretch;justify-content:center}
+}
+
 @media (max-width:680px){
   .page{padding:18px 14px 48px}
   .welcome{font-size:var(--fs-h1)}
+  .lrn2-top{flex-direction:column;gap:8px}
 }
 
 /* ===== Skeleton / shimmer loading ===== */
 @keyframes lrn-shimmer{0%{background-position:-900px 0}100%{background-position:900px 0}}
 .skel{background:linear-gradient(90deg,var(--gray-150) 25%,var(--gray-100) 50%,var(--gray-150) 75%);background-size:1800px 100%;animation:lrn-shimmer 1.5s infinite linear}
 .skel-card{flex:0 0 auto;display:flex;flex-direction:column;background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--r-md);box-shadow:var(--shadow-card);overflow:hidden}
-.skel-card .sk-body{padding:16px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+.skel-card .sk-body{padding:18px;display:flex;flex-direction:column;gap:10px;flex:1}
 .skel-card .sk-line{height:13px;border-radius:var(--r-pill)}
-.skel-card .sk-btn{height:42px;border-radius:var(--r-sm)}
-.skel-card .sk-foot{display:flex;align-items:center;justify-content:space-between;padding-top:10px;margin-top:auto}
+.skel-card .sk-btn{height:46px;margin-top:auto;border-radius:var(--r-sm)}
