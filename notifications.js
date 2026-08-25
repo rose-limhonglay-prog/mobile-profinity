@@ -180,7 +180,8 @@
       actionBtn.type = "button";
       actionBtn.className = "pf-toast-action";
       actionBtn.textContent = notif.action.label;
-      actionBtn.addEventListener("click", function () {
+      actionBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
         dismissToast(notif.id);
         if (notif.action.href) (window.pfGo || function (u) { window.location.href = u; })(notif.action.href);
       });
@@ -196,9 +197,15 @@
     close.className = "pf-toast-close";
     close.setAttribute("aria-label", "Dismiss notification");
     close.innerHTML = '<iconify-icon icon="lucide:x" width="16" height="16"></iconify-icon>';
-    close.addEventListener("click", function () { dismissToast(notif.id); });
+    close.addEventListener("click", function (e) { e.stopPropagation(); dismissToast(notif.id); });
     node.appendChild(close);
 
+    node.style.cursor = "pointer";
+    node.addEventListener("click", function () {
+      dismissToast(notif.id);
+      var href = (notif.action && notif.action.href) || "NewsfeedWeb.html";
+      (window.pfGo || function (u) { window.location.href = u; })(href);
+    });
     node.addEventListener("mouseenter", function () { pauseTimer(notif.id); });
     node.addEventListener("mouseleave", function () { resumeTimer(notif.id); });
 
@@ -490,7 +497,8 @@
       }, 900 + i * 500);
     });
   }
-  window.setTimeout(runDemo, 0);
+  var isNewsfeedPage = /NewsfeedWeb\.html/i.test(window.location.pathname);
+  if (isNewsfeedPage) window.setTimeout(runDemo, 0);
 
   /* -------------------------------------------------- public API -------------------------------------------------- */
   window.PFNotify = {

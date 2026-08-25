@@ -34,6 +34,15 @@ const IMG = {
 };
 const TABS = ["All Courses", "Free Resources", "New Courses", "Recommended Courses", "Upcoming Webinars", "Certification Programs"];
 const MY_COURSES = [{
+  image: IMG.logo,
+  level: "All Levels",
+  title: "PROfinity Membership",
+  description: "Ongoing protocols, weekly demos, marketing resources, and community support.",
+  progress: 14,
+  cta: "Continue learning",
+  active: true,
+  slug: "profinity-membership"
+}, {
   image: IMG.lip,
   level: "Beginner",
   title: "8D Lip Design",
@@ -65,7 +74,7 @@ const MY_COURSES = [{
   cta: "Start learning"
 }];
 function goToCourse(c) {
-  const url = c.slug ? `CourseWeb.html?course=${c.slug}` : `CourseWeb.html?${new URLSearchParams({
+  const url = c.slug === "profinity-membership" ? "CourseLandingWeb.html" : c.slug ? `CourseWeb.html?course=${c.slug}` : `CourseWeb.html?${new URLSearchParams({
     title: c.title,
     instr: TUTOR,
     pct: c.progress || 0

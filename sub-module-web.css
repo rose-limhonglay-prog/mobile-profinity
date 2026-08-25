@@ -1,0 +1,121 @@
+/* ===========================================================================
+   PROfinity — Sub-module (web) · desktop chrome for a folder inside a module.
+   Hero/Before-you-start/Lessons body, sticky progress + Ask Ava sidebar.
+   Mirrors course-web.css.
+   =========================================================================== */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--surface-page);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+img{max-width:100%}
+
+.app{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-page);min-height:100vh}
+
+/* ---------- page + crumb ---------- */
+.smw-page{max-width:1180px;margin:0 auto;padding:24px 24px 80px}
+
+.smw-crumb-row{display:flex;align-items:center;gap:14px;margin-bottom:20px}
+.smw-back-btn{width:38px;height:38px;flex-shrink:0;background:var(--surface-card);border:1px solid var(--border-default);
+  border-radius:var(--r-sm);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.smw-back-btn:hover{background:var(--surface-sunken)}
+.smw-crumb{font-family:var(--font-sans);font-size:14px;color:var(--gray-500)}
+.smw-crumb a{color:var(--gray-500);text-decoration:none;cursor:pointer}
+.smw-crumb a:hover{color:var(--ai-purple)}
+.smw-crumb-mod{color:var(--gray-600)}
+.smw-crumb-cur{color:var(--text-primary);font-weight:var(--fw-semibold)}
+
+/* ---------- page grid ---------- */
+.smw-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:28px;align-items:start}
+@media (max-width:960px){.smw-grid{grid-template-columns:1fr}}
+
+.smw-main{min-width:0;display:flex;flex-direction:column;gap:24px}
+
+.smw-card{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);padding:34px 38px}
+
+/* ---------- hero ---------- */
+.smw-hero-head{display:flex;align-items:center;gap:14px}
+.smw-hero-ic{width:52px;height:52px;flex-shrink:0;border-radius:var(--r-md);background:var(--brand-gold-100);
+  display:inline-flex;align-items:center;justify-content:center}
+.smw-hero-tx{display:flex;flex-direction:column;gap:3px}
+.smw-eyebrow{font-family:var(--font-sans);font-size:13px;font-weight:var(--fw-semibold);letter-spacing:.06em;
+  text-transform:uppercase;color:var(--gray-500)}
+.smw-hero-tx h1{margin:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:30px;color:var(--brand-navy)}
+
+.smw-intro{margin:22px 0 0;font-family:var(--font-sans);font-size:17px;line-height:1.65;color:var(--gray-600);max-width:74ch}
+
+.smw-stats{display:flex;flex-wrap:wrap;gap:36px;margin-top:26px;padding-top:22px;border-top:1px solid var(--border-default)}
+.smw-stat{display:flex;flex-direction:column;gap:5px}
+.smw-stat-key{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-sans);font-size:13px;color:var(--gray-500)}
+.smw-stat-val{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:16px;color:var(--text-primary)}
+
+/* ---------- before you start ---------- */
+.smw-prep h2{margin:0 0 20px;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:22px;color:var(--text-primary)}
+.smw-prep-list{display:flex;flex-direction:column;gap:12px}
+.smw-prep-item{display:flex;gap:16px;align-items:flex-start;padding:16px 18px;background:var(--surface-sunken);border-radius:var(--r-md)}
+.smw-prep-n{flex-shrink:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15px;color:var(--brand-gold)}
+.smw-prep-tx{font-family:var(--font-sans);font-size:15px;line-height:1.6;color:var(--gray-600)}
+
+/* ---------- lessons ---------- */
+.smw-lessons-head{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.smw-lessons-head h2{margin:0;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:22px;color:var(--text-primary)}
+.smw-lessons-count{font-family:var(--font-sans);font-size:15px;color:var(--gray-500)}
+
+.smw-rows{display:flex;flex-direction:column;margin-top:18px;border:1px solid var(--border-default);border-radius:var(--r-md);overflow:hidden}
+.smw-row{display:flex;align-items:center;gap:16px;padding:16px 20px;text-decoration:none;color:inherit;cursor:pointer;
+  transition:background .15s ease}
+.smw-row:not(:first-child){border-top:1px solid var(--border-default)}
+.smw-row:hover{background:var(--surface-sunken)}
+@media (prefers-reduced-motion:reduce){.smw-row{transition:none}}
+.smw-row-n{width:34px;height:34px;flex-shrink:0;border-radius:50%;background:#EEF0FF;display:inline-flex;align-items:center;
+  justify-content:center;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14px;color:var(--brand-navy)}
+.smw-row-n.done{background:var(--success);color:#fff}
+.smw-row-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.smw-row-name{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:16px;color:var(--text-primary)}
+.smw-row-kind{font-family:var(--font-sans);font-size:13px;color:var(--gray-500)}
+.smw-row-dur{flex-shrink:0;font-family:var(--font-sans);font-size:14px;color:var(--gray-500)}
+
+/* ---------- sidebar ---------- */
+.smw-aside{display:flex;flex-direction:column;gap:20px;position:sticky;top:104px}
+
+.smw-side-card{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--r-lg);
+  box-shadow:0 8px 24px rgba(12,12,13,.08);padding:24px}
+
+.smw-progress-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  font-family:var(--font-sans);font-size:15px;color:var(--gray-600)}
+.smw-progress-pct{font-weight:var(--fw-semibold);color:var(--text-primary)}
+.smw-progress-bar{display:block;height:8px;margin-top:12px;border-radius:999px;background:var(--gray-200);overflow:hidden}
+.smw-progress-bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#f4ad3d,#e7820a);transition:width .2s ease}
+
+.smw-cta-primary{width:100%;display:flex;align-items:center;justify-content:center;gap:12px;height:56px;margin-top:20px;
+  border:none;border-radius:var(--r-md);background:var(--brand-navy);font-family:var(--font-sans);font-size:17px;
+  font-weight:var(--fw-bold);color:#fff;cursor:pointer}
+.smw-cta-primary:hover{background:var(--brand-navy-700)}
+.smw-cta-secondary{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;height:48px;margin-top:12px;
+  border:1px solid var(--border-strong);border-radius:var(--r-sm);background:var(--surface-card);font-family:var(--font-sans);
+  font-size:15px;font-weight:var(--fw-semibold);color:var(--brand-navy);cursor:pointer}
+.smw-cta-secondary:hover{background:var(--surface-sunken)}
+
+.smw-divider{height:1px;background:var(--border-default);margin:22px 0}
+
+.smw-siblings-h{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;color:var(--brand-navy)}
+.smw-siblings{display:flex;flex-direction:column;gap:4px;margin-top:12px}
+.smw-sibling{display:flex;align-items:center;gap:11px;padding:11px 12px;border:none;border-radius:var(--r-sm);
+  background:transparent;cursor:pointer;text-align:left;width:100%;font-family:var(--font-sans)}
+.smw-sibling:hover{background:var(--surface-sunken)}
+.smw-sibling.on{background:#F5F6FF}
+.smw-sibling-name{flex:1;min-width:0;font-size:14px;color:var(--text-primary)}
+.smw-sibling.on .smw-sibling-name{font-weight:var(--fw-semibold)}
+.smw-sibling-n{font-family:var(--font-sans);font-size:12px;color:var(--gray-500)}
+
+.smw-ava-card{background:linear-gradient(120deg,#3B3592,#292569);border-radius:var(--r-lg);padding:24px;color:#fff}
+.smw-ava-head{display:flex;align-items:center;gap:12px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:17px}
+.smw-ava-card p{margin:10px 0 18px;font-family:var(--font-sans);font-size:14px;line-height:1.55;color:rgba(255,255,255,.78)}
+.smw-ava-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:9px;height:46px;border:none;
+  border-radius:var(--r-sm);background:#fff;color:var(--brand-navy);font-family:var(--font-sans);font-weight:var(--fw-semibold);
+  font-size:15px;cursor:pointer}
+.smw-ava-btn:hover{background:#F2F4F7}
+
+@media (max-width:680px){
+  .smw-page{padding:16px 14px 60px}
+  .smw-card{padding:24px 20px}
+}
