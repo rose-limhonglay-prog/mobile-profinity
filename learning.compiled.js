@@ -79,22 +79,36 @@ const CONTINUE = {
 };
 const TABS = ["All Courses", "In Progress", "Completed", "Certificates", "Saved"];
 function course(image, level, title, description, extra) {
-  const inProgress = !!(extra && extra.progress);
+  const completed = !!(extra && extra.completed);
+  const inProgress = !completed && !!(extra && extra.progress);
   return {
     image,
     level,
     title,
     description,
     inProgress,
-    progress: extra && extra.progress ? extra.progress : 0,
+    completed,
+    progress: completed ? 100 : extra && extra.progress ? extra.progress : 0,
     lesson: extra && extra.lesson,
-    cta: inProgress ? "Resume Lesson " + extra.lesson : "Learn More"
+    cta: completed ? "View Certificate" : inProgress ? "Resume Lesson " + extra.lesson : "Learn More",
+    certificate: completed ? {
+      issuedDate: extra.issuedDate,
+      id: extra.certId
+    } : null
   };
 }
 const MY_COURSES = [course(IMG.lip, "Intermediate", "8D Lip Design", "Discover a complete view of lip anatomy for deeper learning.", {
   progress: 20,
   lesson: 4
-}), course(IMG.temple, "Advance", "Temple Filler", "Master safe injection techniques with anatomical precision."), course(IMG.protox, "Advance", "Protox Course", "Elevate your botulinum toxin skills and refine your technique."), course(IMG.browLift, "Intermediate", "Brow Lift Training", "Learn expert techniques for achieving flawless, natural brow lifts."), course(IMG.fullFace, "Advance", "Full-Face Rejuvenation Protocol", "A complete framework for combination treatments across the face."), course(IMG.cheek, "Intermediate", "Cheek & Midface Contouring", "Master volumising techniques for natural-looking cheek definition."), course(IMG.complications, "Advance", "Complications Management", "Recognise, prevent and manage vascular and other complications."), course(IMG.consultation, "Beginner", "Consultation & Patient Assessment", "Build trust and plan safe, effective treatments from the first visit.")];
+}), course(IMG.temple, "Advance", "Temple Filler", "Master safe injection techniques with anatomical precision."), course(IMG.protox, "Advance", "Protox Course", "Elevate your botulinum toxin skills and refine your technique.", {
+  completed: true,
+  issuedDate: "12 Jun 2026",
+  certId: "PF-PTX-2201"
+}), course(IMG.browLift, "Intermediate", "Brow Lift Training", "Learn expert techniques for achieving flawless, natural brow lifts."), course(IMG.fullFace, "Advance", "Full-Face Rejuvenation Protocol", "A complete framework for combination treatments across the face."), course(IMG.cheek, "Intermediate", "Cheek & Midface Contouring", "Master volumising techniques for natural-looking cheek definition."), course(IMG.complications, "Advance", "Complications Management", "Recognise, prevent and manage vascular and other complications."), course(IMG.consultation, "Beginner", "Consultation & Patient Assessment", "Build trust and plan safe, effective treatments from the first visit.", {
+  completed: true,
+  issuedDate: "03 Feb 2026",
+  certId: "PF-CPA-1187"
+})];
 function goToCourse(c) {
   const url = c.inProgress ? "LessonWeb.html" : `CourseWeb.html?${new URLSearchParams({
     title: c.title,
@@ -232,7 +246,15 @@ function CourseCard({
     className: "ds"
   }, c.description), /*#__PURE__*/React.createElement("div", {
     className: "by"
-  }, TUTOR), c.inProgress && /*#__PURE__*/React.createElement("div", {
+  }, TUTOR), c.completed && /*#__PURE__*/React.createElement("div", {
+    className: "progrow done"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "fluent:checkmark-circle-16-filled",
+    size: 16,
+    color: "var(--success)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pct"
+  }, "Completed")), c.inProgress && /*#__PURE__*/React.createElement("div", {
     className: "progrow"
   }, /*#__PURE__*/React.createElement("span", {
     className: "bar"
@@ -247,6 +269,39 @@ function CourseCard({
     className: c.inProgress ? "lrn2-cta filled" : "lrn2-cta ghost",
     onClick: () => goToCourse(c)
   }, c.cta)));
+}
+function CertificateCard({
+  c
+}) {
+  return /*#__PURE__*/React.createElement("article", {
+    className: "lrn2-certcard"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "thumb",
+    style: {
+      backgroundImage: "url(" + c.image + ")"
+    }
+  }, /*#__PURE__*/React.createElement(LevelBadge, {
+    level: c.level,
+    className: "lvl"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "cert-ribbon"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "fluent:ribbon-star-16-filled",
+    size: 18,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, c.title), /*#__PURE__*/React.createElement("div", {
+    className: "by"
+  }, TUTOR), /*#__PURE__*/React.createElement("div", {
+    className: "cert-meta"
+  }, "Issued ", c.certificate.issuedDate, " · ", c.certificate.id), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lrn2-cta filled",
+    onClick: () => goToCourse(c)
+  }, "View Certificate")));
 }
 function SkeletonCourseCard() {
   return /*#__PURE__*/React.createElement("div", {
@@ -310,7 +365,7 @@ function PromoLearningPath() {
     "data-screen-label": "Discover your journey",
     onClick: () => (window.pfGo || function (u) {
       window.location.href = u;
-    })("AllCoursesMobile.html")
+    })("AllCoursesWeb.html")
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
@@ -377,6 +432,10 @@ function navigate(label) {
     window.location.href = x;
   })(u);
 }
+const COURSE_TAB_FILTERS = {
+  "In Progress": c => c.inProgress,
+  "Completed": c => c.completed
+};
 function MyLearningApp() {
   const [tab, setTab] = useState("All Courses");
   const [loading, setLoading] = useState(true);
@@ -385,6 +444,9 @@ function MyLearningApp() {
     const t = setTimeout(() => setLoading(false), 1200);
     return () => clearTimeout(t);
   }, []);
+  const certificates = MY_COURSES.filter(c => c.completed);
+  const visibleCourses = tab === "Certificates" ? [] : MY_COURSES.filter(COURSE_TAB_FILTERS[tab] || (() => true));
+  const showContinue = !FREE_TIER && (tab === "All Courses" || tab === "In Progress");
   return /*#__PURE__*/React.createElement("div", {
     className: "app wa-screen",
     style: {
@@ -428,21 +490,28 @@ function MyLearningApp() {
   }), /*#__PURE__*/React.createElement("input", {
     placeholder: "Search course…",
     "aria-label": "Search course"
-  })), !FREE_TIER && /*#__PURE__*/React.createElement(ContinueLearning, null), /*#__PURE__*/React.createElement("section", {
+  })), showContinue && /*#__PURE__*/React.createElement(ContinueLearning, null), /*#__PURE__*/React.createElement("section", {
     className: "panel",
-    "data-screen-label": "My Courses"
+    "data-screen-label": tab === "Certificates" ? "My Certificates" : "My Courses"
   }, /*#__PURE__*/React.createElement(SectionHead, {
-    title: "My Courses"
+    title: tab === "Certificates" ? "My Certificates" : "My Courses"
   }), /*#__PURE__*/React.createElement("div", {
     className: "row"
   }, loading ? Array.from({
     length: 4
   }).map((_, i) => /*#__PURE__*/React.createElement(SkeletonCourseCard, {
     key: i
-  })) : MY_COURSES.map((c, i) => /*#__PURE__*/React.createElement(CourseCard, {
+  })) : tab === "Certificates" ? certificates.map((c, i) => /*#__PURE__*/React.createElement(CertificateCard, {
     key: i,
     c: c
-  })))), /*#__PURE__*/React.createElement("section", {
+  })) : visibleCourses.map((c, i) => /*#__PURE__*/React.createElement(CourseCard, {
+    key: i,
+    c: c
+  }))), !loading && tab === "Certificates" && certificates.length === 0 && /*#__PURE__*/React.createElement("p", {
+    className: "lrn2-empty"
+  }, "Complete a course to earn your first certificate."), !loading && (tab === "In Progress" || tab === "Completed") && visibleCourses.length === 0 && /*#__PURE__*/React.createElement("p", {
+    className: "lrn2-empty"
+  }, tab === "In Progress" ? "No courses in progress yet." : "No completed courses yet.")), /*#__PURE__*/React.createElement("section", {
     className: "lrn2-promos"
   }, /*#__PURE__*/React.createElement(PromoFreeResources, null), /*#__PURE__*/React.createElement(PromoLearningPath, null), /*#__PURE__*/React.createElement(PromoUpgrade, null))));
 }

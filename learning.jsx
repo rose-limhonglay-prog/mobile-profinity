@@ -54,24 +54,26 @@ const CONTINUE = { image: IMG.lip, level: "Intermediate", title: "8D Lip Design"
 const TABS = ["All Courses", "In Progress", "Completed", "Certificates", "Saved"];
 
 function course(image, level, title, description, extra) {
-  const inProgress = !!(extra && extra.progress);
+  const completed = !!(extra && extra.completed);
+  const inProgress = !completed && !!(extra && extra.progress);
   return {
-    image, level, title, description, inProgress,
-    progress: extra && extra.progress ? extra.progress : 0,
+    image, level, title, description, inProgress, completed,
+    progress: completed ? 100 : (extra && extra.progress ? extra.progress : 0),
     lesson: extra && extra.lesson,
-    cta: inProgress ? "Resume Lesson " + extra.lesson : "Learn More",
+    cta: completed ? "View Certificate" : inProgress ? "Resume Lesson " + extra.lesson : "Learn More",
+    certificate: completed ? { issuedDate: extra.issuedDate, id: extra.certId } : null,
   };
 }
 
 const MY_COURSES = [
   course(IMG.lip, "Intermediate", "8D Lip Design", "Discover a complete view of lip anatomy for deeper learning.", { progress: 20, lesson: 4 }),
   course(IMG.temple, "Advance", "Temple Filler", "Master safe injection techniques with anatomical precision."),
-  course(IMG.protox, "Advance", "Protox Course", "Elevate your botulinum toxin skills and refine your technique."),
+  course(IMG.protox, "Advance", "Protox Course", "Elevate your botulinum toxin skills and refine your technique.", { completed: true, issuedDate: "12 Jun 2026", certId: "PF-PTX-2201" }),
   course(IMG.browLift, "Intermediate", "Brow Lift Training", "Learn expert techniques for achieving flawless, natural brow lifts."),
   course(IMG.fullFace, "Advance", "Full-Face Rejuvenation Protocol", "A complete framework for combination treatments across the face."),
   course(IMG.cheek, "Intermediate", "Cheek & Midface Contouring", "Master volumising techniques for natural-looking cheek definition."),
   course(IMG.complications, "Advance", "Complications Management", "Recognise, prevent and manage vascular and other complications."),
-  course(IMG.consultation, "Beginner", "Consultation & Patient Assessment", "Build trust and plan safe, effective treatments from the first visit."),
+  course(IMG.consultation, "Beginner", "Consultation & Patient Assessment", "Build trust and plan safe, effective treatments from the first visit.", { completed: true, issuedDate: "03 Feb 2026", certId: "PF-CPA-1187" }),
 ];
 
 function goToCourse(c) {
@@ -150,12 +152,34 @@ function CourseCard({ c }) {
         <div className="ti">{c.title}</div>
         <div className="ds">{c.description}</div>
         <div className="by">{TUTOR}</div>
+        {c.completed &&
+          <div className="progrow done">
+            <IconifyIcon name="fluent:checkmark-circle-16-filled" size={16} color="var(--success)" />
+            <span className="pct">Completed</span>
+          </div>}
         {c.inProgress &&
           <div className="progrow">
             <span className="bar"><span style={{ width: c.progress + "%" }} /></span>
             <span className="pct">{c.progress}% Complete</span>
           </div>}
         <button type="button" className={c.inProgress ? "lrn2-cta filled" : "lrn2-cta ghost"} onClick={() => goToCourse(c)}>{c.cta}</button>
+      </div>
+    </article>
+  );
+}
+
+function CertificateCard({ c }) {
+  return (
+    <article className="lrn2-certcard">
+      <div className="thumb" style={{ backgroundImage: "url(" + c.image + ")" }}>
+        <LevelBadge level={c.level} className="lvl" />
+        <span className="cert-ribbon"><IconifyIcon name="fluent:ribbon-star-16-filled" size={18} color="#fff" /></span>
+      </div>
+      <div className="body">
+        <div className="ti">{c.title}</div>
+        <div className="by">{TUTOR}</div>
+        <div className="cert-meta">Issued {c.certificate.issuedDate} &middot; {c.certificate.id}</div>
+        <button type="button" className="lrn2-cta filled" onClick={() => goToCourse(c)}>View Certificate</button>
       </div>
     </article>
   );
@@ -192,7 +216,7 @@ function PromoFreeResources() {
 
 function PromoLearningPath() {
   return (
-    <button type="button" className="lrn2-promo navy" data-screen-label="Discover your journey" onClick={() => (window.pfGo || function (u) { window.location.href = u; })("AllCoursesMobile.html")}>
+    <button type="button" className="lrn2-promo navy" data-screen-label="Discover your journey" onClick={() => (window.pfGo || function (u) { window.location.href = u; })("AllCoursesWeb.html")}>
       <span className="ic"><IconifyIcon name="lucide:route" size={24} color="var(--brand-gold)" /></span>
       <div className="tx">
         <h3>Discover your journey</h3>
@@ -239,11 +263,20 @@ function navigate(label) {
   if (u) (window.pfGo || function (x) { window.location.href = x; })(u);
 }
 
+const COURSE_TAB_FILTERS = {
+  "In Progress": (c) => c.inProgress,
+  "Completed": (c) => c.completed,
+};
+
 function MyLearningApp() {
   const [tab, setTab] = useState("All Courses");
   const [loading, setLoading] = useState(true);
   useEffectL(() => pfTagActiveNav("My Learning"));
   useEffectL(() => { const t = setTimeout(() => setLoading(false), 1200); return () => clearTimeout(t); }, []);
+
+  const certificates = MY_COURSES.filter((c) => c.completed);
+  const visibleCourses = tab === "Certificates" ? [] : MY_COURSES.filter(COURSE_TAB_FILTERS[tab] || (() => true));
+  const showContinue = !FREE_TIER && (tab === "All Courses" || tab === "In Progress");
 
   return (
     <div className="app wa-screen" style={{ "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" }}>
@@ -271,15 +304,21 @@ function MyLearningApp() {
           <input placeholder="Search course&hellip;" aria-label="Search course" />
         </label>
 
-        {!FREE_TIER && <ContinueLearning />}
+        {showContinue && <ContinueLearning />}
 
-        <section className="panel" data-screen-label="My Courses">
-          <SectionHead title="My Courses" />
+        <section className="panel" data-screen-label={tab === "Certificates" ? "My Certificates" : "My Courses"}>
+          <SectionHead title={tab === "Certificates" ? "My Certificates" : "My Courses"} />
           <div className="row">
             {loading
               ? Array.from({ length: 4 }).map((_, i) => <SkeletonCourseCard key={i} />)
-              : MY_COURSES.map((c, i) => <CourseCard key={i} c={c} />)}
+              : tab === "Certificates"
+                ? certificates.map((c, i) => <CertificateCard key={i} c={c} />)
+                : visibleCourses.map((c, i) => <CourseCard key={i} c={c} />)}
           </div>
+          {!loading && tab === "Certificates" && certificates.length === 0 &&
+            <p className="lrn2-empty">Complete a course to earn your first certificate.</p>}
+          {!loading && (tab === "In Progress" || tab === "Completed") && visibleCourses.length === 0 &&
+            <p className="lrn2-empty">{tab === "In Progress" ? "No courses in progress yet." : "No completed courses yet."}</p>}
         </section>
 
         <section className="lrn2-promos">

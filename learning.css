@@ -77,6 +77,11 @@ img{max-width:100%}
 .progrow .bar{flex:1;height:8px;border-radius:var(--r-pill);background:var(--gray-200);overflow:hidden}
 .progrow .bar>span{display:block;height:100%;border-radius:var(--r-pill);background:linear-gradient(90deg,#f4ad3d,#e7820a)}
 .progrow .pct{font-family:var(--font-sans);font-size:var(--fs-body);font-weight:var(--fw-semibold);color:var(--text-primary);white-space:nowrap}
+.progrow.done{gap:8px}
+.progrow.done .pct{color:var(--success)}
+
+/* empty state (tab has no matching courses/certificates) */
+.lrn2-empty{margin:24px 0 4px;text-align:center;font-family:var(--font-sans);font-size:var(--fs-body);color:var(--gray-500)}
 
 /* sunken panel — My Courses */
 .panel{margin-top:36px;background:var(--surface-sunken);border-radius:var(--r-lg);padding:28px}
@@ -103,6 +108,20 @@ img{max-width:100%}
 .lrn2-coursecard .by{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);color:var(--text-primary)}
 .lrn2-coursecard .progrow{margin-top:6px}
 .lrn2-coursecard .lrn2-cta{margin-top:auto;padding-top:8px}
+
+/* ===== Certificate card ===== */
+.lrn2-certcard{display:flex;flex-direction:column;background:var(--surface-card);border:1px solid var(--border-default);
+  border-radius:var(--r-md);box-shadow:var(--shadow-card);overflow:hidden;transition:box-shadow .18s ease,transform .18s ease}
+.lrn2-certcard:hover{box-shadow:0 12px 28px rgba(12,12,13,.12);transform:translateY(-3px)}
+.lrn2-certcard .thumb{position:relative;height:170px;background-size:cover;background-position:center;background-color:var(--brand-navy)}
+.lrn2-certcard .lvl{position:absolute;top:12px;left:12px}
+.lrn2-certcard .cert-ribbon{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;
+  background:var(--brand-navy);display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-sm)}
+.lrn2-certcard .body{padding:18px;display:flex;flex-direction:column;gap:8px;flex:1}
+.lrn2-certcard .ti{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body-lg);color:var(--text-primary)}
+.lrn2-certcard .by{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);color:var(--text-primary)}
+.lrn2-certcard .cert-meta{font-family:var(--font-sans);font-size:var(--fs-body);color:var(--gray-500)}
+.lrn2-certcard .lrn2-cta{margin-top:auto;padding-top:8px}
 
 .lrn2-cta{display:flex;align-items:center;justify-content:center;height:46px;margin-top:14px;border-radius:var(--r-sm);
   cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);transition:opacity .15s ease}
