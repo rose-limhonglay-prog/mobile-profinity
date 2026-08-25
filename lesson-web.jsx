@@ -517,10 +517,10 @@ function LessonWebApp() {
                   <LWResources resources={course.resources} />
                 )}
               </div>
-
-              <LWFooter idx={idx} isDone={isDone} hasNext={hasNext}
-                onPrev={handlePrev} onComplete={handleComplete} onNext={handleNext} />
             </section>
+
+            <LWFooter idx={idx} isDone={isDone} hasNext={hasNext}
+              onPrev={handlePrev} onComplete={handleComplete} onNext={handleNext} />
           </div>
 
           {outlineVisible && (

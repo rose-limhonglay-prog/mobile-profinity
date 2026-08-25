@@ -849,14 +849,14 @@ function LessonWebApp() {
     onToggleLike: handleToggleLike
   }) : /*#__PURE__*/React.createElement(LWResources, {
     resources: course.resources
-  })), /*#__PURE__*/React.createElement(LWFooter, {
+  }))), /*#__PURE__*/React.createElement(LWFooter, {
     idx: idx,
     isDone: isDone,
     hasNext: hasNext,
     onPrev: handlePrev,
     onComplete: handleComplete,
     onNext: handleNext
-  }))), outlineVisible && /*#__PURE__*/React.createElement(LWOutlineAside, {
+  })), outlineVisible && /*#__PURE__*/React.createElement(LWOutlineAside, {
     course: course,
     flat: flat,
     currentFlatIdx: idx,
