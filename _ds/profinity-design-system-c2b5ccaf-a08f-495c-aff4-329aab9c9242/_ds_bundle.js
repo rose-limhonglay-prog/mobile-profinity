@@ -2098,7 +2098,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 const I = {
   home: "M3 10.5 12 3l9 7.5M5 9.5V20h5v-6h4v6h5V9.5",
   profile: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20a7.5 7.5 0 0 1 15 0",
-  learning: "M4 5.5A1.5 1.5 0 0 1 5.5 4H19v15H6a2 2 0 0 0-2 2V5.5ZM6 19a2 2 0 0 0-2 2",
+  learning: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z",
   community: "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7 0a3 3 0 1 0 0-6M3 20a6 6 0 0 1 12 0m2-3a6 6 0 0 1 4 3"
 };
 const NavIcon = ({
