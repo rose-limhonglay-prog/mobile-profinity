@@ -24,6 +24,8 @@ const IMG = {
   consultation: "assets/course-consultation.jpg",
 };
 
+const CERT_THUMB = "assets/certificate-thumb.svg";
+
 /* Same "pf-subscription-tier" key the newsfeed/community/membership pages
    read and write — this page doesn't load app.jsx, so it keeps its own tiny
    copy rather than depending on window.PFApp. */
@@ -61,7 +63,7 @@ function course(image, level, title, description, extra) {
     progress: completed ? 100 : (extra && extra.progress ? extra.progress : 0),
     lesson: extra && extra.lesson,
     cta: completed ? "View Certificate" : inProgress ? "Resume Lesson " + extra.lesson : "Learn More",
-    certificate: completed ? { issuedDate: extra.issuedDate, id: extra.certId } : null,
+    certificate: completed ? { issuedDate: extra.issuedDate, id: extra.certId, image: extra.certImage || CERT_THUMB } : null,
   };
 }
 
@@ -171,7 +173,7 @@ function CourseCard({ c }) {
 function CertificateCard({ c }) {
   return (
     <article className="lrn2-certcard">
-      <div className="thumb" style={{ backgroundImage: "url(" + c.image + ")" }}>
+      <div className="thumb" style={{ backgroundImage: "url(" + c.certificate.image + ")" }}>
         <LevelBadge level={c.level} className="lvl" />
         <span className="cert-ribbon"><IconifyIcon name="fluent:ribbon-star-16-filled" size={18} color="#fff" /></span>
       </div>

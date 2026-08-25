@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 170" width="400" height="170">
+  <defs>
+    <radialGradient id="certBg" cx="50%" cy="35%" r="85%">
+      <stop offset="0%" stop-color="#332c7a"/>
+      <stop offset="100%" stop-color="#231f57"/>
+    </radialGradient>
+    <linearGradient id="certGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e7a769"/>
+      <stop offset="100%" stop-color="#ce9957"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="400" height="170" fill="url(#certBg)"/>
+
+  <!-- outer + inner frame -->
+  <rect x="10" y="10" width="380" height="150" fill="none" stroke="url(#certGold)" stroke-width="2"/>
+  <rect x="16" y="16" width="368" height="138" fill="none" stroke="#ce9957" stroke-width="0.75" opacity="0.6"/>
+
+  <!-- corner flourishes -->
+  <g stroke="url(#certGold)" stroke-width="1.5" fill="none" opacity="0.9">
+    <path d="M10 26 V10 H26"/>
+    <path d="M374 10 H390 V26"/>
+    <path d="M390 144 V160 H374"/>
+    <path d="M26 160 H10 V144"/>
+  </g>
+
+  <!-- seal medallion -->
+  <g transform="translate(200,68)">
+    <circle r="26" fill="none" stroke="url(#certGold)" stroke-width="2"/>
+    <circle r="20" fill="none" stroke="#e7a769" stroke-width="1" opacity="0.7"/>
+    <path d="M0 -11 L3.1 -3.4 11 -3.4 4.6 1.6 7 9.4 0 4.6 -7 9.4 -4.6 1.6 -11 -3.4 -3.1 -3.4 Z" fill="url(#certGold)"/>
+  </g>
+  <path d="M182 92 q18 14 36 0" stroke="url(#certGold)" stroke-width="1.5" fill="none" opacity="0.85"/>
+
+  <!-- title -->
+  <text x="200" y="128" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="15" letter-spacing="3" fill="#f7efe3">CERTIFICATE</text>
+  <text x="200" y="143" text-anchor="middle" font-family="'Poppins', Arial, sans-serif" font-size="8" letter-spacing="4" fill="#e7a769">OF COMPLETION</text>
+
+  <!-- flanking rules -->
+  <rect x="70" y="124" width="46" height="1" fill="#ce9957" opacity="0.8"/>
+  <rect x="284" y="124" width="46" height="1" fill="#ce9957" opacity="0.8"/>
+</svg>

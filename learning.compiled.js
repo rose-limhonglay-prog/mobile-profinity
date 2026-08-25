@@ -36,6 +36,7 @@ const IMG = {
   complications: "assets/course-complications.jpg",
   consultation: "assets/course-consultation.jpg"
 };
+const CERT_THUMB = "assets/certificate-thumb.svg";
 
 /* Same "pf-subscription-tier" key the newsfeed/community/membership pages
    read and write — this page doesn't load app.jsx, so it keeps its own tiny
@@ -93,7 +94,8 @@ function course(image, level, title, description, extra) {
     cta: completed ? "View Certificate" : inProgress ? "Resume Lesson " + extra.lesson : "Learn More",
     certificate: completed ? {
       issuedDate: extra.issuedDate,
-      id: extra.certId
+      id: extra.certId,
+      image: extra.certImage || CERT_THUMB
     } : null
   };
 }
@@ -278,7 +280,7 @@ function CertificateCard({
   }, /*#__PURE__*/React.createElement("div", {
     className: "thumb",
     style: {
-      backgroundImage: "url(" + c.image + ")"
+      backgroundImage: "url(" + c.certificate.image + ")"
     }
   }, /*#__PURE__*/React.createElement(LevelBadge, {
     level: c.level,
