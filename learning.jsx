@@ -84,12 +84,43 @@ function goToCourse(c) {
 }
 
 /* ---------------------------------------------------------------- pieces -- */
-function TierPill({ tier }) {
-  if (FREE_TIER) return null;
+function setPreviewTierAndReload(tier) {
+  try {
+    if (tier === "free") localStorage.removeItem("pf-subscription-tier");
+    else localStorage.setItem("pf-subscription-tier", tier);
+  } catch (e) {}
+  window.location.reload();
+}
+
+/* Lets Katy preview this page as a free user or as a subscriber, without
+   needing a real account switch — writes the same "pf-subscription-tier"
+   key every other page reads and reloads. Left button previews the other
+   state; right side is a status badge for the state showing right now. */
+function PreviewTierToggle() {
+  const previewTier = TIER_LADDER[0];
   return (
-    <span className="lrn2-tierpill">
-      <IconifyIcon name="fluent:crown-16-filled" size={16} color="#fff" />{TIER_DISPLAY_NAME[tier]} Path
-    </span>
+    <div className="lrn2-tiertoggle">
+      <button type="button" className="lrn2-toggle-switch" onClick={() => setPreviewTierAndReload(FREE_TIER ? previewTier : "free")}>
+        {FREE_TIER ? "View as member" : "View as free"}
+      </button>
+      <span className={"lrn2-toggle-status" + (FREE_TIER ? " free" : " paid")}>
+        <IconifyIcon name={FREE_TIER ? "lucide:user" : "fluent:crown-16-filled"} size={16} color={FREE_TIER ? "var(--brand-navy)" : "#fff"} />
+        {FREE_TIER ? "Free account" : TIER_DISPLAY_NAME[TIER] + " Path"}
+      </span>
+    </div>
+  );
+}
+
+function LockedCoursesPanel() {
+  return (
+    <div className="lrn2-locked">
+      <span className="lrn2-locked-icon"><IconifyIcon name="lucide:lock" size={28} color="#fff" /></span>
+      <h3>Unlock My Courses</h3>
+      <p>Upgrade to purchase courses and they&rsquo;ll live here for easy access.</p>
+      <button type="button" className="lrn2-locked-upgrade-btn" onClick={() => (window.pfGo || function (u) { window.location.href = u; })("MembershipTier.html")}>
+        Upgrade<IconifyIcon name="lucide:arrow-up-right" size={19} color="#fff" />
+      </button>
+    </div>
   );
 }
 
@@ -292,7 +323,7 @@ function MyLearningApp() {
             <h1 className="welcome">Welcome, Katy!</h1>
             <p className="welcome-sub">Your goal is to grow in aesthetics or medical school</p>
           </div>
-          <TierPill tier={TIER} />
+          <PreviewTierToggle />
         </div>
 
         <GoalCard />
@@ -310,17 +341,23 @@ function MyLearningApp() {
 
         <section className="panel" data-screen-label={tab === "Certificates" ? "My Certificates" : "My Courses"}>
           <SectionHead title={tab === "Certificates" ? "My Certificates" : "My Courses"} />
-          <div className="row">
-            {loading
-              ? Array.from({ length: 4 }).map((_, i) => <SkeletonCourseCard key={i} />)
-              : tab === "Certificates"
-                ? certificates.map((c, i) => <CertificateCard key={i} c={c} />)
-                : visibleCourses.map((c, i) => <CourseCard key={i} c={c} />)}
-          </div>
-          {!loading && tab === "Certificates" && certificates.length === 0 &&
-            <p className="lrn2-empty">Complete a course to earn your first certificate.</p>}
-          {!loading && (tab === "In Progress" || tab === "Completed") && visibleCourses.length === 0 &&
-            <p className="lrn2-empty">{tab === "In Progress" ? "No courses in progress yet." : "No completed courses yet."}</p>}
+          {FREE_TIER ? (
+            <LockedCoursesPanel />
+          ) : (
+            <>
+              <div className="row">
+                {loading
+                  ? Array.from({ length: 4 }).map((_, i) => <SkeletonCourseCard key={i} />)
+                  : tab === "Certificates"
+                    ? certificates.map((c, i) => <CertificateCard key={i} c={c} />)
+                    : visibleCourses.map((c, i) => <CourseCard key={i} c={c} />)}
+              </div>
+              {!loading && tab === "Certificates" && certificates.length === 0 &&
+                <p className="lrn2-empty">Complete a course to earn your first certificate.</p>}
+              {!loading && (tab === "In Progress" || tab === "Completed") && visibleCourses.length === 0 &&
+                <p className="lrn2-empty">{tab === "In Progress" ? "No courses in progress yet." : "No completed courses yet."}</p>}
+            </>
+          )}
         </section>
 
         <section className="lrn2-promos">

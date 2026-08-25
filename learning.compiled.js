@@ -123,17 +123,53 @@ function goToCourse(c) {
 }
 
 /* ---------------------------------------------------------------- pieces -- */
-function TierPill({
-  tier
-}) {
-  if (FREE_TIER) return null;
-  return /*#__PURE__*/React.createElement("span", {
-    className: "lrn2-tierpill"
+function setPreviewTierAndReload(tier) {
+  try {
+    if (tier === "free") localStorage.removeItem("pf-subscription-tier");else localStorage.setItem("pf-subscription-tier", tier);
+  } catch (e) {}
+  window.location.reload();
+}
+
+/* Lets Katy preview this page as a free user or as a subscriber, without
+   needing a real account switch — writes the same "pf-subscription-tier"
+   key every other page reads and reloads. Left button previews the other
+   state; right side is a status badge for the state showing right now. */
+function PreviewTierToggle() {
+  const previewTier = TIER_LADDER[0];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lrn2-tiertoggle"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lrn2-toggle-switch",
+    onClick: () => setPreviewTierAndReload(FREE_TIER ? previewTier : "free")
+  }, FREE_TIER ? "View as member" : "View as free"), /*#__PURE__*/React.createElement("span", {
+    className: "lrn2-toggle-status" + (FREE_TIER ? " free" : " paid")
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "fluent:crown-16-filled",
+    name: FREE_TIER ? "lucide:user" : "fluent:crown-16-filled",
     size: 16,
+    color: FREE_TIER ? "var(--brand-navy)" : "#fff"
+  }), FREE_TIER ? "Free account" : TIER_DISPLAY_NAME[TIER] + " Path"));
+}
+function LockedCoursesPanel() {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lrn2-locked"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lrn2-locked-icon"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:lock",
+    size: 28,
     color: "#fff"
-  }), TIER_DISPLAY_NAME[tier], " Path");
+  })), /*#__PURE__*/React.createElement("h3", null, "Unlock My Courses"), /*#__PURE__*/React.createElement("p", null, "Upgrade to purchase courses and they’ll live here for easy access."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lrn2-locked-upgrade-btn",
+    onClick: () => (window.pfGo || function (u) {
+      window.location.href = u;
+    })("MembershipTier.html")
+  }, "Upgrade", /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:arrow-up-right",
+    size: 19,
+    color: "#fff"
+  })));
 }
 function GoalCard() {
   return /*#__PURE__*/React.createElement("section", {
@@ -475,9 +511,7 @@ function MyLearningApp() {
     className: "welcome"
   }, "Welcome, Katy!"), /*#__PURE__*/React.createElement("p", {
     className: "welcome-sub"
-  }, "Your goal is to grow in aesthetics or medical school")), /*#__PURE__*/React.createElement(TierPill, {
-    tier: TIER
-  })), /*#__PURE__*/React.createElement(GoalCard, null), /*#__PURE__*/React.createElement("div", {
+  }, "Your goal is to grow in aesthetics or medical school")), /*#__PURE__*/React.createElement(PreviewTierToggle, null)), /*#__PURE__*/React.createElement(GoalCard, null), /*#__PURE__*/React.createElement("div", {
     className: "lrn-tabs"
   }, /*#__PURE__*/React.createElement(Tabs, {
     tabs: TABS,
@@ -497,7 +531,7 @@ function MyLearningApp() {
     "data-screen-label": tab === "Certificates" ? "My Certificates" : "My Courses"
   }, /*#__PURE__*/React.createElement(SectionHead, {
     title: tab === "Certificates" ? "My Certificates" : "My Courses"
-  }), /*#__PURE__*/React.createElement("div", {
+  }), FREE_TIER ? /*#__PURE__*/React.createElement(LockedCoursesPanel, null) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "row"
   }, loading ? Array.from({
     length: 4
@@ -513,7 +547,7 @@ function MyLearningApp() {
     className: "lrn2-empty"
   }, "Complete a course to earn your first certificate."), !loading && (tab === "In Progress" || tab === "Completed") && visibleCourses.length === 0 && /*#__PURE__*/React.createElement("p", {
     className: "lrn2-empty"
-  }, tab === "In Progress" ? "No courses in progress yet." : "No completed courses yet.")), /*#__PURE__*/React.createElement("section", {
+  }, tab === "In Progress" ? "No courses in progress yet." : "No completed courses yet."))), /*#__PURE__*/React.createElement("section", {
     className: "lrn2-promos"
   }, /*#__PURE__*/React.createElement(PromoFreeResources, null), /*#__PURE__*/React.createElement(PromoLearningPath, null), /*#__PURE__*/React.createElement(PromoUpgrade, null))));
 }
