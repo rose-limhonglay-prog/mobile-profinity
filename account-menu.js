@@ -21,6 +21,31 @@
 
   var triggerEl, menuEl, open = false;
 
+  var NAV_ITEMS = [
+    { label: "Edit Profile", icon: "lucide:user", href: "Profile.html" },
+    { label: "Settings", icon: "lucide:settings", href: "AccountSettingsWeb.html" },
+    { label: "Notifications", icon: "lucide:bell", href: "NotificationSettingsWeb.html" }
+  ];
+
+  function isDark() {
+    try { return localStorage.getItem("pf-theme") === "dark"; } catch (e) { return false; }
+  }
+
+  function setDark(next) {
+    try {
+      localStorage.setItem("pf-theme", next ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
+    } catch (e) {}
+  }
+
+  function navItemsHtml() {
+    return NAV_ITEMS.map(function (item) {
+      return '<button type="button" class="pf-account-menu-item" role="menuitem" data-href="' + item.href + '">' +
+        '<iconify-icon icon="' + item.icon + '" width="17" height="17"></iconify-icon>' + item.label +
+      '</button>';
+    }).join("");
+  }
+
   function ensureMenu() {
     if (menuEl) return;
     menuEl = document.createElement("div");
@@ -29,10 +54,41 @@
     menuEl.setAttribute("aria-label", "Account");
     menuEl.style.display = "none";
     menuEl.innerHTML =
-      '<button type="button" class="pf-account-menu-item" role="menuitem" id="pf-account-logout">' +
+      navItemsHtml() +
+      '<div class="pf-account-menu-row" id="pf-account-dark-row" role="menuitemcheckbox">' +
+        '<span class="pf-account-menu-row-label">' +
+          '<iconify-icon icon="lucide:moon" width="17" height="17"></iconify-icon>Dark mode' +
+        '</span>' +
+        '<button type="button" class="pf-toggle" role="switch" id="pf-account-dark-toggle" aria-label="Toggle dark mode">' +
+          '<span class="pf-toggle-knob"></span>' +
+        '</button>' +
+      '</div>' +
+      '<div class="pf-account-menu-divider"></div>' +
+      '<button type="button" class="pf-account-menu-item pf-account-menu-item--danger" role="menuitem" id="pf-account-logout">' +
         '<iconify-icon icon="lucide:log-out" width="17" height="17"></iconify-icon>Log out' +
       '</button>';
     document.body.appendChild(menuEl);
+
+    menuEl.querySelectorAll(".pf-account-menu-item[data-href]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        closeMenu();
+        (window.pfGo || function (u) { window.location.href = u; })(btn.getAttribute("data-href"));
+      });
+    });
+
+    var darkToggle = menuEl.querySelector("#pf-account-dark-toggle");
+    function syncDarkToggle() {
+      var on = isDark();
+      darkToggle.classList.toggle("on", on);
+      darkToggle.setAttribute("aria-checked", on ? "true" : "false");
+    }
+    syncDarkToggle();
+    darkToggle.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setDark(!isDark());
+      syncDarkToggle();
+    });
+
     menuEl.querySelector("#pf-account-logout").addEventListener("click", function () {
       closeMenu();
       (window.pfGo || function (u) { window.location.href = u; })("AuthWeb.html?view=loggedout");

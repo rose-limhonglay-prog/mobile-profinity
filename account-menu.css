@@ -16,7 +16,7 @@
 #pf-account-menu {
   position: fixed;
   z-index: 120;
-  min-width: 180px;
+  min-width: 220px;
   padding: 6px;
   background: var(--surface-card, #fff);
   border: 1px solid var(--border-default, #eaecf0);
@@ -45,9 +45,35 @@
   font-family: var(--font-sans, "Poppins", sans-serif);
   font-weight: var(--fw-medium, 500);
   font-size: 14.5px;
-  color: var(--error, #BE1E2D);
+  color: var(--text-primary, #1D2939);
   text-align: left;
 }
 .pf-account-menu-item:hover,
 .pf-account-menu-item:focus-visible { background: var(--surface-sunken, #F5F5F5); }
 .pf-account-menu-item:focus-visible { outline: none; }
+.pf-account-menu-item--danger { color: var(--error, #BE1E2D); }
+
+.pf-account-menu-divider {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--border-default, #eaecf0);
+}
+
+.pf-account-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--r-sm, 8px);
+}
+.pf-account-menu-row-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-sans, "Poppins", sans-serif);
+  font-weight: var(--fw-medium, 500);
+  font-size: 14.5px;
+  color: var(--text-primary, #1D2939);
+}
