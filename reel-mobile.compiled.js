@@ -113,39 +113,39 @@ const RL_COLLECTIONS = [{
   n: 5,
   img: "assets/course-temple.png"
 }];
-function RLCollectionRow({
+function RLCollectionTile({
   c,
   onPick
 }) {
   return /*#__PURE__*/React.createElement("button", {
-    className: "rl-sheet-row",
+    className: "rl-col" + (c.img ? "" : " empty"),
     onClick: () => onPick(c.name)
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "rl-sheet-thumb"
   }, c.img ? /*#__PURE__*/React.createElement("img", {
     src: c.img,
     alt: ""
-  }) : /*#__PURE__*/React.createElement(IconRL, {
-    n: c.icon,
-    size: 20,
-    color: "var(--gray-500,#8a8f98)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "rl-sheet-info"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "rl-sheet-nm"
-  }, c.name, /*#__PURE__*/React.createElement(IconRL, {
-    n: "lucide:lock",
-    size: 12,
-    color: "var(--gray-400,#aab0bc)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "rl-sheet-n"
-  }, c.n, " posts")), /*#__PURE__*/React.createElement("span", {
-    className: "rl-sheet-plus",
+  }) : /*#__PURE__*/React.createElement("span", {
+    className: "rl-col-blank",
     "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "rl-col-veil",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "rl-col-meta"
   }, /*#__PURE__*/React.createElement(IconRL, {
-    n: "lucide:plus",
+    n: c.icon === "lucide:clock" ? "lucide:clock" : "lucide:bookmark",
     size: 18,
-    color: "var(--text-heading,#1a1a1a)"
+    color: "#fff"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "rl-col-name"
+  }, c.name), /*#__PURE__*/React.createElement("span", {
+    className: "rl-col-n"
+  }, c.n, " posts")), /*#__PURE__*/React.createElement("span", {
+    className: "rl-col-lock",
+    "aria-label": "Private collection"
+  }, /*#__PURE__*/React.createElement(IconRL, {
+    n: "lucide:lock",
+    size: 13,
+    color: "#fff"
   })));
 }
 function ReelAction({
@@ -382,25 +382,24 @@ function Reel({
   }), /*#__PURE__*/React.createElement("h3", {
     className: "rl-sheet-title"
   }, "Save to collection"), /*#__PURE__*/React.createElement("div", {
-    className: "rl-sheet-list"
-  }, RL_COLLECTIONS.map(c => /*#__PURE__*/React.createElement(RLCollectionRow, {
+    className: "rl-sheet-grid"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "rl-col rl-col-new",
+    "aria-label": "Create a new collection",
+    onClick: () => chooseCollection("New collection")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rl-col-plus"
+  }, /*#__PURE__*/React.createElement(IconRL, {
+    n: "lucide:plus",
+    size: 22,
+    color: "var(--brand-navy,#292569)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "rl-col-newtx"
+  }, "New collection")), RL_COLLECTIONS.map(c => /*#__PURE__*/React.createElement(RLCollectionTile, {
     key: c.name,
     c: c,
     onPick: chooseCollection
-  })), /*#__PURE__*/React.createElement("button", {
-    className: "rl-sheet-row rl-sheet-new",
-    onClick: () => chooseCollection("New collection")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "rl-sheet-thumb rl-sheet-thumb-new"
-  }, /*#__PURE__*/React.createElement(IconRL, {
-    n: "lucide:plus",
-    size: 20,
-    color: "var(--brand-navy,#292569)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "rl-sheet-info"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "rl-sheet-nm"
-  }, "Create new collection")))))));
+  }))))));
 }
 function ReelApp() {
   const mobile = useIsMobileRL();

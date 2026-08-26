@@ -53,7 +53,7 @@ const GOAL = {
 
 const CONTINUE = { image: IMG.lip, level: "Intermediate", title: "8D Lip Design", progress: 20, note: "Only 6 more modules until you get your certificate", cta: "Resume Lesson 4" };
 
-const TABS = ["All Courses", "In Progress", "Completed", "Certificates", "Saved"];
+const TABS = ["All Courses", "In Progress", "Completed"];
 
 function course(image, level, title, description, extra) {
   const completed = !!(extra && extra.completed);
@@ -152,12 +152,13 @@ function GoalCard() {
   );
 }
 
-function SectionHead({ title, big }) {
+function SectionHead({ title, big, viewAll }) {
   return (
     <div className="sec-h">
       <span className={big ? "t big" : "t"}>{title}</span>
       <span className="grow" />
-      <a className="viewall" tabIndex={0}>View All</a>
+      {viewAll &&
+        <a className="viewall" href="#" tabIndex={0} onClick={(e) => { e.preventDefault(); (window.pfGo || function (u) { window.location.href = u; })(viewAll); }}>View All</a>}
     </div>
   );
 }
@@ -251,7 +252,7 @@ function PromoFreeResources() {
       <div className="tx">
         <h3>Free Resources</h3>
         <p>Guides, checklists and vein maps tailored to your clinic goals.</p>
-        <button type="button" className="lrn2-outline-btn" onClick={() => (window.pfGo || function (u) { window.location.href = u; })("MySaved.html")}>
+        <button type="button" className="lrn2-outline-btn" onClick={() => (window.pfGo || function (u) { window.location.href = u; })("SavedWeb.html")}>
           View free resources<IconifyIcon name="lucide:arrow-up-right" size={17} color="var(--brand-navy)" />
         </button>
       </div>
@@ -319,8 +320,7 @@ function MyLearningApp() {
   useEffectL(() => pfTagActiveNav("My Learning"));
   useEffectL(() => { const t = setTimeout(() => setLoading(false), 1200); return () => clearTimeout(t); }, []);
 
-  const certificates = MY_COURSES.filter((c) => c.completed);
-  const visibleCourses = tab === "Certificates" ? [] : MY_COURSES.filter(COURSE_TAB_FILTERS[tab] || (() => true));
+  const visibleCourses = MY_COURSES.filter(COURSE_TAB_FILTERS[tab] || (() => true));
   const showContinue = !FREE_TIER && (tab === "All Courses" || tab === "In Progress");
 
   return (
@@ -351,8 +351,8 @@ function MyLearningApp() {
 
         {showContinue && <ContinueLearning />}
 
-        <section className="panel" data-screen-label={tab === "Certificates" ? "My Certificates" : "My Courses"}>
-          <SectionHead title={tab === "Certificates" ? "My Certificates" : "My Courses"} />
+        <section className="panel" data-screen-label="My Courses">
+          <SectionHead title="My Courses" viewAll={FREE_TIER ? null : "MyCoursesWeb.html"} />
           {FREE_TIER ? (
             <LockedCoursesPanel />
           ) : (
@@ -360,14 +360,13 @@ function MyLearningApp() {
               <div className="row">
                 {loading
                   ? Array.from({ length: 4 }).map((_, i) => <SkeletonCourseCard key={i} />)
-                  : tab === "Certificates"
-                    ? certificates.map((c, i) => <CertificateCard key={i} c={c} />)
-                    : visibleCourses.map((c, i) => <CourseCard key={i} c={c} />)}
+                  : visibleCourses.map((c, i) =>
+                      tab === "Completed"
+                        ? <CertificateCard key={i} c={c} />
+                        : <CourseCard key={i} c={c} />)}
               </div>
-              {!loading && tab === "Certificates" && certificates.length === 0 &&
-                <p className="lrn2-empty">Complete a course to earn your first certificate.</p>}
               {!loading && (tab === "In Progress" || tab === "Completed") && visibleCourses.length === 0 &&
-                <p className="lrn2-empty">{tab === "In Progress" ? "No courses in progress yet." : "No completed courses yet."}</p>}
+                <p className="lrn2-empty">{tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate."}</p>}
             </>
           )}
         </section>

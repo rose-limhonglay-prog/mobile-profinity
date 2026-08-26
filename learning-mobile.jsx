@@ -53,6 +53,16 @@ const IMG_L = {
   membership: "https://prncpjnraanretzdeuou.supabase.co/storage/v1/object/public/course-content/courses/profinity-membership/poster.jpg",
 };
 
+const CERT_THUMB_L = "assets/certificate-thumb.svg";
+
+/* All Courses / In Progress / Completed / Saved — same
+   category strip as the web My Learning page (learning.jsx). */
+const LM2_TABS = ["All Courses", "In Progress", "Completed", "Saved"];
+const LM2_COURSE_TAB_FILTERS = {
+  "In Progress": (c) => typeof c.progress === "number" && !c.completed,
+  "Completed": (c) => !!c.completed
+};
+
 const LM2_GOAL = {
   title: "My Goal & Dream Clinic",
   vision: "Boutique clinic with lips + skin treatments, £80k/month revenue, team of 3 professionals",
@@ -72,7 +82,7 @@ const LM2_CONTINUE = {
 const LM2_MY_COURSES = [
 { image: IMG_L.eightDLip, level: "Intermediate", title: "8D Lip Design", description: "Discover a complete view of lip anatomy for deeper learning.", progress: 20, lesson: 4, modulesLeft: 6 },
 { image: IMG_L.templeFiller, level: "Advanced", title: "Temple Filler", description: "Master safe injection techniques with anatomical precision." },
-{ image: IMG_L.protox, level: "Advanced", title: "Protox Course", description: "Elevate your botulinum toxin skills and refine your technique." },
+{ image: IMG_L.protox, level: "Advanced", title: "Protox Course", description: "Elevate your botulinum toxin skills and refine your technique.", completed: true, certificate: { issuedDate: "12 Jun 2026", id: "PF-PTX-2201", image: CERT_THUMB_L } },
 { image: IMG_L.browLift, level: "Intermediate", title: "Brow Lift Training", description: "Learn expert techniques for achieving flawless, natural brow lifts." },
 { image: IMG_L.fullFace, level: "Advanced", title: "Full-Face Rejuvenation Protocol", description: "A complete framework for combination treatments across the face." },
 { image: IMG_L.cheekContouring, level: "Intermediate", title: "Cheek & Midface Contouring", description: "Master volumising techniques for natural-looking cheek definition." },
@@ -81,7 +91,7 @@ const LM2_MY_COURSES = [
 { image: IMG_L.tearTrough, level: "Advanced", title: "Tear Trough Correction", description: "Safely treat under-eye hollowing with anatomically-guided technique." },
 { image: IMG_L.skinBoosters, level: "Beginner", title: "Skin Boosters & Hydration Therapy", description: "Introduce biorevitalisation treatments to improve skin quality." },
 { image: IMG_L.complications, level: "Advanced", title: "Complications Management", description: "Recognise, prevent and manage vascular and other complications." },
-{ image: IMG_L.consultation, level: "Beginner", title: "Consultation & Patient Assessment", description: "Build trust and plan safe, effective treatments from the first visit." }];
+{ image: IMG_L.consultation, level: "Beginner", title: "Consultation & Patient Assessment", description: "Build trust and plan safe, effective treatments from the first visit.", completed: true, certificate: { issuedDate: "03 Feb 2026", id: "PF-CPA-1187", image: CERT_THUMB_L } }];
 
 
 /* Confidence tier only sees the courses included in that membership —
@@ -174,6 +184,42 @@ function SecHead({ title, viewAll = true, linkLabel = "See All" }) {
       <h2>{title}</h2>
       {viewAll && <a href="#" onClick={(e) => { e.preventDefault(); goL("MyLearning.html"); }}>{linkLabel}</a>}
     </div>);
+
+}
+
+function LM2CourseTabs({ tab, onChange }) {
+  return (
+    <div className="lm2-coursetabs">
+      <DSL.Tabs tabs={LM2_TABS} active={tab} onChange={onChange} style={{ gap: 22, borderBottom: "none" }} />
+    </div>);
+
+}
+
+function LM2SearchBar() {
+  return (
+    <label className="lm2-search">
+      <IconifyL name="lucide:search" size={18} color="var(--gray-450)" />
+      <input placeholder="Search course…" aria-label="Search course" />
+    </label>);
+
+}
+
+function LM2CertificateCard({ c }) {
+  return (
+    <article className="lm2-coursecard lm2-certcard">
+      <div className="thumb" style={{ backgroundImage: "url(" + c.certificate.image + ")" }}>
+        <LevelBadgeL level={c.level} className="lvl" />
+        <span className="cert-ribbon"><IconifyL name="fluent:ribbon-star-16-filled" size={16} color="#fff" /></span>
+      </div>
+      <div className="body">
+        <div className="ti">{c.title}</div>
+        <div className="by">{TUTOR_L}</div>
+        <div className="cert-meta">Issued {c.certificate.issuedDate} · {c.certificate.id}</div>
+        <div className="foot">
+          <button type="button" className="lm-ghost" onClick={() => goL("CourseDetail.html")}>View Certificate</button>
+        </div>
+      </div>
+    </article>);
 
 }
 
@@ -414,10 +460,13 @@ function LearningHome() {
   const [surveyOpen, setSurveyOpen] = useStateL(false);
   const [helpOpen, setHelpOpen] = useStateL(false);
   const [resourcesUnlocked, setResourcesUnlocked] = useStateL(lmReadResourcesUnlockedL);
+  const [tab, setTab] = useStateL("All Courses");
   const scrollRef = React.useRef(null);
   const { hidden: chromeHidden, floating: chromeFloat } = useScrollChromeL(scrollRef);
   const nextTier = lmNextTierL(LM_TIER);
   const myCourses = LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES;
+  const visibleCourses = myCourses.filter(LM2_COURSE_TAB_FILTERS[tab] || (() => true));
+  const showContinue = !LM_FREE && (tab === "All Courses" || tab === "In Progress");
 
   const unlockResources = () => {
     setResourcesUnlocked(true);
@@ -434,19 +483,28 @@ function LearningHome() {
 
         <LM2GoalBanner data={LM2_GOAL} onHelp={() => setHelpOpen(true)} />
 
-        {!LM_FREE && <LM2ContinueCard data={LM2_CONTINUE} />}
+        <LM2SearchBar />
+
+        {showContinue && <LM2ContinueCard data={LM2_CONTINUE} />}
 
         <section className="lm2-courseband" data-screen-label="My Courses">
           <SecHead title="My Courses" />
           {LM_FREE ?
           <LM2LockedCard title="Unlock My Courses" body="Upgrade to purchase courses and they'll live here for easy access." onUpgrade={() => goL("MembershipTier.html")} /> :
-
+          visibleCourses.length ?
           <div className="lm2-coursegrid">
               <span className="lm2-coursegrid-pad" aria-hidden="true" />
-              <LM2CourseCardWide c={myCourses[0]} />
-              {myCourses.slice(1).map((c, i) => <LM2CourseCard key={i} c={c} />)}
+              {visibleCourses.map((c, i) =>
+              tab === "Completed" ?
+              <LM2CertificateCard key={i} c={c} /> :
+              i === 0 && typeof c.progress === "number" && !c.completed ?
+              <LM2CourseCardWide key={i} c={c} /> :
+              <LM2CourseCard key={i} c={c} />
+              )}
               <span className="lm2-coursegrid-pad" aria-hidden="true" />
-            </div>
+            </div> :
+
+          <p className="lm2-empty">{tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate."}</p>
           }
         </section>
 

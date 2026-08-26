@@ -68,6 +68,15 @@ const IMG_L = {
   consultation: "assets/course-consultation.jpg",
   membership: "https://prncpjnraanretzdeuou.supabase.co/storage/v1/object/public/course-content/courses/profinity-membership/poster.jpg"
 };
+const CERT_THUMB_L = "assets/certificate-thumb.svg";
+
+/* All Courses / In Progress / Completed / Saved — same
+   category strip as the web My Learning page (learning.jsx). */
+const LM2_TABS = ["All Courses", "In Progress", "Completed", "Saved"];
+const LM2_COURSE_TAB_FILTERS = {
+  "In Progress": c => typeof c.progress === "number" && !c.completed,
+  "Completed": c => !!c.completed
+};
 const LM2_GOAL = {
   title: "My Goal & Dream Clinic",
   vision: "Boutique clinic with lips + skin treatments, £80k/month revenue, team of 3 professionals",
@@ -99,7 +108,13 @@ const LM2_MY_COURSES = [{
   image: IMG_L.protox,
   level: "Advanced",
   title: "Protox Course",
-  description: "Elevate your botulinum toxin skills and refine your technique."
+  description: "Elevate your botulinum toxin skills and refine your technique.",
+  completed: true,
+  certificate: {
+    issuedDate: "12 Jun 2026",
+    id: "PF-PTX-2201",
+    image: CERT_THUMB_L
+  }
 }, {
   image: IMG_L.browLift,
   level: "Intermediate",
@@ -144,7 +159,13 @@ const LM2_MY_COURSES = [{
   image: IMG_L.consultation,
   level: "Beginner",
   title: "Consultation & Patient Assessment",
-  description: "Build trust and plan safe, effective treatments from the first visit."
+  description: "Build trust and plan safe, effective treatments from the first visit.",
+  completed: true,
+  certificate: {
+    issuedDate: "03 Feb 2026",
+    id: "PF-CPA-1187",
+    image: CERT_THUMB_L
+  }
 }];
 
 /* Confidence tier only sees the courses included in that membership —
@@ -348,6 +369,69 @@ function SecHead({
       goL("MyLearning.html");
     }
   }, linkLabel));
+}
+function LM2CourseTabs({
+  tab,
+  onChange
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lm2-coursetabs"
+  }, /*#__PURE__*/React.createElement(DSL.Tabs, {
+    tabs: LM2_TABS,
+    active: tab,
+    onChange: onChange,
+    style: {
+      gap: 22,
+      borderBottom: "none"
+    }
+  }));
+}
+function LM2SearchBar() {
+  return /*#__PURE__*/React.createElement("label", {
+    className: "lm2-search"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:search",
+    size: 18,
+    color: "var(--gray-450)"
+  }), /*#__PURE__*/React.createElement("input", {
+    placeholder: "Search course…",
+    "aria-label": "Search course"
+  }));
+}
+function LM2CertificateCard({
+  c
+}) {
+  return /*#__PURE__*/React.createElement("article", {
+    className: "lm2-coursecard lm2-certcard"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "thumb",
+    style: {
+      backgroundImage: "url(" + c.certificate.image + ")"
+    }
+  }, /*#__PURE__*/React.createElement(LevelBadgeL, {
+    level: c.level,
+    className: "lvl"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "cert-ribbon"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "fluent:ribbon-star-16-filled",
+    size: 16,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, c.title), /*#__PURE__*/React.createElement("div", {
+    className: "by"
+  }, TUTOR_L), /*#__PURE__*/React.createElement("div", {
+    className: "cert-meta"
+  }, "Issued ", c.certificate.issuedDate, " · ", c.certificate.id), /*#__PURE__*/React.createElement("div", {
+    className: "foot"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm-ghost",
+    onClick: () => goL("CourseDetail.html")
+  }, "View Certificate"))));
 }
 function LM2SubscribeCard({
   isFree,
@@ -722,6 +806,7 @@ function LearningHome() {
   const [surveyOpen, setSurveyOpen] = useStateL(false);
   const [helpOpen, setHelpOpen] = useStateL(false);
   const [resourcesUnlocked, setResourcesUnlocked] = useStateL(lmReadResourcesUnlockedL);
+  const [tab, setTab] = useStateL("All Courses");
   const scrollRef = React.useRef(null);
   const {
     hidden: chromeHidden,
@@ -729,6 +814,8 @@ function LearningHome() {
   } = useScrollChromeL(scrollRef);
   const nextTier = lmNextTierL(LM_TIER);
   const myCourses = LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES;
+  const visibleCourses = myCourses.filter(LM2_COURSE_TAB_FILTERS[tab] || (() => true));
+  const showContinue = !LM_FREE && (tab === "All Courses" || tab === "In Progress");
   const unlockResources = () => {
     setResourcesUnlocked(true);
     try {
@@ -747,7 +834,7 @@ function LearningHome() {
   }), /*#__PURE__*/React.createElement(LM2GoalBanner, {
     data: LM2_GOAL,
     onHelp: () => setHelpOpen(true)
-  }), !LM_FREE && /*#__PURE__*/React.createElement(LM2ContinueCard, {
+  }), /*#__PURE__*/React.createElement(LM2SearchBar, null), showContinue && /*#__PURE__*/React.createElement(LM2ContinueCard, {
     data: LM2_CONTINUE
   }), /*#__PURE__*/React.createElement("section", {
     className: "lm2-courseband",
@@ -758,20 +845,26 @@ function LearningHome() {
     title: "Unlock My Courses",
     body: "Upgrade to purchase courses and they'll live here for easy access.",
     onUpgrade: () => goL("MembershipTier.html")
-  }) : /*#__PURE__*/React.createElement("div", {
+  }) : visibleCourses.length ? /*#__PURE__*/React.createElement("div", {
     className: "lm2-coursegrid"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lm2-coursegrid-pad",
     "aria-hidden": "true"
-  }), /*#__PURE__*/React.createElement(LM2CourseCardWide, {
-    c: myCourses[0]
-  }), myCourses.slice(1).map((c, i) => /*#__PURE__*/React.createElement(LM2CourseCard, {
+  }), visibleCourses.map((c, i) => tab === "Completed" ? /*#__PURE__*/React.createElement(LM2CertificateCard, {
+    key: i,
+    c: c
+  }) : i === 0 && typeof c.progress === "number" && !c.completed ? /*#__PURE__*/React.createElement(LM2CourseCardWide, {
+    key: i,
+    c: c
+  }) : /*#__PURE__*/React.createElement(LM2CourseCard, {
     key: i,
     c: c
   })), /*#__PURE__*/React.createElement("span", {
     className: "lm2-coursegrid-pad",
     "aria-hidden": "true"
-  }))), /*#__PURE__*/React.createElement(LM2FreeResources, {
+  })) : /*#__PURE__*/React.createElement("p", {
+    className: "lm2-empty"
+  }, tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate.")), /*#__PURE__*/React.createElement(LM2FreeResources, {
     unlocked: resourcesUnlocked,
     onStartSurvey: () => setSurveyOpen(true)
   }), /*#__PURE__*/React.createElement(LM2LearningPathCard, null), nextTier && /*#__PURE__*/React.createElement(LM2SubscribeCard, {

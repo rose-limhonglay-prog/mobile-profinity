@@ -1,0 +1,90 @@
+/* ===========================================================================
+   PROfinity Academy — My Courses (web) · layout shell
+   Desktop page shell (TopNav + wide centered column), mirroring
+   all-courses-web.css. Card/progress/locked styling ported from learning.css
+   (the lrn2-* rules on MyLearning.html) under an mcw- prefix so this page
+   doesn't depend on learning.css being loaded.
+   =========================================================================== */
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--surface-page);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+img{max-width:100%}
+
+.app{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-page);min-height:100vh}
+
+.mcw-page{max-width:1240px;margin:0 auto;padding:28px 24px 64px}
+
+.mcw-back{display:inline-flex;align-items:center;gap:8px;margin-bottom:20px;padding:0;border:none;background:none;
+  cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);color:var(--brand-navy)}
+.mcw-back:hover{text-decoration:underline}
+.mcw-back:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+
+.mcw-head h1{margin:0 0 8px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-display);color:var(--brand-navy)}
+.mcw-head p{margin:0;font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--gray-600)}
+
+.mcw-toolbar{display:flex;align-items:center;gap:16px;margin-top:28px}
+.mcw-search{flex:1;min-width:0;display:flex;align-items:center;gap:11px;height:54px;padding:0 20px;
+  background:var(--surface-card);border:1px solid var(--border-strong);border-radius:var(--r-md)}
+.mcw-search input{flex:1;min-width:0;border:none;outline:none;background:transparent;font-family:var(--font-sans);
+  font-size:var(--fs-body-lg);color:var(--text-primary)}
+.mcw-search input::placeholder{color:var(--gray-450)}
+
+.mcw-tabs{flex:none;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.mcw-tabs::-webkit-scrollbar{display:none}
+.mcw-tab{height:54px;padding:0 20px;border-radius:var(--r-md);border:1px solid var(--border-strong);
+  background:var(--surface-card);cursor:pointer;white-space:nowrap;font-family:var(--font-sans);
+  font-weight:var(--fw-semibold);font-size:var(--fs-body);color:var(--text-primary);transition:background .15s ease,color .15s ease}
+.mcw-tab:hover{background:var(--surface-sunken)}
+.mcw-tab.on{background:var(--brand-navy);border-color:var(--brand-navy);color:var(--white)}
+.mcw-tab:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+
+.mcw-empty{margin:40px 0;text-align:center;font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--gray-500)}
+
+.mcw-grid{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px}
+
+.mcw-coursecard,.mcw-certcard{display:flex;flex-direction:column;background:var(--surface-card);border:1px solid var(--border-default);
+  border-radius:var(--r-lg);overflow:hidden;transition:box-shadow .18s ease,transform .18s ease}
+.mcw-coursecard:hover,.mcw-certcard:hover{box-shadow:0 12px 28px rgba(12,12,13,.12);transform:translateY(-3px)}
+.mcw-coursecard .thumb,.mcw-certcard .thumb{position:relative;height:170px;background-size:cover;background-position:center;background-color:var(--brand-navy)}
+.mcw-coursecard .lvl,.mcw-certcard .lvl{position:absolute;top:12px;left:12px}
+.mcw-coursecard .play{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;background:var(--white)}
+.mcw-certcard .cert-ribbon{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;background:var(--brand-gold)}
+.mcw-coursecard .body,.mcw-certcard .body{padding:18px;display:flex;flex-direction:column;gap:8px;flex:1}
+.mcw-coursecard .ti,.mcw-certcard .ti{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body-lg);color:var(--text-primary)}
+.mcw-coursecard .ds{font-family:var(--font-sans);font-size:var(--fs-body);line-height:1.5;color:var(--gray-500)}
+.mcw-coursecard .by,.mcw-certcard .by{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);color:var(--text-primary)}
+.mcw-certcard .cert-meta{font-family:var(--font-sans);font-size:var(--fs-body);color:var(--gray-500)}
+
+.progrow{display:flex;align-items:center;gap:16px;margin-top:6px}
+.progrow .bar{flex:1;height:8px;border-radius:var(--r-pill);background:var(--gray-200);overflow:hidden}
+.progrow .bar>span{display:block;height:100%;border-radius:var(--r-pill);background:linear-gradient(90deg,#f4ad3d,#e7820a)}
+.progrow .pct{font-family:var(--font-sans);font-size:var(--fs-body);font-weight:var(--fw-semibold);color:var(--text-primary);white-space:nowrap}
+.progrow.done{gap:8px}
+.progrow.done .pct{color:var(--success)}
+
+.mcw-cta{display:flex;align-items:center;justify-content:center;height:46px;margin-top:auto;padding-top:8px;border-radius:var(--r-sm);
+  cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);transition:opacity .15s ease}
+.mcw-cta:hover{opacity:.9}
+.mcw-cta.filled{border:none;background:var(--brand-navy);color:var(--white)}
+.mcw-cta.ghost{border:1px solid var(--border-strong);background:var(--surface-card);color:var(--brand-navy)}
+.mcw-cta:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+
+.mcw-locked{display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;
+  margin-top:32px;padding:48px 24px;background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--r-lg)}
+.mcw-locked-icon{width:56px;height:56px;border-radius:50%;background:var(--brand-navy);
+  display:flex;align-items:center;justify-content:center}
+.mcw-locked h3{margin:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-h3);color:var(--brand-navy)}
+.mcw-locked p{margin:0;max-width:420px;font-family:var(--font-sans);font-size:var(--fs-body);color:var(--text-secondary)}
+.mcw-locked-upgrade-btn{display:inline-flex;align-items:center;gap:8px;margin-top:6px;padding:12px 22px;border:none;
+  border-radius:var(--r-sm);background:var(--brand-navy);color:var(--white);cursor:pointer;font-family:var(--font-sans);
+  font-weight:var(--fw-semibold);font-size:var(--fs-body)}
+.mcw-locked-upgrade-btn:hover{background:var(--brand-navy-700)}
+
+@media (max-width:640px){
+  .mcw-toolbar{flex-direction:column;align-items:stretch}
+  .mcw-tabs{overflow-x:auto;scrollbar-width:none}
+  .mcw-tabs::-webkit-scrollbar{display:none}
+}

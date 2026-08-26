@@ -66,20 +66,21 @@ const RL_COLLECTIONS = [
   { name: "Temple & midface", n: 5, img: "assets/course-temple.png" },
 ];
 
-function RLCollectionRow({ c, onPick }) {
+function RLCollectionTile({ c, onPick }) {
   return (
-    <button className="rl-sheet-row" onClick={() => onPick(c.name)}>
-      <span className="rl-sheet-thumb">
-        {c.img ? <img src={c.img} alt="" /> : <IconRL n={c.icon} size={20} color="var(--gray-500,#8a8f98)" />}
+    <button className={"rl-col" + (c.img ? "" : " empty")} onClick={() => onPick(c.name)}>
+      {c.img ?
+        <img src={c.img} alt="" /> :
+        <span className="rl-col-blank" aria-hidden="true" />}
+      <span className="rl-col-veil" aria-hidden="true" />
+      <span className="rl-col-meta">
+        <IconRL n={c.icon === "lucide:clock" ? "lucide:clock" : "lucide:bookmark"} size={18} color="#fff" />
+        <span className="rl-col-name">{c.name}</span>
+        <span className="rl-col-n">{c.n} posts</span>
       </span>
-      <span className="rl-sheet-info">
-        <span className="rl-sheet-nm">
-          {c.name}
-          <IconRL n="lucide:lock" size={12} color="var(--gray-400,#aab0bc)" />
-        </span>
-        <span className="rl-sheet-n">{c.n} posts</span>
+      <span className="rl-col-lock" aria-label="Private collection">
+        <IconRL n="lucide:lock" size={13} color="#fff" />
       </span>
-      <span className="rl-sheet-plus" aria-hidden="true"><IconRL n="lucide:plus" size={18} color="var(--text-heading,#1a1a1a)" /></span>
     </button>
   );
 }
@@ -222,12 +223,12 @@ function Reel({ reel, active }) {
           <div className="rl-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Save to collection">
             <span className="rl-sheet-drag" aria-hidden="true" />
             <h3 className="rl-sheet-title">Save to collection</h3>
-            <div className="rl-sheet-list">
-              {RL_COLLECTIONS.map((c) => <RLCollectionRow key={c.name} c={c} onPick={chooseCollection} />)}
-              <button className="rl-sheet-row rl-sheet-new" onClick={() => chooseCollection("New collection")}>
-                <span className="rl-sheet-thumb rl-sheet-thumb-new"><IconRL n="lucide:plus" size={20} color="var(--brand-navy,#292569)" /></span>
-                <span className="rl-sheet-info"><span className="rl-sheet-nm">Create new collection</span></span>
+            <div className="rl-sheet-grid">
+              <button className="rl-col rl-col-new" aria-label="Create a new collection" onClick={() => chooseCollection("New collection")}>
+                <span className="rl-col-plus"><IconRL n="lucide:plus" size={22} color="var(--brand-navy,#292569)" /></span>
+                <span className="rl-col-newtx">New collection</span>
               </button>
+              {RL_COLLECTIONS.map((c) => <RLCollectionTile key={c.name} c={c} onPick={chooseCollection} />)}
             </div>
           </div>
         </div>}

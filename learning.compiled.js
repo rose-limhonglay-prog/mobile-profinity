@@ -78,7 +78,7 @@ const CONTINUE = {
   note: "Only 6 more modules until you get your certificate",
   cta: "Resume Lesson 4"
 };
-const TABS = ["All Courses", "In Progress", "Completed", "Certificates", "Saved"];
+const TABS = ["All Courses", "In Progress", "Completed"];
 function course(image, level, title, description, extra) {
   const completed = !!(extra && extra.completed);
   const inProgress = !completed && !!(extra && extra.progress);
@@ -211,7 +211,8 @@ function GoalCard() {
 }
 function SectionHead({
   title,
-  big
+  big,
+  viewAll
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "sec-h"
@@ -219,9 +220,16 @@ function SectionHead({
     className: big ? "t big" : "t"
   }, title), /*#__PURE__*/React.createElement("span", {
     className: "grow"
-  }), /*#__PURE__*/React.createElement("a", {
+  }), viewAll && /*#__PURE__*/React.createElement("a", {
     className: "viewall",
-    tabIndex: 0
+    href: "#",
+    tabIndex: 0,
+    onClick: e => {
+      e.preventDefault();
+      (window.pfGo || function (u) {
+        window.location.href = u;
+      })(viewAll);
+    }
   }, "View All"));
 }
 function ContinueLearning() {
@@ -402,7 +410,7 @@ function PromoFreeResources() {
     className: "lrn2-outline-btn",
     onClick: () => (window.pfGo || function (u) {
       window.location.href = u;
-    })("MySaved.html")
+    })("SavedWeb.html")
   }, "View free resources", /*#__PURE__*/React.createElement(IconifyIcon, {
     name: "lucide:arrow-up-right",
     size: 17,
@@ -495,8 +503,7 @@ function MyLearningApp() {
     const t = setTimeout(() => setLoading(false), 1200);
     return () => clearTimeout(t);
   }, []);
-  const certificates = MY_COURSES.filter(c => c.completed);
-  const visibleCourses = tab === "Certificates" ? [] : MY_COURSES.filter(COURSE_TAB_FILTERS[tab] || (() => true));
+  const visibleCourses = MY_COURSES.filter(COURSE_TAB_FILTERS[tab] || (() => true));
   const showContinue = !FREE_TIER && (tab === "All Courses" || tab === "In Progress");
   return /*#__PURE__*/React.createElement("div", {
     className: "app wa-screen",
@@ -541,26 +548,25 @@ function MyLearningApp() {
     "aria-label": "Search course"
   })), showContinue && /*#__PURE__*/React.createElement(ContinueLearning, null), /*#__PURE__*/React.createElement("section", {
     className: "panel",
-    "data-screen-label": tab === "Certificates" ? "My Certificates" : "My Courses"
+    "data-screen-label": "My Courses"
   }, /*#__PURE__*/React.createElement(SectionHead, {
-    title: tab === "Certificates" ? "My Certificates" : "My Courses"
+    title: "My Courses",
+    viewAll: FREE_TIER ? null : "MyCoursesWeb.html"
   }), FREE_TIER ? /*#__PURE__*/React.createElement(LockedCoursesPanel, null) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "row"
   }, loading ? Array.from({
     length: 4
   }).map((_, i) => /*#__PURE__*/React.createElement(SkeletonCourseCard, {
     key: i
-  })) : tab === "Certificates" ? certificates.map((c, i) => /*#__PURE__*/React.createElement(CertificateCard, {
+  })) : visibleCourses.map((c, i) => tab === "Completed" ? /*#__PURE__*/React.createElement(CertificateCard, {
     key: i,
     c: c
-  })) : visibleCourses.map((c, i) => /*#__PURE__*/React.createElement(CourseCard, {
+  }) : /*#__PURE__*/React.createElement(CourseCard, {
     key: i,
     c: c
-  }))), !loading && tab === "Certificates" && certificates.length === 0 && /*#__PURE__*/React.createElement("p", {
+  }))), !loading && (tab === "In Progress" || tab === "Completed") && visibleCourses.length === 0 && /*#__PURE__*/React.createElement("p", {
     className: "lrn2-empty"
-  }, "Complete a course to earn your first certificate."), !loading && (tab === "In Progress" || tab === "Completed") && visibleCourses.length === 0 && /*#__PURE__*/React.createElement("p", {
-    className: "lrn2-empty"
-  }, tab === "In Progress" ? "No courses in progress yet." : "No completed courses yet."))), /*#__PURE__*/React.createElement("section", {
+  }, tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate."))), /*#__PURE__*/React.createElement("section", {
     className: "lrn2-promos"
   }, /*#__PURE__*/React.createElement(PromoFreeResources, null), /*#__PURE__*/React.createElement(PromoLearningPath, null), /*#__PURE__*/React.createElement(PromoUpgrade, null))));
 }

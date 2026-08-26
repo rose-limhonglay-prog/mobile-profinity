@@ -1,0 +1,65 @@
+/* ===========================================================================
+   PROfinity — All Courses (web) · layout shell
+   Desktop page shell (TopNav + wide centered column) instead of the phone
+   frame + bottom tab dock used by all-courses-mobile.css. Component styling
+   comes from the Profinity Design System bundle + tokens.
+   =========================================================================== */
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--surface-page);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+img{max-width:100%}
+
+.app{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-page);min-height:100vh}
+
+.acw-page{max-width:1240px;margin:0 auto;padding:28px 24px 64px}
+
+.acw-back{display:inline-flex;align-items:center;gap:8px;margin-bottom:20px;padding:0;border:none;background:none;
+  cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);color:var(--brand-navy)}
+.acw-back:hover{text-decoration:underline}
+.acw-back:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+
+.acw-head h1{margin:0 0 8px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:var(--fs-display);color:var(--brand-navy)}
+.acw-head p{margin:0;font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--gray-600)}
+
+.acw-toolbar{display:flex;align-items:center;gap:16px;margin-top:28px}
+.acw-search{flex:1;min-width:0;display:flex;align-items:center;gap:11px;height:54px;padding:0 20px;
+  background:var(--surface-card);border:1px solid var(--border-strong);border-radius:var(--r-md)}
+.acw-search input{flex:1;min-width:0;border:none;outline:none;background:transparent;font-family:var(--font-sans);
+  font-size:var(--fs-body-lg);color:var(--text-primary)}
+.acw-search input::placeholder{color:var(--gray-450)}
+
+.acw-filters{flex:none;display:flex;gap:8px}
+.acw-filter{height:54px;padding:0 20px;border-radius:var(--r-md);border:1px solid var(--border-strong);
+  background:var(--surface-card);cursor:pointer;white-space:nowrap;font-family:var(--font-sans);
+  font-weight:var(--fw-semibold);font-size:var(--fs-body);color:var(--text-primary);transition:background .15s ease,color .15s ease}
+.acw-filter:hover{background:var(--surface-sunken)}
+.acw-filter.on{background:var(--brand-navy);border-color:var(--brand-navy);color:var(--white)}
+.acw-filter:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+
+.acw-coach-row{margin:18px 0 8px}
+
+.acw-empty{margin:40px 0;text-align:center;font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--gray-500)}
+
+.acw-grid{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px}
+
+.acw-coursecard{display:flex;flex-direction:column;background:var(--surface-card);border:1px solid var(--border-default);
+  border-radius:var(--r-lg);overflow:hidden;transition:box-shadow .18s ease,transform .18s ease}
+.acw-coursecard:hover{box-shadow:0 12px 28px rgba(12,12,13,.12);transform:translateY(-3px)}
+.acw-coursecard .thumb{position:relative;height:170px;background-size:cover;background-position:center;background-color:var(--brand-navy)}
+.acw-coursecard .lvl{position:absolute;top:12px;left:12px}
+.acw-coursecard .body{padding:18px;display:flex;flex-direction:column;gap:8px;flex:1}
+.acw-coursecard .ti{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body-lg);color:var(--text-primary)}
+.acw-coursecard .ds{font-family:var(--font-sans);font-size:var(--fs-body);line-height:1.5;color:var(--gray-500)}
+.acw-coursecard .by{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:var(--fs-body);color:var(--text-primary)}
+.acw-cta{margin-top:auto;padding-top:8px;height:44px;border:1.5px solid var(--brand-navy);border-radius:var(--r-sm);
+  background:transparent;color:var(--brand-navy);cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);
+  font-size:var(--fs-body);transition:background .15s ease,color .15s ease}
+.acw-cta:hover{background:var(--brand-navy);color:var(--white)}
+.acw-cta:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+
+@media (max-width:640px){
+  .acw-toolbar{flex-direction:column;align-items:stretch}
+  .acw-filters{overflow-x:auto;scrollbar-width:none}
+  .acw-filters::-webkit-scrollbar{display:none}
+}
