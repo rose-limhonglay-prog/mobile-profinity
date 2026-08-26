@@ -2281,7 +2281,7 @@ function TopNav({
       gap: 24,
       height: 84,
       padding: "0 28px",
-      background: "var(--white)",
+      background: "var(--surface-card)",
       boxShadow: "0 1px 4px rgba(12,12,13,0.05)",
       ...style
     }
