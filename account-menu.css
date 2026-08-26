@@ -77,3 +77,11 @@
   font-size: 14.5px;
   color: var(--text-primary, #1D2939);
 }
+
+#pf-account-dark-toggle .pf-toggle-knob {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-450, #98A2B3);
+}
+#pf-account-dark-toggle.on .pf-toggle-knob { color: #1A1736; }

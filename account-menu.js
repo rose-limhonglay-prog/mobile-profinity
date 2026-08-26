@@ -60,7 +60,7 @@
           '<iconify-icon icon="lucide:moon" width="17" height="17"></iconify-icon>Dark mode' +
         '</span>' +
         '<button type="button" class="pf-toggle" role="switch" id="pf-account-dark-toggle" aria-label="Toggle dark mode">' +
-          '<span class="pf-toggle-knob"></span>' +
+          '<span class="pf-toggle-knob"><iconify-icon icon="lucide:sun" width="13" height="13"></iconify-icon></span>' +
         '</button>' +
       '</div>' +
       '<div class="pf-account-menu-divider"></div>' +
@@ -77,10 +77,12 @@
     });
 
     var darkToggle = menuEl.querySelector("#pf-account-dark-toggle");
+    var darkToggleIcon = darkToggle.querySelector("iconify-icon");
     function syncDarkToggle() {
       var on = isDark();
       darkToggle.classList.toggle("on", on);
       darkToggle.setAttribute("aria-checked", on ? "true" : "false");
+      darkToggleIcon.setAttribute("icon", on ? "lucide:moon" : "lucide:sun");
     }
     syncDarkToggle();
     darkToggle.addEventListener("click", function (e) {

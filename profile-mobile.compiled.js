@@ -955,10 +955,10 @@ function SmDarkSwitchPM({
     "aria-label": on ? "Switch to light mode" : "Switch to dark mode"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sm-knob"
-  }, on && /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:moon",
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: on ? "lucide:moon" : "lucide:sun",
     size: 13,
-    color: "#1A1736"
+    color: on ? "#1A1736" : "var(--gray-450)"
   })));
 }
 function SmDisplayCardPM({

@@ -121,7 +121,7 @@ function SmDarkSwitchCM({ on, onToggle }) {
     <button className={"sm-switch" + (on ? " on" : "")} onClick={onToggle} role="switch"
       aria-checked={on} aria-label={on ? "Switch to light mode" : "Switch to dark mode"}>
       <span className="sm-knob">
-        {on && <DSCM.IconifyIcon name="lucide:moon" size={13} color="#1A1736" />}
+        <DSCM.IconifyIcon name={on ? "lucide:moon" : "lucide:sun"} size={13} color={on ? "#1A1736" : "var(--gray-450)"} />
       </span>
     </button>);
 }
