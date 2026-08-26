@@ -112,6 +112,7 @@ const MY_COURSES = [course(IMG.lip, "Intermediate", "8D Lip Design", "Discover a
   certId: "PF-CPA-1187"
 })];
 function goToCourse(c) {
+  if (c.completed && c.certificate) return goToCertificate(c);
   const url = c.inProgress ? "LessonWeb.html" : `CourseWeb.html?${new URLSearchParams({
     title: c.title,
     instr: TUTOR,
@@ -120,6 +121,18 @@ function goToCourse(c) {
   (window.pfGo || function (u) {
     window.location.href = u;
   })(url);
+}
+function goToCertificate(c) {
+  const params = new URLSearchParams({
+    title: c.title,
+    instr: TUTOR,
+    student: ME.name,
+    issued: c.certificate.issuedDate,
+    id: c.certificate.id
+  });
+  (window.pfGo || function (u) {
+    window.location.href = u;
+  })(`CertificateWeb.html?${params}`);
 }
 
 /* ---------------------------------------------------------------- pieces -- */

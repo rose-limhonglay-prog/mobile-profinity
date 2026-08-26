@@ -79,8 +79,20 @@ const MY_COURSES = [
 ];
 
 function goToCourse(c) {
+  if (c.completed && c.certificate) return goToCertificate(c);
   const url = c.inProgress ? "LessonWeb.html" : `CourseWeb.html?${new URLSearchParams({ title: c.title, instr: TUTOR, pct: c.progress || 0 })}`;
   (window.pfGo || function (u) { window.location.href = u; })(url);
+}
+
+function goToCertificate(c) {
+  const params = new URLSearchParams({
+    title: c.title,
+    instr: TUTOR,
+    student: ME.name,
+    issued: c.certificate.issuedDate,
+    id: c.certificate.id,
+  });
+  (window.pfGo || function (u) { window.location.href = u; })(`CertificateWeb.html?${params}`);
 }
 
 /* ---------------------------------------------------------------- pieces -- */
