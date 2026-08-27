@@ -236,11 +236,6 @@ const EV_TABS = [{
   icon: "lucide:user",
   href: "ProfileMobile.html"
 }, {
-  key: "Agent",
-  label: "Ava",
-  icon: "lucide:sparkles",
-  href: "AgentMobile.html"
-}, {
   key: "Rewards",
   label: "Rewards",
   icon: "lucide:gift",
@@ -289,7 +284,6 @@ const LS_OFFCAM = [{
 }];
 const LS_REACT_EMOJI = ["❤️", "💜", "👏", "🔥", "🙌"];
 const LS_COMPOSER_MORE = ["💜", "👏", "🔥", "🙌", "😂"];
-const LS_BASKET_COUNT = 79;
 
 /* ---- live stream: host view seed data — viewers who've raised a hand to
    join the stage, shown in the host's participants panel. ---- */
@@ -547,6 +541,20 @@ function lsFmtClock(totalSecs) {
     sec = s % 60;
   const pad = n => String(n).padStart(2, "0");
   return pad(h) + ":" + pad(m) + ":" + pad(sec);
+}
+
+/* Deterministic funnel numbers for the host's product-performance stats —
+   clicks > add-to-cart > sold, seeded off each product's own num so the
+   panel reads consistently without a real backing analytics feed. */
+function lsProductStats(p) {
+  const clicks = 20 + p.num * 37 % 80;
+  const cart = Math.max(4, Math.round(clicks * 0.4));
+  const sold = Math.max(1, Math.round(cart * 0.3));
+  return {
+    clicks,
+    cart,
+    sold
+  };
 }
 function EvTabBar({
   active
@@ -811,17 +819,7 @@ function EventsList({
     name: v.i,
     size: 20,
     color: view === v.k ? "#fff" : "var(--gray-600)"
-  }))))), /*#__PURE__*/React.createElement("div", {
-    className: "ev-coach-row"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pf-coach-link",
-    "data-coach": "Which upcoming event should I prioritise attending to grow my clinic?"
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:sparkles",
-    size: 14,
-    color: "var(--ai-purple)"
-  }), "Which event should I prioritise?")), view === "calendar" && /*#__PURE__*/React.createElement(EvCalendar, {
+  }))))), view === "calendar" && /*#__PURE__*/React.createElement(EvCalendar, {
     onOpen: onOpen,
     cur: cur,
     setCur: setCur
@@ -1375,6 +1373,7 @@ function LSStage({
     src: p.avatar,
     alt: ""
   })) : /*#__PURE__*/React.createElement("img", {
+    className: p.rear ? "rear" : undefined,
     src: p.avatar,
     alt: ""
   }), /*#__PURE__*/React.createElement("span", {
@@ -1406,7 +1405,9 @@ function LSTopBar({
   elapsed,
   viewers,
   onLeave,
-  onEndClick
+  onEndClick,
+  onParticipants,
+  pendingCount
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "ls-topbar"
@@ -1416,7 +1417,18 @@ function LSTopBar({
     className: "pulse"
   }), "LIVE"), /*#__PURE__*/React.createElement("span", {
     className: "ls-timer"
-  }, lsFmtClock(elapsed)), /*#__PURE__*/React.createElement("span", {
+  }, lsFmtClock(elapsed)), role === "host" ? /*#__PURE__*/React.createElement("button", {
+    className: "ls-viewers as-btn",
+    "aria-label": "Participants" + (pendingCount ? " — " + pendingCount + " requests" : ""),
+    title: "Participants",
+    onClick: onParticipants
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:eye",
+    size: 14,
+    color: "#fff"
+  }), viewers, pendingCount > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  }, pendingCount)) : /*#__PURE__*/React.createElement("span", {
     className: "ls-viewers"
   }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
     name: "lucide:eye",
@@ -1447,6 +1459,29 @@ function LSTitleBlock({
   }, title), /*#__PURE__*/React.createElement("div", {
     className: "s"
   }, hosts));
+}
+
+/* Audience-only host identity card — mirrors the social live broadcast's
+   "who you're watching" strip (avatar, name, topic, Follow), since a viewer
+   here is watching, not presenting. */
+function lsHostAvatar(name) {
+  return name && name.indexOf("Miranda") !== -1 ? "assets/avatar-miranda.jpg" : "assets/avatar-drtim.png";
+}
+function LSHostCard({
+  avatar,
+  name,
+  tagline
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ls-hostcard"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: avatar,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, name), /*#__PURE__*/React.createElement("i", null, tagline)), /*#__PURE__*/React.createElement("button", {
+    className: "ls-hostcard-follow"
+  }, "Follow"));
 }
 
 /* Ambient + user-triggered reaction particles. Travel distance/duration are
@@ -1524,23 +1559,11 @@ function LSComposer({
   value,
   onChange,
   onSend,
-  onReact,
-  onOpenBasket
+  onReact
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "ls-composer"
-  }, onOpenBasket && /*#__PURE__*/React.createElement("button", {
-    className: "ls-basket",
-    "aria-label": "Shop this stream — " + LS_BASKET_COUNT + " items",
-    title: "Shop",
-    onClick: onOpenBasket
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:shopping-basket",
-    size: 19,
-    color: "var(--brand-navy)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "badge"
-  }, LS_BASKET_COUNT)), /*#__PURE__*/React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("input", {
     className: "ls-input",
     value: value,
     onChange: e => onChange(e.target.value),
@@ -1577,229 +1600,123 @@ function LSComposer({
   }, e)))));
 }
 
-/* Cycles the pinned product card: visible 5s, shrinks into the basket over
-   .5s, then 8s later (from the shrink) the next product pops in. Tapping
-   the basket re-runs the current product's cycle from scratch. */
-function useProductCycle(products) {
-  const [idx, setIdx] = useStateEV(0);
-  const [phase, setPhase] = useStateEV("visible");
-  const timers = React.useRef([]);
-  const clearAll = () => {
-    timers.current.forEach(clearTimeout);
-    timers.current = [];
-  };
-  const advance = i => {
-    const t = setTimeout(() => runCycle((i + 1) % products.length), 7500);
-    timers.current.push(t);
-  };
-  const runCycle = i => {
-    clearAll();
-    setIdx(i);
-    setPhase("visible");
-    const t1 = setTimeout(() => {
-      setPhase("out");
-      const t2 = setTimeout(() => {
-        setPhase("hidden");
-        advance(i);
-      }, 500);
-      timers.current.push(t2);
-    }, 5000);
-    timers.current.push(t1);
-  };
-  const dismiss = () => {
-    clearAll();
-    setPhase("out");
-    const t = setTimeout(() => {
-      setPhase("hidden");
-      advance(idx);
-    }, 500);
-    timers.current.push(t);
-  };
-  useEffectEV(() => {
-    runCycle(0);
-    return clearAll;
-  }, []);
-  return {
-    idx,
-    phase,
-    reveal: () => runCycle(idx),
-    dismiss
-  };
-}
-function LSProductCard({
+/* Echo of whatever the host is currently pushing to viewers (LSHostShowcase).
+   For the speaker this is read-only — see what's pinned so they can talk to
+   it, without granting them showcase controls of their own; the host gets
+   an Unpin action since it's their own push. */
+function LSPinnedForViewers({
   product,
-  phase,
-  onBuy,
-  onClose
+  onUnpin
 }) {
-  const [secs, setSecs] = useStateEV(product.flashSecs);
-  useEffectEV(() => {
-    setSecs(product.flashSecs);
-    const t = setInterval(() => setSecs(s => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(t);
-  }, [product]);
-  if (phase === "hidden") return null;
+  if (!product) return null;
   return /*#__PURE__*/React.createElement("div", {
-    className: "ls-product" + (phase === "out" ? " out" : "")
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "x",
-    "aria-label": "Dismiss offer",
-    title: "Dismiss",
-    onClick: onClose
+    className: "ls-pinned"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "dot"
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:x",
-    size: 13,
-    color: "var(--gray-500)"
-  }))), /*#__PURE__*/React.createElement("span", {
     className: "thumb"
   }, /*#__PURE__*/React.createElement("img", {
     src: product.img,
     alt: ""
-  }), /*#__PURE__*/React.createElement("b", null, product.num)), /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
   }, /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, "Pinned for viewers"), /*#__PURE__*/React.createElement("span", {
     className: "ttl"
   }, product.title), /*#__PURE__*/React.createElement("span", {
-    className: "flash"
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:zap",
-    size: 11,
-    color: "var(--error)"
-  }), "Flash sale · ", lsFmtClock(secs)), /*#__PURE__*/React.createElement("span", {
-    className: "note"
-  }, product.note), /*#__PURE__*/React.createElement("span", {
     className: "price"
-  }, "£", product.price.toFixed(2), " ", /*#__PURE__*/React.createElement("s", null, "£", product.was.toFixed(2)), " ", /*#__PURE__*/React.createElement("i", null, product.off))), /*#__PURE__*/React.createElement("button", {
-    className: "buy",
-    onClick: () => onBuy(product)
-  }, "Buy"));
-}
-function LSShowcase({
-  onClose,
-  onBuy
-}) {
-  useEffectEV(() => {
-    const esc = e => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", esc);
-    return () => window.removeEventListener("keydown", esc);
-  }, [onClose]);
-  return /*#__PURE__*/React.createElement("div", {
-    className: "ev-sheet",
-    role: "dialog",
-    "aria-modal": "true",
-    "aria-label": "Shop this stream"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "ev-sheet-scrim",
-    "aria-label": "Close",
-    onClick: onClose
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "ev-sheet-card ls-showcase"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ev-sheet-grab"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "ls-showcase-hd"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "brand"
-  }, "Profinity"), /*#__PURE__*/React.createElement("button", {
-    className: "ev-sheet-x",
-    "aria-label": "Close",
-    onClick: onClose
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:x",
-    size: 20,
-    color: "var(--gray-500)"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "ls-rows"
-  }, LS_PRODUCTS.map((p, i) => /*#__PURE__*/React.createElement("div", {
-    className: "ls-row",
-    key: p.num
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "thumb"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: p.img,
-    alt: ""
-  }), /*#__PURE__*/React.createElement("b", null, p.num)), /*#__PURE__*/React.createElement("span", {
-    className: "tx"
-  }, i === 0 && /*#__PURE__*/React.createElement("span", {
-    className: "tag live"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "d"
-  }), "LIVE now"), i === 1 && /*#__PURE__*/React.createElement("span", {
-    className: "tag trend"
-  }, "On Trend"), /*#__PURE__*/React.createElement("span", {
-    className: "ttl"
-  }, p.title), /*#__PURE__*/React.createElement("span", {
-    className: "perk"
-  }, p.note, " · Certificate included"), /*#__PURE__*/React.createElement("span", {
-    className: "flash"
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:zap",
-    size: 11,
-    color: "var(--error)"
-  }), lsFmtClock(p.flashSecs)), /*#__PURE__*/React.createElement("span", {
-    className: "price"
-  }, "£", p.price.toFixed(2), " ", /*#__PURE__*/React.createElement("s", null, "£", p.was.toFixed(2)), " ", /*#__PURE__*/React.createElement("i", null, p.off))), /*#__PURE__*/React.createElement("button", {
-    className: "buy",
-    onClick: () => onBuy(p)
-  }, "Buy"))))));
+  }, "£", product.price.toFixed(2))), onUnpin && /*#__PURE__*/React.createElement("button", {
+    className: "unpin",
+    onClick: onUnpin
+  }, "Unpin"));
 }
 
 /* ---- live stream: host + speaker controls. Host runs the stage (device
    toggles, admits raised hands, ends for everyone); speaker just controls
-   their own mic/camera while presenting — no moderation power. ---- */
+   their own mic/camera/facing while presenting — no moderation power. ---- */
 function LSToolbar({
   role,
   mic,
   cam,
   onToggleMic,
   onToggleCam,
-  onParticipants,
+  onFlipCam,
   onShowcase,
-  pendingCount
+  pushedNum
 }) {
+  if (role === "host") {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "ls-toolbar ls-toolbar-pills"
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "ls-pillbtn" + (mic ? "" : " off"),
+      "aria-label": mic ? "Mute microphone" : "Unmute microphone",
+      title: "Microphone",
+      onClick: onToggleMic
+    }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+      name: mic ? "lucide:mic" : "lucide:mic-off",
+      size: 20,
+      color: "#fff"
+    }), /*#__PURE__*/React.createElement("span", null, mic ? "Live" : "Muted")), /*#__PURE__*/React.createElement("button", {
+      className: "ls-pillbtn" + (cam ? "" : " off"),
+      "aria-label": cam ? "Turn camera off" : "Turn camera on",
+      title: "Camera",
+      onClick: onToggleCam
+    }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+      name: cam ? "lucide:video" : "lucide:video-off",
+      size: 20,
+      color: "#fff"
+    }), /*#__PURE__*/React.createElement("span", null, cam ? "On" : "Off")), /*#__PURE__*/React.createElement("button", {
+      className: "ls-pillbtn neutral",
+      "aria-label": "Flip camera",
+      title: "Flip camera",
+      onClick: onFlipCam
+    }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+      name: "lucide:refresh-cw",
+      size: 20,
+      color: "#fff"
+    }), /*#__PURE__*/React.createElement("span", null, "Flip")), /*#__PURE__*/React.createElement("button", {
+      className: "ls-pillbtn gold",
+      "aria-label": "Products",
+      title: "Products",
+      onClick: onShowcase
+    }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+      name: "lucide:shopping-bag",
+      size: 20,
+      color: "#fff"
+    }), /*#__PURE__*/React.createElement("span", null, "Products"), pushedNum != null && /*#__PURE__*/React.createElement("span", {
+      className: "dot",
+      "aria-hidden": "true"
+    })));
+  }
   return /*#__PURE__*/React.createElement("div", {
-    className: "ls-toolbar"
+    className: "ls-toolbar ls-toolbar-pills"
   }, /*#__PURE__*/React.createElement("button", {
-    className: "ls-tbtn" + (mic ? "" : " off"),
+    className: "ls-pillbtn" + (mic ? "" : " off"),
     "aria-label": mic ? "Mute microphone" : "Unmute microphone",
     title: "Microphone",
     onClick: onToggleMic
   }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
     name: mic ? "lucide:mic" : "lucide:mic-off",
-    size: 19,
+    size: 20,
     color: "#fff"
-  })), /*#__PURE__*/React.createElement("button", {
-    className: "ls-tbtn" + (cam ? "" : " off"),
+  }), /*#__PURE__*/React.createElement("span", null, mic ? "Live" : "Muted")), /*#__PURE__*/React.createElement("button", {
+    className: "ls-pillbtn" + (cam ? "" : " off"),
     "aria-label": cam ? "Turn camera off" : "Turn camera on",
     title: "Camera",
     onClick: onToggleCam
   }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
     name: cam ? "lucide:video" : "lucide:video-off",
-    size: 19,
+    size: 20,
     color: "#fff"
-  })), role === "host" && /*#__PURE__*/React.createElement("button", {
-    className: "ls-tbtn",
-    "aria-label": "Participants" + (pendingCount ? " — " + pendingCount + " requests" : ""),
-    title: "Participants",
-    onClick: onParticipants
+  }), /*#__PURE__*/React.createElement("span", null, cam ? "On" : "Off")), /*#__PURE__*/React.createElement("button", {
+    className: "ls-pillbtn neutral",
+    "aria-label": "Flip camera",
+    title: "Flip camera",
+    onClick: onFlipCam
   }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:users",
-    size: 19,
+    name: "lucide:refresh-cw",
+    size: 20,
     color: "#fff"
-  }), pendingCount > 0 && /*#__PURE__*/React.createElement("span", {
-    className: "dot"
-  }, pendingCount)), role === "host" && /*#__PURE__*/React.createElement("button", {
-    className: "ls-tbtn",
-    "aria-label": "Manage showcase",
-    title: "Showcase",
-    onClick: onShowcase
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:megaphone",
-    size: 19,
-    color: "#fff"
-  })));
+  }), /*#__PURE__*/React.createElement("span", null, "Flip")));
 }
 function LSEndConfirm({
   onCancel,
@@ -1937,6 +1854,7 @@ function LSParticipants({
 function LSHostShowcase({
   pushedNum,
   onTogglePush,
+  viewers,
   onClose
 }) {
   useEffectEV(() => {
@@ -1944,11 +1862,14 @@ function LSHostShowcase({
     window.addEventListener("keydown", esc);
     return () => window.removeEventListener("keydown", esc);
   }, [onClose]);
+  const rows = LS_PRODUCTS.slice(0, 6).map(p => Object.assign({}, p, lsProductStats(p)));
+  const totalSales = rows.reduce((s, p) => s + p.sold * p.price, 0);
+  const totalClicks = rows.reduce((s, p) => s + p.clicks, 0);
   return /*#__PURE__*/React.createElement("div", {
     className: "ev-sheet",
     role: "dialog",
     "aria-modal": "true",
-    "aria-label": "Manage showcase"
+    "aria-label": "Products"
   }, /*#__PURE__*/React.createElement("button", {
     className: "ev-sheet-scrim",
     "aria-label": "Close",
@@ -1961,7 +1882,7 @@ function LSHostShowcase({
     className: "ls-showcase-hd"
   }, /*#__PURE__*/React.createElement("span", {
     className: "brand"
-  }, "Manage showcase"), /*#__PURE__*/React.createElement("button", {
+  }, "Products"), /*#__PURE__*/React.createElement("button", {
     className: "ev-sheet-x",
     "aria-label": "Close",
     onClick: onClose
@@ -1969,12 +1890,31 @@ function LSHostShowcase({
     name: "lucide:x",
     size: 20,
     color: "var(--gray-500)"
-  }))), /*#__PURE__*/React.createElement("p", {
-    className: "ev-sheet-p"
-  }, "Push a product to every viewer's screen — it appears pinned above their chat until you stop it."), /*#__PURE__*/React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "ls-pstats"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "c"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, "£", totalSales.toLocaleString()), /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "Sales")), /*#__PURE__*/React.createElement("span", {
+    className: "c"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, viewers), /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "Current viewers")), /*#__PURE__*/React.createElement("span", {
+    className: "c"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, totalClicks), /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "Product clicks"))), /*#__PURE__*/React.createElement("div", {
     className: "ls-rows"
-  }, LS_PRODUCTS.slice(0, 6).map(p => {
-    const live = p.num === pushedNum;
+  }, rows.map(p => {
+    const pinned = p.num === pushedNum;
+    const off = p.was - p.price;
     return /*#__PURE__*/React.createElement("div", {
       className: "ls-row",
       key: p.num
@@ -1985,20 +1925,50 @@ function LSHostShowcase({
       alt: ""
     }), /*#__PURE__*/React.createElement("b", null, p.num)), /*#__PURE__*/React.createElement("span", {
       className: "tx"
-    }, live && /*#__PURE__*/React.createElement("span", {
-      className: "tag live"
+    }, pinned && /*#__PURE__*/React.createElement("span", {
+      className: "tagrow"
     }, /*#__PURE__*/React.createElement("span", {
-      className: "d"
-    }), "LIVE to viewers"), /*#__PURE__*/React.createElement("span", {
+      className: "tag pinned"
+    }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+      name: "lucide:pin",
+      size: 10,
+      color: "var(--premium-gold-deep)"
+    }), "Pinned"), /*#__PURE__*/React.createElement("span", {
+      className: "tag hot"
+    }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+      name: "lucide:flame",
+      size: 10,
+      color: "#fff"
+    }), "Hot deal")), /*#__PURE__*/React.createElement("span", {
       className: "ttl"
     }, p.title), /*#__PURE__*/React.createElement("span", {
-      className: "perk"
-    }, p.note), /*#__PURE__*/React.createElement("span", {
+      className: "tag off"
+    }, "Extra £", off, " off"), /*#__PURE__*/React.createElement("span", {
       className: "price"
-    }, "£", p.price.toFixed(2), " ", /*#__PURE__*/React.createElement("s", null, "£", p.was.toFixed(2)), " ", /*#__PURE__*/React.createElement("i", null, p.off))), /*#__PURE__*/React.createElement("button", {
-      className: live ? "buy stop" : "buy",
-      onClick: () => onTogglePush(live ? null : p.num)
-    }, live ? "Stop" : "Push"));
+    }, "£", p.price.toFixed(2), " ", /*#__PURE__*/React.createElement("s", null, "£", p.was.toFixed(2)))), /*#__PURE__*/React.createElement("button", {
+      className: "pin" + (pinned ? " on" : ""),
+      onClick: () => onTogglePush(pinned ? null : p.num)
+    }, pinned ? "Unpin" : "Pin"), /*#__PURE__*/React.createElement("div", {
+      className: "ls-pstats sm"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "c"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "n"
+    }, p.sold), /*#__PURE__*/React.createElement("span", {
+      className: "l"
+    }, "Items sold")), /*#__PURE__*/React.createElement("span", {
+      className: "c"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "n"
+    }, p.cart), /*#__PURE__*/React.createElement("span", {
+      className: "l"
+    }, "Add-to-cart")), /*#__PURE__*/React.createElement("span", {
+      className: "c"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "n"
+    }, p.clicks), /*#__PURE__*/React.createElement("span", {
+      className: "l"
+    }, "Clicks"))));
   }))));
 }
 const LS_ROLES = [{
@@ -2044,8 +2014,6 @@ function LiveStream({
     id: i
   }, m)));
   const [val, setVal] = useStateEV("");
-  const [showcase, setShowcase] = useStateEV(false);
-  const cycle = useProductCycle(LS_PRODUCTS);
 
   /* Host + speaker preview state — role defaults to audience (today's real
      behaviour is unchanged); switching roles is a dev-only affordance via
@@ -2053,6 +2021,7 @@ function LiveStream({
   const [role, setRole] = useStateEV("audience");
   const [selfMic, setSelfMic] = useStateEV(true);
   const [selfCam, setSelfCam] = useStateEV(true);
+  const [selfFront, setSelfFront] = useStateEV(true);
   const [onCamPeople, setOnCamPeople] = useStateEV(() => LS_ONCAM.map(p => Object.assign({}, p)));
   const [offCamPeople, setOffCamPeople] = useStateEV(() => LS_OFFCAM.map(p => Object.assign({}, p)));
   const [requests, setRequests] = useStateEV(LS_REQUESTS);
@@ -2068,7 +2037,8 @@ function LiveStream({
     avatar: "assets/avatar-katy.jpg",
     mic: selfMic,
     speaking: selfMic,
-    camOff: !selfCam
+    camOff: !selfCam,
+    rear: !selfFront
   }]) : onCamPeople;
   const stageOffCam = role === "host" ? offCamPeople.map(p => p.id === "katy" ? Object.assign({}, p, {
     mic: selfMic
@@ -2131,14 +2101,6 @@ function LiveStream({
     }]));
     setVal("");
   };
-  const buy = p => {
-    const params = new URLSearchParams({
-      title: p.title,
-      instr: "Dr. Tim Pearce",
-      price: String(p.price)
-    });
-    goEV("CourseCheckout.html?" + params.toString());
-  };
   return /*#__PURE__*/React.createElement("div", {
     className: "ls-screen",
     "data-screen-label": "Live Stream"
@@ -2150,42 +2112,39 @@ function LiveStream({
     elapsed: elapsed,
     viewers: viewers,
     onLeave: onLeave,
-    onEndClick: () => setPanel("end")
-  }), /*#__PURE__*/React.createElement(LSTitleBlock, {
+    onEndClick: () => setPanel("end"),
+    onParticipants: () => setPanel("participants"),
+    pendingCount: requests.length
+  }), role === "audience" ? /*#__PURE__*/React.createElement(LSHostCard, {
+    avatar: lsHostAvatar(d.host),
+    name: hostline,
+    tagline: d.title
+  }) : /*#__PURE__*/React.createElement(LSTitleBlock, {
     title: d.title,
     hosts: hostline
   }), /*#__PURE__*/React.createElement("div", {
     className: "ls-overlay"
   }, /*#__PURE__*/React.createElement(LSChat, {
     msgs: msgs
-  }), role === "audience" && cycle.phase !== "hidden" && /*#__PURE__*/React.createElement(LSProductCard, {
-    product: LS_PRODUCTS[cycle.idx],
-    phase: cycle.phase,
-    onBuy: buy,
-    onClose: cycle.dismiss
+  }), role !== "audience" && pushedNum && /*#__PURE__*/React.createElement(LSPinnedForViewers, {
+    product: LS_PRODUCTS.find(p => p.num === pushedNum),
+    onUnpin: role === "host" ? () => setPushedNum(null) : undefined
   }), role !== "audience" && /*#__PURE__*/React.createElement(LSToolbar, {
     role: role,
     mic: selfMic,
     cam: selfCam,
     onToggleMic: () => setSelfMic(m => !m),
     onToggleCam: () => setSelfCam(c => !c),
-    onParticipants: () => setPanel("participants"),
+    onFlipCam: () => setSelfFront(f => !f),
     onShowcase: () => setPanel("showcase"),
-    pendingCount: requests.length
+    pushedNum: pushedNum
   }), /*#__PURE__*/React.createElement(LSComposer, {
     value: val,
     onChange: setVal,
     onSend: send,
-    onReact: spawn,
-    onOpenBasket: role === "audience" ? () => {
-      setShowcase(true);
-      cycle.reveal();
-    } : undefined
+    onReact: spawn
   })), /*#__PURE__*/React.createElement(LSReactions, {
     particles: particles
-  }), role === "audience" && showcase && /*#__PURE__*/React.createElement(LSShowcase, {
-    onClose: () => setShowcase(false),
-    onBuy: buy
   }), role === "host" && panel === "participants" && /*#__PURE__*/React.createElement(LSParticipants, {
     onCam: stageOnCam,
     offCam: stageOffCam,
@@ -2197,6 +2156,7 @@ function LiveStream({
   }), role === "host" && panel === "showcase" && /*#__PURE__*/React.createElement(LSHostShowcase, {
     pushedNum: pushedNum,
     onTogglePush: setPushedNum,
+    viewers: viewers,
     onClose: () => setPanel(null)
   }), role === "host" && panel === "end" && /*#__PURE__*/React.createElement(LSEndConfirm, {
     onCancel: () => setPanel(null),

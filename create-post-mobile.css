@@ -272,12 +272,11 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
   -webkit-mask-image:linear-gradient(to bottom,transparent,#000 34%,#000);
   mask-image:linear-gradient(to bottom,transparent,#000 34%,#000)}
 .cp-bcast-chat::-webkit-scrollbar{width:0}
-.cp-bcast-msg{align-self:flex-start;max-width:88%;padding:9px 13px;border-radius:14px;
-  background:linear-gradient(120deg,rgba(16,20,48,.72),rgba(93,21,188,.48));
-  border:1px solid rgba(255,255,255,.1);
-  color:#fff;font-family:var(--font-sans);font-size:14px;line-height:1.45}
+.cp-bcast-msg{align-self:flex-start;max-width:88%;padding:9px 13px;border-radius:14px;border-bottom-left-radius:4px;
+  background:rgba(0,0,0,.12);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  color:#fff;font-family:var(--font-sans);font-size:13.5px;line-height:1.45;text-shadow:0 1px 3px rgba(0,0,0,.5)}
 .cp-bcast-msg b{font-weight:var(--fw-bold);color:var(--brand-gold)}
-.cp-bcast-msg.me{background:linear-gradient(120deg,rgba(41,37,105,.82),rgba(93,21,188,.55))}
+.cp-bcast-msg.me{background:rgba(255,255,255,.16)}
 /* new chatter slides in from the left as it arrives */
 .cp-bcast-msg.in{animation:cp-bcast-chat-in .34s cubic-bezier(.22,.61,.36,1) both}
 @keyframes cp-bcast-chat-in{from{transform:translateX(-16px);opacity:0}to{transform:none;opacity:1}}

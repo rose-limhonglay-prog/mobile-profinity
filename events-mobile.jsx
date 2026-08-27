@@ -110,7 +110,6 @@ const EV_TABS = [
   { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
   { key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
   { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
-  { key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" },
   { key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" },
 ];
 
@@ -133,7 +132,6 @@ const LS_OFFCAM = [
 
 const LS_REACT_EMOJI = ["❤️", "💜", "👏", "🔥", "🙌"];
 const LS_COMPOSER_MORE = ["💜", "👏", "🔥", "🙌", "😂"];
-const LS_BASKET_COUNT = 79;
 
 /* ---- live stream: host view seed data — viewers who've raised a hand to
    join the stage, shown in the host's participants panel. ---- */
@@ -187,6 +185,16 @@ function lsFmtClock(totalSecs) {
   const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
   const pad = (n) => String(n).padStart(2, "0");
   return pad(h) + ":" + pad(m) + ":" + pad(sec);
+}
+
+/* Deterministic funnel numbers for the host's product-performance stats —
+   clicks > add-to-cart > sold, seeded off each product's own num so the
+   panel reads consistently without a real backing analytics feed. */
+function lsProductStats(p) {
+  const clicks = 20 + ((p.num * 37) % 80);
+  const cart = Math.max(4, Math.round(clicks * 0.4));
+  const sold = Math.max(1, Math.round(cart * 0.3));
+  return { clicks, cart, sold };
 }
 
 function EvTabBar({ active }) {
@@ -337,11 +345,6 @@ function EventsList({ onBack, onOpen, view, setView, cur, setCur }) {
               </button>
             ))}
           </div>
-        </div>
-        <div className="ev-coach-row">
-          <button type="button" className="pf-coach-link" data-coach="Which upcoming event should I prioritise attending to grow my clinic?">
-            <DSEV.IconifyIcon name="lucide:sparkles" size={14} color="var(--ai-purple)" />Which event should I prioritise?
-          </button>
         </div>
         {view === "calendar" && <EvCalendar onOpen={onOpen} cur={cur} setCur={setCur} />}
         {view === "list" && EVENTS_LIST.map((e, i) => {
@@ -642,7 +645,7 @@ function LSStage({ onCam, offCam }) {
           <div className={"ls-cell" + (p.speaking ? " speaking" : "") + (p.camOff ? " camoff" : "")} key={p.id}>
             {p.camOff ?
               <span className="ls-camoff-av"><img src={p.avatar} alt="" /></span> :
-              <img src={p.avatar} alt="" />}
+              <img className={p.rear ? "rear" : undefined} src={p.avatar} alt="" />}
             <span className="ls-namechip">
               {p.name}
               <DSEV.IconifyIcon name={p.mic ? "lucide:mic" : "lucide:mic-off"} size={13} color="#fff" />
@@ -666,12 +669,17 @@ function LSStage({ onCam, offCam }) {
   );
 }
 
-function LSTopBar({ role, elapsed, viewers, onLeave, onEndClick }) {
+function LSTopBar({ role, elapsed, viewers, onLeave, onEndClick, onParticipants, pendingCount }) {
   return (
     <div className="ls-topbar">
       <span className="ls-live"><span className="pulse" />LIVE</span>
       <span className="ls-timer">{lsFmtClock(elapsed)}</span>
-      <span className="ls-viewers"><DSEV.IconifyIcon name="lucide:eye" size={14} color="#fff" />{viewers}</span>
+      {role === "host" ?
+        <button className="ls-viewers as-btn" aria-label={"Participants" + (pendingCount ? " — " + pendingCount + " requests" : "")} title="Participants" onClick={onParticipants}>
+          <DSEV.IconifyIcon name="lucide:eye" size={14} color="#fff" />{viewers}
+          {pendingCount > 0 && <span className="dot">{pendingCount}</span>}
+        </button> :
+        <span className="ls-viewers"><DSEV.IconifyIcon name="lucide:eye" size={14} color="#fff" />{viewers}</span>}
       {role === "host" ?
         <button className="ls-end" onClick={onEndClick}>End</button> :
         <button className="ls-close" aria-label={role === "speaker" ? "Leave stage" : "Leave stream"} title={role === "speaker" ? "Leave stage" : "Leave stream"} onClick={onLeave}>
@@ -686,6 +694,25 @@ function LSTitleBlock({ title, hosts }) {
     <div className="ls-titleblock">
       <div className="t">{title}</div>
       <div className="s">{hosts}</div>
+    </div>
+  );
+}
+
+/* Audience-only host identity card — mirrors the social live broadcast's
+   "who you're watching" strip (avatar, name, topic, Follow), since a viewer
+   here is watching, not presenting. */
+function lsHostAvatar(name) {
+  return name && name.indexOf("Miranda") !== -1 ? "assets/avatar-miranda.jpg" : "assets/avatar-drtim.png";
+}
+function LSHostCard({ avatar, name, tagline }) {
+  return (
+    <div className="ls-hostcard">
+      <img src={avatar} alt="" />
+      <span className="tx">
+        <b>{name}</b>
+        <i>{tagline}</i>
+      </span>
+      <button className="ls-hostcard-follow">Follow</button>
     </div>
   );
 }
@@ -741,14 +768,9 @@ function LSChat({ msgs }) {
   );
 }
 
-function LSComposer({ value, onChange, onSend, onReact, onOpenBasket }) {
+function LSComposer({ value, onChange, onSend, onReact }) {
   return (
     <div className="ls-composer">
-      {onOpenBasket &&
-      <button className="ls-basket" aria-label={"Shop this stream — " + LS_BASKET_COUNT + " items"} title="Shop" onClick={onOpenBasket}>
-        <DSEV.IconifyIcon name="lucide:shopping-basket" size={19} color="var(--brand-navy)" />
-        <span className="badge">{LS_BASKET_COUNT}</span>
-      </button>}
       <input className="ls-input" value={value} onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") onSend(); }} placeholder="Say something…" aria-label="Say something" />
       <button className="ls-send" aria-label="Send message" title="Send" onClick={onSend}>
@@ -766,121 +788,66 @@ function LSComposer({ value, onChange, onSend, onReact, onOpenBasket }) {
   );
 }
 
-/* Cycles the pinned product card: visible 5s, shrinks into the basket over
-   .5s, then 8s later (from the shrink) the next product pops in. Tapping
-   the basket re-runs the current product's cycle from scratch. */
-function useProductCycle(products) {
-  const [idx, setIdx] = useStateEV(0);
-  const [phase, setPhase] = useStateEV("visible");
-  const timers = React.useRef([]);
-  const clearAll = () => { timers.current.forEach(clearTimeout); timers.current = []; };
-  const advance = (i) => {
-    const t = setTimeout(() => runCycle((i + 1) % products.length), 7500);
-    timers.current.push(t);
-  };
-  const runCycle = (i) => {
-    clearAll();
-    setIdx(i);
-    setPhase("visible");
-    const t1 = setTimeout(() => {
-      setPhase("out");
-      const t2 = setTimeout(() => { setPhase("hidden"); advance(i); }, 500);
-      timers.current.push(t2);
-    }, 5000);
-    timers.current.push(t1);
-  };
-  const dismiss = () => {
-    clearAll();
-    setPhase("out");
-    const t = setTimeout(() => { setPhase("hidden"); advance(idx); }, 500);
-    timers.current.push(t);
-  };
-  useEffectEV(() => { runCycle(0); return clearAll; }, []);
-  return { idx, phase, reveal: () => runCycle(idx), dismiss };
-}
-
-function LSProductCard({ product, phase, onBuy, onClose }) {
-  const [secs, setSecs] = useStateEV(product.flashSecs);
-  useEffectEV(() => {
-    setSecs(product.flashSecs);
-    const t = setInterval(() => setSecs((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(t);
-  }, [product]);
-  if (phase === "hidden") return null;
+/* Echo of whatever the host is currently pushing to viewers (LSHostShowcase).
+   For the speaker this is read-only — see what's pinned so they can talk to
+   it, without granting them showcase controls of their own; the host gets
+   an Unpin action since it's their own push. */
+function LSPinnedForViewers({ product, onUnpin }) {
+  if (!product) return null;
   return (
-    <div className={"ls-product" + (phase === "out" ? " out" : "")}>
-      <button className="x" aria-label="Dismiss offer" title="Dismiss" onClick={onClose}>
-        <span className="dot"><DSEV.IconifyIcon name="lucide:x" size={13} color="var(--gray-500)" /></span>
-      </button>
-      <span className="thumb"><img src={product.img} alt="" /><b>{product.num}</b></span>
+    <div className="ls-pinned">
+      <span className="thumb"><img src={product.img} alt="" /></span>
       <span className="tx">
+        <span className="lbl">Pinned for viewers</span>
         <span className="ttl">{product.title}</span>
-        <span className="flash"><DSEV.IconifyIcon name="lucide:zap" size={11} color="var(--error)" />Flash sale · {lsFmtClock(secs)}</span>
-        <span className="note">{product.note}</span>
-        <span className="price">£{product.price.toFixed(2)} <s>£{product.was.toFixed(2)}</s> <i>{product.off}</i></span>
+        <span className="price">£{product.price.toFixed(2)}</span>
       </span>
-      <button className="buy" onClick={() => onBuy(product)}>Buy</button>
-    </div>
-  );
-}
-
-function LSShowcase({ onClose, onBuy }) {
-  useEffectEV(() => {
-    const esc = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", esc);
-    return () => window.removeEventListener("keydown", esc);
-  }, [onClose]);
-  return (
-    <div className="ev-sheet" role="dialog" aria-modal="true" aria-label="Shop this stream">
-      <button className="ev-sheet-scrim" aria-label="Close" onClick={onClose} />
-      <div className="ev-sheet-card ls-showcase">
-        <span className="ev-sheet-grab" />
-        <div className="ls-showcase-hd">
-          <span className="brand">Profinity</span>
-          <button className="ev-sheet-x" aria-label="Close" onClick={onClose}><DSEV.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" /></button>
-        </div>
-        <div className="ls-rows">
-          {LS_PRODUCTS.map((p, i) => (
-            <div className="ls-row" key={p.num}>
-              <span className="thumb"><img src={p.img} alt="" /><b>{p.num}</b></span>
-              <span className="tx">
-                {i === 0 && <span className="tag live"><span className="d" />LIVE now</span>}
-                {i === 1 && <span className="tag trend">On Trend</span>}
-                <span className="ttl">{p.title}</span>
-                <span className="perk">{p.note} · Certificate included</span>
-                <span className="flash"><DSEV.IconifyIcon name="lucide:zap" size={11} color="var(--error)" />{lsFmtClock(p.flashSecs)}</span>
-                <span className="price">£{p.price.toFixed(2)} <s>£{p.was.toFixed(2)}</s> <i>{p.off}</i></span>
-              </span>
-              <button className="buy" onClick={() => onBuy(p)}>Buy</button>
-            </div>
-          ))}
-        </div>
-      </div>
+      {onUnpin && <button className="unpin" onClick={onUnpin}>Unpin</button>}
     </div>
   );
 }
 
 /* ---- live stream: host + speaker controls. Host runs the stage (device
    toggles, admits raised hands, ends for everyone); speaker just controls
-   their own mic/camera while presenting — no moderation power. ---- */
-function LSToolbar({ role, mic, cam, onToggleMic, onToggleCam, onParticipants, onShowcase, pendingCount }) {
+   their own mic/camera/facing while presenting — no moderation power. ---- */
+function LSToolbar({ role, mic, cam, onToggleMic, onToggleCam, onFlipCam, onShowcase, pushedNum }) {
+  if (role === "host") {
+    return (
+      <div className="ls-toolbar ls-toolbar-pills">
+        <button className={"ls-pillbtn" + (mic ? "" : " off")} aria-label={mic ? "Mute microphone" : "Unmute microphone"} title="Microphone" onClick={onToggleMic}>
+          <DSEV.IconifyIcon name={mic ? "lucide:mic" : "lucide:mic-off"} size={20} color="#fff" />
+          <span>{mic ? "Live" : "Muted"}</span>
+        </button>
+        <button className={"ls-pillbtn" + (cam ? "" : " off")} aria-label={cam ? "Turn camera off" : "Turn camera on"} title="Camera" onClick={onToggleCam}>
+          <DSEV.IconifyIcon name={cam ? "lucide:video" : "lucide:video-off"} size={20} color="#fff" />
+          <span>{cam ? "On" : "Off"}</span>
+        </button>
+        <button className="ls-pillbtn neutral" aria-label="Flip camera" title="Flip camera" onClick={onFlipCam}>
+          <DSEV.IconifyIcon name="lucide:refresh-cw" size={20} color="#fff" />
+          <span>Flip</span>
+        </button>
+        <button className="ls-pillbtn gold" aria-label="Products" title="Products" onClick={onShowcase}>
+          <DSEV.IconifyIcon name="lucide:shopping-bag" size={20} color="#fff" />
+          <span>Products</span>
+          {pushedNum != null && <span className="dot" aria-hidden="true" />}
+        </button>
+      </div>
+    );
+  }
   return (
-    <div className="ls-toolbar">
-      <button className={"ls-tbtn" + (mic ? "" : " off")} aria-label={mic ? "Mute microphone" : "Unmute microphone"} title="Microphone" onClick={onToggleMic}>
-        <DSEV.IconifyIcon name={mic ? "lucide:mic" : "lucide:mic-off"} size={19} color="#fff" />
+    <div className="ls-toolbar ls-toolbar-pills">
+      <button className={"ls-pillbtn" + (mic ? "" : " off")} aria-label={mic ? "Mute microphone" : "Unmute microphone"} title="Microphone" onClick={onToggleMic}>
+        <DSEV.IconifyIcon name={mic ? "lucide:mic" : "lucide:mic-off"} size={20} color="#fff" />
+        <span>{mic ? "Live" : "Muted"}</span>
       </button>
-      <button className={"ls-tbtn" + (cam ? "" : " off")} aria-label={cam ? "Turn camera off" : "Turn camera on"} title="Camera" onClick={onToggleCam}>
-        <DSEV.IconifyIcon name={cam ? "lucide:video" : "lucide:video-off"} size={19} color="#fff" />
+      <button className={"ls-pillbtn" + (cam ? "" : " off")} aria-label={cam ? "Turn camera off" : "Turn camera on"} title="Camera" onClick={onToggleCam}>
+        <DSEV.IconifyIcon name={cam ? "lucide:video" : "lucide:video-off"} size={20} color="#fff" />
+        <span>{cam ? "On" : "Off"}</span>
       </button>
-      {role === "host" &&
-      <button className="ls-tbtn" aria-label={"Participants" + (pendingCount ? " — " + pendingCount + " requests" : "")} title="Participants" onClick={onParticipants}>
-        <DSEV.IconifyIcon name="lucide:users" size={19} color="#fff" />
-        {pendingCount > 0 && <span className="dot">{pendingCount}</span>}
-      </button>}
-      {role === "host" &&
-      <button className="ls-tbtn" aria-label="Manage showcase" title="Showcase" onClick={onShowcase}>
-        <DSEV.IconifyIcon name="lucide:megaphone" size={19} color="#fff" />
-      </button>}
+      <button className="ls-pillbtn neutral" aria-label="Flip camera" title="Flip camera" onClick={onFlipCam}>
+        <DSEV.IconifyIcon name="lucide:refresh-cw" size={20} color="#fff" />
+        <span>Flip</span>
+      </button>
     </div>
   );
 }
@@ -954,35 +921,52 @@ function LSParticipants({ onCam, offCam, onToggleMute, requests, onApprove, onDe
   );
 }
 
-function LSHostShowcase({ pushedNum, onTogglePush, onClose }) {
+function LSHostShowcase({ pushedNum, onTogglePush, viewers, onClose }) {
   useEffectEV(() => {
     const esc = (e) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", esc);
     return () => window.removeEventListener("keydown", esc);
   }, [onClose]);
+  const rows = LS_PRODUCTS.slice(0, 6).map((p) => Object.assign({}, p, lsProductStats(p)));
+  const totalSales = rows.reduce((s, p) => s + p.sold * p.price, 0);
+  const totalClicks = rows.reduce((s, p) => s + p.clicks, 0);
   return (
-    <div className="ev-sheet" role="dialog" aria-modal="true" aria-label="Manage showcase">
+    <div className="ev-sheet" role="dialog" aria-modal="true" aria-label="Products">
       <button className="ev-sheet-scrim" aria-label="Close" onClick={onClose} />
       <div className="ev-sheet-card ls-showcase">
         <span className="ev-sheet-grab" />
         <div className="ls-showcase-hd">
-          <span className="brand">Manage showcase</span>
+          <span className="brand">Products</span>
           <button className="ev-sheet-x" aria-label="Close" onClick={onClose}><DSEV.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" /></button>
         </div>
-        <p className="ev-sheet-p">Push a product to every viewer's screen — it appears pinned above their chat until you stop it.</p>
+        <div className="ls-pstats">
+          <span className="c"><span className="n">£{totalSales.toLocaleString()}</span><span className="l">Sales</span></span>
+          <span className="c"><span className="n">{viewers}</span><span className="l">Current viewers</span></span>
+          <span className="c"><span className="n">{totalClicks}</span><span className="l">Product clicks</span></span>
+        </div>
         <div className="ls-rows">
-          {LS_PRODUCTS.slice(0, 6).map((p) => {
-            const live = p.num === pushedNum;
+          {rows.map((p) => {
+            const pinned = p.num === pushedNum;
+            const off = p.was - p.price;
             return (
               <div className="ls-row" key={p.num}>
                 <span className="thumb"><img src={p.img} alt="" /><b>{p.num}</b></span>
                 <span className="tx">
-                  {live && <span className="tag live"><span className="d" />LIVE to viewers</span>}
+                  {pinned &&
+                  <span className="tagrow">
+                    <span className="tag pinned"><DSEV.IconifyIcon name="lucide:pin" size={10} color="var(--premium-gold-deep)" />Pinned</span>
+                    <span className="tag hot"><DSEV.IconifyIcon name="lucide:flame" size={10} color="#fff" />Hot deal</span>
+                  </span>}
                   <span className="ttl">{p.title}</span>
-                  <span className="perk">{p.note}</span>
-                  <span className="price">£{p.price.toFixed(2)} <s>£{p.was.toFixed(2)}</s> <i>{p.off}</i></span>
+                  <span className="tag off">Extra £{off} off</span>
+                  <span className="price">£{p.price.toFixed(2)} <s>£{p.was.toFixed(2)}</s></span>
                 </span>
-                <button className={live ? "buy stop" : "buy"} onClick={() => onTogglePush(live ? null : p.num)}>{live ? "Stop" : "Push"}</button>
+                <button className={"pin" + (pinned ? " on" : "")} onClick={() => onTogglePush(pinned ? null : p.num)}>{pinned ? "Unpin" : "Pin"}</button>
+                <div className="ls-pstats sm">
+                  <span className="c"><span className="n">{p.sold}</span><span className="l">Items sold</span></span>
+                  <span className="c"><span className="n">{p.cart}</span><span className="l">Add-to-cart</span></span>
+                  <span className="c"><span className="n">{p.clicks}</span><span className="l">Clicks</span></span>
+                </div>
               </div>
             );
           })}
@@ -1018,8 +1002,6 @@ function LiveStream({ event, onLeave }) {
   const { particles, spawn } = useReactionParticles();
   const [msgs, setMsgs] = useStateEV(() => LS_CHAT_SEED.map((m, i) => Object.assign({ id: i }, m)));
   const [val, setVal] = useStateEV("");
-  const [showcase, setShowcase] = useStateEV(false);
-  const cycle = useProductCycle(LS_PRODUCTS);
 
   /* Host + speaker preview state — role defaults to audience (today's real
      behaviour is unchanged); switching roles is a dev-only affordance via
@@ -1027,6 +1009,7 @@ function LiveStream({ event, onLeave }) {
   const [role, setRole] = useStateEV("audience");
   const [selfMic, setSelfMic] = useStateEV(true);
   const [selfCam, setSelfCam] = useStateEV(true);
+  const [selfFront, setSelfFront] = useStateEV(true);
   const [onCamPeople, setOnCamPeople] = useStateEV(() => LS_ONCAM.map((p) => Object.assign({}, p)));
   const [offCamPeople, setOffCamPeople] = useStateEV(() => LS_OFFCAM.map((p) => Object.assign({}, p)));
   const [requests, setRequests] = useStateEV(LS_REQUESTS);
@@ -1037,7 +1020,7 @@ function LiveStream({ event, onLeave }) {
      a host chip — speaker role promotes her into the main stage grid,
      host role just wires her chip's mic icon to the self-mic toggle. */
   const stageOnCam = role === "speaker" ?
-    onCamPeople.concat([{ id: "katy", name: "Katy Wilson", avatar: "assets/avatar-katy.jpg", mic: selfMic, speaking: selfMic, camOff: !selfCam }]) :
+    onCamPeople.concat([{ id: "katy", name: "Katy Wilson", avatar: "assets/avatar-katy.jpg", mic: selfMic, speaking: selfMic, camOff: !selfCam, rear: !selfFront }]) :
     onCamPeople;
   const stageOffCam = role === "host" ?
     offCamPeople.map((p) => p.id === "katy" ? Object.assign({}, p, { mic: selfMic }) : p) :
@@ -1089,44 +1072,40 @@ function LiveStream({ event, onLeave }) {
     setVal("");
   };
 
-  const buy = (p) => {
-    const params = new URLSearchParams({ title: p.title, instr: "Dr. Tim Pearce", price: String(p.price) });
-    goEV("CourseCheckout.html?" + params.toString());
-  };
-
   return (
     <div className="ls-screen" data-screen-label="Live Stream">
       <LSStage onCam={stageOnCam} offCam={stageOffCam} />
-      <LSTopBar role={role} elapsed={elapsed} viewers={viewers} onLeave={onLeave} onEndClick={() => setPanel("end")} />
-      <LSTitleBlock title={d.title} hosts={hostline} />
+      <LSTopBar role={role} elapsed={elapsed} viewers={viewers} onLeave={onLeave} onEndClick={() => setPanel("end")}
+        onParticipants={() => setPanel("participants")} pendingCount={requests.length} />
+      {role === "audience" ?
+        <LSHostCard avatar={lsHostAvatar(d.host)} name={hostline} tagline={d.title} /> :
+        <LSTitleBlock title={d.title} hosts={hostline} />}
 
       {/* Everything below floats over the full-bleed camera feed — the
           stage is the whole screen, not just a top strip. */}
       <div className="ls-overlay">
         <LSChat msgs={msgs} />
 
-        {role === "audience" && cycle.phase !== "hidden" &&
-          <LSProductCard product={LS_PRODUCTS[cycle.idx]} phase={cycle.phase} onBuy={buy} onClose={cycle.dismiss} />}
+        {role !== "audience" && pushedNum &&
+          <LSPinnedForViewers product={LS_PRODUCTS.find((p) => p.num === pushedNum)}
+            onUnpin={role === "host" ? () => setPushedNum(null) : undefined} />}
 
         {role !== "audience" &&
           <LSToolbar role={role} mic={selfMic} cam={selfCam}
             onToggleMic={() => setSelfMic((m) => !m)} onToggleCam={() => setSelfCam((c) => !c)}
-            onParticipants={() => setPanel("participants")} onShowcase={() => setPanel("showcase")}
-            pendingCount={requests.length} />}
+            onFlipCam={() => setSelfFront((f) => !f)}
+            onShowcase={() => setPanel("showcase")} pushedNum={pushedNum} />}
 
-        <LSComposer value={val} onChange={setVal} onSend={send} onReact={spawn}
-          onOpenBasket={role === "audience" ? () => { setShowcase(true); cycle.reveal(); } : undefined} />
+        <LSComposer value={val} onChange={setVal} onSend={send} onReact={spawn} />
       </div>
 
       <LSReactions particles={particles} />
-
-      {role === "audience" && showcase && <LSShowcase onClose={() => setShowcase(false)} onBuy={buy} />}
 
       {role === "host" && panel === "participants" &&
         <LSParticipants onCam={stageOnCam} offCam={stageOffCam} onToggleMute={toggleMute}
           requests={requests} onApprove={approveRequest} onDecline={declineRequest} onClose={() => setPanel(null)} />}
       {role === "host" && panel === "showcase" &&
-        <LSHostShowcase pushedNum={pushedNum} onTogglePush={setPushedNum} onClose={() => setPanel(null)} />}
+        <LSHostShowcase pushedNum={pushedNum} onTogglePush={setPushedNum} viewers={viewers} onClose={() => setPanel(null)} />}
       {role === "host" && panel === "end" &&
         <LSEndConfirm onCancel={() => setPanel(null)} onConfirm={onLeave} />}
 
