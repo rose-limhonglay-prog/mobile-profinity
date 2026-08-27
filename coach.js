@@ -8,6 +8,12 @@
 (function () {
   "use strict";
 
+  /* Ava is scoped to the My Learning page only (mobile + desktop) — every
+     other screen used to get the floating orb too, which read as an
+     always-on nag. Both "My Learning" HTML pages carry that exact phrase
+     in <title>, so bail out before building/mounting anything elsewhere. */
+  if (!/My Learning/.test(document.title)) return;
+
   /* Every mobile page's outermost app screen carries one of these classes
      (named ones per spec, plus every other screen root discovered across the
      mobile app) so Ava can mount on literally every screen, not just five.

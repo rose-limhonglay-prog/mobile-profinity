@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <script src="dark-mode-init.js"></script>
-  <title>PROfinity — Create Post (iPhone 17 Pro Max)</title>
+  <title>PROfinity — Social Stream (iPhone 17 Pro Max)</title>
 
   <!-- Profinity Design System tokens -->
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fonts.css" />
@@ -15,12 +15,15 @@
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fig-tokens.css" />
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/styles.css" />
   <link rel="stylesheet" href="styles.css" />
-  <!-- create post shell styles -->
+  <!-- shares the create-post shell so the live stage stays identical -->
   <link rel="stylesheet" href="create-post-mobile.css" />
   <link rel="stylesheet" href="dark-mode.css" />
 </head>
 <body>
   <div id="pf-root"></div>
+
+  <!-- open straight into the live broadcast -->
+  <script>window.PF_SOCIAL_STREAM = true;</script>
 
   <script src="vendor/react.production.min.js"></script>
   <script src="vendor/react-dom.production.min.js"></script>

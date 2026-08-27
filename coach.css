@@ -50,6 +50,14 @@
    orb would just duplicate both entry points. */
 .pm-screen .pf-ava-tab { display: none; }
 
+/* Waiting room: full-bleed live lobby has no room for the floating orb —
+   it collides with the arrivals chat and the pinned Join CTA. */
+.ev-lobby .pf-ava-tab { display: none; }
+
+/* Live stream: same reasoning — the orb would sit on top of the pinned
+   product card, the reaction stream or the composer. */
+.ls-screen .pf-ava-tab { display: none; }
+
 @media (prefers-reduced-motion: reduce) {
   .pf-ava-tab, .pf-ava-label { transition: none; }
   .pf-ava-halo { animation: none; opacity: .5; }

@@ -62,7 +62,7 @@ const EVENTS_LIST = [
   ...evTuesdaysBetween(new Date(2026, 7, 4), new Date(2026, 11, 31)).map((d, i) => ({
     id: "tt" + i, title: "Technique Tuesday", host: "Dr Tim Pearce", cohost: "Miranda Pearce", banner: null,
     date: evFmtDate(d), time: "20:00 GMT", weekly: true, primary: i === 0,
-    state: i === 0 ? "live" : "upcoming", going: i === 0 ? "342" : "128",
+    state: i === 0 ? "live" : "upcoming", going: i === 0 ? "342" : "128", watching: i === 0 ? "44" : undefined,
     membersOnly: i !== 1,
   })),
   { id: "ac", title: "Art Codes Live Webinar", host: "Dr Tim Pearce", banner: null,
@@ -121,11 +121,73 @@ const CALL_PEOPLE = [
   { name: "Marcus", avatar: "assets/avatar-drtim.png" },
 ];
 
-const CHAT_SEED = [
-  { who: "Dr Marcus", me: false, text: "Hi Katy, I hope you're doing well! I wanted to share a new case study." },
-  { who: "Katy Wilson", me: true, text: "Hi Dr Marcus, I trust you're having a productive day! That sounds great." },
-  { who: "Dr Marcus", me: false, text: "Yes, I typically use a 22G 70mm cannula with a fanning technique." },
+/* ---- live stream: audience view seed data ---- */
+const LS_ONCAM = [
+  { id: "tim", name: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png", mic: true, speaking: true },
+  { id: "miranda", name: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", mic: true, speaking: false },
 ];
+const LS_OFFCAM = [
+  { id: "katy", name: "Katy Wilson", avatar: "assets/avatar-katy.jpg", mic: false, host: true },
+  { id: "grace", name: "Grace Lindqvist", avatar: "assets/avatar-sarah-collins.jpg", mic: false, host: false },
+];
+
+const LS_REACT_EMOJI = ["❤️", "💜", "👏", "🔥", "🙌"];
+const LS_COMPOSER_MORE = ["💜", "👏", "🔥", "🙌", "😂"];
+const LS_BASKET_COUNT = 79;
+
+/* ---- live stream: host view seed data — viewers who've raised a hand to
+   join the stage, shown in the host's participants panel. ---- */
+const LS_REQUESTS = [
+  { id: "amir", name: "Amir Khan", avatar: "assets/avatar-amir-khan.jpg", note: "wants to demo a case" },
+  { id: "mark", name: "Mark Ellis", avatar: "assets/avatar-mark-ellis.jpg", note: "raised their hand" },
+];
+
+const LS_CHAT_SEED = [
+  { name: "Dr Tim Pearce", text: "Good question — covering migration next" },
+  { name: "Olivia Marsh", text: "Saved. Watching the replay tomorrow." },
+  { name: "Ravi Chandra", text: "How do you review for asymmetry afterwards?" },
+  { name: "Nadia Farouk", text: "This is gold, thank you Dr Pearce" },
+  { name: "Sam O'Connell", text: "Anyone else taking notes for their next clinic day?" },
+  { name: "Beth Okafor", text: "The fanning technique really clicked for me just now" },
+  { name: "Marcus Webb", text: "Can you share the slide deck after?" },
+  { name: "Priya Nair", text: "Miranda's tip on cannula angle was so useful" },
+  { name: "Leah Whitmore", text: "First live session — loving it so far" },
+  { name: "Dr Tim Pearce", text: "Great turnout tonight, keep the questions coming" },
+  { name: "Josh Reilly", text: "Does this count toward my CPD hours?" },
+  { name: "Ingrid Voss", text: "Watching from Oslo, thanks for the early slot!" },
+];
+
+const LS_PRODUCTS = [
+  { num: 1, img: "assets/course-8d-lip-design.jpg", title: "8D Lip Design — full course", note: "CPD accredited", price: 468, was: 520, off: "-10%", flashSecs: 9437 },
+  { num: 2, img: "assets/course-advanced-lip-techniques.jpg", title: "Advanced Lip Techniques", note: "CPD accredited", price: 342, was: 380, off: "-10%", flashSecs: 6120 },
+  { num: 3, img: "assets/course-full-face-rejuvenation.jpg", title: "Full Face Rejuvenation", note: "Certificate included", price: 612, was: 680, off: "-10%", flashSecs: 4310 },
+  { num: 4, img: "assets/course-brow-lift.jpg", title: "Brow Lift Masterclass", note: "CPD accredited", price: 396, was: 440, off: "-10%", flashSecs: 7215 },
+  { num: 5, img: "assets/course-cheek-contouring.jpg", title: "Cheek Contouring Essentials", note: "Certificate included", price: 378, was: 420, off: "-10%", flashSecs: 5540 },
+  { num: 6, img: "assets/course-complications.jpg", title: "Complications Management", note: "CPD accredited", price: 450, was: 500, off: "-10%", flashSecs: 8802 },
+  { num: 7, img: "assets/course-consultation.jpg", title: "Consultation Skills for Injectors", note: "Certificate included", price: 270, was: 300, off: "-10%", flashSecs: 3190 },
+  { num: 8, img: "assets/course-jawline-sculpting.jpg", title: "Jawline Sculpting", note: "CPD accredited", price: 414, was: 460, off: "-10%", flashSecs: 6710 },
+  { num: 9, img: "assets/course-lip.png", title: "Lip Filler Fundamentals", note: "Certificate included", price: 288, was: 320, off: "-10%", flashSecs: 2985 },
+  { num: 10, img: "assets/course-marketing.webp", title: "Clinic Marketing Blueprint", note: "CPD accredited", price: 324, was: 360, off: "-10%", flashSecs: 9010 },
+  { num: 11, img: "assets/course-protox.png", title: "Tox Fundamentals", note: "Certificate included", price: 432, was: 480, off: "-10%", flashSecs: 4025 },
+  { num: 12, img: "assets/course-rhinoplasty.jpg", title: "Non-Surgical Rhinoplasty", note: "CPD accredited", price: 558, was: 620, off: "-10%", flashSecs: 7960 },
+  { num: 13, img: "assets/course-skin-boosters.jpg", title: "Skin Boosters Masterclass", note: "Certificate included", price: 306, was: 340, off: "-10%", flashSecs: 5325 },
+  { num: 14, img: "assets/course-tear-trough.jpg", title: "Tear Trough Correction", note: "CPD accredited", price: 360, was: 400, off: "-10%", flashSecs: 6455 },
+  { num: 15, img: "assets/course-temple-filler.webp", title: "Temple Filler Technique", note: "Certificate included", price: 342, was: 380, off: "-10%", flashSecs: 3720 },
+  { num: 16, img: "assets/course-temple.png", title: "Temple Volumising", note: "CPD accredited", price: 315, was: 350, off: "-10%", flashSecs: 8340 },
+  { num: 17, img: "assets/course-jawline-sculpting.jpg", title: "Advanced Jawline Sculpting", note: "CPD accredited", price: 522, was: 580, off: "-10%", flashSecs: 4590 },
+  { num: 18, img: "assets/course-cheek-contouring.jpg", title: "Advanced Cheek Contouring", note: "Certificate included", price: 468, was: 520, off: "-10%", flashSecs: 7130 },
+  { num: 19, img: "assets/course-rhinoplasty.jpg", title: "Non-Surgical Rhinoplasty — Advanced", note: "CPD accredited", price: 630, was: 700, off: "-10%", flashSecs: 2410 },
+  { num: 20, img: "assets/course-complications.jpg", title: "Complications: Vascular Occlusion", note: "CPD accredited", price: 486, was: 540, off: "-10%", flashSecs: 5875 },
+  { num: 21, img: "assets/course-skin-boosters.jpg", title: "Skin Boosters — Advanced Layering", note: "Certificate included", price: 360, was: 400, off: "-10%", flashSecs: 9155 },
+  { num: 22, img: "assets/course-brow-lift.jpg", title: "Brow Lift — Advanced Shaping", note: "CPD accredited", price: 450, was: 500, off: "-10%", flashSecs: 3055 },
+];
+
+function lsFmtClock(totalSecs) {
+  const s = Math.max(0, Math.floor(totalSecs));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return pad(h) + ":" + pad(m) + ":" + pad(sec);
+}
 
 function EvTabBar({ active }) {
   return (
@@ -353,7 +415,7 @@ function MembersGate({ onClose, onUpgrade }) {
         <span className="ev-gate-ic"><DSEV.IconifyIcon name="lucide:lock" size={26} color="var(--brand-gold)" /></span>
         <h3 className="ev-sheet-ttl">This event is for members</h3>
         <p className="ev-sheet-p">You can browse the full details any time. To attend live, join a membership tier — it includes every weekly session, replays and the Q&amp;A.</p>
-        <button className="ev-detail-cta" onClick={onUpgrade}>Upgrade</button>
+        <button className="ev-detail-cta" onClick={onUpgrade}>See membership tiers</button>
         <button className="ev-detail-cta ghost" onClick={onClose}>Not now</button>
       </div>
     </div>
@@ -435,7 +497,6 @@ function InviteSheet({ title, event, onClose }) {
 /* ---- screen 2: event detail (open to everyone; gate fires on action) ---- */
 function EventDetail({ onBack, onJoin, event }) {
   const d = Object.assign({}, EV_DETAIL, event || {});
-  const [tab, setTab] = useStateEV("Overview");
   const [attending, setAttending] = useStateEV(() => evStatusOf(d, evStore()).registered);
   const [inCal, setInCal] = useStateEV(() => evStatusOf(d, evStore()).calendar);
   const [gate, setGate] = useStateEV(false);
@@ -463,9 +524,9 @@ function EventDetail({ onBack, onJoin, event }) {
     register();
   };
   const addToCalendar = () => {
-    if (d.membersOnly && evIsFree() && !inCal) { setGate(true); return; }
     setInCal((v) => { const nv = !v; if (d.id) evMark(d.id, { calendar: nv }); return nv; });
   };
+  const findStatus = (icon) => { const s = (d.status || []).find((s) => s.icon === icon); return s ? s.t : null; };
   return (
     <div className="ev-screen" data-screen-label="Event Details" key={d.title + d.date}>
       <header className="ev-head">
@@ -519,12 +580,6 @@ function EventDetail({ onBack, onJoin, event }) {
             </button>
           </div>
 
-          <div className="ev-dtabs" role="tablist">
-            {["Overview", "About the Host", "Agenda"].map((t) => (
-              <button key={t} role="tab" aria-selected={tab === t} className={"ev-dtab" + (tab === t ? " on" : "")} onClick={() => setTab(t)}>{t}</button>
-            ))}
-          </div>
-
           <h2 className="ev-sec-h">About this event</h2>
           <p className="ev-sec-p">{d.about}</p>
 
@@ -532,6 +587,12 @@ function EventDetail({ onBack, onJoin, event }) {
           <ul className="ev-checklist">
             {d.learn.map((l, i) => <li key={i}><DSEV.IconifyIcon name="lucide:check" size={19} color="var(--brand-navy)" />{l}</li>)}
           </ul>
+
+          <div className="ev-stats">
+            <div className="ev-stat"><span className="l">Attendees</span><span className="n">{d.attendees || d.going}</span><span className="s">registered so far</span></div>
+            <div className="ev-stat"><span className="l">Duration</span><span className="n">{findStatus("lucide:timer") || "60 min"}</span><span className="s">live session</span></div>
+            <div className="ev-stat"><span className="l">Format</span><span className="n">{findStatus("lucide:video") || "Live Webinar"}</span><span className="s">{d.membersOnly ? "Members only" : "Open access"}</span></div>
+          </div>
 
           <h2 className="ev-sec-h">Event Status</h2>
           <div className="ev-status">
@@ -565,136 +626,569 @@ function EventDetail({ onBack, onJoin, event }) {
   );
 }
 
-/* ---- live chat overlay ---- */
-function LiveChat({ open, onClose }) {
-  const [msgs, setMsgs] = useStateEV(CHAT_SEED);
-  const [v, setV] = useStateEV("");
-  const send = () => { const t = v.trim(); if (!t) return; setMsgs((m) => [...m, { who: "Katy Wilson", me: true, text: t }]); setV(""); };
+/* ---- live stream: audience view. The member is watching, not presenting —
+   no self camera, no mute/camera controls, just a stage, chat and a shop. ---- */
+/* Note: nothing needing pointer events belongs inside LSStage — it's
+   position:absolute and z-index:0, so its stacking context sits below the
+   sibling .ls-overlay (z-index:2) regardless of z-index set on children
+   here. LSTopBar/LSTitleBlock must render as .ls-screen siblings instead
+   (see LiveStream), or their buttons become visually present but unclickable. */
+function LSStage({ onCam, offCam }) {
+  const n = onCam.length;
   return (
-    <div className={"ev-chat-wrap" + (open ? " open" : "")} aria-hidden={!open}>
-      <div className="ev-chat-scrim" onClick={onClose} />
-      <aside className="ev-chat" role="dialog" aria-modal="true" aria-label="Live Chat">
-        <div className="ev-chat-head">
-          <span className="t">Live Chat</span>
-          <button aria-label="Close chat" onClick={onClose}><DSEV.IconifyIcon name="lucide:x" size={22} color="var(--text-primary)" /></button>
+    <div className="ls-stage">
+      <div className={"ls-grid n" + n}>
+        {onCam.map((p) => (
+          <div className={"ls-cell" + (p.speaking ? " speaking" : "") + (p.camOff ? " camoff" : "")} key={p.id}>
+            {p.camOff ?
+              <span className="ls-camoff-av"><img src={p.avatar} alt="" /></span> :
+              <img src={p.avatar} alt="" />}
+            <span className="ls-namechip">
+              {p.name}
+              <DSEV.IconifyIcon name={p.mic ? "lucide:mic" : "lucide:mic-off"} size={13} color="#fff" />
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="ls-offcam">
+        {offCam.map((p) => (
+          <div className="ls-offtile" key={p.id}>
+            {p.host && <span className="cap">Host</span>}
+            <img src={p.avatar} alt="" />
+            <span className="nm">
+              {p.name.split(" ")[0]}
+              <DSEV.IconifyIcon name={p.mic ? "lucide:mic" : "lucide:mic-off"} size={10} color="#fff" />
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LSTopBar({ role, elapsed, viewers, onLeave, onEndClick }) {
+  return (
+    <div className="ls-topbar">
+      <span className="ls-live"><span className="pulse" />LIVE</span>
+      <span className="ls-timer">{lsFmtClock(elapsed)}</span>
+      <span className="ls-viewers"><DSEV.IconifyIcon name="lucide:eye" size={14} color="#fff" />{viewers}</span>
+      {role === "host" ?
+        <button className="ls-end" onClick={onEndClick}>End</button> :
+        <button className="ls-close" aria-label={role === "speaker" ? "Leave stage" : "Leave stream"} title={role === "speaker" ? "Leave stage" : "Leave stream"} onClick={onLeave}>
+          <DSEV.IconifyIcon name="lucide:x" size={18} color="#fff" />
+        </button>}
+    </div>
+  );
+}
+
+function LSTitleBlock({ title, hosts }) {
+  return (
+    <div className="ls-titleblock">
+      <div className="t">{title}</div>
+      <div className="s">{hosts}</div>
+    </div>
+  );
+}
+
+/* Ambient + user-triggered reaction particles. Travel distance/duration are
+   explicit px/seconds per particle — a percentage translateY would resolve
+   against the emoji's own ~30px box and barely move. */
+function useReactionParticles() {
+  const [particles, setParticles] = useStateEV([]);
+  const idRef = React.useRef(0);
+  const spawn = (emoji) => {
+    const id = ++idRef.current;
+    const dist = Math.round(460 + Math.random() * 160);
+    const dur = +(4.4 + Math.random() * 2).toFixed(2);
+    const size = Math.round(20 + Math.random() * 14);
+    const drift = Math.round(-22 + Math.random() * 44);
+    const right = Math.round(18 + Math.random() * 46);
+    setParticles((ps) => ps.concat([{ id, emoji, dist, dur, size, drift, right }]));
+    setTimeout(() => setParticles((ps) => ps.filter((p) => p.id !== id)), dur * 1000 + 200);
+  };
+  useEffectEV(() => {
+    const t = setInterval(() => spawn(LS_REACT_EMOJI[Math.floor(Math.random() * LS_REACT_EMOJI.length)]), 700);
+    return () => clearInterval(t);
+  }, []);
+  return { particles, spawn };
+}
+
+function LSReactions({ particles }) {
+  return (
+    <div className="ls-reactions" aria-hidden="true">
+      {particles.map((p) => (
+        <span key={p.id} className="ls-particle" style={{
+          right: p.right + "px", fontSize: p.size + "px", animationDuration: p.dur + "s",
+          "--dist": p.dist + "px", "--drift": p.drift + "px",
+        }}>{p.emoji}</span>
+      ))}
+    </div>
+  );
+}
+
+function LSChat({ msgs }) {
+  const ref = React.useRef(null);
+  useEffectEV(() => {
+    const el = ref.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [msgs.length]);
+  return (
+    <div className="ls-chat" ref={ref} aria-live="polite" aria-label="Live chat">
+      <div className="ls-chat-inner">
+        {msgs.map((m) => <div className="ls-msg" key={m.id}><b>{m.name}</b> {m.text}</div>)}
+      </div>
+    </div>
+  );
+}
+
+function LSComposer({ value, onChange, onSend, onReact, onOpenBasket }) {
+  return (
+    <div className="ls-composer">
+      {onOpenBasket &&
+      <button className="ls-basket" aria-label={"Shop this stream — " + LS_BASKET_COUNT + " items"} title="Shop" onClick={onOpenBasket}>
+        <DSEV.IconifyIcon name="lucide:shopping-basket" size={19} color="var(--brand-navy)" />
+        <span className="badge">{LS_BASKET_COUNT}</span>
+      </button>}
+      <input className="ls-input" value={value} onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") onSend(); }} placeholder="Say something…" aria-label="Say something" />
+      <button className="ls-send" aria-label="Send message" title="Send" onClick={onSend}>
+        <DSEV.IconifyIcon name="lucide:send" size={17} color="#fff" />
+      </button>
+      <div className="ls-react">
+        <button className="ls-heart" aria-label="Send heart reaction" title="React" onClick={() => onReact("❤️")}>❤️</button>
+        <div className="ls-react-pop" role="menu" aria-label="More reactions">
+          {LS_COMPOSER_MORE.map((e, i) => (
+            <button key={i} role="menuitem" aria-label={"Send " + e + " reaction"} onClick={() => onReact(e)}>{e}</button>
+          ))}
         </div>
-        <div className="ev-chat-body">
-          {msgs.map((m, i) => (
-            <div className={"ev-msg " + (m.me ? "me" : "them")} key={i}>
-              <div className="who">{m.who}</div>
-              <div className="bubble">{m.text}</div>
+      </div>
+    </div>
+  );
+}
+
+/* Cycles the pinned product card: visible 5s, shrinks into the basket over
+   .5s, then 8s later (from the shrink) the next product pops in. Tapping
+   the basket re-runs the current product's cycle from scratch. */
+function useProductCycle(products) {
+  const [idx, setIdx] = useStateEV(0);
+  const [phase, setPhase] = useStateEV("visible");
+  const timers = React.useRef([]);
+  const clearAll = () => { timers.current.forEach(clearTimeout); timers.current = []; };
+  const advance = (i) => {
+    const t = setTimeout(() => runCycle((i + 1) % products.length), 7500);
+    timers.current.push(t);
+  };
+  const runCycle = (i) => {
+    clearAll();
+    setIdx(i);
+    setPhase("visible");
+    const t1 = setTimeout(() => {
+      setPhase("out");
+      const t2 = setTimeout(() => { setPhase("hidden"); advance(i); }, 500);
+      timers.current.push(t2);
+    }, 5000);
+    timers.current.push(t1);
+  };
+  const dismiss = () => {
+    clearAll();
+    setPhase("out");
+    const t = setTimeout(() => { setPhase("hidden"); advance(idx); }, 500);
+    timers.current.push(t);
+  };
+  useEffectEV(() => { runCycle(0); return clearAll; }, []);
+  return { idx, phase, reveal: () => runCycle(idx), dismiss };
+}
+
+function LSProductCard({ product, phase, onBuy, onClose }) {
+  const [secs, setSecs] = useStateEV(product.flashSecs);
+  useEffectEV(() => {
+    setSecs(product.flashSecs);
+    const t = setInterval(() => setSecs((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [product]);
+  if (phase === "hidden") return null;
+  return (
+    <div className={"ls-product" + (phase === "out" ? " out" : "")}>
+      <button className="x" aria-label="Dismiss offer" title="Dismiss" onClick={onClose}>
+        <span className="dot"><DSEV.IconifyIcon name="lucide:x" size={13} color="var(--gray-500)" /></span>
+      </button>
+      <span className="thumb"><img src={product.img} alt="" /><b>{product.num}</b></span>
+      <span className="tx">
+        <span className="ttl">{product.title}</span>
+        <span className="flash"><DSEV.IconifyIcon name="lucide:zap" size={11} color="var(--error)" />Flash sale · {lsFmtClock(secs)}</span>
+        <span className="note">{product.note}</span>
+        <span className="price">£{product.price.toFixed(2)} <s>£{product.was.toFixed(2)}</s> <i>{product.off}</i></span>
+      </span>
+      <button className="buy" onClick={() => onBuy(product)}>Buy</button>
+    </div>
+  );
+}
+
+function LSShowcase({ onClose, onBuy }) {
+  useEffectEV(() => {
+    const esc = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  return (
+    <div className="ev-sheet" role="dialog" aria-modal="true" aria-label="Shop this stream">
+      <button className="ev-sheet-scrim" aria-label="Close" onClick={onClose} />
+      <div className="ev-sheet-card ls-showcase">
+        <span className="ev-sheet-grab" />
+        <div className="ls-showcase-hd">
+          <span className="brand">Profinity</span>
+          <button className="ev-sheet-x" aria-label="Close" onClick={onClose}><DSEV.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" /></button>
+        </div>
+        <div className="ls-rows">
+          {LS_PRODUCTS.map((p, i) => (
+            <div className="ls-row" key={p.num}>
+              <span className="thumb"><img src={p.img} alt="" /><b>{p.num}</b></span>
+              <span className="tx">
+                {i === 0 && <span className="tag live"><span className="d" />LIVE now</span>}
+                {i === 1 && <span className="tag trend">On Trend</span>}
+                <span className="ttl">{p.title}</span>
+                <span className="perk">{p.note} · Certificate included</span>
+                <span className="flash"><DSEV.IconifyIcon name="lucide:zap" size={11} color="var(--error)" />{lsFmtClock(p.flashSecs)}</span>
+                <span className="price">£{p.price.toFixed(2)} <s>£{p.was.toFixed(2)}</s> <i>{p.off}</i></span>
+              </span>
+              <button className="buy" onClick={() => onBuy(p)}>Buy</button>
             </div>
           ))}
         </div>
-        <div className="ev-chat-foot">
-          <input value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") send(); }} placeholder="Type a message…" />
-          <button className="ev-chat-send" aria-label="Send" onClick={send}><DSEV.IconifyIcon name="lucide:send" size={20} color="var(--white)" /></button>
-        </div>
-      </aside>
+      </div>
     </div>
   );
 }
 
-/* ---- screen 4: video call ---- */
-function VideoCall({ onLeave }) {
-  const [chat, setChat] = useStateEV(false);
-  const [muted, setMuted] = useStateEV(true);
-  const [cam, setCam] = useStateEV(true);
+/* ---- live stream: host + speaker controls. Host runs the stage (device
+   toggles, admits raised hands, ends for everyone); speaker just controls
+   their own mic/camera while presenting — no moderation power. ---- */
+function LSToolbar({ role, mic, cam, onToggleMic, onToggleCam, onParticipants, onShowcase, pendingCount }) {
   return (
-    <div className="ev-call" data-screen-label="Live Call">
-      <div className="ev-call-top">
-        <img src="assets/profinity-icon-twist.png" alt="PROfinity" />
-        <span className="ev-call-timer"><DSEV.IconifyIcon name="lucide:clock" size={17} color="var(--white)" />00:32:54</span>
-      </div>
-      <div className="ev-stage">
-        <img src="assets/avatar-drtim.png" alt="Dr Tim Pearce" />
-        <div className="ev-pip"><img src="assets/avatar-katy.jpg" alt="You" /><span>You</span></div>
-        <span className="ev-name-tag">Dr Tim Pearce <DSEV.IconifyIcon name="lucide:mic" size={15} color="var(--white)" /></span>
-        <span className="ev-mic-off"><DSEV.IconifyIcon name="lucide:mic-off" size={14} color="var(--white)" />Mic off</span>
-      </div>
-      <div className="ev-thumbs">
-        {CALL_PEOPLE.map((p, i) => (
-          <div className="ev-thumb" key={i}><img src={p.avatar} alt={p.name} /><span>{p.name}</span></div>
-        ))}
-      </div>
-      <div className="ev-controls">
-        <button className={"ev-ctl" + (muted ? "" : " on")} onClick={() => setMuted((m) => !m)}>
-          <span className="cbtn"><DSEV.IconifyIcon name={muted ? "lucide:mic-off" : "lucide:mic"} size={22} color="var(--white)" /></span>Mute
-        </button>
-        <button className={"ev-ctl" + (cam ? " on" : "")} onClick={() => setCam((c) => !c)}>
-          <span className="cbtn"><DSEV.IconifyIcon name={cam ? "lucide:video" : "lucide:video-off"} size={22} color="var(--white)" /></span>Camera
-        </button>
-        <button className="ev-ctl">
-          <span className="cbtn"><DSEV.IconifyIcon name="lucide:users" size={22} color="var(--white)" /></span>People
-        </button>
-        <button className="ev-ctl" onClick={() => setChat(true)}>
-          <span className="cbtn"><DSEV.IconifyIcon name="lucide:message-circle" size={22} color="var(--white)" /></span>Chat
-        </button>
-        <button className="ev-ctl leave" onClick={onLeave}>
-          <span className="cbtn"><DSEV.IconifyIcon name="lucide:phone-off" size={22} color="var(--white)" /></span>Leave
-        </button>
-      </div>
-      <LiveChat open={chat} onClose={() => setChat(false)} />
+    <div className="ls-toolbar">
+      <button className={"ls-tbtn" + (mic ? "" : " off")} aria-label={mic ? "Mute microphone" : "Unmute microphone"} title="Microphone" onClick={onToggleMic}>
+        <DSEV.IconifyIcon name={mic ? "lucide:mic" : "lucide:mic-off"} size={19} color="#fff" />
+      </button>
+      <button className={"ls-tbtn" + (cam ? "" : " off")} aria-label={cam ? "Turn camera off" : "Turn camera on"} title="Camera" onClick={onToggleCam}>
+        <DSEV.IconifyIcon name={cam ? "lucide:video" : "lucide:video-off"} size={19} color="#fff" />
+      </button>
+      {role === "host" &&
+      <button className="ls-tbtn" aria-label={"Participants" + (pendingCount ? " — " + pendingCount + " requests" : "")} title="Participants" onClick={onParticipants}>
+        <DSEV.IconifyIcon name="lucide:users" size={19} color="#fff" />
+        {pendingCount > 0 && <span className="dot">{pendingCount}</span>}
+      </button>}
+      {role === "host" &&
+      <button className="ls-tbtn" aria-label="Manage showcase" title="Showcase" onClick={onShowcase}>
+        <DSEV.IconifyIcon name="lucide:megaphone" size={19} color="#fff" />
+      </button>}
     </div>
   );
 }
 
-/* ---- waiting room (between Join Live Now and the live call) ---- */
-function WaitingRoom({ onBack, onAdmit, event }) {
+function LSEndConfirm({ onCancel, onConfirm }) {
+  useEffectEV(() => {
+    const esc = (e) => e.key === "Escape" && onCancel();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onCancel]);
+  return (
+    <div className="ev-sheet" role="dialog" aria-modal="true" aria-label="End live stream">
+      <button className="ev-sheet-scrim" aria-label="Close" onClick={onCancel} />
+      <div className="ev-sheet-card">
+        <span className="ev-gate-ic warn"><DSEV.IconifyIcon name="lucide:radio" size={26} color="var(--error)" /></span>
+        <h3 className="ev-sheet-ttl">End the live stream?</h3>
+        <p className="ev-sheet-p">Everyone watching will be disconnected and the stream will end for all viewers. This can't be undone.</p>
+        <button className="ev-detail-cta danger" onClick={onConfirm}>End live stream</button>
+        <button className="ev-detail-cta ghost" onClick={onCancel}>Keep streaming</button>
+      </div>
+    </div>
+  );
+}
+
+function LSParticipants({ onCam, offCam, onToggleMute, requests, onApprove, onDecline, onClose }) {
+  useEffectEV(() => {
+    const esc = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  const live = onCam.concat(offCam);
+  return (
+    <div className="ev-sheet" role="dialog" aria-modal="true" aria-label="Participants">
+      <button className="ev-sheet-scrim" aria-label="Close" onClick={onClose} />
+      <div className="ev-sheet-card ls-participants">
+        <span className="ev-sheet-grab" />
+        <div className="ls-showcase-hd">
+          <span className="brand">Participants</span>
+          <button className="ev-sheet-x" aria-label="Close" onClick={onClose}><DSEV.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" /></button>
+        </div>
+
+        {requests.length > 0 &&
+        <React.Fragment>
+          <h4 className="ls-plabel">Requests to speak</h4>
+          <div className="ls-preqs">
+            {requests.map((r) => (
+              <div className="ls-preq" key={r.id}>
+                <img src={r.avatar} alt="" />
+                <span className="tx"><b>{r.name}</b><span>{r.note}</span></span>
+                <button className="ok" aria-label={"Approve " + r.name} title="Approve" onClick={() => onApprove(r)}><DSEV.IconifyIcon name="lucide:check" size={16} color="#fff" /></button>
+                <button className="no" aria-label={"Decline " + r.name} title="Decline" onClick={() => onDecline(r)}><DSEV.IconifyIcon name="lucide:x" size={16} color="var(--gray-500)" /></button>
+              </div>
+            ))}
+          </div>
+        </React.Fragment>}
+
+        <h4 className="ls-plabel">Live now — {live.length}</h4>
+        <div className="ls-plist">
+          {live.map((p) => (
+            <div className="ls-prow" key={p.id}>
+              <img src={p.avatar} alt="" />
+              <span className="tx"><b>{p.name}</b>{p.host && <span className="cap">Host</span>}</span>
+              <button className={"mute" + (p.mic ? "" : " off")} aria-label={p.mic ? "Mute " + p.name : "Unmute " + p.name} title="Mute" onClick={() => onToggleMute(p)}>
+                <DSEV.IconifyIcon name={p.mic ? "lucide:mic" : "lucide:mic-off"} size={16} color={p.mic ? "var(--text-primary)" : "var(--error)"} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LSHostShowcase({ pushedNum, onTogglePush, onClose }) {
+  useEffectEV(() => {
+    const esc = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  return (
+    <div className="ev-sheet" role="dialog" aria-modal="true" aria-label="Manage showcase">
+      <button className="ev-sheet-scrim" aria-label="Close" onClick={onClose} />
+      <div className="ev-sheet-card ls-showcase">
+        <span className="ev-sheet-grab" />
+        <div className="ls-showcase-hd">
+          <span className="brand">Manage showcase</span>
+          <button className="ev-sheet-x" aria-label="Close" onClick={onClose}><DSEV.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" /></button>
+        </div>
+        <p className="ev-sheet-p">Push a product to every viewer's screen — it appears pinned above their chat until you stop it.</p>
+        <div className="ls-rows">
+          {LS_PRODUCTS.slice(0, 6).map((p) => {
+            const live = p.num === pushedNum;
+            return (
+              <div className="ls-row" key={p.num}>
+                <span className="thumb"><img src={p.img} alt="" /><b>{p.num}</b></span>
+                <span className="tx">
+                  {live && <span className="tag live"><span className="d" />LIVE to viewers</span>}
+                  <span className="ttl">{p.title}</span>
+                  <span className="perk">{p.note}</span>
+                  <span className="price">£{p.price.toFixed(2)} <s>£{p.was.toFixed(2)}</s> <i>{p.off}</i></span>
+                </span>
+                <button className={live ? "buy stop" : "buy"} onClick={() => onTogglePush(live ? null : p.num)}>{live ? "Stop" : "Push"}</button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const LS_ROLES = [
+  { key: "audience", label: "Audience" },
+  { key: "host", label: "Host" },
+  { key: "speaker", label: "Speaker" },
+];
+
+/* Dev-only preview control — lets whoever's demoing this screen flip
+   between the three live-stream views without separate URLs/logins. */
+function LSRoleSwitcher({ role, onChange }) {
+  return (
+    <div className="ls-roleswitch" role="group" aria-label="Preview role">
+      {LS_ROLES.map((r) => (
+        <button key={r.key} className={role === r.key ? "on" : ""} onClick={() => onChange(r.key)}>{r.label}</button>
+      ))}
+    </div>
+  );
+}
+
+function LiveStream({ event, onLeave }) {
   const d = Object.assign({}, EV_DETAIL, event || {});
-  const [muted, setMuted] = useStateEV(false);
-  const [cam, setCam] = useStateEV(true);
+  const hostline = d.cohost ? (d.host + " & " + d.cohost) : d.host;
+  const [elapsed, setElapsed] = useStateEV(1990);
+  const [viewers] = useStateEV(() => (d.watching ? Number(d.watching) * 8 : 350));
+  const { particles, spawn } = useReactionParticles();
+  const [msgs, setMsgs] = useStateEV(() => LS_CHAT_SEED.map((m, i) => Object.assign({ id: i }, m)));
+  const [val, setVal] = useStateEV("");
+  const [showcase, setShowcase] = useStateEV(false);
+  const cycle = useProductCycle(LS_PRODUCTS);
+
+  /* Host + speaker preview state — role defaults to audience (today's real
+     behaviour is unchanged); switching roles is a dev-only affordance via
+     LSRoleSwitcher, not a real permissions system. */
+  const [role, setRole] = useStateEV("audience");
+  const [selfMic, setSelfMic] = useStateEV(true);
+  const [selfCam, setSelfCam] = useStateEV(true);
+  const [onCamPeople, setOnCamPeople] = useStateEV(() => LS_ONCAM.map((p) => Object.assign({}, p)));
+  const [offCamPeople, setOffCamPeople] = useStateEV(() => LS_OFFCAM.map((p) => Object.assign({}, p)));
+  const [requests, setRequests] = useStateEV(LS_REQUESTS);
+  const [panel, setPanel] = useStateEV(null); // null | "participants" | "showcase" | "end"
+  const [pushedNum, setPushedNum] = useStateEV(null);
+
+  /* Katy Wilson (the logged-in user, PFAEV.ME) already sits in LS_OFFCAM as
+     a host chip — speaker role promotes her into the main stage grid,
+     host role just wires her chip's mic icon to the self-mic toggle. */
+  const stageOnCam = role === "speaker" ?
+    onCamPeople.concat([{ id: "katy", name: "Katy Wilson", avatar: "assets/avatar-katy.jpg", mic: selfMic, speaking: selfMic, camOff: !selfCam }]) :
+    onCamPeople;
+  const stageOffCam = role === "host" ?
+    offCamPeople.map((p) => p.id === "katy" ? Object.assign({}, p, { mic: selfMic }) : p) :
+    role === "speaker" ?
+    offCamPeople.filter((p) => p.id !== "katy") :
+    offCamPeople;
+
+  const toggleMute = (p) => {
+    if (p.id === "katy") { setSelfMic((m) => !m); return; }
+    setOnCamPeople((arr) => arr.map((x) => x.id === p.id ? Object.assign({}, x, { mic: !x.mic }) : x));
+    setOffCamPeople((arr) => arr.map((x) => x.id === p.id ? Object.assign({}, x, { mic: !x.mic }) : x));
+  };
+  const approveRequest = (r) => {
+    setOnCamPeople((arr) => arr.concat([{ id: r.id, name: r.name, avatar: r.avatar, mic: true, speaking: false }]));
+    setRequests((rs) => rs.filter((x) => x.id !== r.id));
+  };
+  const declineRequest = (r) => setRequests((rs) => rs.filter((x) => x.id !== r.id));
+
+  useEffectEV(() => {
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffectEV(() => {
+    let i = LS_CHAT_SEED.length;
+    const t = setInterval(() => {
+      const next = LS_CHAT_SEED[i % LS_CHAT_SEED.length];
+      i++;
+      setMsgs((m) => {
+        const last = m[m.length - 1];
+        if (last && last.name === next.name && last.text === next.text) return m;
+        return m.slice(-40).concat([Object.assign({ id: Date.now() }, next)]);
+      });
+    }, 2600);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffectEV(() => {
+    const esc = (e) => e.key === "Escape" && onLeave();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onLeave]);
+
+  const send = () => {
+    const t = val.trim();
+    if (!t) return;
+    const me = (PFAEV && PFAEV.ME && PFAEV.ME.name) || "You";
+    setMsgs((m) => m.slice(-40).concat([{ id: Date.now(), name: me, text: t }]));
+    setVal("");
+  };
+
+  const buy = (p) => {
+    const params = new URLSearchParams({ title: p.title, instr: "Dr. Tim Pearce", price: String(p.price) });
+    goEV("CourseCheckout.html?" + params.toString());
+  };
+
   return (
-    <div className="ev-screen" data-screen-label="Waiting Room">
-      <header className="ev-head">
-        <button className="ev-back" aria-label="Back" onClick={onBack}><DSEV.IconifyIcon name="lucide:arrow-left" size={22} color="var(--brand-navy)" /></button>
-        <span className="ev-title">Waiting Room</span>
-        <span className="spacer" />
-      </header>
-      <div className="ev-scroll">
-        <div className="ev-wait-banner">
-          <DSEV.IconifyIcon name="lucide:circle-check" size={26} color="var(--success)" />
-          <div>
-            <div className="t">You're in the waiting room</div>
-            <div className="s">The host will let you in shortly. Thank you for your patience.</div>
-          </div>
-        </div>
-        <div className="ev-wait-card">
-          <span className="ev-live-badge live"><span className="pulse" />Live now</span>
-          <h1 className="ttl">{d.title}</h1>
-          <p className="ev-wait-sub">Weekly live techniques, Q&amp;A and expert insights to elevate your skills</p>
-          <div className="ev-wait-host"><DSEV.Avatar name={d.host} src="assets/avatar-drtim.png" size={36} />Hosted by <b>{d.cohost ? (d.host + " & " + d.cohost) : d.host}</b></div>
-          <div className="ev-wait-meta">
-            <span><DSEV.IconifyIcon name="lucide:calendar" size={19} color="var(--brand-navy)" />{d.date}</span>
-            <span className="dotsep">•</span>
-            <span><DSEV.IconifyIcon name="lucide:clock" size={19} color="var(--brand-navy)" />{d.time}</span>
-          </div>
-        </div>
-        <div className="ev-wait-video">
-          <img src="assets/waiting-self-preview.png" alt="You" />
-          <span className="ev-wait-you">You</span>
-          <div className="ev-wait-vctl">
-            <button className={"vbtn" + (muted ? " off" : "")} aria-label="Mic" onClick={() => setMuted((m) => !m)}>
-              <DSEV.IconifyIcon name={muted ? "lucide:mic-off" : "lucide:mic"} size={20} color="var(--white)" />
-            </button>
-            <button className={"vbtn" + (cam ? "" : " off")} aria-label="Camera" onClick={() => setCam((c) => !c)}>
-              <DSEV.IconifyIcon name={cam ? "lucide:video" : "lucide:video-off"} size={20} color="var(--white)" />
-            </button>
-          </div>
-        </div>
-        <div className="ev-detail-actions ev-wait-actions">
-          <button className="ev-detail-cta" onClick={onAdmit}>Join Now!</button>
-          <button className="ev-detail-cta ghost">Share Event</button>
-        </div>
-        <p className="ev-wait-note">You'll automatically join the live session when the host admits you.</p>
-        <h2 className="ev-sec-h">Need Help?</h2>
-        <button className="ev-help">
-          <DSEV.IconifyIcon name="lucide:circle-help" size={22} color="var(--brand-navy)" />
-          <span>Contact Support - We are here to help if you have any questions about this event.</span>
-          <DSEV.IconifyIcon name="lucide:chevron-right" size={22} color="var(--gray-450)" />
-        </button>
+    <div className="ls-screen" data-screen-label="Live Stream">
+      <LSStage onCam={stageOnCam} offCam={stageOffCam} />
+      <LSTopBar role={role} elapsed={elapsed} viewers={viewers} onLeave={onLeave} onEndClick={() => setPanel("end")} />
+      <LSTitleBlock title={d.title} hosts={hostline} />
+
+      {/* Everything below floats over the full-bleed camera feed — the
+          stage is the whole screen, not just a top strip. */}
+      <div className="ls-overlay">
+        <LSChat msgs={msgs} />
+
+        {role === "audience" && cycle.phase !== "hidden" &&
+          <LSProductCard product={LS_PRODUCTS[cycle.idx]} phase={cycle.phase} onBuy={buy} onClose={cycle.dismiss} />}
+
+        {role !== "audience" &&
+          <LSToolbar role={role} mic={selfMic} cam={selfCam}
+            onToggleMic={() => setSelfMic((m) => !m)} onToggleCam={() => setSelfCam((c) => !c)}
+            onParticipants={() => setPanel("participants")} onShowcase={() => setPanel("showcase")}
+            pendingCount={requests.length} />}
+
+        <LSComposer value={val} onChange={setVal} onSend={send} onReact={spawn}
+          onOpenBasket={role === "audience" ? () => { setShowcase(true); cycle.reveal(); } : undefined} />
       </div>
-      <EvTabBar active="Home" />
+
+      <LSReactions particles={particles} />
+
+      {role === "audience" && showcase && <LSShowcase onClose={() => setShowcase(false)} onBuy={buy} />}
+
+      {role === "host" && panel === "participants" &&
+        <LSParticipants onCam={stageOnCam} offCam={stageOffCam} onToggleMute={toggleMute}
+          requests={requests} onApprove={approveRequest} onDecline={declineRequest} onClose={() => setPanel(null)} />}
+      {role === "host" && panel === "showcase" &&
+        <LSHostShowcase pushedNum={pushedNum} onTogglePush={setPushedNum} onClose={() => setPanel(null)} />}
+      {role === "host" && panel === "end" &&
+        <LSEndConfirm onCancel={() => setPanel(null)} onConfirm={onLeave} />}
+
+      <LSRoleSwitcher role={role} onChange={setRole} />
+    </div>
+  );
+}
+
+/* ---- waiting room: the live lobby shown between "Join Live Now" and the
+   live stream. Full-bleed host camera, no self-preview or camera permission
+   — the audience joins muted with camera off, so this is a lobby, not a
+   device check. A member "arrives" in the chat every ~2.6s. ---- */
+const EV_ARRIVALS = [
+  { name: "Miranda Pearce", text: "Just joined — excited for this one" },
+  { name: "Aisha Rahman", text: "Can't wait, my first Technique Tuesday 🙌" },
+  { name: "Grace Lindqvist", text: "Hello from Stockholm!" },
+  { name: "Jonas Adeyemi", text: "Hoping he covers migration tonight" },
+];
+
+function WaitingRoom({ onBack, onJoin, event }) {
+  const d = Object.assign({}, EV_DETAIL, event || {});
+  const watching = d.watching || d.going || "40";
+  const [msgs, setMsgs] = useStateEV(() => [Object.assign({ id: 0 }, EV_ARRIVALS[0])]);
+  useEffectEV(() => {
+    let i = 1;
+    const t = setInterval(() => {
+      setMsgs((m) => m.slice(-4).concat([Object.assign({ id: Date.now() }, EV_ARRIVALS[i % EV_ARRIVALS.length])]));
+      i++;
+    }, 2600);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="ev-lobby" data-screen-label="Waiting Room" style={{ backgroundImage: "url(assets/live-preview-camera.jpg)" }}>
+      <div className="ev-lobby-scrim" aria-hidden="true" />
+
+      <div className="ev-lobby-top">
+        <button className="ev-lobby-back" aria-label="Back" title="Back" onClick={onBack}>
+          <DSEV.IconifyIcon name="lucide:chevron-left" size={24} color="#fff" />
+        </button>
+        <span className="ev-lobby-live"><span className="pulse" />LIVE NOW</span>
+        <span className="ev-lobby-viewers"><DSEV.IconifyIcon name="lucide:users" size={15} color="#fff" />{watching}</span>
+      </div>
+
+      <div className="ev-lobby-center">
+        <span className="ev-lobby-badge"><DSEV.IconifyIcon name="lucide:radio" size={28} color="#fff" /></span>
+        <h1 className="ev-lobby-h">{d.title} is live now</h1>
+        <p className="ev-lobby-lead"><b>{watching} clinicians</b> are already watching. Tap below to join — no approval needed.</p>
+        <p className="ev-lobby-desc">Join {d.host} every week for a live, interactive session — expert technique demonstrations, your questions answered, and the latest thinking in aesthetic medicine.</p>
+        <ul className="ev-lobby-checks">
+          <li><DSEV.IconifyIcon name="lucide:check" size={16} color="var(--success)" />Step-by-step technique demonstration</li>
+          <li><DSEV.IconifyIcon name="lucide:check" size={16} color="var(--success)" />Live Q&amp;A with the panel</li>
+          <li><DSEV.IconifyIcon name="lucide:check" size={16} color="var(--success)" />Real-world case studies</li>
+        </ul>
+      </div>
+
+      <div className="ev-lobby-chat" aria-live="polite">
+        {msgs.map((m) => <div className="ev-lobby-msg" key={m.id}><b>{m.name}</b> {m.text}</div>)}
+      </div>
+
+      <button className="ev-lobby-join" onClick={onJoin}>
+        <DSEV.IconifyIcon name="lucide:radio" size={19} color="#fff" />Join the live
+      </button>
     </div>
   );
 }
@@ -707,12 +1201,21 @@ function EventsContent() {
   const [sel, setSel] = useStateEV(null);
   const [view, setView] = useStateEV("list");
   const [cur, setCur] = useStateEV({ y: EV_TODAY.getFullYear(), m: EV_TODAY.getMonth() });
+  /* Where the waiting room's back button returns to: a live event tapped
+     straight from the list skips detail entirely, so back must return to
+     the list — not a detail screen the user never saw. */
+  const [waitFrom, setWaitFrom] = useStateEV("list");
+  const open = (e) => {
+    setSel(e);
+    if (e.state === "live") { setWaitFrom("list"); setScreen("waiting"); }
+    else { setScreen("detail"); }
+  };
   return (
     <>
-      {screen === "list" && <EventsList onBack={() => goEV("NewsfeedMobile.html")} onOpen={(e) => { setSel(e); setScreen("detail"); }} view={view} setView={setView} cur={cur} setCur={setCur} />}
-      {screen === "detail" && <EventDetail event={sel} onBack={() => setScreen("list")} onJoin={() => setScreen("waiting")} />}
-      {screen === "waiting" && <WaitingRoom event={sel} onBack={() => setScreen("detail")} onAdmit={() => setScreen("call")} />}
-      {screen === "call" && <VideoCall onLeave={() => setScreen("detail")} />}
+      {screen === "list" && <EventsList onBack={() => goEV("NewsfeedMobile.html")} onOpen={open} view={view} setView={setView} cur={cur} setCur={setCur} />}
+      {screen === "detail" && <EventDetail event={sel} onBack={() => setScreen("list")} onJoin={() => { setWaitFrom("detail"); setScreen("waiting"); }} />}
+      {screen === "waiting" && <WaitingRoom event={sel} onBack={() => setScreen(waitFrom)} onJoin={() => setScreen("call")} />}
+      {screen === "call" && <LiveStream event={sel} onLeave={() => setScreen("detail")} />}
     </>
   );
 }

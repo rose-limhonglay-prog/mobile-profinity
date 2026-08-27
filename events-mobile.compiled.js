@@ -80,6 +80,7 @@ const EVENTS_LIST = [...evTuesdaysBetween(new Date(2026, 7, 4), new Date(2026, 1
   primary: i === 0,
   state: i === 0 ? "live" : "upcoming",
   going: i === 0 ? "342" : "128",
+  watching: i === 0 ? "44" : undefined,
   membersOnly: i !== 1
 })), {
   id: "ac",
@@ -258,19 +259,295 @@ const CALL_PEOPLE = [{
   name: "Marcus",
   avatar: "assets/avatar-drtim.png"
 }];
-const CHAT_SEED = [{
-  who: "Dr Marcus",
-  me: false,
-  text: "Hi Katy, I hope you're doing well! I wanted to share a new case study."
+
+/* ---- live stream: audience view seed data ---- */
+const LS_ONCAM = [{
+  id: "tim",
+  name: "Dr Tim Pearce",
+  avatar: "assets/avatar-drtim.png",
+  mic: true,
+  speaking: true
 }, {
-  who: "Katy Wilson",
-  me: true,
-  text: "Hi Dr Marcus, I trust you're having a productive day! That sounds great."
-}, {
-  who: "Dr Marcus",
-  me: false,
-  text: "Yes, I typically use a 22G 70mm cannula with a fanning technique."
+  id: "miranda",
+  name: "Miranda Pearce",
+  avatar: "assets/avatar-miranda.jpg",
+  mic: true,
+  speaking: false
 }];
+const LS_OFFCAM = [{
+  id: "katy",
+  name: "Katy Wilson",
+  avatar: "assets/avatar-katy.jpg",
+  mic: false,
+  host: true
+}, {
+  id: "grace",
+  name: "Grace Lindqvist",
+  avatar: "assets/avatar-sarah-collins.jpg",
+  mic: false,
+  host: false
+}];
+const LS_REACT_EMOJI = ["❤️", "💜", "👏", "🔥", "🙌"];
+const LS_COMPOSER_MORE = ["💜", "👏", "🔥", "🙌", "😂"];
+const LS_BASKET_COUNT = 79;
+
+/* ---- live stream: host view seed data — viewers who've raised a hand to
+   join the stage, shown in the host's participants panel. ---- */
+const LS_REQUESTS = [{
+  id: "amir",
+  name: "Amir Khan",
+  avatar: "assets/avatar-amir-khan.jpg",
+  note: "wants to demo a case"
+}, {
+  id: "mark",
+  name: "Mark Ellis",
+  avatar: "assets/avatar-mark-ellis.jpg",
+  note: "raised their hand"
+}];
+const LS_CHAT_SEED = [{
+  name: "Dr Tim Pearce",
+  text: "Good question — covering migration next"
+}, {
+  name: "Olivia Marsh",
+  text: "Saved. Watching the replay tomorrow."
+}, {
+  name: "Ravi Chandra",
+  text: "How do you review for asymmetry afterwards?"
+}, {
+  name: "Nadia Farouk",
+  text: "This is gold, thank you Dr Pearce"
+}, {
+  name: "Sam O'Connell",
+  text: "Anyone else taking notes for their next clinic day?"
+}, {
+  name: "Beth Okafor",
+  text: "The fanning technique really clicked for me just now"
+}, {
+  name: "Marcus Webb",
+  text: "Can you share the slide deck after?"
+}, {
+  name: "Priya Nair",
+  text: "Miranda's tip on cannula angle was so useful"
+}, {
+  name: "Leah Whitmore",
+  text: "First live session — loving it so far"
+}, {
+  name: "Dr Tim Pearce",
+  text: "Great turnout tonight, keep the questions coming"
+}, {
+  name: "Josh Reilly",
+  text: "Does this count toward my CPD hours?"
+}, {
+  name: "Ingrid Voss",
+  text: "Watching from Oslo, thanks for the early slot!"
+}];
+const LS_PRODUCTS = [{
+  num: 1,
+  img: "assets/course-8d-lip-design.jpg",
+  title: "8D Lip Design — full course",
+  note: "CPD accredited",
+  price: 468,
+  was: 520,
+  off: "-10%",
+  flashSecs: 9437
+}, {
+  num: 2,
+  img: "assets/course-advanced-lip-techniques.jpg",
+  title: "Advanced Lip Techniques",
+  note: "CPD accredited",
+  price: 342,
+  was: 380,
+  off: "-10%",
+  flashSecs: 6120
+}, {
+  num: 3,
+  img: "assets/course-full-face-rejuvenation.jpg",
+  title: "Full Face Rejuvenation",
+  note: "Certificate included",
+  price: 612,
+  was: 680,
+  off: "-10%",
+  flashSecs: 4310
+}, {
+  num: 4,
+  img: "assets/course-brow-lift.jpg",
+  title: "Brow Lift Masterclass",
+  note: "CPD accredited",
+  price: 396,
+  was: 440,
+  off: "-10%",
+  flashSecs: 7215
+}, {
+  num: 5,
+  img: "assets/course-cheek-contouring.jpg",
+  title: "Cheek Contouring Essentials",
+  note: "Certificate included",
+  price: 378,
+  was: 420,
+  off: "-10%",
+  flashSecs: 5540
+}, {
+  num: 6,
+  img: "assets/course-complications.jpg",
+  title: "Complications Management",
+  note: "CPD accredited",
+  price: 450,
+  was: 500,
+  off: "-10%",
+  flashSecs: 8802
+}, {
+  num: 7,
+  img: "assets/course-consultation.jpg",
+  title: "Consultation Skills for Injectors",
+  note: "Certificate included",
+  price: 270,
+  was: 300,
+  off: "-10%",
+  flashSecs: 3190
+}, {
+  num: 8,
+  img: "assets/course-jawline-sculpting.jpg",
+  title: "Jawline Sculpting",
+  note: "CPD accredited",
+  price: 414,
+  was: 460,
+  off: "-10%",
+  flashSecs: 6710
+}, {
+  num: 9,
+  img: "assets/course-lip.png",
+  title: "Lip Filler Fundamentals",
+  note: "Certificate included",
+  price: 288,
+  was: 320,
+  off: "-10%",
+  flashSecs: 2985
+}, {
+  num: 10,
+  img: "assets/course-marketing.webp",
+  title: "Clinic Marketing Blueprint",
+  note: "CPD accredited",
+  price: 324,
+  was: 360,
+  off: "-10%",
+  flashSecs: 9010
+}, {
+  num: 11,
+  img: "assets/course-protox.png",
+  title: "Tox Fundamentals",
+  note: "Certificate included",
+  price: 432,
+  was: 480,
+  off: "-10%",
+  flashSecs: 4025
+}, {
+  num: 12,
+  img: "assets/course-rhinoplasty.jpg",
+  title: "Non-Surgical Rhinoplasty",
+  note: "CPD accredited",
+  price: 558,
+  was: 620,
+  off: "-10%",
+  flashSecs: 7960
+}, {
+  num: 13,
+  img: "assets/course-skin-boosters.jpg",
+  title: "Skin Boosters Masterclass",
+  note: "Certificate included",
+  price: 306,
+  was: 340,
+  off: "-10%",
+  flashSecs: 5325
+}, {
+  num: 14,
+  img: "assets/course-tear-trough.jpg",
+  title: "Tear Trough Correction",
+  note: "CPD accredited",
+  price: 360,
+  was: 400,
+  off: "-10%",
+  flashSecs: 6455
+}, {
+  num: 15,
+  img: "assets/course-temple-filler.webp",
+  title: "Temple Filler Technique",
+  note: "Certificate included",
+  price: 342,
+  was: 380,
+  off: "-10%",
+  flashSecs: 3720
+}, {
+  num: 16,
+  img: "assets/course-temple.png",
+  title: "Temple Volumising",
+  note: "CPD accredited",
+  price: 315,
+  was: 350,
+  off: "-10%",
+  flashSecs: 8340
+}, {
+  num: 17,
+  img: "assets/course-jawline-sculpting.jpg",
+  title: "Advanced Jawline Sculpting",
+  note: "CPD accredited",
+  price: 522,
+  was: 580,
+  off: "-10%",
+  flashSecs: 4590
+}, {
+  num: 18,
+  img: "assets/course-cheek-contouring.jpg",
+  title: "Advanced Cheek Contouring",
+  note: "Certificate included",
+  price: 468,
+  was: 520,
+  off: "-10%",
+  flashSecs: 7130
+}, {
+  num: 19,
+  img: "assets/course-rhinoplasty.jpg",
+  title: "Non-Surgical Rhinoplasty — Advanced",
+  note: "CPD accredited",
+  price: 630,
+  was: 700,
+  off: "-10%",
+  flashSecs: 2410
+}, {
+  num: 20,
+  img: "assets/course-complications.jpg",
+  title: "Complications: Vascular Occlusion",
+  note: "CPD accredited",
+  price: 486,
+  was: 540,
+  off: "-10%",
+  flashSecs: 5875
+}, {
+  num: 21,
+  img: "assets/course-skin-boosters.jpg",
+  title: "Skin Boosters — Advanced Layering",
+  note: "Certificate included",
+  price: 360,
+  was: 400,
+  off: "-10%",
+  flashSecs: 9155
+}, {
+  num: 22,
+  img: "assets/course-brow-lift.jpg",
+  title: "Brow Lift — Advanced Shaping",
+  note: "CPD accredited",
+  price: 450,
+  was: 500,
+  off: "-10%",
+  flashSecs: 3055
+}];
+function lsFmtClock(totalSecs) {
+  const s = Math.max(0, Math.floor(totalSecs));
+  const h = Math.floor(s / 3600),
+    m = Math.floor(s % 3600 / 60),
+    sec = s % 60;
+  const pad = n => String(n).padStart(2, "0");
+  return pad(h) + ":" + pad(m) + ":" + pad(sec);
+}
 function EvTabBar({
   active
 }) {
@@ -691,7 +968,7 @@ function MembersGate({
   }, "You can browse the full details any time. To attend live, join a membership tier — it includes every weekly session, replays and the Q&A."), /*#__PURE__*/React.createElement("button", {
     className: "ev-detail-cta",
     onClick: onUpgrade
-  }, "Upgrade"), /*#__PURE__*/React.createElement("button", {
+  }, "See membership tiers"), /*#__PURE__*/React.createElement("button", {
     className: "ev-detail-cta ghost",
     onClick: onClose
   }, "Not now")));
@@ -826,7 +1103,6 @@ function EventDetail({
   event
 }) {
   const d = Object.assign({}, EV_DETAIL, event || {});
-  const [tab, setTab] = useStateEV("Overview");
   const [attending, setAttending] = useStateEV(() => evStatusOf(d, evStore()).registered);
   const [inCal, setInCal] = useStateEV(() => evStatusOf(d, evStore()).calendar);
   const [gate, setGate] = useStateEV(false);
@@ -867,10 +1143,6 @@ function EventDetail({
     register();
   };
   const addToCalendar = () => {
-    if (d.membersOnly && evIsFree() && !inCal) {
-      setGate(true);
-      return;
-    }
     setInCal(v => {
       const nv = !v;
       if (d.id) evMark(d.id, {
@@ -878,6 +1150,10 @@ function EventDetail({
       });
       return nv;
     });
+  };
+  const findStatus = icon => {
+    const s = (d.status || []).find(s => s.icon === icon);
+    return s ? s.t : null;
   };
   return /*#__PURE__*/React.createElement("div", {
     className: "ev-screen",
@@ -984,16 +1260,7 @@ function EventDetail({
     name: inCal ? "lucide:calendar-check" : "lucide:calendar",
     size: 22,
     color: inCal ? "var(--success)" : "var(--brand-navy)"
-  }), inCal ? "Added to Calendar" : "Add to Calendar")), /*#__PURE__*/React.createElement("div", {
-    className: "ev-dtabs",
-    role: "tablist"
-  }, ["Overview", "About the Host", "Agenda"].map(t => /*#__PURE__*/React.createElement("button", {
-    key: t,
-    role: "tab",
-    "aria-selected": tab === t,
-    className: "ev-dtab" + (tab === t ? " on" : ""),
-    onClick: () => setTab(t)
-  }, t))), /*#__PURE__*/React.createElement("h2", {
+  }), inCal ? "Added to Calendar" : "Add to Calendar")), /*#__PURE__*/React.createElement("h2", {
     className: "ev-sec-h"
   }, "About this event"), /*#__PURE__*/React.createElement("p", {
     className: "ev-sec-p"
@@ -1007,7 +1274,33 @@ function EventDetail({
     name: "lucide:check",
     size: 19,
     color: "var(--brand-navy)"
-  }), l))), /*#__PURE__*/React.createElement("h2", {
+  }), l))), /*#__PURE__*/React.createElement("div", {
+    className: "ev-stats"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ev-stat"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "Attendees"), /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, d.attendees || d.going), /*#__PURE__*/React.createElement("span", {
+    className: "s"
+  }, "registered so far")), /*#__PURE__*/React.createElement("div", {
+    className: "ev-stat"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "Duration"), /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, findStatus("lucide:timer") || "60 min"), /*#__PURE__*/React.createElement("span", {
+    className: "s"
+  }, "live session")), /*#__PURE__*/React.createElement("div", {
+    className: "ev-stat"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "Format"), /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, findStatus("lucide:video") || "Live Webinar"), /*#__PURE__*/React.createElement("span", {
+    className: "s"
+  }, d.membersOnly ? "Members only" : "Open access"))), /*#__PURE__*/React.createElement("h2", {
     className: "ev-sec-h"
   }, "Event Status"), /*#__PURE__*/React.createElement("div", {
     className: "ev-status"
@@ -1057,292 +1350,972 @@ function EventDetail({
   }, "View")));
 }
 
-/* ---- live chat overlay ---- */
-function LiveChat({
-  open,
+/* ---- live stream: audience view. The member is watching, not presenting —
+   no self camera, no mute/camera controls, just a stage, chat and a shop. ---- */
+/* Note: nothing needing pointer events belongs inside LSStage — it's
+   position:absolute and z-index:0, so its stacking context sits below the
+   sibling .ls-overlay (z-index:2) regardless of z-index set on children
+   here. LSTopBar/LSTitleBlock must render as .ls-screen siblings instead
+   (see LiveStream), or their buttons become visually present but unclickable. */
+function LSStage({
+  onCam,
+  offCam
+}) {
+  const n = onCam.length;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ls-stage"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ls-grid n" + n
+  }, onCam.map(p => /*#__PURE__*/React.createElement("div", {
+    className: "ls-cell" + (p.speaking ? " speaking" : "") + (p.camOff ? " camoff" : ""),
+    key: p.id
+  }, p.camOff ? /*#__PURE__*/React.createElement("span", {
+    className: "ls-camoff-av"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: p.avatar,
+    alt: ""
+  })) : /*#__PURE__*/React.createElement("img", {
+    src: p.avatar,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "ls-namechip"
+  }, p.name, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: p.mic ? "lucide:mic" : "lucide:mic-off",
+    size: 13,
+    color: "#fff"
+  }))))), /*#__PURE__*/React.createElement("div", {
+    className: "ls-offcam"
+  }, offCam.map(p => /*#__PURE__*/React.createElement("div", {
+    className: "ls-offtile",
+    key: p.id
+  }, p.host && /*#__PURE__*/React.createElement("span", {
+    className: "cap"
+  }, "Host"), /*#__PURE__*/React.createElement("img", {
+    src: p.avatar,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "nm"
+  }, p.name.split(" ")[0], /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: p.mic ? "lucide:mic" : "lucide:mic-off",
+    size: 10,
+    color: "#fff"
+  }))))));
+}
+function LSTopBar({
+  role,
+  elapsed,
+  viewers,
+  onLeave,
+  onEndClick
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ls-topbar"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ls-live"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pulse"
+  }), "LIVE"), /*#__PURE__*/React.createElement("span", {
+    className: "ls-timer"
+  }, lsFmtClock(elapsed)), /*#__PURE__*/React.createElement("span", {
+    className: "ls-viewers"
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:eye",
+    size: 14,
+    color: "#fff"
+  }), viewers), role === "host" ? /*#__PURE__*/React.createElement("button", {
+    className: "ls-end",
+    onClick: onEndClick
+  }, "End") : /*#__PURE__*/React.createElement("button", {
+    className: "ls-close",
+    "aria-label": role === "speaker" ? "Leave stage" : "Leave stream",
+    title: role === "speaker" ? "Leave stage" : "Leave stream",
+    onClick: onLeave
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:x",
+    size: 18,
+    color: "#fff"
+  })));
+}
+function LSTitleBlock({
+  title,
+  hosts
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ls-titleblock"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "t"
+  }, title), /*#__PURE__*/React.createElement("div", {
+    className: "s"
+  }, hosts));
+}
+
+/* Ambient + user-triggered reaction particles. Travel distance/duration are
+   explicit px/seconds per particle — a percentage translateY would resolve
+   against the emoji's own ~30px box and barely move. */
+function useReactionParticles() {
+  const [particles, setParticles] = useStateEV([]);
+  const idRef = React.useRef(0);
+  const spawn = emoji => {
+    const id = ++idRef.current;
+    const dist = Math.round(460 + Math.random() * 160);
+    const dur = +(4.4 + Math.random() * 2).toFixed(2);
+    const size = Math.round(20 + Math.random() * 14);
+    const drift = Math.round(-22 + Math.random() * 44);
+    const right = Math.round(18 + Math.random() * 46);
+    setParticles(ps => ps.concat([{
+      id,
+      emoji,
+      dist,
+      dur,
+      size,
+      drift,
+      right
+    }]));
+    setTimeout(() => setParticles(ps => ps.filter(p => p.id !== id)), dur * 1000 + 200);
+  };
+  useEffectEV(() => {
+    const t = setInterval(() => spawn(LS_REACT_EMOJI[Math.floor(Math.random() * LS_REACT_EMOJI.length)]), 700);
+    return () => clearInterval(t);
+  }, []);
+  return {
+    particles,
+    spawn
+  };
+}
+function LSReactions({
+  particles
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ls-reactions",
+    "aria-hidden": "true"
+  }, particles.map(p => /*#__PURE__*/React.createElement("span", {
+    key: p.id,
+    className: "ls-particle",
+    style: {
+      right: p.right + "px",
+      fontSize: p.size + "px",
+      animationDuration: p.dur + "s",
+      "--dist": p.dist + "px",
+      "--drift": p.drift + "px"
+    }
+  }, p.emoji)));
+}
+function LSChat({
+  msgs
+}) {
+  const ref = React.useRef(null);
+  useEffectEV(() => {
+    const el = ref.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [msgs.length]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ls-chat",
+    ref: ref,
+    "aria-live": "polite",
+    "aria-label": "Live chat"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ls-chat-inner"
+  }, msgs.map(m => /*#__PURE__*/React.createElement("div", {
+    className: "ls-msg",
+    key: m.id
+  }, /*#__PURE__*/React.createElement("b", null, m.name), " ", m.text))));
+}
+function LSComposer({
+  value,
+  onChange,
+  onSend,
+  onReact,
+  onOpenBasket
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ls-composer"
+  }, onOpenBasket && /*#__PURE__*/React.createElement("button", {
+    className: "ls-basket",
+    "aria-label": "Shop this stream — " + LS_BASKET_COUNT + " items",
+    title: "Shop",
+    onClick: onOpenBasket
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:shopping-basket",
+    size: 19,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "badge"
+  }, LS_BASKET_COUNT)), /*#__PURE__*/React.createElement("input", {
+    className: "ls-input",
+    value: value,
+    onChange: e => onChange(e.target.value),
+    onKeyDown: e => {
+      if (e.key === "Enter") onSend();
+    },
+    placeholder: "Say something…",
+    "aria-label": "Say something"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "ls-send",
+    "aria-label": "Send message",
+    title: "Send",
+    onClick: onSend
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:send",
+    size: 17,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "ls-react"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ls-heart",
+    "aria-label": "Send heart reaction",
+    title: "React",
+    onClick: () => onReact("❤️")
+  }, "❤️"), /*#__PURE__*/React.createElement("div", {
+    className: "ls-react-pop",
+    role: "menu",
+    "aria-label": "More reactions"
+  }, LS_COMPOSER_MORE.map((e, i) => /*#__PURE__*/React.createElement("button", {
+    key: i,
+    role: "menuitem",
+    "aria-label": "Send " + e + " reaction",
+    onClick: () => onReact(e)
+  }, e)))));
+}
+
+/* Cycles the pinned product card: visible 5s, shrinks into the basket over
+   .5s, then 8s later (from the shrink) the next product pops in. Tapping
+   the basket re-runs the current product's cycle from scratch. */
+function useProductCycle(products) {
+  const [idx, setIdx] = useStateEV(0);
+  const [phase, setPhase] = useStateEV("visible");
+  const timers = React.useRef([]);
+  const clearAll = () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  };
+  const advance = i => {
+    const t = setTimeout(() => runCycle((i + 1) % products.length), 7500);
+    timers.current.push(t);
+  };
+  const runCycle = i => {
+    clearAll();
+    setIdx(i);
+    setPhase("visible");
+    const t1 = setTimeout(() => {
+      setPhase("out");
+      const t2 = setTimeout(() => {
+        setPhase("hidden");
+        advance(i);
+      }, 500);
+      timers.current.push(t2);
+    }, 5000);
+    timers.current.push(t1);
+  };
+  const dismiss = () => {
+    clearAll();
+    setPhase("out");
+    const t = setTimeout(() => {
+      setPhase("hidden");
+      advance(idx);
+    }, 500);
+    timers.current.push(t);
+  };
+  useEffectEV(() => {
+    runCycle(0);
+    return clearAll;
+  }, []);
+  return {
+    idx,
+    phase,
+    reveal: () => runCycle(idx),
+    dismiss
+  };
+}
+function LSProductCard({
+  product,
+  phase,
+  onBuy,
   onClose
 }) {
-  const [msgs, setMsgs] = useStateEV(CHAT_SEED);
-  const [v, setV] = useStateEV("");
-  const send = () => {
-    const t = v.trim();
-    if (!t) return;
-    setMsgs(m => [...m, {
-      who: "Katy Wilson",
-      me: true,
-      text: t
-    }]);
-    setV("");
-  };
+  const [secs, setSecs] = useStateEV(product.flashSecs);
+  useEffectEV(() => {
+    setSecs(product.flashSecs);
+    const t = setInterval(() => setSecs(s => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [product]);
+  if (phase === "hidden") return null;
   return /*#__PURE__*/React.createElement("div", {
-    className: "ev-chat-wrap" + (open ? " open" : ""),
-    "aria-hidden": !open
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ev-chat-scrim",
+    className: "ls-product" + (phase === "out" ? " out" : "")
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "x",
+    "aria-label": "Dismiss offer",
+    title: "Dismiss",
     onClick: onClose
-  }), /*#__PURE__*/React.createElement("aside", {
-    className: "ev-chat",
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:x",
+    size: 13,
+    color: "var(--gray-500)"
+  }))), /*#__PURE__*/React.createElement("span", {
+    className: "thumb"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: product.img,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("b", null, product.num)), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ttl"
+  }, product.title), /*#__PURE__*/React.createElement("span", {
+    className: "flash"
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:zap",
+    size: 11,
+    color: "var(--error)"
+  }), "Flash sale · ", lsFmtClock(secs)), /*#__PURE__*/React.createElement("span", {
+    className: "note"
+  }, product.note), /*#__PURE__*/React.createElement("span", {
+    className: "price"
+  }, "£", product.price.toFixed(2), " ", /*#__PURE__*/React.createElement("s", null, "£", product.was.toFixed(2)), " ", /*#__PURE__*/React.createElement("i", null, product.off))), /*#__PURE__*/React.createElement("button", {
+    className: "buy",
+    onClick: () => onBuy(product)
+  }, "Buy"));
+}
+function LSShowcase({
+  onClose,
+  onBuy
+}) {
+  useEffectEV(() => {
+    const esc = e => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet",
     role: "dialog",
     "aria-modal": "true",
-    "aria-label": "Live Chat"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ev-chat-head"
+    "aria-label": "Shop this stream"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ev-sheet-scrim",
+    "aria-label": "Close",
+    onClick: onClose
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet-card ls-showcase"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "t"
-  }, "Live Chat"), /*#__PURE__*/React.createElement("button", {
-    "aria-label": "Close chat",
+    className: "ev-sheet-grab"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ls-showcase-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "brand"
+  }, "Profinity"), /*#__PURE__*/React.createElement("button", {
+    className: "ev-sheet-x",
+    "aria-label": "Close",
     onClick: onClose
   }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
     name: "lucide:x",
-    size: 22,
-    color: "var(--text-primary)"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "ev-chat-body"
-  }, msgs.map((m, i) => /*#__PURE__*/React.createElement("div", {
-    className: "ev-msg " + (m.me ? "me" : "them"),
-    key: i
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "who"
-  }, m.who), /*#__PURE__*/React.createElement("div", {
-    className: "bubble"
-  }, m.text)))), /*#__PURE__*/React.createElement("div", {
-    className: "ev-chat-foot"
-  }, /*#__PURE__*/React.createElement("input", {
-    value: v,
-    onChange: e => setV(e.target.value),
-    onKeyDown: e => {
-      if (e.key === "Enter") send();
-    },
-    placeholder: "Type a message…"
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "ev-chat-send",
-    "aria-label": "Send",
-    onClick: send
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:send",
     size: 20,
-    color: "var(--white)"
-  })))));
+    color: "var(--gray-500)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "ls-rows"
+  }, LS_PRODUCTS.map((p, i) => /*#__PURE__*/React.createElement("div", {
+    className: "ls-row",
+    key: p.num
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "thumb"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: p.img,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("b", null, p.num)), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, i === 0 && /*#__PURE__*/React.createElement("span", {
+    className: "tag live"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "d"
+  }), "LIVE now"), i === 1 && /*#__PURE__*/React.createElement("span", {
+    className: "tag trend"
+  }, "On Trend"), /*#__PURE__*/React.createElement("span", {
+    className: "ttl"
+  }, p.title), /*#__PURE__*/React.createElement("span", {
+    className: "perk"
+  }, p.note, " · Certificate included"), /*#__PURE__*/React.createElement("span", {
+    className: "flash"
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:zap",
+    size: 11,
+    color: "var(--error)"
+  }), lsFmtClock(p.flashSecs)), /*#__PURE__*/React.createElement("span", {
+    className: "price"
+  }, "£", p.price.toFixed(2), " ", /*#__PURE__*/React.createElement("s", null, "£", p.was.toFixed(2)), " ", /*#__PURE__*/React.createElement("i", null, p.off))), /*#__PURE__*/React.createElement("button", {
+    className: "buy",
+    onClick: () => onBuy(p)
+  }, "Buy"))))));
 }
 
-/* ---- screen 4: video call ---- */
-function VideoCall({
-  onLeave
+/* ---- live stream: host + speaker controls. Host runs the stage (device
+   toggles, admits raised hands, ends for everyone); speaker just controls
+   their own mic/camera while presenting — no moderation power. ---- */
+function LSToolbar({
+  role,
+  mic,
+  cam,
+  onToggleMic,
+  onToggleCam,
+  onParticipants,
+  onShowcase,
+  pendingCount
 }) {
-  const [chat, setChat] = useStateEV(false);
-  const [muted, setMuted] = useStateEV(true);
-  const [cam, setCam] = useStateEV(true);
   return /*#__PURE__*/React.createElement("div", {
-    className: "ev-call",
-    "data-screen-label": "Live Call"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ev-call-top"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-icon-twist.png",
-    alt: "PROfinity"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "ev-call-timer"
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:clock",
-    size: 17,
-    color: "var(--white)"
-  }), "00:32:54")), /*#__PURE__*/React.createElement("div", {
-    className: "ev-stage"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/avatar-drtim.png",
-    alt: "Dr Tim Pearce"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "ev-pip"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/avatar-katy.jpg",
-    alt: "You"
-  }), /*#__PURE__*/React.createElement("span", null, "You")), /*#__PURE__*/React.createElement("span", {
-    className: "ev-name-tag"
-  }, "Dr Tim Pearce ", /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:mic",
-    size: 15,
-    color: "var(--white)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "ev-mic-off"
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:mic-off",
-    size: 14,
-    color: "var(--white)"
-  }), "Mic off")), /*#__PURE__*/React.createElement("div", {
-    className: "ev-thumbs"
-  }, CALL_PEOPLE.map((p, i) => /*#__PURE__*/React.createElement("div", {
-    className: "ev-thumb",
-    key: i
-  }, /*#__PURE__*/React.createElement("img", {
-    src: p.avatar,
-    alt: p.name
-  }), /*#__PURE__*/React.createElement("span", null, p.name)))), /*#__PURE__*/React.createElement("div", {
-    className: "ev-controls"
+    className: "ls-toolbar"
   }, /*#__PURE__*/React.createElement("button", {
-    className: "ev-ctl" + (muted ? "" : " on"),
-    onClick: () => setMuted(m => !m)
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cbtn"
+    className: "ls-tbtn" + (mic ? "" : " off"),
+    "aria-label": mic ? "Mute microphone" : "Unmute microphone",
+    title: "Microphone",
+    onClick: onToggleMic
   }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: muted ? "lucide:mic-off" : "lucide:mic",
-    size: 22,
-    color: "var(--white)"
-  })), "Mute"), /*#__PURE__*/React.createElement("button", {
-    className: "ev-ctl" + (cam ? " on" : ""),
-    onClick: () => setCam(c => !c)
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cbtn"
+    name: mic ? "lucide:mic" : "lucide:mic-off",
+    size: 19,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "ls-tbtn" + (cam ? "" : " off"),
+    "aria-label": cam ? "Turn camera off" : "Turn camera on",
+    title: "Camera",
+    onClick: onToggleCam
   }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
     name: cam ? "lucide:video" : "lucide:video-off",
-    size: 22,
-    color: "var(--white)"
-  })), "Camera"), /*#__PURE__*/React.createElement("button", {
-    className: "ev-ctl"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cbtn"
+    size: 19,
+    color: "#fff"
+  })), role === "host" && /*#__PURE__*/React.createElement("button", {
+    className: "ls-tbtn",
+    "aria-label": "Participants" + (pendingCount ? " — " + pendingCount + " requests" : ""),
+    title: "Participants",
+    onClick: onParticipants
   }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
     name: "lucide:users",
-    size: 22,
-    color: "var(--white)"
-  })), "People"), /*#__PURE__*/React.createElement("button", {
-    className: "ev-ctl",
-    onClick: () => setChat(true)
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cbtn"
+    size: 19,
+    color: "#fff"
+  }), pendingCount > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  }, pendingCount)), role === "host" && /*#__PURE__*/React.createElement("button", {
+    className: "ls-tbtn",
+    "aria-label": "Manage showcase",
+    title: "Showcase",
+    onClick: onShowcase
   }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:message-circle",
-    size: 22,
-    color: "var(--white)"
-  })), "Chat"), /*#__PURE__*/React.createElement("button", {
-    className: "ev-ctl leave",
-    onClick: onLeave
+    name: "lucide:megaphone",
+    size: 19,
+    color: "#fff"
+  })));
+}
+function LSEndConfirm({
+  onCancel,
+  onConfirm
+}) {
+  useEffectEV(() => {
+    const esc = e => e.key === "Escape" && onCancel();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onCancel]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "End live stream"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ev-sheet-scrim",
+    "aria-label": "Close",
+    onClick: onCancel
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet-card"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "cbtn"
+    className: "ev-gate-ic warn"
   }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:phone-off",
-    size: 22,
-    color: "var(--white)"
-  })), "Leave")), /*#__PURE__*/React.createElement(LiveChat, {
-    open: chat,
-    onClose: () => setChat(false)
+    name: "lucide:radio",
+    size: 26,
+    color: "var(--error)"
+  })), /*#__PURE__*/React.createElement("h3", {
+    className: "ev-sheet-ttl"
+  }, "End the live stream?"), /*#__PURE__*/React.createElement("p", {
+    className: "ev-sheet-p"
+  }, "Everyone watching will be disconnected and the stream will end for all viewers. This can't be undone."), /*#__PURE__*/React.createElement("button", {
+    className: "ev-detail-cta danger",
+    onClick: onConfirm
+  }, "End live stream"), /*#__PURE__*/React.createElement("button", {
+    className: "ev-detail-cta ghost",
+    onClick: onCancel
+  }, "Keep streaming")));
+}
+function LSParticipants({
+  onCam,
+  offCam,
+  onToggleMute,
+  requests,
+  onApprove,
+  onDecline,
+  onClose
+}) {
+  useEffectEV(() => {
+    const esc = e => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  const live = onCam.concat(offCam);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Participants"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ev-sheet-scrim",
+    "aria-label": "Close",
+    onClick: onClose
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet-card ls-participants"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ev-sheet-grab"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ls-showcase-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "brand"
+  }, "Participants"), /*#__PURE__*/React.createElement("button", {
+    className: "ev-sheet-x",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:x",
+    size: 20,
+    color: "var(--gray-500)"
+  }))), requests.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h4", {
+    className: "ls-plabel"
+  }, "Requests to speak"), /*#__PURE__*/React.createElement("div", {
+    className: "ls-preqs"
+  }, requests.map(r => /*#__PURE__*/React.createElement("div", {
+    className: "ls-preq",
+    key: r.id
+  }, /*#__PURE__*/React.createElement("img", {
+    src: r.avatar,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, r.name), /*#__PURE__*/React.createElement("span", null, r.note)), /*#__PURE__*/React.createElement("button", {
+    className: "ok",
+    "aria-label": "Approve " + r.name,
+    title: "Approve",
+    onClick: () => onApprove(r)
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:check",
+    size: 16,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "no",
+    "aria-label": "Decline " + r.name,
+    title: "Decline",
+    onClick: () => onDecline(r)
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:x",
+    size: 16,
+    color: "var(--gray-500)"
+  })))))), /*#__PURE__*/React.createElement("h4", {
+    className: "ls-plabel"
+  }, "Live now — ", live.length), /*#__PURE__*/React.createElement("div", {
+    className: "ls-plist"
+  }, live.map(p => /*#__PURE__*/React.createElement("div", {
+    className: "ls-prow",
+    key: p.id
+  }, /*#__PURE__*/React.createElement("img", {
+    src: p.avatar,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, p.name), p.host && /*#__PURE__*/React.createElement("span", {
+    className: "cap"
+  }, "Host")), /*#__PURE__*/React.createElement("button", {
+    className: "mute" + (p.mic ? "" : " off"),
+    "aria-label": p.mic ? "Mute " + p.name : "Unmute " + p.name,
+    title: "Mute",
+    onClick: () => onToggleMute(p)
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: p.mic ? "lucide:mic" : "lucide:mic-off",
+    size: 16,
+    color: p.mic ? "var(--text-primary)" : "var(--error)"
+  })))))));
+}
+function LSHostShowcase({
+  pushedNum,
+  onTogglePush,
+  onClose
+}) {
+  useEffectEV(() => {
+    const esc = e => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Manage showcase"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ev-sheet-scrim",
+    "aria-label": "Close",
+    onClick: onClose
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet-card ls-showcase"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ev-sheet-grab"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ls-showcase-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "brand"
+  }, "Manage showcase"), /*#__PURE__*/React.createElement("button", {
+    className: "ev-sheet-x",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:x",
+    size: 20,
+    color: "var(--gray-500)"
+  }))), /*#__PURE__*/React.createElement("p", {
+    className: "ev-sheet-p"
+  }, "Push a product to every viewer's screen — it appears pinned above their chat until you stop it."), /*#__PURE__*/React.createElement("div", {
+    className: "ls-rows"
+  }, LS_PRODUCTS.slice(0, 6).map(p => {
+    const live = p.num === pushedNum;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "ls-row",
+      key: p.num
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "thumb"
+    }, /*#__PURE__*/React.createElement("img", {
+      src: p.img,
+      alt: ""
+    }), /*#__PURE__*/React.createElement("b", null, p.num)), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, live && /*#__PURE__*/React.createElement("span", {
+      className: "tag live"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "d"
+    }), "LIVE to viewers"), /*#__PURE__*/React.createElement("span", {
+      className: "ttl"
+    }, p.title), /*#__PURE__*/React.createElement("span", {
+      className: "perk"
+    }, p.note), /*#__PURE__*/React.createElement("span", {
+      className: "price"
+    }, "£", p.price.toFixed(2), " ", /*#__PURE__*/React.createElement("s", null, "£", p.was.toFixed(2)), " ", /*#__PURE__*/React.createElement("i", null, p.off))), /*#__PURE__*/React.createElement("button", {
+      className: live ? "buy stop" : "buy",
+      onClick: () => onTogglePush(live ? null : p.num)
+    }, live ? "Stop" : "Push"));
+  }))));
+}
+const LS_ROLES = [{
+  key: "audience",
+  label: "Audience"
+}, {
+  key: "host",
+  label: "Host"
+}, {
+  key: "speaker",
+  label: "Speaker"
+}];
+
+/* Dev-only preview control — lets whoever's demoing this screen flip
+   between the three live-stream views without separate URLs/logins. */
+function LSRoleSwitcher({
+  role,
+  onChange
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ls-roleswitch",
+    role: "group",
+    "aria-label": "Preview role"
+  }, LS_ROLES.map(r => /*#__PURE__*/React.createElement("button", {
+    key: r.key,
+    className: role === r.key ? "on" : "",
+    onClick: () => onChange(r.key)
+  }, r.label)));
+}
+function LiveStream({
+  event,
+  onLeave
+}) {
+  const d = Object.assign({}, EV_DETAIL, event || {});
+  const hostline = d.cohost ? d.host + " & " + d.cohost : d.host;
+  const [elapsed, setElapsed] = useStateEV(1990);
+  const [viewers] = useStateEV(() => d.watching ? Number(d.watching) * 8 : 350);
+  const {
+    particles,
+    spawn
+  } = useReactionParticles();
+  const [msgs, setMsgs] = useStateEV(() => LS_CHAT_SEED.map((m, i) => Object.assign({
+    id: i
+  }, m)));
+  const [val, setVal] = useStateEV("");
+  const [showcase, setShowcase] = useStateEV(false);
+  const cycle = useProductCycle(LS_PRODUCTS);
+
+  /* Host + speaker preview state — role defaults to audience (today's real
+     behaviour is unchanged); switching roles is a dev-only affordance via
+     LSRoleSwitcher, not a real permissions system. */
+  const [role, setRole] = useStateEV("audience");
+  const [selfMic, setSelfMic] = useStateEV(true);
+  const [selfCam, setSelfCam] = useStateEV(true);
+  const [onCamPeople, setOnCamPeople] = useStateEV(() => LS_ONCAM.map(p => Object.assign({}, p)));
+  const [offCamPeople, setOffCamPeople] = useStateEV(() => LS_OFFCAM.map(p => Object.assign({}, p)));
+  const [requests, setRequests] = useStateEV(LS_REQUESTS);
+  const [panel, setPanel] = useStateEV(null); // null | "participants" | "showcase" | "end"
+  const [pushedNum, setPushedNum] = useStateEV(null);
+
+  /* Katy Wilson (the logged-in user, PFAEV.ME) already sits in LS_OFFCAM as
+     a host chip — speaker role promotes her into the main stage grid,
+     host role just wires her chip's mic icon to the self-mic toggle. */
+  const stageOnCam = role === "speaker" ? onCamPeople.concat([{
+    id: "katy",
+    name: "Katy Wilson",
+    avatar: "assets/avatar-katy.jpg",
+    mic: selfMic,
+    speaking: selfMic,
+    camOff: !selfCam
+  }]) : onCamPeople;
+  const stageOffCam = role === "host" ? offCamPeople.map(p => p.id === "katy" ? Object.assign({}, p, {
+    mic: selfMic
+  }) : p) : role === "speaker" ? offCamPeople.filter(p => p.id !== "katy") : offCamPeople;
+  const toggleMute = p => {
+    if (p.id === "katy") {
+      setSelfMic(m => !m);
+      return;
+    }
+    setOnCamPeople(arr => arr.map(x => x.id === p.id ? Object.assign({}, x, {
+      mic: !x.mic
+    }) : x));
+    setOffCamPeople(arr => arr.map(x => x.id === p.id ? Object.assign({}, x, {
+      mic: !x.mic
+    }) : x));
+  };
+  const approveRequest = r => {
+    setOnCamPeople(arr => arr.concat([{
+      id: r.id,
+      name: r.name,
+      avatar: r.avatar,
+      mic: true,
+      speaking: false
+    }]));
+    setRequests(rs => rs.filter(x => x.id !== r.id));
+  };
+  const declineRequest = r => setRequests(rs => rs.filter(x => x.id !== r.id));
+  useEffectEV(() => {
+    const t = setInterval(() => setElapsed(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+  useEffectEV(() => {
+    let i = LS_CHAT_SEED.length;
+    const t = setInterval(() => {
+      const next = LS_CHAT_SEED[i % LS_CHAT_SEED.length];
+      i++;
+      setMsgs(m => {
+        const last = m[m.length - 1];
+        if (last && last.name === next.name && last.text === next.text) return m;
+        return m.slice(-40).concat([Object.assign({
+          id: Date.now()
+        }, next)]);
+      });
+    }, 2600);
+    return () => clearInterval(t);
+  }, []);
+  useEffectEV(() => {
+    const esc = e => e.key === "Escape" && onLeave();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onLeave]);
+  const send = () => {
+    const t = val.trim();
+    if (!t) return;
+    const me = PFAEV && PFAEV.ME && PFAEV.ME.name || "You";
+    setMsgs(m => m.slice(-40).concat([{
+      id: Date.now(),
+      name: me,
+      text: t
+    }]));
+    setVal("");
+  };
+  const buy = p => {
+    const params = new URLSearchParams({
+      title: p.title,
+      instr: "Dr. Tim Pearce",
+      price: String(p.price)
+    });
+    goEV("CourseCheckout.html?" + params.toString());
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ls-screen",
+    "data-screen-label": "Live Stream"
+  }, /*#__PURE__*/React.createElement(LSStage, {
+    onCam: stageOnCam,
+    offCam: stageOffCam
+  }), /*#__PURE__*/React.createElement(LSTopBar, {
+    role: role,
+    elapsed: elapsed,
+    viewers: viewers,
+    onLeave: onLeave,
+    onEndClick: () => setPanel("end")
+  }), /*#__PURE__*/React.createElement(LSTitleBlock, {
+    title: d.title,
+    hosts: hostline
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ls-overlay"
+  }, /*#__PURE__*/React.createElement(LSChat, {
+    msgs: msgs
+  }), role === "audience" && cycle.phase !== "hidden" && /*#__PURE__*/React.createElement(LSProductCard, {
+    product: LS_PRODUCTS[cycle.idx],
+    phase: cycle.phase,
+    onBuy: buy,
+    onClose: cycle.dismiss
+  }), role !== "audience" && /*#__PURE__*/React.createElement(LSToolbar, {
+    role: role,
+    mic: selfMic,
+    cam: selfCam,
+    onToggleMic: () => setSelfMic(m => !m),
+    onToggleCam: () => setSelfCam(c => !c),
+    onParticipants: () => setPanel("participants"),
+    onShowcase: () => setPanel("showcase"),
+    pendingCount: requests.length
+  }), /*#__PURE__*/React.createElement(LSComposer, {
+    value: val,
+    onChange: setVal,
+    onSend: send,
+    onReact: spawn,
+    onOpenBasket: role === "audience" ? () => {
+      setShowcase(true);
+      cycle.reveal();
+    } : undefined
+  })), /*#__PURE__*/React.createElement(LSReactions, {
+    particles: particles
+  }), role === "audience" && showcase && /*#__PURE__*/React.createElement(LSShowcase, {
+    onClose: () => setShowcase(false),
+    onBuy: buy
+  }), role === "host" && panel === "participants" && /*#__PURE__*/React.createElement(LSParticipants, {
+    onCam: stageOnCam,
+    offCam: stageOffCam,
+    onToggleMute: toggleMute,
+    requests: requests,
+    onApprove: approveRequest,
+    onDecline: declineRequest,
+    onClose: () => setPanel(null)
+  }), role === "host" && panel === "showcase" && /*#__PURE__*/React.createElement(LSHostShowcase, {
+    pushedNum: pushedNum,
+    onTogglePush: setPushedNum,
+    onClose: () => setPanel(null)
+  }), role === "host" && panel === "end" && /*#__PURE__*/React.createElement(LSEndConfirm, {
+    onCancel: () => setPanel(null),
+    onConfirm: onLeave
+  }), /*#__PURE__*/React.createElement(LSRoleSwitcher, {
+    role: role,
+    onChange: setRole
   }));
 }
 
-/* ---- waiting room (between Join Live Now and the live call) ---- */
+/* ---- waiting room: the live lobby shown between "Join Live Now" and the
+   live stream. Full-bleed host camera, no self-preview or camera permission
+   — the audience joins muted with camera off, so this is a lobby, not a
+   device check. A member "arrives" in the chat every ~2.6s. ---- */
+const EV_ARRIVALS = [{
+  name: "Miranda Pearce",
+  text: "Just joined — excited for this one"
+}, {
+  name: "Aisha Rahman",
+  text: "Can't wait, my first Technique Tuesday 🙌"
+}, {
+  name: "Grace Lindqvist",
+  text: "Hello from Stockholm!"
+}, {
+  name: "Jonas Adeyemi",
+  text: "Hoping he covers migration tonight"
+}];
 function WaitingRoom({
   onBack,
-  onAdmit,
+  onJoin,
   event
 }) {
   const d = Object.assign({}, EV_DETAIL, event || {});
-  const [muted, setMuted] = useStateEV(false);
-  const [cam, setCam] = useStateEV(true);
+  const watching = d.watching || d.going || "40";
+  const [msgs, setMsgs] = useStateEV(() => [Object.assign({
+    id: 0
+  }, EV_ARRIVALS[0])]);
+  useEffectEV(() => {
+    let i = 1;
+    const t = setInterval(() => {
+      setMsgs(m => m.slice(-4).concat([Object.assign({
+        id: Date.now()
+      }, EV_ARRIVALS[i % EV_ARRIVALS.length])]));
+      i++;
+    }, 2600);
+    return () => clearInterval(t);
+  }, []);
   return /*#__PURE__*/React.createElement("div", {
-    className: "ev-screen",
-    "data-screen-label": "Waiting Room"
-  }, /*#__PURE__*/React.createElement("header", {
-    className: "ev-head"
+    className: "ev-lobby",
+    "data-screen-label": "Waiting Room",
+    style: {
+      backgroundImage: "url(assets/live-preview-camera.jpg)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ev-lobby-scrim",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ev-lobby-top"
   }, /*#__PURE__*/React.createElement("button", {
-    className: "ev-back",
+    className: "ev-lobby-back",
     "aria-label": "Back",
+    title: "Back",
     onClick: onBack
   }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:arrow-left",
-    size: 22,
-    color: "var(--brand-navy)"
+    name: "lucide:chevron-left",
+    size: 24,
+    color: "#fff"
   })), /*#__PURE__*/React.createElement("span", {
-    className: "ev-title"
-  }, "Waiting Room"), /*#__PURE__*/React.createElement("span", {
-    className: "spacer"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "ev-scroll"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ev-wait-banner"
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:circle-check",
-    size: 26,
-    color: "var(--success)"
-  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "t"
-  }, "You're in the waiting room"), /*#__PURE__*/React.createElement("div", {
-    className: "s"
-  }, "The host will let you in shortly. Thank you for your patience."))), /*#__PURE__*/React.createElement("div", {
-    className: "ev-wait-card"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ev-live-badge live"
+    className: "ev-lobby-live"
   }, /*#__PURE__*/React.createElement("span", {
     className: "pulse"
-  }), "Live now"), /*#__PURE__*/React.createElement("h1", {
-    className: "ttl"
-  }, d.title), /*#__PURE__*/React.createElement("p", {
-    className: "ev-wait-sub"
-  }, "Weekly live techniques, Q&A and expert insights to elevate your skills"), /*#__PURE__*/React.createElement("div", {
-    className: "ev-wait-host"
-  }, /*#__PURE__*/React.createElement(DSEV.Avatar, {
-    name: d.host,
-    src: "assets/avatar-drtim.png",
-    size: 36
-  }), "Hosted by ", /*#__PURE__*/React.createElement("b", null, d.cohost ? d.host + " & " + d.cohost : d.host)), /*#__PURE__*/React.createElement("div", {
-    className: "ev-wait-meta"
-  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:calendar",
+  }), "LIVE NOW"), /*#__PURE__*/React.createElement("span", {
+    className: "ev-lobby-viewers"
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:users",
+    size: 15,
+    color: "#fff"
+  }), watching)), /*#__PURE__*/React.createElement("div", {
+    className: "ev-lobby-center"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ev-lobby-badge"
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:radio",
+    size: 28,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("h1", {
+    className: "ev-lobby-h"
+  }, d.title, " is live now"), /*#__PURE__*/React.createElement("p", {
+    className: "ev-lobby-lead"
+  }, /*#__PURE__*/React.createElement("b", null, watching, " clinicians"), " are already watching. Tap below to join — no approval needed."), /*#__PURE__*/React.createElement("p", {
+    className: "ev-lobby-desc"
+  }, "Join ", d.host, " every week for a live, interactive session — expert technique demonstrations, your questions answered, and the latest thinking in aesthetic medicine."), /*#__PURE__*/React.createElement("ul", {
+    className: "ev-lobby-checks"
+  }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:check",
+    size: 16,
+    color: "var(--success)"
+  }), "Step-by-step technique demonstration"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:check",
+    size: 16,
+    color: "var(--success)"
+  }), "Live Q&A with the panel"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:check",
+    size: 16,
+    color: "var(--success)"
+  }), "Real-world case studies"))), /*#__PURE__*/React.createElement("div", {
+    className: "ev-lobby-chat",
+    "aria-live": "polite"
+  }, msgs.map(m => /*#__PURE__*/React.createElement("div", {
+    className: "ev-lobby-msg",
+    key: m.id
+  }, /*#__PURE__*/React.createElement("b", null, m.name), " ", m.text))), /*#__PURE__*/React.createElement("button", {
+    className: "ev-lobby-join",
+    onClick: onJoin
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:radio",
     size: 19,
-    color: "var(--brand-navy)"
-  }), d.date), /*#__PURE__*/React.createElement("span", {
-    className: "dotsep"
-  }, "•"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:clock",
-    size: 19,
-    color: "var(--brand-navy)"
-  }), d.time))), /*#__PURE__*/React.createElement("div", {
-    className: "ev-wait-video"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/waiting-self-preview.png",
-    alt: "You"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "ev-wait-you"
-  }, "You"), /*#__PURE__*/React.createElement("div", {
-    className: "ev-wait-vctl"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "vbtn" + (muted ? " off" : ""),
-    "aria-label": "Mic",
-    onClick: () => setMuted(m => !m)
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: muted ? "lucide:mic-off" : "lucide:mic",
-    size: 20,
-    color: "var(--white)"
-  })), /*#__PURE__*/React.createElement("button", {
-    className: "vbtn" + (cam ? "" : " off"),
-    "aria-label": "Camera",
-    onClick: () => setCam(c => !c)
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: cam ? "lucide:video" : "lucide:video-off",
-    size: 20,
-    color: "var(--white)"
-  })))), /*#__PURE__*/React.createElement("div", {
-    className: "ev-detail-actions ev-wait-actions"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "ev-detail-cta",
-    onClick: onAdmit
-  }, "Join Now!"), /*#__PURE__*/React.createElement("button", {
-    className: "ev-detail-cta ghost"
-  }, "Share Event")), /*#__PURE__*/React.createElement("p", {
-    className: "ev-wait-note"
-  }, "You'll automatically join the live session when the host admits you."), /*#__PURE__*/React.createElement("h2", {
-    className: "ev-sec-h"
-  }, "Need Help?"), /*#__PURE__*/React.createElement("button", {
-    className: "ev-help"
-  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:circle-help",
-    size: 22,
-    color: "var(--brand-navy)"
-  }), /*#__PURE__*/React.createElement("span", null, "Contact Support - We are here to help if you have any questions about this event."), /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 22,
-    color: "var(--gray-450)"
-  }))), /*#__PURE__*/React.createElement(EvTabBar, {
-    active: "Home"
-  }));
+    color: "#fff"
+  }), "Join the live"));
 }
 
 /* ---- app shell: list/detail/waiting/call screen stack, view + calendar
@@ -1356,12 +2329,22 @@ function EventsContent() {
     y: EV_TODAY.getFullYear(),
     m: EV_TODAY.getMonth()
   });
+  /* Where the waiting room's back button returns to: a live event tapped
+     straight from the list skips detail entirely, so back must return to
+     the list — not a detail screen the user never saw. */
+  const [waitFrom, setWaitFrom] = useStateEV("list");
+  const open = e => {
+    setSel(e);
+    if (e.state === "live") {
+      setWaitFrom("list");
+      setScreen("waiting");
+    } else {
+      setScreen("detail");
+    }
+  };
   return /*#__PURE__*/React.createElement(React.Fragment, null, screen === "list" && /*#__PURE__*/React.createElement(EventsList, {
     onBack: () => goEV("NewsfeedMobile.html"),
-    onOpen: e => {
-      setSel(e);
-      setScreen("detail");
-    },
+    onOpen: open,
     view: view,
     setView: setView,
     cur: cur,
@@ -1369,12 +2352,16 @@ function EventsContent() {
   }), screen === "detail" && /*#__PURE__*/React.createElement(EventDetail, {
     event: sel,
     onBack: () => setScreen("list"),
-    onJoin: () => setScreen("waiting")
+    onJoin: () => {
+      setWaitFrom("detail");
+      setScreen("waiting");
+    }
   }), screen === "waiting" && /*#__PURE__*/React.createElement(WaitingRoom, {
     event: sel,
-    onBack: () => setScreen("detail"),
-    onAdmit: () => setScreen("call")
-  }), screen === "call" && /*#__PURE__*/React.createElement(VideoCall, {
+    onBack: () => setScreen(waitFrom),
+    onJoin: () => setScreen("call")
+  }), screen === "call" && /*#__PURE__*/React.createElement(LiveStream, {
+    event: sel,
     onLeave: () => setScreen("detail")
   }));
 }

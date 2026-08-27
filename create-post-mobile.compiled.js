@@ -359,7 +359,8 @@ function CPChannelSheet({
 function CPTopBar({
   canPost,
   onPost,
-  onCancel
+  onCancel,
+  actionLabel
 }) {
   return /*#__PURE__*/React.createElement("header", {
     className: "cp-top"
@@ -372,7 +373,577 @@ function CPTopBar({
     className: "cp-post-btn",
     disabled: !canPost,
     onClick: onPost
-  }, "Post"));
+  }, actionLabel || "Post"));
+}
+const CP_MODES = [{
+  id: "post",
+  label: "Post",
+  icon: "lucide:file-text"
+}, {
+  id: "live",
+  label: "Live",
+  icon: "lucide:radio"
+}];
+function CPModeTabs({
+  mode,
+  onChange
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cp-mode-tabs",
+    role: "tablist",
+    "aria-label": "Post type"
+  }, CP_MODES.map(m => /*#__PURE__*/React.createElement("button", {
+    key: m.id,
+    type: "button",
+    role: "tab",
+    "aria-selected": mode === m.id,
+    className: "cp-mode-tab" + (mode === m.id ? " on" : ""),
+    onClick: () => onChange(m.id)
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: m.icon,
+    size: 15,
+    color: mode === m.id ? "#fff" : "var(--brand-navy)"
+  }), m.label)));
+}
+const CP_LIVE_TOOLS = [{
+  label: "Flash Off",
+  icon: "lucide:zap-off"
+}, {
+  label: "Rotate",
+  icon: "lucide:refresh-cw"
+}, {
+  label: "Mute mic",
+  icon: "lucide:mic-off"
+}, {
+  label: "Enhance off",
+  icon: "lucide:sparkles"
+}];
+
+/* Full-screen "go live" camera stage — replaces the whole compose screen
+   while mode === "live". Uses a static photo as a stand-in for a live
+   camera feed since this prototype has no real capture pipeline. */
+function CPLiveStage({
+  onBack,
+  dest,
+  canPickChannel,
+  onOpenChannelSheet,
+  description,
+  onDescriptionChange,
+  onGoLive
+}) {
+  const [descOpen, setDescOpen] = React.useState(false);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cp-live-stage",
+    style: {
+      backgroundImage: "url(assets/live-preview-camera.jpg)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-live-scrim-top",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "cp-live-back",
+    "aria-label": "Back",
+    onClick: onBack
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:chevron-left",
+    size: 26,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "cp-live-who"
+  }, /*#__PURE__*/React.createElement(DSCP.Avatar, {
+    name: PFACP.ME.name,
+    src: PFACP.ME.avatar,
+    size: 30
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "cp-live-name"
+  }, PFACP.ME.name)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-live-dest" + (canPickChannel ? "" : " static"),
+    onClick: () => canPickChannel && onOpenChannelSheet()
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:globe",
+    size: 13,
+    color: "var(--brand-navy)"
+  }), dest === "feed" ? "Newsfeed" : dest, canPickChannel && /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:chevron-down",
+    size: 12,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "cp-live-tools"
+  }, CP_LIVE_TOOLS.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.label,
+    type: "button",
+    className: "cp-live-tool"
+  }, /*#__PURE__*/React.createElement("span", null, t.label), /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: t.icon,
+    size: 20,
+    color: "#fff"
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "cp-live-scrim-bottom",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cp-live-bottom"
+  }, descOpen ? /*#__PURE__*/React.createElement("input", {
+    autoFocus: true,
+    className: "cp-live-desc-input",
+    placeholder: "Add a description...",
+    value: description,
+    onChange: e => onDescriptionChange(e.target.value),
+    onBlur: () => setDescOpen(false)
+  }) : /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-live-desc-btn",
+    onClick: () => setDescOpen(true)
+  }, description || "Tap to add a description..."), /*#__PURE__*/React.createElement("button", {
+    className: "cp-live-go-btn",
+    onClick: onGoLive
+  }, "Go Live")));
+}
+
+/* Full-screen live broadcast — mounted once the host taps "Go Live" (no page
+   navigation, a pure in-app stage change), or as SocialStream.html's whole
+   page for an audience member (?watch=1) or a co-host arriving from an
+   invite (?cohost=1). */
+const CP_BCAST_GUESTS = [{
+  u: "@mirandapearce",
+  n: "Miranda Pearce",
+  av: "assets/avatar-miranda.jpg",
+  f: "15.6K followers"
+}, {
+  u: "@drtimpearce",
+  n: "Dr Tim Pearce",
+  av: "assets/avatar-drtim.png",
+  f: "28.3K followers"
+}, {
+  u: "@katywilson",
+  n: "Katy Wilson",
+  av: "assets/avatar-katy.jpg",
+  f: "9.1K followers"
+}, {
+  u: "@gracelindqvist",
+  n: "Grace Lindqvist",
+  av: "assets/waiting-self-preview.png",
+  f: "47.5K followers"
+}];
+function CPBroadcastStage({
+  dest,
+  watch,
+  social,
+  onClose
+}) {
+  const [secs, setSecs] = React.useState(0);
+  const [chat, setChat] = React.useState([{
+    n: "Miranda Pearce",
+    t: "Just joined — can't wait for this one 👀"
+  }, {
+    n: "Dr Tim Pearce",
+    t: "Great topic. Are you covering cannula depth?"
+  }]);
+  const [msg, setMsg] = React.useState("");
+  const [guestSheet, setGuestSheet] = React.useState(false);
+  const [guests, setGuests] = React.useState(() => {
+    try {
+      return new URLSearchParams(location.search).get("cohost") === "1" ? [{
+        u: "@mirandapearce",
+        n: "Miranda Pearce",
+        av: "assets/avatar-miranda.jpg",
+        f: "15.6K followers"
+      }] : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [invited, setInvited] = React.useState([]);
+  const [liveMuted, setLiveMuted] = React.useState(false);
+  const [liveCam, setLiveCam] = React.useState(true);
+  const [front, setFront] = React.useState(true);
+  const [copied, setCopied] = React.useState(false);
+  const [hearts, setHearts] = React.useState([]);
+  const [confirmEnd, setConfirmEnd] = React.useState(false);
+  const [keepPost, setKeepPost] = React.useState(true);
+  const liveRef = React.useRef(null);
+  const chatRef = React.useRef(null);
+  const chatAtBottom = React.useRef(true);
+  const opener = React.useRef(typeof document !== "undefined" ? document.activeElement : null);
+  React.useEffect(() => {
+    const t = setTimeout(() => {
+      if (liveRef.current) liveRef.current.focus();
+    }, 60);
+    return () => clearTimeout(t);
+  }, []);
+  const close = () => {
+    onClose();
+    const o = opener.current;
+    if (o && o.focus) setTimeout(() => o.focus(), 0);
+  };
+  React.useEffect(() => {
+    const t = setInterval(() => setSecs(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+  React.useEffect(() => {
+    const k = e => {
+      if (e.key !== "Escape") return;
+      /* Topmost sheet closes first; only then does Escape reach the broadcast itself. */
+      if (guestSheet) setGuestSheet(false);else if (confirmEnd) setConfirmEnd(false);
+      /* While hosting, Escape asks first rather than dropping the broadcast. */else if (!watch) setConfirmEnd(true);else close();
+    };
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, [confirmEnd, guestSheet, watch]);
+
+  /* Audience reactions drift up the right edge while the broadcast runs. */
+  React.useEffect(() => {
+    const emo = ["❤️", "❤️", "💜", "👏", "🔥"];
+    let n = 0;
+    const t = setInterval(() => {
+      const id = ++n;
+      const h = {
+        id: id,
+        x: 14 + Math.random() * 84,
+        dur: 4.4 + Math.random() * 2,
+        size: 20 + Math.random() * 12,
+        rise: 460 + Math.random() * 160,
+        e: emo[Math.floor(Math.random() * emo.length)]
+      };
+      setHearts(s => s.concat(h).slice(-14));
+      setTimeout(() => setHearts(s => s.filter(x => x.id !== id)), h.dur * 1000);
+    }, 620);
+    return () => clearInterval(t);
+  }, []);
+
+  /* Audience chatter keeps arriving while the stream runs. */
+  React.useEffect(() => {
+    const feed = [{
+      n: "Aisha Rahman",
+      t: "Do you always aspirate on the wet-dry border?"
+    }, {
+      n: "Grace Lindqvist",
+      t: "This is so much clearer than the textbook 🙌"
+    }, {
+      n: "Jonas Adeyemi",
+      t: "What product are you using here?"
+    }, {
+      n: "Sofia Alarcón",
+      t: "Joining from Madrid — thank you for doing these live"
+    }, {
+      n: "Dr Tim Pearce",
+      t: "Good question in the chat about migration — cover that next?"
+    }, {
+      n: "Olivia Marsh",
+      t: "Saved. Watching the replay again tomorrow."
+    }, {
+      n: "Ravi Chandran",
+      t: "How long before you review the result?"
+    }, {
+      n: "Hana Kobayashi",
+      t: "That cannula angle makes so much sense now 🔥"
+    }];
+    let i = 0;
+    const t = setInterval(() => {
+      const m = feed[i % feed.length];
+      i++;
+      setChat(c => c.concat({
+        n: m.n,
+        t: m.t,
+        fresh: true
+      }).slice(-60));
+    }, 2600);
+    return () => clearInterval(t);
+  }, []);
+  const sendReact = e => {
+    const id = "me" + Date.now() + Math.random();
+    const h = {
+      id: id,
+      x: 14 + Math.random() * 84,
+      dur: 4.4,
+      size: 30,
+      rise: 520,
+      e: e
+    };
+    setHearts(s => s.concat(h).slice(-16));
+    setTimeout(() => setHearts(s => s.filter(x => x.id !== id)), 4400);
+  };
+  React.useEffect(() => {
+    /* Only snap to the newest message if the reader was already at the bottom —
+       otherwise arriving chatter would yank them away from history they scrolled up to read. */
+    const el = chatRef.current;
+    if (el && chatAtBottom.current) el.scrollTop = el.scrollHeight;
+  }, [chat]);
+  const onChatScroll = e => {
+    const el = e.currentTarget;
+    chatAtBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+  };
+  const clock = String(Math.floor(secs / 60)).padStart(2, "0") + ":" + String(secs % 60).padStart(2, "0");
+  const send = () => {
+    const v = msg.trim();
+    if (!v) return;
+    setChat(c => c.concat({
+      n: PFACP.ME.name,
+      t: v,
+      me: true
+    }));
+    setMsg("");
+  };
+  const onCam = [].concat([{
+    n: "You",
+    av: liveCam ? "assets/live-preview-camera.jpg" : PFACP.ME.avatar,
+    me: true,
+    off: !liveCam
+  }], guests.map(g => ({
+    n: g.n.split(" ")[0],
+    av: g.av
+  })));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Live broadcast"
+  }, onCam.length > 1 ? /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-grid n" + Math.min(onCam.length, 4)
+  }, onCam.slice(0, 4).map(p => /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-cell" + (p.off ? " camoff" : ""),
+    key: p.n
+  }, /*#__PURE__*/React.createElement("img", {
+    className: p.me && !front ? "rear" : undefined,
+    src: p.av,
+    alt: ""
+  }), p.off && /*#__PURE__*/React.createElement("span", {
+    className: "co"
+  }, "Camera off"), /*#__PURE__*/React.createElement("span", {
+    className: "nm"
+  }, p.n, p.me && liveMuted && /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:mic-off",
+    size: 11,
+    color: "#fff"
+  }))))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("img", {
+    className: "cp-bcast-cam" + (front ? "" : " rear") + (liveCam ? "" : " hidden"),
+    src: "assets/live-preview-camera.jpg",
+    alt: ""
+  }), !liveCam && /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-camoff"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: PFACP.ME.avatar,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", null, "Your camera is off"))), /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-bcast-dot"
+  }, "LIVE"), /*#__PURE__*/React.createElement("span", {
+    className: "cp-bcast-clock"
+  }, clock), /*#__PURE__*/React.createElement("span", {
+    className: "cp-bcast-viewers"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:eye",
+    size: 15,
+    color: "#fff"
+  }), "142"), /*#__PURE__*/React.createElement("button", {
+    className: "cp-bcast-guest-btn",
+    "aria-label": "Add guest",
+    onClick: () => setGuestSheet(true)
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:user-plus",
+    size: 17,
+    color: "#fff"
+  }), "Add guest"), /*#__PURE__*/React.createElement("button", {
+    className: "cp-bcast-x",
+    "aria-label": watch ? "Leave live" : "End broadcast",
+    ref: liveRef,
+    onClick: () => watch ? close() : setConfirmEnd(true)
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:x",
+    size: 20,
+    color: "#fff"
+  }))), watch && /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-host"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: "assets/avatar-miranda.jpg",
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, "Miranda Pearce"), /*#__PURE__*/React.createElement("i", null, "Live Q&A: correcting migrated lip filler")), /*#__PURE__*/React.createElement("button", {
+    className: "cp-bcast-follow"
+  }, "Follow")), /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-chat",
+    ref: chatRef,
+    onScroll: onChatScroll
+  }, chat.map((c, i) => /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-msg" + (c.me ? " me" : "") + (c.fresh ? " in" : ""),
+    key: i
+  }, /*#__PURE__*/React.createElement("b", null, c.n), " ", c.t))), /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-hearts",
+    "aria-hidden": "true"
+  }, hearts.map(h => /*#__PURE__*/React.createElement("span", {
+    className: "cp-bcast-heart",
+    key: h.id,
+    style: {
+      right: h.x + "px",
+      animationDuration: h.dur + "s",
+      fontSize: h.size + "px",
+      "--rise": h.rise + "px"
+    }
+  }, h.e))), !watch && /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-tools"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "cp-bcast-tool" + (liveMuted ? " off" : ""),
+    "aria-label": liveMuted ? "Unmute microphone" : "Mute microphone",
+    "aria-pressed": liveMuted,
+    onClick: () => setLiveMuted(!liveMuted)
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: liveMuted ? "lucide:mic-off" : "lucide:mic",
+    size: 20,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "cp-bcast-tool" + (liveCam ? "" : " off"),
+    "aria-label": liveCam ? "Turn camera off" : "Turn camera on",
+    "aria-pressed": !liveCam,
+    onClick: () => setLiveCam(!liveCam)
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: liveCam ? "lucide:video" : "lucide:video-off",
+    size: 20,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "cp-bcast-tool",
+    "aria-label": "Flip camera",
+    onClick: () => setFront(!front)
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:refresh-cw",
+    size: 19,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-foot"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-input"
+  }, /*#__PURE__*/React.createElement("input", {
+    placeholder: "Say something…",
+    "aria-label": "Live chat message",
+    value: msg,
+    onChange: e => setMsg(e.target.value),
+    onKeyDown: e => {
+      if (e.key === "Enter") send();
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "cp-bcast-send",
+    "aria-label": "Send",
+    onClick: send
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:send",
+    size: 18,
+    color: "#fff"
+  })), watch && /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-react"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "cp-bcast-react-main",
+    type: "button",
+    "aria-label": "React with a heart",
+    onClick: () => sendReact("❤️")
+  }, "❤️"), /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-react-more",
+    role: "group",
+    "aria-label": "More reactions"
+  }, ["💜", "👏", "🔥", "🙌", "😮"].map(e => /*#__PURE__*/React.createElement("button", {
+    key: e,
+    type: "button",
+    "aria-label": "React " + e,
+    onClick: () => sendReact(e)
+  }, e)))))), guestSheet && /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-guest",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Invite a guest",
+    onClick: e => {
+      if (e.target === e.currentTarget) setGuestSheet(false);
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-guest-card"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-sheet-grip"
+  }), /*#__PURE__*/React.createElement("h3", null, "Invite a guest"), /*#__PURE__*/React.createElement("p", {
+    className: "cp-bcast-guest-p"
+  }, "Guests you bring on become co-hosts — they can invite people too."), /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-guest-search"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:search",
+    size: 18,
+    color: "var(--gray-450)"
+  }), /*#__PURE__*/React.createElement("input", {
+    placeholder: "Search users",
+    "aria-label": "Search users"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-guest-list"
+  }, CP_BCAST_GUESTS.map(g => {
+    const on = guests.some(x => x.u === g.u);
+    const pending = !on && invited.indexOf(g.u) !== -1;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "cp-bcast-guest-row",
+      key: g.u
+    }, /*#__PURE__*/React.createElement("img", {
+      src: g.av,
+      alt: ""
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, g.u), /*#__PURE__*/React.createElement("i", null, pending ? "Waiting to accept…" : g.f)), /*#__PURE__*/React.createElement("button", {
+      className: "cp-bcast-guest-invite" + (on ? " on" : "") + (pending ? " pending" : ""),
+      disabled: on || pending,
+      onClick: () => {
+        setInvited(s => s.concat(g.u));
+        setTimeout(() => setGuests(s => s.some(x => x.u === g.u) ? s : s.concat(g)), 2200);
+      }
+    }, on ? "Co-host" : pending ? "Invited" : "Invite"));
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "cp-bcast-guest-link",
+    onClick: () => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: copied ? "lucide:check" : "lucide:link",
+    size: 20,
+    color: copied ? "var(--success)" : "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, copied ? "Link copied" : "Copy invite link"), /*#__PURE__*/React.createElement("i", null, "Share the link to invite others")), /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 19,
+    color: "var(--gray-450)"
+  })))), confirmEnd && /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-endc",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "End live broadcast",
+    onClick: e => {
+      if (e.target === e.currentTarget) setConfirmEnd(false);
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-endc-card"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-bcast-endc-ic"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:radio",
+    size: 26,
+    color: "var(--error)"
+  })), /*#__PURE__*/React.createElement("h3", null, "End this live video?"), /*#__PURE__*/React.createElement("p", null, "You've been live for ", /*#__PURE__*/React.createElement("b", null, clock), " with ", /*#__PURE__*/React.createElement("b", null, "142 viewers"), ". Ending stops the broadcast for everyone — you can't resume it."), /*#__PURE__*/React.createElement("label", {
+    className: "cp-bcast-endc-keep"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: keepPost,
+    onChange: e => setKeepPost(e.target.checked)
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "bx"
+  }, keepPost && /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:check",
+    size: 13,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, "Post the replay to ", dest), /*#__PURE__*/React.createElement("i", null, "Members who missed it can still watch. Untick to discard the recording."))), /*#__PURE__*/React.createElement("button", {
+    className: "cp-bcast-endc-go",
+    onClick: close
+  }, keepPost ? "End live & post replay" : "End live & discard"), /*#__PURE__*/React.createElement("button", {
+    className: "cp-bcast-endc-cancel",
+    onClick: () => setConfirmEnd(false)
+  }, "Keep streaming"))));
 }
 function CPTagPicker({
   tags,
@@ -393,6 +964,11 @@ function CPTagPicker({
   }, "#", t.label))));
 }
 function CPScreen() {
+  const bcastParams = new URLSearchParams(window.location.search);
+  const isSocial = typeof window !== "undefined" && !!window.PF_SOCIAL_STREAM;
+  const watchMode = bcastParams.get("watch") === "1";
+  const [mode, setMode] = React.useState(() => isSocial || watchMode ? "broadcast" : "post");
+  const [liveDescription, setLiveDescription] = React.useState("");
   const [text, setText] = React.useState("");
   const [channels, setChannels] = React.useState(() => {
     try {
@@ -430,9 +1006,10 @@ function CPScreen() {
   React.useEffect(() => {
     if (textareaRef.current) textareaRef.current.focus();
   }, []);
+  const canPost = text.trim().length > 0;
   const handlePost = () => {
-    const body = text.trim();
-    if (!body) return;
+    const body = mode === "live" ? liveDescription.trim() : text.trim();
+    if (mode !== "live" && !body) return;
     if (dest === "feed") {
       const post = {
         id: "u" + Date.now(),
@@ -450,6 +1027,7 @@ function CPScreen() {
           css: bg.css,
           fg: bg.fg
         } : null,
+        live: mode === "live",
         likes: "0",
         comments: "0",
         shares: "0",
@@ -480,13 +1058,48 @@ function CPScreen() {
     };
     input.click();
   };
+  if (mode === "live") {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "cp-screen",
+      "data-screen-label": "Create Post (mobile) — live"
+    }, /*#__PURE__*/React.createElement(CPLiveStage, {
+      onBack: () => setMode("post"),
+      dest: dest,
+      canPickChannel: canPickChannel,
+      onOpenChannelSheet: () => setChanSheet(true),
+      description: liveDescription,
+      onDescriptionChange: setLiveDescription,
+      onGoLive: () => setMode("broadcast")
+    }), chanSheet && /*#__PURE__*/React.createElement(CPChannelSheet, {
+      dests: destOptions,
+      value: dest,
+      onPick: setDest,
+      onClose: () => setChanSheet(false)
+    }));
+  }
+  if (mode === "broadcast") {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "cp-screen",
+      "data-screen-label": "Create Post (mobile) — broadcast"
+    }, /*#__PURE__*/React.createElement(CPBroadcastStage, {
+      dest: dest === "feed" ? "Newsfeed" : dest,
+      watch: watchMode,
+      social: isSocial,
+      onClose: () => {
+        if (isSocial || watchMode) goCP("NewsfeedMobileConfidence.html");else setMode("post");
+      }
+    }));
+  }
   return /*#__PURE__*/React.createElement("div", {
     className: "cp-screen",
     "data-screen-label": "Create Post (mobile)"
   }, /*#__PURE__*/React.createElement(CPTopBar, {
-    canPost: text.trim().length > 0,
+    canPost: canPost,
     onPost: handlePost,
     onCancel: () => goCP(backTo)
+  }), /*#__PURE__*/React.createElement(CPModeTabs, {
+    mode: mode,
+    onChange: setMode
   }), /*#__PURE__*/React.createElement("div", {
     className: "cp-scroll"
   }, /*#__PURE__*/React.createElement("div", {
