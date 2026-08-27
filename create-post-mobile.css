@@ -314,7 +314,7 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 .cp-bcast-input input{flex:1;min-width:0;border:none;outline:none;background:none;color:#fff;
   font-family:var(--font-sans);font-size:15px}
 .cp-bcast-input input::placeholder{color:rgba(255,255,255,.6)}
-.cp-bcast-input input:focus-visible{outline:2px solid rgba(255,255,255,.6);outline-offset:2px;border-radius:var(--r-pill)}
+#pf-root .cp-bcast-input input:focus-visible{outline:none}
 .cp-bcast-send{flex:none;width:44px;height:44px;border-radius:50%;border:none;cursor:pointer;background:var(--brand-navy);
   display:flex;align-items:center;justify-content:center}
 .cp-bcast-send:focus-visible{outline:2px solid #fff;outline-offset:2px}
