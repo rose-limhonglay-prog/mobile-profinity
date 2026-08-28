@@ -1462,29 +1462,6 @@ function LSTitleBlock({
   }, hosts));
 }
 
-/* Audience-only host identity card — mirrors the social live broadcast's
-   "who you're watching" strip (avatar, name, topic, Follow), since a viewer
-   here is watching, not presenting. */
-function lsHostAvatar(name) {
-  return name && name.indexOf("Miranda") !== -1 ? "assets/avatar-miranda.jpg" : "assets/avatar-drtim.png";
-}
-function LSHostCard({
-  avatar,
-  name,
-  tagline
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "ls-hostcard"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: avatar,
-    alt: ""
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, name), /*#__PURE__*/React.createElement("i", null, tagline)), /*#__PURE__*/React.createElement("button", {
-    className: "ls-hostcard-follow"
-  }, "Follow"));
-}
-
 /* Ambient + user-triggered reaction particles. Travel distance/duration are
    explicit px/seconds per particle — a percentage translateY would resolve
    against the emoji's own ~30px box and barely move. */
@@ -2307,11 +2284,7 @@ function LiveStream({
     onEndClick: () => setPanel("end"),
     onParticipants: () => setPanel("participants"),
     pendingCount: requests.length
-  }), role === "audience" ? /*#__PURE__*/React.createElement(LSHostCard, {
-    avatar: lsHostAvatar(d.host),
-    name: hostline,
-    tagline: d.title
-  }) : /*#__PURE__*/React.createElement(LSTitleBlock, {
+  }), /*#__PURE__*/React.createElement(LSTitleBlock, {
     title: d.title,
     hosts: hostline
   }), /*#__PURE__*/React.createElement("div", {

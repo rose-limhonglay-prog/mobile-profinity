@@ -372,20 +372,6 @@ img{max-width:100%}
 .ls-titleblock .s{margin-top:2px;font-family:var(--font-sans);font-size:12.5px;color:rgba(255,255,255,.85);
   text-shadow:0 1px 6px rgba(0,0,0,.5)}
 
-/* audience: who is hosting — mirrors social live streaming's watch-mode
-   host strip (avatar, name, topic, Follow) */
-.ls-hostcard{position:absolute;z-index:4;top:96px;left:14px;right:14px;
-  display:flex;align-items:center;gap:11px;padding:8px 10px 8px 8px;border-radius:var(--r-pill);
-  background:rgba(13,15,22,.5);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-.ls-hostcard img{flex:none;width:38px;height:38px;border-radius:50%;object-fit:cover}
-.ls-hostcard .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-.ls-hostcard .tx b{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:14px;color:#fff}
-.ls-hostcard .tx i{font-style:normal;font-family:var(--font-sans);font-size:12.5px;color:rgba(255,255,255,.75);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ls-hostcard-follow{flex:none;min-height:44px;padding:0 15px;border:none;border-radius:var(--r-pill);cursor:pointer;
-  background:#fff;color:var(--brand-navy);font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:13.5px}
-.ls-hostcard-follow:focus-visible{outline:2px solid #fff;outline-offset:2px}
-
 /* reactions: drift up the right side with an explicit px distance */
 .ls-reactions{position:absolute;inset:0;z-index:50;pointer-events:none;overflow:hidden}
 .ls-particle{position:absolute;bottom:150px;line-height:1;will-change:transform,opacity;

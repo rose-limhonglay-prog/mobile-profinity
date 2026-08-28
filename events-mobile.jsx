@@ -699,25 +699,6 @@ function LSTitleBlock({ title, hosts }) {
   );
 }
 
-/* Audience-only host identity card — mirrors the social live broadcast's
-   "who you're watching" strip (avatar, name, topic, Follow), since a viewer
-   here is watching, not presenting. */
-function lsHostAvatar(name) {
-  return name && name.indexOf("Miranda") !== -1 ? "assets/avatar-miranda.jpg" : "assets/avatar-drtim.png";
-}
-function LSHostCard({ avatar, name, tagline }) {
-  return (
-    <div className="ls-hostcard">
-      <img src={avatar} alt="" />
-      <span className="tx">
-        <b>{name}</b>
-        <i>{tagline}</i>
-      </span>
-      <button className="ls-hostcard-follow">Follow</button>
-    </div>
-  );
-}
-
 /* Ambient + user-triggered reaction particles. Travel distance/duration are
    explicit px/seconds per particle — a percentage translateY would resolve
    against the emoji's own ~30px box and barely move. */
@@ -1184,9 +1165,7 @@ function LiveStream({ event, onLeave }) {
       <LSStage onCam={stageOnCam} offCam={stageOffCam} />
       <LSTopBar role={role} elapsed={elapsed} viewers={viewers} onLeave={onLeave} onEndClick={() => setPanel("end")}
         onParticipants={() => setPanel("participants")} pendingCount={requests.length} />
-      {role === "audience" ?
-        <LSHostCard avatar={lsHostAvatar(d.host)} name={hostline} tagline={d.title} /> :
-        <LSTitleBlock title={d.title} hosts={hostline} />}
+      <LSTitleBlock title={d.title} hosts={hostline} />
 
       {/* Everything below floats over the full-bleed camera feed — the
           stage is the whole screen, not just a top strip. */}
