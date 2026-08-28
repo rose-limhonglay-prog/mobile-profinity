@@ -284,6 +284,7 @@ const LS_OFFCAM = [{
 }];
 const LS_REACT_EMOJI = ["❤️", "💜", "👏", "🔥", "🙌"];
 const LS_COMPOSER_MORE = ["💜", "👏", "🔥", "🙌", "😂"];
+const LS_BASKET_COUNT = 79;
 
 /* ---- live stream: host view seed data — viewers who've raised a hand to
    join the stage, shown in the host's participants panel. ---- */
@@ -1559,11 +1560,23 @@ function LSComposer({
   value,
   onChange,
   onSend,
-  onReact
+  onReact,
+  onOpenBasket
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "ls-composer"
-  }, /*#__PURE__*/React.createElement("input", {
+  }, onOpenBasket && /*#__PURE__*/React.createElement("button", {
+    className: "ls-basket",
+    "aria-label": "Shop this stream — " + LS_BASKET_COUNT + " items",
+    title: "Shop",
+    onClick: onOpenBasket
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:shopping-basket",
+    size: 19,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "badge"
+  }, LS_BASKET_COUNT)), /*#__PURE__*/React.createElement("input", {
     className: "ls-input",
     value: value,
     onChange: e => onChange(e.target.value),
@@ -1598,6 +1611,175 @@ function LSComposer({
     "aria-label": "Send " + e + " reaction",
     onClick: () => onReact(e)
   }, e)))));
+}
+
+/* Cycles the pinned product card: visible 5s, shrinks into the basket over
+   .5s, then 8s later (from the shrink) the next product pops in. Tapping
+   the basket re-runs the current product's cycle from scratch. */
+function useProductCycle(products) {
+  const [idx, setIdx] = useStateEV(0);
+  const [phase, setPhase] = useStateEV("visible");
+  const timers = React.useRef([]);
+  const clearAll = () => {
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+  };
+  const advance = i => {
+    const t = setTimeout(() => runCycle((i + 1) % products.length), 7500);
+    timers.current.push(t);
+  };
+  const runCycle = i => {
+    clearAll();
+    setIdx(i);
+    setPhase("visible");
+    const t1 = setTimeout(() => {
+      setPhase("out");
+      const t2 = setTimeout(() => {
+        setPhase("hidden");
+        advance(i);
+      }, 500);
+      timers.current.push(t2);
+    }, 5000);
+    timers.current.push(t1);
+  };
+  const dismiss = () => {
+    clearAll();
+    setPhase("out");
+    const t = setTimeout(() => {
+      setPhase("hidden");
+      advance(idx);
+    }, 500);
+    timers.current.push(t);
+  };
+  useEffectEV(() => {
+    runCycle(0);
+    return clearAll;
+  }, []);
+  return {
+    idx,
+    phase,
+    reveal: () => runCycle(idx),
+    dismiss
+  };
+}
+function LSProductCard({
+  product,
+  phase,
+  onBuy,
+  onClose
+}) {
+  const [secs, setSecs] = useStateEV(product.flashSecs);
+  useEffectEV(() => {
+    setSecs(product.flashSecs);
+    const t = setInterval(() => setSecs(s => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [product]);
+  if (phase === "hidden") return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ls-product" + (phase === "out" ? " out" : "")
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "x",
+    "aria-label": "Dismiss offer",
+    title: "Dismiss",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:x",
+    size: 13,
+    color: "var(--gray-500)"
+  }))), /*#__PURE__*/React.createElement("span", {
+    className: "thumb"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: product.img,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("b", null, product.num)), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ttl"
+  }, product.title), /*#__PURE__*/React.createElement("span", {
+    className: "flash"
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:zap",
+    size: 11,
+    color: "var(--error)"
+  }), "Flash sale · ", lsFmtClock(secs)), /*#__PURE__*/React.createElement("span", {
+    className: "note"
+  }, product.note), /*#__PURE__*/React.createElement("span", {
+    className: "price"
+  }, "£", product.price.toFixed(2), " ", /*#__PURE__*/React.createElement("s", null, "£", product.was.toFixed(2)), " ", /*#__PURE__*/React.createElement("i", null, product.off))), /*#__PURE__*/React.createElement("button", {
+    className: "buy",
+    onClick: () => onBuy(product)
+  }, "Buy"));
+}
+function LSShowcase({
+  onClose,
+  onBuy
+}) {
+  useEffectEV(() => {
+    const esc = e => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Shop this stream"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ev-sheet-scrim",
+    "aria-label": "Close",
+    onClick: onClose
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet-card ls-showcase"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ev-sheet-grab"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ls-showcase-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "brand"
+  }, "Profinity"), /*#__PURE__*/React.createElement("button", {
+    className: "ev-sheet-x",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:x",
+    size: 20,
+    color: "var(--gray-500)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "ls-rows"
+  }, LS_PRODUCTS.map((p, i) => /*#__PURE__*/React.createElement("div", {
+    className: "ls-row",
+    key: p.num
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "thumb"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: p.img,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("b", null, p.num)), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, i === 0 && /*#__PURE__*/React.createElement("span", {
+    className: "tag live"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "d"
+  }), "LIVE now"), i === 1 && /*#__PURE__*/React.createElement("span", {
+    className: "tag trend"
+  }, "On Trend"), /*#__PURE__*/React.createElement("span", {
+    className: "ttl"
+  }, p.title), /*#__PURE__*/React.createElement("span", {
+    className: "perk"
+  }, p.note, " · Certificate included"), /*#__PURE__*/React.createElement("span", {
+    className: "flash"
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:zap",
+    size: 11,
+    color: "var(--error)"
+  }), lsFmtClock(p.flashSecs)), /*#__PURE__*/React.createElement("span", {
+    className: "price"
+  }, "£", p.price.toFixed(2), " ", /*#__PURE__*/React.createElement("s", null, "£", p.was.toFixed(2)), " ", /*#__PURE__*/React.createElement("i", null, p.off))), /*#__PURE__*/React.createElement("button", {
+    className: "buy",
+    onClick: () => onBuy(p)
+  }, "Buy"))))));
 }
 
 /* Echo of whatever the host is currently pushing to viewers (LSHostShowcase).
@@ -2014,6 +2196,8 @@ function LiveStream({
     id: i
   }, m)));
   const [val, setVal] = useStateEV("");
+  const [showcase, setShowcase] = useStateEV(false);
+  const cycle = useProductCycle(LS_PRODUCTS);
 
   /* Host + speaker preview state — role defaults to audience (today's real
      behaviour is unchanged); switching roles is a dev-only affordance via
@@ -2101,6 +2285,14 @@ function LiveStream({
     }]));
     setVal("");
   };
+  const buy = p => {
+    const params = new URLSearchParams({
+      title: p.title,
+      instr: "Dr. Tim Pearce",
+      price: String(p.price)
+    });
+    goEV("CourseCheckout.html?" + params.toString());
+  };
   return /*#__PURE__*/React.createElement("div", {
     className: "ls-screen",
     "data-screen-label": "Live Stream"
@@ -2126,6 +2318,11 @@ function LiveStream({
     className: "ls-overlay"
   }, /*#__PURE__*/React.createElement(LSChat, {
     msgs: msgs
+  }), role === "audience" && cycle.phase !== "hidden" && /*#__PURE__*/React.createElement(LSProductCard, {
+    product: LS_PRODUCTS[cycle.idx],
+    phase: cycle.phase,
+    onBuy: buy,
+    onClose: cycle.dismiss
   }), role !== "audience" && pushedNum && /*#__PURE__*/React.createElement(LSPinnedForViewers, {
     product: LS_PRODUCTS.find(p => p.num === pushedNum),
     onUnpin: role === "host" ? () => setPushedNum(null) : undefined
@@ -2142,9 +2339,16 @@ function LiveStream({
     value: val,
     onChange: setVal,
     onSend: send,
-    onReact: spawn
+    onReact: spawn,
+    onOpenBasket: role === "audience" ? () => {
+      setShowcase(true);
+      cycle.reveal();
+    } : undefined
   })), /*#__PURE__*/React.createElement(LSReactions, {
     particles: particles
+  }), role === "audience" && showcase && /*#__PURE__*/React.createElement(LSShowcase, {
+    onClose: () => setShowcase(false),
+    onBuy: buy
   }), role === "host" && panel === "participants" && /*#__PURE__*/React.createElement(LSParticipants, {
     onCam: stageOnCam,
     offCam: stageOffCam,
