@@ -2737,7 +2737,8 @@ const TIER_LADDER_MAP = TIER_LADDER.reduce((m, t, i) => {
   return m;
 }, {});
 const COURSE_NAMES = {
-  protox: "PROTOX"
+  protox: "PROTOX",
+  "toxin-battle": "Toxin Battle"
 };
 
 /* Preview personas — the same ladder as the architecture guide's simulator.

@@ -560,6 +560,23 @@ function LSShareCommentModal({ onCancel, onConfirm }) {
 
 }
 
+/* Mirrors CreatePostMobile's addPost (same "pf-newsfeed-user-posts" key so
+   the Newsfeed's Feed() picks it up), but tagged bucket: "coursecomment" so
+   it renders through app.jsx's CourseCommentCard — the "X commented in
+   course Y" treatment already built for other members' course comments. */
+function shareCommentToNewsfeedLS(courseSlug, text) {
+  const post = {
+    id: "u" + Date.now(),
+    author: { name: PFALS.ME.name, avatar: PFALS.ME.avatar, seals: ["gb", "verified"] },
+    time: "Just now", body: text, bucket: "coursecomment", course: courseSlug,
+    likes: "0", comments: "0", shares: "0", commentList: []
+  };
+  try {
+    const existing = JSON.parse(window.localStorage.getItem("pf-newsfeed-user-posts")) || [];
+    window.localStorage.setItem("pf-newsfeed-user-posts", JSON.stringify([post, ...existing]));
+  } catch (e) {}
+}
+
 function LSComments({ comments, onAddComment, onAddReply }) {
   const [pendingText, setPendingText] = useStateLS(null);
 
@@ -693,6 +710,7 @@ function Lesson() {
 
   function addComment(text, sharedToNewsfeed) {
     setComments((all) => [...all, { author: { name: PFALS.ME.name, avatar: PFALS.ME.avatar }, time: "now", text, sharedToNewsfeed, _id: "lsc" + _lscseq++, replies: [] }]);
+    if (sharedToNewsfeed) shareCommentToNewsfeedLS(ctx.course.slug, text);
   }
   function addReply(commentId, text) {
     setComments((all) => all.map((c) => c._id === commentId ?

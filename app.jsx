@@ -1185,7 +1185,7 @@ const TIER_LADDER = [
 
 const TIER_LADDER_MAP = TIER_LADDER.reduce((m, t, i) => {m[t.key] = { ...t, rank: i };return m;}, {});
 
-const COURSE_NAMES = { protox: "PROTOX" };
+const COURSE_NAMES = { protox: "PROTOX", "toxin-battle": "Toxin Battle" };
 
 /* Preview personas — the same ladder as the architecture guide's simulator.
    channels lists every channel bucket that persona holds (each higher tier
