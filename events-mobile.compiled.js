@@ -274,13 +274,15 @@ const LS_OFFCAM = [{
   name: "Katy Wilson",
   avatar: "assets/avatar-katy.jpg",
   mic: false,
-  host: true
+  host: true,
+  camOff: true
 }, {
   id: "grace",
   name: "Grace Lindqvist",
   avatar: "assets/avatar-sarah-collins.jpg",
   mic: false,
-  host: false
+  host: false,
+  camOff: true
 }];
 const LS_REACT_EMOJI = ["❤️", "💜", "👏", "🔥", "🙌"];
 const LS_COMPOSER_MORE = ["💜", "👏", "🔥", "🙌", "😂"];
@@ -1356,19 +1358,25 @@ function EventDetail({
    sibling .ls-overlay (z-index:2) regardless of z-index set on children
    here. LSTopBar/LSTitleBlock must render as .ls-screen siblings instead
    (see LiveStream), or their buttons become visually present but unclickable. */
+/* Everyone on the call gets a full grid cell — including anyone whose
+   camera is off (rendered as a dimmed avatar bubble via .camoff) — so no
+   one included in the live drops off screen just for muting their video. */
 function LSStage({
   onCam,
   offCam
 }) {
-  const n = onCam.length;
+  const people = onCam.concat(offCam);
+  const n = people.length;
   return /*#__PURE__*/React.createElement("div", {
     className: "ls-stage"
   }, /*#__PURE__*/React.createElement("div", {
     className: "ls-grid n" + n
-  }, onCam.map(p => /*#__PURE__*/React.createElement("div", {
+  }, people.map(p => /*#__PURE__*/React.createElement("div", {
     className: "ls-cell" + (p.speaking ? " speaking" : "") + (p.camOff ? " camoff" : ""),
     key: p.id
-  }, p.camOff ? /*#__PURE__*/React.createElement("span", {
+  }, p.host && /*#__PURE__*/React.createElement("span", {
+    className: "cap"
+  }, "Host"), p.camOff ? /*#__PURE__*/React.createElement("span", {
     className: "ls-camoff-av"
   }, /*#__PURE__*/React.createElement("img", {
     src: p.avatar,
@@ -1382,22 +1390,6 @@ function LSStage({
   }, p.name, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
     name: p.mic ? "lucide:mic" : "lucide:mic-off",
     size: 13,
-    color: "#fff"
-  }))))), /*#__PURE__*/React.createElement("div", {
-    className: "ls-offcam"
-  }, offCam.map(p => /*#__PURE__*/React.createElement("div", {
-    className: "ls-offtile",
-    key: p.id
-  }, p.host && /*#__PURE__*/React.createElement("span", {
-    className: "cap"
-  }, "Host"), /*#__PURE__*/React.createElement("img", {
-    src: p.avatar,
-    alt: ""
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "nm"
-  }, p.name.split(" ")[0], /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
-    name: p.mic ? "lucide:mic" : "lucide:mic-off",
-    size: 10,
     color: "#fff"
   }))))));
 }
@@ -2348,9 +2340,10 @@ function LiveStream({
   const [requests, setRequests] = useStateEV(LS_REQUESTS);
   const [panel, setPanel] = useStateEV(null); // null | "participants" | "showcase" | "end"
 
-  /* Katy Wilson (the logged-in user, PFAEV.ME) already sits in LS_OFFCAM as
-     a host chip — speaker role promotes her into the main stage grid,
-     host role just wires her chip's mic icon to the self-mic toggle. */
+  /* Katy Wilson (the logged-in user, PFAEV.ME) already sits in LS_OFFCAM
+     as the host, camera off — speaker role promotes her into the main
+     stage grid instead with a live camOff/mic state of her own, host role
+     just wires her existing stage tile's mic icon to the self-mic toggle. */
   const stageOnCam = role === "speaker" ? onCamPeople.concat([{
     id: "katy",
     name: "Katy Wilson",

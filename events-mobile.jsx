@@ -126,8 +126,8 @@ const LS_ONCAM = [
   { id: "miranda", name: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", mic: true, speaking: false },
 ];
 const LS_OFFCAM = [
-  { id: "katy", name: "Katy Wilson", avatar: "assets/avatar-katy.jpg", mic: false, host: true },
-  { id: "grace", name: "Grace Lindqvist", avatar: "assets/avatar-sarah-collins.jpg", mic: false, host: false },
+  { id: "katy", name: "Katy Wilson", avatar: "assets/avatar-katy.jpg", mic: false, host: true, camOff: true },
+  { id: "grace", name: "Grace Lindqvist", avatar: "assets/avatar-sarah-collins.jpg", mic: false, host: false, camOff: true },
 ];
 
 const LS_REACT_EMOJI = ["❤️", "💜", "👏", "🔥", "🙌"];
@@ -637,31 +637,24 @@ function EventDetail({ onBack, onJoin, event }) {
    sibling .ls-overlay (z-index:2) regardless of z-index set on children
    here. LSTopBar/LSTitleBlock must render as .ls-screen siblings instead
    (see LiveStream), or their buttons become visually present but unclickable. */
+/* Everyone on the call gets a full grid cell — including anyone whose
+   camera is off (rendered as a dimmed avatar bubble via .camoff) — so no
+   one included in the live drops off screen just for muting their video. */
 function LSStage({ onCam, offCam }) {
-  const n = onCam.length;
+  const people = onCam.concat(offCam);
+  const n = people.length;
   return (
     <div className="ls-stage">
       <div className={"ls-grid n" + n}>
-        {onCam.map((p) => (
+        {people.map((p) => (
           <div className={"ls-cell" + (p.speaking ? " speaking" : "") + (p.camOff ? " camoff" : "")} key={p.id}>
+            {p.host && <span className="cap">Host</span>}
             {p.camOff ?
               <span className="ls-camoff-av"><img src={p.avatar} alt="" /></span> :
               <img className={p.rear ? "rear" : undefined} src={p.avatar} alt="" />}
             <span className="ls-namechip">
               {p.name}
               <DSEV.IconifyIcon name={p.mic ? "lucide:mic" : "lucide:mic-off"} size={13} color="#fff" />
-            </span>
-          </div>
-        ))}
-      </div>
-      <div className="ls-offcam">
-        {offCam.map((p) => (
-          <div className="ls-offtile" key={p.id}>
-            {p.host && <span className="cap">Host</span>}
-            <img src={p.avatar} alt="" />
-            <span className="nm">
-              {p.name.split(" ")[0]}
-              <DSEV.IconifyIcon name={p.mic ? "lucide:mic" : "lucide:mic-off"} size={10} color="#fff" />
             </span>
           </div>
         ))}
@@ -1205,9 +1198,10 @@ function LiveStream({ event, onLeave }) {
   const [requests, setRequests] = useStateEV(LS_REQUESTS);
   const [panel, setPanel] = useStateEV(null); // null | "participants" | "showcase" | "end"
 
-  /* Katy Wilson (the logged-in user, PFAEV.ME) already sits in LS_OFFCAM as
-     a host chip — speaker role promotes her into the main stage grid,
-     host role just wires her chip's mic icon to the self-mic toggle. */
+  /* Katy Wilson (the logged-in user, PFAEV.ME) already sits in LS_OFFCAM
+     as the host, camera off — speaker role promotes her into the main
+     stage grid instead with a live camOff/mic state of her own, host role
+     just wires her existing stage tile's mic icon to the self-mic toggle. */
   const stageOnCam = role === "speaker" ?
     onCamPeople.concat([{ id: "katy", name: "Katy Wilson", avatar: "assets/avatar-katy.jpg", mic: selfMic, speaking: selfMic, camOff: !selfCam, rear: !selfFront }]) :
     onCamPeople;

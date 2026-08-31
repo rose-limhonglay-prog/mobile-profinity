@@ -91,7 +91,7 @@ const EW_DETAIL = {
   attend: ["Aesthetic Practitioners", "Holistic Health Coaches", "Fitness Instructors", "Nutritional Therapists", "Wellness Consultants"],
 };
 
-
+/* Decorative attendee face-pile shown on the event detail page. */
 const CALL_PEOPLE = [
   { name: "Sarah", avatar: "assets/avatar-katy.jpg" },
   { name: "Jordan", avatar: "assets/avatar-drtim.png" },
@@ -99,11 +99,83 @@ const CALL_PEOPLE = [
   { name: "Marcus", avatar: "assets/avatar-drtim.png" },
 ];
 
-const CHAT_SEED = [
-  { who: "Dr Marcus", me: false, text: "Hi Katy, I hope you're doing well! I wanted to share a new case study." },
-  { who: "Katy Wilson", me: true, text: "Hi Dr Marcus, I trust you're having a productive day! That sounds great." },
-  { who: "Dr Marcus", me: false, text: "Yes, I typically use a 22G 70mm cannula with a fanning technique." },
+/* ---- live stream: audience view seed data ---- */
+const LS_ONCAM = [
+  { id: "tim", name: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png", mic: true, speaking: true },
+  { id: "miranda", name: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", mic: true, speaking: false },
 ];
+const LS_OFFCAM = [
+  { id: "katy", name: "Katy Wilson", avatar: "assets/avatar-katy.jpg", mic: false, host: true, camOff: true },
+  { id: "grace", name: "Grace Lindqvist", avatar: "assets/avatar-sarah-collins.jpg", mic: false, host: false, camOff: true },
+];
+
+const LS_REACT_EMOJI = ["❤️", "💜", "👏", "🔥", "🙌"];
+const LS_COMPOSER_MORE = ["💜", "👏", "🔥", "🙌", "😂"];
+const LS_BASKET_COUNT = 79;
+
+/* ---- live stream: host view seed data — viewers who've raised a hand to
+   join the stage, shown in the host's participants panel. ---- */
+const LS_REQUESTS = [
+  { id: "amir", name: "Amir Khan", avatar: "assets/avatar-amir-khan.jpg", note: "wants to demo a case" },
+  { id: "mark", name: "Mark Ellis", avatar: "assets/avatar-mark-ellis.jpg", note: "raised their hand" },
+];
+
+const LS_CHAT_SEED = [
+  { name: "Dr Tim Pearce", text: "Good question — covering migration next" },
+  { name: "Olivia Marsh", text: "Saved. Watching the replay tomorrow." },
+  { name: "Ravi Chandra", text: "How do you review for asymmetry afterwards?" },
+  { name: "Nadia Farouk", text: "This is gold, thank you Dr Pearce" },
+  { name: "Sam O'Connell", text: "Anyone else taking notes for their next clinic day?" },
+  { name: "Beth Okafor", text: "The fanning technique really clicked for me just now" },
+  { name: "Marcus Webb", text: "Can you share the slide deck after?" },
+  { name: "Priya Nair", text: "Miranda's tip on cannula angle was so useful" },
+  { name: "Leah Whitmore", text: "First live session — loving it so far" },
+  { name: "Dr Tim Pearce", text: "Great turnout tonight, keep the questions coming" },
+  { name: "Josh Reilly", text: "Does this count toward my CPD hours?" },
+  { name: "Ingrid Voss", text: "Watching from Oslo, thanks for the early slot!" },
+];
+
+const LS_PRODUCTS = [
+  { num: 1, img: "assets/course-8d-lip-design.jpg", title: "8D Lip Design — full course", note: "CPD accredited", price: 468, was: 520, off: "-10%", flashSecs: 9437 },
+  { num: 2, img: "assets/course-advanced-lip-techniques.jpg", title: "Advanced Lip Techniques", note: "CPD accredited", price: 342, was: 380, off: "-10%", flashSecs: 6120 },
+  { num: 3, img: "assets/course-full-face-rejuvenation.jpg", title: "Full Face Rejuvenation", note: "Certificate included", price: 612, was: 680, off: "-10%", flashSecs: 4310 },
+  { num: 4, img: "assets/course-brow-lift.jpg", title: "Brow Lift Masterclass", note: "CPD accredited", price: 396, was: 440, off: "-10%", flashSecs: 7215 },
+  { num: 5, img: "assets/course-cheek-contouring.jpg", title: "Cheek Contouring Essentials", note: "Certificate included", price: 378, was: 420, off: "-10%", flashSecs: 5540 },
+  { num: 6, img: "assets/course-complications.jpg", title: "Complications Management", note: "CPD accredited", price: 450, was: 500, off: "-10%", flashSecs: 8802 },
+  { num: 7, img: "assets/course-consultation.jpg", title: "Consultation Skills for Injectors", note: "Certificate included", price: 270, was: 300, off: "-10%", flashSecs: 3190 },
+  { num: 8, img: "assets/course-jawline-sculpting.jpg", title: "Jawline Sculpting", note: "CPD accredited", price: 414, was: 460, off: "-10%", flashSecs: 6710 },
+  { num: 9, img: "assets/course-lip.png", title: "Lip Filler Fundamentals", note: "Certificate included", price: 288, was: 320, off: "-10%", flashSecs: 2985 },
+  { num: 10, img: "assets/course-marketing.webp", title: "Clinic Marketing Blueprint", note: "CPD accredited", price: 324, was: 360, off: "-10%", flashSecs: 9010 },
+  { num: 11, img: "assets/course-protox.png", title: "Tox Fundamentals", note: "Certificate included", price: 432, was: 480, off: "-10%", flashSecs: 4025 },
+  { num: 12, img: "assets/course-rhinoplasty.jpg", title: "Non-Surgical Rhinoplasty", note: "CPD accredited", price: 558, was: 620, off: "-10%", flashSecs: 7960 },
+  { num: 13, img: "assets/course-skin-boosters.jpg", title: "Skin Boosters Masterclass", note: "Certificate included", price: 306, was: 340, off: "-10%", flashSecs: 5325 },
+  { num: 14, img: "assets/course-tear-trough.jpg", title: "Tear Trough Correction", note: "CPD accredited", price: 360, was: 400, off: "-10%", flashSecs: 6455 },
+  { num: 15, img: "assets/course-temple-filler.webp", title: "Temple Filler Technique", note: "Certificate included", price: 342, was: 380, off: "-10%", flashSecs: 3720 },
+  { num: 16, img: "assets/course-temple.png", title: "Temple Volumising", note: "CPD accredited", price: 315, was: 350, off: "-10%", flashSecs: 8340 },
+  { num: 17, img: "assets/course-jawline-sculpting.jpg", title: "Advanced Jawline Sculpting", note: "CPD accredited", price: 522, was: 580, off: "-10%", flashSecs: 4590 },
+  { num: 18, img: "assets/course-cheek-contouring.jpg", title: "Advanced Cheek Contouring", note: "Certificate included", price: 468, was: 520, off: "-10%", flashSecs: 7130 },
+  { num: 19, img: "assets/course-rhinoplasty.jpg", title: "Non-Surgical Rhinoplasty — Advanced", note: "CPD accredited", price: 630, was: 700, off: "-10%", flashSecs: 2410 },
+  { num: 20, img: "assets/course-complications.jpg", title: "Complications: Vascular Occlusion", note: "CPD accredited", price: 486, was: 540, off: "-10%", flashSecs: 5875 },
+  { num: 21, img: "assets/course-skin-boosters.jpg", title: "Skin Boosters — Advanced Layering", note: "Certificate included", price: 360, was: 400, off: "-10%", flashSecs: 9155 },
+  { num: 22, img: "assets/course-brow-lift.jpg", title: "Brow Lift — Advanced Shaping", note: "CPD accredited", price: 450, was: 500, off: "-10%", flashSecs: 3055 },
+];
+
+function lsFmtClock(totalSecs) {
+  const s = Math.max(0, Math.floor(totalSecs));
+  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return pad(h) + ":" + pad(m) + ":" + pad(sec);
+}
+
+/* Deterministic funnel numbers for the host's product-performance stats —
+   clicks > add-to-cart > sold, seeded off each product's own num so the
+   panel reads consistently without a real backing analytics feed. */
+function lsProductStats(p) {
+  const clicks = 20 + ((p.num * 37) % 80);
+  const cart = Math.max(4, Math.round(clicks * 0.4));
+  const sold = Math.max(1, Math.round(cart * 0.3));
+  return { clicks, cart, sold };
+}
 
 
 /* ---- per-event join / calendar state (persisted, shared by both views) ---- */
@@ -521,135 +593,752 @@ function EventDetail({ onBack, onJoin, event }) {
   );
 }
 
-/* ---- live chat overlay ---- */
-function LiveChat({ open, onClose }) {
-  const [msgs, setMsgs] = useStateEW(CHAT_SEED);
-  const [v, setV] = useStateEW("");
-  const send = () => { const t = v.trim(); if (!t) return; setMsgs((m) => [...m, { who: "Katy Wilson", me: true, text: t }]); setV(""); };
+/* ===========================================================================
+   Live stream — ported from events-mobile.jsx's LiveStream + LS* components
+   (same state shape and behaviour), laid out for a desktop window instead of
+   a phone: the LIVE/timer/viewer bar is a real header row rather than an
+   overlay, and chat docks in a permanent right-hand sidebar at wide widths
+   (falling back to the mobile-style slide-in drawer below 1100px) instead of
+   floating over the video. Products/checkout/participants reuse the existing
+   centered `.ev-sheet` dialog chrome already built for this page.
+   =========================================================================== */
+
+/* ---- live stream: camera stage. Everyone on the call gets a full grid
+   cell — including anyone whose camera is off (rendered as a dimmed avatar
+   bubble via .camoff) — so no one included in the live drops off screen
+   just for muting their video. ---- */
+function LSStage({ onCam, offCam }) {
+  const people = onCam.concat(offCam);
+  const n = people.length;
   return (
-    <div className={"ev-chat-wrap" + (open ? " open" : "")} aria-hidden={!open}>
-      <div className="ev-chat-scrim" onClick={onClose} />
-      <aside className="ev-chat" role="dialog" aria-modal="true" aria-label="Live Chat">
-        <div className="ev-chat-head">
-          <span className="t">Live Chat</span>
-          <button aria-label="Close chat" onClick={onClose}><DSEW.IconifyIcon name="lucide:x" size={22} color="var(--text-primary)" /></button>
+    <div className="ls-stage">
+      <div className={"ls-grid n" + n}>
+        {people.map((p) => (
+          <div className={"ls-cell" + (p.speaking ? " speaking" : "") + (p.camOff ? " camoff" : "")} key={p.id}>
+            {p.host && <span className="cap">Host</span>}
+            {p.camOff ?
+              <span className="ls-camoff-av"><img src={p.avatar} alt="" /></span> :
+              <img className={p.rear ? "rear" : undefined} src={p.avatar} alt="" />}
+            <span className="ls-namechip">
+              {p.name}
+              <DSEW.IconifyIcon name={p.mic ? "lucide:mic" : "lucide:mic-off"} size={13} color="#fff" />
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LSTopBar({ role, title, elapsed, viewers, onLeave, onEndClick, onParticipants, pendingCount }) {
+  return (
+    <div className="ls-topbar">
+      <img className="ls-topbar-brand" src="assets/profinity-icon-twist.png" alt="PROfinity" />
+      <span className="ls-topbar-title">{title}</span>
+      <span className="ls-live"><span className="pulse" />LIVE</span>
+      <span className="ls-timer"><DSEW.IconifyIcon name="lucide:clock" size={13} color="#fff" />{lsFmtClock(elapsed)}</span>
+      {role === "host" ?
+        <button className="ls-viewers as-btn" aria-label={"Participants" + (pendingCount ? " — " + pendingCount + " requests" : "")} title="Participants" onClick={onParticipants}>
+          <DSEW.IconifyIcon name="lucide:eye" size={14} color="#fff" />{viewers}
+          {pendingCount > 0 && <span className="dot">{pendingCount}</span>}
+        </button> :
+        <span className="ls-viewers"><DSEW.IconifyIcon name="lucide:eye" size={14} color="#fff" />{viewers}</span>}
+      {role === "host" ?
+        <button className="ls-end" onClick={onEndClick}>End</button> :
+        <button className="ls-close" aria-label={role === "speaker" ? "Leave stage" : "Leave stream"} title={role === "speaker" ? "Leave stage" : "Leave stream"} onClick={onLeave}>
+          <DSEW.IconifyIcon name="lucide:x" size={18} color="#fff" />
+        </button>}
+    </div>
+  );
+}
+
+/* Ambient + user-triggered reaction particles. Travel distance/duration are
+   explicit px/seconds per particle — a percentage translateY would resolve
+   against the emoji's own ~30px box and barely move. */
+function useReactionParticles() {
+  const [particles, setParticles] = useStateEW([]);
+  const idRef = React.useRef(0);
+  const spawn = (emoji) => {
+    const id = ++idRef.current;
+    const dist = Math.round(460 + Math.random() * 160);
+    const dur = +(4.4 + Math.random() * 2).toFixed(2);
+    const size = Math.round(20 + Math.random() * 14);
+    const drift = Math.round(-22 + Math.random() * 44);
+    const right = Math.round(18 + Math.random() * 46);
+    setParticles((ps) => ps.concat([{ id, emoji, dist, dur, size, drift, right }]));
+    setTimeout(() => setParticles((ps) => ps.filter((p) => p.id !== id)), dur * 1000 + 200);
+  };
+  useEffectEW(() => {
+    const t = setInterval(() => spawn(LS_REACT_EMOJI[Math.floor(Math.random() * LS_REACT_EMOJI.length)]), 700);
+    return () => clearInterval(t);
+  }, []);
+  return { particles, spawn };
+}
+
+function LSReactions({ particles }) {
+  return (
+    <div className="ls-reactions" aria-hidden="true">
+      {particles.map((p) => (
+        <span key={p.id} className="ls-particle" style={{
+          right: p.right + "px", fontSize: p.size + "px", animationDuration: p.dur + "s",
+          "--dist": p.dist + "px", "--drift": p.drift + "px",
+        }}>{p.emoji}</span>
+      ))}
+    </div>
+  );
+}
+
+function LSChat({ msgs, onAddReply }) {
+  const ref = React.useRef(null);
+  const [replyFor, setReplyFor] = useStateEW(null);
+  const [replyVal, setReplyVal] = useStateEW("");
+  useEffectEW(() => {
+    const el = ref.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [msgs.length]);
+
+  const submitReply = (m) => {
+    const t = replyVal.trim();
+    if (!t) return;
+    onAddReply(m.id, t);
+    setReplyVal("");
+    setReplyFor(null);
+  };
+
+  return (
+    <div className="ls-chat" ref={ref} aria-live="polite" aria-label="Live chat">
+      <div className="ls-chat-inner">
+        {msgs.map((m) => (
+          <div className="ls-msg-block" key={m.id}>
+            <button type="button" className="ls-msg" aria-expanded={replyFor === m.id}
+              onClick={() => setReplyFor(replyFor === m.id ? null : m.id)}>
+              <b>{m.name}</b> {m.text}
+            </button>
+            {m.replies && m.replies.length > 0 &&
+            <div className="ls-msg-replies">
+              {m.replies.map((r) => <div className="ls-msg ls-msg-reply" key={r.id}><b>{r.name}</b> {r.text}</div>)}
+            </div>}
+            {replyFor === m.id &&
+            <div className="ls-reply-box">
+              <input className="ls-reply-input" autoFocus value={replyVal} onChange={(e) => setReplyVal(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") submitReply(m); if (e.key === "Escape") setReplyFor(null); }}
+                placeholder={"Reply to " + m.name + "…"} aria-label={"Reply to " + m.name} />
+              <button type="button" className="ls-reply-send" aria-label="Send reply" title="Send" onClick={() => submitReply(m)}>
+                <DSEW.IconifyIcon name="lucide:send" size={14} color="#fff" />
+              </button>
+            </div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LSComposer({ value, onChange, onSend, onReact, onOpenBasket }) {
+  return (
+    <div className="ls-composer">
+      {onOpenBasket &&
+      <button className="ls-basket" aria-label={"Shop this stream — " + LS_BASKET_COUNT + " items"} title="Shop" onClick={onOpenBasket}>
+        <DSEW.IconifyIcon name="lucide:shopping-basket" size={19} color="var(--brand-navy)" />
+        <span className="badge">{LS_BASKET_COUNT}</span>
+      </button>}
+      <input className="ls-input" value={value} onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") onSend(); }} placeholder="Say something…" aria-label="Say something" />
+      <button className="ls-send" aria-label="Send message" title="Send" onClick={onSend}>
+        <DSEW.IconifyIcon name="lucide:send" size={17} color="#fff" />
+      </button>
+      <div className="ls-react">
+        <button className="ls-heart" aria-label="Send heart reaction" title="React" onClick={() => onReact("❤️")}>❤️</button>
+        <div className="ls-react-pop" role="menu" aria-label="More reactions">
+          {LS_COMPOSER_MORE.map((e, i) => (
+            <button key={i} role="menuitem" aria-label={"Send " + e + " reaction"} onClick={() => onReact(e)}>{e}</button>
+          ))}
         </div>
-        <div className="ev-chat-body">
-          {msgs.map((m, i) => (
-            <div className={"ev-msg " + (m.me ? "me" : "them")} key={i}>
-              <div className="who">{m.who}</div>
-              <div className="bubble">{m.text}</div>
+      </div>
+    </div>
+  );
+}
+
+/* Audience-side popup for whatever product the host currently has pinned.
+   It only closes when the viewer clicks the X — no auto-hide, no auto-cycle
+   — and pops back open whenever the host pins a new product. Clicking the
+   basket re-shows the currently pinned product. */
+function usePinnedPopup(pushedNum) {
+  const [phase, setPhase] = useStateEW("hidden");
+  const prevNum = React.useRef(null);
+  const timer = React.useRef(null);
+  useEffectEW(() => {
+    if (pushedNum == null) {
+      setPhase("hidden");
+    } else if (pushedNum !== prevNum.current) {
+      clearTimeout(timer.current);
+      setPhase("visible");
+    }
+    prevNum.current = pushedNum;
+  }, [pushedNum]);
+  useEffectEW(() => () => clearTimeout(timer.current), []);
+  const dismiss = () => {
+    setPhase("out");
+    timer.current = setTimeout(() => setPhase("hidden"), 500);
+  };
+  const show = () => { if (pushedNum != null) setPhase("visible"); };
+  return { phase, dismiss, show };
+}
+
+function LSProductCard({ product, phase, onBuy, onClose }) {
+  const [secs, setSecs] = useStateEW(product.flashSecs);
+  useEffectEW(() => {
+    setSecs(product.flashSecs);
+    const t = setInterval(() => setSecs((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(t);
+  }, [product]);
+  if (phase === "hidden") return null;
+  return (
+    <div className={"ls-product" + (phase === "out" ? " out" : "")}>
+      <button className="x" aria-label="Dismiss offer" title="Dismiss" onClick={onClose}>
+        <span className="dot"><DSEW.IconifyIcon name="lucide:x" size={13} color="var(--gray-500)" /></span>
+      </button>
+      <span className="thumb"><img src={product.img} alt="" /><b>{product.num}</b></span>
+      <span className="tx">
+        <span className="ttl">{product.title}</span>
+        <span className="flash"><DSEW.IconifyIcon name="lucide:zap" size={11} color="var(--error)" />Flash sale · {lsFmtClock(secs)}</span>
+        <span className="note">{product.note}</span>
+        <span className="price">£{product.price.toFixed(2)} <s>£{product.was.toFixed(2)}</s> <i>{product.off}</i></span>
+      </span>
+      <button className="buy" onClick={() => onBuy(product)}>Buy</button>
+    </div>
+  );
+}
+
+function LSShowcase({ onClose, onBuy }) {
+  useEffectEW(() => {
+    const esc = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  return (
+    <div className="ev-sheet" role="dialog" aria-modal="true" aria-label="Shop this stream">
+      <button className="ev-sheet-scrim" aria-label="Close" onClick={onClose} />
+      <div className="ev-sheet-card ls-showcase">
+        <div className="ls-showcase-hd">
+          <span className="brand">Profinity</span>
+          <button className="ev-sheet-x" aria-label="Close" onClick={onClose}><DSEW.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" /></button>
+        </div>
+        <div className="ls-rows">
+          {LS_PRODUCTS.map((p, i) => (
+            <div className="ls-row" key={p.num}>
+              <span className="thumb"><img src={p.img} alt="" /><b>{p.num}</b></span>
+              <span className="tx">
+                {i === 0 && <span className="tag live"><span className="d" />LIVE now</span>}
+                {i === 1 && <span className="tag trend">On Trend</span>}
+                <span className="ttl">{p.title}</span>
+                <span className="perk">{p.note} · Certificate included</span>
+                <span className="flash"><DSEW.IconifyIcon name="lucide:zap" size={11} color="var(--error)" />{lsFmtClock(p.flashSecs)}</span>
+                <span className="price">£{p.price.toFixed(2)} <s>£{p.was.toFixed(2)}</s> <i>{p.off}</i></span>
+              </span>
+              <button className="buy" onClick={() => onBuy(p)}>Buy</button>
             </div>
           ))}
         </div>
-        <div className="ev-chat-foot">
-          <input value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") send(); }} placeholder="Type a message…" />
-          <button className="ev-chat-send" aria-label="Send" onClick={send}><DSEW.IconifyIcon name="lucide:send" size={20} color="var(--white)" /></button>
-        </div>
-      </aside>
+      </div>
     </div>
   );
 }
 
-/* ---- screen 4: video call ---- */
-function VideoCall({ onLeave }) {
-  const [chat, setChat] = useStateEW(false);
-  const [muted, setMuted] = useStateEW(true);
-  const [cam, setCam] = useStateEW(true);
+/* In-viewer checkout — buying from a live stream must never navigate the
+   audience away from the video (that's the whole point of watching live),
+   so this stays an overlay dialog on top of the stream instead of routing
+   to CourseCheckout.html. */
+function LSCheckout({ product, onClose }) {
+  const [paying, setPaying] = useStateEW(false);
+  const [done, setDone] = useStateEW(false);
+  useEffectEW(() => {
+    const esc = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  if (!product) return null;
+  const vat = Math.round(product.price * 0.2 * 100) / 100;
+  const total = product.price + vat;
+
+  const pay = () => {
+    setPaying(true);
+    setTimeout(() => { setPaying(false); setDone(true); }, 900);
+  };
+
   return (
-    <div className="ev-call" data-screen-label="Live Call">
-      <div className="ev-call-top">
-        <img src="assets/profinity-icon-twist.png" alt="PROfinity" />
-        <span className="ev-call-timer"><DSEW.IconifyIcon name="lucide:clock" size={17} color="var(--white)" />00:32:54</span>
+    <div className="ev-sheet ls-checkout-sheet" role="dialog" aria-modal="true" aria-label="Checkout">
+      <button className="ev-sheet-scrim" aria-label="Close" onClick={onClose} />
+      <div className="ev-sheet-card ls-checkout">
+        {done ? (
+          <div className="ls-checkout-done">
+            <span className="ico"><DSEW.IconifyIcon name="lucide:check-circle-2" size={40} color="var(--success)" /></span>
+            <h3 className="ev-sheet-ttl">You're in!</h3>
+            <p className="ev-sheet-p">{product.title} has been added to your account — watch it any time from My Learning.</p>
+            <button className="ev-detail-cta" onClick={onClose}>Continue watching</button>
+          </div>
+        ) : (
+          <React.Fragment>
+            <div className="ls-showcase-hd">
+              <span className="brand">Checkout</span>
+              <button className="ev-sheet-x" aria-label="Close" onClick={onClose}><DSEW.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" /></button>
+            </div>
+
+            <div className="ls-checkout-item">
+              <span className="thumb"><img src={product.img} alt="" /></span>
+              <span className="tx">
+                <span className="ttl">{product.title}</span>
+                <span className="note">{product.note} · with Dr. Tim Pearce</span>
+              </span>
+            </div>
+
+            <div className="ls-checkout-summary">
+              <div className="row"><span>Price</span><span>£{product.price.toFixed(2)}</span></div>
+              <div className="row"><span>VAT (20%)</span><span>£{vat.toFixed(2)}</span></div>
+              <div className="row total"><span>Total due today</span><span>£{total.toFixed(2)}</span></div>
+            </div>
+
+            <div className="ls-checkout-pay">
+              <span className="ic"><DSEW.IconifyIcon name="lucide:credit-card" size={16} color="var(--brand-navy)" /></span>
+              <span className="tx"><b>Visa ending 4242</b><span>Expires 08/28</span></span>
+              <DSEW.IconifyIcon name="lucide:check-circle-2" size={18} color="var(--brand-navy)" />
+            </div>
+
+            <button className="ev-detail-cta ls-checkout-cta" disabled={paying} onClick={pay}>
+              <DSEW.IconifyIcon name="lucide:lock" size={14} color="#fff" /> {paying ? "Processing…" : "Pay £" + total.toFixed(2) + " & unlock"}
+            </button>
+            <p className="ls-checkout-secure">
+              <DSEW.IconifyIcon name="lucide:shield-check" size={12} color="var(--gray-400)" />
+              Secured by Stripe · stay live while you pay
+            </p>
+          </React.Fragment>
+        )}
       </div>
-      <div className="ev-stage">
-        <img src="assets/avatar-drtim.png" alt="Dr Tim Pearce" />
-        <div className="ev-pip"><img src="assets/avatar-katy.jpg" alt="You" /><span>You</span></div>
-        <span className="ev-name-tag">Dr Tim Pearce <DSEW.IconifyIcon name="lucide:mic" size={15} color="var(--white)" /></span>
-        <span className="ev-mic-off"><DSEW.IconifyIcon name="lucide:mic-off" size={14} color="var(--white)" />Mic off</span>
-      </div>
-      <div className="ev-thumbs">
-        {CALL_PEOPLE.map((p, i) => (
-          <div className="ev-thumb" key={i}><img src={p.avatar} alt={p.name} /><span>{p.name}</span></div>
-        ))}
-      </div>
-      <div className="ev-controls">
-        <button className={"ev-ctl" + (muted ? "" : " on")} onClick={() => setMuted((m) => !m)}>
-          <span className="cbtn"><DSEW.IconifyIcon name={muted ? "lucide:mic-off" : "lucide:mic"} size={22} color="var(--white)" /></span>Mute
-        </button>
-        <button className={"ev-ctl" + (cam ? " on" : "")} onClick={() => setCam((c) => !c)}>
-          <span className="cbtn"><DSEW.IconifyIcon name={cam ? "lucide:video" : "lucide:video-off"} size={22} color="var(--white)" /></span>Camera
-        </button>
-        <button className="ev-ctl">
-          <span className="cbtn"><DSEW.IconifyIcon name="lucide:users" size={22} color="var(--white)" /></span>People
-        </button>
-        <button className="ev-ctl" onClick={() => setChat(true)}>
-          <span className="cbtn"><DSEW.IconifyIcon name="lucide:message-circle" size={22} color="var(--white)" /></span>Chat
-        </button>
-        <button className="ev-ctl leave" onClick={onLeave}>
-          <span className="cbtn"><DSEW.IconifyIcon name="lucide:phone-off" size={22} color="var(--white)" /></span>Leave
-        </button>
-      </div>
-      <LiveChat open={chat} onClose={() => setChat(false)} />
     </div>
   );
 }
 
-/* ---- waiting room (between Join Live Now and the live call) ---- */
-function WaitingRoom({ onBack, onAdmit, event }) {
+/* Echo of whatever the host is currently pushing to viewers (LSHostShowcase).
+   For the speaker this is read-only — see what's pinned so they can talk to
+   it, without granting them showcase controls of their own — but they can
+   still dismiss the popup from their own view with the X; the host gets an
+   Unpin action instead since it's their own push (removes it for everyone,
+   not just their view). */
+function LSPinnedForViewers({ product, phase, onUnpin, onClose }) {
+  if (!product || phase === "hidden") return null;
+  return (
+    <div className={"ls-pinned" + (phase === "out" ? " out" : "")}>
+      {onClose &&
+        <button className="x" aria-label="Dismiss" title="Dismiss" onClick={onClose}>
+          <span className="dot"><DSEW.IconifyIcon name="lucide:x" size={13} color="var(--gray-500)" /></span>
+        </button>}
+      <span className="thumb"><img src={product.img} alt="" /></span>
+      <span className="tx">
+        <span className="lbl">Pinned for viewers</span>
+        <span className="ttl">{product.title}</span>
+        <span className="price">£{product.price.toFixed(2)}</span>
+      </span>
+      {onUnpin && <button className="unpin" onClick={onUnpin}>Unpin</button>}
+    </div>
+  );
+}
+
+/* ---- live stream: host + speaker controls. Host runs the stage (device
+   toggles, admits raised hands, ends for everyone); speaker just controls
+   their own mic/camera/facing while presenting — no moderation power. ---- */
+function LSToolbar({ role, mic, cam, onToggleMic, onToggleCam, onFlipCam, onShowcase, pushedNum }) {
+  if (role === "host") {
+    return (
+      <div className="ls-toolbar ls-toolbar-pills">
+        <button className={"ls-pillbtn" + (mic ? "" : " off")} aria-label={mic ? "Mute microphone" : "Unmute microphone"} title="Microphone" onClick={onToggleMic}>
+          <DSEW.IconifyIcon name={mic ? "lucide:mic" : "lucide:mic-off"} size={20} color="#fff" />
+          <span>{mic ? "Live" : "Muted"}</span>
+        </button>
+        <button className={"ls-pillbtn" + (cam ? "" : " off")} aria-label={cam ? "Turn camera off" : "Turn camera on"} title="Camera" onClick={onToggleCam}>
+          <DSEW.IconifyIcon name={cam ? "lucide:video" : "lucide:video-off"} size={20} color="#fff" />
+          <span>{cam ? "On" : "Off"}</span>
+        </button>
+        <button className="ls-pillbtn neutral" aria-label="Flip camera" title="Flip camera" onClick={onFlipCam}>
+          <DSEW.IconifyIcon name="lucide:refresh-cw" size={20} color="#fff" />
+          <span>Flip</span>
+        </button>
+        <button className="ls-pillbtn gold" aria-label="Products" title="Products" onClick={onShowcase}>
+          <DSEW.IconifyIcon name="lucide:shopping-bag" size={20} color="#fff" />
+          <span>Products</span>
+          {pushedNum != null && <span className="dot" aria-hidden="true" />}
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="ls-toolbar ls-toolbar-pills">
+      <button className={"ls-pillbtn" + (mic ? "" : " off")} aria-label={mic ? "Mute microphone" : "Unmute microphone"} title="Microphone" onClick={onToggleMic}>
+        <DSEW.IconifyIcon name={mic ? "lucide:mic" : "lucide:mic-off"} size={20} color="#fff" />
+        <span>{mic ? "Live" : "Muted"}</span>
+      </button>
+      <button className={"ls-pillbtn" + (cam ? "" : " off")} aria-label={cam ? "Turn camera off" : "Turn camera on"} title="Camera" onClick={onToggleCam}>
+        <DSEW.IconifyIcon name={cam ? "lucide:video" : "lucide:video-off"} size={20} color="#fff" />
+        <span>{cam ? "On" : "Off"}</span>
+      </button>
+      <button className="ls-pillbtn neutral" aria-label="Flip camera" title="Flip camera" onClick={onFlipCam}>
+        <DSEW.IconifyIcon name="lucide:refresh-cw" size={20} color="#fff" />
+        <span>Flip</span>
+      </button>
+    </div>
+  );
+}
+
+function LSEndConfirm({ onCancel, onConfirm }) {
+  useEffectEW(() => {
+    const esc = (e) => e.key === "Escape" && onCancel();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onCancel]);
+  return (
+    <div className="ev-sheet" role="dialog" aria-modal="true" aria-label="End live stream">
+      <button className="ev-sheet-scrim" aria-label="Close" onClick={onCancel} />
+      <div className="ev-sheet-card">
+        <span className="ev-gate-ic warn"><DSEW.IconifyIcon name="lucide:radio" size={26} color="var(--error)" /></span>
+        <h3 className="ev-sheet-ttl">End the live stream?</h3>
+        <p className="ev-sheet-p">Everyone watching will be disconnected and the stream will end for all viewers. This can't be undone.</p>
+        <button className="ev-detail-cta danger" onClick={onConfirm}>End live stream</button>
+        <button className="ev-detail-cta ghost" onClick={onCancel}>Keep streaming</button>
+      </div>
+    </div>
+  );
+}
+
+function LSParticipants({ onCam, offCam, onToggleMute, requests, onApprove, onDecline, onClose }) {
+  useEffectEW(() => {
+    const esc = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  const live = onCam.concat(offCam);
+  return (
+    <div className="ev-sheet" role="dialog" aria-modal="true" aria-label="Participants">
+      <button className="ev-sheet-scrim" aria-label="Close" onClick={onClose} />
+      <div className="ev-sheet-card ls-participants">
+        <div className="ls-showcase-hd">
+          <span className="brand">Participants</span>
+          <button className="ev-sheet-x" aria-label="Close" onClick={onClose}><DSEW.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" /></button>
+        </div>
+
+        {requests.length > 0 &&
+        <React.Fragment>
+          <h4 className="ls-plabel">Requests to speak</h4>
+          <div className="ls-preqs">
+            {requests.map((r) => (
+              <div className="ls-preq" key={r.id}>
+                <img src={r.avatar} alt="" />
+                <span className="tx"><b>{r.name}</b><span>{r.note}</span></span>
+                <button className="ok" aria-label={"Approve " + r.name} title="Approve" onClick={() => onApprove(r)}><DSEW.IconifyIcon name="lucide:check" size={16} color="#fff" /></button>
+                <button className="no" aria-label={"Decline " + r.name} title="Decline" onClick={() => onDecline(r)}><DSEW.IconifyIcon name="lucide:x" size={16} color="var(--gray-500)" /></button>
+              </div>
+            ))}
+          </div>
+        </React.Fragment>}
+
+        <h4 className="ls-plabel">Live now — {live.length}</h4>
+        <div className="ls-plist">
+          {live.map((p) => (
+            <div className="ls-prow" key={p.id}>
+              <img src={p.avatar} alt="" />
+              <span className="tx"><b>{p.name}</b>{p.host && <span className="cap">Host</span>}</span>
+              <button className={"mute" + (p.mic ? "" : " off")} aria-label={p.mic ? "Mute " + p.name : "Unmute " + p.name} title="Mute" onClick={() => onToggleMute(p)}>
+                <DSEW.IconifyIcon name={p.mic ? "lucide:mic" : "lucide:mic-off"} size={16} color={p.mic ? "var(--text-primary)" : "var(--error)"} />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LSHostShowcase({ pushedNum, onTogglePush, viewers, onClose }) {
+  useEffectEW(() => {
+    const esc = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  const rows = LS_PRODUCTS.slice(0, 6).map((p) => Object.assign({}, p, lsProductStats(p)));
+  const totalSales = rows.reduce((s, p) => s + p.sold * p.price, 0);
+  const totalClicks = rows.reduce((s, p) => s + p.clicks, 0);
+  return (
+    <div className="ev-sheet" role="dialog" aria-modal="true" aria-label="Products">
+      <button className="ev-sheet-scrim" aria-label="Close" onClick={onClose} />
+      <div className="ev-sheet-card ls-showcase">
+        <div className="ls-showcase-hd">
+          <span className="brand">Products</span>
+          <button className="ev-sheet-x" aria-label="Close" onClick={onClose}><DSEW.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" /></button>
+        </div>
+        <div className="ls-pstats">
+          <span className="c"><span className="n">£{totalSales.toLocaleString()}</span><span className="l">Sales</span></span>
+          <span className="c"><span className="n">{viewers}</span><span className="l">Current viewers</span></span>
+          <span className="c"><span className="n">{totalClicks}</span><span className="l">Product clicks</span></span>
+        </div>
+        <div className="ls-rows">
+          {rows.map((p) => {
+            const pinned = p.num === pushedNum;
+            const off = p.was - p.price;
+            return (
+              <div className="ls-row" key={p.num}>
+                <span className="thumb"><img src={p.img} alt="" /><b>{p.num}</b></span>
+                <span className="tx">
+                  {pinned &&
+                  <span className="tagrow">
+                    <span className="tag pinned"><DSEW.IconifyIcon name="lucide:pin" size={10} color="var(--premium-gold-deep)" />Pinned</span>
+                    <span className="tag hot"><DSEW.IconifyIcon name="lucide:flame" size={10} color="#fff" />Hot deal</span>
+                  </span>}
+                  <span className="ttl">{p.title}</span>
+                  <span className="tag off">Extra £{off} off</span>
+                  <span className="price">£{p.price.toFixed(2)} <s>£{p.was.toFixed(2)}</s></span>
+                </span>
+                <button className={"pin" + (pinned ? " on" : "")} onClick={() => onTogglePush(pinned ? null : p.num)}>{pinned ? "Unpin" : "Pin"}</button>
+                <div className="ls-pstats sm">
+                  <span className="c"><span className="n">{p.sold}</span><span className="l">Items sold</span></span>
+                  <span className="c"><span className="n">{p.cart}</span><span className="l">Add-to-cart</span></span>
+                  <span className="c"><span className="n">{p.clicks}</span><span className="l">Clicks</span></span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const LS_ROLES = [
+  { key: "audience", label: "Audience" },
+  { key: "host", label: "Host" },
+  { key: "speaker", label: "Speaker" },
+];
+
+/* Dev-only preview control — lets whoever's demoing this screen flip between
+   the three live-stream views without separate URLs/logins. */
+function LSRoleSwitcher({ role, onChange }) {
+  return (
+    <div className="ls-roleswitch" role="group" aria-label="Preview role">
+      {LS_ROLES.map((r) => (
+        <button key={r.key} className={role === r.key ? "on" : ""} onClick={() => onChange(r.key)}>{r.label}</button>
+      ))}
+    </div>
+  );
+}
+
+/* ---- screen 4: live stream ---- */
+function LiveStream({ event, onLeave }) {
   const d = Object.assign({}, EW_DETAIL, event || {});
-  const [muted, setMuted] = useStateEW(false);
-  const [cam, setCam] = useStateEW(true);
+  const [elapsed, setElapsed] = useStateEW(1990);
+  const [viewers] = useStateEW(() => (d.watching ? Number(d.watching) * 8 : 350));
+  const { particles, spawn } = useReactionParticles();
+  const [msgs, setMsgs] = useStateEW(() => LS_CHAT_SEED.map((m, i) => Object.assign({ id: i }, m)));
+  const [val, setVal] = useStateEW("");
+  const [showcase, setShowcase] = useStateEW(false);
+  const [checkoutProduct, setCheckoutProduct] = useStateEW(null);
+  const [pushedNum, setPushedNum] = useStateEW(LS_PRODUCTS[0].num);
+  const pinnedPopup = usePinnedPopup(pushedNum);
+  const speakerPinnedPopup = usePinnedPopup(pushedNum);
+
+  /* Host + speaker preview state — role defaults to audience (today's real
+     behaviour is unchanged); switching roles is a dev-only affordance via
+     LSRoleSwitcher, not a real permissions system. */
+  const [role, setRole] = useStateEW("audience");
+  const [selfMic, setSelfMic] = useStateEW(true);
+  const [selfCam, setSelfCam] = useStateEW(true);
+  const [selfFront, setSelfFront] = useStateEW(true);
+  const [onCamPeople, setOnCamPeople] = useStateEW(() => LS_ONCAM.map((p) => Object.assign({}, p)));
+  const [offCamPeople, setOffCamPeople] = useStateEW(() => LS_OFFCAM.map((p) => Object.assign({}, p)));
+  const [requests, setRequests] = useStateEW(LS_REQUESTS);
+  const [panel, setPanel] = useStateEW(null); // null | "participants" | "showcase" | "end"
+  /* Chat sidebar is always visible at wide widths (CSS-driven); this only
+     drives the slide-in drawer used below the 1100px breakpoint. */
+  const [chatOpen, setChatOpen] = useStateEW(false);
+
+  const stageOnCam = role === "speaker" ?
+    onCamPeople.concat([{ id: "katy", name: ME_EW.name, avatar: ME_EW.avatar, mic: selfMic, speaking: selfMic, camOff: !selfCam, rear: !selfFront }]) :
+    onCamPeople;
+  const stageOffCam = role === "host" ?
+    offCamPeople.map((p) => p.id === "katy" ? Object.assign({}, p, { mic: selfMic }) : p) :
+    role === "speaker" ?
+    offCamPeople.filter((p) => p.id !== "katy") :
+    offCamPeople;
+
+  const toggleMute = (p) => {
+    if (p.id === "katy") { setSelfMic((m) => !m); return; }
+    setOnCamPeople((arr) => arr.map((x) => x.id === p.id ? Object.assign({}, x, { mic: !x.mic }) : x));
+    setOffCamPeople((arr) => arr.map((x) => x.id === p.id ? Object.assign({}, x, { mic: !x.mic }) : x));
+  };
+  const approveRequest = (r) => {
+    setOnCamPeople((arr) => arr.concat([{ id: r.id, name: r.name, avatar: r.avatar, mic: true, speaking: false }]));
+    setRequests((rs) => rs.filter((x) => x.id !== r.id));
+  };
+  const declineRequest = (r) => setRequests((rs) => rs.filter((x) => x.id !== r.id));
+
+  useEffectEW(() => {
+    const t = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffectEW(() => {
+    let i = LS_CHAT_SEED.length;
+    const t = setInterval(() => {
+      const next = LS_CHAT_SEED[i % LS_CHAT_SEED.length];
+      i++;
+      setMsgs((m) => {
+        const last = m[m.length - 1];
+        if (last && last.name === next.name && last.text === next.text) return m;
+        return m.slice(-40).concat([Object.assign({ id: Date.now() }, next)]);
+      });
+    }, 2600);
+    return () => clearInterval(t);
+  }, []);
+
+  useEffectEW(() => {
+    const esc = (e) => e.key === "Escape" && onLeave();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onLeave]);
+
+  const send = () => {
+    const t = val.trim();
+    if (!t) return;
+    const me = (PFAEW && PFAEW.ME && PFAEW.ME.name) || ME_EW.name;
+    setMsgs((m) => m.slice(-40).concat([{ id: Date.now(), name: me, text: t }]));
+    setVal("");
+  };
+
+  const addReply = (msgId, text) => {
+    const me = (PFAEW && PFAEW.ME && PFAEW.ME.name) || ME_EW.name;
+    setMsgs((m) => m.map((x) => x.id === msgId ?
+      Object.assign({}, x, { replies: (x.replies || []).concat([{ id: Date.now(), name: me, text }]) }) : x));
+  };
+
+  const buy = (p) => {
+    setShowcase(false);
+    setCheckoutProduct(p);
+  };
+
   return (
-    <div className="ev-screen" data-screen-label="Waiting Room">
-      <header className="ev-head">
-        <button className="ev-back" aria-label="Back" onClick={onBack}><DSEW.IconifyIcon name="lucide:arrow-left" size={22} color="var(--brand-navy)" /></button>
-        <span className="ev-title">Waiting Room</span>
-        <span className="spacer" />
-      </header>
-      <div className="ev-scroll">
-        <div className="ev-wait-banner">
-          <DSEW.IconifyIcon name="lucide:circle-check" size={26} color="var(--success)" />
-          <div>
-            <div className="t">You're in the waiting room</div>
-            <div className="s">The host will let you in shortly. Thank you for your patience.</div>
-          </div>
+    <div className="ev-call" data-screen-label="Live Stream">
+      <LSTopBar role={role} title={d.title} elapsed={elapsed} viewers={viewers} onLeave={onLeave} onEndClick={() => setPanel("end")}
+        onParticipants={() => setPanel("participants")} pendingCount={requests.length} />
+
+      <div className="ls-main">
+        <div className="ls-stagewrap">
+          <LSStage onCam={stageOnCam} offCam={stageOffCam} />
+          <LSReactions particles={particles} />
+
+          {role === "audience" && pushedNum != null && pinnedPopup.phase !== "hidden" &&
+            <LSProductCard product={LS_PRODUCTS.find((p) => p.num === pushedNum)} phase={pinnedPopup.phase} onBuy={buy} onClose={pinnedPopup.dismiss} />}
+
+          {role !== "audience" && pushedNum &&
+            <LSPinnedForViewers product={LS_PRODUCTS.find((p) => p.num === pushedNum)}
+              phase={role === "speaker" ? speakerPinnedPopup.phase : "visible"}
+              onUnpin={role === "host" ? () => setPushedNum(null) : undefined}
+              onClose={role === "speaker" ? speakerPinnedPopup.dismiss : undefined} />}
+
+          {role !== "audience" &&
+            <LSToolbar role={role} mic={selfMic} cam={selfCam}
+              onToggleMic={() => setSelfMic((m) => !m)} onToggleCam={() => setSelfCam((c) => !c)}
+              onFlipCam={() => setSelfFront((f) => !f)}
+              onShowcase={() => setPanel("showcase")} pushedNum={pushedNum} />}
+
+          <button className="ls-chatbtn" aria-label="Open chat" title="Chat" onClick={() => setChatOpen((o) => !o)}>
+            <DSEW.IconifyIcon name="lucide:message-circle" size={20} color="#fff" />
+          </button>
+
+          <LSRoleSwitcher role={role} onChange={setRole} />
         </div>
-        <div className="ev-wait-card">
-          <span className="ev-live-badge live"><span className="pulse" />Live now</span>
-          <h1 className="ttl">{d.title}</h1>
-          <p className="ev-wait-sub">Weekly live techniques, Q&amp;A and expert insights to elevate your skills</p>
-          <div className="ev-wait-host"><DSEW.Avatar name={d.host} src="assets/avatar-drtim.png" size={36} />Hosted by <b>{d.cohost ? (d.host + " & " + d.cohost) : d.host}</b></div>
-          <div className="ev-wait-meta">
-            <span><DSEW.IconifyIcon name="lucide:calendar" size={19} color="var(--brand-navy)" />{d.date}</span>
-            <span className="dotsep">•</span>
-            <span><DSEW.IconifyIcon name="lucide:clock" size={19} color="var(--brand-navy)" />{d.time}</span>
-          </div>
+
+        <div className={"ls-chatpanel" + (chatOpen ? " open" : "")} aria-hidden={!chatOpen}>
+          <div className="ls-chatpanel-scrim" onClick={() => setChatOpen(false)} />
+          <aside className="ls-chatpanel-inner" role="dialog" aria-label="Live chat">
+            <div className="ls-chatpanel-head">
+              <span>Live Chat</span>
+              <button className="ls-chatpanel-close" aria-label="Close chat" onClick={() => setChatOpen(false)}>
+                <DSEW.IconifyIcon name="lucide:x" size={20} color="var(--text-primary)" />
+              </button>
+            </div>
+            <LSChat msgs={msgs} onAddReply={addReply} />
+            <LSComposer value={val} onChange={setVal} onSend={send} onReact={spawn}
+              onOpenBasket={role === "audience" ? () => { setShowcase(true); pinnedPopup.show(); } : undefined} />
+          </aside>
         </div>
-        <div className="ev-wait-video">
-          <img src="assets/waiting-self-preview.png" alt="You" />
-          <span className="ev-wait-you">You</span>
-          <div className="ev-wait-vctl">
-            <button className={"vbtn" + (muted ? " off" : "")} aria-label="Mic" onClick={() => setMuted((m) => !m)}>
-              <DSEW.IconifyIcon name={muted ? "lucide:mic-off" : "lucide:mic"} size={20} color="var(--white)" />
-            </button>
-            <button className={"vbtn" + (cam ? "" : " off")} aria-label="Camera" onClick={() => setCam((c) => !c)}>
-              <DSEW.IconifyIcon name={cam ? "lucide:video" : "lucide:video-off"} size={20} color="var(--white)" />
-            </button>
-          </div>
-        </div>
-        <div className="ev-detail-actions ev-wait-actions">
-          <button className="ev-detail-cta" onClick={onAdmit}>Join Now!</button>
-          <button className="ev-detail-cta ghost">Share Event</button>
-        </div>
-        <p className="ev-wait-note">You'll automatically join the live session when the host admits you.</p>
-        <h2 className="ev-sec-h">Need Help?</h2>
-        <button className="ev-help">
-          <DSEW.IconifyIcon name="lucide:circle-help" size={22} color="var(--brand-navy)" />
-          <span>Contact Support - We are here to help if you have any questions about this event.</span>
-          <DSEW.IconifyIcon name="lucide:chevron-right" size={22} color="var(--gray-450)" />
-        </button>
       </div>
+
+      {role === "audience" && showcase && <LSShowcase onClose={() => setShowcase(false)} onBuy={buy} />}
+      {checkoutProduct && <LSCheckout product={checkoutProduct} onClose={() => setCheckoutProduct(null)} />}
+
+      {role === "host" && panel === "participants" &&
+        <LSParticipants onCam={stageOnCam} offCam={stageOffCam} onToggleMute={toggleMute}
+          requests={requests} onApprove={approveRequest} onDecline={declineRequest} onClose={() => setPanel(null)} />}
+      {role === "host" && panel === "showcase" &&
+        <LSHostShowcase pushedNum={pushedNum} onTogglePush={setPushedNum} viewers={viewers} onClose={() => setPanel(null)} />}
+      {role === "host" && panel === "end" &&
+        <LSEndConfirm onCancel={() => setPanel(null)} onConfirm={onLeave} />}
+    </div>
+  );
+}
+
+/* ---- live lobby: member "arrivals" ticker shown while waiting for a live
+   event, ported from events-mobile.jsx's EV_ARRIVALS/WaitingRoom. ---- */
+const EW_ARRIVALS = [
+  { name: "Miranda Pearce", text: "Just joined — excited for this one" },
+  { name: "Aisha Rahman", text: "Can't wait, my first Technique Tuesday 🙌" },
+  { name: "Grace Lindqvist", text: "Hello from Stockholm!" },
+  { name: "Jonas Adeyemi", text: "Hoping he covers migration tonight" },
+];
+
+/* ---- waiting room / live lobby — ported from events-mobile.jsx's
+   WaitingRoom: full-bleed host camera preview, no self-preview or admit
+   gate — the audience joins instantly, so this is a lobby, not a device
+   check. Replaces the previous admit-flow card. ---- */
+function WaitingRoom({ onBack, onJoin, event }) {
+  const d = Object.assign({}, EW_DETAIL, event || {});
+  const watching = d.watching || d.going || "40";
+  const [msgs, setMsgs] = useStateEW(() => [Object.assign({ id: 0 }, EW_ARRIVALS[0])]);
+  useEffectEW(() => {
+    let i = 1;
+    const t = setInterval(() => {
+      setMsgs((m) => m.slice(-4).concat([Object.assign({ id: Date.now() }, EW_ARRIVALS[i % EW_ARRIVALS.length])]));
+      i++;
+    }, 2600);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div className="ev-lobby" data-screen-label="Waiting Room" style={{ backgroundImage: "url(assets/live-preview-camera.jpg)" }}>
+      <div className="ev-lobby-scrim" aria-hidden="true" />
+
+      <div className="ev-lobby-top">
+        <button className="ev-lobby-back" aria-label="Back" title="Back" onClick={onBack}>
+          <DSEW.IconifyIcon name="lucide:chevron-left" size={24} color="#fff" />
+        </button>
+        <span className="ev-lobby-live"><span className="pulse" />LIVE NOW</span>
+        <span className="ev-lobby-viewers"><DSEW.IconifyIcon name="lucide:users" size={15} color="#fff" />{watching}</span>
+      </div>
+
+      <div className="ev-lobby-center">
+        <span className="ev-lobby-badge"><DSEW.IconifyIcon name="lucide:radio" size={28} color="#fff" /></span>
+        <h1 className="ev-lobby-h">{d.title} is live now</h1>
+        <p className="ev-lobby-lead"><b>{watching} clinicians</b> are already watching. Click below to join — no approval needed.</p>
+        <p className="ev-lobby-desc">Join {d.host} every week for a live, interactive session — expert technique demonstrations, your questions answered, and the latest thinking in aesthetic medicine.</p>
+        <ul className="ev-lobby-checks">
+          <li><DSEW.IconifyIcon name="lucide:check" size={16} color="var(--success)" />Step-by-step technique demonstration</li>
+          <li><DSEW.IconifyIcon name="lucide:check" size={16} color="var(--success)" />Live Q&amp;A with the panel</li>
+          <li><DSEW.IconifyIcon name="lucide:check" size={16} color="var(--success)" />Real-world case studies</li>
+        </ul>
+      </div>
+
+      <div className="ev-lobby-chat" aria-live="polite">
+        {msgs.map((m) => <div className="ev-lobby-msg" key={m.id}><b>{m.name}</b> {m.text}</div>)}
+      </div>
+
+      <button className="ev-lobby-join" onClick={onJoin}>
+        <DSEW.IconifyIcon name="lucide:radio" size={19} color="#fff" />Join the live
+      </button>
     </div>
   );
 }
@@ -664,18 +1353,27 @@ function EventsWebApp() {
   const [sel, setSel] = useStateEW(null);
   const [view, setView] = useStateEW("list");
   const [cur, setCur] = useStateEW({ y: EW_TODAY.getFullYear(), m: EW_TODAY.getMonth() });
+  /* Where the waiting room's back button returns to: a live event clicked
+     straight from the list skips detail entirely, so back must return to
+     the list — not a detail screen the user never saw. */
+  const [waitFrom, setWaitFrom] = useStateEW("list");
+  const open = (e) => {
+    setSel(e);
+    if (e.state === "live") { setWaitFrom("list"); setScreen("waiting"); }
+    else { setScreen("detail"); }
+  };
   const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
   return (
     <div className="app wa-screen" style={vars}>
-      {screen !== "call" &&
+      {screen !== "call" && screen !== "waiting" &&
       <TopNavEW active="Home" user={ME_EW} logoSrc="assets/profinity-icon-purple-gold.png"
         onNavigate={navigateEW}
         style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />
       }
-      {screen === "list" && <EventsList onBack={() => goEW("NewsfeedWeb.html")} onOpen={(e) => { setSel(e); setScreen("detail"); }} view={view} setView={setView} cur={cur} setCur={setCur} />}
-      {screen === "detail" && <EventDetail event={sel} onBack={() => setScreen("list")} onJoin={() => setScreen("waiting")} />}
-      {screen === "waiting" && <WaitingRoom event={sel} onBack={() => setScreen("detail")} onAdmit={() => setScreen("call")} />}
-      {screen === "call" && <VideoCall onLeave={() => setScreen("detail")} />}
+      {screen === "list" && <EventsList onBack={() => goEW("NewsfeedWeb.html")} onOpen={open} view={view} setView={setView} cur={cur} setCur={setCur} />}
+      {screen === "detail" && <EventDetail event={sel} onBack={() => setScreen("list")} onJoin={() => { setWaitFrom("detail"); setScreen("waiting"); }} />}
+      {screen === "waiting" && <WaitingRoom event={sel} onBack={() => setScreen(waitFrom)} onJoin={() => setScreen("call")} />}
+      {screen === "call" && <LiveStream event={sel} onLeave={() => setScreen("detail")} />}
     </div>
   );
 }
