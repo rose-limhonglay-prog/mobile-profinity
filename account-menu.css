@@ -13,6 +13,12 @@
   outline-offset: 2px;
 }
 
+#pf-account-menu,
+#pf-account-menu *,
+#pf-account-menu *::before,
+#pf-account-menu *::after {
+  box-sizing: border-box;
+}
 #pf-account-menu {
   position: fixed;
   z-index: 120;
@@ -26,6 +32,7 @@
   opacity: 0;
   transform: translateY(-6px);
   transition: opacity 150ms ease-out, transform 150ms ease-out;
+  overflow: hidden;
 }
 #pf-account-menu.pf-account-menu-open { opacity: 1; transform: translateY(0); }
 @media (prefers-reduced-motion: reduce) {
@@ -72,6 +79,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-family: var(--font-sans, "Poppins", sans-serif);
   font-weight: var(--fw-medium, 500);
   font-size: 14.5px;
