@@ -7818,13 +7818,14 @@ function FeedPost({
       boxShadow: "none",
       border: "none",
       borderRadius: 0,
-      background: "transparent"
+      background: "transparent",
+      padding: "24px 8px"
     }
   }), inlineBubbles && hasRegion && /*#__PURE__*/React.createElement("div", {
     className: "comments-region",
     style: {
       borderTop: "1px solid var(--border-default)",
-      padding: "4px 16px 16px"
+      padding: "4px 8px 24px"
     }
   }, composerOpen && /*#__PURE__*/React.createElement(CommentComposer, {
     placeholder: "Write a comment…",
@@ -7838,7 +7839,7 @@ function FeedPost({
     className: "comments-region",
     style: {
       borderTop: "1px solid var(--border-default)",
-      padding: "6px 24px 20px"
+      padding: "6px 8px 24px"
     }
   }, /*#__PURE__*/React.createElement(LikedByRow, {
     onOpen: () => setLikesOpen(true)
@@ -7908,7 +7909,7 @@ function FeedPost({
   })), commentSheet && comments.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "comments-region cm-preview-region",
     style: {
-      padding: "0px",
+      padding: "0px 8px 24px",
       margin: "8px 0px 0px"
     }
   }, /*#__PURE__*/React.createElement("div", {

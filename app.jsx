@@ -4121,9 +4121,9 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
       onReport={() => setReportedOpen(true)}
       onReactionsClick={() => setLikesOpen(true)}
       onHashtagClick={goToHashtag}
-      style={{ boxShadow: "none", border: "none", borderRadius: 0, background: "transparent" }} />
+      style={{ boxShadow: "none", border: "none", borderRadius: 0, background: "transparent", padding: "24px 8px" }} />
       {inlineBubbles && hasRegion &&
-      <div className="comments-region" style={{ borderTop: "1px solid var(--border-default)", padding: "4px 16px 16px" }}>
+      <div className="comments-region" style={{ borderTop: "1px solid var(--border-default)", padding: "4px 8px 24px" }}>
           {composerOpen &&
         <CommentComposer placeholder="Write a comment…" autoFocus onSubmit={(t) => onAddComment(t)} />
         }
@@ -4131,7 +4131,7 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
         </div>
       }
       {!commentSheet && !inlineBubbles && hasRegion &&
-      <div className="comments-region" style={{ borderTop: "1px solid var(--border-default)", padding: "6px 24px 20px" }}>
+      <div className="comments-region" style={{ borderTop: "1px solid var(--border-default)", padding: "6px 8px 24px" }}>
           <LikedByRow onOpen={() => setLikesOpen(true)} />
           {composerOpen &&
         <CommentComposer placeholder="Write a comment…" autoFocus onSubmit={(t) => onAddComment(t)} />
@@ -4176,7 +4176,7 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
       </div>
       }
       {commentSheet && comments.length > 0 &&
-      <div className="comments-region cm-preview-region" style={{ padding: "0px", margin: "8px 0px 0px" }}>
+      <div className="comments-region cm-preview-region" style={{ padding: "0px 8px 24px", margin: "8px 0px 0px" }}>
           <div className="cmt-preview" role="button" tabIndex={0}
         onClick={() => setSheetOpen(true)}
         onKeyDown={(e) => {if (e.key === "Enter") setSheetOpen(true);}}>
