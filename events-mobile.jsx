@@ -735,16 +735,47 @@ function LSReactions({ particles }) {
   );
 }
 
-function LSChat({ msgs }) {
+function LSChat({ msgs, onAddReply }) {
   const ref = React.useRef(null);
+  const [replyFor, setReplyFor] = useStateEV(null);
+  const [replyVal, setReplyVal] = useStateEV("");
   useEffectEV(() => {
     const el = ref.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [msgs.length]);
+
+  const submitReply = (m) => {
+    const t = replyVal.trim();
+    if (!t) return;
+    onAddReply(m.id, t);
+    setReplyVal("");
+    setReplyFor(null);
+  };
+
   return (
     <div className="ls-chat" ref={ref} aria-live="polite" aria-label="Live chat">
       <div className="ls-chat-inner">
-        {msgs.map((m) => <div className="ls-msg" key={m.id}><b>{m.name}</b> {m.text}</div>)}
+        {msgs.map((m) => (
+          <div className="ls-msg-block" key={m.id}>
+            <button type="button" className="ls-msg" aria-expanded={replyFor === m.id}
+              onClick={() => setReplyFor(replyFor === m.id ? null : m.id)}>
+              <b>{m.name}</b> {m.text}
+            </button>
+            {m.replies && m.replies.length > 0 &&
+            <div className="ls-msg-replies">
+              {m.replies.map((r) => <div className="ls-msg ls-msg-reply" key={r.id}><b>{r.name}</b> {r.text}</div>)}
+            </div>}
+            {replyFor === m.id &&
+            <div className="ls-reply-box">
+              <input className="ls-reply-input" autoFocus value={replyVal} onChange={(e) => setReplyVal(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") submitReply(m); if (e.key === "Escape") setReplyFor(null); }}
+                placeholder={"Reply to " + m.name + "…"} aria-label={"Reply to " + m.name} />
+              <button type="button" className="ls-reply-send" aria-label="Send reply" title="Send" onClick={() => submitReply(m)}>
+                <DSEV.IconifyIcon name="lucide:send" size={14} color="#fff" />
+              </button>
+            </div>}
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -862,14 +893,94 @@ function LSShowcase({ onClose, onBuy }) {
   );
 }
 
+/* In-viewer checkout — buying from a live stream must never navigate the
+   audience away from the video (that's the whole point of watching live),
+   so this stays an overlay sheet on top of the stream instead of routing
+   to CourseCheckout.html. */
+function LSCheckout({ product, onClose }) {
+  const [paying, setPaying] = useStateEV(false);
+  const [done, setDone] = useStateEV(false);
+  useEffectEV(() => {
+    const esc = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  if (!product) return null;
+  const vat = Math.round(product.price * 0.2 * 100) / 100;
+  const total = product.price + vat;
+
+  const pay = () => {
+    setPaying(true);
+    setTimeout(() => { setPaying(false); setDone(true); }, 900);
+  };
+
+  return (
+    <div className="ev-sheet ls-checkout-sheet" role="dialog" aria-modal="true" aria-label="Checkout">
+      <button className="ev-sheet-scrim" aria-label="Close" onClick={onClose} />
+      <div className="ev-sheet-card ls-checkout">
+        <span className="ev-sheet-grab" />
+        {done ? (
+          <div className="ls-checkout-done">
+            <span className="ico"><DSEV.IconifyIcon name="lucide:check-circle-2" size={40} color="var(--success)" /></span>
+            <h3 className="ev-sheet-ttl">You're in!</h3>
+            <p className="ev-sheet-p">{product.title} has been added to your account — watch it any time from My Learning.</p>
+            <button className="ev-detail-cta" onClick={onClose}>Continue watching</button>
+          </div>
+        ) : (
+          <React.Fragment>
+            <div className="ls-showcase-hd">
+              <span className="brand">Checkout</span>
+              <button className="ev-sheet-x" aria-label="Close" onClick={onClose}><DSEV.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" /></button>
+            </div>
+
+            <div className="ls-checkout-item">
+              <span className="thumb"><img src={product.img} alt="" /></span>
+              <span className="tx">
+                <span className="ttl">{product.title}</span>
+                <span className="note">{product.note} · with Dr. Tim Pearce</span>
+              </span>
+            </div>
+
+            <div className="ls-checkout-summary">
+              <div className="row"><span>Price</span><span>£{product.price.toFixed(2)}</span></div>
+              <div className="row"><span>VAT (20%)</span><span>£{vat.toFixed(2)}</span></div>
+              <div className="row total"><span>Total due today</span><span>£{total.toFixed(2)}</span></div>
+            </div>
+
+            <div className="ls-checkout-pay">
+              <span className="ic"><DSEV.IconifyIcon name="lucide:credit-card" size={16} color="var(--brand-navy)" /></span>
+              <span className="tx"><b>Visa ending 4242</b><span>Expires 08/28</span></span>
+              <DSEV.IconifyIcon name="lucide:check-circle-2" size={18} color="var(--brand-navy)" />
+            </div>
+
+            <button className="ev-detail-cta ls-checkout-cta" disabled={paying} onClick={pay}>
+              <DSEV.IconifyIcon name="lucide:lock" size={14} color="#fff" /> {paying ? "Processing…" : "Pay £" + total.toFixed(2) + " & unlock"}
+            </button>
+            <p className="ls-checkout-secure">
+              <DSEV.IconifyIcon name="lucide:shield-check" size={12} color="var(--gray-400)" />
+              Secured by Stripe · stay live while you pay
+            </p>
+          </React.Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* Echo of whatever the host is currently pushing to viewers (LSHostShowcase).
    For the speaker this is read-only — see what's pinned so they can talk to
-   it, without granting them showcase controls of their own; the host gets
-   an Unpin action since it's their own push. */
-function LSPinnedForViewers({ product, onUnpin }) {
-  if (!product) return null;
+   it, without granting them showcase controls of their own — but they can
+   still dismiss the popup from their own view with the X; the host gets
+   an Unpin action instead since it's their own push (removes it for
+   everyone, not just their view). */
+function LSPinnedForViewers({ product, phase, onUnpin, onClose }) {
+  if (!product || phase === "hidden") return null;
   return (
-    <div className="ls-pinned">
+    <div className={"ls-pinned" + (phase === "out" ? " out" : "")}>
+      {onClose &&
+        <button className="x" aria-label="Dismiss" title="Dismiss" onClick={onClose}>
+          <span className="dot"><DSEV.IconifyIcon name="lucide:x" size={13} color="var(--gray-500)" /></span>
+        </button>}
       <span className="thumb"><img src={product.img} alt="" /></span>
       <span className="tx">
         <span className="lbl">Pinned for viewers</span>
@@ -1077,8 +1188,10 @@ function LiveStream({ event, onLeave }) {
   const [msgs, setMsgs] = useStateEV(() => LS_CHAT_SEED.map((m, i) => Object.assign({ id: i }, m)));
   const [val, setVal] = useStateEV("");
   const [showcase, setShowcase] = useStateEV(false);
+  const [checkoutProduct, setCheckoutProduct] = useStateEV(null);
   const [pushedNum, setPushedNum] = useStateEV(LS_PRODUCTS[0].num);
   const pinnedPopup = usePinnedPopup(pushedNum);
+  const speakerPinnedPopup = usePinnedPopup(pushedNum);
 
   /* Host + speaker preview state — role defaults to audience (today's real
      behaviour is unchanged); switching roles is a dev-only affordance via
@@ -1148,9 +1261,15 @@ function LiveStream({ event, onLeave }) {
     setVal("");
   };
 
+  const addReply = (msgId, text) => {
+    const me = (PFAEV && PFAEV.ME && PFAEV.ME.name) || "You";
+    setMsgs((m) => m.map((x) => x.id === msgId ?
+      Object.assign({}, x, { replies: (x.replies || []).concat([{ id: Date.now(), name: me, text }]) }) : x));
+  };
+
   const buy = (p) => {
-    const params = new URLSearchParams({ title: p.title, instr: "Dr. Tim Pearce", price: String(p.price) });
-    goEV("CourseCheckout.html?" + params.toString());
+    setShowcase(false);
+    setCheckoutProduct(p);
   };
 
   return (
@@ -1163,14 +1282,16 @@ function LiveStream({ event, onLeave }) {
       {/* Everything below floats over the full-bleed camera feed — the
           stage is the whole screen, not just a top strip. */}
       <div className="ls-overlay">
-        <LSChat msgs={msgs} />
+        <LSChat msgs={msgs} onAddReply={addReply} />
 
         {role === "audience" && pushedNum != null && pinnedPopup.phase !== "hidden" &&
           <LSProductCard product={LS_PRODUCTS.find((p) => p.num === pushedNum)} phase={pinnedPopup.phase} onBuy={buy} onClose={pinnedPopup.dismiss} />}
 
         {role !== "audience" && pushedNum &&
           <LSPinnedForViewers product={LS_PRODUCTS.find((p) => p.num === pushedNum)}
-            onUnpin={role === "host" ? () => setPushedNum(null) : undefined} />}
+            phase={role === "speaker" ? speakerPinnedPopup.phase : "visible"}
+            onUnpin={role === "host" ? () => setPushedNum(null) : undefined}
+            onClose={role === "speaker" ? speakerPinnedPopup.dismiss : undefined} />}
 
         {role !== "audience" &&
           <LSToolbar role={role} mic={selfMic} cam={selfCam}
@@ -1185,6 +1306,7 @@ function LiveStream({ event, onLeave }) {
       <LSReactions particles={particles} />
 
       {role === "audience" && showcase && <LSShowcase onClose={() => setShowcase(false)} onBuy={buy} />}
+      {checkoutProduct && <LSCheckout product={checkoutProduct} onClose={() => setCheckoutProduct(null)} />}
 
       {role === "host" && panel === "participants" &&
         <LSParticipants onCam={stageOnCam} offCam={stageOffCam} onToggleMute={toggleMute}
