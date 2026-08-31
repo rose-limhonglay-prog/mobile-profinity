@@ -37,7 +37,7 @@ function goLW(url) {
 }
 function navigateLW(label) {
   var u = {
-    Home: "Newsfeed.html",
+    Home: "NewsfeedWeb.html",
     Profile: "Profile.html",
     "My Learning": "MyLearning.html",
     Community: "Community.html",

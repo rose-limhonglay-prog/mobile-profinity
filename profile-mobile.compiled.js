@@ -167,6 +167,14 @@ function pmPillarScore(pillarKey, assessState) {
   return Math.min(100, Math.round(seval * 0.6 + scourse));
 }
 
+/* "Track your goals" is gated behind the 4 scored pillar assessments (not
+   Dream & Vision, which never touches a pillar score) — the forecast has
+   nothing to show until every pillar has a real baseline. */
+const PM_FORECAST_PILLARS = PM_PILLARS.map(p => p.key);
+function pmForecastDone(assessState) {
+  return PM_FORECAST_PILLARS.filter(k => assessState[k] && assessState[k].status === "completed").length;
+}
+
 /* Dynamic Goal Focus (3.3) — lowest-scoring pillar, tie-break in this order. */
 const PM_GOAL_TIEBREAK = ["Clinical Skills", "Business Systems", "Sales", "Marketing"];
 function pmLowestPillar(assessState) {
@@ -185,12 +193,27 @@ const PM_GOAL_REASONING = {
   "Business Systems": "Tightening your operations, pricing and financial tracking is what turns bookings into a sustainable, scalable business."
 };
 
+/* Esc closes any role="dialog" overlay (wizard, hub, help sheets) — `active`
+   lets a component call this unconditionally (Rules of Hooks) while only
+   listening once it's actually showing. */
+function usePMEscClose(active, onClose) {
+  useEffectPM(() => {
+    if (!active) return;
+    function onKey(e) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [active, onClose]);
+}
+
 /* "How it works" help — a plain-language explainer for the Spiral Score,
    reached via a link next to the heading (no new tab/nav item). */
 function PMSpiralHelpModal({
   open,
   onClose
 }) {
+  usePMEscClose(open, onClose);
   if (!open) return null;
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-help-overlay",
@@ -235,6 +258,13 @@ function PMSpiralCard({
   assessState
 }) {
   const [helpOpen, setHelpOpen] = useStatePM(false);
+  const scored = PM_PILLARS.map(g => ({
+    ...g,
+    score: pmPillarScore(g.key, assessState)
+  }));
+  const avg = Math.round(scored.reduce((sum, p) => sum + p.score, 0) / scored.length);
+  const strongest = scored.reduce((a, b) => b.score > a.score ? b : a);
+  const weakest = scored.reduce((a, b) => b.score < a.score ? b : a);
   return /*#__PURE__*/React.createElement("section", {
     className: "pm-sec pm-card",
     id: "prosperity-spiral",
@@ -252,38 +282,51 @@ function PMSpiralCard({
     name: "lucide:circle-help",
     size: 16,
     color: "var(--gray-500)"
-  }), "How it works")), /*#__PURE__*/React.createElement("button", {
+  }), "How it works"))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-spiral-overview"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-spiral-ring",
+    style: {
+      "--pct": avg
+    },
+    role: "img",
+    "aria-label": "Overall balance " + avg
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, avg), /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, "balance")), /*#__PURE__*/React.createElement("p", {
+    className: "pm-spiral-sentence"
+  }, "Your clinic is strongest in ", /*#__PURE__*/React.createElement("b", null, strongest.key), ". Lift ", /*#__PURE__*/React.createElement("b", null, weakest.key), " to bring the spiral into balance.")), /*#__PURE__*/React.createElement("div", {
+    className: "pm-spiral-rows"
+  }, scored.map(g => /*#__PURE__*/React.createElement("button", {
+    key: g.key,
     type: "button",
-    className: "pf-coach-link",
-    "data-coach": "Discuss my Prosperity Spiral — Sales, Marketing, Clinical Skills and Business Systems — and tell me what to prioritise."
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:sparkles",
-    size: 14,
-    color: "var(--ai-purple)"
-  }), "Discuss with Ava")), /*#__PURE__*/React.createElement("div", {
-    className: "pm-pillar-grid"
-  }, PM_PILLARS.map(g => {
-    const pct = pmPillarScore(g.key, assessState);
-    return /*#__PURE__*/React.createElement("button", {
-      key: g.key,
-      type: "button",
-      className: "pm-pillar-card",
-      onClick: () => goPM("LearningMobile.html")
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "top"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "k"
-    }, g.key), /*#__PURE__*/React.createElement("span", {
-      className: "v"
-    }, pct)), /*#__PURE__*/React.createElement("span", {
-      className: "bar"
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        width: pct + "%",
-        background: g.color
-      }
-    })));
-  })), /*#__PURE__*/React.createElement(PMSpiralHelpModal, {
+    className: "pm-spiral-row" + (g.key === weakest.key ? " lowest" : ""),
+    onClick: () => goPM("LearningMobile.html")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dot",
+    style: {
+      background: g.color
+    },
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "label"
+  }, g.key), /*#__PURE__*/React.createElement("span", {
+    className: "bar",
+    role: "progressbar",
+    "aria-label": g.key,
+    "aria-valuenow": g.score,
+    "aria-valuemin": 0,
+    "aria-valuemax": 100
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: g.score + "%",
+      background: g.color
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "score"
+  }, g.score)))), /*#__PURE__*/React.createElement(PMSpiralHelpModal, {
     open: helpOpen,
     onClose: () => setHelpOpen(false)
   }));
@@ -355,20 +398,29 @@ function PMTargetsCard() {
     next[i] = !next[i];
     return next;
   });
+  const doneCount = done.filter(Boolean).length;
+  const pct = all.length ? Math.round(doneCount / all.length * 100) : 0;
   return /*#__PURE__*/React.createElement("section", {
     className: "pm-sec pm-card",
     "data-screen-label": "Today's Targets"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-card-hd"
-  }, /*#__PURE__*/React.createElement("h2", null, "Today's Targets"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pf-coach-link",
-    "data-coach": "Help me plan today's targets to make progress on my clinic goal."
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:sparkles",
-    size: 14,
-    color: "var(--ai-purple)"
-  }), "Discuss with Ava")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-card-hd-ti"
+  }, /*#__PURE__*/React.createElement("h2", null, "Today's Targets"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-targets-pill"
+  }, doneCount, "/", all.length))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-targets-track",
+    role: "progressbar",
+    "aria-valuenow": pct,
+    "aria-valuemin": 0,
+    "aria-valuemax": 100
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-targets-fill",
+    style: {
+      width: pct + "%"
+    }
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pm-target-rows"
   }, all.map((t, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
@@ -390,9 +442,41 @@ function PMTargetsCard() {
     }
   }, PM_TARGET_TAGS[t.tag].label), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, t.text)))), /*#__PURE__*/React.createElement("p", {
+  }, t.text)))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-target-divider"
+  }), /*#__PURE__*/React.createElement("p", {
     className: "pm-target-note"
-  }, "Completing these will move your Prosperity Spiral forward"));
+  }, "Completing these will move your Prosperity Spiral forward."));
+}
+
+/* Gate card shown in place of Goal Focus / Prosperity Spiral / Today's
+   Targets until all four scored pillar assessments are done — those three
+   have nothing real to show before that, so they don't render at all
+   (never as empty or zeroed states). The CTA opens "Get to know you", which
+   lives inside ProfileSteps — not a prop we have here — so it's reached by
+   dispatching a DOM event ProfileSteps listens for. */
+function PMGoalsGateCard({
+  doneCount
+}) {
+  const heading = doneCount === 0 ? "Start with “Get to know you”" : `Keep going — ${doneCount} of 4 done`;
+  return /*#__PURE__*/React.createElement("section", {
+    className: "pm-sec pm-card pm-goals-gate"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-goals-gate-icon",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:compass",
+    size: 26,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("h3", null, heading), /*#__PURE__*/React.createElement("p", null, "Your forecast unlocks once all four pillar assessments — Marketing, Sales, Clinical Skills and Business Systems — are complete."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-goals-gate-cta",
+    onClick: () => window.dispatchEvent(new CustomEvent("pf-open-assess-hub"))
+  }, "Get to know you", /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:arrow-up-right",
+    size: 17,
+    color: "#fff"
+  })));
 }
 
 /* "Track your goals" — encloses Goal Focus, the Prosperity Spiral and
@@ -415,7 +499,9 @@ function PMGoalsMenu({
   useEffectPM(() => {
     if (window.location.hash === "#prosperity-spiral") setExpanded(true);
   }, []);
-  const avgPct = Math.round(PM_PILLARS.reduce((sum, p) => sum + pmPillarScore(p.key, assessState), 0) / PM_PILLARS.length);
+  const doneCount = pmForecastDone(assessState);
+  const unlocked = doneCount === PM_FORECAST_PILLARS.length;
+  const avgPct = unlocked ? Math.round(PM_PILLARS.reduce((sum, p) => sum + pmPillarScore(p.key, assessState), 0) / PM_PILLARS.length) : 0;
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-goals-viewport",
     style: viewportH != null ? {
@@ -433,13 +519,13 @@ function PMGoalsMenu({
     className: "pm-goals-collapsed-top"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "pm-steps-h"
-  }, "Track your goals"), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+  }, unlocked ? "Track your goals" : "Complete all four pillar assessments to unlock your forecast"), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 20,
     color: "var(--gray-400)"
   })), /*#__PURE__*/React.createElement("p", {
     className: "pm-steps-sub"
-  }, "Goal Focus, Prosperity Spiral & Today's Targets"), /*#__PURE__*/React.createElement("div", {
+  }, unlocked ? "Goal Focus, Prosperity Spiral & Today's Targets" : `${doneCount} of 4 assessments done — tap to continue`), /*#__PURE__*/React.createElement("div", {
     className: "pm-steps-track",
     role: "progressbar",
     "aria-valuenow": avgPct,
@@ -450,7 +536,7 @@ function PMGoalsMenu({
     style: {
       width: avgPct + "%"
     }
-  })), /*#__PURE__*/React.createElement("p", {
+  })), unlocked && /*#__PURE__*/React.createElement("p", {
     className: "pm-steps-pct"
   }, avgPct, "% average progress — tap to view")), /*#__PURE__*/React.createElement("div", {
     ref: expandedRef,
@@ -463,11 +549,13 @@ function PMGoalsMenu({
     name: "lucide:chevron-left",
     size: 20,
     color: "var(--text-heading)"
-  }), "Track your goals"), /*#__PURE__*/React.createElement(PMGoalFocusCard, {
+  }), "Track your goals"), unlocked ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PMGoalFocusCard, {
     assessState: assessState
   }), /*#__PURE__*/React.createElement(PMSpiralCard, {
     assessState: assessState
-  }), /*#__PURE__*/React.createElement(PMTargetsCard, null))));
+  }), /*#__PURE__*/React.createElement(PMTargetsCard, null)) : /*#__PURE__*/React.createElement(PMGoalsGateCard, {
+    doneCount: doneCount
+  }))));
 }
 const TIER_DISPLAY_NAME_PM = {
   confidence: "Confidence",
@@ -1983,6 +2071,7 @@ function PMAssessWizard({
   onComplete,
   onClose
 }) {
+  usePMEscClose(true, onClose);
   const questions = def.questions;
   const total = questions.length;
   const scored = assessKey !== "dreamVision";
@@ -2042,7 +2131,11 @@ function PMAssessWizard({
   }, scored ? "Answer honestly — this sets your baseline. Course progress can still carry this pillar all the way to 100%." : "Non-scored — this just helps us understand your goals so we can build your vision with you."), /*#__PURE__*/React.createElement("div", {
     className: "pm-wiz-progress"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-wiz-track"
+    className: "pm-wiz-track",
+    role: "progressbar",
+    "aria-valuenow": pct,
+    "aria-valuemin": 0,
+    "aria-valuemax": 100
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: pct + "%"
@@ -2083,6 +2176,53 @@ function PMAssessWizard({
     onClose: onClose
   })));
 }
+
+/* Assessment-complete celebration — raw JSON through lottie-web
+   (loadAnimation), never the lottie.host /embed iframe: the iframe caches
+   hard and ignores re-publishes, and ?v= cache-busters break its route. */
+function PMResultLottie({
+  size
+}) {
+  const host = React.useRef(null);
+  useEffectPM(() => {
+    let anim, iv;
+    function start() {
+      if (!window.lottie || !host.current) return;
+      anim = window.lottie.loadAnimation({
+        container: host.current,
+        renderer: "svg",
+        loop: false,
+        autoplay: true,
+        path: "https://lottie.host/d343b01e-a214-4708-97e8-51a7f92d98bf/HFXvByPBoo.json"
+      });
+    }
+    if (window.lottie) start();else iv = setInterval(() => {
+      if (window.lottie) {
+        clearInterval(iv);
+        start();
+      }
+    }, 120);
+    return () => {
+      if (anim) anim.destroy();
+      if (iv) clearInterval(iv);
+    };
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    ref: host,
+    className: "pm-wiz-result-lottie",
+    style: {
+      width: size,
+      height: size
+    },
+    "aria-hidden": "true"
+  });
+}
+function pmResultInterpretation(pct) {
+  if (pct >= 75) return "This is already a real strength for your practice — keep leaning into what's working.";
+  if (pct >= 50) return "You're solidly ahead of where most clinics start in this area.";
+  if (pct >= 25) return "You've got the basics in place, with clear room to grow here.";
+  return "You're just getting started here — plenty of room to build fast.";
+}
 function PMAssessResult({
   scored,
   answers,
@@ -2091,19 +2231,27 @@ function PMAssessResult({
   if (scored) {
     const raw = answers.reduce((sum, a) => sum + (a + 1), 0);
     const max = answers.length * 4;
+    const pct = Math.round(raw / max * 100);
     return /*#__PURE__*/React.createElement("div", {
       className: "pm-wiz-body pm-wiz-result"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "pm-wiz-result-icon"
-    }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-      name: "lucide:check",
-      size: 32,
-      color: "#fff"
-    })), /*#__PURE__*/React.createElement("h3", null, "Assessment complete"), /*#__PURE__*/React.createElement("p", {
-      className: "pm-wiz-result-score"
-    }, raw, " / ", max, " points"), /*#__PURE__*/React.createElement("p", {
+    }, /*#__PURE__*/React.createElement(PMResultLottie, {
+      size: 150
+    }), /*#__PURE__*/React.createElement("h3", null, "Assessment complete"), /*#__PURE__*/React.createElement("div", {
+      className: "pm-wiz-result-ring",
+      style: {
+        "--pct": pct
+      },
+      role: "img",
+      "aria-label": raw + " of " + max + " points"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "n"
+    }, raw), /*#__PURE__*/React.createElement("span", {
+      className: "lbl"
+    }, "of ", max)), /*#__PURE__*/React.createElement("span", {
+      className: "pm-wiz-result-pill"
+    }, pct, "% baseline for this pillar"), /*#__PURE__*/React.createElement("p", {
       className: "pm-wiz-result-note"
-    }, "This sets your baseline for this pillar — course progress can still carry it all the way to 100%."), /*#__PURE__*/React.createElement("button", {
+    }, pmResultInterpretation(pct)), /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "pm-wiz-done-btn",
       onClick: onClose
@@ -2122,14 +2270,10 @@ function PMAssessResult({
   const arch = PM_ARCHETYPES[dominant];
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-wiz-body pm-wiz-result"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-wiz-result-icon pm-wiz-result-icon--vision"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:sparkles",
-    size: 32,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement("h3", null, "Your Vision Profile"), /*#__PURE__*/React.createElement("p", {
-    className: "pm-wiz-result-arch"
+  }, /*#__PURE__*/React.createElement(PMResultLottie, {
+    size: 150
+  }), /*#__PURE__*/React.createElement("h3", null, "Your Vision Profile"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-wiz-result-pill pm-wiz-result-pill--arch"
   }, arch.name), /*#__PURE__*/React.createElement("p", {
     className: "pm-wiz-result-note"
   }, arch.desc), /*#__PURE__*/React.createElement("p", {
@@ -2178,6 +2322,7 @@ function PMAssessHelpModal({
   open,
   onClose
 }) {
+  usePMEscClose(open, onClose);
   if (!open) return null;
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-help-overlay",
@@ -2222,6 +2367,7 @@ function PMAssessHub({
   onOpenAssess,
   onClose
 }) {
+  usePMEscClose(true, onClose);
   const [helpOpen, setHelpOpen] = useStatePM(false);
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-wiz-overlay",
@@ -2611,6 +2757,18 @@ function ProfileSteps({
     expandedRef,
     height: viewportH
   } = usePMSlidePaneHeight(expanded, [assessState, steps]);
+
+  /* "Track your goals"' gate card lives in a sibling component with no
+     shared parent state, so it reaches the hub here via a DOM event rather
+     than a prop. */
+  useEffectPM(() => {
+    function openHub() {
+      setExpanded(true);
+      setHubOpen(true);
+    }
+    window.addEventListener("pf-open-assess-hub", openHub);
+    return () => window.removeEventListener("pf-open-assess-hub", openHub);
+  }, []);
   const total = steps.length;
   const done = steps.filter(s => s.state === "done").length;
 

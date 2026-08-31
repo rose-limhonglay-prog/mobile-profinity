@@ -580,6 +580,20 @@ img{max-width:100%}
 @keyframes sm-fs-in{from{opacity:0}to{opacity:1}}
 .sm-fs > img{width:100%;height:100%;object-fit:contain}
 
+/* web-only reel/video player modal — takes the place of navigating to
+   ReelMobile.html (a mobile-only route) when a reel/video post is opened
+   from the web newsfeed */
+.sm-reel-modal{position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,.92);
+  display:flex;align-items:center;justify-content:center;animation:sm-fs-in .2s ease}
+.sm-reel-modal-inner{position:relative;border-radius:var(--r-md);overflow:hidden}
+.sm-reel-modal-inner.vertical{width:min(420px,90vw)}
+.sm-reel-modal-inner.vertical .sm-vertical{margin-bottom:0}
+.sm-reel-modal-inner.square{width:min(560px,88vw)}
+.sm-reel-modal-inner.square .sm-video{margin-bottom:0}
+.sm-reel-modal-close{position:absolute;top:max(18px,env(safe-area-inset-top));right:20px;z-index:2;
+  width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;
+  background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center}
+
 /* carousel fullscreen viewer — tap any image in a multi-image post to open a
    swipeable, full-size version of the same carousel */
 .mc-fs-track{display:flex;width:100%;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;
@@ -599,6 +613,24 @@ img{max-width:100%}
 .sm-gallery img{flex:0 0 auto;width:82%;aspect-ratio:1/1;object-fit:cover;border-radius:var(--r-md);scroll-snap-align:start}
 .sm-count{position:absolute;top:12px;right:12px;padding:5px 12px;border-radius:var(--r-pill);
   background:rgba(16,24,40,.72);color:var(--white);font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px}
+
+/* ===== Web-only Facebook-style photo grid (multi-image posts) — mobile
+   keeps the swipeable .sm-gallery strip above. Rows are plain flex strips
+   (not one CSS grid) since the 5+ layout needs a 2-photo row on top of a
+   3-photo row — different column counts per row. ===== */
+.sm-grid-wrap{margin-bottom:16px;border-radius:var(--r-md);overflow:hidden}
+.sm-grid{display:flex;flex-direction:column;gap:4px}
+.sm-grid-row{display:flex;gap:4px}
+.sm-grid-cell{position:relative;flex:1 1 0;min-width:0}
+.sm-grid img{width:100%;height:100%;object-fit:cover;display:block;cursor:pointer}
+.sm-grid-1 .sm-grid-cell{aspect-ratio:16/10}
+.sm-grid-2 .sm-grid-cell{aspect-ratio:1/1}
+.sm-grid-3 .sm-grid-cell{aspect-ratio:1/1}
+.sm-grid-4 .sm-grid-cell{aspect-ratio:1/1}
+.sm-grid-5plus .sm-grid-cell{aspect-ratio:4/3}
+.sm-grid-more{position:absolute;inset:0;background:rgba(16,24,40,.55);color:var(--white);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-sans);
+  font-weight:var(--fw-semibold);font-size:26px;pointer-events:none}
 
 /* ===== MediaCarousel: swipeable strip + dot indicators + counter ===== */
 .mc-wrap{position:relative;margin-bottom:12px}

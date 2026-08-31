@@ -17,7 +17,7 @@ const ME_SMW = { name: "Katy Wilson", role: "Nurse Practitioner", avatar: "asset
 
 function goSMW(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
 function navigateSMW(label) {
-  var u = { Home: "Newsfeed.html", Profile: "Profile.html", "My Learning": "MyLearning.html", Community: "Community.html", Agent: "Agent.html" }[label];
+  var u = { Home: "NewsfeedWeb.html", Profile: "Profile.html", "My Learning": "MyLearning.html", Community: "Community.html", Agent: "Agent.html" }[label];
   if (u) goSMW(u);
 }
 

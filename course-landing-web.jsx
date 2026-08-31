@@ -12,7 +12,7 @@ const ME_CL = { name: "Rose Lim", role: "PROfinity Team", avatar: "assets/avatar
 
 function goCL(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
 function navigateCL(label) {
-  var u = { Home: "Newsfeed.html", Profile: "Profile.html", "My Learning": "MyLearning.html", Community: "Community.html", Agent: "Agent.html" }[label];
+  var u = { Home: "NewsfeedWeb.html", Profile: "Profile.html", "My Learning": "MyLearning.html", Community: "Community.html", Agent: "Agent.html" }[label];
   if (u) goCL(u);
 }
 function continueCL() { goCL("CourseWeb.html?course=8d-lips"); }

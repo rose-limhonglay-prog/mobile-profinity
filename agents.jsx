@@ -84,7 +84,7 @@ function pfTagActiveNav(activeLabel) {
 }
 
 function navigate(label) {
-  var u = { Home: "Newsfeed.html", Profile: "Profile.html", "My Learning": "MyLearning.html", Community: "Community.html" }[label];
+  var u = { Home: "NewsfeedWeb.html", Profile: "Profile.html", "My Learning": "MyLearning.html", Community: "Community.html" }[label];
   if (u) (window.pfGo || function (x) { window.location.href = x; })(u);
 }
 

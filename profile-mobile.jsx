@@ -95,6 +95,14 @@ function pmPillarScore(pillarKey, assessState) {
   return Math.min(100, Math.round(seval * 0.6 + scourse));
 }
 
+/* "Track your goals" is gated behind the 4 scored pillar assessments (not
+   Dream & Vision, which never touches a pillar score) — the forecast has
+   nothing to show until every pillar has a real baseline. */
+const PM_FORECAST_PILLARS = PM_PILLARS.map((p) => p.key);
+function pmForecastDone(assessState) {
+  return PM_FORECAST_PILLARS.filter((k) => assessState[k] && assessState[k].status === "completed").length;
+}
+
 /* Dynamic Goal Focus (3.3) — lowest-scoring pillar, tie-break in this order. */
 const PM_GOAL_TIEBREAK = ["Clinical Skills", "Business Systems", "Sales", "Marketing"];
 function pmLowestPillar(assessState) {
@@ -110,9 +118,22 @@ const PM_GOAL_REASONING = {
   "Business Systems": "Tightening your operations, pricing and financial tracking is what turns bookings into a sustainable, scalable business."
 };
 
+/* Esc closes any role="dialog" overlay (wizard, hub, help sheets) — `active`
+   lets a component call this unconditionally (Rules of Hooks) while only
+   listening once it's actually showing. */
+function usePMEscClose(active, onClose) {
+  useEffectPM(() => {
+    if (!active) return;
+    function onKey(e) { if (e.key === "Escape") onClose(); }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [active, onClose]);
+}
+
 /* "How it works" help — a plain-language explainer for the Spiral Score,
    reached via a link next to the heading (no new tab/nav item). */
 function PMSpiralHelpModal({ open, onClose }) {
+  usePMEscClose(open, onClose);
   if (!open) return null;
   return (
     <div className="pm-help-overlay" onClick={onClose}>
@@ -139,6 +160,10 @@ function PMSpiralHelpModal({ open, onClose }) {
 
 function PMSpiralCard({ assessState }) {
   const [helpOpen, setHelpOpen] = useStatePM(false);
+  const scored = PM_PILLARS.map((g) => ({ ...g, score: pmPillarScore(g.key, assessState) }));
+  const avg = Math.round(scored.reduce((sum, p) => sum + p.score, 0) / scored.length);
+  const strongest = scored.reduce((a, b) => (b.score > a.score ? b : a));
+  const weakest = scored.reduce((a, b) => (b.score < a.score ? b : a));
   return (
     <section className="pm-sec pm-card" id="prosperity-spiral" data-screen-label="The Prosperity Spiral">
       <div className="pm-card-hd">
@@ -148,23 +173,27 @@ function PMSpiralCard({ assessState }) {
             <DSPM.IconifyIcon name="lucide:circle-help" size={16} color="var(--gray-500)" />How it works
           </button>
         </span>
-        <button type="button" className="pf-coach-link" data-coach="Discuss my Prosperity Spiral — Sales, Marketing, Clinical Skills and Business Systems — and tell me what to prioritise.">
-          <DSPM.IconifyIcon name="lucide:sparkles" size={14} color="var(--ai-purple)" />Discuss with Ava
-        </button>
       </div>
-      <div className="pm-pillar-grid">
-        {PM_PILLARS.map((g) => {
-          const pct = pmPillarScore(g.key, assessState);
-          return (
-            <button key={g.key} type="button" className="pm-pillar-card" onClick={() => goPM("LearningMobile.html")}>
-              <span className="top">
-                <span className="k">{g.key}</span>
-                <span className="v">{pct}</span>
-              </span>
-              <span className="bar"><span style={{ width: pct + "%", background: g.color }} /></span>
-            </button>);
-
-        })}
+      <div className="pm-spiral-overview">
+        <div className="pm-spiral-ring" style={{ "--pct": avg }} role="img" aria-label={"Overall balance " + avg}>
+          <span className="n">{avg}</span>
+          <span className="lbl">balance</span>
+        </div>
+        <p className="pm-spiral-sentence">
+          Your clinic is strongest in <b>{strongest.key}</b>. Lift <b>{weakest.key}</b> to bring the spiral into balance.
+        </p>
+      </div>
+      <div className="pm-spiral-rows">
+        {scored.map((g) =>
+        <button key={g.key} type="button" className={"pm-spiral-row" + (g.key === weakest.key ? " lowest" : "")} onClick={() => goPM("LearningMobile.html")}>
+            <span className="dot" style={{ background: g.color }} aria-hidden="true" />
+            <span className="label">{g.key}</span>
+            <span className="bar" role="progressbar" aria-label={g.key} aria-valuenow={g.score} aria-valuemin={0} aria-valuemax={100}>
+              <span style={{ width: g.score + "%", background: g.color }} />
+            </span>
+            <span className="score">{g.score}</span>
+          </button>
+        )}
       </div>
       <PMSpiralHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
     </section>);
@@ -213,13 +242,18 @@ function PMTargetsCard() {
     next[i] = !next[i];
     return next;
   });
+  const doneCount = done.filter(Boolean).length;
+  const pct = all.length ? Math.round((doneCount / all.length) * 100) : 0;
   return (
     <section className="pm-sec pm-card" data-screen-label="Today's Targets">
       <div className="pm-card-hd">
-        <h2>Today's Targets</h2>
-        <button type="button" className="pf-coach-link" data-coach="Help me plan today's targets to make progress on my clinic goal.">
-          <DSPM.IconifyIcon name="lucide:sparkles" size={14} color="var(--ai-purple)" />Discuss with Ava
-        </button>
+        <span className="pm-card-hd-ti">
+          <h2>Today's Targets</h2>
+          <span className="pm-targets-pill">{doneCount}/{all.length}</span>
+        </span>
+      </div>
+      <div className="pm-targets-track" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+        <span className="pm-targets-fill" style={{ width: pct + "%" }}></span>
       </div>
       <div className="pm-target-rows">
         {all.map((t, i) =>
@@ -230,7 +264,30 @@ function PMTargetsCard() {
           </button>
         )}
       </div>
-      <p className="pm-target-note">Completing these will move your Prosperity Spiral forward</p>
+      <div className="pm-target-divider" />
+      <p className="pm-target-note">Completing these will move your Prosperity Spiral forward.</p>
+    </section>);
+
+}
+
+/* Gate card shown in place of Goal Focus / Prosperity Spiral / Today's
+   Targets until all four scored pillar assessments are done — those three
+   have nothing real to show before that, so they don't render at all
+   (never as empty or zeroed states). The CTA opens "Get to know you", which
+   lives inside ProfileSteps — not a prop we have here — so it's reached by
+   dispatching a DOM event ProfileSteps listens for. */
+function PMGoalsGateCard({ doneCount }) {
+  const heading = doneCount === 0 ? "Start with “Get to know you”" : `Keep going — ${doneCount} of 4 done`;
+  return (
+    <section className="pm-sec pm-card pm-goals-gate">
+      <span className="pm-goals-gate-icon" aria-hidden="true">
+        <DSPM.IconifyIcon name="lucide:compass" size={26} color="#fff" />
+      </span>
+      <h3>{heading}</h3>
+      <p>Your forecast unlocks once all four pillar assessments — Marketing, Sales, Clinical Skills and Business Systems — are complete.</p>
+      <button type="button" className="pm-goals-gate-cta" onClick={() => window.dispatchEvent(new CustomEvent("pf-open-assess-hub"))}>
+        Get to know you<DSPM.IconifyIcon name="lucide:arrow-up-right" size={17} color="#fff" />
+      </button>
     </section>);
 
 }
@@ -250,32 +307,40 @@ function PMGoalsMenu({ assessState }) {
     if (window.location.hash === "#prosperity-spiral") setExpanded(true);
   }, []);
 
-  const avgPct = Math.round(
+  const doneCount = pmForecastDone(assessState);
+  const unlocked = doneCount === PM_FORECAST_PILLARS.length;
+  const avgPct = unlocked ? Math.round(
     PM_PILLARS.reduce((sum, p) => sum + pmPillarScore(p.key, assessState), 0) / PM_PILLARS.length
-  );
+  ) : 0;
 
   return (
     <div className="pm-goals-viewport" style={viewportH != null ? { height: viewportH + "px" } : undefined}>
       <div className={"pm-goals-slider" + (expanded ? " expanded" : "")}>
         <button type="button" ref={collapsedRef} className="pm-goals-pane pm-goals-collapsed" aria-label="Track your goals — tap to view" onClick={() => setExpanded(true)}>
           <div className="pm-goals-collapsed-top">
-            <h3 className="pm-steps-h">Track your goals</h3>
+            <h3 className="pm-steps-h">{unlocked ? "Track your goals" : "Complete all four pillar assessments to unlock your forecast"}</h3>
             <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
           </div>
-          <p className="pm-steps-sub">Goal Focus, Prosperity Spiral &amp; Today's Targets</p>
+          <p className="pm-steps-sub">{unlocked ? "Goal Focus, Prosperity Spiral & Today's Targets" : `${doneCount} of 4 assessments done — tap to continue`}</p>
           <div className="pm-steps-track" role="progressbar" aria-valuenow={avgPct} aria-valuemin={0} aria-valuemax={100}>
             <span className="pm-steps-fill" style={{ width: avgPct + "%" }}></span>
           </div>
-          <p className="pm-steps-pct">{avgPct}% average progress — tap to view</p>
+          {unlocked && <p className="pm-steps-pct">{avgPct}% average progress — tap to view</p>}
         </button>
 
         <div ref={expandedRef} className="pm-goals-pane pm-goals-expanded">
           <button type="button" className="pm-goals-back" onClick={() => setExpanded(false)}>
             <DSPM.IconifyIcon name="lucide:chevron-left" size={20} color="var(--text-heading)" />Track your goals
           </button>
-          <PMGoalFocusCard assessState={assessState} />
-          <PMSpiralCard assessState={assessState} />
-          <PMTargetsCard />
+          {unlocked ?
+          <>
+              <PMGoalFocusCard assessState={assessState} />
+              <PMSpiralCard assessState={assessState} />
+              <PMTargetsCard />
+            </> :
+
+          <PMGoalsGateCard doneCount={doneCount} />
+          }
         </div>
       </div>
     </div>
@@ -1235,6 +1300,7 @@ function pmAssessStatus(entry) {
    score on finish (rawPoints out of 28); Dream & Vision tallies a dominant
    letter and reveals an archetype instead of a score. ---- */
 function PMAssessWizard({ assessKey, def, initialAnswers, onProgress, onComplete, onClose }) {
+  usePMEscClose(true, onClose);
   const questions = def.questions;
   const total = questions.length;
   const scored = assessKey !== "dreamVision";
@@ -1281,7 +1347,9 @@ function PMAssessWizard({ assessKey, def, initialAnswers, onProgress, onComplete
                 : "Non-scored — this just helps us understand your goals so we can build your vision with you."}
             </p>
             <div className="pm-wiz-progress">
-              <span className="pm-wiz-track"><span style={{ width: pct + "%" }} /></span>
+              <span className="pm-wiz-track" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+                <span style={{ width: pct + "%" }} />
+              </span>
               <span className="pm-wiz-count">{step + 1} of {total}</span>
             </div>
             <div className="pm-wiz-q">{cur.q}</div>
@@ -1309,16 +1377,49 @@ function PMAssessWizard({ assessKey, def, initialAnswers, onProgress, onComplete
 
 }
 
+/* Assessment-complete celebration — raw JSON through lottie-web
+   (loadAnimation), never the lottie.host /embed iframe: the iframe caches
+   hard and ignores re-publishes, and ?v= cache-busters break its route. */
+function PMResultLottie({ size }) {
+  const host = React.useRef(null);
+  useEffectPM(() => {
+    let anim, iv;
+    function start() {
+      if (!window.lottie || !host.current) return;
+      anim = window.lottie.loadAnimation({
+        container: host.current, renderer: "svg", loop: false, autoplay: true,
+        path: "https://lottie.host/d343b01e-a214-4708-97e8-51a7f92d98bf/HFXvByPBoo.json"
+      });
+    }
+    if (window.lottie) start();
+    else iv = setInterval(() => { if (window.lottie) { clearInterval(iv); start(); } }, 120);
+    return () => { if (anim) anim.destroy(); if (iv) clearInterval(iv); };
+  }, []);
+  return <div ref={host} className="pm-wiz-result-lottie" style={{ width: size, height: size }} aria-hidden="true" />;
+}
+
+function pmResultInterpretation(pct) {
+  if (pct >= 75) return "This is already a real strength for your practice — keep leaning into what's working.";
+  if (pct >= 50) return "You're solidly ahead of where most clinics start in this area.";
+  if (pct >= 25) return "You've got the basics in place, with clear room to grow here.";
+  return "You're just getting started here — plenty of room to build fast.";
+}
+
 function PMAssessResult({ scored, answers, onClose }) {
   if (scored) {
     const raw = answers.reduce((sum, a) => sum + (a + 1), 0);
     const max = answers.length * 4;
+    const pct = Math.round((raw / max) * 100);
     return (
       <div className="pm-wiz-body pm-wiz-result">
-        <div className="pm-wiz-result-icon"><DSPM.IconifyIcon name="lucide:check" size={32} color="#fff" /></div>
+        <PMResultLottie size={150} />
         <h3>Assessment complete</h3>
-        <p className="pm-wiz-result-score">{raw} / {max} points</p>
-        <p className="pm-wiz-result-note">This sets your baseline for this pillar — course progress can still carry it all the way to 100%.</p>
+        <div className="pm-wiz-result-ring" style={{ "--pct": pct }} role="img" aria-label={raw + " of " + max + " points"}>
+          <span className="n">{raw}</span>
+          <span className="lbl">of {max}</span>
+        </div>
+        <span className="pm-wiz-result-pill">{pct}% baseline for this pillar</span>
+        <p className="pm-wiz-result-note">{pmResultInterpretation(pct)}</p>
         <button type="button" className="pm-wiz-done-btn" onClick={onClose}>Back to assessments</button>
       </div>);
 
@@ -1329,9 +1430,9 @@ function PMAssessResult({ scored, answers, onClose }) {
   const arch = PM_ARCHETYPES[dominant];
   return (
     <div className="pm-wiz-body pm-wiz-result">
-      <div className="pm-wiz-result-icon pm-wiz-result-icon--vision"><DSPM.IconifyIcon name="lucide:sparkles" size={32} color="#fff" /></div>
+      <PMResultLottie size={150} />
       <h3>Your Vision Profile</h3>
-      <p className="pm-wiz-result-arch">{arch.name}</p>
+      <span className="pm-wiz-result-pill pm-wiz-result-pill--arch">{arch.name}</span>
       <p className="pm-wiz-result-note">{arch.desc}</p>
       <p className="pm-wiz-result-note pm-wiz-result-note--muted">This doesn't change your Prosperity Spiral — it just helps us (and your mentor) understand where you want your clinic to go.</p>
       <button type="button" className="pm-wiz-done-btn" onClick={onClose}>Back to assessments</button>
@@ -1362,6 +1463,7 @@ function PMAssessHubTile({ assessKey, def, entry, onOpen }) {
 /* Assessment Selection Screen (PRD 3.1) — 4 pillar tiles + Dream & Vision,
    opened from the "Get to know you" entry point in Complete Your Profile. */
 function PMAssessHelpModal({ open, onClose }) {
+  usePMEscClose(open, onClose);
   if (!open) return null;
   return (
     <div className="pm-help-overlay" onClick={onClose}>
@@ -1388,6 +1490,7 @@ function PMAssessHelpModal({ open, onClose }) {
 }
 
 function PMAssessHub({ assessState, onOpenAssess, onClose }) {
+  usePMEscClose(true, onClose);
   const [helpOpen, setHelpOpen] = useStatePM(false);
   return (
     <div className="pm-wiz-overlay" role="dialog" aria-modal="true" aria-label="Get to know you">
@@ -1624,6 +1727,15 @@ function ProfileSteps({ assessState, onAssessPatch }) {
   const [openAssessKey, setOpenAssessKey] = useStatePM(null);
   const [expanded, setExpanded] = useStatePM(false);
   const { collapsedRef, expandedRef, height: viewportH } = usePMSlidePaneHeight(expanded, [assessState, steps]);
+
+  /* "Track your goals"' gate card lives in a sibling component with no
+     shared parent state, so it reaches the hub here via a DOM event rather
+     than a prop. */
+  useEffectPM(() => {
+    function openHub() { setExpanded(true); setHubOpen(true); }
+    window.addEventListener("pf-open-assess-hub", openHub);
+    return () => window.removeEventListener("pf-open-assess-hub", openHub);
+  }, []);
 
   const total = steps.length;
   const done = steps.filter(s => s.state === "done").length;

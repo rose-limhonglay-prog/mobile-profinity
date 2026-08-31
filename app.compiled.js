@@ -2919,22 +2919,6 @@ const CHANNEL_GROUPS = [{
     premium: true
   }]
 }];
-const TRENDING = [{
-  rank: 1,
-  kind: "Protocol",
-  title: "Lip Reversal Protocol",
-  media: IMG.lip
-}, {
-  rank: 2,
-  kind: "Case Study",
-  title: "Tear Trough Correction",
-  media: IMG.toxin
-}, {
-  rank: 3,
-  kind: "Article",
-  title: "MidFace Filler Complications",
-  media: IMG.collage
-}];
 const FOLLOWS = [{
   name: "Caron Kiem",
   loc: "London, United Kingdom"
@@ -4845,79 +4829,6 @@ function ChannelGroup({
     ...r
   }))));
 }
-function Trending() {
-  return /*#__PURE__*/React.createElement(Card, {
-    padding: 20
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 9,
-      marginBottom: 6
-    }
-  }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:trending-up",
-    size: 22,
-    color: "var(--reaction-like)"
-  }), /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontFamily: "var(--font-sans)",
-      fontWeight: "var(--fw-bold)",
-      fontSize: "var(--fs-body-lg)",
-      color: "var(--text-heading)"
-    }
-  }, "Trending Among Clinicians")), TRENDING.map((t, i) => /*#__PURE__*/React.createElement("a", {
-    key: i,
-    style: {
-      display: "block",
-      padding: "14px 0",
-      borderTop: i ? "1px solid var(--border-default)" : "none",
-      cursor: "pointer"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--fs-caption)",
-      color: "var(--gray-500)",
-      marginBottom: 9
-    }
-  }, "#", t.rank, " – ", /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "var(--text-primary)",
-      fontWeight: "var(--fw-semibold)"
-    }
-  }, "Top Trending")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 12,
-      alignItems: "center"
-    }
-  }, /*#__PURE__*/React.createElement("img", {
-    src: t.media,
-    alt: "",
-    style: {
-      width: 56,
-      height: 56,
-      borderRadius: "var(--r-sm)",
-      objectFit: "cover",
-      flexShrink: 0
-    }
-  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "var(--font-sans)",
-      fontWeight: "var(--fw-bold)",
-      fontSize: "var(--fs-body-lg)",
-      color: "var(--text-heading)"
-    }
-  }, t.kind), /*#__PURE__*/React.createElement("div", {
-    style: {
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--fs-body)",
-      color: "var(--gray-600)",
-      marginTop: 2
-    }
-  }, t.title))))));
-}
 function StoreButton({
   iconify,
   small,
@@ -5002,7 +4913,7 @@ function LeftRail() {
   }, /*#__PURE__*/React.createElement(ProfileCard, null), CHANNEL_GROUPS.map((g, i) => /*#__PURE__*/React.createElement(ChannelGroup, {
     key: i,
     group: g
-  })), /*#__PURE__*/React.createElement(Trending, null), /*#__PURE__*/React.createElement(Download, null));
+  })), /*#__PURE__*/React.createElement(Download, null));
 }
 
 /* ============================ RIGHT RAIL ================================= */
@@ -6457,6 +6368,139 @@ function ChannelContext({
     onClick: () => setJoined(j => !j)
   }, joined ? "Joined" : "Join"));
 }
+
+/* Facebook-style static photo grid for multi-image posts — web only (mobile
+   keeps the swipeable .sm-gallery strip). Up to 4 photos share one even row;
+   5+ shows a 2-over-3 layout with a "+N" overlay on the last cell for any
+   photos beyond the first 5. */
+function GalleryGrid({
+  images,
+  onImageClick
+}) {
+  const total = images.length;
+  if (total >= 5) {
+    const top = images.slice(0, 2);
+    const bottom = images.slice(2, 5);
+    const extra = total - 5;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "sm-grid sm-grid-5plus"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "sm-grid-row"
+    }, top.map((src, i) => /*#__PURE__*/React.createElement("div", {
+      key: i,
+      className: "sm-grid-cell"
+    }, /*#__PURE__*/React.createElement("img", {
+      src: src,
+      alt: "Image " + (i + 1) + " of " + total,
+      onClick: onImageClick
+    })))), /*#__PURE__*/React.createElement("div", {
+      className: "sm-grid-row"
+    }, bottom.map((src, i) => /*#__PURE__*/React.createElement("div", {
+      key: i,
+      className: "sm-grid-cell"
+    }, /*#__PURE__*/React.createElement("img", {
+      src: src,
+      alt: "Image " + (i + 3) + " of " + total,
+      onClick: onImageClick
+    }), i === bottom.length - 1 && extra > 0 && /*#__PURE__*/React.createElement("span", {
+      className: "sm-grid-more"
+    }, "+", extra)))));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "sm-grid sm-grid-" + total
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sm-grid-row"
+  }, images.map((src, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "sm-grid-cell"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: src,
+    alt: "Image " + (i + 1) + " of " + total,
+    onClick: onImageClick
+  })))));
+}
+
+/* Web-only in-page player for reel (vertical) and square-video posts — takes
+   the place of navigating to ReelMobile.html, which is a mobile-only route.
+   Reuses the same simulated poster+controls markup as the feed-card player. */
+function WebReelModal({
+  sample,
+  playing,
+  setPlaying,
+  muted,
+  setMuted,
+  onClose
+}) {
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  const vertical = sample.type === "vertical";
+  const poster = vertical ? sample.image : sample.poster;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "sm-reel-modal",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sm-reel-modal-inner" + (vertical ? " vertical" : " square"),
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: (vertical ? "sm-vertical sm-reel" : "sm-video sm-video-square") + (playing ? " playing" : ""),
+    onClick: () => setPlaying(p => !p),
+    role: "button",
+    tabIndex: 0,
+    "aria-label": playing ? "Pause video" : "Play video",
+    onKeyDown: e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        setPlaying(p => !p);
+      }
+    }
+  }, /*#__PURE__*/React.createElement("img", {
+    src: poster,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sm-mute",
+    "aria-label": muted ? "Unmute" : "Mute",
+    onClick: e => {
+      e.stopPropagation();
+      setMuted(m => !m);
+    }
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: muted ? "lucide:volume-x" : "lucide:volume-2",
+    size: 16,
+    color: "var(--white)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sm-bigplay" + (playing ? " hide" : "")
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "fluent:play-16-filled",
+    size: 30,
+    color: "var(--white)"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: vertical ? "sm-controls" : "sm-video-controls",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-time"
+  }, "0:07"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-track"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-fill" + (!vertical ? " sm-video-fill" : "")
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sm-time"
+  }, "0:15")))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sm-reel-modal-close",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 22,
+    color: "var(--white)"
+  })));
+}
 function SampleMedia({
   sample,
   postId,
@@ -6479,8 +6523,17 @@ function SampleMedia({
   const [idx, setIdx] = useState(0);
   const [playing, setPlaying] = useState(() => sample && sample.type === "vertical" || postId != null && window.pfWasWatched && window.pfWasWatched(postId));
   const [muted, setMuted] = useState(true);
+  const [webPlayerOpen, setWebPlayerOpen] = useState(false);
+  const isWeb = typeof window !== "undefined" && !window.PF_EMBED;
+  /* Web has no ReelMobile-style full-screen route, so instead of navigating
+     off the newsfeed it opens an in-page player modal; mobile keeps its
+     existing navigation to ReelMobile.html untouched. */
   const openReel = () => {
     if (postId != null && window.pfMarkWatched) window.pfMarkWatched(postId);
+    if (isWeb) {
+      setWebPlayerOpen(true);
+      return;
+    }
     let el = videoRef.current;
     while (el && el.parentElement) {
       el = el.parentElement;
@@ -6498,6 +6551,14 @@ function SampleMedia({
     heartNode
   } = useDoubleTapLove(onLoveReact || (() => {}));
   if (!sample) return null;
+  const webPlayerNode = webPlayerOpen && /*#__PURE__*/React.createElement(WebReelModal, {
+    sample: sample,
+    playing: playing,
+    setPlaying: setPlaying,
+    muted: muted,
+    setMuted: setMuted,
+    onClose: () => setWebPlayerOpen(false)
+  });
   if (sample.type === "video") {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "sm-video" + (sample.aspect === "square" ? " sm-video-square" : ""),
@@ -6537,7 +6598,7 @@ function SampleMedia({
       className: "sm-fill sm-video-fill"
     })), /*#__PURE__*/React.createElement("span", {
       className: "sm-time"
-    }, "0:15"))), heartNode);
+    }, "0:15"))), heartNode, webPlayerNode);
   }
   if (sample.type === "vertical") {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
@@ -6594,10 +6655,18 @@ function SampleMedia({
       name: muted ? "lucide:volume-x" : "lucide:volume-2",
       size: 16,
       color: "var(--white)"
-    })))), heartNode);
+    })))), heartNode, webPlayerNode);
   }
 
   // gallery
+  if (typeof window !== "undefined" && !window.PF_EMBED) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "sm-grid-wrap"
+    }, /*#__PURE__*/React.createElement(GalleryGrid, {
+      images: sample.images,
+      onImageClick: wrap(null)
+    }), heartNode);
+  }
   const onScroll = () => {
     const el = galleryRef.current;
     if (!el) return;

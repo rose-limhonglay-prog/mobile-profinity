@@ -480,7 +480,7 @@ function pfTagActiveNav(activeLabel) {
 }
 function navigate(label) {
   var u = {
-    Home: "Newsfeed.html",
+    Home: "NewsfeedWeb.html",
     Profile: "Profile.html",
     Community: "Community.html",
     Agent: "Agent.html"

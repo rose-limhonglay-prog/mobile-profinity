@@ -31,7 +31,7 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .mt-btn-fill, .mt-btn-outline { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px;
   border-radius: var(--r-pill); padding: 14px 20px; cursor: pointer; display: flex; align-items: center;
   justify-content: center; gap: 6px; flex: 1; border: none; }
-.mt-btn-fill { background: var(--premium-badge); color: #fff; }
+.mt-btn-fill { background: var(--brand-navy); color: #fff; }
 .mt-btn-outline { background: transparent; border: 1.5px solid var(--border-default); color: var(--brand-navy); }
 
 .mt-hero-ctas { display: flex; gap: 10px; margin: 18px 0 22px; }

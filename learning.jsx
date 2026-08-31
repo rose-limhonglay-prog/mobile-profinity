@@ -303,7 +303,7 @@ function pfTagActiveNav(activeLabel) {
 }
 
 function navigate(label) {
-  var u = { Home: "Newsfeed.html", Profile: "Profile.html", Community: "Community.html", Agent: "Agent.html" }[label];
+  var u = { Home: "NewsfeedWeb.html", Profile: "Profile.html", Community: "Community.html", Agent: "Agent.html" }[label];
   if (u) (window.pfGo || function (x) { window.location.href = x; })(u);
 }
 

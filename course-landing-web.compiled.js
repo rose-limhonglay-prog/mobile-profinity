@@ -26,7 +26,7 @@ function goCL(url) {
 }
 function navigateCL(label) {
   var u = {
-    Home: "Newsfeed.html",
+    Home: "NewsfeedWeb.html",
     Profile: "Profile.html",
     "My Learning": "MyLearning.html",
     Community: "Community.html",

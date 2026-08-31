@@ -2417,7 +2417,7 @@ Object.assign(__ds_scope, { AchievementChip });
 try { (() => {
 /**
  * Membership / subscription upsell card — gold gradient plan panel with a
- * price box and a purple "Subscribe Now" action. Sits in the Profile right rail.
+ * price box and a navy "Subscribe Now" action. Sits in the Profile right rail.
  */
 function MembershipCard({
   heading = "Subscription Plan",
@@ -2540,7 +2540,7 @@ function MembershipCard({
       fontSize: "var(--fs-body-lg)",
       fontWeight: "var(--fw-semibold)",
       color: "var(--white)",
-      background: "var(--action-primary)"
+      background: "var(--brand-navy)"
     }
   }, cta, /*#__PURE__*/React.createElement(__ds_scope.IconifyIcon, {
     name: "lucide:arrow-up-right",

@@ -15,7 +15,7 @@ const TUTOR_ROLE_CT = "Clinical Director · PROfinity Academy";
 
 function goCT(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
 function navigateCT(label) {
-  var u = { Home: "Newsfeed.html", Profile: "Profile.html", "My Learning": "MyLearning.html", Community: "Community.html", Agent: "Agent.html" }[label];
+  var u = { Home: "NewsfeedWeb.html", Profile: "Profile.html", "My Learning": "MyLearning.html", Community: "Community.html", Agent: "Agent.html" }[label];
   if (u) goCT(u);
 }
 
