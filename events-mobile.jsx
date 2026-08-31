@@ -775,37 +775,30 @@ function LSComposer({ value, onChange, onSend, onReact, onOpenBasket }) {
   );
 }
 
-/* Cycles the pinned product card: visible 5s, shrinks into the basket over
-   .5s, then 8s later (from the shrink) the next product pops in. Tapping
-   the basket re-runs the current product's cycle from scratch. */
-function useProductCycle(products) {
-  const [idx, setIdx] = useStateEV(0);
-  const [phase, setPhase] = useStateEV("visible");
-  const timers = React.useRef([]);
-  const clearAll = () => { timers.current.forEach(clearTimeout); timers.current = []; };
-  const advance = (i) => {
-    const t = setTimeout(() => runCycle((i + 1) % products.length), 7500);
-    timers.current.push(t);
-  };
-  const runCycle = (i) => {
-    clearAll();
-    setIdx(i);
-    setPhase("visible");
-    const t1 = setTimeout(() => {
-      setPhase("out");
-      const t2 = setTimeout(() => { setPhase("hidden"); advance(i); }, 500);
-      timers.current.push(t2);
-    }, 5000);
-    timers.current.push(t1);
-  };
+/* Audience-side popup for whatever product the host currently has pinned.
+   It only closes when the viewer taps the X — no auto-hide, no auto-cycle
+   — and pops back open whenever the host pins a new product. Tapping the
+   basket re-shows the currently pinned product. */
+function usePinnedPopup(pushedNum) {
+  const [phase, setPhase] = useStateEV("hidden");
+  const prevNum = React.useRef(null);
+  const timer = React.useRef(null);
+  useEffectEV(() => {
+    if (pushedNum == null) {
+      setPhase("hidden");
+    } else if (pushedNum !== prevNum.current) {
+      clearTimeout(timer.current);
+      setPhase("visible");
+    }
+    prevNum.current = pushedNum;
+  }, [pushedNum]);
+  useEffectEV(() => () => clearTimeout(timer.current), []);
   const dismiss = () => {
-    clearAll();
     setPhase("out");
-    const t = setTimeout(() => { setPhase("hidden"); advance(idx); }, 500);
-    timers.current.push(t);
+    timer.current = setTimeout(() => setPhase("hidden"), 500);
   };
-  useEffectEV(() => { runCycle(0); return clearAll; }, []);
-  return { idx, phase, reveal: () => runCycle(idx), dismiss };
+  const show = () => { if (pushedNum != null) setPhase("visible"); };
+  return { phase, dismiss, show };
 }
 
 function LSProductCard({ product, phase, onBuy, onClose }) {
@@ -1084,7 +1077,8 @@ function LiveStream({ event, onLeave }) {
   const [msgs, setMsgs] = useStateEV(() => LS_CHAT_SEED.map((m, i) => Object.assign({ id: i }, m)));
   const [val, setVal] = useStateEV("");
   const [showcase, setShowcase] = useStateEV(false);
-  const cycle = useProductCycle(LS_PRODUCTS);
+  const [pushedNum, setPushedNum] = useStateEV(LS_PRODUCTS[0].num);
+  const pinnedPopup = usePinnedPopup(pushedNum);
 
   /* Host + speaker preview state — role defaults to audience (today's real
      behaviour is unchanged); switching roles is a dev-only affordance via
@@ -1097,7 +1091,6 @@ function LiveStream({ event, onLeave }) {
   const [offCamPeople, setOffCamPeople] = useStateEV(() => LS_OFFCAM.map((p) => Object.assign({}, p)));
   const [requests, setRequests] = useStateEV(LS_REQUESTS);
   const [panel, setPanel] = useStateEV(null); // null | "participants" | "showcase" | "end"
-  const [pushedNum, setPushedNum] = useStateEV(null);
 
   /* Katy Wilson (the logged-in user, PFAEV.ME) already sits in LS_OFFCAM as
      a host chip — speaker role promotes her into the main stage grid,
@@ -1172,8 +1165,8 @@ function LiveStream({ event, onLeave }) {
       <div className="ls-overlay">
         <LSChat msgs={msgs} />
 
-        {role === "audience" && cycle.phase !== "hidden" &&
-          <LSProductCard product={LS_PRODUCTS[cycle.idx]} phase={cycle.phase} onBuy={buy} onClose={cycle.dismiss} />}
+        {role === "audience" && pushedNum != null && pinnedPopup.phase !== "hidden" &&
+          <LSProductCard product={LS_PRODUCTS.find((p) => p.num === pushedNum)} phase={pinnedPopup.phase} onBuy={buy} onClose={pinnedPopup.dismiss} />}
 
         {role !== "audience" && pushedNum &&
           <LSPinnedForViewers product={LS_PRODUCTS.find((p) => p.num === pushedNum)}
@@ -1186,7 +1179,7 @@ function LiveStream({ event, onLeave }) {
             onShowcase={() => setPanel("showcase")} pushedNum={pushedNum} />}
 
         <LSComposer value={val} onChange={setVal} onSend={send} onReact={spawn}
-          onOpenBasket={role === "audience" ? () => { setShowcase(true); cycle.reveal(); } : undefined} />
+          onOpenBasket={role === "audience" ? () => { setShowcase(true); pinnedPopup.show(); } : undefined} />
       </div>
 
       <LSReactions particles={particles} />
