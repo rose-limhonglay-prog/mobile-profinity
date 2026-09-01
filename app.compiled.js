@@ -5055,7 +5055,10 @@ const REACTION_MAP = REACTIONS.reduce((m, r) => {
 
 /* Compact reaction control for a comment: tap toggles Like; hover/long-press
    opens the mini reaction picker; picking one colours the label + shows its emoji. */
-function CommentReact() {
+function CommentReact({
+  count,
+  pills
+}) {
   const [reaction, setReaction] = useState(null);
   const [open, setOpen] = useState(false);
   const hideT = useRef(null);
@@ -5071,20 +5074,39 @@ function CommentReact() {
     className: "cmt-react",
     onMouseEnter: show,
     onMouseLeave: hide
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "cmt-link cmt-react-btn" + (r ? " on" : ""),
+  }, pills && pills.length > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "cmt-react-summary"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cmt-react-pills"
+  }, pills.slice(0, 3).map((p, i) => /*#__PURE__*/React.createElement("span", {
+    key: p.k,
+    className: "cmt-react-pill-ic",
+    style: {
+      zIndex: 3 - i
+    }
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: PILL_EMOJI[p.k] || PILL_EMOJI.like,
+    size: 12
+  })))), count && /*#__PURE__*/React.createElement("span", {
+    className: "cmt-react-count",
     style: r ? {
       color: "var(" + r.color + ")"
-    } : null,
+    } : null
+  }, count)), !(pills && pills.length > 0) && count && /*#__PURE__*/React.createElement("span", {
+    className: "cmt-react-count",
+    style: r ? {
+      color: "var(" + r.color + ")"
+    } : null
+  }, count), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cmt-react-btn" + (r ? " on" : ""),
+    "aria-label": r ? "Reacted: " + r.label + ". Change reaction" : "Like this comment",
     onClick: () => setReaction(reaction ? null : "like")
-  }, r ? /*#__PURE__*/React.createElement("span", {
-    className: "cmt-react-cur"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: r.icon,
-    width: "16",
-    height: "16"
-  }), r.label) : "Like"), open && /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: r ? r.flat : REACTION_MAP.like.flat,
+    size: 17,
+    color: r ? "var(" + r.color + ")" : "var(--gray-500)"
+  })), open && /*#__PURE__*/React.createElement("span", {
     className: "cmt-react-pop",
     role: "menu",
     "aria-label": "React to comment",
@@ -5419,28 +5441,123 @@ function withIds(list) {
     }))
   }));
 }
+const COMMENT_EMOJI = ["😀", "😂", "😍", "🥰", "😊", "😉", "🤔", "😮", "😢", "😅", "🙌", "👏", "👍", "🙏", "🔥", "💯", "🎉", "❤️"];
 
-/* Inline comment / reply composer built from DS primitives. */
+/* Small emoji grid, anchored above the trigger button; a full-screen
+   transparent backdrop closes it on outside click (same pattern as the
+   other floating pickers in this file, minus the portal since it only
+   ever opens inside an already-scrollable sheet/card). */
+function EmojiPicker({
+  onPick,
+  onClose
+}) {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    onClick: onClose,
+    style: {
+      position: "fixed",
+      inset: 0,
+      zIndex: 998
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    role: "menu",
+    "aria-label": "Pick an emoji",
+    style: {
+      position: "absolute",
+      bottom: "calc(100% + 8px)",
+      right: 0,
+      zIndex: 999,
+      background: "var(--surface-card)",
+      border: "1px solid var(--border-default)",
+      borderRadius: "var(--r-md)",
+      boxShadow: "var(--shadow-lg, var(--shadow-card))",
+      padding: 6,
+      display: "grid",
+      gridTemplateColumns: "repeat(6, 1fr)",
+      gap: 2,
+      width: 204
+    }
+  }, COMMENT_EMOJI.map(em => /*#__PURE__*/React.createElement("button", {
+    key: em,
+    type: "button",
+    role: "menuitem",
+    onClick: () => onPick(em),
+    style: {
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      width: 30,
+      height: 30,
+      border: "none",
+      background: "transparent",
+      cursor: "pointer",
+      fontSize: 18,
+      borderRadius: "var(--r-sm)"
+    }
+  }, em))));
+}
+
+/* Quick-tap reaction strip shown above the composer (Instagram-reply style):
+   tapping one drops it straight into the text field. */
+const QUICK_REACT_EMOJI = ["❤️", "🙌", "🔥", "👏", "😢", "😍", "😮", "😂"];
+
+/* Inline comment / reply composer built from DS primitives: a quick-react
+   emoji strip, an avatar + pill text field, and a sticker/emoji trigger
+   that opens the full EmojiPicker grid for inserting into the text.
+   `focusKey` lets a parent (e.g. tapping "Reply" on a comment elsewhere in
+   the sheet) refocus this same field imperatively by bumping the value. */
 function CommentComposer({
   placeholder,
   onSubmit,
   autoFocus,
-  small
+  small,
+  focusKey
 }) {
   const [v, setV] = useState("");
+  const [emojiOpen, setEmojiOpen] = useState(false);
+  const inputRef = useRef(null);
+  useEffect(() => {
+    if (focusKey && inputRef.current) inputRef.current.focus();
+  }, [focusKey]);
   const submit = () => {
     const t = v.trim();
     if (!t) return;
     onSubmit(t);
     setV("");
   };
-  const ready = v.trim().length > 0;
+  const addEmoji = em => {
+    setV(s => s + em);
+    setEmojiOpen(false);
+    if (inputRef.current) inputRef.current.focus();
+  };
   return /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 14
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      justifyContent: "space-between",
+      padding: "0 2px",
+      marginBottom: 14
+    }
+  }, QUICK_REACT_EMOJI.map(em => /*#__PURE__*/React.createElement("button", {
+    key: em,
+    type: "button",
+    "aria-label": "Add " + em,
+    onClick: () => addEmoji(em),
+    style: {
+      border: "none",
+      background: "transparent",
+      cursor: "pointer",
+      padding: 4,
+      fontSize: small ? 22 : 26,
+      lineHeight: 1
+    }
+  }, em))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       alignItems: "center",
-      gap: 10,
-      marginTop: 14
+      gap: 10
     }
   }, /*#__PURE__*/React.createElement(Avatar, {
     name: ME.name,
@@ -5449,15 +5566,17 @@ function CommentComposer({
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
+      position: "relative",
       display: "flex",
       alignItems: "center",
-      gap: 8,
+      gap: 4,
       background: "var(--surface-sunken)",
       border: "1px solid var(--border-default)",
       borderRadius: "var(--r-pill)",
       padding: "7px 7px 7px 16px"
     }
   }, /*#__PURE__*/React.createElement("input", {
+    ref: inputRef,
     value: v,
     onChange: e => setV(e.target.value),
     onKeyDown: e => {
@@ -5477,25 +5596,27 @@ function CommentComposer({
     }
   }), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    onClick: submit,
-    "aria-label": "Post comment",
+    onClick: () => setEmojiOpen(o => !o),
+    "aria-label": "Add emoji",
     style: {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      width: 32,
-      height: 32,
+      width: small ? 28 : 32,
+      height: small ? 28 : 32,
       flexShrink: 0,
-      borderRadius: "var(--r-pill)",
+      borderRadius: "50%",
       border: "none",
-      cursor: ready ? "pointer" : "default",
-      background: ready ? "var(--action-primary)" : "var(--gray-200)",
-      transition: "background var(--dur-fast)"
+      cursor: "pointer",
+      background: "transparent"
     }
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:send",
-    size: 16,
-    color: ready ? "var(--white)" : "var(--gray-500)"
+    name: "lucide:sticker",
+    size: small ? 17 : 19,
+    color: "var(--text-primary)"
+  })), emojiOpen && /*#__PURE__*/React.createElement(EmojiPicker, {
+    onPick: addEmoji,
+    onClose: () => setEmojiOpen(false)
   }))));
 }
 
@@ -5945,6 +6066,20 @@ function CommentsSheet({
   const sheetRef = useRef(null);
   const closeRef = useRef(null);
   const [replyFor, setReplyFor] = useState(null);
+  const [focusKey, setFocusKey] = useState(0);
+  const replyTarget = replyFor ? comments.find(c => c._id === replyFor) : null;
+  const startReply = id => {
+    setReplyFor(id);
+    setFocusKey(k => k + 1);
+  };
+  const submitBottom = text => {
+    if (replyFor) {
+      onAddReply(replyFor, text);
+      setReplyFor(null);
+    } else {
+      onAddComment(text);
+    }
+  };
   useEffect(() => {
     const prev = document.activeElement;
     if (closeRef.current) closeRef.current.focus();
@@ -6026,11 +6161,14 @@ function CommentsSheet({
     className: "tx"
   }, c.text)), /*#__PURE__*/React.createElement("div", {
     className: "cmtsheet-acts"
-  }, /*#__PURE__*/React.createElement(CommentReact, null), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "cmt-link",
-    onClick: () => setReplyFor(replyFor === c._id ? null : c._id)
-  }, "Reply")), (c.replies || []).map((rep, j) => /*#__PURE__*/React.createElement("div", {
+    onClick: () => startReply(c._id)
+  }, "Reply"), /*#__PURE__*/React.createElement(CommentReact, {
+    count: c.reactionCount,
+    pills: c.pills
+  })), (c.replies || []).map((rep, j) => /*#__PURE__*/React.createElement("div", {
     key: j,
     className: "cmtsheet-item reply"
   }, /*#__PURE__*/React.createElement(Avatar, {
@@ -6051,19 +6189,22 @@ function CommentsSheet({
     gap: 3
   }))), /*#__PURE__*/React.createElement("div", {
     className: "tx"
-  }, rep.text))))), replyFor === c._id && /*#__PURE__*/React.createElement(CommentComposer, {
-    small: true,
-    autoFocus: true,
-    placeholder: "Reply to " + c.author.name + "…",
-    onSubmit: t => {
-      onAddReply(c._id, t);
-      setReplyFor(null);
-    }
-  }))))), /*#__PURE__*/React.createElement("div", {
+  }, rep.text))))))))), /*#__PURE__*/React.createElement("div", {
     className: "cmtsheet-foot"
-  }, /*#__PURE__*/React.createElement(CommentComposer, {
-    placeholder: "Add a comment…",
-    onSubmit: onAddComment
+  }, replyTarget && /*#__PURE__*/React.createElement("div", {
+    className: "cmtsheet-replying"
+  }, "Replying to ", /*#__PURE__*/React.createElement("strong", null, replyTarget.author.name), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    onClick: () => setReplyFor(null),
+    "aria-label": "Cancel reply"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 13,
+    color: "var(--gray-500)"
+  }))), /*#__PURE__*/React.createElement(CommentComposer, {
+    placeholder: replyTarget ? "Reply to " + replyTarget.author.name + "…" : "Add a comment…",
+    onSubmit: submitBottom,
+    focusKey: focusKey
   }))));
 }
 
