@@ -270,6 +270,12 @@ function cpTier() {
   } catch (e) {}
   return PFACP && PFACP.getUserTier ? PFACP.getUserTier() : "free";
 }
+
+/* Going live is a Super User (admin-tier) capability — normal members never
+   see the "Live" tab, so the create-post flow can't reach it at all. */
+function cpIsSuperUser() {
+  return cpTier() === "admin";
+}
 const CP_DESTS = [{
   k: "feed",
   label: "My feed",
@@ -386,13 +392,16 @@ const CP_MODES = [{
 }];
 function CPModeTabs({
   mode,
-  onChange
+  onChange,
+  superUser
 }) {
+  const modes = CP_MODES.filter(m => m.id !== "live" || superUser);
+  if (modes.length <= 1) return null;
   return /*#__PURE__*/React.createElement("div", {
     className: "cp-mode-tabs",
     role: "tablist",
     "aria-label": "Post type"
-  }, CP_MODES.map(m => /*#__PURE__*/React.createElement("button", {
+  }, modes.map(m => /*#__PURE__*/React.createElement("button", {
     key: m.id,
     type: "button",
     role: "tab",
@@ -404,6 +413,60 @@ function CPModeTabs({
     size: 15,
     color: mode === m.id ? "#fff" : "var(--brand-navy)"
   }), m.label)));
+}
+
+/* Dev-only affordance so the team can preview the Super User (admin-tier)
+   Live tab without opening devtools — mirrors the "Previewing as" panel on
+   the newsfeed, reusing its pf-preview-* styling. Writes the same
+   "pf-preview-tier" override cpTier() already checks first. */
+const CP_DEV_PERSONAS = [{
+  key: "free",
+  name: "Normal user",
+  desc: "No Live tab in Create Post."
+}, {
+  key: "admin",
+  name: "Super User",
+  desc: "Sees the Live tab + Go Live."
+}];
+function CPDevSuperUserToggle({
+  superUser,
+  onChange
+}) {
+  const [open, setOpen] = React.useState(false);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pf-preview"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-preview-bar",
+    onClick: () => setOpen(o => !o),
+    "aria-expanded": open
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-preview-label"
+  }, "Dev — viewing as"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-preview-current"
+  }, superUser ? "Super User" : "Normal user"), /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: open ? "lucide:chevron-up" : "lucide:chevron-down",
+    size: 16,
+    color: "var(--gray-500)"
+  })), open && /*#__PURE__*/React.createElement("div", {
+    className: "pf-preview-panel"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "pf-preview-sec"
+  }, "Who's looking?"), /*#__PURE__*/React.createElement("div", {
+    className: "pf-preview-personas"
+  }, CP_DEV_PERSONAS.map(p => {
+    const isAdmin = p.key === "admin";
+    return /*#__PURE__*/React.createElement("button", {
+      key: p.key,
+      type: "button",
+      className: "pf-preview-persona" + (isAdmin === superUser ? " on" : ""),
+      onClick: () => onChange(isAdmin)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "pf-pp-name"
+    }, p.name), /*#__PURE__*/React.createElement("span", {
+      className: "pf-pp-desc"
+    }, p.desc));
+  }))));
 }
 const CP_LIVE_TOOLS = [{
   label: "Flash Off",
@@ -945,6 +1008,174 @@ function CPBroadcastStage({
     onClick: () => setConfirmEnd(false)
   }, "Keep streaming"))));
 }
+
+/* Full-screen cover picker for an attached reel — scrubs the actual sample
+   video to real frames (via canvas capture) so the filmstrip is genuine,
+   not faked. "Add from camera roll" lets a custom image override any frame. */
+const CP_COVER_FRAME_COUNT = 6;
+function CPCoverPicker({
+  video,
+  onConfirm,
+  onClose
+}) {
+  const hiddenVideoRef = React.useRef(null);
+  const canvasRef = React.useRef(null);
+  const [frames, setFrames] = React.useState([]);
+  const [building, setBuilding] = React.useState(true);
+  const [selected, setSelected] = React.useState(video.cover ? {
+    src: video.cover,
+    custom: video.coverIsCustom || false
+  } : null);
+  React.useEffect(() => {
+    const v = hiddenVideoRef.current;
+    const canvas = canvasRef.current;
+    if (!v || !canvas) return;
+    let cancelled = false;
+    const captureAt = t => new Promise(resolve => {
+      const onSeeked = () => {
+        v.removeEventListener("seeked", onSeeked);
+        const ctx = canvas.getContext("2d");
+        canvas.width = v.videoWidth;
+        canvas.height = v.videoHeight;
+        ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.72));
+      };
+      v.addEventListener("seeked", onSeeked);
+      v.currentTime = t;
+    });
+    const build = async () => {
+      await new Promise(resolve => {
+        if (v.readyState >= 1) resolve();else v.addEventListener("loadedmetadata", resolve, {
+          once: true
+        });
+      });
+      if (cancelled) return;
+      const dur = v.duration || 1;
+      const out = [];
+      for (let i = 0; i < CP_COVER_FRAME_COUNT; i++) {
+        const t = Math.min(dur - 0.05, dur * (i + 0.5) / CP_COVER_FRAME_COUNT);
+        const src = await captureAt(Math.max(0, t));
+        if (cancelled) return;
+        out.push({
+          time: t,
+          src
+        });
+        setFrames(prev => [...prev, {
+          time: t,
+          src
+        }]);
+      }
+      if (!cancelled && !selected) {
+        setSelected({
+          src: out[0].src,
+          custom: false,
+          time: out[0].time
+        });
+      }
+      setBuilding(false);
+    };
+    build();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const pickFromCameraRoll = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => setSelected({
+        src: reader.result,
+        custom: true
+      });
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cp-cover-picker",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Edit cover"
+  }, /*#__PURE__*/React.createElement("video", {
+    ref: hiddenVideoRef,
+    src: video.src,
+    muted: true,
+    playsInline: true,
+    style: {
+      display: "none"
+    }
+  }), /*#__PURE__*/React.createElement("canvas", {
+    ref: canvasRef,
+    style: {
+      display: "none"
+    }
+  }), /*#__PURE__*/React.createElement("header", {
+    className: "cp-cover-top"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "cp-cover-x",
+    "aria-label": "Cancel",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:x",
+    size: 20,
+    color: "var(--text-heading)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "cp-cover-title"
+  }, "Edit cover"), /*#__PURE__*/React.createElement("button", {
+    className: "cp-cover-check",
+    "aria-label": "Use this cover",
+    disabled: !selected,
+    onClick: () => selected && onConfirm(selected)
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:check",
+    size: 20,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("p", {
+    className: "cp-cover-hint"
+  }, "Select a cover image from your video or camera roll."), /*#__PURE__*/React.createElement("div", {
+    className: "cp-cover-preview"
+  }, selected ? /*#__PURE__*/React.createElement("img", {
+    src: selected.src,
+    alt: ""
+  }) : /*#__PURE__*/React.createElement("span", {
+    className: "cp-cover-loading"
+  }, "Loading frames…")), /*#__PURE__*/React.createElement("div", {
+    className: "cp-cover-filmstrip",
+    role: "radiogroup",
+    "aria-label": "Video frame"
+  }, frames.map((f, i) => /*#__PURE__*/React.createElement("button", {
+    key: i,
+    type: "button",
+    role: "radio",
+    "aria-checked": !!selected && !selected.custom && selected.src === f.src,
+    className: "cp-cover-frame" + (selected && !selected.custom && selected.src === f.src ? " on" : ""),
+    onClick: () => setSelected({
+      src: f.src,
+      custom: false,
+      time: f.time
+    })
+  }, /*#__PURE__*/React.createElement("img", {
+    src: f.src,
+    alt: ""
+  }))), building && frames.length < CP_COVER_FRAME_COUNT && Array.from({
+    length: CP_COVER_FRAME_COUNT - frames.length
+  }).map((_, i) => /*#__PURE__*/React.createElement("span", {
+    className: "cp-cover-frame-skel",
+    key: "s" + i,
+    "aria-hidden": "true"
+  }))), /*#__PURE__*/React.createElement("button", {
+    className: "cp-cover-roll-btn",
+    onClick: pickFromCameraRoll
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:image",
+    size: 17,
+    color: "var(--brand-navy)"
+  }), "Add from camera roll"));
+}
 function CPTagPicker({
   tags,
   selected,
@@ -968,6 +1199,13 @@ function CPScreen() {
   const isSocial = typeof window !== "undefined" && !!window.PF_SOCIAL_STREAM;
   const watchMode = bcastParams.get("watch") === "1";
   const [mode, setMode] = React.useState(() => isSocial || watchMode ? "broadcast" : "post");
+  const [devSuperUser, setDevSuperUserRaw] = React.useState(cpIsSuperUser);
+  const setDevSuperUser = next => {
+    try {
+      if (next) localStorage.setItem("pf-preview-tier", "admin");else localStorage.removeItem("pf-preview-tier");
+    } catch (e) {}
+    setDevSuperUserRaw(next);
+  };
   const [liveDescription, setLiveDescription] = React.useState("");
   const [text, setText] = React.useState("");
   const [channels, setChannels] = React.useState(() => {
@@ -979,6 +1217,8 @@ function CPScreen() {
     }
   });
   const [images, setImages] = React.useState([]);
+  const [video, setVideo] = React.useState(null);
+  const [coverPickerOpen, setCoverPickerOpen] = React.useState(false);
   const [audience, setAudience] = React.useState("Everyone");
   const [allTags] = React.useState(() => window.PFHashtags ? window.PFHashtags.getAll() : []);
   const [selectedTags, setSelectedTags] = React.useState([]);
@@ -998,7 +1238,10 @@ function CPScreen() {
   const backTo = dest === "feed" ? "NewsfeedMobile.html" : "CommunityMobile.html";
   const pickBg = id => {
     setBgId(id);
-    if (id !== "none") setImages([]);
+    if (id !== "none") {
+      setImages([]);
+      setVideo(null);
+    }
   };
   const toggleTag = slug => {
     setSelectedTags(prev => prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]);
@@ -1006,7 +1249,7 @@ function CPScreen() {
   React.useEffect(() => {
     if (textareaRef.current) textareaRef.current.focus();
   }, []);
-  const canPost = text.trim().length > 0;
+  const canPost = text.trim().length > 0 || !!video;
   const handlePost = () => {
     const body = mode === "live" ? liveDescription.trim() : text.trim();
     if (mode !== "live" && !body) return;
@@ -1026,6 +1269,10 @@ function CPScreen() {
           id: bg.id,
           css: bg.css,
           fg: bg.fg
+        } : null,
+        video: video ? {
+          src: video.src,
+          cover: video.cover
         } : null,
         live: mode === "live",
         likes: "0",
@@ -1057,6 +1304,48 @@ function CPScreen() {
       });
     };
     input.click();
+  };
+
+  /* No real capture pipeline in this prototype, so attaching "Video" loads a
+     bundled sample reel — matching the fake-camera pattern already used for
+     Go Live — and immediately opens the real frame-based cover picker. */
+  const handleVideoPick = () => {
+    setImages([]);
+    setBgId("none");
+    const src = "assets/sample-reel.mp4";
+    setVideo({
+      src,
+      cover: null,
+      coverIsCustom: false,
+      ratio: null
+    });
+    setCoverPickerOpen(true);
+
+    /* Reads the clip's real dimensions so the preview box can take on its
+       actual shape — vertical stays tall, horizontal stays wide, square
+       stays square — instead of being force-cropped into one fixed box. */
+    const probe = document.createElement("video");
+    probe.preload = "metadata";
+    probe.muted = true;
+    probe.src = src;
+    probe.addEventListener("loadedmetadata", () => {
+      const ratio = probe.videoWidth && probe.videoHeight ? probe.videoWidth / probe.videoHeight : null;
+      setVideo(v => v && {
+        ...v,
+        ratio
+      });
+    }, {
+      once: true
+    });
+  };
+  const handleCoverConfirm = selected => {
+    setVideo(v => v && {
+      ...v,
+      cover: selected.src,
+      coverIsCustom: !!selected.custom,
+      coverTime: selected.time
+    });
+    setCoverPickerOpen(false);
   };
   if (mode === "live") {
     return /*#__PURE__*/React.createElement("div", {
@@ -1097,9 +1386,13 @@ function CPScreen() {
     canPost: canPost,
     onPost: handlePost,
     onCancel: () => goCP(backTo)
+  }), /*#__PURE__*/React.createElement(CPDevSuperUserToggle, {
+    superUser: devSuperUser,
+    onChange: setDevSuperUser
   }), /*#__PURE__*/React.createElement(CPModeTabs, {
     mode: mode,
-    onChange: setMode
+    onChange: setMode,
+    superUser: devSuperUser
   }), /*#__PURE__*/React.createElement("div", {
     className: "cp-scroll"
   }, /*#__PURE__*/React.createElement("div", {
@@ -1171,7 +1464,33 @@ function CPScreen() {
     name: "lucide:x",
     size: 14,
     color: "var(--white)"
-  }))))), /*#__PURE__*/React.createElement(CPTagPicker, {
+  }))))), video && /*#__PURE__*/React.createElement("div", {
+    className: "cp-video-wrap",
+    style: video.ratio ? {
+      aspectRatio: video.ratio
+    } : undefined
+  }, video.cover ? /*#__PURE__*/React.createElement("img", {
+    src: video.cover,
+    alt: "",
+    className: "cp-video-cover"
+  }) : /*#__PURE__*/React.createElement("video", {
+    src: video.src,
+    className: "cp-video-cover",
+    muted: true,
+    playsInline: true,
+    preload: "metadata"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "cp-video-rm",
+    "aria-label": "Remove video",
+    onClick: () => setVideo(null)
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:x",
+    size: 14,
+    color: "var(--white)"
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "cp-video-edit-cover",
+    onClick: () => setCoverPickerOpen(true)
+  }, "Edit cover")), /*#__PURE__*/React.createElement(CPTagPicker, {
     tags: allTags,
     selected: selectedTags,
     onToggle: toggleTag
@@ -1185,8 +1504,8 @@ function CPScreen() {
     key: a.label,
     className: "cp-attach-btn",
     "aria-label": a.label,
-    disabled: a.label === "Photo" && !!bg.css,
-    onClick: a.label === "Photo" ? handleImagePick : undefined
+    disabled: a.label === "Photo" && (!!bg.css || !!video) || a.label === "Video" && (!!bg.css || images.length > 0),
+    onClick: a.label === "Photo" ? handleImagePick : a.label === "Video" ? handleVideoPick : undefined
   }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
     name: a.icon,
     size: 24,
@@ -1194,7 +1513,7 @@ function CPScreen() {
   }))), /*#__PURE__*/React.createElement("button", {
     className: "cp-attach-btn",
     "aria-label": "Background",
-    disabled: images.length > 0,
+    disabled: images.length > 0 || !!video,
     onClick: () => setStyleSheetOpen(true)
   }, /*#__PURE__*/React.createElement("span", {
     className: "cp-bg-aa lg"
@@ -1207,6 +1526,10 @@ function CPScreen() {
     value: dest,
     onPick: setDest,
     onClose: () => setChanSheet(false)
+  }), coverPickerOpen && video && /*#__PURE__*/React.createElement(CPCoverPicker, {
+    video: video,
+    onConfirm: handleCoverConfirm,
+    onClose: () => setCoverPickerOpen(false)
   }));
 }
 function CreatePostApp() {
