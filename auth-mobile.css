@@ -87,10 +87,18 @@ body{font-family:var(--font-sans);color:var(--text-primary)}
 .au-rw-scrim{position:absolute;inset:0;border:none;cursor:pointer;background:rgba(16,20,48,.58);
   -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .au-rw-card{position:relative;z-index:1;width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;
-  text-align:center;padding:28px 24px 26px;border-radius:22px;
+  text-align:center;padding:28px 24px 26px;border-radius:22px;overflow:hidden;
   background:var(--surface-card);border:1px solid var(--border-default);
   box-shadow:0 30px 70px rgba(16,20,48,.24);
   animation:au-pop .32s cubic-bezier(.22,.61,.36,1)}
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  .au-rw-card{background:linear-gradient(165deg,rgba(255,255,255,.7),rgba(255,255,255,.42));
+    -webkit-backdrop-filter:blur(22px) saturate(180%);backdrop-filter:blur(22px) saturate(180%);
+    border:1px solid rgba(255,255,255,.65);
+    box-shadow:0 30px 70px rgba(16,20,48,.28),inset 0 1px 0 rgba(255,255,255,.85)}
+  .au-rw-card::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(120% 70% at 50% -10%,rgba(255,255,255,.55),transparent 60%)}
+}
 .au-rw-burst{position:relative;width:168px;height:168px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
 .au-rw-coin{position:relative;z-index:2;display:flex;color:var(--brand-gold);
   animation:au-rw-pop .72s cubic-bezier(.34,1.56,.64,1) both}

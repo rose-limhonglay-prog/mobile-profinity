@@ -371,8 +371,8 @@ function VerifySuccess({ onNext }) {
 }
 
 /* ------------------------------ DAILY REWARD ------------------------------ */
-function DailyReward({ onDone }) {
-  const TOTAL = 1000;
+function DailyReward({ onDone, points, kicker, title, sub }) {
+  const TOTAL = points || 1000;
   const [n, setN] = useStateAU(0);
   const [phase, setPhase] = useStateAU("in");
   React.useEffect(() => {
@@ -405,12 +405,12 @@ function DailyReward({ onDone }) {
           <AULottie src="https://lottie.host/cc6c5973-9f61-481c-85ed-0fe2089a9176/CwHL9yTPJJ.json" size={168} />
         </span>
       </div>
-      <p className="au-rw-kicker">Daily login reward</p>
+      <p className="au-rw-kicker">{kicker || "Daily login reward"}</p>
       <p className="au-rw-points" aria-live="polite">
         <b>+{n.toLocaleString()}</b><i>points</i>
       </p>
-      <h1 className="au-rw-h1">Nice work, Katy!</h1>
-      <p className="au-rw-sub">You've earned today's points just for showing up. Keep your streak going to unlock bonus rewards.</p>
+      <h1 className="au-rw-h1">{title || "Nice work, Katy!"}</h1>
+      <p className="au-rw-sub">{sub || "You've earned today's points just for showing up. Keep your streak going to unlock bonus rewards."}</p>
       <button type="button" className="au-cta" onClick={onDone}>Collect &amp; continue</button>
       </div>
     </div>
@@ -419,8 +419,13 @@ function DailyReward({ onDone }) {
 
 /* -------------------------------- COMPLETE -------------------------------- */
 function Complete() {
+  const [claimed, setClaimedAU] = useStateAU(false);
   return (
     <div className="au-screen" data-screen-label="Sign up · complete">
+      {!claimed &&
+        <DailyReward points={250} kicker="Welcome bonus" title="You're all set, Katy!"
+          sub="Here's 250 points just for joining — keep learning and connecting to earn more."
+          onDone={() => setClaimedAU(true)} />}
       <div className="au-done">
         <span className="au-done-ic"><Ico n="lucide:check" s={40} c="var(--success)" /></span>
         <h1>You're all set!</h1>

@@ -5622,20 +5622,26 @@ function CommentComposer({
 
 /* Post composer — "What's on your mind?" pill with quick-attach icons
    (Video / Photo / Reel) plus a Post button, matching the create-post-mobile
-   flow's post shape so new posts render identically on both surfaces. Only
-   Photo actually attaches (via post.media, rendered by MediaCarousel);
-   Video/Reel focus the composer since there's no capture/upload pipeline
-   for those yet. */
+   flow's post shape so new posts render identically on both surfaces.
+   Photo attaches via post.media (rendered by MediaCarousel); Video attaches
+   a real file, scrubbed into a real cover picker (WebCoverPicker), exactly
+   like create-post-mobile's CPCoverPicker but for a genuinely uploaded clip
+   rather than a bundled sample. Reel still just focuses the composer — no
+   capture pipeline for that one. Go Live only shows for the admin persona
+   (mirrors create-post-mobile's Super-User-only Live tab), reusing this
+   page's own "Previewing as" persona switcher instead of a second toggle. */
 function ComposerIconButton({
   icon,
   color,
   label,
-  onClick
+  onClick,
+  disabled
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onClick,
     "aria-label": label,
+    disabled: disabled,
     style: {
       display: "flex",
       alignItems: "center",
@@ -5645,7 +5651,8 @@ function ComposerIconButton({
       flexShrink: 0,
       borderRadius: "var(--r-pill)",
       border: "none",
-      cursor: "pointer",
+      cursor: disabled ? "default" : "pointer",
+      opacity: disabled ? 0.35 : 1,
       background: "transparent"
     }
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
@@ -5655,21 +5662,28 @@ function ComposerIconButton({
   }));
 }
 function PostComposer({
-  onPost
+  onPost,
+  superUser
 }) {
   const [v, setV] = useState("");
   const [images, setImages] = useState([]);
+  const [video, setVideo] = useState(null);
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false);
+  const [liveStage, setLiveStage] = useState(null); // null | "precam" | "live"
+  const [liveDescription, setLiveDescription] = useState("");
   const inputRef = useRef(null);
   const firstName = (ME.name || "").split(" ")[0];
-  const ready = v.trim().length > 0 || images.length > 0;
+  const ready = v.trim().length > 0 || images.length > 0 || !!video;
   const submit = () => {
     if (!ready) return;
     onPost({
       body: v.trim(),
-      media: images
+      media: images,
+      video
     });
     setV("");
     setImages([]);
+    setVideo(null);
   };
   const focusInput = () => {
     if (inputRef.current) inputRef.current.focus();
@@ -5687,6 +5701,73 @@ function PostComposer({
       });
     };
     input.click();
+  };
+
+  /* A real upload (unlike create-post-mobile's bundled sample-reel.mp4
+     stand-in) — an object URL to the actual file, probed for its real
+     dimensions/duration so the preview and posted card keep the clip's own
+     shape instead of being force-cropped into one fixed box. */
+  const pickVideo = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "video/*";
+    input.onchange = e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      setImages([]);
+      const src = URL.createObjectURL(file);
+      setVideo({
+        src,
+        cover: null,
+        coverIsCustom: false,
+        ratio: null,
+        duration: null
+      });
+      setCoverPickerOpen(true);
+      const probe = document.createElement("video");
+      probe.preload = "metadata";
+      probe.muted = true;
+      probe.src = src;
+      probe.addEventListener("loadedmetadata", () => {
+        const ratio = probe.videoWidth && probe.videoHeight ? probe.videoWidth / probe.videoHeight : null;
+        setVideo(cur => cur && {
+          ...cur,
+          ratio,
+          duration: probe.duration
+        });
+      }, {
+        once: true
+      });
+    };
+    input.click();
+  };
+  const removeVideo = () => {
+    if (video && video.src) {
+      try {
+        URL.revokeObjectURL(video.src);
+      } catch (e) {}
+    }
+    setVideo(null);
+  };
+  const handleCoverConfirm = selected => {
+    setVideo(cur => cur && {
+      ...cur,
+      cover: selected.src,
+      coverIsCustom: !!selected.custom
+    });
+    setCoverPickerOpen(false);
+  };
+  const endLive = keepReplay => {
+    setLiveStage(null);
+    if (keepReplay && liveDescription.trim()) {
+      onPost({
+        body: liveDescription.trim(),
+        media: [],
+        video: null,
+        live: true
+      });
+    }
+    setLiveDescription("");
   };
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -5742,18 +5823,29 @@ function PostComposer({
     icon: "lucide:video",
     color: "var(--error)",
     label: "Add video",
-    onClick: focusInput
+    onClick: pickVideo,
+    disabled: images.length > 0
   }), /*#__PURE__*/React.createElement(ComposerIconButton, {
     icon: "lucide:image",
     color: "var(--success)",
     label: "Add photo",
-    onClick: pickImages
+    onClick: pickImages,
+    disabled: !!video
   }), /*#__PURE__*/React.createElement(ComposerIconButton, {
     icon: "lucide:clapperboard",
     color: "var(--reaction-love)",
     label: "Add reel",
     onClick: focusInput
-  }), /*#__PURE__*/React.createElement("button", {
+  }), superUser && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-golive-pill",
+    "aria-label": "Go live",
+    onClick: () => setLiveStage("precam")
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:radio",
+    size: 15,
+    color: "var(--error)"
+  }), "Go Live"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: submit,
     "aria-label": "New post",
@@ -5818,7 +5910,713 @@ function PostComposer({
     name: "lucide:x",
     size: 12,
     color: "var(--white)"
-  }))))));
+  }))))), video && /*#__PURE__*/React.createElement("div", {
+    className: "pfw-video-preview",
+    style: {
+      marginLeft: 56
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-video-wrap",
+    style: {
+      aspectRatio: video.ratio || 16 / 9
+    }
+  }, video.cover ? /*#__PURE__*/React.createElement("img", {
+    src: video.cover,
+    alt: "",
+    className: "pfw-video-cover"
+  }) : /*#__PURE__*/React.createElement("video", {
+    src: video.src,
+    className: "pfw-video-cover",
+    muted: true,
+    playsInline: true,
+    preload: "metadata"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-video-rm",
+    "aria-label": "Remove video",
+    onClick: removeVideo
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 13,
+    color: "var(--white)"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-video-edit",
+    onClick: () => setCoverPickerOpen(true)
+  }, "Edit cover"))), coverPickerOpen && video && /*#__PURE__*/React.createElement(WebCoverPicker, {
+    video: video,
+    onConfirm: handleCoverConfirm,
+    onClose: () => setCoverPickerOpen(false)
+  }), liveStage === "precam" && /*#__PURE__*/React.createElement(WebGoLiveStage, {
+    description: liveDescription,
+    onDescriptionChange: setLiveDescription,
+    onClose: () => setLiveStage(null),
+    onGoLive: () => setLiveStage("live")
+  }), liveStage === "live" && /*#__PURE__*/React.createElement(WebBroadcastStage, {
+    onEnd: endLive
+  }));
+}
+
+/* Full-screen cover picker for an uploaded video — scrubs the real file to
+   real frames via canvas capture, so the filmstrip reflects the actual
+   upload rather than a fixed sample. Ported from create-post-mobile's
+   CPCoverPicker, restyled as a centered web modal instead of a device-frame
+   full-screen sheet. "Upload a photo" lets a custom image override any frame. */
+const PFW_COVER_FRAME_COUNT = 6;
+function WebCoverPicker({
+  video,
+  onConfirm,
+  onClose
+}) {
+  const hiddenVideoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [frames, setFrames] = useState([]);
+  const [building, setBuilding] = useState(true);
+  const [selected, setSelected] = useState(video.cover ? {
+    src: video.cover,
+    custom: video.coverIsCustom || false
+  } : null);
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  useEffect(() => {
+    const vEl = hiddenVideoRef.current;
+    const canvas = canvasRef.current;
+    if (!vEl || !canvas) return;
+    let cancelled = false;
+    const captureAt = t => new Promise(resolve => {
+      const onSeeked = () => {
+        vEl.removeEventListener("seeked", onSeeked);
+        const ctx = canvas.getContext("2d");
+        canvas.width = vEl.videoWidth;
+        canvas.height = vEl.videoHeight;
+        ctx.drawImage(vEl, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.72));
+      };
+      vEl.addEventListener("seeked", onSeeked);
+      vEl.currentTime = t;
+    });
+    const build = async () => {
+      await new Promise(resolve => {
+        if (vEl.readyState >= 1) resolve();else vEl.addEventListener("loadedmetadata", resolve, {
+          once: true
+        });
+      });
+      if (cancelled) return;
+      const dur = vEl.duration || 1;
+      const out = [];
+      for (let i = 0; i < PFW_COVER_FRAME_COUNT; i++) {
+        const t = Math.min(dur - 0.05, dur * (i + 0.5) / PFW_COVER_FRAME_COUNT);
+        const src = await captureAt(Math.max(0, t));
+        if (cancelled) return;
+        out.push({
+          time: t,
+          src
+        });
+        setFrames(prev => [...prev, {
+          time: t,
+          src
+        }]);
+      }
+      if (!cancelled && !selected) {
+        setSelected({
+          src: out[0].src,
+          custom: false,
+          time: out[0].time
+        });
+      }
+      setBuilding(false);
+    };
+    build();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const pickFromDisk = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => setSelected({
+        src: reader.result,
+        custom: true
+      });
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cover-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cover-modal",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Edit cover",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("video", {
+    ref: hiddenVideoRef,
+    src: video.src,
+    muted: true,
+    playsInline: true,
+    style: {
+      display: "none"
+    }
+  }), /*#__PURE__*/React.createElement("canvas", {
+    ref: canvasRef,
+    style: {
+      display: "none"
+    }
+  }), /*#__PURE__*/React.createElement("header", {
+    className: "pfw-cover-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cover-title"
+  }, "Edit cover"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cover-x",
+    "aria-label": "Cancel",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 18,
+    color: "var(--text-heading)"
+  }))), /*#__PURE__*/React.createElement("p", {
+    className: "pfw-cover-hint"
+  }, "Select a cover image from your video, or upload your own."), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cover-preview"
+  }, selected ? /*#__PURE__*/React.createElement("img", {
+    src: selected.src,
+    alt: ""
+  }) : /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cover-loading"
+  }, "Loading frames…")), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cover-filmstrip",
+    role: "radiogroup",
+    "aria-label": "Video frame"
+  }, frames.map((f, i) => /*#__PURE__*/React.createElement("button", {
+    key: i,
+    type: "button",
+    role: "radio",
+    "aria-checked": !!selected && !selected.custom && selected.src === f.src,
+    className: "pfw-cover-frame" + (selected && !selected.custom && selected.src === f.src ? " on" : ""),
+    onClick: () => setSelected({
+      src: f.src,
+      custom: false,
+      time: f.time
+    })
+  }, /*#__PURE__*/React.createElement("img", {
+    src: f.src,
+    alt: ""
+  }))), building && frames.length < PFW_COVER_FRAME_COUNT && Array.from({
+    length: PFW_COVER_FRAME_COUNT - frames.length
+  }).map((_, i) => /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cover-frame-skel",
+    key: "s" + i,
+    "aria-hidden": "true"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cover-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cover-roll-btn",
+    onClick: pickFromDisk
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:image",
+    size: 16,
+    color: "var(--brand-navy)"
+  }), "Upload a photo instead"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cover-check",
+    disabled: !selected,
+    onClick: () => selected && onConfirm(selected)
+  }, "Use this cover"))));
+}
+
+/* Full-screen "go live" camera stage — mirrors create-post-mobile's
+   CPLiveStage, minus its channel picker (the web composer only ever posts
+   to the main feed). Uses the same static camera stand-in image since this
+   prototype has no real capture pipeline on either surface. */
+const PFW_LIVE_TOOLS = [{
+  label: "Flash Off",
+  icon: "lucide:zap-off"
+}, {
+  label: "Rotate",
+  icon: "lucide:refresh-cw"
+}, {
+  label: "Mute mic",
+  icon: "lucide:mic-off"
+}, {
+  label: "Enhance off",
+  icon: "lucide:sparkles"
+}];
+function WebGoLiveStage({
+  description,
+  onDescriptionChange,
+  onGoLive,
+  onClose
+}) {
+  const [descOpen, setDescOpen] = useState(false);
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pfw-golive-stage",
+    style: {
+      backgroundImage: "url(assets/live-preview-camera.jpg)"
+    },
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Go live"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-golive-scrim-top",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-golive-back",
+    "aria-label": "Cancel",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 22,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-golive-who"
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: ME.name,
+    src: ME.avatar,
+    size: 32
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-golive-name"
+  }, ME.name), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-golive-dest"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:rss",
+    size: 13,
+    color: "var(--brand-navy)"
+  }), "Newsfeed")), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-golive-tools"
+  }, PFW_LIVE_TOOLS.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.label,
+    type: "button",
+    className: "pfw-golive-tool"
+  }, /*#__PURE__*/React.createElement("span", null, t.label), /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: t.icon,
+    size: 19,
+    color: "#fff"
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-golive-scrim-bottom",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-golive-bottom"
+  }, descOpen ? /*#__PURE__*/React.createElement("input", {
+    autoFocus: true,
+    className: "pfw-golive-desc-input",
+    placeholder: "Add a description...",
+    value: description,
+    onChange: e => onDescriptionChange(e.target.value),
+    onBlur: () => setDescOpen(false)
+  }) : /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-golive-desc-btn",
+    onClick: () => setDescOpen(true)
+  }, description || "Tap to add a description..."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-golive-go-btn",
+    onClick: onGoLive
+  }, "Go Live")));
+}
+
+/* Full-screen live broadcast — mounted once the host clicks "Go Live" (a
+   pure in-page overlay, no navigation). Ported from create-post-mobile's
+   CPBroadcastStage: same simulated viewer chat/hearts/guest-invite flow,
+   restyled full-bleed for desktop instead of a device-frame phone screen.
+   Host-only on web for now — mirrors what's actually reachable from the
+   mobile Create Post flow today. */
+const PFW_BCAST_GUESTS = [{
+  u: "@mirandapearce",
+  n: "Miranda Pearce",
+  av: "assets/avatar-miranda.jpg",
+  f: "15.6K followers"
+}, {
+  u: "@drtimpearce",
+  n: "Dr Tim Pearce",
+  av: "assets/avatar-drtim.png",
+  f: "28.3K followers"
+}, {
+  u: "@katywilson",
+  n: "Katy Wilson",
+  av: "assets/avatar-katy.jpg",
+  f: "9.1K followers"
+}, {
+  u: "@gracelindqvist",
+  n: "Grace Lindqvist",
+  av: "assets/waiting-self-preview.png",
+  f: "47.5K followers"
+}];
+function WebBroadcastStage({
+  onEnd
+}) {
+  const [secs, setSecs] = useState(0);
+  const [chat, setChat] = useState([{
+    n: "Miranda Pearce",
+    t: "Just joined — can't wait for this one 👀"
+  }, {
+    n: "Dr Tim Pearce",
+    t: "Great topic. Are you covering cannula depth?"
+  }]);
+  const [msg, setMsg] = useState("");
+  const [guestSheet, setGuestSheet] = useState(false);
+  const [guests, setGuests] = useState([]);
+  const [invited, setInvited] = useState([]);
+  const [liveMuted, setLiveMuted] = useState(false);
+  const [liveCam, setLiveCam] = useState(true);
+  const [front, setFront] = useState(true);
+  const [copied, setCopied] = useState(false);
+  const [hearts, setHearts] = useState([]);
+  const [confirmEnd, setConfirmEnd] = useState(false);
+  const [keepPost, setKeepPost] = useState(true);
+  const chatRef = useRef(null);
+  const chatAtBottom = useRef(true);
+  useEffect(() => {
+    const t = setInterval(() => setSecs(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+  useEffect(() => {
+    const k = e => {
+      if (e.key !== "Escape") return;
+      if (guestSheet) setGuestSheet(false);else if (confirmEnd) setConfirmEnd(false);else setConfirmEnd(true);
+    };
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
+  }, [confirmEnd, guestSheet]);
+
+  /* Audience reactions drift up the right edge while the broadcast runs. */
+  useEffect(() => {
+    const emo = ["❤️", "❤️", "💜", "👏", "🔥"];
+    let n = 0;
+    const t = setInterval(() => {
+      const id = ++n;
+      const h = {
+        id: id,
+        x: 14 + Math.random() * 84,
+        dur: 4.4 + Math.random() * 2,
+        size: 20 + Math.random() * 12,
+        rise: 460 + Math.random() * 160,
+        e: emo[Math.floor(Math.random() * emo.length)]
+      };
+      setHearts(s => s.concat(h).slice(-14));
+      setTimeout(() => setHearts(s => s.filter(x => x.id !== id)), h.dur * 1000);
+    }, 620);
+    return () => clearInterval(t);
+  }, []);
+
+  /* Audience chatter keeps arriving while the stream runs. */
+  useEffect(() => {
+    const feed = [{
+      n: "Aisha Rahman",
+      t: "Do you always aspirate on the wet-dry border?"
+    }, {
+      n: "Grace Lindqvist",
+      t: "This is so much clearer than the textbook 🙌"
+    }, {
+      n: "Jonas Adeyemi",
+      t: "What product are you using here?"
+    }, {
+      n: "Sofia Alarcón",
+      t: "Joining from Madrid — thank you for doing these live"
+    }, {
+      n: "Dr Tim Pearce",
+      t: "Good question in the chat about migration — cover that next?"
+    }, {
+      n: "Olivia Marsh",
+      t: "Saved. Watching the replay again tomorrow."
+    }, {
+      n: "Ravi Chandran",
+      t: "How long before you review the result?"
+    }, {
+      n: "Hana Kobayashi",
+      t: "That cannula angle makes so much sense now 🔥"
+    }];
+    let i = 0;
+    const t = setInterval(() => {
+      const m = feed[i % feed.length];
+      i++;
+      setChat(c => c.concat({
+        n: m.n,
+        t: m.t,
+        fresh: true
+      }).slice(-60));
+    }, 2600);
+    return () => clearInterval(t);
+  }, []);
+  useEffect(() => {
+    const el = chatRef.current;
+    if (el && chatAtBottom.current) el.scrollTop = el.scrollHeight;
+  }, [chat]);
+  const onChatScroll = e => {
+    const el = e.currentTarget;
+    chatAtBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 24;
+  };
+  const clock = String(Math.floor(secs / 60)).padStart(2, "0") + ":" + String(secs % 60).padStart(2, "0");
+  const send = () => {
+    const val = msg.trim();
+    if (!val) return;
+    setChat(c => c.concat({
+      n: ME.name,
+      t: val,
+      me: true
+    }));
+    setMsg("");
+  };
+  const onCam = [].concat([{
+    n: "You",
+    av: liveCam ? "assets/live-preview-camera.jpg" : ME.avatar,
+    me: true,
+    off: !liveCam
+  }], guests.map(g => ({
+    n: g.n.split(" ")[0],
+    av: g.av
+  })));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Live broadcast"
+  }, onCam.length > 1 ? /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-grid n" + Math.min(onCam.length, 4)
+  }, onCam.slice(0, 4).map(p => /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-cell" + (p.off ? " camoff" : ""),
+    key: p.n
+  }, /*#__PURE__*/React.createElement("img", {
+    className: p.me && !front ? "rear" : undefined,
+    src: p.av,
+    alt: ""
+  }), p.off && /*#__PURE__*/React.createElement("span", {
+    className: "co"
+  }, "Camera off"), /*#__PURE__*/React.createElement("span", {
+    className: "nm"
+  }, p.n, p.me && liveMuted && /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:mic-off",
+    size: 11,
+    color: "#fff"
+  }))))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("img", {
+    className: "pfw-bcast-cam" + (front ? "" : " rear") + (liveCam ? "" : " hidden"),
+    src: "assets/live-preview-camera.jpg",
+    alt: ""
+  }), !liveCam && /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-camoff"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: ME.avatar,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", null, "Your camera is off"))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-bcast-dot"
+  }, "LIVE"), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-bcast-clock"
+  }, clock), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-bcast-viewers"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:eye",
+    size: 15,
+    color: "#fff"
+  }), "142"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-bcast-guest-btn",
+    "aria-label": "Add guest",
+    onClick: () => setGuestSheet(true)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:user-plus",
+    size: 16,
+    color: "#fff"
+  }), "Add guest"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-bcast-x",
+    "aria-label": "End broadcast",
+    onClick: () => setConfirmEnd(true)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 19,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-chat",
+    ref: chatRef,
+    onScroll: onChatScroll
+  }, chat.map((c, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-msg" + (c.me ? " me" : "") + (c.fresh ? " in" : ""),
+    key: i
+  }, /*#__PURE__*/React.createElement("b", null, c.n), " ", c.t))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-hearts",
+    "aria-hidden": "true"
+  }, hearts.map(h => /*#__PURE__*/React.createElement("span", {
+    className: "pfw-bcast-heart",
+    key: h.id,
+    style: {
+      right: h.x + "px",
+      animationDuration: h.dur + "s",
+      fontSize: h.size + "px",
+      "--rise": h.rise + "px"
+    }
+  }, h.e))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-tools"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-bcast-tool" + (liveMuted ? " off" : ""),
+    "aria-label": liveMuted ? "Unmute microphone" : "Mute microphone",
+    "aria-pressed": liveMuted,
+    onClick: () => setLiveMuted(!liveMuted)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: liveMuted ? "lucide:mic-off" : "lucide:mic",
+    size: 19,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-bcast-tool" + (liveCam ? "" : " off"),
+    "aria-label": liveCam ? "Turn camera off" : "Turn camera on",
+    "aria-pressed": !liveCam,
+    onClick: () => setLiveCam(!liveCam)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: liveCam ? "lucide:video" : "lucide:video-off",
+    size: 19,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-bcast-tool",
+    "aria-label": "Flip camera",
+    onClick: () => setFront(!front)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:refresh-cw",
+    size: 18,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-foot"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-input"
+  }, /*#__PURE__*/React.createElement("input", {
+    placeholder: "Say something…",
+    "aria-label": "Live chat message",
+    value: msg,
+    onChange: e => setMsg(e.target.value),
+    onKeyDown: e => {
+      if (e.key === "Enter") send();
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-bcast-send",
+    "aria-label": "Send",
+    onClick: send
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:send",
+    size: 17,
+    color: "#fff"
+  })))), guestSheet && /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-guest",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Invite a guest",
+    onClick: e => {
+      if (e.target === e.currentTarget) setGuestSheet(false);
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-guest-card"
+  }, /*#__PURE__*/React.createElement("h3", null, "Invite a guest"), /*#__PURE__*/React.createElement("p", {
+    className: "pfw-bcast-guest-p"
+  }, "Guests you bring on become co-hosts — they can invite people too."), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-guest-search"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:search",
+    size: 17,
+    color: "var(--gray-450)"
+  }), /*#__PURE__*/React.createElement("input", {
+    placeholder: "Search users",
+    "aria-label": "Search users"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-guest-list"
+  }, PFW_BCAST_GUESTS.map(g => {
+    const on = guests.some(x => x.u === g.u);
+    const pending = !on && invited.indexOf(g.u) !== -1;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "pfw-bcast-guest-row",
+      key: g.u
+    }, /*#__PURE__*/React.createElement("img", {
+      src: g.av,
+      alt: ""
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, g.u), /*#__PURE__*/React.createElement("i", null, pending ? "Waiting to accept…" : g.f)), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "pfw-bcast-guest-invite" + (on ? " on" : "") + (pending ? " pending" : ""),
+      disabled: on || pending,
+      onClick: () => {
+        setInvited(s => s.concat(g.u));
+        setTimeout(() => setGuests(s => s.some(x => x.u === g.u) ? s : s.concat(g)), 2200);
+      }
+    }, on ? "Co-host" : pending ? "Invited" : "Invite"));
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-bcast-guest-link",
+    onClick: () => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: copied ? "lucide:check" : "lucide:link",
+    size: 18,
+    color: copied ? "var(--success)" : "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, copied ? "Link copied" : "Copy invite link"), /*#__PURE__*/React.createElement("i", null, "Share the link to invite others"))))), confirmEnd && /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-endc",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "End live broadcast",
+    onClick: e => {
+      if (e.target === e.currentTarget) setConfirmEnd(false);
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-endc-card"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-bcast-endc-ic"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:radio",
+    size: 24,
+    color: "var(--error)"
+  })), /*#__PURE__*/React.createElement("h3", null, "End this live video?"), /*#__PURE__*/React.createElement("p", null, "You've been live for ", /*#__PURE__*/React.createElement("b", null, clock), " with ", /*#__PURE__*/React.createElement("b", null, "142 viewers"), ". Ending stops the broadcast for everyone — you can't resume it."), /*#__PURE__*/React.createElement("label", {
+    className: "pfw-bcast-endc-keep"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "checkbox",
+    checked: keepPost,
+    onChange: e => setKeepPost(e.target.checked)
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "bx"
+  }, keepPost && /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:check",
+    size: 12,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, "Post the replay to Newsfeed"), /*#__PURE__*/React.createElement("i", null, "Members who missed it can still watch. Untick to discard the recording."))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-bcast-endc-go",
+    onClick: () => onEnd(keepPost)
+  }, keepPost ? "End live & post replay" : "End live & discard"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-bcast-endc-cancel",
+    onClick: () => setConfirmEnd(false)
+  }, "Keep streaming"))));
 }
 function LikedByRow() {
   return null;
@@ -6753,6 +7551,31 @@ function SampleMedia({
     setMuted: setMuted,
     onClose: () => setWebPlayerOpen(false)
   });
+
+  /* A genuinely uploaded clip (composer's real file, unlike the built-in
+     demo posts which only ever carry a poster image standing in for video)
+     gets a real, playable <video> instead of the faux poster + fake
+     progress bar below. */
+  if (sample.type === "video" && sample.src) {
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "sm-video sm-video-real",
+      style: {
+        aspectRatio: sample.ratio || 16 / 9
+      }
+    }, /*#__PURE__*/React.createElement("video", {
+      src: sample.src,
+      poster: sample.poster || undefined,
+      controls: true,
+      playsInline: true,
+      style: {
+        width: "100%",
+        height: "100%",
+        display: "block",
+        objectFit: "contain",
+        background: "#000"
+      }
+    })), heartNode);
+  }
   if (sample.type === "video") {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "sm-video" + (sample.aspect === "square" ? " sm-video-square" : ""),
@@ -7924,9 +8747,15 @@ function FeedPost({
   }), /*#__PURE__*/React.createElement(PostCard, {
     ...post,
     commentList: [],
-    time: post.tierTag ? /*#__PURE__*/React.createElement(React.Fragment, null, post.time, /*#__PURE__*/React.createElement(TierTagChip, {
+    time: post.tierTag || post.live ? /*#__PURE__*/React.createElement(React.Fragment, null, post.time, post.tierTag && /*#__PURE__*/React.createElement(TierTagChip, {
       tag: post.tierTag
-    })) : post.time,
+    }), post.live && /*#__PURE__*/React.createElement("span", {
+      className: "pf-live-chip"
+    }, /*#__PURE__*/React.createElement(IconifyIcon, {
+      name: "lucide:radio",
+      size: 11,
+      color: "var(--error)"
+    }), "Live replay")) : post.time,
     hashtags: hideTags || post.questionnaire || post.poll ? [] : resolveHashtags(post.hashtags),
     title: post.author === PROFINITY ? null : post.title,
     body: post.questionnaire || post.poll ? null : post.bg ? /*#__PURE__*/React.createElement("div", {
@@ -9055,8 +9884,17 @@ function Feed({
      made from either surface show up on both. */
   const addPost = ({
     body,
-    media
+    media,
+    video,
+    live
   }) => {
+    const sample = video ? {
+      type: "video",
+      poster: video.cover,
+      src: video.src,
+      ratio: video.ratio,
+      duration: video.duration
+    } : null;
     const post = {
       id: "u" + Date.now(),
       author: {
@@ -9067,6 +9905,8 @@ function Feed({
       time: "Just now",
       body,
       media: media || [],
+      sample,
+      live: !!live,
       likes: "0",
       comments: "0",
       shares: "0",
@@ -9161,7 +10001,8 @@ function Feed({
     className: "feed",
     "data-screen-label": "Home feed"
   }, !channel && !window.PF_EMBED && /*#__PURE__*/React.createElement(PostComposer, {
-    onPost: addPost
+    onPost: addPost,
+    superUser: viewerCurrent.admin
   }), !channel && /*#__PURE__*/React.createElement(FeedPreviewPanel, {
     persona: viewerPersona,
     onPersona: setViewerPersona,

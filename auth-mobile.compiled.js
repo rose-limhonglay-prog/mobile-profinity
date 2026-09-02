@@ -661,9 +661,13 @@ function VerifySuccess({
 
 /* ------------------------------ DAILY REWARD ------------------------------ */
 function DailyReward({
-  onDone
+  onDone,
+  points,
+  kicker,
+  title,
+  sub
 }) {
-  const TOTAL = 1000;
+  const TOTAL = points || 1000;
   const [n, setN] = useStateAU(0);
   const [phase, setPhase] = useStateAU("in");
   React.useEffect(() => {
@@ -731,14 +735,14 @@ function DailyReward({
     size: 168
   }))), /*#__PURE__*/React.createElement("p", {
     className: "au-rw-kicker"
-  }, "Daily login reward"), /*#__PURE__*/React.createElement("p", {
+  }, kicker || "Daily login reward"), /*#__PURE__*/React.createElement("p", {
     className: "au-rw-points",
     "aria-live": "polite"
   }, /*#__PURE__*/React.createElement("b", null, "+", n.toLocaleString()), /*#__PURE__*/React.createElement("i", null, "points")), /*#__PURE__*/React.createElement("h1", {
     className: "au-rw-h1"
-  }, "Nice work, Katy!"), /*#__PURE__*/React.createElement("p", {
+  }, title || "Nice work, Katy!"), /*#__PURE__*/React.createElement("p", {
     className: "au-rw-sub"
-  }, "You've earned today's points just for showing up. Keep your streak going to unlock bonus rewards."), /*#__PURE__*/React.createElement("button", {
+  }, sub || "You've earned today's points just for showing up. Keep your streak going to unlock bonus rewards."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "au-cta",
     onClick: onDone
@@ -747,10 +751,17 @@ function DailyReward({
 
 /* -------------------------------- COMPLETE -------------------------------- */
 function Complete() {
+  const [claimed, setClaimedAU] = useStateAU(false);
   return /*#__PURE__*/React.createElement("div", {
     className: "au-screen",
     "data-screen-label": "Sign up · complete"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, !claimed && /*#__PURE__*/React.createElement(DailyReward, {
+    points: 250,
+    kicker: "Welcome bonus",
+    title: "You're all set, Katy!",
+    sub: "Here's 250 points just for joining — keep learning and connecting to earn more.",
+    onDone: () => setClaimedAU(true)
+  }), /*#__PURE__*/React.createElement("div", {
     className: "au-done"
   }, /*#__PURE__*/React.createElement("span", {
     className: "au-done-ic"
