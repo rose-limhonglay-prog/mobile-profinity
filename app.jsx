@@ -3030,6 +3030,38 @@ function CommentsSheet({ post, comments, onClose, onAddComment, onAddReply }) {
     {onAddComment(text);}
   };
 
+  // Drag-to-resize: the handle can be dragged up to expand the sheet toward
+  // full height, or dragged back down to snap to the small default height.
+  const [sheetH, setSheetH] = useState(null);
+  const [dragging, setDragging] = useState(false);
+  const dragRef = useRef(null);
+  const getSmallH = () => Math.min(window.innerHeight * 0.86, 780);
+  // Reserve a fixed top inset (status bar / notch) so the sheet never rises
+  // above it, instead of a vh-based margin that shrinks to ~nothing on tall viewports.
+  const getLargeH = () => window.innerHeight - 54;
+  const onDragStart = (e) => {
+    const rect = sheetRef.current.getBoundingClientRect();
+    dragRef.current = { startY: e.clientY, startH: rect.height };
+    setDragging(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onDragMove = (e) => {
+    if (!dragRef.current) return;
+    const delta = dragRef.current.startY - e.clientY;
+    const min = getSmallH();
+    const max = getLargeH();
+    setSheetH(Math.min(max, Math.max(min, dragRef.current.startH + delta)));
+  };
+  const onDragEnd = () => {
+    if (!dragRef.current) return;
+    dragRef.current = null;
+    setDragging(false);
+    const min = getSmallH();
+    const max = getLargeH();
+    const mid = (min + max) / 2;
+    setSheetH((cur) => cur != null && cur > mid ? max : min);
+  };
+
   useEffect(() => {
     const prev = document.activeElement;
     if (closeRef.current) closeRef.current.focus();
@@ -3040,8 +3072,16 @@ function CommentsSheet({ post, comments, onClose, onAddComment, onAddReply }) {
   return (
     <div className="cmtsheet-overlay" onClick={onClose}>
       <div className="cmtsheet" ref={sheetRef} onClick={(e) => e.stopPropagation()}
-      role="dialog" aria-modal="true" aria-label="Comments">
-        <div className="cmtsheet-handle" />
+      role="dialog" aria-modal="true" aria-label="Comments"
+      style={sheetH != null ? {
+        height: sheetH, maxHeight: "none",
+        transition: dragging ? "none" : "height .28s cubic-bezier(.22,1.06,.36,1)"
+      } : undefined}>
+        <div className="cmtsheet-draghandle"
+        onPointerDown={onDragStart} onPointerMove={onDragMove}
+        onPointerUp={onDragEnd} onPointerCancel={onDragEnd}>
+          <div className="cmtsheet-handle" />
+        </div>
         <div className="cmtsheet-head">
           <span className="cmtsheet-title">Comments</span>
           <button type="button" className="cmtsheet-x" aria-label="Close comments" ref={closeRef} onClick={onClose}>
