@@ -3016,6 +3016,7 @@ const PF_CMT_TIMES = ["2h", "1h", "45m", "20m", "12m", "5m", "2m"];
    Rendered position:absolute so it stays inside the phone frame. */
 function CommentsSheet({ post, comments, onClose, onAddComment, onAddReply }) {
   const sheetRef = useRef(null);
+  const overlayRef = useRef(null);
   const closeRef = useRef(null);
   const [replyFor, setReplyFor] = useState(null);
   const [focusKey, setFocusKey] = useState(0);
@@ -3035,10 +3036,15 @@ function CommentsSheet({ post, comments, onClose, onAddComment, onAddReply }) {
   const [sheetH, setSheetH] = useState(null);
   const [dragging, setDragging] = useState(false);
   const dragRef = useRef(null);
-  const getSmallH = () => Math.min(window.innerHeight * 0.86, 780);
-  // Reserve a fixed top inset (status bar / notch) so the sheet never rises
-  // above it, instead of a vh-based margin that shrinks to ~nothing on tall viewports.
-  const getLargeH = () => window.innerHeight - 54;
+  // Measure the overlay's own rendered box rather than window.innerHeight: on
+  // the desktop preview the sheet is fixed inside the scaled IOSDevice frame
+  // (a transformed ancestor becomes its containing block), so window height
+  // is the wrong reference there — clientHeight reflects the real local box
+  // in both that preview and on an actual mobile viewport.
+  const getContainerH = () => overlayRef.current ? overlayRef.current.clientHeight : window.innerHeight;
+  const getSmallH = () => Math.min(getContainerH() * 0.86, 780);
+  // Reserve a fixed top inset (status bar / notch) so the sheet never rises above it.
+  const getLargeH = () => getContainerH() - 54;
   const onDragStart = (e) => {
     const rect = sheetRef.current.getBoundingClientRect();
     dragRef.current = { startY: e.clientY, startH: rect.height };
@@ -3070,7 +3076,7 @@ function CommentsSheet({ post, comments, onClose, onAddComment, onAddReply }) {
     return () => {document.removeEventListener("keydown", onKey);if (prev && prev.focus) prev.focus();};
   }, []);
   return (
-    <div className="cmtsheet-overlay" onClick={onClose}>
+    <div className="cmtsheet-overlay" ref={overlayRef} onClick={onClose}>
       <div className="cmtsheet" ref={sheetRef} onClick={(e) => e.stopPropagation()}
       role="dialog" aria-modal="true" aria-label="Comments"
       style={sheetH != null ? {
