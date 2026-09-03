@@ -5722,8 +5722,8 @@ function EmojiPicker({
 const QUICK_REACT_EMOJI = ["❤️", "🙌", "🔥", "👏", "😢", "😍", "😮", "😂"];
 
 /* Inline comment / reply composer built from DS primitives: a quick-react
-   emoji strip, an avatar + pill text field, and a sticker/emoji trigger
-   that opens the full EmojiPicker grid for inserting into the text.
+   emoji strip, an avatar + pill text field, and a Send button (dimmed until
+   there is text) that submits — Enter in the field does the same.
    `focusKey` lets a parent (e.g. tapping "Reply" on a comment elsewhere in
    the sheet) refocus this same field imperatively by bumping the value. */
 function CommentComposer({
@@ -5734,7 +5734,6 @@ function CommentComposer({
   focusKey
 }) {
   const [v, setV] = useState("");
-  const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
   useEffect(() => {
     if (focusKey && inputRef.current) inputRef.current.focus();
@@ -5750,7 +5749,6 @@ function CommentComposer({
   };
   const addEmoji = em => {
     setV(s => s + em);
-    setEmojiOpen(false);
     if (inputRef.current) inputRef.current.focus();
   };
   return /*#__PURE__*/React.createElement("div", {
@@ -5820,8 +5818,9 @@ function CommentComposer({
     }
   }), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    onClick: () => setEmojiOpen(o => !o),
-    "aria-label": "Add emoji",
+    onClick: submit,
+    "aria-label": "Send",
+    disabled: !v.trim(),
     style: {
       display: "flex",
       alignItems: "center",
@@ -5831,17 +5830,16 @@ function CommentComposer({
       flexShrink: 0,
       borderRadius: "50%",
       border: "none",
-      cursor: "pointer",
-      background: "transparent"
+      cursor: v.trim() ? "pointer" : "default",
+      background: "transparent",
+      opacity: v.trim() ? 1 : 0.45,
+      transition: "opacity .15s ease"
     }
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:sticker",
+    name: "lucide:send",
     size: small ? 17 : 19,
-    color: "var(--text-primary)"
-  })), emojiOpen && /*#__PURE__*/React.createElement(EmojiPicker, {
-    onPick: addEmoji,
-    onClose: () => setEmojiOpen(false)
-  }))));
+    color: "var(--brand-navy)"
+  })))));
 }
 
 /* Post composer — "What's on your mind?" pill with quick-attach icons

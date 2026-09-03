@@ -2931,13 +2931,12 @@ function EmojiPicker({ onPick, onClose }) {
 const QUICK_REACT_EMOJI = ["❤️", "🙌", "🔥", "👏", "😢", "😍", "😮", "😂"];
 
 /* Inline comment / reply composer built from DS primitives: a quick-react
-   emoji strip, an avatar + pill text field, and a sticker/emoji trigger
-   that opens the full EmojiPicker grid for inserting into the text.
+   emoji strip, an avatar + pill text field, and a Send button (dimmed until
+   there is text) that submits — Enter in the field does the same.
    `focusKey` lets a parent (e.g. tapping "Reply" on a comment elsewhere in
    the sheet) refocus this same field imperatively by bumping the value. */
 function CommentComposer({ placeholder, onSubmit, autoFocus, small, focusKey }) {
   const [v, setV] = useState("");
-  const [emojiOpen, setEmojiOpen] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -2956,7 +2955,6 @@ function CommentComposer({ placeholder, onSubmit, autoFocus, small, focusKey }) 
 
   const addEmoji = (em) => {
     setV((s) => s + em);
-    setEmojiOpen(false);
     if (inputRef.current) inputRef.current.focus();
   };
 
@@ -2976,11 +2974,10 @@ function CommentComposer({ placeholder, onSubmit, autoFocus, small, focusKey }) 
           <input ref={inputRef} value={v} onChange={(e) => setV(e.target.value)} onKeyDown={(e) => {if (e.key === "Enter") submit();}}
           placeholder={placeholder} autoFocus={autoFocus}
           style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: "var(--font-sans)", fontSize: "var(--fs-body)", color: "var(--text-primary)", minWidth: 0 }} />
-          <button type="button" onClick={() => setEmojiOpen((o) => !o)} aria-label="Add emoji"
-          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: small ? 28 : 32, height: small ? 28 : 32, flexShrink: 0, borderRadius: "50%", border: "none", cursor: "pointer", background: "transparent" }}>
-            <IconifyIcon name="lucide:sticker" size={small ? 17 : 19} color="var(--text-primary)" />
+          <button type="button" onClick={submit} aria-label="Send" disabled={!v.trim()}
+          style={{ display: "flex", alignItems: "center", justifyContent: "center", width: small ? 28 : 32, height: small ? 28 : 32, flexShrink: 0, borderRadius: "50%", border: "none", cursor: v.trim() ? "pointer" : "default", background: "transparent", opacity: v.trim() ? 1 : 0.45, transition: "opacity .15s ease" }}>
+            <IconifyIcon name="lucide:send" size={small ? 17 : 19} color="var(--brand-navy)" />
           </button>
-          {emojiOpen && <EmojiPicker onPick={addEmoji} onClose={() => setEmojiOpen(false)} />}
         </div>
       </div>
     </div>);
