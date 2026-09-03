@@ -2601,10 +2601,25 @@ if (typeof window !== "undefined") setTimeout(() => ensurePtsOwl(), 1200);
    Appended to <body> as position:fixed so it escapes overflow:hidden cards,
    the comments sheet and the scaled device frame (same trick as burstFrom). */
 const PTS_POP_IN_MS = 400, PTS_POP_HOLD_MS = 2200, PTS_POP_OUT_MS = 300;
+
+/* Visual scale of the IOSDevice preview frame containing `el` (1 on a real
+   phone or any unframed page). Body-level portals — the reaction bar, the
+   points pill, burst particles — are position:fixed outside the frame's
+   CSS transform, so they'd otherwise render at full size and look huge next
+   to the shrunken content they float over. Rendered width / layout width
+   recovers the transform's scale without reading React state. */
+function frameScaleOf(el) {
+  const frame = el && el.closest && el.closest("[data-ios-device]");
+  if (!frame || !frame.offsetWidth) return 1;
+  const s = frame.getBoundingClientRect().width / frame.offsetWidth;
+  return s > 0 && isFinite(s) ? s : 1;
+}
+
 function popPoints(anchor, amount) {
   if (!anchor || typeof window === "undefined") return;
   const rect = anchor.getBoundingClientRect();
   if (!rect.width && !rect.height) return;
+  const s = frameScaleOf(anchor);
   const cx = rect.left + rect.width / 2;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -2642,16 +2657,19 @@ function popPoints(anchor, amount) {
   const fr = frame ? frame.getBoundingClientRect() : null;
   const bx0 = fr ? fr.left : 0, bx1 = fr ? fr.right : window.innerWidth;
   const by0 = fr ? fr.top : 0, by1 = fr ? fr.bottom : window.innerHeight;
-  const half = pill.offsetWidth / 2 + 10;
-  const ph = pill.offsetHeight || 52;
+  // offsetWidth/Height are pre-transform, so scale them to on-screen size.
+  const half = (pill.offsetWidth / 2 + 10) * s;
+  const ph = (pill.offsetHeight || 52) * s;
   const px = Math.min(Math.max(cx, bx0 + half), bx1 - half);
-  const py = Math.min(Math.max(rect.top - ph / 2 - 4, by0 + 90), by1 - 30);
+  const py = Math.min(Math.max(rect.top - ph / 2 - 4 * s, by0 + 90 * s), by1 - 30 * s);
   pill.style.left = px + "px";
   pill.style.top = py + "px";
 
   const dur = PTS_POP_IN_MS + PTS_POP_HOLD_MS + PTS_POP_OUT_MS;
   const inEnd = PTS_POP_IN_MS / dur, outStart = (PTS_POP_IN_MS + PTS_POP_HOLD_MS) / dur;
-  const base = "translate(-50%,-50%)";
+  // Fold the frame scale into every keyframe so the pill matches the phone.
+  const base = "translate(-50%,-50%) scale(" + s + ")";
+  pill.style.transform = base;
   const frames = reduce ?
   [
   { transform: base + " scale(1)", opacity: 0, easing: "ease" },
@@ -2722,17 +2740,18 @@ function burstFrom(btn, key) {
     );
   }
 
+  const s = frameScaleOf(btn);
   const rect = btn.getBoundingClientRect();
-  const cx = rect.left + 16,cy = rect.top + rect.height / 2;
+  const cx = rect.left + 16 * s,cy = rect.top + rect.height / 2;
   for (let i = 0; i < 7; i++) {
-    const size = 13 + Math.random() * 10;
+    const size = (13 + Math.random() * 10) * s;
     const el = document.createElement("iconify-icon");
     el.setAttribute("icon", r.icon);
     el.setAttribute("aria-hidden", "true");
     el.style.cssText = "position:fixed;left:" + cx + "px;top:" + cy + "px;width:" + size + "px;height:" + size +
     "px;pointer-events:none;z-index:9999;line-height:0;will-change:transform,opacity;color:" + color + ";";
     document.body.appendChild(el);
-    const dx = (Math.random() - 0.5) * 96,dy = -56 - Math.random() * 74;
+    const dx = (Math.random() - 0.5) * 96 * s,dy = (-56 - Math.random() * 74) * s;
     const anim = el.animate(
       [
       { transform: "translate(-50%,-50%) scale(.3)", opacity: 0 },
@@ -2750,8 +2769,14 @@ function burstFrom(btn, key) {
    hover lift + label tooltip. */
 function ReactionPicker({ at, onPick, onEnter, onLeave }) {
   if (!at) return null;
+  // `at.scale` is the IOSDevice preview frame's scale (1 on a phone). The bar
+  // lives in a body portal outside that transform, so shrink it to match the
+  // content underneath; the wrapper carries the scale because .pf-react-bar
+  // animates its own transform on entry.
+  const scale = at.scale || 1;
   return ReactDOM.createPortal(
     <div style={{ position: "fixed", left: 0, right: 0, bottom: at.bottom, zIndex: 9999, display: "flex", justifyContent: "center", pointerEvents: "none" }}>
+      <div style={{ transform: scale !== 1 ? "scale(" + scale + ")" : undefined, transformOrigin: "center bottom", display: "flex" }}>
       <div onMouseEnter={onEnter} onMouseLeave={onLeave} className="pf-react-bar"
       role="menu" aria-label="Pick a reaction"
       style={{ pointerEvents: "auto" }}>
@@ -2763,6 +2788,7 @@ function ReactionPicker({ at, onPick, onEnter, onLeave }) {
             <IconifyIcon name={r.icon} size={40} />
           </button>
         )}
+      </div>
       </div>
     </div>,
     document.body
@@ -2782,7 +2808,8 @@ function useReactionPicker(ref, reaction, onReact) {
     const btn = likeButtonOf(ref.current);
     if (!btn) return;
     const r = btn.getBoundingClientRect();
-    setPicker({ bottom: window.innerHeight - r.top + 8 });
+    const scale = frameScaleOf(btn);
+    setPicker({ bottom: window.innerHeight - r.top + 8 * scale, scale });
   };
   const scheduleHide = () => {
     clearTimeout(hideT.current);
@@ -2845,7 +2872,8 @@ function ReactTrigger() {
     clearTimeout(hideT.current);
     if (!btnRef.current) return;
     const rect = btnRef.current.getBoundingClientRect();
-    setAt({ bottom: window.innerHeight - rect.top + 8 });
+    const scale = frameScaleOf(btnRef.current);
+    setAt({ bottom: window.innerHeight - rect.top + 8 * scale, scale });
   };
   const scheduleHide = () => {clearTimeout(hideT.current);hideT.current = setTimeout(() => setAt(null), 240);};
   const pick = (key) => {setReaction(key);burstFrom(btnRef.current, key);setAt(null);};
