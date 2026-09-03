@@ -251,6 +251,23 @@ const EVT_FORMAT_META = {
     icon: "lucide:radio"
   }
 };
+/* How a Webinar is delivered to attendees. In-app live streams reuse the
+   Super User "Go Live" surface (attendees watch inside PROfinity); Zoom
+   events hand attendees an external meeting link at join time. */
+const EVT_DELIVERY_META = {
+  live_stream: {
+    label: "In-App Live Stream",
+    short: "In-app stream",
+    icon: "lucide:radio",
+    desc: "Broadcast from PROfinity. Attendees watch, chat and buy live inside the app."
+  },
+  zoom: {
+    label: "Zoom Link",
+    short: "Zoom",
+    icon: "lucide:video",
+    desc: "Attendees are sent your Zoom meeting link and join from the Events page."
+  }
+};
 
 /* PRD §4.4: "Launching a Live stream automatically creates a tracking
    record in the existing Admin Panel > Events Tab." These rows are derived
@@ -386,6 +403,8 @@ const EVT_SEED_ROWS = [{
   startIso: "2026-06-18T19:00:00Z",
   endIso: "2026-06-18T20:30:00Z",
   location: "",
+  deliveryType: "zoom",
+  meetingUrl: "https://us02web.zoom.us/j/84219930571?pwd=vipclinic",
   audienceGroup: "mastery",
   invitationMode: "self_subscribe",
   description: "A members-only masterclass on scaling a clinic without burning out the front desk.",
@@ -427,6 +446,8 @@ const EVT_SEED_ROWS = [{
   startIso: new Date(new Date().setUTCHours(10, 0, 0, 0)).toISOString(),
   endIso: new Date(new Date().setUTCHours(23, 0, 0, 0)).toISOString(),
   location: "",
+  deliveryType: "live_stream",
+  meetingUrl: "",
   audienceGroup: "all",
   invitationMode: "self_subscribe",
   description: "Open Q&A with Dr Tim Pearce — drop your questions in the chat.",
@@ -444,6 +465,8 @@ const EVT_SEED_ROWS = [{
   startIso: "2025-12-10T18:00:00Z",
   endIso: "2025-12-10T19:00:00Z",
   location: "",
+  deliveryType: "zoom",
+  meetingUrl: "https://us02web.zoom.us/j/81003321987",
   audienceGroup: "all",
   invitationMode: "self_subscribe",
   description: "Archived — kept for reference only.",
@@ -608,6 +631,8 @@ function EventFormModal({
     startIso: "",
     endIso: "",
     location: "",
+    deliveryType: "live_stream",
+    meetingUrl: "",
     audienceGroup: "all",
     invitationMode: "self_subscribe",
     selectedAttendeesRaw: "",
@@ -636,6 +661,8 @@ function EventFormModal({
   const isEdit = !!(initial && initial.id);
   const showLocation = f.formatType === "in_person";
   const showCapacity = f.formatType === "in_person";
+  const showDelivery = f.formatType === "webinar";
+  const needsMeetingUrl = showDelivery && f.deliveryType === "zoom";
   const toggleProduct = id => set("products", f.products.includes(id) ? f.products.filter(x => x !== id) : f.products.concat(id));
   const filteredProducts = EVT_PRODUCTS.filter(p => p.title.toLowerCase().includes(productQuery.trim().toLowerCase()));
   const validate = () => {
@@ -646,6 +673,10 @@ function EventFormModal({
     if (f.startIso && f.endIso && new Date(f.endIso) <= new Date(f.startIso)) e.endIso = "End must be after start.";
     if (!f.description.trim()) e.description = "Description is required.";
     if (showLocation && !f.location.trim()) e.location = "Location is required for In-Person events.";
+    if (needsMeetingUrl) {
+      const url = (f.meetingUrl || "").trim();
+      if (!url) e.meetingUrl = "Paste the Zoom meeting link attendees will join.";else if (!/^https?:\/\/\S+$/i.test(url)) e.meetingUrl = "Enter a full link starting with https://";
+    }
     if (showCapacity && f.capacityEnabled && !String(f.capacity).trim()) e.capacity = "Set the available capacity, or turn the switch off.";
     if (!isEdit && !f.thumbnail) e.thumbnail = "Upload a thumbnail image.";
     if (f.liveSellingEnabled && f.products.length === 0) e.products = "Select at least one product for the host to sell live.";
@@ -659,6 +690,8 @@ function EventFormModal({
       capacity: showCapacity && f.capacityEnabled ? Number(f.capacity) || 0 : 0,
       capacityEnabled: showCapacity ? f.capacityEnabled : false,
       location: showLocation ? f.location : "",
+      deliveryType: showDelivery ? f.deliveryType : "",
+      meetingUrl: needsMeetingUrl ? f.meetingUrl.trim() : "",
       products: f.liveSellingEnabled ? f.products : []
     });
     onSave(row);
@@ -710,7 +743,61 @@ function EventFormModal({
     onClick: () => set("formatType", k)
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: EVT_FORMAT_META[k].icon
-  }), EVT_FORMAT_META[k].label)))), /*#__PURE__*/React.createElement("div", {
+  }), EVT_FORMAT_META[k].label)))), showDelivery && /*#__PURE__*/React.createElement(EVTFormRow, {
+    label: "Webinar Delivery",
+    required: true,
+    hint: "How attendees join this online event."
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "evtf-delivery-cards",
+    role: "radiogroup"
+  }, Object.keys(EVT_DELIVERY_META).map(k => {
+    const d = EVT_DELIVERY_META[k];
+    const on = f.deliveryType === k;
+    return /*#__PURE__*/React.createElement("button", {
+      key: k,
+      type: "button",
+      role: "radio",
+      "aria-checked": on,
+      className: "evtf-delivery-card" + (on ? " on" : ""),
+      onClick: () => set("deliveryType", k)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "evtf-delivery-ic"
+    }, /*#__PURE__*/React.createElement("iconify-icon", {
+      icon: d.icon
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "evtf-delivery-tx"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "t"
+    }, d.label), /*#__PURE__*/React.createElement("span", {
+      className: "d"
+    }, d.desc)), /*#__PURE__*/React.createElement("span", {
+      className: "evtf-delivery-check" + (on ? " on" : "")
+    }, on && /*#__PURE__*/React.createElement("iconify-icon", {
+      icon: "lucide:check"
+    })));
+  })), needsMeetingUrl && /*#__PURE__*/React.createElement("div", {
+    className: "evtf-url-block"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "evtf-url-wrap" + (errors.meetingUrl ? " err" : "")
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:link"
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "url",
+    className: "evtf-url-input",
+    value: f.meetingUrl,
+    inputMode: "url",
+    autoComplete: "off",
+    onChange: e => set("meetingUrl", e.target.value),
+    placeholder: "https://zoom.us/j/1234567890?pwd=..."
+  })), errors.meetingUrl ? /*#__PURE__*/React.createElement("span", {
+    className: "evtf-err"
+  }, errors.meetingUrl) : /*#__PURE__*/React.createElement("span", {
+    className: "evtf-hint"
+  }, "Include the passcode in the link so attendees join in one tap. The link is revealed to registered attendees only.")), f.deliveryType === "live_stream" && /*#__PURE__*/React.createElement("div", {
+    className: "evtf-audience-banner evtf-delivery-banner"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:radio"
+  }), /*#__PURE__*/React.createElement("span", null, "No link needed. When the event starts, the host taps ", /*#__PURE__*/React.createElement("strong", null, "Go Live"), " in the app and this event is linked to that stream automatically. Attendees get a \"Join Live\" button on the Events page."))), /*#__PURE__*/React.createElement("div", {
     className: "evtf-grid-2"
   }, /*#__PURE__*/React.createElement(EVTFormRow, {
     label: "Start Date & Time",
@@ -1273,7 +1360,21 @@ function EVTListView() {
       }).filter(Boolean).join(", ")
     }, /*#__PURE__*/React.createElement("iconify-icon", {
       icon: "lucide:shopping-cart"
-    }), r.products.length, " product", r.products.length === 1 ? "" : "s", " live"), r.invitationMode === "admin_driven" && /*#__PURE__*/React.createElement("span", {
+    }), r.products.length, " product", r.products.length === 1 ? "" : "s", " live"), r.formatType === "webinar" && EVT_DELIVERY_META[r.deliveryType] && (r.deliveryType === "zoom" && r.meetingUrl ? /*#__PURE__*/React.createElement("a", {
+      className: "evt-invite-tag evt-delivery-tag evt-delivery-zoom",
+      href: r.meetingUrl,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      title: r.meetingUrl
+    }, /*#__PURE__*/React.createElement("iconify-icon", {
+      icon: "lucide:video"
+    }), "Zoom link", /*#__PURE__*/React.createElement("iconify-icon", {
+      icon: "lucide:external-link"
+    })) : /*#__PURE__*/React.createElement("span", {
+      className: "evt-invite-tag evt-delivery-tag"
+    }, /*#__PURE__*/React.createElement("iconify-icon", {
+      icon: EVT_DELIVERY_META[r.deliveryType].icon
+    }), EVT_DELIVERY_META[r.deliveryType].label)), r.invitationMode === "admin_driven" && /*#__PURE__*/React.createElement("span", {
       className: "evt-invite-tag"
     }, /*#__PURE__*/React.createElement("iconify-icon", {
       icon: "lucide:mail-check"
@@ -1293,7 +1394,7 @@ function EVTListView() {
       className: "evt-cell"
     }, evtFmtTime(r.startIso)), /*#__PURE__*/React.createElement("span", {
       className: "evt-cell evt-cell-location"
-    }, r.location || "—"), /*#__PURE__*/React.createElement("span", {
+    }, r.location || (EVT_DELIVERY_META[r.deliveryType] ? "Online · " + EVT_DELIVERY_META[r.deliveryType].short : "—")), /*#__PURE__*/React.createElement("span", {
       className: "evt-metric"
     }, evtCapacityLabel(r)), /*#__PURE__*/React.createElement("span", {
       className: "evt-metric"

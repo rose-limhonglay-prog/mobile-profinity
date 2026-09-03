@@ -115,6 +115,10 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
   font-weight: 600; color: var(--premium-gold-deep, #92400e); }
 .evt-invite-tag iconify-icon { font-size: 13px; }
 .evt-autolog-tag { color: var(--ai-purple); }
+.evt-delivery-tag { color: var(--brand-navy); }
+.evt-delivery-zoom { text-decoration: none; }
+.evt-delivery-zoom:hover { text-decoration: underline; }
+.evt-delivery-zoom iconify-icon:last-child { font-size: 11px; opacity: .7; }
 .evt-host-tag { color: var(--brand-navy); }
 .evt-speaker-tag { color: var(--gray-500); }
 .evt-products-tag { color: var(--success); cursor: default; }
@@ -200,6 +204,32 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
   font-family: inherit; font-size: 14px; font-weight: 600; color: var(--gray-600); }
 .evtf-seg-btn iconify-icon { font-size: 16px; }
 .evtf-seg-btn.on { background: var(--brand-navy); border-color: var(--brand-navy); color: #fff; }
+
+/* Webinar delivery picker: In-App Live Stream vs Zoom Link */
+.evtf-delivery-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.evtf-delivery-card { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; text-align: left;
+  border-radius: 12px; border: 1px solid var(--border-default); background: var(--white); cursor: pointer; font-family: inherit; color: var(--text-primary); }
+.evtf-delivery-card:hover { border-color: var(--gray-400); }
+.evtf-delivery-card.on { border-color: var(--brand-navy); box-shadow: 0 0 0 1px var(--brand-navy) inset; background: var(--brand-navy-08, rgba(11,31,58,.05)); }
+.evtf-delivery-ic { flex: none; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
+  background: var(--gray-100); color: var(--gray-600); font-size: 18px; }
+.evtf-delivery-card.on .evtf-delivery-ic { background: var(--brand-navy); color: #fff; }
+.evtf-delivery-tx { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
+.evtf-delivery-tx .t { font-size: 14px; font-weight: 700; }
+.evtf-delivery-tx .d { font-size: 12.5px; line-height: 1.4; color: var(--gray-500); }
+.evtf-delivery-check { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border-default);
+  display: grid; place-items: center; font-size: 13px; color: #fff; margin-top: 8px; }
+.evtf-delivery-check.on { background: var(--brand-navy); border-color: var(--brand-navy); }
+.evtf-url-block { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.evtf-url-wrap { display: flex; align-items: center; gap: 10px; padding: 0 14px; height: 46px; border-radius: 10px;
+  border: 1px solid var(--border-default); background: var(--white); }
+.evtf-url-wrap iconify-icon { flex: none; font-size: 17px; color: var(--gray-500); }
+.evtf-url-wrap:focus-within { border-color: var(--ai-purple); box-shadow: 0 0 0 4px var(--focus-ring); }
+.evtf-url-wrap.err { border-color: var(--error); }
+.evtf-url-input { flex: 1; border: 0; outline: 0; background: transparent; font-family: inherit; font-size: 14.5px; color: var(--text-primary); min-width: 0; }
+.evtf-delivery-banner { margin-top: 10px; font-size: 13px; line-height: 1.45; color: var(--text-primary); }
+.evtf-delivery-banner strong { font-weight: 700; }
+@media (max-width: 640px) { .evtf-delivery-cards { grid-template-columns: 1fr; } }
 
 .evtf-radio-row { display: flex; flex-direction: column; gap: 10px; }
 .evtf-radio { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--text-primary); cursor: pointer; }

@@ -147,6 +147,15 @@ const EVT_FORMAT_META = {
      auto-logged from window.PFSuperUser, not created/edited from this form. */
   live: { label: "Live Stream", icon: "lucide:radio" },
 };
+/* How a Webinar is delivered to attendees. In-app live streams reuse the
+   Super User "Go Live" surface (attendees watch inside PROfinity); Zoom
+   events hand attendees an external meeting link at join time. */
+const EVT_DELIVERY_META = {
+  live_stream: { label: "In-App Live Stream", short: "In-app stream", icon: "lucide:radio",
+    desc: "Broadcast from PROfinity. Attendees watch, chat and buy live inside the app." },
+  zoom: { label: "Zoom Link", short: "Zoom", icon: "lucide:video",
+    desc: "Attendees are sent your Zoom meeting link and join from the Events page." },
+};
 
 /* PRD §4.4: "Launching a Live stream automatically creates a tracking
    record in the existing Admin Panel > Events Tab." These rows are derived
@@ -238,7 +247,7 @@ const EVT_SEED_ROWS = [
   {
     id: "evt-vip", title: "VIP Training: How To Build a THRIVING Clinic That Serves",
     formatType: "webinar", startIso: "2026-06-18T19:00:00Z", endIso: "2026-06-18T20:30:00Z",
-    location: "",
+    location: "", deliveryType: "zoom", meetingUrl: "https://us02web.zoom.us/j/84219930571?pwd=vipclinic",
     audienceGroup: "mastery",
     invitationMode: "self_subscribe",
     description: "A members-only masterclass on scaling a clinic without burning out the front desk.",
@@ -267,7 +276,7 @@ const EVT_SEED_ROWS = [
     formatType: "webinar",
     startIso: new Date(new Date().setUTCHours(10, 0, 0, 0)).toISOString(),
     endIso: new Date(new Date().setUTCHours(23, 0, 0, 0)).toISOString(),
-    location: "",
+    location: "", deliveryType: "live_stream", meetingUrl: "",
     audienceGroup: "all",
     invitationMode: "self_subscribe",
     description: "Open Q&A with Dr Tim Pearce — drop your questions in the chat.",
@@ -279,7 +288,7 @@ const EVT_SEED_ROWS = [
   {
     id: "evt-archived", title: "2025 Legacy Webinar: Year in Review",
     formatType: "webinar", startIso: "2025-12-10T18:00:00Z", endIso: "2025-12-10T19:00:00Z",
-    location: "",
+    location: "", deliveryType: "zoom", meetingUrl: "https://us02web.zoom.us/j/81003321987",
     audienceGroup: "all",
     invitationMode: "self_subscribe",
     description: "Archived — kept for reference only.",
@@ -367,7 +376,7 @@ function EVTPeopleManager({ people, onAdd, onRemove, addLabel, emptyLabel }) {
 function EventFormModal({ initial, onClose, onSave }) {
   const blank = {
     id: null, title: "", formatType: "webinar", startIso: "", endIso: "",
-    location: "", audienceGroup: "all",
+    location: "", deliveryType: "live_stream", meetingUrl: "", audienceGroup: "all",
     invitationMode: "self_subscribe", selectedAttendeesRaw: "", description: "",
     thumbnail: "", capacityEnabled: true, capacity: "", isActive: true,
     liveSellingEnabled: false, products: [],
@@ -381,6 +390,8 @@ function EventFormModal({ initial, onClose, onSave }) {
   const isEdit = !!(initial && initial.id);
   const showLocation = f.formatType === "in_person";
   const showCapacity = f.formatType === "in_person";
+  const showDelivery = f.formatType === "webinar";
+  const needsMeetingUrl = showDelivery && f.deliveryType === "zoom";
   const toggleProduct = (id) => set("products", f.products.includes(id) ? f.products.filter((x) => x !== id) : f.products.concat(id));
   const filteredProducts = EVT_PRODUCTS.filter((p) => p.title.toLowerCase().includes(productQuery.trim().toLowerCase()));
 
@@ -393,6 +404,11 @@ function EventFormModal({ initial, onClose, onSave }) {
     if (f.startIso && f.endIso && new Date(f.endIso) <= new Date(f.startIso)) e.endIso = "End must be after start.";
     if (!f.description.trim()) e.description = "Description is required.";
     if (showLocation && !f.location.trim()) e.location = "Location is required for In-Person events.";
+    if (needsMeetingUrl) {
+      const url = (f.meetingUrl || "").trim();
+      if (!url) e.meetingUrl = "Paste the Zoom meeting link attendees will join.";
+      else if (!/^https?:\/\/\S+$/i.test(url)) e.meetingUrl = "Enter a full link starting with https://";
+    }
     if (showCapacity && f.capacityEnabled && !String(f.capacity).trim()) e.capacity = "Set the available capacity, or turn the switch off.";
     if (!isEdit && !f.thumbnail) e.thumbnail = "Upload a thumbnail image.";
     if (f.liveSellingEnabled && f.products.length === 0) e.products = "Select at least one product for the host to sell live.";
@@ -407,6 +423,8 @@ function EventFormModal({ initial, onClose, onSave }) {
       capacity: showCapacity && f.capacityEnabled ? Number(f.capacity) || 0 : 0,
       capacityEnabled: showCapacity ? f.capacityEnabled : false,
       location: showLocation ? f.location : "",
+      deliveryType: showDelivery ? f.deliveryType : "",
+      meetingUrl: needsMeetingUrl ? f.meetingUrl.trim() : "",
       products: f.liveSellingEnabled ? f.products : [],
     });
     onSave(row);
@@ -438,6 +456,45 @@ function EventFormModal({ initial, onClose, onSave }) {
               ))}
             </div>
           </EVTFormRow>
+
+          {showDelivery && (
+            <EVTFormRow label="Webinar Delivery" required hint="How attendees join this online event.">
+              <div className="evtf-delivery-cards" role="radiogroup">
+                {Object.keys(EVT_DELIVERY_META).map((k) => {
+                  const d = EVT_DELIVERY_META[k];
+                  const on = f.deliveryType === k;
+                  return (
+                    <button key={k} type="button" role="radio" aria-checked={on}
+                      className={"evtf-delivery-card" + (on ? " on" : "")} onClick={() => set("deliveryType", k)}>
+                      <span className="evtf-delivery-ic"><iconify-icon icon={d.icon}></iconify-icon></span>
+                      <span className="evtf-delivery-tx">
+                        <span className="t">{d.label}</span>
+                        <span className="d">{d.desc}</span>
+                      </span>
+                      <span className={"evtf-delivery-check" + (on ? " on" : "")}>{on && <iconify-icon icon="lucide:check"></iconify-icon>}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {needsMeetingUrl && (
+                <div className="evtf-url-block">
+                  <div className={"evtf-url-wrap" + (errors.meetingUrl ? " err" : "")}>
+                    <iconify-icon icon="lucide:link"></iconify-icon>
+                    <input type="url" className="evtf-url-input" value={f.meetingUrl} inputMode="url" autoComplete="off"
+                      onChange={(e) => set("meetingUrl", e.target.value)} placeholder="https://zoom.us/j/1234567890?pwd=..." />
+                  </div>
+                  {errors.meetingUrl ? <span className="evtf-err">{errors.meetingUrl}</span>
+                    : <span className="evtf-hint">Include the passcode in the link so attendees join in one tap. The link is revealed to registered attendees only.</span>}
+                </div>
+              )}
+              {f.deliveryType === "live_stream" && (
+                <div className="evtf-audience-banner evtf-delivery-banner">
+                  <iconify-icon icon="lucide:radio"></iconify-icon>
+                  <span>No link needed. When the event starts, the host taps <strong>Go Live</strong> in the app and this event is linked to that stream automatically. Attendees get a "Join Live" button on the Events page.</span>
+                </div>
+              )}
+            </EVTFormRow>
+          )}
 
           <div className="evtf-grid-2">
             <EVTFormRow label="Start Date & Time" required hint="Stored as GMT/UTC.">
@@ -796,13 +853,20 @@ function EVTListView() {
                     <iconify-icon icon="lucide:shopping-cart"></iconify-icon>{r.products.length} product{r.products.length === 1 ? "" : "s"} live
                   </span>
                 )}
+                {r.formatType === "webinar" && EVT_DELIVERY_META[r.deliveryType] && (
+                  r.deliveryType === "zoom" && r.meetingUrl ?
+                  <a className="evt-invite-tag evt-delivery-tag evt-delivery-zoom" href={r.meetingUrl} target="_blank" rel="noopener noreferrer" title={r.meetingUrl}>
+                    <iconify-icon icon="lucide:video"></iconify-icon>Zoom link<iconify-icon icon="lucide:external-link"></iconify-icon>
+                  </a> :
+                  <span className="evt-invite-tag evt-delivery-tag"><iconify-icon icon={EVT_DELIVERY_META[r.deliveryType].icon}></iconify-icon>{EVT_DELIVERY_META[r.deliveryType].label}</span>
+                )}
                 {r.invitationMode === "admin_driven" && <span className="evt-invite-tag"><iconify-icon icon="lucide:mail-check"></iconify-icon>Invite only</span>}
                 {r.autoLogged && <span className="evt-invite-tag evt-autolog-tag"><iconify-icon icon="lucide:zap"></iconify-icon>Auto-logged · Super User</span>}
               </div>
               <span className="evt-cell"><span className="evt-type-badge"><iconify-icon icon={meta.icon}></iconify-icon>{meta.label}</span></span>
               <span className="evt-cell">{evtFmtDate(r.startIso)}</span>
               <span className="evt-cell">{evtFmtTime(r.startIso)}</span>
-              <span className="evt-cell evt-cell-location">{r.location || "—"}</span>
+              <span className="evt-cell evt-cell-location">{r.location || (EVT_DELIVERY_META[r.deliveryType] ? "Online · " + EVT_DELIVERY_META[r.deliveryType].short : "—")}</span>
               <span className="evt-metric">{evtCapacityLabel(r)}</span>
               <span className="evt-metric">{r.invited}</span>
               <span className="evt-metric">{r.opened}</span>
