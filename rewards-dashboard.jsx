@@ -232,12 +232,7 @@ function RewardsDashboardHome() {
         <StreakRiskBanner state={state} onSimResolve={() => { refresh(); flash("Nice — streak saved!"); }} />
         <div style={{ padding: "0 20px" }}>
           <RdbEngagementCards state={state} />
-          <div className="ml-sec-h">
-            <h2>Jump back in</h2>
-            <button type="button" className="pf-coach-link" data-coach="Help me find the fastest way to earn more points and reach the next reward tier.">
-              <DSRDB.IconifyIcon name="lucide:sparkles" size={14} color="var(--ai-purple)" />Discuss with Ava
-            </button>
-          </div>
+          <div className="ml-sec-h"><h2>Jump back in</h2></div>
           <RdbQuickNav />
           <RdbNextReward state={state} config={config} />
           <div className="ml-sec-h"><h2>Recent Activity</h2></div>

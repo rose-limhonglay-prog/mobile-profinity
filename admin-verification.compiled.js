@@ -13,6 +13,24 @@ function goVer(url) {
   })(url);
 }
 
+/* Shared with profile-mobile.jsx (CredentialsStep) — the only bridge
+   between "user submits credentials" and "admin approves them" in this
+   localStorage-only demo, since the two run in separate page loads with
+   no real backend. */
+const PF_CRED_KEY_VER = "pf-credential-verification";
+function getCredVerificationVer() {
+  try {
+    return JSON.parse(localStorage.getItem(PF_CRED_KEY_VER));
+  } catch (e) {
+    return null;
+  }
+}
+function setCredVerificationVer(record) {
+  try {
+    localStorage.setItem(PF_CRED_KEY_VER, JSON.stringify(record));
+  } catch (e) {}
+}
+
 /* ------------------------------------------------------------- sidebar */
 const VER_NAV = [{
   icon: "lucide:layout-grid",
@@ -160,8 +178,8 @@ function VerHeader({
 
 /* ------------------------------------------------------------- mock data */
 const VER_RECORD = {
-  name: "Helena Halliwell",
-  subtitle: "helena.halliwell@profinity.academy · Clinician",
+  name: "Katy Wilson",
+  subtitle: "katy@example.com · Registered Nurse",
   status: "DRAFT",
   frontIdPath: "a1b2c3d4-e5f6-47a8-9b0c-d1e2f3a4b5c6.jpg",
   backIdPath: ""
@@ -220,6 +238,18 @@ const VER_STATUS_META = {
   DRAFT: {
     color: "var(--gray-500)",
     bg: "var(--gray-100)"
+  },
+  PENDING: {
+    color: "var(--warning)",
+    bg: "var(--warning-bg)"
+  },
+  APPROVED: {
+    color: "var(--success)",
+    bg: "var(--success-bg)"
+  },
+  REJECTED: {
+    color: "var(--error)",
+    bg: "var(--error-bg)"
   }
 };
 
@@ -241,8 +271,46 @@ function verCopy(text, setFlag) {
 function VerDetailCard() {
   const [copiedFront, setCopiedFront] = useStateVer(false);
   const [copiedBack, setCopiedBack] = useStateVer(false);
-  const statusMeta = VER_STATUS_META[VER_RECORD.status] || VER_STATUS_META.DRAFT;
+  const [submission, setSubmission] = useStateVer(() => getCredVerificationVer());
+  const [pointsToast, setPointsToast] = useStateVer(null);
+  const status = submission ? submission.status.toUpperCase() : VER_RECORD.status;
+  const statusMeta = VER_STATUS_META[status] || VER_STATUS_META.DRAFT;
   const hasBackPath = !!VER_RECORD.backIdPath;
+  const isPending = !!submission && submission.status === "pending";
+  const fields = VER_FIELDS.map(f => {
+    if (f.key === "license" && submission) return {
+      ...f,
+      value: submission.nmcNumber
+    };
+    if (f.key === "submitted" && submission) return {
+      ...f,
+      value: new Date(submission.submittedAt).toLocaleString()
+    };
+    return f;
+  });
+  function approve() {
+    if (!isPending) return;
+    const updated = {
+      ...submission,
+      status: "approved",
+      approvedAt: new Date().toISOString()
+    };
+    setCredVerificationVer(updated);
+    setSubmission(updated);
+    const engine = window.PFLoyalty;
+    const res = engine && engine.completeAction("evt_license_verify");
+    setPointsToast(res && res.ok && !res.capped ? "+" + res.pointsAwarded + " pts awarded" : "Approved");
+    setTimeout(() => setPointsToast(null), 2600);
+  }
+  function reject() {
+    if (!isPending) return;
+    const updated = {
+      ...submission,
+      status: "rejected"
+    };
+    setCredVerificationVer(updated);
+    setSubmission(updated);
+  }
   return /*#__PURE__*/React.createElement("div", {
     className: "ver-card"
   }, /*#__PURE__*/React.createElement("div", {
@@ -259,9 +327,9 @@ function VerDetailCard() {
       background: statusMeta.bg,
       color: statusMeta.color
     }
-  }, VER_RECORD.status)), /*#__PURE__*/React.createElement("div", {
+  }, status)), /*#__PURE__*/React.createElement("div", {
     className: "ver-field-grid"
-  }, VER_FIELDS.map(f => {
+  }, fields.map(f => {
     const empty = !f.value;
     return /*#__PURE__*/React.createElement("div", {
       className: "ver-field",
@@ -296,14 +364,20 @@ function VerDetailCard() {
     icon: copiedBack ? "lucide:check" : "lucide:copy"
   }), copiedBack ? "Copied!" : "Copy back path"), /*#__PURE__*/React.createElement("div", {
     className: "ver-spacer"
-  }), /*#__PURE__*/React.createElement("button", {
+  }), pointsToast && /*#__PURE__*/React.createElement("span", {
+    className: "ver-points-toast"
+  }, pointsToast), /*#__PURE__*/React.createElement("button", {
     className: "ver-btn ver-btn-danger-outline",
-    type: "button"
+    type: "button",
+    disabled: !isPending,
+    onClick: reject
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:x"
   }), "Reject"), /*#__PURE__*/React.createElement("button", {
     className: "ver-btn ver-btn-navy",
-    type: "button"
+    type: "button",
+    disabled: !isPending,
+    onClick: approve
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:check"
   }), "Approve")));

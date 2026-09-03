@@ -987,6 +987,23 @@ img{max-width:100%}
   font-family:var(--font-sans);font-size:11.5px;font-weight:var(--fw-semibold);color:var(--error);
   vertical-align:middle}
 
+/* Live-now post (LIVE_NOW_POST): "is live now · N watching" header line */
+.pf-livenow-meta{color:var(--text-secondary)}
+
+/* Live-now post media: portrait stream frame, inset with rounded corners
+   (unlike the edge-to-edge reels) so it reads as a window into a broadcast */
+.pf-livenow{position:relative;margin:4px 8px 12px;border-radius:14px;overflow:hidden;background:#000;cursor:pointer}
+.pf-livenow img{display:block;width:100%;height:auto;aspect-ratio:2/3;object-fit:cover;object-position:62% 30%}
+.pf-livenow-badge{position:absolute;top:12px;left:12px;z-index:2;display:inline-flex;align-items:center;gap:6px;
+  padding:5px 11px;border-radius:var(--r-pill);background:var(--error);color:var(--white);
+  font-family:var(--font-sans);font-size:12px;font-weight:var(--fw-bold);letter-spacing:.04em;
+  box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.pf-livenow-dot{width:7px;height:7px;border-radius:50%;background:var(--white);animation:pf-livenow-pulse 1.4s ease-in-out infinite}
+@keyframes pf-livenow-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.7)}}
+.pf-livenow-viewers{position:absolute;top:12px;right:12px;z-index:2;display:inline-flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:var(--r-pill);background:rgba(0,0,0,.55);color:var(--white);
+  font-family:var(--font-sans);font-size:12px;font-weight:var(--fw-semibold);backdrop-filter:blur(6px)}
+
 /* Go Live pill in the composer row (only shown to the admin persona) */
 .pfw-golive-pill{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;padding:8px 14px;
   border-radius:var(--r-pill);border:1.5px solid var(--error);background:none;cursor:pointer;
@@ -1045,6 +1062,53 @@ img{max-width:100%}
   background:var(--brand-navy);color:#fff;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14px}
 .pfw-cover-check:disabled{background:var(--gray-300);cursor:default}
 .pfw-cover-check:not(:disabled):hover{filter:brightness(1.12)}
+
+/* ===== create-post modal (collapsed pill -> full composer overlay) ===== */
+.pfw-cp-pill-trigger:hover{background:var(--gray-100)}
+.pfw-cp-overlay{position:fixed;inset:0;z-index:1100;display:flex;align-items:center;justify-content:center;
+  padding:24px;background:rgba(16,24,40,.55);animation:saved-fade .18s ease both}
+.pfw-cp-modal{width:100%;max-width:760px;max-height:88vh;display:flex;flex-direction:column;
+  background:var(--surface-card);border-radius:var(--r-md);box-shadow:0 24px 60px rgba(16,24,40,.35);
+  overflow:hidden;animation:saved-fade .18s ease both}
+.pfw-cp-top{flex:none;display:flex;align-items:center;justify-content:center;position:relative;
+  padding:18px 20px;border-bottom:1px solid var(--border-default)}
+.pfw-cp-title{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:17px;color:var(--text-heading)}
+.pfw-cp-top .pfw-cover-x{position:absolute;right:16px;top:14px}
+.pfw-cp-user{flex:none;display:flex;align-items:center;gap:10px;padding:16px 20px 0}
+.pfw-cp-username{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14.5px;color:var(--text-primary)}
+.pfw-cp-dev{margin-left:auto;display:flex;align-items:center;gap:8px}
+.pfw-cp-dev-label{font-family:var(--font-sans);font-size:11px;font-weight:var(--fw-semibold);letter-spacing:.04em;
+  text-transform:uppercase;color:var(--gray-500)}
+.pfw-cp-dev-seg{display:inline-flex;padding:3px;gap:2px;border-radius:var(--r-pill);background:var(--surface-sunken);
+  border:1px solid var(--border-default)}
+.pfw-cp-dev-opt{border:none;cursor:pointer;padding:5px 11px;border-radius:var(--r-pill);background:transparent;
+  font-family:var(--font-sans);font-size:12px;font-weight:var(--fw-semibold);color:var(--text-secondary)}
+.pfw-cp-dev-opt:hover{color:var(--text-heading)}
+.pfw-cp-dev-opt.on{background:var(--brand-navy);color:#fff}
+.pfw-cp-dev-opt:disabled{cursor:default;opacity:.7}
+.pfw-cp-body{flex:1;min-height:0;overflow-y:auto;padding:12px 20px 20px;display:flex;flex-direction:column;gap:14px}
+.pfw-cp-textarea{width:100%;min-height:140px;border:none;outline:none;resize:none;background:transparent;
+  font-family:var(--font-sans);font-size:20px;line-height:1.4;color:var(--text-primary)}
+.pfw-cp-textarea::placeholder{color:var(--text-secondary)}
+#pf-root .pfw-cp-textarea:focus,#pf-root .pfw-cp-textarea:focus-visible{outline:none;box-shadow:none}
+.pfw-cp-images{display:flex;gap:8px;flex-wrap:wrap}
+.pfw-cp-image{position:relative;width:88px;height:88px;border-radius:var(--r-sm);overflow:hidden}
+.pfw-cp-image img{width:100%;height:100%;object-fit:cover;display:block}
+.pfw-cp-image button{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;border:none;
+  cursor:pointer;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center}
+.pfw-cp-image button:hover{background:rgba(0,0,0,.75)}
+.pfw-cp-addrow{flex:none;display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  margin:0 20px;padding:12px 14px;border:1px solid var(--border-default);border-radius:var(--r-sm)}
+.pfw-cp-add-label{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14px;color:var(--text-primary)}
+.pfw-cp-add-icons{display:flex;align-items:center;gap:4px}
+.pfw-cp-live-btn{display:inline-flex;align-items:center;gap:5px;margin-left:6px;padding:6px 12px;border-radius:var(--r-pill);
+  border:1px solid color-mix(in srgb, var(--error) 35%, transparent);background:transparent;cursor:pointer;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;color:var(--error)}
+.pfw-cp-live-btn:hover{background:color-mix(in srgb, var(--error) 8%, transparent)}
+.pfw-cp-post-btn{flex:none;margin:14px 20px 20px;padding:11px;border-radius:var(--r-pill);border:none;cursor:pointer;
+  background:var(--action-primary);color:var(--white);font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15px}
+.pfw-cp-post-btn:disabled{background:var(--gray-200);color:var(--gray-500);cursor:default}
+.pfw-cp-post-btn:not(:disabled):hover{filter:brightness(1.08)}
 
 /* ===== "go live" pre-broadcast camera stage ===== */
 .pfw-golive-stage{position:fixed;inset:0;z-index:1200;display:flex;flex-direction:column;color:#fff;
@@ -1148,17 +1212,16 @@ img{max-width:100%}
   100%{transform:translateY(calc(var(--rise) * -1)) translateX(-44px) scale(.8);opacity:0}}
 @media (prefers-reduced-motion:reduce){.pfw-bcast-hearts{display:none}}
 
-.pfw-bcast-tools{position:absolute;right:24px;top:50%;transform:translateY(-50%);z-index:3;
-  display:flex;flex-direction:column;gap:12px}
+.pfw-bcast-tools{flex:none;display:flex;align-items:center;gap:10px;margin-left:16px}
 .pfw-bcast-tool{width:48px;height:48px;border-radius:50%;border:1px solid rgba(255,255,255,.24);cursor:pointer;
   background:rgba(16,20,48,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   display:flex;align-items:center;justify-content:center}
 .pfw-bcast-tool:hover{background:rgba(16,20,48,.78)}
 .pfw-bcast-tool.off{background:var(--error);border-color:transparent}
 
-.pfw-bcast-foot{position:absolute;left:24px;right:24px;bottom:24px;z-index:2;display:flex;justify-content:flex-start}
+.pfw-bcast-foot{position:absolute;left:24px;right:24px;bottom:24px;z-index:3;display:flex;align-items:center;justify-content:flex-start}
 .pfw-bcast-input{display:flex;align-items:center;gap:8px;padding:5px 5px 5px 16px;border-radius:var(--r-pill);
-  width:100%;max-width:420px;background:rgba(16,20,48,.35);border:1px solid rgba(255,255,255,.2)}
+  flex:1;min-width:0;max-width:420px;background:rgba(16,20,48,.35);border:1px solid rgba(255,255,255,.2)}
 .pfw-bcast-input input{flex:1;min-width:0;border:none;outline:none;background:none;color:#fff;
   font-family:var(--font-sans);font-size:15px}
 .pfw-bcast-input input::placeholder{color:rgba(255,255,255,.6)}
@@ -1219,3 +1282,22 @@ img{max-width:100%}
 .pfw-bcast-endc-keep .tx i{font-style:normal;font-family:var(--font-sans);font-size:13px;line-height:1.45;color:var(--gray-500)}
 .pfw-bcast-endc-cancel{width:100%;height:44px;margin-top:6px;border:none;background:none;cursor:pointer;
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px;color:var(--gray-500)}
+
+/* "+15 points" reward chip that settles just above a like button / comment
+   composer after a reaction or comment lands (see popPoints in app.jsx).
+   Visually identical to profile-mobile's per-step points toast (.pm-pts-toast:
+   gold rim, frosted glass, 40px waving owl). Fixed + body-level so it clears
+   overflow:hidden cards, the comments sheet and the scaled device frame;
+   fade in/hold/out is driven by Web Animations, not CSS. */
+.pf-pts-pop{position:fixed;z-index:9999;pointer-events:none;display:inline-flex;align-items:center;gap:8px;
+  padding:6px 18px 6px 6px;border-radius:999px;
+  background:var(--surface-card);border:1px solid var(--brand-gold);box-shadow:0 12px 30px rgba(16,20,48,.22);
+  font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15px;line-height:1;color:var(--brand-navy);white-space:nowrap;
+  transform:translate(-50%,-50%);opacity:0;will-change:transform,opacity}
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))){
+  .pf-pts-pop{background:linear-gradient(165deg,rgba(255,255,255,.94),rgba(255,255,255,.78));
+    -webkit-backdrop-filter:blur(18px) saturate(180%);backdrop-filter:blur(18px) saturate(180%)}
+}
+.pf-pts-pop-owl{display:flex;flex:none;width:40px;height:40px}
+.pf-pts-pop-owl svg{display:block;width:40px!important;height:40px!important}
+.pf-pts-pop iconify-icon{display:block;margin:auto}

@@ -78,6 +78,23 @@ function getUserTierPM() {
   }
 }
 
+/* Shared with admin-verification.jsx — the only bridge between "user
+   submits credentials" and "admin approves them" in this localStorage-only
+   demo, since the two run in separate page loads with no real backend. */
+const PF_CRED_KEY_PM = "pf-credential-verification";
+function getCredVerificationPM() {
+  try {
+    return JSON.parse(localStorage.getItem(PF_CRED_KEY_PM));
+  } catch (e) {
+    return null;
+  }
+}
+function setCredVerificationPM(record) {
+  try {
+    localStorage.setItem(PF_CRED_KEY_PM, JSON.stringify(record));
+  } catch (e) {}
+}
+
 /* ===========================================================================
    The Prosperity Spiral + Today's Targets — moved here from LearningMobile
    (Aug 2026 prototype pass, Profile placement not yet signed off by Tim).
@@ -568,14 +585,22 @@ const PM_ME = {
   role: "Registered Nurse",
   avatar: "assets/avatar-katy.jpg",
   seals: ["gb", "verified", "crown", "gold"],
-  bio: "Enhance patient satisfaction scores by 15% over the next 6 months through improved communication and personalized care planning.",
+  title: "Doctor",
+  specialty: "Nurse Practitioner",
+  bio: "",
   followers: "1,546",
   following: "880",
   posts: "57",
   location: "London, United Kingdom",
   clinic: "Allcare Medical",
+  clinicNumber: "+02 309 3928",
+  clinicAddress: "Mr. John Smith, 132 My Street, Kingston, New York 12401.",
+  yearsExperience: "12",
+  instagram: "@katywilson",
   tier: TIER_DISPLAY_NAME_PM[getUserTierPM()] || null
 };
+const PM_TITLE_OPTIONS = ["Doctor", "Nurse Practitioner", "Registered Nurse", "Aesthetic Practitioner", "Dentist", "Physician Associate"];
+const PM_PERSONAL_GOAL_QUESTIONS = ["Why did you choose to become an aesthetic practitioner, and what's the impact you dream of making for your clients?", "What's the one thing in your business that keeps you up at night, and how would solving it change your life?", "Who or what inspires you to keep pushing forward in your business, even on the toughest days?", "If you could wave a magic wand and change one thing about running your practice, what would it be?", "What does success as an aesthetic practitioner look like for you"];
 
 /* Membership ladder — the upgrade banner should point at the next rung up,
    not repeat the tier the viewer already holds. A free viewer (no tier,
@@ -1850,8 +1875,8 @@ const PM_STEPS_INIT = [{
   state: "priority"
 }, {
   ti: "Write your bio",
-  su: "Complete",
-  state: "done"
+  su: "Incomplete",
+  state: "todo"
 }, {
   ti: "Add your location",
   su: "Complete",
@@ -2533,12 +2558,52 @@ function LocationStep({
   }, "Save Location"));
 }
 
-/* ---- Step sheet: Credentials ---- */
+/* ---- Step sheet: Credentials ----
+   Submitting doesn't mark this step done — it only flips to "done" (and
+   awards evt_license_verify points) once admin-verification.jsx approves
+   the same pf-credential-verification record, so "Got it" here just
+   closes the sheet rather than calling onComplete/markDone. */
+/* Dev-only affordance: on localhost the "under review" screen also offers a
+   one-tap approve so the flow can be exercised without opening
+   AdminVerification.html. Never shown on a deployed origin. */
+const PM_IS_DEV = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(window.location.hostname);
 function CredentialsStep({
+  onClose,
+  onPending,
   onComplete
 }) {
-  const [nmcNum, setNmcNum] = useStatePM("");
-  const [submitted, setSubmitted] = useStatePM(false);
+  const rec = getCredVerificationPM();
+  const [nmcNum, setNmcNum] = useStatePM(rec?.nmcNumber || "");
+  const [submitted, setSubmitted] = useStatePM(rec?.status === "pending");
+  function submit() {
+    setCredVerificationPM({
+      nmcNumber: nmcNum.trim(),
+      status: "pending",
+      submittedAt: new Date().toISOString()
+    });
+    onPending();
+    setSubmitted(true);
+  }
+
+  /* Mirrors admin-verification.jsx approve(): same record shape, same
+     evt_license_verify award, so the rest of the app can't tell the
+     difference. */
+  function devApprove() {
+    const current = getCredVerificationPM() || {
+      nmcNumber: nmcNum.trim(),
+      submittedAt: new Date().toISOString()
+    };
+    /* The evt_license_verify award (and its "+N points" toast) happens in
+       ProfileSteps.markDone(3), so it isn't completed twice here; rewardShown
+       keeps the mount-time sync from toasting it again on the next load. */
+    setCredVerificationPM({
+      ...current,
+      status: "approved",
+      approvedAt: new Date().toISOString(),
+      rewardShown: true
+    });
+    onComplete();
+  }
   if (submitted) {
     return /*#__PURE__*/React.createElement("div", {
       className: "pm-sheet-step pm-sheet-center"
@@ -2552,12 +2617,26 @@ function CredentialsStep({
       className: "pm-sheet-desc"
     }, "Your credentials are under review. We'll notify you within 1–2 business days."), /*#__PURE__*/React.createElement("button", {
       className: "pm-sheet-cta",
-      onClick: onComplete
-    }, "Got it"));
+      onClick: onClose
+    }, "Got it"), PM_IS_DEV && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "pm-sheet-dev",
+      onClick: devApprove
+    }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+      name: "lucide:wrench",
+      size: 14,
+      color: "currentColor"
+    }), "Dev only · Approve verification now"));
   }
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-sheet-step"
-  }, /*#__PURE__*/React.createElement("p", {
+  }, rec?.status === "rejected" && /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-alert"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:alert-circle",
+    size: 16,
+    color: "var(--error)"
+  }), "Your last submission was rejected. Please check your details and resubmit."), /*#__PURE__*/React.createElement("p", {
     className: "pm-sheet-desc"
   }, "Enter your NMC or GMC registration number to verify your professional credentials."), /*#__PURE__*/React.createElement("div", {
     className: "pm-sheet-field"
@@ -2576,7 +2655,7 @@ function CredentialsStep({
     color: "var(--brand-navy)"
   }), "Upload supporting documents"), /*#__PURE__*/React.createElement("button", {
     className: "pm-sheet-cta",
-    onClick: () => setSubmitted(true),
+    onClick: submit,
     disabled: nmcNum.trim().length < 5
   }, "Submit for Verification"));
 }
@@ -2642,7 +2721,8 @@ function StepSheet({
   step,
   idx,
   onComplete,
-  onClose
+  onClose,
+  onPending
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-sheet-overlay",
@@ -2674,39 +2754,98 @@ function StepSheet({
     onComplete: onComplete,
     isDone: step.state === "done"
   }), idx === 3 && /*#__PURE__*/React.createElement(CredentialsStep, {
-    onComplete: onComplete,
-    isDone: step.state === "done"
+    onClose: onClose,
+    onPending: onPending,
+    onComplete: onComplete
   }), idx === 4 && /*#__PURE__*/React.createElement(SocialStep, {
     onComplete: onComplete,
     isDone: step.state === "done"
   }))));
 }
 
+/* Raw-JSON Lottie (the /embed iframe caches aggressively). Mirrors AULottie in auth-mobile.jsx. */
+function PMLottie({
+  src,
+  size
+}) {
+  const host = React.useRef(null);
+  React.useEffect(() => {
+    let anim, iv;
+    const start = () => {
+      if (!window.lottie || !host.current) return;
+      anim = window.lottie.loadAnimation({
+        container: host.current,
+        renderer: "svg",
+        loop: true,
+        autoplay: true,
+        path: src
+      });
+    };
+    if (window.lottie) start();else {
+      iv = setInterval(() => {
+        if (window.lottie) {
+          clearInterval(iv);
+          start();
+        }
+      }, 120);
+      setTimeout(() => clearInterval(iv), 8000);
+    }
+    return () => {
+      if (iv) clearInterval(iv);
+      if (anim) anim.destroy();
+    };
+  }, [src]);
+  return /*#__PURE__*/React.createElement("span", {
+    ref: host,
+    style: {
+      display: "block",
+      width: size,
+      height: size
+    }
+  });
+}
+
 /* ---- Profile complete success banner ---- */
 function ProfileCompleteCard({
-  onDismiss
+  onDismiss,
+  pointsAwarded,
+  exiting
 }) {
   useEffectPM(() => {
     const t = setTimeout(onDismiss, 4000);
     return () => clearTimeout(t);
   }, []);
   return /*#__PURE__*/React.createElement("div", {
+    className: "pm-steps-modal-overlay" + (exiting ? " pm-steps-exit" : ""),
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Profile complete"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-steps-scrim",
+    "aria-label": "Close",
+    onClick: onDismiss
+  }), /*#__PURE__*/React.createElement("div", {
     className: "pm-steps-success",
     "aria-live": "polite"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-steps-success-icon"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:check",
-    size: 36,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement("h3", {
+  }, /*#__PURE__*/React.createElement(PMLottie, {
+    src: "https://lottie.host/cc6c5973-9f61-481c-85ed-0fe2089a9176/CwHL9yTPJJ.json",
+    size: 84
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "pm-steps-success-kicker"
+  }, "Milestone unlocked"), pointsAwarded > 0 && /*#__PURE__*/React.createElement("p", {
+    className: "pm-steps-success-pts"
+  }, /*#__PURE__*/React.createElement("b", null, "+", pointsAwarded), /*#__PURE__*/React.createElement("i", null, "points")), /*#__PURE__*/React.createElement("h1", {
     className: "pm-steps-success-h"
   }, "Profile Complete!"), /*#__PURE__*/React.createElement("p", {
     className: "pm-steps-success-sub"
   }, "Your profile is fully set up. You're ready to connect with the community."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "pm-steps-success-btn",
     onClick: onDismiss
-  }, "Got it"));
+  }, "Got it")));
 }
 
 /* Shared by every "collapse to a summary row / expand to a two-pane slide-
@@ -2769,6 +2908,23 @@ function ProfileSteps({
     window.addEventListener("pf-open-assess-hub", openHub);
     return () => window.removeEventListener("pf-open-assess-hub", openHub);
   }, []);
+
+  /* The full-page Edit Profile screen (opened from "Edit Profile" at the top
+     of the profile) saves its own bio field directly — it has no shared
+     state with this component, so it announces a completed bio the same way
+     "Track your goals" announces the assessment hub: a DOM event. */
+  useEffectPM(() => {
+    function onBioSaved() {
+      setSteps(prev => prev[1].state === "done" ? prev : prev.map((s, i) => i === 1 ? {
+        ...s,
+        state: "done",
+        su: "Complete"
+      } : s));
+      awardStepPoints("evt_bio_write", pts => showStepReward(pts, 1));
+    }
+    window.addEventListener("pf-bio-saved", onBioSaved);
+    return () => window.removeEventListener("pf-bio-saved", onBioSaved);
+  }, []);
   const total = steps.length;
   const done = steps.filter(s => s.state === "done").length;
 
@@ -2782,6 +2938,85 @@ function ProfileSteps({
   const totalSlices = total + 1;
   const allDone = done === total && assessDone === PM_ASSESS_ORDER.length;
   const pct = Math.round((done + assessFraction) / totalSlices * 100);
+  const [profilePoints, setProfilePoints] = useStatePM(0);
+  useEffectPM(() => {
+    if (!allDone) return;
+    awardStepPoints("evt_profile_complete", setProfilePoints);
+  }, [allDone]);
+
+  /* Picks up whatever admin-verification.jsx last wrote to the shared
+     pf-credential-verification record — approved there flips this step to
+     done (and, the first time, awards evt_license_verify points) without
+     the user having to do anything else in this tab. */
+  useEffectPM(() => {
+    function syncCredStep() {
+      const rec = getCredVerificationPM();
+      if (!rec) return;
+      if (rec.status === "approved") {
+        setSteps(prev => prev.map((s, i) => i === 3 ? {
+          ...s,
+          state: "done",
+          su: "Complete"
+        } : s));
+        /* Toast the payout exactly once per approval. admin-verification.jsx
+           usually books evt_license_verify before this tab hears about it, so
+           fall back to the ledger entry for the amount; rewardShown on the
+           shared record stops a repeat "+N points" on every profile load. */
+        const engine = window.PFLoyalty;
+        if (engine && !rec.rewardShown) {
+          const res = engine.completeAction("evt_license_verify");
+          let pts = res && res.ok && !res.capped ? res.pointsAwarded : 0;
+          if (!pts) {
+            const txn = (engine.getState().ledger || []).filter(t => t.actionId === "evt_license_verify" && t.pointsDelta > 0).pop();
+            pts = txn ? txn.pointsDelta : 0;
+          }
+          setCredVerificationPM({
+            ...rec,
+            rewardShown: true
+          });
+          if (pts > 0) showStepReward(pts, 3);
+        }
+      } else if (rec.status === "rejected") {
+        setSteps(prev => prev.map((s, i) => i === 3 ? {
+          ...s,
+          state: "todo",
+          su: "Rejected — resubmit"
+        } : s));
+      } else if (rec.status === "pending") {
+        setSteps(prev => prev.map((s, i) => i === 3 ? {
+          ...s,
+          state: "pending",
+          su: "Under review"
+        } : s));
+      }
+    }
+    syncCredStep();
+    /* Approve/reject in the AdminVerification tab writes the same key, so a
+       storage event lets this tab flip the step (and toast) without a reload. */
+    function onStorage(e) {
+      if (e.key === PF_CRED_KEY_PM) syncCredStep();
+    }
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+
+  /* Points earned by an individual step ("Write your bio", "Verify your
+     credentials") surface as a small owl pill overlaid on the checklist,
+     floating over the top edge of the step that earned them — a fixed toast
+     at the top of the screen was easy to miss. { pts, idx } so the list knows
+     which row to anchor to; the checklist expands so the pill is on screen. */
+  const [stepReward, setStepReward] = useStatePM(null);
+  function showStepReward(pts, idx) {
+    setStepReward({
+      pts,
+      idx
+    });
+    setExpanded(true);
+  }
+  const PM_STEP_ACTIONS = {
+    1: "evt_bio_write",
+    3: "evt_license_verify"
+  };
   function markDone(idx) {
     setSteps(prev => prev.map((s, i) => i === idx ? {
       ...s,
@@ -2789,6 +3024,30 @@ function ProfileSteps({
       su: "Complete"
     } : s));
     setActiveIdx(null);
+    if (PM_STEP_ACTIONS[idx]) awardStepPoints(PM_STEP_ACTIONS[idx], pts => showStepReward(pts, idx));
+  }
+  function awardStepPoints(actionId, setReward) {
+    const engine = window.PFLoyalty;
+    if (!engine) return;
+    const res = engine.completeAction(actionId);
+    let pts = 0;
+    if (res.ok && !res.capped) {
+      pts = res.pointsAwarded;
+    } else {
+      const action = engine.getActionById(actionId);
+      if (action) {
+        const mult = engine.tierMultiplierFor(action, engine.getState().user.membershipTier);
+        pts = Math.round(action.basePoints * mult);
+      }
+    }
+    if (pts > 0) setReward(pts);
+  }
+  function markPending(idx) {
+    setSteps(prev => prev.map((s, i) => i === idx ? {
+      ...s,
+      state: "pending",
+      su: "Under review"
+    } : s));
   }
   function handleDismiss() {
     setExiting(true);
@@ -2829,11 +3088,11 @@ function ProfileSteps({
   }
   if (dismissed) return null;
   if (allDone) {
-    return /*#__PURE__*/React.createElement("div", {
-      className: "pm-steps-wrap" + (exiting ? " pm-steps-exit" : "")
-    }, /*#__PURE__*/React.createElement(ProfileCompleteCard, {
-      onDismiss: handleDismiss
-    }));
+    return /*#__PURE__*/React.createElement(ProfileCompleteCard, {
+      onDismiss: handleDismiss,
+      pointsAwarded: profilePoints,
+      exiting: exiting
+    });
   }
   const assessAllDone = assessDone === PM_ASSESS_ORDER.length;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
@@ -2911,10 +3170,16 @@ function ProfileSteps({
     name: "lucide:chevron-right",
     size: 18,
     color: "var(--gray-400)"
-  })), steps.map((s, i) => /*#__PURE__*/React.createElement("button", {
+  })), steps.map((s, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pm-step-slot",
+    key: i
+  }, stepReward != null && stepReward.idx === i && /*#__PURE__*/React.createElement(PMPointsToast, {
+    key: "reward-" + stepReward.pts,
+    points: stepReward.pts,
+    onDone: () => setStepReward(null)
+  }), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-step " + s.state,
-    key: i,
     onClick: () => setActiveIdx(i)
   }, /*#__PURE__*/React.createElement("span", {
     className: "pm-step-mark",
@@ -2923,6 +3188,10 @@ function ProfileSteps({
     name: "lucide:check",
     size: 18,
     color: "#fff"
+  }) : s.state === "pending" ? /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:clock",
+    size: 16,
+    color: "var(--premium-orange)"
   }) : /*#__PURE__*/React.createElement("span", {
     className: "dot"
   })), /*#__PURE__*/React.createElement("span", {
@@ -2935,11 +3204,12 @@ function ProfileSteps({
     name: "lucide:chevron-right",
     size: 18,
     color: "var(--gray-400)"
-  }))))))), activeIdx !== null && /*#__PURE__*/React.createElement(StepSheet, {
+  })))))))), activeIdx !== null && /*#__PURE__*/React.createElement(StepSheet, {
     step: steps[activeIdx],
     idx: activeIdx,
     onComplete: () => markDone(activeIdx),
-    onClose: () => setActiveIdx(null)
+    onClose: () => setActiveIdx(null),
+    onPending: () => markPending(activeIdx)
   }), hubOpen && /*#__PURE__*/React.createElement(PMAssessHub, {
     assessState: assessState,
     onOpenAssess: key => {
@@ -2958,6 +3228,39 @@ function ProfileSteps({
       setHubOpen(true);
     }
   }));
+}
+
+/* ---- Small "just earned points" pill (owl animation), overlaid on the
+   checklist above the step that earned it (no layout shift), for individual
+   profile steps like Bio/About rather than the full profile-complete modal ---- */
+function PMPointsToast({
+  points,
+  onDone
+}) {
+  const [exiting, setExiting] = useStatePM(false);
+  useEffectPM(() => {
+    const t = setTimeout(() => setExiting(true), 2200);
+    return () => clearTimeout(t);
+  }, []);
+  useEffectPM(() => {
+    if (!exiting) return;
+    const t = setTimeout(onDone, 300);
+    return () => clearTimeout(t);
+  }, [exiting]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-pts-toast-row" + (exiting ? " pm-pts-toast-exit" : ""),
+    role: "status",
+    "aria-live": "polite"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-pts-toast"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-pts-toast-ic"
+  }, /*#__PURE__*/React.createElement(PMLottie, {
+    src: "https://lottie.host/cc6c5973-9f61-481c-85ed-0fe2089a9176/CwHL9yTPJJ.json",
+    size: 40
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pm-pts-toast-txt"
+  }, "+", points, " points")));
 }
 function PMSection({
   title,
@@ -3601,13 +3904,204 @@ function useIsMobilePM() {
   }, []);
   return mobile;
 }
+
+/* ---- Full-page profile editor (opened from "Edit Profile") ---- */
+function PMEditField({
+  label,
+  icon,
+  value,
+  onChange,
+  options,
+  placeholder
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-edit-field"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "pm-edit-label"
+  }, label), /*#__PURE__*/React.createElement("div", {
+    className: "pm-edit-input-wrap"
+  }, icon && /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: icon,
+    size: 18,
+    color: "var(--gray-450)"
+  }), options ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("select", {
+    className: "pm-edit-select",
+    value: value,
+    onChange: e => onChange(e.target.value)
+  }, options.map(o => /*#__PURE__*/React.createElement("option", {
+    key: o,
+    value: o
+  }, o))), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-down",
+    size: 16,
+    color: "var(--gray-450)"
+  })) : /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    className: "pm-edit-input",
+    value: value,
+    placeholder: placeholder || label,
+    onChange: e => onChange(e.target.value)
+  })));
+}
+function PMEditProfileScreen({
+  profile,
+  onCancel,
+  onSave
+}) {
+  const [form, setForm] = useStatePM(() => ({
+    title: profile.title || PM_TITLE_OPTIONS[0],
+    fullName: profile.name || "",
+    bio: profile.bio || "",
+    specialty: profile.specialty || "",
+    clinic: profile.clinic || "",
+    clinicNumber: profile.clinicNumber || "",
+    clinicAddress: profile.clinicAddress || "",
+    yearsExperience: profile.yearsExperience || "",
+    instagram: profile.instagram || ""
+  }));
+  const [goals, setGoals] = useStatePM(() => profile.personalGoal || PM_PERSONAL_GOAL_QUESTIONS.map(() => ""));
+  function setField(key) {
+    return value => setForm(f => ({
+      ...f,
+      [key]: value
+    }));
+  }
+  function setGoalAt(i, value) {
+    setGoals(g => g.map((v, gi) => gi === i ? value : v));
+  }
+  function handleSave() {
+    onSave({
+      name: form.fullName,
+      bio: form.bio,
+      title: form.title,
+      specialty: form.specialty,
+      clinic: form.clinic,
+      clinicNumber: form.clinicNumber,
+      clinicAddress: form.clinicAddress,
+      yearsExperience: form.yearsExperience,
+      instagram: form.instagram,
+      personalGoal: goals
+    });
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-edit-screen",
+    "data-screen-label": "Edit profile"
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "pm-edit-hd"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-edit-back",
+    "aria-label": "Back",
+    onClick: onCancel
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:arrow-left",
+    size: 22,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("h1", null, "Edit Profile"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-edit-hd-spacer",
+    "aria-hidden": "true"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pm-edit-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-edit-avwrap"
+  }, /*#__PURE__*/React.createElement(DSPM.Avatar, {
+    name: profile.name,
+    src: profile.avatar,
+    size: 96
+  })), /*#__PURE__*/React.createElement("section", {
+    className: "pm-edit-card"
+  }, /*#__PURE__*/React.createElement("h2", null, "Public Profile Information"), /*#__PURE__*/React.createElement(PMEditField, {
+    label: "Title",
+    icon: "lucide:contact",
+    value: form.title,
+    onChange: setField("title"),
+    options: PM_TITLE_OPTIONS
+  }), /*#__PURE__*/React.createElement(PMEditField, {
+    label: "Full Name",
+    icon: "lucide:user",
+    value: form.fullName,
+    onChange: setField("fullName")
+  }), /*#__PURE__*/React.createElement(PMEditField, {
+    label: "Tell us about yourself",
+    value: form.bio,
+    onChange: setField("bio"),
+    placeholder: "Tell us about yourself"
+  }), /*#__PURE__*/React.createElement(PMEditField, {
+    label: "Primary Specialty",
+    icon: "lucide:stethoscope",
+    value: form.specialty,
+    onChange: setField("specialty")
+  }), /*#__PURE__*/React.createElement(PMEditField, {
+    label: "Clinic Name",
+    icon: "lucide:image",
+    value: form.clinic,
+    onChange: setField("clinic")
+  }), /*#__PURE__*/React.createElement(PMEditField, {
+    label: "Clinic Number",
+    icon: "lucide:phone",
+    value: form.clinicNumber,
+    onChange: setField("clinicNumber")
+  }), /*#__PURE__*/React.createElement(PMEditField, {
+    label: "Clinic Address",
+    icon: "lucide:map-pin",
+    value: form.clinicAddress,
+    onChange: setField("clinicAddress")
+  }), /*#__PURE__*/React.createElement(PMEditField, {
+    label: "Years of Experience",
+    icon: "lucide:hash",
+    value: form.yearsExperience,
+    onChange: setField("yearsExperience")
+  }), /*#__PURE__*/React.createElement(PMEditField, {
+    label: "Instagram Account",
+    icon: "lucide:instagram",
+    value: form.instagram,
+    onChange: setField("instagram")
+  })), /*#__PURE__*/React.createElement("section", {
+    className: "pm-edit-card"
+  }, /*#__PURE__*/React.createElement("h2", null, "Personal Goal"), PM_PERSONAL_GOAL_QUESTIONS.map((q, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pm-edit-field",
+    key: i
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "pm-edit-label"
+  }, q), /*#__PURE__*/React.createElement("div", {
+    className: "pm-edit-input-wrap"
+  }, /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    className: "pm-edit-input",
+    value: goals[i],
+    onChange: e => setGoalAt(i, e.target.value)
+  })))))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-edit-footer"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-edit-cancel",
+    onClick: onCancel
+  }, "Cancel"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-edit-save",
+    onClick: handleSave
+  }, "Save")));
+}
 function PMScreen() {
-  const m = PM_ME;
+  const [profile, setProfile] = useStatePM(() => ({
+    ...PM_ME
+  }));
+  const m = profile;
   const [msgOpen, setMsgOpen] = useStatePM(false);
   const [menuOpen, setMenuOpen] = useStatePM(false);
+  const [editOpen, setEditOpen] = useStatePM(false);
   const [assessState, setAssessState] = useStatePM(() => pmLoadAssessState());
   const scrollRef = React.useRef(null);
   const chromeHidden = useHeaderHidePM(scrollRef);
+  function saveProfileEdits(updated) {
+    const bioJustAdded = !profile.bio && updated.bio && updated.bio.trim().length > 0;
+    setProfile(prev => ({
+      ...prev,
+      ...updated
+    }));
+    setEditOpen(false);
+    if (bioJustAdded) window.dispatchEvent(new CustomEvent("pf-bio-saved"));
+  }
   function patchAssessState(key, patch) {
     setAssessState(prev => {
       const next = {
@@ -3639,6 +4133,13 @@ function PMScreen() {
     }, 420);
     return () => clearTimeout(t);
   }, []);
+  if (editOpen) {
+    return /*#__PURE__*/React.createElement(PMEditProfileScreen, {
+      profile: profile,
+      onCancel: () => setEditOpen(false),
+      onSave: saveProfileEdits
+    });
+  }
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-screen",
     "data-screen-label": "Profile (mobile)"
@@ -3712,7 +4213,7 @@ function PMScreen() {
     className: "bi"
   }, "🇬🇧"), " Aesthetic Nurse Practitioner"), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
     className: "bi"
-  }, "💉"), " Botox · Fillers · Lip Enhancement"), /*#__PURE__*/React.createElement("p", null, m.bio)), /*#__PURE__*/React.createElement("a", {
+  }, "💉"), " Botox · Fillers · Lip Enhancement"), m.bio && /*#__PURE__*/React.createElement("p", null, m.bio)), /*#__PURE__*/React.createElement("a", {
     className: "pm-ig-link",
     href: "#",
     onClick: e => e.preventDefault()
@@ -3744,7 +4245,7 @@ function PMScreen() {
     className: "pm-ig-actions"
   }, /*#__PURE__*/React.createElement("button", {
     className: "pm-ig-btn",
-    onClick: () => goPM("ProfileMobile.html")
+    onClick: () => setEditOpen(true)
   }, "Edit Profile"), /*#__PURE__*/React.createElement("button", {
     className: "pm-ig-btn navy"
   }, "Share Profile"), /*#__PURE__*/React.createElement("button", {

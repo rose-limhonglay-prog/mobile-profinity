@@ -3527,6 +3527,28 @@ const SAMPLE_LONG_TEXT_POST = {
   actioned: false,
   commentList: thread("This is exactly the reminder I needed before my clinic day tomorrow.")
 };
+
+/* Sample social live-stream post — a member broadcasting right now (as
+   opposed to `live: true`, which marks a finished broadcast kept as a
+   replay). Renders a portrait stream frame with a LIVE badge + viewer count
+   in place of the usual media, and "is live now · N watching" where the
+   timestamp normally goes. Pinned to the top of every tier's feed. */
+const LIVE_NOW_POST = {
+  id: "ff_livenow1",
+  author: MIRANDA,
+  time: "",
+  liveNow: {
+    viewers: "142",
+    frame: "assets/live-preview-camera.jpg"
+  },
+  hashtags: [],
+  body: "",
+  likes: "318",
+  comments: "42",
+  shares: "12",
+  actioned: false,
+  commentList: thread("Joining from Manchester — perfect timing, just finished clinic 🙌")
+};
 const PORTRAIT_IMG_POST_1 = {
   id: "ff_ptimg1",
   author: MIRANDA,
@@ -4625,7 +4647,7 @@ const TIER_FEED_SEQUENCES = {
    to seed interaction state and search so switching tiers via the live
    persona-preview switcher never loses a post's likes/comments state, and
    Search can still find posts that only some tiers' sequences contain. */
-const ALL_FEED_SEQUENCE_POSTS = Object.values([SAMPLE_LONG_TEXT_POST, ...FREE_FEED_SEQUENCE, ...CONFIDENCE_FEED_SEQUENCE, ...MASTERY_FEED_SEQUENCE].reduce((m, p) => {
+const ALL_FEED_SEQUENCE_POSTS = Object.values([LIVE_NOW_POST, SAMPLE_LONG_TEXT_POST, ...FREE_FEED_SEQUENCE, ...CONFIDENCE_FEED_SEQUENCE, ...MASTERY_FEED_SEQUENCE].reduce((m, p) => {
   m[p.id] = p;
   return m;
 }, {}));
@@ -5143,9 +5165,175 @@ function likeButtonOf(wrap) {
   return (bar || wrap).querySelector("button");
 }
 
-/* Burst of floating reaction glyphs + a springy pop on the like icon. */
-function burstReaction(wrap, key) {
-  burstFrom(likeButtonOf(wrap), key);
+/* Burst of floating reaction glyphs + a springy pop on the like icon.
+   `reward` additionally floats a "+15 pts" chip up from the button — passed
+   only when the post goes from unreacted → reacted, so switching Like → Love
+   doesn't look like it pays out twice. */
+function burstReaction(wrap, key, reward) {
+  const btn = likeButtonOf(wrap);
+  burstFrom(btn, key);
+  if (reward) popPoints(btn, REACT_POINTS);
+}
+
+/* Points awarded for a newsfeed reaction / comment (mirrors evt_react_post &
+   evt_comment_post in loyalty-engine.js, shown at the 1.5x tier multiplier). */
+const REACT_POINTS = 15;
+const COMMENT_POINTS = 15;
+
+/* Owl that rides inside the points chip — the same Lottie as the per-step
+   "+N points" toast on Profile (PMPointsToast in profile-mobile.jsx), so a
+   like/comment payout looks identical to a "Verify your credentials" payout. */
+const PTS_OWL_LOTTIE_SRC = "https://lottie.host/cc6c5973-9f61-481c-85ed-0fe2089a9176/CwHL9yTPJJ.json";
+const PTS_LOTTIE_LIB_SRC = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
+let _ptsOwlData = null;
+
+/* Lazy-loads lottie-web (same data-pf-lottie marker as tour.js so the two
+   never double-inject) and prefetches the owl JSON, so the first chip already
+   animates instead of showing the sparkle fallback. */
+function ensurePtsOwl(cb) {
+  if (typeof document === "undefined") return;
+  if (!_ptsOwlData && !ensurePtsOwl._fetching) {
+    ensurePtsOwl._fetching = true;
+    fetch(PTS_OWL_LOTTIE_SRC).then(r => r.json()).then(d => {
+      _ptsOwlData = d;
+    }).catch(() => {});
+  }
+  if (window.lottie) {
+    if (cb) cb();
+    return;
+  }
+  if (!document.querySelector("script[data-pf-lottie]")) {
+    const sc = document.createElement("script");
+    sc.src = PTS_LOTTIE_LIB_SRC;
+    sc.async = true;
+    sc.setAttribute("data-pf-lottie", "1");
+    document.head.appendChild(sc);
+  }
+  if (cb) {
+    const iv = setInterval(() => {
+      if (window.lottie) {
+        clearInterval(iv);
+        cb();
+      }
+    }, 120);
+    setTimeout(() => clearInterval(iv), 8000);
+  }
+}
+if (typeof window !== "undefined") setTimeout(() => ensurePtsOwl(), 1200);
+
+/* Lightweight, non-blocking reward moment: a gold-rimmed pill reading
+   "+15 points" with the waving owl settles in just above `anchor`, holds for a
+   beat and fades away — a 1:1 copy of the profile checklist's per-step toast
+   (.pm-pts-toast: .4s drop-in, 2.2s hold, .3s fade-out, no travel, no specks).
+   Appended to <body> as position:fixed so it escapes overflow:hidden cards,
+   the comments sheet and the scaled device frame (same trick as burstFrom). */
+const PTS_POP_IN_MS = 400,
+  PTS_POP_HOLD_MS = 2200,
+  PTS_POP_OUT_MS = 300;
+function popPoints(anchor, amount) {
+  if (!anchor || typeof window === "undefined") return;
+  const rect = anchor.getBoundingClientRect();
+  if (!rect.width && !rect.height) return;
+  const cx = rect.left + rect.width / 2;
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const pill = document.createElement("div");
+  pill.className = "pf-pts-pop";
+  pill.setAttribute("role", "status");
+  pill.setAttribute("aria-live", "polite");
+  const owl = document.createElement("span");
+  owl.className = "pf-pts-pop-owl";
+  owl.setAttribute("aria-hidden", "true");
+  pill.appendChild(owl);
+  let owlAnim = null;
+  if (window.lottie && _ptsOwlData) {
+    owlAnim = window.lottie.loadAnimation({
+      container: owl,
+      renderer: "svg",
+      loop: true,
+      autoplay: true,
+      animationData: _ptsOwlData,
+      rendererSettings: {
+        preserveAspectRatio: "xMidYMid meet"
+      }
+    });
+  } else {
+    ensurePtsOwl();
+    const ic = document.createElement("iconify-icon");
+    ic.setAttribute("icon", "lucide:sparkles");
+    ic.style.cssText = "font-size:20px;line-height:0;color:var(--brand-navy)";
+    owl.appendChild(ic);
+  }
+  const tx = document.createElement("span");
+  tx.textContent = "+" + amount + " points";
+  pill.appendChild(tx);
+  document.body.appendChild(pill);
+  // Sit the pill just above the anchor — like the profile toast straddling
+  // the top edge of the step it paid out — and keep it fully on-screen when
+  // the anchor hugs a viewport edge (the like button sits ~16px from the left
+  // of a mobile card; a composer can sit right at the bottom of the comments
+  // sheet). In the desktop preview the anchor lives inside the scaled
+  // IOSDevice frame, so clamp to the frame's screen box rather than the
+  // browser viewport — otherwise the pill spills past the phone's edge.
+  const frame = anchor.closest && anchor.closest("[data-ios-device]");
+  const fr = frame ? frame.getBoundingClientRect() : null;
+  const bx0 = fr ? fr.left : 0,
+    bx1 = fr ? fr.right : window.innerWidth;
+  const by0 = fr ? fr.top : 0,
+    by1 = fr ? fr.bottom : window.innerHeight;
+  const half = pill.offsetWidth / 2 + 10;
+  const ph = pill.offsetHeight || 52;
+  const px = Math.min(Math.max(cx, bx0 + half), bx1 - half);
+  const py = Math.min(Math.max(rect.top - ph / 2 - 4, by0 + 90), by1 - 30);
+  pill.style.left = px + "px";
+  pill.style.top = py + "px";
+  const dur = PTS_POP_IN_MS + PTS_POP_HOLD_MS + PTS_POP_OUT_MS;
+  const inEnd = PTS_POP_IN_MS / dur,
+    outStart = (PTS_POP_IN_MS + PTS_POP_HOLD_MS) / dur;
+  const base = "translate(-50%,-50%)";
+  const frames = reduce ? [{
+    transform: base + " scale(1)",
+    opacity: 0,
+    easing: "ease"
+  }, {
+    transform: base + " scale(1)",
+    opacity: 1,
+    offset: inEnd
+  }, {
+    transform: base + " scale(1)",
+    opacity: 1,
+    offset: outStart,
+    easing: "ease"
+  }, {
+    transform: base + " scale(1)",
+    opacity: 0
+  }] : [{
+    transform: base + " translateY(-10px) scale(.92)",
+    opacity: 0,
+    easing: "cubic-bezier(.22,.61,.36,1)"
+  }, {
+    transform: base + " translateY(0) scale(1)",
+    opacity: 1,
+    offset: inEnd
+  }, {
+    transform: base + " translateY(0) scale(1)",
+    opacity: 1,
+    offset: outStart,
+    easing: "ease"
+  }, {
+    transform: base + " translateY(-6px) scale(.96)",
+    opacity: 0
+  }];
+  if (pill.animate) {
+    const a = pill.animate(frames, {
+      duration: dur,
+      fill: "forwards"
+    });
+    a.onfinish = () => pill.remove();
+  }
+  setTimeout(() => {
+    if (owlAnim) owlAnim.destroy();
+    pill.remove();
+  }, dur + 200);
 }
 
 /* Instagram-style "double tap to love": tracks tap timing per media element
@@ -5357,7 +5545,7 @@ function useReactionPicker(ref, reaction, onReact) {
   const pick = key => {
     const changing = reaction !== key;
     onReact(key);
-    if (changing) burstReaction(ref.current, key);
+    if (changing) burstReaction(ref.current, key, !reaction);
     setPicker(null);
   };
   return {
@@ -5523,6 +5711,9 @@ function CommentComposer({
     if (!t) return;
     onSubmit(t);
     setV("");
+    // reward moment: "+15 pts" floats up from the composer pill once the
+    // comment/reply lands in the post
+    popPoints(inputRef.current && inputRef.current.parentElement, COMMENT_POINTS);
   };
   const addEmoji = em => {
     setV(s => s + em);
@@ -5627,9 +5818,10 @@ function CommentComposer({
    a real file, scrubbed into a real cover picker (WebCoverPicker), exactly
    like create-post-mobile's CPCoverPicker but for a genuinely uploaded clip
    rather than a bundled sample. Reel still just focuses the composer — no
-   capture pipeline for that one. Go Live only shows for the admin persona
-   (mirrors create-post-mobile's Super-User-only Live tab), reusing this
-   page's own "Previewing as" persona switcher instead of a second toggle. */
+   capture pipeline for that one. Go Live only shows for a Super User
+   (mirrors create-post-mobile's Super-User-only Live tab) — either the Admin
+   persona in "Previewing as", or the dev "Posting as" toggle in that same
+   panel flipped to Super user. Normal users never see a Live entry point. */
 function ComposerIconButton({
   icon,
   color,
@@ -5663,7 +5855,10 @@ function ComposerIconButton({
 }
 function PostComposer({
   onPost,
-  superUser
+  superUser,
+  devRole,
+  onDevRole,
+  lockedAdmin
 }) {
   const [v, setV] = useState("");
   const [images, setImages] = useState([]);
@@ -5671,7 +5866,7 @@ function PostComposer({
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [liveStage, setLiveStage] = useState(null); // null | "precam" | "live"
   const [liveDescription, setLiveDescription] = useState("");
-  const inputRef = useRef(null);
+  const [modalOpen, setModalOpen] = useState(false);
   const firstName = (ME.name || "").split(" ")[0];
   const ready = v.trim().length > 0 || images.length > 0 || !!video;
   const submit = () => {
@@ -5684,9 +5879,12 @@ function PostComposer({
     setV("");
     setImages([]);
     setVideo(null);
+    setModalOpen(false);
   };
-  const focusInput = () => {
-    if (inputRef.current) inputRef.current.focus();
+  const openModal = () => setModalOpen(true);
+  const openModalAnd = fn => () => {
+    setModalOpen(true);
+    fn();
   };
   const pickImages = () => {
     const input = document.createElement("input");
@@ -5790,52 +5988,59 @@ function PostComposer({
     name: ME.name,
     src: ME.avatar,
     size: 44
-  }), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cp-pill-trigger",
+    "aria-haspopup": "dialog",
+    onClick: openModal,
     style: {
       flex: 1,
+      textAlign: "left",
       display: "flex",
       alignItems: "center",
       gap: 4,
       background: "var(--surface-sunken)",
       border: "1px solid var(--border-default)",
       borderRadius: "var(--r-pill)",
-      padding: "9px 9px 9px 18px"
+      padding: "9px 9px 9px 18px",
+      cursor: "pointer"
     }
-  }, /*#__PURE__*/React.createElement("input", {
-    ref: inputRef,
-    value: v,
-    onChange: e => setV(e.target.value),
-    onKeyDown: e => {
-      if (e.key === "Enter") submit();
-    },
-    placeholder: "What's on your mind, " + firstName + "?",
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
-      border: "none",
-      outline: "none",
-      background: "transparent",
       fontFamily: "var(--font-sans)",
       fontSize: "var(--fs-body-lg)",
-      color: "var(--text-primary)",
-      minWidth: 0
+      color: v ? "var(--text-primary)" : "var(--text-secondary)",
+      minWidth: 0,
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap"
     }
-  }), /*#__PURE__*/React.createElement(ComposerIconButton, {
+  }, v || "What's on your mind, " + firstName + "?"))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      borderTop: "1px solid var(--border-default)",
+      paddingTop: 10
+    }
+  }, /*#__PURE__*/React.createElement(ComposerIconButton, {
     icon: "lucide:video",
     color: "var(--error)",
     label: "Add video",
-    onClick: pickVideo,
+    onClick: openModalAnd(pickVideo),
     disabled: images.length > 0
   }), /*#__PURE__*/React.createElement(ComposerIconButton, {
     icon: "lucide:image",
     color: "var(--success)",
     label: "Add photo",
-    onClick: pickImages,
+    onClick: openModalAnd(pickImages),
     disabled: !!video
   }), /*#__PURE__*/React.createElement(ComposerIconButton, {
     icon: "lucide:clapperboard",
     color: "var(--reaction-love)",
     label: "Add reel",
-    onClick: focusInput
+    onClick: openModal
   }), superUser && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pfw-golive-pill",
@@ -5845,79 +6050,152 @@ function PostComposer({
     name: "lucide:radio",
     size: 15,
     color: "var(--error)"
-  }), "Go Live"), /*#__PURE__*/React.createElement("button", {
+  }), "Go Live")), modalOpen && /*#__PURE__*/React.createElement(CreatePostModal, {
+    v: v,
+    setV: setV,
+    images: images,
+    setImages: setImages,
+    video: video,
+    pickImages: pickImages,
+    pickVideo: pickVideo,
+    removeVideo: removeVideo,
+    submit: submit,
+    ready: ready,
+    firstName: firstName,
+    coverPickerOpen: coverPickerOpen,
+    setCoverPickerOpen: setCoverPickerOpen,
+    handleCoverConfirm: handleCoverConfirm,
+    superUser: superUser,
+    devRole: devRole,
+    onDevRole: onDevRole,
+    lockedAdmin: lockedAdmin,
+    onGoLive: () => {
+      setModalOpen(false);
+      setLiveStage("precam");
+    },
+    onClose: () => setModalOpen(false)
+  }), liveStage === "precam" && /*#__PURE__*/React.createElement(WebGoLiveStage, {
+    description: liveDescription,
+    onDescriptionChange: setLiveDescription,
+    onClose: () => setLiveStage(null),
+    onGoLive: () => setLiveStage("live")
+  }), liveStage === "live" && /*#__PURE__*/React.createElement(WebBroadcastStage, {
+    onEnd: endLive
+  }));
+}
+
+/* Full-screen "create post" overlay — opens when the collapsed pill or any
+   of its quick-attach icons is clicked, matching the create-post-mobile
+   flow's full-screen composer but as a centered web modal (same family as
+   WebCoverPicker below). Holds the real textarea plus the image/video
+   preview and re-exposes the Photo/Video pickers so attachments can be
+   added or swapped without leaving the overlay. */
+function CreatePostModal({
+  v,
+  setV,
+  images,
+  setImages,
+  video,
+  pickImages,
+  pickVideo,
+  removeVideo,
+  submit,
+  ready,
+  firstName,
+  coverPickerOpen,
+  setCoverPickerOpen,
+  handleCoverConfirm,
+  superUser,
+  devRole,
+  onDevRole,
+  lockedAdmin,
+  onGoLive,
+  onClose
+}) {
+  const textareaRef = useRef(null);
+  useEffect(() => {
+    if (textareaRef.current) textareaRef.current.focus();
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cp-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cp-modal",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Create post",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "pfw-cp-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cp-title"
+  }, "Create post"), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    onClick: submit,
-    "aria-label": "New post",
-    style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      width: 38,
-      height: 38,
-      flexShrink: 0,
-      borderRadius: "var(--r-pill)",
-      border: "none",
-      cursor: ready ? "pointer" : "default",
-      background: ready ? "var(--action-primary)" : "var(--gray-200)",
-      transition: "background var(--dur-fast)"
-    }
+    className: "pfw-cover-x",
+    "aria-label": "Close",
+    onClick: onClose
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:send",
+    name: "lucide:x",
     size: 18,
-    color: ready ? "var(--white)" : "var(--gray-500)"
-  })))), images.length > 0 && /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: 8,
-      flexWrap: "wrap",
-      paddingLeft: 56
-    }
+    color: "var(--text-heading)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cp-user"
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: ME.name,
+    src: ME.avatar,
+    size: 40
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cp-username"
+  }, ME.name), onDevRole && /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cp-dev",
+    role: "group",
+    "aria-label": "Dev — viewing as"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cp-dev-label"
+  }, "Dev · viewing as"), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cp-dev-seg"
+  }, COMPOSER_ROLES.map(r => /*#__PURE__*/React.createElement("button", {
+    key: r.key,
+    type: "button",
+    className: "pfw-cp-dev-opt" + (r.key === "super" === !!superUser ? " on" : ""),
+    disabled: lockedAdmin,
+    title: lockedAdmin ? "Admin persona is always a Super User" : r.desc,
+    onClick: () => onDevRole(r.key)
+  }, r.name))))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cp-body"
+  }, /*#__PURE__*/React.createElement("textarea", {
+    ref: textareaRef,
+    value: v,
+    onChange: e => setV(e.target.value),
+    placeholder: "What's on your mind, " + firstName + "?",
+    className: "pfw-cp-textarea"
+  }), images.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cp-images"
   }, images.map((src, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
-    style: {
-      position: "relative"
-    }
+    className: "pfw-cp-image"
   }, /*#__PURE__*/React.createElement("img", {
     src: src,
-    alt: "",
-    style: {
-      width: 72,
-      height: 72,
-      borderRadius: "var(--r-sm)",
-      objectFit: "cover",
-      display: "block"
-    }
+    alt: ""
   }), /*#__PURE__*/React.createElement("button", {
     type: "button",
     "aria-label": "Remove image",
-    onClick: () => setImages(imgs => imgs.filter((_, j) => j !== i)),
-    style: {
-      position: "absolute",
-      top: -6,
-      right: -6,
-      width: 20,
-      height: 20,
-      borderRadius: "50%",
-      border: "none",
-      cursor: "pointer",
-      background: "var(--gray-900)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center"
-    }
+    onClick: () => setImages(imgs => imgs.filter((_, j) => j !== i))
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
     name: "lucide:x",
     size: 12,
     color: "var(--white)"
   }))))), video && /*#__PURE__*/React.createElement("div", {
-    className: "pfw-video-preview",
-    style: {
-      marginLeft: 56
-    }
+    className: "pfw-video-preview"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pfw-video-wrap",
     style: {
+      maxWidth: "100%",
       aspectRatio: video.ratio || 16 / 9
     }
   }, video.cover ? /*#__PURE__*/React.createElement("img", {
@@ -5943,18 +6221,42 @@ function PostComposer({
     type: "button",
     className: "pfw-video-edit",
     onClick: () => setCoverPickerOpen(true)
-  }, "Edit cover"))), coverPickerOpen && video && /*#__PURE__*/React.createElement(WebCoverPicker, {
+  }, "Edit cover")))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cp-addrow",
+    "aria-label": "Add to your post"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cp-add-icons"
+  }, /*#__PURE__*/React.createElement(ComposerIconButton, {
+    icon: "lucide:image",
+    color: "var(--success)",
+    label: "Add photo",
+    onClick: pickImages,
+    disabled: !!video
+  }), /*#__PURE__*/React.createElement(ComposerIconButton, {
+    icon: "lucide:video",
+    color: "var(--error)",
+    label: "Add video",
+    onClick: pickVideo,
+    disabled: images.length > 0
+  }), superUser && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cp-live-btn",
+    "aria-label": "Go live",
+    onClick: onGoLive
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:radio",
+    size: 15,
+    color: "var(--error)"
+  }), "Live"))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cp-post-btn",
+    disabled: !ready,
+    onClick: submit
+  }, "Post"), coverPickerOpen && video && /*#__PURE__*/React.createElement(WebCoverPicker, {
     video: video,
     onConfirm: handleCoverConfirm,
     onClose: () => setCoverPickerOpen(false)
-  }), liveStage === "precam" && /*#__PURE__*/React.createElement(WebGoLiveStage, {
-    description: liveDescription,
-    onDescriptionChange: setLiveDescription,
-    onClose: () => setLiveStage(null),
-    onGoLive: () => setLiveStage("live")
-  }), liveStage === "live" && /*#__PURE__*/React.createElement(WebBroadcastStage, {
-    onEnd: endLive
-  }));
+  })));
 }
 
 /* Full-screen cover picker for an uploaded video — scrubs the real file to
@@ -6469,7 +6771,30 @@ function WebBroadcastStage({
       "--rise": h.rise + "px"
     }
   }, h.e))), /*#__PURE__*/React.createElement("div", {
-    className: "pfw-bcast-tools"
+    className: "pfw-bcast-foot"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-input"
+  }, /*#__PURE__*/React.createElement("input", {
+    placeholder: "Say something…",
+    "aria-label": "Live chat message",
+    value: msg,
+    onChange: e => setMsg(e.target.value),
+    onKeyDown: e => {
+      if (e.key === "Enter") send();
+    }
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-bcast-send",
+    "aria-label": "Send",
+    onClick: send
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:send",
+    size: 17,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bcast-tools",
+    role: "group",
+    "aria-label": "Broadcast controls"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pfw-bcast-tool" + (liveMuted ? " off" : ""),
@@ -6498,27 +6823,6 @@ function WebBroadcastStage({
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
     name: "lucide:refresh-cw",
     size: 18,
-    color: "#fff"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "pfw-bcast-foot"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pfw-bcast-input"
-  }, /*#__PURE__*/React.createElement("input", {
-    placeholder: "Say something…",
-    "aria-label": "Live chat message",
-    value: msg,
-    onChange: e => setMsg(e.target.value),
-    onKeyDown: e => {
-      if (e.key === "Enter") send();
-    }
-  }), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pfw-bcast-send",
-    "aria-label": "Send",
-    onClick: send
-  }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:send",
-    size: 17,
     color: "#fff"
   })))), guestSheet && /*#__PURE__*/React.createElement("div", {
     className: "pfw-bcast-guest",
@@ -7492,6 +7796,41 @@ function WebReelModal({
     size: 22,
     color: "var(--white)"
   })));
+}
+
+/* Live-stream frame for a LIVE_NOW_POST: the broadcaster's camera frame
+   cropped portrait, a pulsing LIVE badge top-left and the viewer count
+   top-right — no scrubber/play UI since there's nothing to seek. Double-tap
+   still loves the post like any other media. */
+function LiveNowMedia({
+  live,
+  author,
+  onLoveReact
+}) {
+  const {
+    wrap,
+    heartNode
+  } = useDoubleTapLove(onLoveReact || (() => {}));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pf-livenow",
+    onClick: wrap(null),
+    role: "img",
+    "aria-label": (author ? author.name : "A member") + " is live now, " + live.viewers + " watching"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: live.frame,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pf-livenow-badge"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-livenow-dot",
+    "aria-hidden": "true"
+  }), "LIVE"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-livenow-viewers"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:eye",
+    size: 13,
+    color: "var(--white)"
+  }), live.viewers), heartNode);
 }
 function SampleMedia({
   sample,
@@ -8666,12 +9005,12 @@ function FeedPost({
   const handleLike = () => {
     const willReact = !st.reaction;
     onToggleLike();
-    if (willReact) burstReaction(ref.current, "like");
+    if (willReact) burstReaction(ref.current, "like", true);
   };
   const handleDoubleTapLove = () => {
     const willReact = !st.reaction;
     onDoubleTapLove();
-    if (willReact) burstReaction(ref.current, "love");
+    if (willReact) burstReaction(ref.current, "love", true);
   };
   const handleComment = () => {
     const g = actionIcon(1);
@@ -8747,7 +9086,9 @@ function FeedPost({
   }), /*#__PURE__*/React.createElement(PostCard, {
     ...post,
     commentList: [],
-    time: post.tierTag || post.live ? /*#__PURE__*/React.createElement(React.Fragment, null, post.time, post.tierTag && /*#__PURE__*/React.createElement(TierTagChip, {
+    time: post.liveNow ? /*#__PURE__*/React.createElement("span", {
+      className: "pf-livenow-meta"
+    }, "is live now · ", post.liveNow.viewers, " watching") : post.tierTag || post.live ? /*#__PURE__*/React.createElement(React.Fragment, null, post.time, post.tierTag && /*#__PURE__*/React.createElement(TierTagChip, {
       tag: post.tierTag
     }), post.live && /*#__PURE__*/React.createElement("span", {
       className: "pf-live-chip"
@@ -8756,9 +9097,9 @@ function FeedPost({
       size: 11,
       color: "var(--error)"
     }), "Live replay")) : post.time,
-    hashtags: hideTags || post.questionnaire || post.poll ? [] : resolveHashtags(post.hashtags),
+    hashtags: hideTags || post.questionnaire || post.poll || post.liveNow ? [] : resolveHashtags(post.hashtags),
     title: post.author === PROFINITY ? null : post.title,
-    body: post.questionnaire || post.poll ? null : post.bg ? /*#__PURE__*/React.createElement("div", {
+    body: post.questionnaire || post.poll || post.liveNow ? null : post.bg ? /*#__PURE__*/React.createElement("div", {
       className: "pf-post-bg",
       style: {
         background: post.bg.css,
@@ -8783,7 +9124,11 @@ function FeedPost({
         // edge-to-edge with the card instead of sitting inset
         margin: "0 -16px"
       }
-    }, post.questionnaire ? /*#__PURE__*/React.createElement(Questionnaire, {
+    }, post.liveNow ? /*#__PURE__*/React.createElement(LiveNowMedia, {
+      live: post.liveNow,
+      author: post.author,
+      onLoveReact: handleDoubleTapLove
+    }) : post.questionnaire ? /*#__PURE__*/React.createElement(Questionnaire, {
       questionnaire: post.questionnaire
     }) : post.poll ? /*#__PURE__*/React.createElement(Poll, {
       poll: post.poll
@@ -9213,12 +9558,12 @@ function ChannelFeedCard({
   const handleLike = () => {
     const willReact = !st.reaction;
     onToggleLike();
-    if (willReact) burstReaction(ref.current, "like");
+    if (willReact) burstReaction(ref.current, "like", true);
   };
   const handleDoubleTapLove = () => {
     const willReact = !st.reaction;
     onDoubleTapLove();
-    if (willReact) burstReaction(ref.current, "love");
+    if (willReact) burstReaction(ref.current, "love", true);
   };
   return /*#__PURE__*/React.createElement("div", {
     className: "pf-chcard",
@@ -9374,7 +9719,7 @@ function CourseCommentCard({
   const handleLike = () => {
     const willReact = !st.reaction;
     onToggleLike();
-    if (willReact) burstReaction(ref.current, "like");
+    if (willReact) burstReaction(ref.current, "like", true);
   };
   return /*#__PURE__*/React.createElement("div", {
     className: "post-wrap pf-ccard",
@@ -9660,6 +10005,62 @@ function PreviewToggle({
    (bucket-merged, tier-gated, free-tier teasers) without a real auth/paywall
    backend. Collapsed by default and defaults to Paid · Confidence, so
    nothing changes for the normal signed-in view. */
+/* Dev-only "viewing as" switch for the composer — mirrors create-post-mobile's
+   CPDevSuperUserToggle (same pf-preview-* styling, same two cards) so the
+   team can preview the Super User composer (Go Live pill + Live in the
+   Create post modal) without switching the whole feed to the Admin persona.
+   Admin persona always counts as Super, so the bar locks while previewing
+   as Admin. */
+const COMPOSER_ROLES = [{
+  key: "normal",
+  name: "Normal user",
+  desc: "Photo + video only — no Live."
+}, {
+  key: "super",
+  name: "Super User",
+  desc: "Sees Go Live + Live in Create post."
+}];
+function ComposerDevToggle({
+  role,
+  onChange,
+  lockedAdmin
+}) {
+  const [open, setOpen] = useState(false);
+  const effective = lockedAdmin ? "super" : role;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pf-preview"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-preview-bar",
+    onClick: () => setOpen(o => !o),
+    "aria-expanded": open
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-preview-label"
+  }, "Dev — viewing as"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-preview-current"
+  }, effective === "super" ? "Super User" : "Normal user"), /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: open ? "lucide:chevron-up" : "lucide:chevron-down",
+    size: 16,
+    color: "var(--gray-500)"
+  })), open && /*#__PURE__*/React.createElement("div", {
+    className: "pf-preview-panel"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "pf-preview-sec"
+  }, "Who's posting?"), /*#__PURE__*/React.createElement("div", {
+    className: "pf-preview-personas"
+  }, COMPOSER_ROLES.map(r => /*#__PURE__*/React.createElement("button", {
+    key: r.key,
+    type: "button",
+    className: "pf-preview-persona" + (r.key === effective ? " on" : ""),
+    disabled: lockedAdmin,
+    title: lockedAdmin ? "Admin persona is always a Super User" : undefined,
+    onClick: () => onChange(r.key)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-pp-name"
+  }, r.name), /*#__PURE__*/React.createElement("span", {
+    className: "pf-pp-desc"
+  }, r.desc))))));
+}
 function FeedPreviewPanel({
   persona,
   onPersona,
@@ -9864,6 +10265,7 @@ function Feed({
     save: false,
     mute: false
   });
+  const [composerRole, setComposerRole] = useState("normal"); // dev "Posting as": normal | super
   const [upgradeFor, setUpgradeFor] = useState(null);
   const saveFlow = useSaveFlow();
   const toggle = (id, key) => setState(s => ({
@@ -9933,6 +10335,7 @@ function Feed({
     }));
   };
   const viewerCurrent = PERSONA_MAP[viewerPersona] || PERSONA_MAP.confidence;
+  const composerSuperUser = viewerCurrent.admin || composerRole === "super";
   const bucketResolved = resolveBucketFeed(viewerPersona, bucketToggles);
   /* Tier-tagged posts stack with the membership ladder: each tier sees its
      own tag plus every tag below it (see tierTagPostsFor). */
@@ -9963,6 +10366,9 @@ function Feed({
     item: p,
     mode: "full"
   })), {
+    item: LIVE_NOW_POST,
+    mode: "full"
+  }, {
     item: SAMPLE_LONG_TEXT_POST,
     mode: "full"
   }, ...eventRegPosts.map(p => ({
@@ -10002,7 +10408,14 @@ function Feed({
     "data-screen-label": "Home feed"
   }, !channel && !window.PF_EMBED && /*#__PURE__*/React.createElement(PostComposer, {
     onPost: addPost,
-    superUser: viewerCurrent.admin
+    superUser: composerSuperUser,
+    devRole: composerRole,
+    onDevRole: setComposerRole,
+    lockedAdmin: viewerCurrent.admin
+  }), !channel && !window.PF_EMBED && /*#__PURE__*/React.createElement(ComposerDevToggle, {
+    role: composerRole,
+    onChange: setComposerRole,
+    lockedAdmin: viewerCurrent.admin
   }), !channel && /*#__PURE__*/React.createElement(FeedPreviewPanel, {
     persona: viewerPersona,
     onPersona: setViewerPersona,

@@ -8,6 +8,18 @@ const { useState: useStateVer } = React;
 
 function goVer(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
 
+/* Shared with profile-mobile.jsx (CredentialsStep) — the only bridge
+   between "user submits credentials" and "admin approves them" in this
+   localStorage-only demo, since the two run in separate page loads with
+   no real backend. */
+const PF_CRED_KEY_VER = "pf-credential-verification";
+function getCredVerificationVer() {
+  try { return JSON.parse(localStorage.getItem(PF_CRED_KEY_VER)); } catch (e) { return null; }
+}
+function setCredVerificationVer(record) {
+  try { localStorage.setItem(PF_CRED_KEY_VER, JSON.stringify(record)); } catch (e) {}
+}
+
 /* ------------------------------------------------------------- sidebar */
 const VER_NAV = [
   { icon: "lucide:layout-grid", label: "Dashboard" },
@@ -105,8 +117,8 @@ function VerHeader({ title }) {
 
 /* ------------------------------------------------------------- mock data */
 const VER_RECORD = {
-  name: "Helena Halliwell",
-  subtitle: "helena.halliwell@profinity.academy · Clinician",
+  name: "Katy Wilson",
+  subtitle: "katy@example.com · Registered Nurse",
   status: "DRAFT",
   frontIdPath: "a1b2c3d4-e5f6-47a8-9b0c-d1e2f3a4b5c6.jpg",
   backIdPath: "",
@@ -129,6 +141,9 @@ const VER_FIELDS = [
 
 const VER_STATUS_META = {
   DRAFT: { color: "var(--gray-500)", bg: "var(--gray-100)" },
+  PENDING: { color: "var(--warning)", bg: "var(--warning-bg)" },
+  APPROVED: { color: "var(--success)", bg: "var(--success-bg)" },
+  REJECTED: { color: "var(--error)", bg: "var(--error-bg)" },
 };
 
 /* ------------------------------------------------------------- copy hook */
@@ -146,8 +161,37 @@ function verCopy(text, setFlag) {
 function VerDetailCard() {
   const [copiedFront, setCopiedFront] = useStateVer(false);
   const [copiedBack, setCopiedBack] = useStateVer(false);
-  const statusMeta = VER_STATUS_META[VER_RECORD.status] || VER_STATUS_META.DRAFT;
+  const [submission, setSubmission] = useStateVer(() => getCredVerificationVer());
+  const [pointsToast, setPointsToast] = useStateVer(null);
+
+  const status = submission ? submission.status.toUpperCase() : VER_RECORD.status;
+  const statusMeta = VER_STATUS_META[status] || VER_STATUS_META.DRAFT;
   const hasBackPath = !!VER_RECORD.backIdPath;
+  const isPending = !!submission && submission.status === "pending";
+
+  const fields = VER_FIELDS.map((f) => {
+    if (f.key === "license" && submission) return { ...f, value: submission.nmcNumber };
+    if (f.key === "submitted" && submission) return { ...f, value: new Date(submission.submittedAt).toLocaleString() };
+    return f;
+  });
+
+  function approve() {
+    if (!isPending) return;
+    const updated = { ...submission, status: "approved", approvedAt: new Date().toISOString() };
+    setCredVerificationVer(updated);
+    setSubmission(updated);
+    const engine = window.PFLoyalty;
+    const res = engine && engine.completeAction("evt_license_verify");
+    setPointsToast(res && res.ok && !res.capped ? "+" + res.pointsAwarded + " pts awarded" : "Approved");
+    setTimeout(() => setPointsToast(null), 2600);
+  }
+
+  function reject() {
+    if (!isPending) return;
+    const updated = { ...submission, status: "rejected" };
+    setCredVerificationVer(updated);
+    setSubmission(updated);
+  }
 
   return (
     <div className="ver-card">
@@ -157,12 +201,12 @@ function VerDetailCard() {
           <div className="ver-card-sub">{VER_RECORD.subtitle}</div>
         </div>
         <span className="ver-status-pill" style={{ background: statusMeta.bg, color: statusMeta.color }}>
-          {VER_RECORD.status}
+          {status}
         </span>
       </div>
 
       <div className="ver-field-grid">
-        {VER_FIELDS.map((f) => {
+        {fields.map((f) => {
           const empty = !f.value;
           return (
             <div className="ver-field" key={f.key}>
@@ -204,11 +248,12 @@ function VerDetailCard() {
           {copiedBack ? "Copied!" : "Copy back path"}
         </button>
         <div className="ver-spacer" />
-        <button className="ver-btn ver-btn-danger-outline" type="button">
+        {pointsToast && <span className="ver-points-toast">{pointsToast}</span>}
+        <button className="ver-btn ver-btn-danger-outline" type="button" disabled={!isPending} onClick={reject}>
           <iconify-icon icon="lucide:x"></iconify-icon>
           Reject
         </button>
-        <button className="ver-btn ver-btn-navy" type="button">
+        <button className="ver-btn ver-btn-navy" type="button" disabled={!isPending} onClick={approve}>
           <iconify-icon icon="lucide:check"></iconify-icon>
           Approve
         </button>

@@ -453,15 +453,7 @@ function RewardsDashboardHome() {
     state: state
   }), /*#__PURE__*/React.createElement("div", {
     className: "ml-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Jump back in"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pf-coach-link",
-    "data-coach": "Help me find the fastest way to earn more points and reach the next reward tier."
-  }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
-    name: "lucide:sparkles",
-    size: 14,
-    color: "var(--ai-purple)"
-  }), "Discuss with Ava")), /*#__PURE__*/React.createElement(RdbQuickNav, null), /*#__PURE__*/React.createElement(RdbNextReward, {
+  }, /*#__PURE__*/React.createElement("h2", null, "Jump back in")), /*#__PURE__*/React.createElement(RdbQuickNav, null), /*#__PURE__*/React.createElement(RdbNextReward, {
     state: state,
     config: config
   }), /*#__PURE__*/React.createElement("div", {

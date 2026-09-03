@@ -80,11 +80,14 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
 .ver-btn iconify-icon { font-size: 18px; }
 .ver-btn-navy { background: var(--brand-navy); color: #fff; }
 .ver-btn-navy:hover { background: var(--brand-navy-700); }
+.ver-btn-navy:disabled { background: var(--gray-200); color: var(--gray-500); cursor: not-allowed; }
 .ver-btn-outline { background: var(--white); color: var(--gray-700); border: 1px solid var(--border-strong); }
 .ver-btn-outline:hover { background: var(--gray-50); }
 .ver-btn-outline:disabled { color: var(--gray-400); border-color: var(--border-default); cursor: not-allowed; background: var(--gray-50); }
 .ver-btn-danger-outline { background: var(--error-bg); color: var(--error); border: 1px solid #f0c2c6; }
 .ver-btn-danger-outline:hover { background: #fbdde1; }
+.ver-btn-danger-outline:disabled { background: var(--gray-50); color: var(--gray-400); border-color: var(--border-default); cursor: not-allowed; }
+.ver-points-toast { font-size: 14px; font-weight: 600; color: var(--success); margin-right: 4px; }
 
 /* ------------------------------------------------------------------ card */
 .ver-card { background: var(--white); border: 1px solid var(--border-default); border-radius: 20px;

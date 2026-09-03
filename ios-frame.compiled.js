@@ -377,6 +377,7 @@ function IOSDevice({
   keyboard = false
 }) {
   return /*#__PURE__*/React.createElement("div", {
+    "data-ios-device": "",
     style: {
       width,
       height,
