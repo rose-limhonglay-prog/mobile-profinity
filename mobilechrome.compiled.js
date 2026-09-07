@@ -631,6 +631,120 @@
       text: "Perfect, thank you — this is exactly what I needed.",
       t: "12:00 PM"
     }]
+  }, {
+    id: "sarahc",
+    name: "Dr. Sarah Collins",
+    avatar: "assets/avatar-sarah-collins.jpg",
+    online: true,
+    unread: 0,
+    messages: [{
+      me: false,
+      text: "Uploading tonight's case: 34F, mid-face volume loss, 2ml Voluma.",
+      t: "Yesterday"
+    }, {
+      me: true,
+      text: "Brilliant — I'll review before Thursday's call.",
+      t: "Yesterday"
+    }]
+  }, {
+    id: "g-casereview",
+    isGroup: true,
+    name: "Clinical Case Review",
+    unread: 3,
+    members: [{
+      id: "tim",
+      name: "Dr Tim Pearce",
+      avatar: "assets/avatar-drtim.png"
+    }, {
+      id: "sarahc",
+      name: "Dr. Sarah Collins",
+      avatar: "assets/avatar-sarah-collins.jpg"
+    }, {
+      id: "alex",
+      name: "Dr Alex Chen",
+      avatar: null
+    }],
+    messages: [{
+      me: false,
+      sender: "Dr Tim Pearce",
+      text: "Katy, can you present your lip case at the review too?",
+      t: "9m"
+    }]
+  }, {
+    id: "amir",
+    name: "Dr Amir Khan",
+    avatar: "assets/avatar-amir-khan.jpg",
+    online: false,
+    unread: 0,
+    messages: [{
+      me: false,
+      text: "Katy, the dental block technique video is live in the Mastery library.",
+      t: "Mon"
+    }, {
+      me: true,
+      text: "Brilliant, watching it tonight. Thanks Amir!",
+      t: "Mon"
+    }]
+  }, {
+    id: "mark",
+    name: "Mark Ellis",
+    avatar: "assets/avatar-mark-ellis.jpg",
+    online: true,
+    unread: 0,
+    messages: [{
+      me: false,
+      text: "Quick one — what CRM are you using for recall reminders?",
+      t: "Sun"
+    }, {
+      me: true,
+      text: "We moved to Pabau last quarter, happy to walk you through it.",
+      t: "Sun"
+    }]
+  }, {
+    id: "beth",
+    name: "Nurse Beth",
+    avatar: "assets/avatar-nurse-beth.jpg",
+    online: false,
+    unread: 0,
+    messages: [{
+      me: false,
+      text: "Loved your consultation framework post 🙌",
+      t: "Sat"
+    }, {
+      me: true,
+      text: "Thanks Beth! Ping me if you want the template.",
+      t: "Sat"
+    }]
+  }, {
+    id: "priya",
+    name: "Priya Shah",
+    avatar: "assets/avatar-priya-shah.jpg",
+    online: true,
+    unread: 0,
+    messages: [{
+      me: false,
+      text: "Are you going to the London masterclass in October?",
+      t: "Fri"
+    }, {
+      me: true,
+      text: "Booked! See you there.",
+      t: "Fri"
+    }]
+  }, {
+    id: "hannah",
+    name: "Dr Hannah Reid",
+    avatar: null,
+    online: false,
+    unread: 0,
+    messages: [{
+      me: false,
+      text: "Thanks for the referral pathway notes.",
+      t: "2 Sep"
+    }, {
+      me: true,
+      text: "Anytime, Hannah.",
+      t: "2 Sep"
+    }]
   }];
   const VOICE_CONFS_SEED_C = [{
     id: "vc1",
@@ -646,6 +760,12 @@
     live: false
   }];
   const PF_GROUPS_KEY = "pf-dm-groups";
+
+  /* The DS Avatar takes the first letter of the first two words — strip the
+   honorific so "Dr Sarah Kim" reads SK, not DS. */
+  function avatarNameC(name) {
+    return String(name || "").replace(/^(dr\.?|nurse|prof\.?|mr\.?|mrs\.?|ms\.?)\s+/i, "");
+  }
   function readDmGroupsC() {
     try {
       return JSON.parse(localStorage.getItem(PF_GROUPS_KEY)) || [];
@@ -689,7 +809,7 @@
       className: "mp-group-av-item",
       key: m.id || i
     }, /*#__PURE__*/React.createElement(DSC.Avatar, {
-      name: m.name,
+      name: avatarNameC(m.name),
       src: m.avatar,
       size: Math.round(s * 0.68)
     }))));
@@ -701,13 +821,14 @@
     const last = c.messages && c.messages.length ? c.messages[c.messages.length - 1] : null;
     return /*#__PURE__*/React.createElement("button", {
       className: "mp-row",
+      "data-thread-id": c.id,
       onClick: onOpen
     }, /*#__PURE__*/React.createElement("span", {
       className: "mp-av"
     }, c.isGroup ? /*#__PURE__*/React.createElement(GroupAvatarStackC, {
       members: c.members
     }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DSC.Avatar, {
-      name: c.name,
+      name: avatarNameC(c.name),
       src: c.avatar,
       size: 52
     }), c.online && /*#__PURE__*/React.createElement("span", {
@@ -795,7 +916,7 @@
       }, /*#__PURE__*/React.createElement("span", {
         className: "mp-av"
       }, /*#__PURE__*/React.createElement(DSC.Avatar, {
-        name: c.name,
+        name: avatarNameC(c.name),
         src: c.avatar,
         size: 44
       })), /*#__PURE__*/React.createElement("span", {
@@ -872,7 +993,7 @@
     const filtered = allThreads.filter(t => t.name.toLowerCase().includes(query.toLowerCase()));
     const unreadTotal = DM_THREADS_SEED_C.reduce((n, t) => n + (t.unread || 0), 0);
     function openThread(id) {
-      goC("DirectMessage.html?id=" + id + "&from=LearningMobile.html");
+      goC("Messages.html?t=" + id);
     }
     function togglePick(id) {
       setPicked(all => all.includes(id) ? all.filter(x => x !== id) : [...all, id]);
@@ -904,7 +1025,7 @@
         "aria-modal": "true",
         "aria-label": "New Conversation"
       }, /*#__PURE__*/React.createElement(NewConversationScreenC, {
-        contacts: DM_THREADS_SEED_C,
+        contacts: DM_THREADS_SEED_C.filter(c => !c.isGroup),
         picked: picked,
         onToggle: togglePick,
         query: ncQuery,
@@ -942,6 +1063,14 @@
         fontWeight: "700"
       }
     }, "Messages"), /*#__PURE__*/React.createElement("button", {
+      className: "mp-expand",
+      "aria-label": "Open Messages",
+      onClick: () => goC("Messages.html")
+    }, /*#__PURE__*/React.createElement(DSC.IconifyIcon, {
+      name: "lucide:maximize-2",
+      size: 20,
+      color: "var(--gray-900)"
+    })), /*#__PURE__*/React.createElement("button", {
       className: "mp-compose",
       "aria-label": "New message",
       onClick: () => setScreen("new")

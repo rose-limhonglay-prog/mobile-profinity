@@ -320,3 +320,10 @@
 .mp-vc-live{flex:none;font-family:var(--font-sans);font-weight:700;font-size:11px;letter-spacing:.05em;color:var(--error);
   background:var(--error-bg);border-radius:var(--r-pill);padding:3px 8px}
 .mp-vc-time{font-family:var(--font-sans);font-size:13px;color:var(--gray-450)}
+
+/* 44px expand icon beside the Messages drawer title — opens the full Messages page */
+.mp-panel .nt-head h2{text-align:left;padding-left:2px}
+.mp-expand{flex:none;width:44px;height:44px;border-radius:50%;background:var(--gray-100);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mp-expand:active{background:var(--gray-200)}
+.mp-expand:focus-visible,.mp-compose:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+.mp-row[data-thread-id]:focus-visible{outline:2px solid var(--brand-navy);outline-offset:-2px;border-radius:10px}

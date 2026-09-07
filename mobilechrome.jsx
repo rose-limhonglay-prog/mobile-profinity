@@ -247,7 +247,44 @@
     { id: "miranda", name: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", online: false, unread: 0,
       messages: [
         { me: true, text: "Sharing the confidence-score writeup with you now.", t: "11:50 AM" },
-        { me: false, text: "Perfect, thank you — this is exactly what I needed.", t: "12:00 PM" }] }];
+        { me: false, text: "Perfect, thank you — this is exactly what I needed.", t: "12:00 PM" }] },
+{ id: "sarahc", name: "Dr. Sarah Collins", avatar: "assets/avatar-sarah-collins.jpg", online: true, unread: 0,
+  messages: [
+  { me: false, text: "Uploading tonight's case: 34F, mid-face volume loss, 2ml Voluma.", t: "Yesterday" },
+  { me: true, text: "Brilliant — I'll review before Thursday's call.", t: "Yesterday" }] },
+
+{ id: "g-casereview", isGroup: true, name: "Clinical Case Review", unread: 3,
+  members: [
+  { id: "tim", name: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png" },
+  { id: "sarahc", name: "Dr. Sarah Collins", avatar: "assets/avatar-sarah-collins.jpg" },
+  { id: "alex", name: "Dr Alex Chen", avatar: null }],
+  messages: [
+  { me: false, sender: "Dr Tim Pearce", text: "Katy, can you present your lip case at the review too?", t: "9m" }] },
+
+{ id: "amir", name: "Dr Amir Khan", avatar: "assets/avatar-amir-khan.jpg", online: false, unread: 0,
+  messages: [
+  { me: false, text: "Katy, the dental block technique video is live in the Mastery library.", t: "Mon" },
+  { me: true, text: "Brilliant, watching it tonight. Thanks Amir!", t: "Mon" }] },
+
+{ id: "mark", name: "Mark Ellis", avatar: "assets/avatar-mark-ellis.jpg", online: true, unread: 0,
+  messages: [
+  { me: false, text: "Quick one — what CRM are you using for recall reminders?", t: "Sun" },
+  { me: true, text: "We moved to Pabau last quarter, happy to walk you through it.", t: "Sun" }] },
+
+{ id: "beth", name: "Nurse Beth", avatar: "assets/avatar-nurse-beth.jpg", online: false, unread: 0,
+  messages: [
+  { me: false, text: "Loved your consultation framework post 🙌", t: "Sat" },
+  { me: true, text: "Thanks Beth! Ping me if you want the template.", t: "Sat" }] },
+
+{ id: "priya", name: "Priya Shah", avatar: "assets/avatar-priya-shah.jpg", online: true, unread: 0,
+  messages: [
+  { me: false, text: "Are you going to the London masterclass in October?", t: "Fri" },
+  { me: true, text: "Booked! See you there.", t: "Fri" }] },
+
+{ id: "hannah", name: "Dr Hannah Reid", avatar: null, online: false, unread: 0,
+  messages: [
+  { me: false, text: "Thanks for the referral pathway notes.", t: "2 Sep" },
+  { me: true, text: "Anytime, Hannah.", t: "2 Sep" }] }];
 
   const VOICE_CONFS_SEED_C = [
     { id: "vc1", name: "Clinical Case Review", who: "Dr Tim Pearce, Dr Sarah Kim +3", t: "Today, 4:00 PM", live: true },
@@ -255,7 +292,11 @@
 
   const PF_GROUPS_KEY = "pf-dm-groups";
 
-  function readDmGroupsC() {
+  /* The DS Avatar takes the first letter of the first two words — strip the
+   honorific so "Dr Sarah Kim" reads SK, not DS. */
+function avatarNameC(name) { return String(name || "").replace(/^(dr\.?|nurse|prof\.?|mr\.?|mrs\.?|ms\.?)\s+/i, ""); }
+
+function readDmGroupsC() {
     try { return JSON.parse(localStorage.getItem(PF_GROUPS_KEY)) || []; } catch (e) { return []; }
   }
 
@@ -280,7 +321,7 @@
       <span className="mp-group-av" style={{ width: s, height: s }}>
         {members.slice(0, 2).map((m, i) =>
           <span className="mp-group-av-item" key={m.id || i}>
-            <DSC.Avatar name={m.name} src={m.avatar} size={Math.round(s * 0.68)} />
+            <DSC.Avatar name={avatarNameC(m.name)} src={m.avatar} size={Math.round(s * 0.68)} />
           </span>
         )}
       </span>);
@@ -289,12 +330,12 @@
   function MessagesRowC({ c, onOpen }) {
     const last = c.messages && c.messages.length ? c.messages[c.messages.length - 1] : null;
     return (
-      <button className="mp-row" onClick={onOpen}>
+      <button className="mp-row" data-thread-id={c.id} onClick={onOpen}>
         <span className="mp-av">
           {c.isGroup ?
             <GroupAvatarStackC members={c.members} /> :
             <>
-              <DSC.Avatar name={c.name} src={c.avatar} size={52} />
+              <DSC.Avatar name={avatarNameC(c.name)} src={c.avatar} size={52} />
               {c.online && <span className="dm-online-dot" />}
             </>
           }
@@ -341,7 +382,7 @@
             const on = picked.includes(c.id);
             return (
               <button key={c.id} className={"mp-new-row" + (on ? " on" : "")} onClick={() => onToggle(c.id)}>
-                <span className="mp-av"><DSC.Avatar name={c.name} src={c.avatar} size={44} /></span>
+                <span className="mp-av"><DSC.Avatar name={avatarNameC(c.name)} src={c.avatar} size={44} /></span>
                 <span className="mp-new-name">{c.name}</span>
                 <span className={"mp-new-check" + (on ? " on" : "")}>
                   {on && <DSC.IconifyIcon name="lucide:check" size={13} color="#fff" />}
@@ -395,7 +436,7 @@
     const unreadTotal = DM_THREADS_SEED_C.reduce((n, t) => n + (t.unread || 0), 0);
 
     function openThread(id) {
-      goC("DirectMessage.html?id=" + id + "&from=LearningMobile.html");
+      goC("Messages.html?t=" + id);
     }
 
     function togglePick(id) {
@@ -417,7 +458,7 @@
         <div className={"m-drawer-wrap" + (open ? " open" : "")} aria-hidden={!open}>
           <div className="m-drawer-scrim" onClick={onClose} />
           <aside className="m-drawer nt-panel mp-panel" role="dialog" aria-modal="true" aria-label="New Conversation">
-            <NewConversationScreenC contacts={DM_THREADS_SEED_C} picked={picked} onToggle={togglePick}
+            <NewConversationScreenC contacts={DM_THREADS_SEED_C.filter((c) => !c.isGroup)} picked={picked} onToggle={togglePick}
               query={ncQuery} onQuery={setNcQuery} groupName={groupName} onGroupName={setGroupName}
               onBack={() => setScreen("list")} onCreate={handleCreate} />
           </aside>
@@ -433,6 +474,9 @@
               <DSC.IconifyIcon name="lucide:arrow-left" size={24} color="var(--gray-900)" />
             </button>
             <h2 style={{ fontSize: "26px", fontWeight: "700" }}>Messages</h2>
+          <button className="mp-expand" aria-label="Open Messages" onClick={() => goC("Messages.html")}>
+            <DSC.IconifyIcon name="lucide:maximize-2" size={20} color="var(--gray-900)" />
+          </button>
             <button className="mp-compose" aria-label="New message" onClick={() => setScreen("new")}>
               <DSC.IconifyIcon name="lucide:square-pen" size={20} color="var(--gray-900)" />
             </button>
