@@ -597,7 +597,8 @@ button.ls-msg:hover,button.ls-msg:focus-visible{background:rgba(0,0,0,.6)}
 .ls-checkout-done{display:flex;flex-direction:column;align-items:center;text-align:center;padding:8px 0 4px}
 .ls-checkout-done .ico{margin-bottom:10px}
 .ls-checkout-done .ev-sheet-p{text-align:center}
-.ls-checkout-done .ev-detail-cta{width:100%;margin-top:6px}
+.ls-checkout-done-acts{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:6px}
+.ls-checkout-done .ev-detail-cta{width:100%;margin:0;flex:none}
 
 /* host: participants panel */
 .ls-participants{max-height:82vh;overflow-y:auto}

@@ -1632,7 +1632,7 @@ function LSProductCard({
   }, /*#__PURE__*/React.createElement(DSEW.IconifyIcon, {
     name: "lucide:zap",
     size: 11,
-    color: "var(--error)"
+    color: "var(--premium-gold)"
   }), "Flash sale · ", lsFmtClock(secs)), /*#__PURE__*/React.createElement("span", {
     className: "note"
   }, product.note), /*#__PURE__*/React.createElement("span", {
@@ -1735,6 +1735,15 @@ function LSCheckout({
       setDone(true);
     }, 900);
   };
+  /* Leaving the stream is the buyer's explicit choice here — the course page
+     is the primary action once the purchase has landed. */
+  const goCourse = () => {
+    goEW(`CourseWeb.html?${new URLSearchParams({
+      title: product.title,
+      instr: "Dr. Tim Pearce",
+      pct: 0
+    })}`);
+  };
   return /*#__PURE__*/React.createElement("div", {
     className: "ev-sheet ls-checkout-sheet",
     role: "dialog",
@@ -1758,10 +1767,19 @@ function LSCheckout({
     className: "ev-sheet-ttl"
   }, "You're in!"), /*#__PURE__*/React.createElement("p", {
     className: "ev-sheet-p"
-  }, product.title, " has been added to your account — watch it any time from My Learning."), /*#__PURE__*/React.createElement("button", {
+  }, product.title, " has been added to your account — start it now or keep watching the stream and find it later in My Learning."), /*#__PURE__*/React.createElement("div", {
+    className: "ls-checkout-done-acts"
+  }, /*#__PURE__*/React.createElement("button", {
     className: "ev-detail-cta",
+    onClick: goCourse
+  }, /*#__PURE__*/React.createElement(DSEW.IconifyIcon, {
+    name: "lucide:play-circle",
+    size: 18,
+    color: "var(--white)"
+  }), "Proceed to course"), /*#__PURE__*/React.createElement("button", {
+    className: "ev-detail-cta ghost",
     onClick: onClose
-  }, "Continue watching")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, "Continue watching"))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "ls-showcase-hd"
   }, /*#__PURE__*/React.createElement("span", {
     className: "brand"
@@ -2376,16 +2394,6 @@ function LiveStream({
     offCam: stageOffCam
   }), /*#__PURE__*/React.createElement(LSReactions, {
     particles: particles
-  }), role === "audience" && pushedNum != null && pinnedPopup.phase !== "hidden" && /*#__PURE__*/React.createElement(LSProductCard, {
-    product: LS_PRODUCTS.find(p => p.num === pushedNum),
-    phase: pinnedPopup.phase,
-    onBuy: buy,
-    onClose: pinnedPopup.dismiss
-  }), role !== "audience" && pushedNum && /*#__PURE__*/React.createElement(LSPinnedForViewers, {
-    product: LS_PRODUCTS.find(p => p.num === pushedNum),
-    phase: role === "speaker" ? speakerPinnedPopup.phase : "visible",
-    onUnpin: role === "host" ? () => setPushedNum(null) : undefined,
-    onClose: role === "speaker" ? speakerPinnedPopup.dismiss : undefined
   }), role !== "audience" && /*#__PURE__*/React.createElement(LSToolbar, {
     role: role,
     mic: selfMic,
@@ -2427,7 +2435,17 @@ function LiveStream({
     name: "lucide:x",
     size: 20,
     color: "var(--text-primary)"
-  }))), /*#__PURE__*/React.createElement(LSChat, {
+  }))), role === "audience" && pushedNum != null && pinnedPopup.phase !== "hidden" && /*#__PURE__*/React.createElement(LSProductCard, {
+    product: LS_PRODUCTS.find(p => p.num === pushedNum),
+    phase: pinnedPopup.phase,
+    onBuy: buy,
+    onClose: pinnedPopup.dismiss
+  }), role !== "audience" && pushedNum && /*#__PURE__*/React.createElement(LSPinnedForViewers, {
+    product: LS_PRODUCTS.find(p => p.num === pushedNum),
+    phase: role === "speaker" ? speakerPinnedPopup.phase : "visible",
+    onUnpin: role === "host" ? () => setPushedNum(null) : undefined,
+    onClose: role === "speaker" ? speakerPinnedPopup.dismiss : undefined
+  }), /*#__PURE__*/React.createElement(LSChat, {
     msgs: msgs,
     onAddReply: addReply
   }), /*#__PURE__*/React.createElement(LSComposer, {

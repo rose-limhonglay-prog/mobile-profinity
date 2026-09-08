@@ -906,6 +906,11 @@ function LSCheckout({ product, onClose }) {
     setPaying(true);
     setTimeout(() => { setPaying(false); setDone(true); }, 900);
   };
+  /* Leaving the stream is the buyer's explicit choice here — the course page
+     is the primary action once the purchase has landed. */
+  const goCourse = () => {
+    goEV(`CourseDetail.html?${new URLSearchParams({ title: product.title, instr: "Dr. Tim Pearce", pct: 0 })}`);
+  };
 
   return (
     <div className="ev-sheet ls-checkout-sheet" role="dialog" aria-modal="true" aria-label="Checkout">
@@ -916,8 +921,13 @@ function LSCheckout({ product, onClose }) {
           <div className="ls-checkout-done">
             <span className="ico"><DSEV.IconifyIcon name="lucide:check-circle-2" size={40} color="var(--success)" /></span>
             <h3 className="ev-sheet-ttl">You're in!</h3>
-            <p className="ev-sheet-p">{product.title} has been added to your account — watch it any time from My Learning.</p>
-            <button className="ev-detail-cta" onClick={onClose}>Continue watching</button>
+            <p className="ev-sheet-p">{product.title} has been added to your account — start it now or keep watching the stream and find it later in My Learning.</p>
+            <div className="ls-checkout-done-acts">
+              <button className="ev-detail-cta" onClick={goCourse}>
+                <DSEV.IconifyIcon name="lucide:play-circle" size={18} color="var(--white)" />Proceed to course
+              </button>
+              <button className="ev-detail-cta ghost" onClick={onClose}>Continue watching</button>
+            </div>
           </div>
         ) : (
           <React.Fragment>

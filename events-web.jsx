@@ -801,7 +801,7 @@ function LSProductCard({ product, phase, onBuy, onClose }) {
       <span className="thumb"><img src={product.img} alt="" /><b>{product.num}</b></span>
       <span className="tx">
         <span className="ttl">{product.title}</span>
-        <span className="flash"><DSEW.IconifyIcon name="lucide:zap" size={11} color="var(--error)" />Flash sale · {lsFmtClock(secs)}</span>
+        <span className="flash"><DSEW.IconifyIcon name="lucide:zap" size={11} color="var(--premium-gold)" />Flash sale · {lsFmtClock(secs)}</span>
         <span className="note">{product.note}</span>
         <span className="price">£{product.price.toFixed(2)} <s>£{product.was.toFixed(2)}</s> <i>{product.off}</i></span>
       </span>
@@ -865,6 +865,11 @@ function LSCheckout({ product, onClose }) {
     setPaying(true);
     setTimeout(() => { setPaying(false); setDone(true); }, 900);
   };
+  /* Leaving the stream is the buyer's explicit choice here — the course page
+     is the primary action once the purchase has landed. */
+  const goCourse = () => {
+    goEW(`CourseWeb.html?${new URLSearchParams({ title: product.title, instr: "Dr. Tim Pearce", pct: 0 })}`);
+  };
 
   return (
     <div className="ev-sheet ls-checkout-sheet" role="dialog" aria-modal="true" aria-label="Checkout">
@@ -874,8 +879,13 @@ function LSCheckout({ product, onClose }) {
           <div className="ls-checkout-done">
             <span className="ico"><DSEW.IconifyIcon name="lucide:check-circle-2" size={40} color="var(--success)" /></span>
             <h3 className="ev-sheet-ttl">You're in!</h3>
-            <p className="ev-sheet-p">{product.title} has been added to your account — watch it any time from My Learning.</p>
-            <button className="ev-detail-cta" onClick={onClose}>Continue watching</button>
+            <p className="ev-sheet-p">{product.title} has been added to your account — start it now or keep watching the stream and find it later in My Learning.</p>
+            <div className="ls-checkout-done-acts">
+              <button className="ev-detail-cta" onClick={goCourse}>
+                <DSEW.IconifyIcon name="lucide:play-circle" size={18} color="var(--white)" />Proceed to course
+              </button>
+              <button className="ev-detail-cta ghost" onClick={onClose}>Continue watching</button>
+            </div>
           </div>
         ) : (
           <React.Fragment>
@@ -1231,15 +1241,6 @@ function LiveStream({ event, onLeave }) {
           <LSStage onCam={stageOnCam} offCam={stageOffCam} />
           <LSReactions particles={particles} />
 
-          {role === "audience" && pushedNum != null && pinnedPopup.phase !== "hidden" &&
-            <LSProductCard product={LS_PRODUCTS.find((p) => p.num === pushedNum)} phase={pinnedPopup.phase} onBuy={buy} onClose={pinnedPopup.dismiss} />}
-
-          {role !== "audience" && pushedNum &&
-            <LSPinnedForViewers product={LS_PRODUCTS.find((p) => p.num === pushedNum)}
-              phase={role === "speaker" ? speakerPinnedPopup.phase : "visible"}
-              onUnpin={role === "host" ? () => setPushedNum(null) : undefined}
-              onClose={role === "speaker" ? speakerPinnedPopup.dismiss : undefined} />}
-
           {role !== "audience" &&
             <LSToolbar role={role} mic={selfMic} cam={selfCam}
               onToggleMic={() => setSelfMic((m) => !m)} onToggleCam={() => setSelfCam((c) => !c)}
@@ -1262,6 +1263,15 @@ function LiveStream({ event, onLeave }) {
                 <DSEW.IconifyIcon name="lucide:x" size={20} color="var(--text-primary)" />
               </button>
             </div>
+            {/* Pinned product lives in the chat column (compact strip under
+                the header) so it never covers the stage or the toolbar. */}
+            {role === "audience" && pushedNum != null && pinnedPopup.phase !== "hidden" &&
+              <LSProductCard product={LS_PRODUCTS.find((p) => p.num === pushedNum)} phase={pinnedPopup.phase} onBuy={buy} onClose={pinnedPopup.dismiss} />}
+            {role !== "audience" && pushedNum &&
+              <LSPinnedForViewers product={LS_PRODUCTS.find((p) => p.num === pushedNum)}
+                phase={role === "speaker" ? speakerPinnedPopup.phase : "visible"}
+                onUnpin={role === "host" ? () => setPushedNum(null) : undefined}
+                onClose={role === "speaker" ? speakerPinnedPopup.dismiss : undefined} />}
             <LSChat msgs={msgs} onAddReply={addReply} />
             <LSComposer value={val} onChange={setVal} onSend={send} onReact={spawn}
               onOpenBasket={role === "audience" ? () => { setShowcase(true); pinnedPopup.show(); } : undefined} />
