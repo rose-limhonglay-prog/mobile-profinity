@@ -33,8 +33,9 @@ const EVT_NAV = [
   { icon: "lucide:users", label: "Community", chevron: true },
 ];
 
-/* Single source of truth for "the admin user" — every event created here
-   auto-assigns this person as Host (see EventFormModal's `host` field). */
+/* The signed-in admin shown in the page header. Hosts are chosen per event
+   in the Create/Edit form (`hosts` field) and start empty — nobody is
+   pre-filled as a default host. */
 const EVT_ADMIN_USER = { name: "Dr Tim Pearce", role: "Admin", email: "drtim@profinity.academy", avatar: "assets/avatar-drtim.png" };
 
 const EVT_NAV_LINKS = {
@@ -237,7 +238,7 @@ const EVT_SEED_ROWS = [
     capacityEnabled: true, capacity: 150, booked: 133,
     isActive: true,
     invited: 41, opened: 87,
-    host: EVT_ADMIN_USER,
+    hosts: [{ id: "h1", name: "Dr Sarah Collins", email: "sarah@profinity.academy", avatar: "assets/avatar-sarah-collins.jpg" }],
     speakers: [
       { id: "sp1", name: "Alicia", email: "alicia@profinity.academy" },
       { id: "sp2", name: "Ash", email: "ash@profinity.academy" },
@@ -267,7 +268,7 @@ const EVT_SEED_ROWS = [
     capacityEnabled: true, capacity: 40, booked: 33,
     isActive: true,
     invited: 40, opened: 36,
-    host: EVT_ADMIN_USER,
+    hosts: [{ id: "h2", name: "Dr Amir Khan", email: "amir@profinity.academy", avatar: "assets/avatar-amir-khan.jpg" }],
     speakers: [{ id: "sp3", name: "Miranda Pearce", email: "miranda@profinity.academy" }],
     invitees: [],
   },
@@ -316,12 +317,25 @@ const EVT_ATTENDEES_SEED = {
 
 /* ================================================================ form
    fields ================================================================ */
+/* Hover/focus "i" that reveals instruction text in a tooltip — replaces the
+   old always-visible hint line under each field. */
+function EVTInfo({ text }) {
+  return (
+    <span className="evtf-info" tabIndex={0} role="img" aria-label={text}>
+      <iconify-icon icon="lucide:info"></iconify-icon>
+      <span className="evtf-tip" role="tooltip">{text}</span>
+    </span>
+  );
+}
+
 function EVTFormRow({ label, required, hint, children }) {
   return (
     <div className="evtf-row">
-      <label className="evtf-label">{label}{required && <span className="req">*</span>}</label>
+      <label className="evtf-label">
+        <span>{label}{required && <span className="req">*</span>}</span>
+        {hint && <EVTInfo text={hint} />}
+      </label>
       {children}
-      {hint && <span className="evtf-hint">{hint}</span>}
     </div>
   );
 }
@@ -338,7 +352,7 @@ function EVTSwitch({ checked, onChange, label }) {
 
 /* Add-a-person mini-form + running list, shared by Speakers and Specific
    Invites below — mirrors AttendeesDrawer's inline invite pattern. */
-function EVTPeopleManager({ people, onAdd, onRemove, addLabel, emptyLabel }) {
+function EVTPeopleManager({ people, onAdd, onRemove, addLabel, emptyLabel, badge, badgeIcon }) {
   const [name, setName] = useStateEVT("");
   const [email, setEmail] = useStateEVT("");
   const add = () => {
@@ -357,12 +371,15 @@ function EVTPeopleManager({ people, onAdd, onRemove, addLabel, emptyLabel }) {
         <div className="evtf-people-list">
           {people.map((p) => (
             <div className="evtf-att-row" key={p.id}>
-              <span className="evtf-att-avatar">{p.name.split(" ").map((s) => s[0]).slice(0, 2).join("")}</span>
+              {p.avatar
+                ? <img className="evtf-att-avatar evtf-att-photo" src={p.avatar} alt={p.name} />
+                : <span className="evtf-att-avatar">{p.name.split(" ").map((s) => s[0]).slice(0, 2).join("")}</span>}
               <span className="evtf-att-tx">
                 <span className="n">{p.name}</span>
                 <span className="e">{p.email}</span>
               </span>
-              <button type="button" className="evtf-att-remove" onClick={() => onRemove(p.id)}><iconify-icon icon="lucide:x"></iconify-icon></button>
+              {badge && <span className="evtf-host-badge">{badgeIcon && <iconify-icon icon={badgeIcon}></iconify-icon>}{badge}</span>}
+              <button type="button" className="evtf-att-remove" aria-label={"Remove " + p.name} onClick={() => onRemove(p.id)}><iconify-icon icon="lucide:x"></iconify-icon></button>
             </div>
           ))}
         </div>
@@ -380,7 +397,7 @@ function EventFormModal({ initial, onClose, onSave }) {
     invitationMode: "self_subscribe", selectedAttendeesRaw: "", description: "",
     thumbnail: "", capacityEnabled: true, capacity: "", isActive: true,
     liveSellingEnabled: false, products: [],
-    host: EVT_ADMIN_USER, speakers: [], invitees: [],
+    hosts: [], speakers: [], invitees: [],
     booked: 0, invited: 0, opened: 0,
   };
   const [f, setF] = useStateEVT(() => Object.assign({}, blank, initial || {}, initial ? { selectedAttendeesRaw: "" } : {}));
@@ -411,6 +428,7 @@ function EventFormModal({ initial, onClose, onSave }) {
     }
     if (showCapacity && f.capacityEnabled && !String(f.capacity).trim()) e.capacity = "Set the available capacity, or turn the switch off.";
     if (!isEdit && !f.thumbnail) e.thumbnail = "Upload a thumbnail image.";
+    if (f.hosts.length === 0) e.hosts = "Add at least one host for this event.";
     if (f.liveSellingEnabled && f.products.length === 0) e.products = "Select at least one product for the host to sell live.";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -482,9 +500,9 @@ function EventFormModal({ initial, onClose, onSave }) {
                     <iconify-icon icon="lucide:link"></iconify-icon>
                     <input type="url" className="evtf-url-input" value={f.meetingUrl} inputMode="url" autoComplete="off"
                       onChange={(e) => set("meetingUrl", e.target.value)} placeholder="https://zoom.us/j/1234567890?pwd=..." />
+                    <EVTInfo text="Include the passcode in the link so attendees join in one tap. The link is revealed to registered attendees only." />
                   </div>
-                  {errors.meetingUrl ? <span className="evtf-err">{errors.meetingUrl}</span>
-                    : <span className="evtf-hint">Include the passcode in the link so attendees join in one tap. The link is revealed to registered attendees only.</span>}
+                  {errors.meetingUrl && <span className="evtf-err">{errors.meetingUrl}</span>}
                 </div>
               )}
               {f.deliveryType === "live_stream" && (
@@ -520,7 +538,7 @@ function EventFormModal({ initial, onClose, onSave }) {
             </div>
           </EVTFormRow>
 
-          <EVTFormRow label="Invitation Mode" required>
+          <EVTFormRow label="Registration Type" required hint="How people get onto the attendee list.">
             <div className="evtf-radio-row" role="radiogroup">
               <label className="evtf-radio"><input type="radio" name="invite" checked={f.invitationMode === "self_subscribe"} onChange={() => set("invitationMode", "self_subscribe")} />Self-Subscribe — users register on the landing page</label>
               <label className="evtf-radio"><input type="radio" name="invite" checked={f.invitationMode === "admin_driven"} onChange={() => set("invitationMode", "admin_driven")} />Admin-Driven (Exclusive) — invite-only by admin</label>
@@ -536,15 +554,11 @@ function EventFormModal({ initial, onClose, onSave }) {
             </EVTFormRow>
           )}
 
-          <EVTFormRow label="Event Host" hint="You're automatically assigned as the host of every event you create.">
-            <div className="evtf-host-card">
-              <img className="evtf-host-avatar" src={f.host.avatar} alt={f.host.name} />
-              <span className="evtf-host-tx">
-                <span className="n">{f.host.name}</span>
-                <span className="e">{f.host.email}</span>
-              </span>
-              <span className="evtf-host-badge"><iconify-icon icon="lucide:crown"></iconify-icon>Host</span>
-            </div>
+          <EVTFormRow label="Event Hosts" required hint="Add the person (or people) hosting this event.">
+            <EVTPeopleManager people={f.hosts} addLabel="Add Host" emptyLabel="No host added yet." badge="Host" badgeIcon="lucide:crown"
+              onAdd={(p) => set("hosts", f.hosts.concat(p))}
+              onRemove={(id) => set("hosts", f.hosts.filter((p) => p.id !== id))} />
+            {errors.hosts && <span className="evtf-err">{errors.hosts}</span>}
           </EVTFormRow>
 
           <EVTFormRow label="Speakers" hint="Add anyone presenting or co-hosting this session alongside you.">
@@ -842,8 +856,8 @@ function EVTListView() {
             <div key={r.id} className="evt-row-grid evt-trow">
               <div className="evt-trow-title">
                 <div className="evt-trow-title-main">{r.title}</div>
-                {!r.autoLogged && (
-                  <span className="evt-invite-tag evt-host-tag"><iconify-icon icon="lucide:user-check"></iconify-icon>Hosted by {(r.host && r.host.name) || EVT_ADMIN_USER.name}</span>
+                {!r.autoLogged && r.hosts && r.hosts.length > 0 && (
+                  <span className="evt-invite-tag evt-host-tag"><iconify-icon icon="lucide:user-check"></iconify-icon>Hosted by {r.hosts.map((h) => h.name).join(", ")}</span>
                 )}
                 {r.speakers && r.speakers.length > 0 && (
                   <span className="evt-invite-tag evt-speaker-tag"><iconify-icon icon="lucide:mic"></iconify-icon>{r.speakers.length} speaker{r.speakers.length === 1 ? "" : "s"}</span>

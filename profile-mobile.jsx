@@ -53,29 +53,62 @@ function setCredVerificationPM(record) {
 /* ===========================================================================
    The Prosperity Spiral + Today's Targets — moved here from LearningMobile
    (Aug 2026 prototype pass, Profile placement not yet signed off by Tim).
-   Same four pillars, same target tags/copy as before; the Learning page now
-   just links across via #prosperity-spiral. =====================
+   Framework: the Prosperity Spiral, exactly four pillars — Sales · Marketing ·
+   Clinical Skills · Business Systems.
    =========================================================================== */
 const PM_PILLARS = [
-{ key: "Sales", color: "var(--error)" },
-{ key: "Marketing", color: "linear-gradient(90deg, #f4ad3d, #e7820a)" },
-{ key: "Clinical Skills", color: "var(--info)" },
-{ key: "Business Systems", color: "var(--premium-orange)" }];
+{ key: "Sales", short: "SALE", icon: "fluent-emoji-flat:money-bag" },
+{ key: "Marketing", short: "MKT", icon: "fluent-emoji-flat:megaphone" },
+{ key: "Clinical Skills", short: "CLIN", icon: "fluent-emoji-flat:syringe" },
+{ key: "Business Systems", short: "SYS", icon: "fluent-emoji-flat:gear" }];
 
+/* Score bands. The four pillars are meant to land in different bands so one
+   is visibly the pillar to lift; every band's `text` is ≥4.5:1 on its `soft`
+   tint and on white. `color` is the bar / dial fill. */
+const PM_BANDS = [
+{ key: "expert", label: "Expert", min: 80, color: "#2A9568", text: "#1E7A5C", soft: "#EAF6F0" },
+{ key: "improving", label: "Needs improving", min: 60, color: "#CE9957", text: "#8A5303", soft: "#FCF4E4" },
+{ key: "practice", label: "Needs more practice", min: 40, color: "#E7820A", text: "#9A4B00", soft: "#FDEEDD" },
+{ key: "study", label: "Needs study", min: 0, color: "#C8362F", text: "#A8231D", soft: "#FCE8E6" }];
+function pmBand(score) { return PM_BANDS.find((b) => score >= b.min) || PM_BANDS[PM_BANDS.length - 1]; }
 
-const PM_TARGET_TAGS = {
-  MKT: { label: "MKT", color: "#e7820a" },
-  CLIN: { label: "CLIN", color: "#0088de" },
-  SALE: { label: "SALE", color: "var(--error)" },
-  SYS: { label: "SYS", color: "var(--premium-orange)" }
+/* Tapping any pillar (Spiral row, target row, Goal Focus CTA) opens that
+   pillar's goal page. */
+function pmGoalUrl(pillarKey) { return "LearningMobile.html?goal=" + encodeURIComponent(pillarKey); }
+
+/* Today's Targets — one live task per pillar, drawn in order from that
+   pillar's pool. Priority follows the pillar's rank in the Spiral (weakest =
+   high), so the day always leads with the pillar to lift. */
+const PM_TARGET_POOL = {
+  "Sales": [
+    "Follow up with 3 lapsed patients",
+    "Rehearse your consultation close with Ava",
+    "Send the 2 treatment-plan quotes you've left open",
+    "Call back every enquiry from the last 48 hours"],
+  "Marketing": [
+    "Post 2 before/after case studies",
+    "Reply to every comment on your last post",
+    "Draft next week's Instagram story sequence",
+    "Ask 1 happy patient for a Google review"],
+  "Clinical Skills": [
+    "Complete Lesson 4: Lip Anatomy",
+    "Review the toxin complications checklist",
+    "Watch: mid-face volumising (12 min)",
+    "Photograph today's cases with the 5-angle protocol"],
+  "Business Systems": [
+    "Log this week's expenses in your tracker",
+    "Update your price list for Q4",
+    "Book 15 minutes to review your booking flow",
+    "Reconcile last week's card takings"]
 };
-
-const PM_TARGETS = [
-{ text: "Complete Lesson 4: Lip Anatomy", tag: "CLIN" },
-{ text: "Post 2 before/after case studies", tag: "MKT" },
-{ text: "Follow up with 3 lapsed patients", tag: "SALE" },
-{ text: "Log this week's expenses in your tracker", tag: "SYS" }];
-
+const PM_PRIORITY = {
+  high: { label: "High priority", pts: 150, icon: "lucide:chevrons-up", color: "#C8362F" },
+  medium: { label: "Medium priority", pts: 100, icon: "lucide:chevron-up", color: "#CE9957" },
+  low: { label: "Low priority", pts: 50, icon: "lucide:minus", color: "#8B8FA3" }
+};
+const PM_PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
+const PM_TARGETS_KEY = "pf-today-targets";
+function pmTodayStamp() { return new Date().toISOString().slice(0, 10); }
 
 /* ===========================================================================
    Self-Assessment scoring engine (PRD: Prosperity Spiral & Self-Assessment
@@ -85,11 +118,12 @@ const PM_TARGETS = [
    100% regardless of assessment performance.
    =========================================================================== */
 
-/* Course-completion baseline (Scourse) per pillar. Reuses the Spiral's
-   previous mock percentages as "how far courses alone have carried this
-   pillar" — with no assessment taken (Seval = 0), pillarScore collapses to
-   exactly Scourse, so nothing changes here until an assessment is completed. */
-const PM_SCOURSE = { "Sales": 31, "Marketing": 52, "Clinical Skills": 62, "Business Systems": 41 };
+/* Course-completion baseline (Scourse) per pillar — "how far courses alone
+   have carried this pillar". Deliberately staggered so that, with a typical
+   mid-range assessment (+30), the four pillars land one per band:
+   Sales ~38 (study) · Systems ~52 (practice) · Marketing ~68 (improving) ·
+   Clinical ~85 (expert). */
+const PM_SCOURSE = { "Sales": 8, "Marketing": 38, "Clinical Skills": 55, "Business Systems": 22 };
 
 const PM_ASSESS_KEY = "pf-self-assessment";
 function pmLoadAssessState() {
@@ -114,14 +148,17 @@ function pmForecastDone(assessState) {
   return PM_FORECAST_PILLARS.filter((k) => assessState[k] && assessState[k].status === "completed").length;
 }
 
-/* Dynamic Goal Focus (3.3) — lowest-scoring pillar, tie-break in this order. */
+/* Pillars scored and ranked weakest → strongest (tie-break order below is
+   the Goal Focus rule from PRD 3.3). */
 const PM_GOAL_TIEBREAK = ["Clinical Skills", "Business Systems", "Sales", "Marketing"];
-function pmLowestPillar(assessState) {
-  const scored = PM_PILLARS.map((p) => ({ key: p.key, score: pmPillarScore(p.key, assessState) }));
-  const lowest = Math.min(...scored.map((s) => s.score));
-  const tied = scored.filter((s) => s.score === lowest).map((s) => s.key);
-  return PM_GOAL_TIEBREAK.find((k) => tied.includes(k)) || tied[0];
+function pmRankedPillars(assessState) {
+  return PM_PILLARS.
+  map((p) => ({ ...p, score: pmPillarScore(p.key, assessState) })).
+  sort((a, b) => a.score - b.score || PM_GOAL_TIEBREAK.indexOf(a.key) - PM_GOAL_TIEBREAK.indexOf(b.key)).
+  map((p) => ({ ...p, band: pmBand(p.score) }));
 }
+function pmLowestPillar(assessState) { return pmRankedPillars(assessState)[0].key; }
+
 const PM_GOAL_REASONING = {
   "Sales": "Your consultations and follow-up are the fastest lever right now — tightening how you convert the patients already reaching out will move this pillar quickest.",
   "Marketing": "You need visibility. Better, more consistent lead generation is the fastest way to fill your books.",
@@ -141,144 +178,289 @@ function usePMEscClose(active, onClose) {
   }, [active, onClose]);
 }
 
-/* "How it works" help — a plain-language explainer for the Spiral Score,
-   reached via a link next to the heading (no new tab/nav item). */
-function PMSpiralHelpModal({ open, onClose }) {
+/* Overlays rendered from inside the "Track your goals" slider need to escape
+   it: .pm-goals-slider is transformed (translateX), so it becomes the
+   containing block for position:absolute children and its overflow:hidden
+   viewport clips them. Portal to the screen root (same host pattern as the
+   share sheet in app.jsx). */
+function pmScreenPortal(node) {
+  const host = typeof document !== "undefined" && document.querySelector(".pm-screen");
+  return host ? ReactDOM.createPortal(node, host) : node;
+}
+
+/* Shared ⓘ explainer sheet — title, an icon, body copy and an optional
+   "Ask Ava" hand-off. role=dialog + aria-modal + Esc via usePMEscClose. */
+function PMInfoModal({ open, onClose, title, icon, children, coach, coachLabel }) {
   usePMEscClose(open, onClose);
   if (!open) return null;
-  return (
+  return pmScreenPortal(
     <div className="pm-help-overlay" onClick={onClose}>
-      <div className="pm-help-card" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="How the Prosperity Spiral works">
+      <div className="pm-help-card" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={title}>
         <div className="pm-help-hd">
-          <span className="pm-help-icon"><DSPM.IconifyIcon name="lucide:sparkles" size={18} color="var(--ai-purple)" /></span>
-          <h3>How the Prosperity Spiral works</h3>
+          <span className="pm-help-icon"><DSPM.IconifyIcon name={icon || "lucide:info"} size={18} color="var(--ai-purple)" /></span>
+          <h3>{title}</h3>
           <button type="button" className="pm-help-x" aria-label="Close" onClick={onClose}>
             <DSPM.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" />
           </button>
         </div>
         <div className="pm-help-body">
-          <p>Your Spiral Score is simply a snapshot of how balanced your business is across four areas every successful clinic needs: <b>Sales</b>, <b>Marketing</b>, <b>Clinical Skills</b> and <b>Business Systems</b>.</p>
-          <p>Each pillar's number goes up when you take actions that build it — finishing a lesson, completing a Today's Target, posting a case study, following up with a patient. There's no trick to it: the more consistently you show up in a pillar, the faster it climbs.</p>
-          <p>A weak pillar isn't a bad grade — it's just where Ava recommends you focus next, because the fastest way to grow your clinic is usually to strengthen your lowest pillar first.</p>
-          <button type="button" className="pf-coach-link pm-help-coach" data-coach="Explain how my Spiral Score is calculated and what I can do this week to raise it." onClick={onClose}>
-            <DSPM.IconifyIcon name="lucide:sparkles" size={14} color="var(--ai-purple)" />Ask Ava to explain mine
-          </button>
+          {children}
+          {coach &&
+          <button type="button" className="pf-coach-link pm-help-coach" data-coach={coach} onClick={onClose}>
+              <DSPM.IconifyIcon name="lucide:sparkles" size={14} color="var(--ai-purple)" />{coachLabel || "Ask Ava"}
+            </button>}
         </div>
       </div>
     </div>);
-
 }
 
-function PMSpiralCard({ assessState }) {
-  const [helpOpen, setHelpOpen] = useStatePM(false);
-  const scored = PM_PILLARS.map((g) => ({ ...g, score: pmPillarScore(g.key, assessState) }));
-  const avg = Math.round(scored.reduce((sum, p) => sum + p.score, 0) / scored.length);
-  const strongest = scored.reduce((a, b) => (b.score > a.score ? b : a));
-  const weakest = scored.reduce((a, b) => (b.score < a.score ? b : a));
+/* Card shell for the three pane cards: bordered card, a collapse toggle
+   pinned to the top-right corner, and an ⓘ button 12px after the title. */
+function PMPaneCard({ id, title, sub, infoLabel, onInfo, className, children, defaultOpen = true, stacked = false }) {
+  const [open, setOpen] = useStatePM(defaultOpen);
+  const bodyId = React.useId ? React.useId() : undefined;
   return (
-    <section className="pm-sec pm-card" id="prosperity-spiral" data-screen-label="The Prosperity Spiral">
-      <div className="pm-card-hd">
-        <span className="pm-card-hd-ti">
-          <h2>The Prosperity Spiral</h2>
-          <button type="button" className="pm-help-link" aria-label="How it works" onClick={() => setHelpOpen(true)}>
-            <DSPM.IconifyIcon name="lucide:circle-help" size={16} color="var(--gray-500)" />How it works
-          </button>
-        </span>
+    <section id={id} className={"pm-sec pm-card pm-pane-card" + (open ? "" : " is-collapsed") + (stacked ? " pm-pane-card--stacked" : "") + (className ? " " + className : "")} data-screen-label={title}>
+      <div className="pm-pane-hd">
+        <h2>{title}</h2>
+        <button type="button" className="pm-pane-info" aria-label={infoLabel || "About " + title} onClick={onInfo}>
+          <DSPM.IconifyIcon name="lucide:info" size={17} color="var(--gray-500)" />
+        </button>
       </div>
-      <div className="pm-spiral-overview">
-        <div className="pm-spiral-ring" style={{ "--pct": avg }} role="img" aria-label={"Overall balance " + avg}>
-          <span className="n">{avg}</span>
-          <span className="lbl">balance</span>
-        </div>
-        <p className="pm-spiral-sentence">
-          Your clinic is strongest in <b>{strongest.key}</b>. Lift <b>{weakest.key}</b> to bring the spiral into balance.
-        </p>
-      </div>
-      <div className="pm-spiral-rows">
-        {scored.map((g) =>
-        <button key={g.key} type="button" className={"pm-spiral-row" + (g.key === weakest.key ? " lowest" : "")} onClick={() => goPM("LearningMobile.html")}>
-            <span className="dot" style={{ background: g.color }} aria-hidden="true" />
-            <span className="label">{g.key}</span>
-            <span className="bar" role="progressbar" aria-label={g.key} aria-valuenow={g.score} aria-valuemin={0} aria-valuemax={100}>
-              <span style={{ width: g.score + "%", background: g.color }} />
-            </span>
-            <span className="score">{g.score}</span>
-          </button>
-        )}
-      </div>
-      <PMSpiralHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
+      {sub && open && <p className="pm-pane-sub">{sub}</p>}
+      <button type="button" className="pm-pane-toggle" aria-expanded={open} aria-controls={bodyId}
+        aria-label={(open ? "Collapse " : "Expand ") + title} onClick={() => setOpen((o) => !o)}>
+        <DSPM.IconifyIcon name="lucide:chevron-up" size={20} color="var(--gray-500)" />
+      </button>
+      {open && <div className="pm-pane-body" id={bodyId}>{children}</div>}
     </section>);
-
 }
 
-/* "Let's work on your goal" — relocated here from My Learning (PRD 3.2/3.3):
-   sits above the Prosperity Spiral and auto-picks the lowest-scoring pillar. */
+/* "Let's work on your goal" — a band-coloured conic dial with the percentage
+   inside, naming the weakest pillar. */
 function PMGoalFocusCard({ assessState }) {
-  const pillarKey = pmLowestPillar(assessState);
-  const score = pmPillarScore(pillarKey, assessState);
+  const [info, setInfo] = useStatePM(false);
+  const weakest = pmRankedPillars(assessState)[0];
+  const band = weakest.band;
   return (
-    <section className="pm-sec pm-card pm-goal-card" data-screen-label="Let's work on your goal">
+    <PMPaneCard title="Let's work on your goal" infoLabel="How your goal is chosen" onInfo={() => setInfo(true)} className="pm-goal-card" defaultOpen={false}>
       <div className="pm-goal-top">
         <div className="pm-goal-main">
-          <span className="eyebrow"><DSPM.IconifyIcon name="lucide:trophy" size={13} color="var(--premium-orange)" />Let's work on your goal</span>
-          <div className="ti">{pillarKey}</div>
-          <p className="note">Your lowest-scoring pillar right now — Ava recommends focusing here next.</p>
+          <span className="eyebrow" style={{ color: band.text }}>{band.label}</span>
+          <div className="ti">{weakest.key}</div>
+          <p className="note">Your weakest pillar right now — Ava recommends starting here.</p>
         </div>
-        <div className="pm-goal-ring" style={{ "--pct": score }} role="img" aria-label={score + " progress"}>
-          <span className="n">{score}</span>
-          <span className="lbl">Progress</span>
+        <div className="pm-goal-ring" style={{ "--pct": weakest.score, "--band": band.color, "--band-text": band.text }}
+          role="img" aria-label={weakest.key + " " + weakest.score + " percent — " + band.label}>
+          <span className="n">{weakest.score}%</span>
         </div>
       </div>
-      <p className="pm-goal-reasoning">{PM_GOAL_REASONING[pillarKey]}</p>
-      <button type="button" className="pm-goal-cta" onClick={() => goPM("LearningMobile.html")}>
-        Work on your goal<DSPM.IconifyIcon name="lucide:arrow-up-right" size={17} color="#fff" />
+      <p className="pm-goal-reasoning">{PM_GOAL_REASONING[weakest.key]}</p>
+      <button type="button" className="pm-goal-cta" onClick={() => goPM(pmGoalUrl(weakest.key))}>
+        Work on {weakest.key}<DSPM.IconifyIcon name="lucide:arrow-up-right" size={17} color="#fff" />
       </button>
-    </section>);
-
+      <PMInfoModal open={info} onClose={() => setInfo(false)} title="How your goal is chosen" icon="lucide:trophy"
+        coach={"Why is " + weakest.key + " my goal focus right now, and what should I do first?"} coachLabel="Ask Ava about this goal">
+        <p>Your goal is always your <b>lowest-scoring pillar</b>. Each pillar's score is your <b>Get to know you</b> baseline (worth up to 60%) plus the course progress you've made in that area.</p>
+        <p>The dial's colour is its band: <b>Expert</b>, <b>Needs improving</b>, <b>Needs more practice</b> or <b>Needs study</b>. When this pillar overtakes another, your goal switches automatically.</p>
+      </PMInfoModal>
+    </PMPaneCard>);
 }
 
-function PMTargetsCard() {
-  const [extra, setExtra] = useStatePM([]);
-  useEffectPM(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("pf-coach-targets")) || [];
-      setExtra(stored.map((t) => ({ text: t.text, tag: null })));
-    } catch (e) {}
-  }, []);
-  const all = PM_TARGETS.concat(extra);
-  const [done, setDone] = useStatePM([]);
-  const toggle = (i) => setDone((s) => {
-    const next = s.slice();
-    while (next.length <= i) next.push(false);
-    next[i] = !next[i];
-    return next;
-  });
-  const doneCount = done.filter(Boolean).length;
-  const pct = all.length ? Math.round((doneCount / all.length) * 100) : 0;
-  return (
-    <section className="pm-sec pm-card" data-screen-label="Today's Targets">
-      <div className="pm-card-hd">
-        <span className="pm-card-hd-ti">
-          <h2>Today's Targets</h2>
-          <span className="pm-targets-pill">{doneCount}/{all.length}</span>
-        </span>
-      </div>
-      <div className="pm-targets-track" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-        <span className="pm-targets-fill" style={{ width: pct + "%" }}></span>
-      </div>
-      <div className="pm-target-rows">
-        {all.map((t, i) =>
-        <button key={i} type="button" className={"pm-target-row" + (done[i] ? " done" : "")} onClick={() => toggle(i)} role="checkbox" aria-checked={!!done[i]}>
-            <span className="circle">{done[i] && <DSPM.IconifyIcon name="lucide:check" size={12} color="#fff" />}</span>
-            {t.tag && <span className="pm-target-tag" style={{ background: PM_TARGET_TAGS[t.tag].color }}>{PM_TARGET_TAGS[t.tag].label}</span>}
-            <span className="tx">{t.text}</span>
-          </button>
-        )}
-      </div>
-      <div className="pm-target-divider" />
-      <p className="pm-target-note">Completing these will move your Prosperity Spiral forward.</p>
-    </section>);
+/* The Prosperity Spiral — a 2×2 grid of pillar tiles ordered weakest →
+   strongest: a band-coloured ring with the score inside, the pillar name, a
+   band chip (the weakest reads "Start here") and the gap to the community
+   average. The sub-line sits under the title, with the ⓘ and collapse
+   controls side by side on the right. */
+const PM_PILLAR_AVERAGE = 56; // community average per pillar (mock)
+const PM_BAND_CHIP = { expert: "Strong", improving: "Growing", practice: "Building", study: "Needs study" };
 
+function PMSpiralCard({ assessState }) {
+  const [info, setInfo] = useStatePM(false);
+  const [tim, setTim] = useStatePM(false);
+  const ranked = pmRankedPillars(assessState);
+  const weakest = ranked[0];
+  return (
+    <PMPaneCard id="prosperity-spiral" title="The Prosperity Spiral" stacked
+      sub={<><b>{weakest.key}</b> is carrying the least weight. Lift it and the whole spiral rises.</>}
+      infoLabel="How the Prosperity Spiral works" onInfo={() => setInfo(true)} defaultOpen={window.location.hash === "#prosperity-spiral"}>
+      <div className="pm-spiral-grid">
+        {ranked.map((p) => {
+          const lowest = p.key === weakest.key;
+          const diff = p.score - PM_PILLAR_AVERAGE;
+          const chip = lowest ? "Start here" : PM_BAND_CHIP[p.band.key];
+          return (
+            <button key={p.key} type="button" className={"pm-spiral-tile" + (lowest ? " lowest" : "")}
+              style={{ "--band": p.band.color, "--band-soft": p.band.soft, "--band-text": p.band.text }}
+              aria-label={p.key + " " + p.score + " — " + chip + ", " + (diff >= 0 ? "+" : "") + diff + " versus average"}
+              onClick={() => goPM(pmGoalUrl(p.key))}>
+              <span className="pm-spiral-ring" style={{ "--pct": p.score }} aria-hidden="true"><span className="n">{p.score}</span></span>
+              <span className="pm-spiral-tile-name">{p.key}</span>
+              <span className={"pm-spiral-tile-chip" + (lowest ? " start" : "")}>{chip}</span>
+              <span className="pm-spiral-tile-avg">{diff >= 0 ? "+" : "−"}{Math.abs(diff)} vs average</span>
+            </button>);
+        })}
+      </div>
+      <button type="button" className="pm-spiral-tim" onClick={() => setTim(true)}>
+        <span className="pm-spiral-tim-av">
+          <img src="assets/avatar-drtim.png" alt="" width={44} height={44} />
+          <span className="pm-spiral-tim-play" aria-hidden="true"><DSPM.IconifyIcon name="lucide:play" size={11} color="#fff" /></span>
+        </span>
+        <span className="pm-spiral-tim-copy">
+          <span className="ti">Dr Tim on the Spiral</span>
+          <span className="su">2 min · why balance beats brilliance in one pillar</span>
+        </span>
+        <DSPM.IconifyIcon name="lucide:chevron-right" size={18} color="var(--gray-400)" />
+      </button>
+
+      <PMInfoModal open={info} onClose={() => setInfo(false)} title="How the Prosperity Spiral works" icon="lucide:sparkles"
+        coach="Explain how my Spiral Score is calculated and what I can do this week to raise it." coachLabel="Ask Ava to explain mine">
+        <p>Your Spiral is a snapshot of how balanced your business is across the four areas every successful clinic needs: <b>Sales</b>, <b>Marketing</b>, <b>Clinical Skills</b> and <b>Business Systems</b>.</p>
+        <p>Each ring is coloured by its band — green <b>Strong</b>, gold <b>Growing</b>, orange <b>Building</b>, red <b>Needs study</b> — and “vs average” compares you with other PROfinity clinics. A pillar climbs when you act on it: finishing a lesson, completing a target, posting a case study, following up with a patient.</p>
+        <p>A weak pillar isn't a bad grade — it's where Ava recommends you start, because the fastest way to grow a clinic is usually to lift its lowest pillar first.</p>
+      </PMInfoModal>
+
+      <PMInfoModal open={tim} onClose={() => setTim(false)} title="Why balance beats brilliance" icon="lucide:play">
+        <div className="pm-tim-poster" role="img" aria-label="Dr Tim Pearce — 2 minute explainer">
+          <img src="assets/avatar-drtim.png" alt="" />
+          <span className="pm-tim-poster-play"><DSPM.IconifyIcon name="lucide:play" size={22} color="#fff" /></span>
+          <span className="pm-tim-poster-dur">2:04</span>
+        </div>
+        <p><b>Dr Tim Pearce</b> · “A clinic that's brilliant at one thing and average at the other three grows slowly. Every patient you win in Marketing leaks out through weak Sales follow-up; every great result you deliver goes unseen without Systems to capture it.”</p>
+        <p>“That's why the Spiral rewards balance. Lift your lowest pillar and the other three suddenly work harder for you — that's the spiral effect.”</p>
+      </PMInfoModal>
+    </PMPaneCard>);
+}
+
+/* Builds the day's set: one task per pillar, weakest first, priority by rank
+   (high / medium / low / low), plus any Ava-suggested extras from the coach. */
+function pmBuildTargets(ranked, rounds, extras) {
+  const prio = ["high", "medium", "low", "low"];
+  const list = ranked.map((p, i) => {
+    const pool = PM_TARGET_POOL[p.key];
+    const idx = (rounds[p.key] || 0) % pool.length;
+    return { id: p.key + ":" + idx, text: pool[idx], pillar: p.key, priority: prio[i] || "low", done: false };
+  });
+  (extras || []).forEach((t, i) => list.push({ id: "ava:" + i, text: t.text, pillar: null, priority: "low", done: false }));
+  return list;
+}
+
+/* Today's saved set, or a fresh one for a new day. Shared by the Targets
+   card and the collapsed "Track your goals" preview so both read the same
+   list. */
+function pmLoadTodayTargets(ranked) {
+  let extras = [];
+  try { extras = (JSON.parse(localStorage.getItem("pf-coach-targets")) || []).map((t) => ({ text: t.text })); } catch (e) {}
+  try {
+    const saved = JSON.parse(localStorage.getItem(PM_TARGETS_KEY));
+    if (saved && saved.date === pmTodayStamp() && Array.isArray(saved.targets)) return saved;
+  } catch (e) {}
+  return { date: pmTodayStamp(), rounds: {}, targets: pmBuildTargets(ranked, {}, extras) };
+}
+
+function PMTargetsCard({ assessState }) {
+  const [info, setInfo] = useStatePM(false);
+  const ranked = pmRankedPillars(assessState);
+  const weakest = ranked[0];
+
+  /* Persisted per day: tick state, per-pillar pool cursors and any task that
+     arrived after the set was finished. A new date starts a fresh set. */
+  const [state, setState] = useStatePM(() => pmLoadTodayTargets(ranked));
+  useEffectPM(() => {
+    try { localStorage.setItem(PM_TARGETS_KEY, JSON.stringify(state)); } catch (e) {}
+  }, [state]);
+
+  const [fresh, setFresh] = useStatePM(null);     // id of the row animating in
+  const [settling, setSettling] = useStatePM(null); // id of the row just ticked
+
+  /* Ticking a target pays its priority points once: booked straight into the
+     loyalty engine (so Rewards' ledger, lifetime total and beaker move) and
+     announced on pf:points-earned so the header pill pops. `awarded` on the
+     target stops an untick → re-tick paying twice. */
+  function awardTargetPoints(t) {
+    const pts = PM_PRIORITY[t.priority].pts;
+    const label = "Today's target: " + t.text;
+    const engine = window.PFLoyalty;
+    let booked = false;
+    if (engine && engine.awardPoints) {
+      try { engine.awardPoints(pts, label, "evt_daily_target"); booked = true; } catch (e) {}
+    }
+    try { window.dispatchEvent(new CustomEvent("pf:points-earned", { detail: { amount: pts, label, actionId: "evt_daily_target", booked } })); } catch (e) {}
+  }
+
+  function toggle(id) {
+    const cur = state.targets.find((t) => t.id === id);
+    const paying = !!(cur && !cur.done && !cur.awarded);
+    if (paying) awardTargetPoints(cur);
+    setState((s) => {
+      const targets = s.targets.map((t) => t.id === id ? { ...t, done: !t.done, awarded: t.awarded || paying } : t);
+      const justDone = targets.find((t) => t.id === id).done;
+      if (!justDone || !targets.every((t) => t.done)) return { ...s, targets };
+      /* Day's set finished — surface the next task from the weakest pillar.
+         It arrives as a fresh high-priority row; completed ones stay put. */
+      const rounds = { ...s.rounds, [weakest.key]: (s.rounds[weakest.key] || 0) + 1 };
+      const pool = PM_TARGET_POOL[weakest.key];
+      const idx = rounds[weakest.key] % pool.length;
+      const next = { id: weakest.key + ":" + idx + ":" + Date.now(), text: pool[idx], pillar: weakest.key, priority: "high", done: false, added: true };
+      setFresh(next.id);
+      return { ...s, rounds, targets: targets.concat(next) };
+    });
+    setSettling(id);
+  }
+  useEffectPM(() => {
+    if (!fresh && !settling) return;
+    const t = setTimeout(() => { setFresh(null); setSettling(null); }, 700);
+    return () => clearTimeout(t);
+  }, [fresh, settling]);
+
+  /* Render order: high → low priority (stable within a priority), so the
+     weakest pillar's work always leads. Done rows keep their slot. */
+  const rows = state.targets.
+  map((t, i) => ({ ...t, i })).
+  sort((a, b) => PM_PRIORITY_ORDER[a.priority] - PM_PRIORITY_ORDER[b.priority] || a.i - b.i);
+  const doneCount = rows.filter((t) => t.done).length;
+
+  return (
+    <PMPaneCard title="Today's Targets"
+      sub={<><span className="pm-target-date">{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}</span>Completing these will move your Prosperity Spiral forward</>}
+      infoLabel="How targets and points work" onInfo={() => setInfo(true)}>
+      <div className="pm-target-rows">
+        {rows.map((t) => {
+          const pr = PM_PRIORITY[t.priority];
+          const caption = (t.pillar || "Suggested by Ava") + " · " + pr.label;
+          return (
+            <div key={t.id} className={"pm-target-row" + (t.done ? " done" : "") + (fresh === t.id ? " is-entering" : "") + (settling === t.id && t.done ? " is-settling" : "")}>
+              <span className="pm-target-check" role="checkbox" tabIndex={0} aria-checked={t.done}
+                aria-label={(t.done ? "Mark not done: " : "Mark done: ") + t.text}
+                onClick={() => toggle(t.id)}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(t.id); } }}>
+                <span className="circle">{t.done && <DSPM.IconifyIcon name="lucide:check" size={13} color="#fff" />}</span>
+              </span>
+              <button type="button" className="pm-target-main" aria-label={t.text + ". " + caption + ". Opens " + (t.pillar || "your") + " goal page"}
+                onClick={() => goPM(t.pillar ? pmGoalUrl(t.pillar) : "LearningMobile.html")}>
+                <span className="pm-target-prio" style={{ color: pr.color }} aria-hidden="true">
+                  <DSPM.IconifyIcon name={pr.icon} size={18} color={pr.color} />
+                </span>
+                <span className="pm-target-copy">
+                  <span className="tx">{t.text}</span>
+                  <span className="cap">{caption}</span>
+                </span>
+                <span className={"pm-target-pts" + (t.done ? " earned" : "")}>
+                  {t.done && <DSPM.IconifyIcon name="lucide:check" size={11} color="#1E7A5C" />}+{pr.pts} pts
+                </span>
+              </button>
+            </div>);
+        })}
+      </div>
+      <p className="pm-target-foot">{doneCount} of {rows.length} done{doneCount === rows.length && rows.length ? " — a new target has been added" : ""}</p>
+
+      <PMInfoModal open={info} onClose={() => setInfo(false)} title="How targets and points work" icon="lucide:list-checks"
+        coach="What should I tackle first from today's targets, and why?" coachLabel="Ask Ava where to start">
+        <p>Ava picks one small action per pillar each day and orders them by priority — <b>red double chevron</b> for your weakest pillar, <b>gold single</b> for the next, <b>grey dash</b> for the rest.</p>
+        <p>Ticking a target earns its points (<b>+150 / +100 / +50</b>) and nudges that pillar's score. Tap the row itself to open the pillar's goal page; the circle is just the tick.</p>
+        <p>Finish the set and a new target appears — completed ones stay where they are so you can see the day's work.</p>
+      </PMInfoModal>
+    </PMPaneCard>);
 }
 
 /* Gate card shown in place of Goal Focus / Prosperity Spiral / Today's
@@ -287,8 +469,10 @@ function PMTargetsCard() {
    (never as empty or zeroed states). The CTA opens "Get to know you", which
    lives inside ProfileSteps — not a prop we have here — so it's reached by
    dispatching a DOM event ProfileSteps listens for. */
+function pmOpenAssessHub() { window.dispatchEvent(new CustomEvent("pf-open-assess-hub")); }
+
 function PMGoalsGateCard({ doneCount }) {
-  const heading = doneCount === 0 ? "Start with “Get to know you”" : `Keep going — ${doneCount} of 4 done`;
+  const heading = doneCount === 0 ? "Start with ‘Get to know you’" : `Keep going — ${doneCount} of 4 done`;
   return (
     <section className="pm-sec pm-card pm-goals-gate">
       <span className="pm-goals-gate-icon" aria-hidden="true">
@@ -296,66 +480,99 @@ function PMGoalsGateCard({ doneCount }) {
       </span>
       <h3>{heading}</h3>
       <p>Your forecast unlocks once all four pillar assessments — Marketing, Sales, Clinical Skills and Business Systems — are complete.</p>
-      <button type="button" className="pm-goals-gate-cta" onClick={() => window.dispatchEvent(new CustomEvent("pf-open-assess-hub"))}>
-        Get to know you<DSPM.IconifyIcon name="lucide:arrow-up-right" size={17} color="#fff" />
+      <div className="pm-goals-gate-dots" aria-label={doneCount + " of 4 assessments done"}>
+        {PM_FORECAST_PILLARS.map((k, i) => <span key={k} className={i < doneCount ? "on" : ""} />)}
+      </div>
+      <button type="button" className="pm-goals-gate-cta" onClick={pmOpenAssessHub}>
+        {doneCount === 0 ? "Get to know you" : "Continue ‘Get to know you’"}<DSPM.IconifyIcon name="lucide:arrow-up-right" size={17} color="#fff" />
       </button>
     </section>);
-
 }
 
-/* "Track your goals" — encloses Goal Focus, the Prosperity Spiral and
-   Today's Targets behind one collapsible summary row, the same
-   collapse/expand slide-over pattern used for "Complete your profile". */
+/* "Track your goals" — a collapsed summary card that slides into a pane of
+   Goal Focus + the Prosperity Spiral + Today's Targets.
+
+   Layout: the two panes sit in a 200%-wide slider. Whichever pane is showing
+   is the in-flow one, so the viewport's height:auto follows it; the other
+   goes position:absolute (.is-offstage) and rides off-screen. No measured
+   heights — these screens grow after first layout (icon web components
+   upgrade, chips wrap, Poppins loads), so any single measurement is stale. */
 function PMGoalsMenu({ assessState }) {
   const [expanded, setExpanded] = useStatePM(false);
-  const { collapsedRef, expandedRef, height: viewportH } = usePMSlidePaneHeight(expanded, [assessState]);
 
   /* Deep link from LearningMobile's "See your full Prosperity Spiral" points
-     at #prosperity-spiral, which now lives inside the collapsed-by-default
-     menu — auto-expand so the link actually reveals the Spiral, not just an
-     off-canvas element PMScreen's scrollIntoView effect can't see. */
+     at #prosperity-spiral, which lives inside the collapsed-by-default menu —
+     auto-expand so the link actually reveals the Spiral. */
   useEffectPM(() => {
     if (window.location.hash === "#prosperity-spiral") setExpanded(true);
   }, []);
 
   const doneCount = pmForecastDone(assessState);
   const unlocked = doneCount === PM_FORECAST_PILLARS.length;
-  const avgPct = unlocked ? Math.round(
-    PM_PILLARS.reduce((sum, p) => sum + pmPillarScore(p.key, assessState), 0) / PM_PILLARS.length
-  ) : 0;
+  const ranked = unlocked ? pmRankedPillars(assessState) : [];
+
+  /* Collapsed preview: the day's open targets in priority order, first two
+     shown, the rest counted. Re-read on every render so ticks made in the
+     expanded pane show once the user slides back. */
+  const openTargets = unlocked ? pmLoadTodayTargets(ranked).targets.
+  map((t, i) => ({ ...t, i })).
+  filter((t) => !t.done).
+  sort((a, b) => PM_PRIORITY_ORDER[a.priority] - PM_PRIORITY_ORDER[b.priority] || a.i - b.i) : [];
+  const previewTargets = openTargets.slice(0, 2);
+  const moreCount = openTargets.length - previewTargets.length;
+
+  function tapCollapsed() {
+    setExpanded(true);
+    if (!unlocked) pmOpenAssessHub();
+  }
 
   return (
-    <div className="pm-goals-viewport" style={viewportH != null ? { height: viewportH + "px" } : undefined}>
+    <div className="pm-goals-viewport">
       <div className={"pm-goals-slider" + (expanded ? " expanded" : "")}>
-        <button type="button" ref={collapsedRef} className="pm-goals-pane pm-goals-collapsed" aria-label="Track your goals — tap to view" onClick={() => setExpanded(true)}>
+        <button type="button" className={"pm-goals-pane pm-goals-collapsed" + (expanded ? " is-offstage" : "")}
+          aria-hidden={expanded} tabIndex={expanded ? -1 : 0}
+          aria-label={unlocked ? "Track your goals — tap to view" : "Track your goals — assessment required, tap to start"} onClick={tapCollapsed}>
           <div className="pm-goals-collapsed-top">
-            <h3 className="pm-steps-h">{unlocked ? "Track your goals" : "Complete all four pillar assessments to unlock your forecast"}</h3>
+            <h3 className="pm-steps-h">Track your goals</h3>
             <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
           </div>
-          <p className="pm-steps-sub">{unlocked ? "Goal Focus, Prosperity Spiral & Today's Targets" : `${doneCount} of 4 assessments done — tap to continue`}</p>
-          <div className="pm-steps-track" role="progressbar" aria-valuenow={avgPct} aria-valuemin={0} aria-valuemax={100}>
-            <span className="pm-steps-fill" style={{ width: avgPct + "%" }}></span>
+          <p className="pm-steps-sub">Goal Focus, Prosperity Spiral &amp; Today's Targets</p>
+          <div className="pm-goals-preview">
+            {unlocked ?
+            <>
+                <span className="pm-goals-preview-h">
+                  <DSPM.IconifyIcon name="lucide:list-checks" size={16} color="var(--brand-gold)" />Today's Targets
+                </span>
+                {previewTargets.length ?
+              <ul className="pm-goals-preview-list">
+                    {previewTargets.map((t) => <li key={t.id}>{t.text}</li>)}
+                  </ul> :
+              <p className="pm-goals-preview-empty">All done for today — nice work</p>}
+                {moreCount > 0 && <span className="pm-goals-preview-more">+{moreCount} more</span>}
+              </> :
+            <>
+                <span className="pm-goals-preview-h">
+                  <DSPM.IconifyIcon name="lucide:lock" size={16} color="var(--brand-gold)" />Assessment required
+                </span>
+                <p className="pm-goals-preview-empty">Complete ‘Get to know you’ to unlock your forecast — tap to start</p>
+              </>}
           </div>
-          {unlocked && <p className="pm-steps-pct">{avgPct}% average progress — tap to view</p>}
         </button>
 
-        <div ref={expandedRef} className="pm-goals-pane pm-goals-expanded">
-          <button type="button" className="pm-goals-back" onClick={() => setExpanded(false)}>
+        <div className={"pm-goals-pane pm-goals-expanded" + (expanded ? "" : " is-offstage")} aria-hidden={!expanded}>
+          <button type="button" className="pm-goals-back" tabIndex={expanded ? 0 : -1} onClick={() => setExpanded(false)}>
             <DSPM.IconifyIcon name="lucide:chevron-left" size={20} color="var(--text-heading)" />Track your goals
           </button>
           {unlocked ?
           <>
+              <PMTargetsCard assessState={assessState} />
               <PMGoalFocusCard assessState={assessState} />
               <PMSpiralCard assessState={assessState} />
-              <PMTargetsCard />
             </> :
-
-          <PMGoalsGateCard doneCount={doneCount} />
-          }
+          <PMGoalsGateCard doneCount={doneCount} />}
         </div>
       </div>
-    </div>
-  );
+    </div>);
 }
 
 const TIER_DISPLAY_NAME_PM = { confidence: "Confidence", mastery: "Mastery", freedom: "Freedom", inner: "Inner Circle" };
@@ -747,11 +964,15 @@ function SideMenuPM({ open, onClose }) {
 }
 
 function PMTopBar({ onMenu, onMessages }) {
+  /* Shared header points pill from mobilechrome.jsx (lifetime points, taps
+     through to Rewards). Resolved at render so script order doesn't matter. */
+  const PointsPill = window.PFPointsPillC;
   return (
     <header className="pm-top">
       <button className="pm-burger" aria-label="Menu" onClick={onMenu}><DSPM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
       <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       <span className="grow" />
+      {PointsPill && <PointsPill />}
       <button className="pm-iconbtn" aria-label="Search"><DSPM.Icon name="search" size={21} color="var(--brand-navy)" /></button>
       <button className="pm-iconbtn" aria-label="Notifications">
         <DSPM.IconifyIcon name="lucide:bell" size={21} color="var(--brand-navy)" /><span className="dot">12</span>
@@ -1320,9 +1541,10 @@ function pmAssessStatus(entry) {
   return "not_started";
 }
 
-/* ---- Question wizard — shared by all 5 assessments. Pillar assessments
-   score on finish (rawPoints out of 28); Dream & Vision tallies a dominant
-   letter and reveals an archetype instead of a score. ---- */
+/* ---- Question wizard — shared by all 5 assessments. One question per
+   screen, gold selection accents, a segmented progress bar. Pillar
+   assessments score on finish (rawPoints out of 28); Dream & Vision tallies
+   a dominant letter and reveals an archetype instead of a score. ---- */
 function PMAssessWizard({ assessKey, def, initialAnswers, onProgress, onComplete, onClose }) {
   usePMEscClose(true, onClose);
   const questions = def.questions;
@@ -1337,9 +1559,10 @@ function PMAssessWizard({ assessKey, def, initialAnswers, onProgress, onComplete
   const [finished, setFinished] = useStatePM(false);
 
   useEffectPM(() => { if (!finished) onProgress(answers); }, [answers]);
+  /* Warm the celebration animation while the user is still answering. */
+  useEffectPM(() => { if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) pmLottieData(); }, []);
 
   const cur = questions[step];
-  const pct = Math.round(((step + 1) / total) * 100);
 
   function pick(i) {
     const next = answers.slice();
@@ -1356,35 +1579,36 @@ function PMAssessWizard({ assessKey, def, initialAnswers, onProgress, onComplete
     <div className="pm-wiz-overlay" role="dialog" aria-modal="true" aria-label={def.label}>
       <div className="pm-wiz-card">
         <div className="pm-wiz-hd">
-          <span style={{ width: 22 }} />
+          <span className="pm-wiz-hd-spacer" />
           <span className="pm-wiz-hd-ti">{def.label}</span>
-          <button className="pm-wiz-close" aria-label="Close" onClick={onClose}>
+          <button type="button" className="pm-wiz-close" aria-label="Close" onClick={onClose}>
             <DSPM.IconifyIcon name="lucide:x" size={22} color="var(--gray-700)" />
           </button>
         </div>
 
-        {!finished ? (
-          <div className="pm-wiz-body">
+        {!finished ?
+        <div className="pm-wiz-body">
             <p className="pm-wiz-sub">
-              {scored
-                ? "Answer honestly — this sets your baseline. Course progress can still carry this pillar all the way to 100%."
-                : "Non-scored — this just helps us understand your goals so we can build your vision with you."}
+              {scored ?
+            "Answer honestly — this sets your baseline. Course progress can still carry this pillar all the way to 100%." :
+            "Non-scored — this just helps us understand your goals so we can build your vision with you."}
             </p>
             <div className="pm-wiz-progress">
-              <span className="pm-wiz-track" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-                <span style={{ width: pct + "%" }} />
+              <span className="pm-wiz-seg" role="progressbar" aria-label="Question progress" aria-valuenow={step + 1} aria-valuemin={1} aria-valuemax={total}
+              aria-valuetext={"Question " + (step + 1) + " of " + total}>
+                {questions.map((_, i) => <span key={i} className={i < step ? "done" : i === step ? "on" : ""} />)}
               </span>
               <span className="pm-wiz-count">{step + 1} of {total}</span>
             </div>
-            <div className="pm-wiz-q">{cur.q}</div>
+            <div className="pm-wiz-q" key={"q" + step}>{cur.q}</div>
             <div className="pm-wiz-opts" role="radiogroup" aria-label={cur.q}>
               {cur.opts.map((o, i) =>
-              <button key={i} type="button" className={"pm-wiz-opt" + (answers[step] === i ? " on" : "")}
-                role="radio" aria-checked={answers[step] === i} onClick={() => pick(i)}>
+            <button key={i} type="button" className={"pm-wiz-opt" + (answers[step] === i ? " on" : "")}
+              role="radio" aria-checked={answers[step] === i} onClick={() => pick(i)}>
                   <span className="pm-wiz-opt-letter">{PM_ARCHETYPE_LETTERS[i]}</span>
                   <span className="pm-wiz-opt-tx">{o}</span>
                 </button>
-              )}
+            )}
             </div>
             <div className="pm-wiz-nav">
               {step > 0 && <button type="button" className="pm-wiz-back" onClick={goBack}>Back</button>}
@@ -1392,61 +1616,75 @@ function PMAssessWizard({ assessKey, def, initialAnswers, onProgress, onComplete
                 {step === total - 1 ? "See results" : "Continue"}
               </button>
             </div>
-          </div>
-        ) : (
-          <PMAssessResult scored={scored} answers={answers} onClose={onClose} />
-        )}
+          </div> :
+        <PMAssessResult scored={scored} answers={answers} onClose={onClose} />}
       </div>
     </div>);
-
 }
 
 /* Assessment-complete celebration — raw JSON through lottie-web
    (loadAnimation), never the lottie.host /embed iframe: the iframe caches
-   hard and ignores re-publishes, and ?v= cache-busters break its route. */
+   hard and ignores re-publishes, and ?v= cache-busters break its route.
+   Skipped entirely under prefers-reduced-motion. */
+const PM_RESULT_LOTTIE = "https://lottie.host/d343b01e-a214-4708-97e8-51a7f92d98bf/HFXvByPBoo.json";
+/* The JSON is ~185KB from a cold CDN edge, so it's fetched once when the
+   wizard opens (well before the result screen) and shared by every result. */
+let pmLottiePromise = null;
+function pmLottieData() {
+  if (!pmLottiePromise) {
+    pmLottiePromise = fetch(PM_RESULT_LOTTIE).then((r) => r.ok ? r.json() : null).catch(() => { pmLottiePromise = null; return null; });
+  }
+  return pmLottiePromise;
+}
 function PMResultLottie({ size }) {
   const host = React.useRef(null);
   useEffectPM(() => {
-    let anim, iv;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let anim, iv, cancelled = false;
     function start() {
-      if (!window.lottie || !host.current) return;
-      anim = window.lottie.loadAnimation({
-        container: host.current, renderer: "svg", loop: false, autoplay: true,
-        path: "https://lottie.host/d343b01e-a214-4708-97e8-51a7f92d98bf/HFXvByPBoo.json"
+      if (cancelled || !window.lottie || !host.current) return;
+      pmLottieData().then((animationData) => {
+        if (!animationData || cancelled || !host.current) return;
+        anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: false, autoplay: true, animationData });
       });
     }
     if (window.lottie) start();
     else iv = setInterval(() => { if (window.lottie) { clearInterval(iv); start(); } }, 120);
-    return () => { if (anim) anim.destroy(); if (iv) clearInterval(iv); };
+    return () => { cancelled = true; if (anim) anim.destroy(); if (iv) clearInterval(iv); };
   }, []);
   return <div ref={host} className="pm-wiz-result-lottie" style={{ width: size, height: size }} aria-hidden="true" />;
 }
 
-function pmResultInterpretation(pct) {
-  if (pct >= 75) return "This is already a real strength for your practice — keep leaning into what's working.";
-  if (pct >= 50) return "You're solidly ahead of where most clinics start in this area.";
-  if (pct >= 25) return "You've got the basics in place, with clear room to grow here.";
-  return "You're just getting started here — plenty of room to build fast.";
+function pmResultInterpretation(band) {
+  switch (band.key) {
+    case "expert": return "This is already a real strength for your practice — keep leaning into what's working.";
+    case "improving": return "You're solidly ahead of where most clinics start in this area.";
+    case "practice": return "You've got the basics in place, with clear room to grow here.";
+    default: return "You're just getting started here — plenty of room to build fast.";
+  }
 }
 
+/* Result — the same band-coloured dial as Goal Focus: percentage in the
+   ring, "19 of 28" beneath, band name as a tinted chip. Each fact once. */
 function PMAssessResult({ scored, answers, onClose }) {
   if (scored) {
     const raw = answers.reduce((sum, a) => sum + (a + 1), 0);
     const max = answers.length * 4;
     const pct = Math.round((raw / max) * 100);
+    const band = pmBand(pct);
     return (
       <div className="pm-wiz-body pm-wiz-result">
         <PMResultLottie size={150} />
         <h3>Assessment complete</h3>
-        <div className="pm-wiz-result-ring" style={{ "--pct": pct }} role="img" aria-label={raw + " of " + max + " points"}>
-          <span className="n">{raw}</span>
-          <span className="lbl">of {max}</span>
+        <div className="pm-wiz-result-ring" style={{ "--pct": pct, "--band": band.color, "--band-text": band.text }}
+          role="img" aria-label={pct + " percent — " + raw + " of " + max + " points — " + band.label}>
+          <span className="n">{pct}%</span>
         </div>
-        <span className="pm-wiz-result-pill">{pct}% baseline for this pillar</span>
-        <p className="pm-wiz-result-note">{pmResultInterpretation(pct)}</p>
+        <p className="pm-wiz-result-raw">{raw} of {max}</p>
+        <span className="pm-wiz-result-band" style={{ background: band.soft, color: band.text }}>{band.label}</span>
+        <p className="pm-wiz-result-note">{pmResultInterpretation(band)}</p>
         <button type="button" className="pm-wiz-done-btn" onClick={onClose}>Back to assessments</button>
       </div>);
-
   }
   const counts = { A: 0, B: 0, C: 0, D: 0 };
   answers.forEach((a) => { counts[PM_ARCHETYPE_LETTERS[a]]++; });
@@ -1456,32 +1694,49 @@ function PMAssessResult({ scored, answers, onClose }) {
     <div className="pm-wiz-body pm-wiz-result">
       <PMResultLottie size={150} />
       <h3>Your Vision Profile</h3>
-      <span className="pm-wiz-result-pill pm-wiz-result-pill--arch">{arch.name}</span>
+      <span className="pm-wiz-result-band pm-wiz-result-band--arch">{arch.name}</span>
       <p className="pm-wiz-result-note">{arch.desc}</p>
       <p className="pm-wiz-result-note pm-wiz-result-note--muted">This doesn't change your Prosperity Spiral — it just helps us (and your mentor) understand where you want your clinic to go.</p>
       <button type="button" className="pm-wiz-done-btn" onClick={onClose}>Back to assessments</button>
     </div>);
-
 }
+
+/* Per-tile presentation: a large emoji icon (fluent-emoji-flat — every name
+   below verified against the Iconify collection index) and a pastel wash
+   with a matching hairline. */
+const PM_HUB_META = {
+  "Marketing": { icon: "fluent-emoji-flat:megaphone", blurb: "How you attract and convert new patients", wash: "#FFF1E8", line: "#F3CDB3" },
+  "Sales": { icon: "fluent-emoji-flat:money-bag", blurb: "Consultations, follow-up and closing the plan", wash: "#EAF7EF", line: "#B9E2C8" },
+  "Clinical Skills": { icon: "fluent-emoji-flat:syringe", blurb: "Technique, safety and your treatment range", wash: "#F1EEFF", line: "#D2CBF7" },
+  "Business Systems": { icon: "fluent-emoji-flat:gear", blurb: "Pricing, operations and financial tracking", wash: "#EAF3FF", line: "#BFD8F7" },
+  "dreamVision": { icon: "fluent-emoji-flat:crystal-ball", blurb: "Where you want your clinic to go — not scored", wash: "#FFEDF3", line: "#F5C3D3" }
+};
 
 function PMAssessHubTile({ assessKey, def, entry, onOpen }) {
   const status = pmAssessStatus(entry);
   const scored = assessKey !== "dreamVision";
-  const scoreChip = status === "completed" && scored
-    ? Math.round((entry.rawPoints / (def.questions.length * 4)) * 100) + "%"
-    : null;
+  const meta = PM_HUB_META[assessKey];
+  const scorePct = status === "completed" && scored ? Math.round((entry.rawPoints / (def.questions.length * 4)) * 100) : null;
+  const done = status === "completed";
+  const style = done ? { "--wash": "#EAF6F0", "--line": "#B9E2C8" } : { "--wash": meta.wash, "--line": meta.line };
   return (
-    <button type="button" className={"pm-hub-tile pm-hub-tile--" + status} onClick={() => onOpen(assessKey)}>
-      <div className="pm-hub-tile-top">
+    <button type="button" className={"pm-hub-tile pm-hub-tile--" + status} style={style} onClick={() => onOpen(assessKey)}
+      aria-label={def.label + " — " + PM_ASSESS_STATUS_LABEL[status] + (scorePct != null ? ", " + scorePct + " percent" : "") + ". About " + def.timeMin + " minutes"}>
+      <span className="pm-hub-ic" aria-hidden="true"><DSPM.IconifyIcon name={meta.icon} size={34} /></span>
+      <span className="pm-hub-copy">
         <span className="ti">{def.label}</span>
-        <span className={"pm-hub-badge pm-hub-badge--" + status}>{PM_ASSESS_STATUS_LABEL[status]}</span>
-      </div>
-      <div className="pm-hub-tile-bottom">
-        <span className="su"><DSPM.IconifyIcon name="lucide:clock" size={13} color="var(--gray-500)" />~{def.timeMin} mins</span>
-        {scoreChip && <span className="pm-hub-score">{scoreChip}</span>}
-      </div>
+        <span className="bl">{meta.blurb}</span>
+        <span className="tm">
+          <DSPM.IconifyIcon name="lucide:clock" size={12} color="var(--gray-500)" />~{def.timeMin} mins
+          {scorePct != null && <b className="pm-hub-score">· {scorePct}%</b>}
+          {done && !scored && <b className="pm-hub-score">· {PM_ARCHETYPES[entry.archetype] ? PM_ARCHETYPES[entry.archetype].name : "Done"}</b>}
+        </span>
+      </span>
+      <span className={"pm-hub-badge pm-hub-badge--" + status}>
+        {done && <DSPM.IconifyIcon name="lucide:check" size={11} color="#1E7A5C" />}{PM_ASSESS_STATUS_LABEL[status]}
+      </span>
+      <span className="pm-hub-chev" aria-hidden="true"><DSPM.IconifyIcon name="lucide:chevron-right" size={18} color="var(--brand-navy)" /></span>
     </button>);
-
 }
 
 /* Assessment Selection Screen (PRD 3.1) — 4 pillar tiles + Dream & Vision,
@@ -1495,7 +1750,7 @@ function PMAssessHelpModal({ open, onClose }) {
         <div className="pm-help-hd">
           <span className="pm-help-icon"><DSPM.IconifyIcon name="lucide:compass" size={18} color="var(--ai-purple)" /></span>
           <h3>How self-assessments work</h3>
-          <button className="pm-help-x" aria-label="Close" onClick={onClose}>
+          <button type="button" className="pm-help-x" aria-label="Close" onClick={onClose}>
             <DSPM.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" />
           </button>
         </div>
@@ -1510,30 +1765,40 @@ function PMAssessHelpModal({ open, onClose }) {
         </div>
       </div>
     </div>);
-
 }
 
 function PMAssessHub({ assessState, onOpenAssess, onClose }) {
-  usePMEscClose(true, onClose);
   const [helpOpen, setHelpOpen] = useStatePM(false);
+  /* Esc closes the topmost sheet only — while the ? explainer is open, the
+     hub's own Esc handler stands down so one keypress doesn't shut both. */
+  usePMEscClose(!helpOpen, onClose);
   return (
     <div className="pm-wiz-overlay" role="dialog" aria-modal="true" aria-label="Get to know you">
       <div className="pm-wiz-card">
         <div className="pm-wiz-hd">
-          <span style={{ width: 22 }} />
-          <span className="pm-wiz-hd-ti">Get to know you</span>
-          <button className="pm-wiz-close" aria-label="Close" onClick={onClose}>
+          <span className="pm-wiz-hd-spacer" />
+          <span className="pm-wiz-hd-ti pm-wiz-hd-ti--with-help">
+            Get to know you
+            <button type="button" className="pm-wiz-help" aria-label="How self-assessments work" onClick={() => setHelpOpen(true)}>
+              <DSPM.IconifyIcon name="lucide:circle-help" size={18} color="var(--gray-500)" />
+            </button>
+          </span>
+          <button type="button" className="pm-wiz-close" aria-label="Close" onClick={onClose}>
             <DSPM.IconifyIcon name="lucide:x" size={22} color="var(--gray-700)" />
           </button>
         </div>
         <div className="pm-wiz-body pm-hub-body">
           <div className="pm-hub-intro">
-            <DSPM.IconifyIcon name="lucide:sparkles" size={18} color="var(--ai-purple)" />
-            <p>We use these to get to know you — your strengths, your gaps, and your dreams for your clinic — so Ava can guide your journey and your Prosperity Spiral reflects where you really are.</p>
+            <span className="pm-hub-intro-ic" aria-hidden="true"><DSPM.IconifyIcon name="lucide:sparkles" size={18} color="var(--ai-purple)" /></span>
+            <div className="pm-hub-intro-copy">
+              <b>Why Ava asks</b>
+              <p>Your answers set your Prosperity Spiral and shape every target Ava suggests. Four short assessments — about 3 minutes each.</p>
+              <div className="pm-hub-intro-chips">
+                <span><DSPM.IconifyIcon name="lucide:lock" size={12} color="var(--ai-purple)" />Private to you</span>
+                <span><DSPM.IconifyIcon name="lucide:refresh-cw" size={12} color="var(--ai-purple)" />Retake anytime</span>
+              </div>
+            </div>
           </div>
-          <button type="button" className="pm-hub-help" onClick={() => setHelpOpen(true)}>
-            <DSPM.IconifyIcon name="lucide:circle-help" size={15} color="var(--gray-500)" />How it works
-          </button>
           <div className="pm-hub-grid">
             {PM_ASSESS_ORDER.map((key) =>
             <PMAssessHubTile key={key} assessKey={key} def={pmAssessDef(key)} entry={assessState[key]} onOpen={onOpenAssess} />
@@ -1543,7 +1808,6 @@ function PMAssessHub({ assessState, onOpenAssess, onClose }) {
       </div>
       <PMAssessHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>);
-
 }
 
 /* ---- Step sheet: Photo ---- */

@@ -76,8 +76,9 @@ const EVT_NAV = [{
   chevron: true
 }];
 
-/* Single source of truth for "the admin user" — every event created here
-   auto-assigns this person as Host (see EventFormModal's `host` field). */
+/* The signed-in admin shown in the page header. Hosts are chosen per event
+   in the Create/Edit form (`hosts` field) and start empty — nobody is
+   pre-filled as a default host. */
 const EVT_ADMIN_USER = {
   name: "Dr Tim Pearce",
   role: "Admin",
@@ -385,7 +386,12 @@ const EVT_SEED_ROWS = [{
   isActive: true,
   invited: 41,
   opened: 87,
-  host: EVT_ADMIN_USER,
+  hosts: [{
+    id: "h1",
+    name: "Dr Sarah Collins",
+    email: "sarah@profinity.academy",
+    avatar: "assets/avatar-sarah-collins.jpg"
+  }],
   speakers: [{
     id: "sp1",
     name: "Alicia",
@@ -432,7 +438,12 @@ const EVT_SEED_ROWS = [{
   isActive: true,
   invited: 40,
   opened: 36,
-  host: EVT_ADMIN_USER,
+  hosts: [{
+    id: "h2",
+    name: "Dr Amir Khan",
+    email: "amir@profinity.academy",
+    avatar: "assets/avatar-amir-khan.jpg"
+  }],
   speakers: [{
     id: "sp3",
     name: "Miranda Pearce",
@@ -521,6 +532,23 @@ const EVT_ATTENDEES_SEED = {
 
 /* ================================================================ form
    fields ================================================================ */
+/* Hover/focus "i" that reveals instruction text in a tooltip — replaces the
+   old always-visible hint line under each field. */
+function EVTInfo({
+  text
+}) {
+  return /*#__PURE__*/React.createElement("span", {
+    className: "evtf-info",
+    tabIndex: 0,
+    role: "img",
+    "aria-label": text
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:info"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "evtf-tip",
+    role: "tooltip"
+  }, text));
+}
 function EVTFormRow({
   label,
   required,
@@ -531,11 +559,11 @@ function EVTFormRow({
     className: "evtf-row"
   }, /*#__PURE__*/React.createElement("label", {
     className: "evtf-label"
-  }, label, required && /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, label, required && /*#__PURE__*/React.createElement("span", {
     className: "req"
-  }, "*")), children, hint && /*#__PURE__*/React.createElement("span", {
-    className: "evtf-hint"
-  }, hint));
+  }, "*")), hint && /*#__PURE__*/React.createElement(EVTInfo, {
+    text: hint
+  })), children);
 }
 function EVTSwitch({
   checked,
@@ -562,7 +590,9 @@ function EVTPeopleManager({
   onAdd,
   onRemove,
   addLabel,
-  emptyLabel
+  emptyLabel,
+  badge,
+  badgeIcon
 }) {
   const [name, setName] = useStateEVT("");
   const [email, setEmail] = useStateEVT("");
@@ -601,7 +631,11 @@ function EVTPeopleManager({
   }, people.map(p => /*#__PURE__*/React.createElement("div", {
     className: "evtf-att-row",
     key: p.id
-  }, /*#__PURE__*/React.createElement("span", {
+  }, p.avatar ? /*#__PURE__*/React.createElement("img", {
+    className: "evtf-att-avatar evtf-att-photo",
+    src: p.avatar,
+    alt: p.name
+  }) : /*#__PURE__*/React.createElement("span", {
     className: "evtf-att-avatar"
   }, p.name.split(" ").map(s => s[0]).slice(0, 2).join("")), /*#__PURE__*/React.createElement("span", {
     className: "evtf-att-tx"
@@ -609,9 +643,14 @@ function EVTPeopleManager({
     className: "n"
   }, p.name), /*#__PURE__*/React.createElement("span", {
     className: "e"
-  }, p.email)), /*#__PURE__*/React.createElement("button", {
+  }, p.email)), badge && /*#__PURE__*/React.createElement("span", {
+    className: "evtf-host-badge"
+  }, badgeIcon && /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: badgeIcon
+  }), badge), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "evtf-att-remove",
+    "aria-label": "Remove " + p.name,
     onClick: () => onRemove(p.id)
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:x"
@@ -643,7 +682,7 @@ function EventFormModal({
     isActive: true,
     liveSellingEnabled: false,
     products: [],
-    host: EVT_ADMIN_USER,
+    hosts: [],
     speakers: [],
     invitees: [],
     booked: 0,
@@ -679,6 +718,7 @@ function EventFormModal({
     }
     if (showCapacity && f.capacityEnabled && !String(f.capacity).trim()) e.capacity = "Set the available capacity, or turn the switch off.";
     if (!isEdit && !f.thumbnail) e.thumbnail = "Upload a thumbnail image.";
+    if (f.hosts.length === 0) e.hosts = "Add at least one host for this event.";
     if (f.liveSellingEnabled && f.products.length === 0) e.products = "Select at least one product for the host to sell live.";
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -789,11 +829,11 @@ function EventFormModal({
     autoComplete: "off",
     onChange: e => set("meetingUrl", e.target.value),
     placeholder: "https://zoom.us/j/1234567890?pwd=..."
-  })), errors.meetingUrl ? /*#__PURE__*/React.createElement("span", {
+  }), /*#__PURE__*/React.createElement(EVTInfo, {
+    text: "Include the passcode in the link so attendees join in one tap. The link is revealed to registered attendees only."
+  })), errors.meetingUrl && /*#__PURE__*/React.createElement("span", {
     className: "evtf-err"
-  }, errors.meetingUrl) : /*#__PURE__*/React.createElement("span", {
-    className: "evtf-hint"
-  }, "Include the passcode in the link so attendees join in one tap. The link is revealed to registered attendees only.")), f.deliveryType === "live_stream" && /*#__PURE__*/React.createElement("div", {
+  }, errors.meetingUrl)), f.deliveryType === "live_stream" && /*#__PURE__*/React.createElement("div", {
     className: "evtf-audience-banner evtf-delivery-banner"
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:radio"
@@ -838,8 +878,9 @@ function EventFormModal({
   }, f.audienceGroup === g.key && /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:check"
   }), g.label)))), /*#__PURE__*/React.createElement(EVTFormRow, {
-    label: "Invitation Mode",
-    required: true
+    label: "Registration Type",
+    required: true,
+    hint: "How people get onto the attendee list."
   }, /*#__PURE__*/React.createElement("div", {
     className: "evtf-radio-row",
     role: "radiogroup"
@@ -873,25 +914,20 @@ function EventFormModal({
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:upload"
   }), "Import CSV")), /*#__PURE__*/React.createElement(EVTFormRow, {
-    label: "Event Host",
-    hint: "You're automatically assigned as the host of every event you create."
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "evtf-host-card"
-  }, /*#__PURE__*/React.createElement("img", {
-    className: "evtf-host-avatar",
-    src: f.host.avatar,
-    alt: f.host.name
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "evtf-host-tx"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "n"
-  }, f.host.name), /*#__PURE__*/React.createElement("span", {
-    className: "e"
-  }, f.host.email)), /*#__PURE__*/React.createElement("span", {
-    className: "evtf-host-badge"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:crown"
-  }), "Host"))), /*#__PURE__*/React.createElement(EVTFormRow, {
+    label: "Event Hosts",
+    required: true,
+    hint: "Add the person (or people) hosting this event."
+  }, /*#__PURE__*/React.createElement(EVTPeopleManager, {
+    people: f.hosts,
+    addLabel: "Add Host",
+    emptyLabel: "No host added yet.",
+    badge: "Host",
+    badgeIcon: "lucide:crown",
+    onAdd: p => set("hosts", f.hosts.concat(p)),
+    onRemove: id => set("hosts", f.hosts.filter(p => p.id !== id))
+  }), errors.hosts && /*#__PURE__*/React.createElement("span", {
+    className: "evtf-err"
+  }, errors.hosts)), /*#__PURE__*/React.createElement(EVTFormRow, {
     label: "Speakers",
     hint: "Add anyone presenting or co-hosting this session alongside you."
   }, /*#__PURE__*/React.createElement(EVTPeopleManager, {
@@ -1344,11 +1380,11 @@ function EVTListView() {
       className: "evt-trow-title"
     }, /*#__PURE__*/React.createElement("div", {
       className: "evt-trow-title-main"
-    }, r.title), !r.autoLogged && /*#__PURE__*/React.createElement("span", {
+    }, r.title), !r.autoLogged && r.hosts && r.hosts.length > 0 && /*#__PURE__*/React.createElement("span", {
       className: "evt-invite-tag evt-host-tag"
     }, /*#__PURE__*/React.createElement("iconify-icon", {
       icon: "lucide:user-check"
-    }), "Hosted by ", r.host && r.host.name || EVT_ADMIN_USER.name), r.speakers && r.speakers.length > 0 && /*#__PURE__*/React.createElement("span", {
+    }), "Hosted by ", r.hosts.map(h => h.name).join(", ")), r.speakers && r.speakers.length > 0 && /*#__PURE__*/React.createElement("span", {
       className: "evt-invite-tag evt-speaker-tag"
     }, /*#__PURE__*/React.createElement("iconify-icon", {
       icon: "lucide:mic"

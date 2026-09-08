@@ -490,6 +490,9 @@ function CMTopBar({
   onMenu,
   onMessages
 }) {
+  /* Shared header points pill from mobilechrome.jsx (lifetime points, taps
+     through to Rewards). Resolved at render so script order doesn't matter. */
+  const PointsPill = window.PFPointsPillC;
   return /*#__PURE__*/React.createElement("header", {
     className: "cm-top"
   }, /*#__PURE__*/React.createElement("button", {
@@ -505,7 +508,7 @@ function CMTopBar({
     alt: "PROfinity Academy"
   }), /*#__PURE__*/React.createElement("span", {
     className: "grow"
-  }), /*#__PURE__*/React.createElement("button", {
+  }), PointsPill && /*#__PURE__*/React.createElement(PointsPill, null), /*#__PURE__*/React.createElement("button", {
     className: "cm-iconbtn",
     "aria-label": "Search"
   }, /*#__PURE__*/React.createElement(DSCM.Icon, {

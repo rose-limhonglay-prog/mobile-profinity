@@ -170,21 +170,10 @@ img{max-width:100%}
 
 /* Prosperity Spiral — a balance ring + strongest/weakest sentence reading
    the whole, then four pillar rows (not four identical tiles). */
-.pm-spiral-overview{display:flex;align-items:center;gap:16px;margin-bottom:18px}
-.pm-spiral-ring{position:relative;flex:none;width:92px;height:92px;border-radius:50%;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;background:conic-gradient(var(--brand-gold) calc(var(--pct) * 1%),var(--surface-sunken) 0)}
-.pm-spiral-ring::before{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--surface-card)}
-.pm-spiral-ring .n{position:relative;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:22px;color:var(--text-heading);
-  line-height:1.1;font-variant-numeric:tabular-nums}
-.pm-spiral-ring .lbl{position:relative;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:10.5px;
-  letter-spacing:.03em;text-transform:uppercase;color:var(--gray-500)}
-.pm-spiral-sentence{flex:1;min-width:0;margin:0;font-family:var(--font-sans);font-size:14px;line-height:1.5;color:var(--gray-600)}
-.pm-spiral-sentence b{color:var(--text-heading)}
 .pm-spiral-rows{display:flex;flex-direction:column}
 .pm-spiral-row{display:flex;align-items:center;gap:10px;width:100%;padding:10px 0;border:none;border-top:1px solid var(--border-default);
   background:none;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent}
 .pm-spiral-row:first-child{border-top:none}
-.pm-spiral-row .dot{flex:none;width:10px;height:10px;border-radius:50%}
 .pm-spiral-row .label{flex:none;width:122px;white-space:nowrap;font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:13.5px;color:var(--text-primary)}
 .pm-spiral-row.lowest .label{color:var(--brand-navy);font-weight:var(--fw-bold)}
 .pm-spiral-row .bar{flex:1;display:block;height:7px;border-radius:var(--r-pill);background:var(--gray-150);overflow:hidden}
@@ -194,23 +183,6 @@ img{max-width:100%}
 .pm-spiral-row.lowest .score{color:var(--brand-navy)}
 
 /* today's targets checklist */
-.pm-targets-pill{flex:none;padding:3px 10px;border-radius:100px;background:color-mix(in srgb,var(--success) 18%,#fff);
-  color:var(--success);font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:12.5px;font-variant-numeric:tabular-nums}
-.pm-targets-track{margin:0 0 16px;height:8px;border-radius:100px;background:var(--gray-150);overflow:hidden}
-.pm-targets-fill{display:block;height:100%;border-radius:100px;background:var(--success);transition:width .4s ease}
-.pm-target-rows{display:flex;flex-direction:column;gap:10px}
-.pm-target-row{display:flex;align-items:center;gap:10px;width:100%;min-height:60px;box-sizing:border-box;text-align:left;cursor:pointer;
-  background:var(--surface-card);border:1px solid var(--border-default);border-radius:12px;padding:12px 14px}
-.pm-target-row:active{background:var(--gray-50)}
-.pm-target-row.done{background:var(--surface-sunken)}
-.pm-target-row .circle{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--gray-300);
-  display:flex;align-items:center;justify-content:center;transition:background .15s ease,border-color .15s ease}
-.pm-target-row.done .circle{background:var(--brand-navy);border-color:var(--brand-navy)}
-.pm-target-tag{flex:none;padding:3px 8px;border-radius:6px;color:#fff;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:10px;letter-spacing:.02em}
-.pm-target-row .tx{font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:15px;color:var(--text-primary)}
-.pm-target-row.done .tx{color:var(--gray-500);text-decoration:line-through}
-.pm-target-divider{margin:14px 0 0;border-top:1px solid var(--border-default)}
-.pm-target-note{margin:12px 0 0;font-family:var(--font-sans);font-size:13px;color:var(--gray-500)}
 
 /* "How it works" modal — explains the Spiral Score in plain language */
 .pm-help-overlay{position:absolute;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:22px;
@@ -507,7 +479,7 @@ img{max-width:100%}
 }
 
 /* ===== slide-in drawer (Messages panel, opened from header icon) ===== */
-.m-drawer-wrap{position:absolute;inset:0;z-index:200;pointer-events:none}
+.m-drawer-wrap{position:absolute;inset:0;z-index:200;pointer-events:none;overflow:hidden}
 .m-drawer-wrap.open{pointer-events:auto}
 .m-drawer-scrim{position:absolute;inset:0;background:rgba(16,24,40,.4);opacity:0;transition:opacity .25s ease}
 .m-drawer-wrap.open .m-drawer-scrim{opacity:1}
@@ -771,7 +743,6 @@ img{max-width:100%}
 
 /* result / reveal screens */
 .pm-wiz-result{align-items:center;text-align:center;padding-top:8px}
-.pm-wiz-result-lottie{margin:0 auto 4px}
 .pm-wiz-result h3{margin:0 0 16px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:20px;color:var(--text-heading)}
 .pm-wiz-result-ring{position:relative;width:130px;height:130px;border-radius:50%;margin:0 auto 14px;display:flex;flex-direction:column;
   align-items:center;justify-content:center;background:conic-gradient(var(--brand-gold) calc(var(--pct) * 1%),var(--surface-sunken) 0)}
@@ -780,9 +751,6 @@ img{max-width:100%}
   line-height:1.05;font-variant-numeric:tabular-nums}
 .pm-wiz-result-ring .lbl{position:relative;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px;
   letter-spacing:.02em;color:var(--gray-500)}
-.pm-wiz-result-pill{display:inline-block;margin:0 0 14px;padding:6px 16px;border-radius:100px;
-  background:color-mix(in srgb,var(--brand-gold) 22%,#fff);color:#8a6400;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:13.5px}
-.pm-wiz-result-pill--arch{font-size:16px}
 .pm-wiz-result-note{margin:0 0 6px;font-family:var(--font-sans);font-size:14px;line-height:1.5;color:var(--gray-600);max-width:320px}
 .pm-wiz-result-note--muted{font-size:12.5px;color:var(--gray-500);font-style:italic}
 .pm-wiz-done-btn{width:100%;margin-top:22px;padding:16px;border:none;border-radius:var(--r-md);cursor:pointer;
@@ -790,24 +758,7 @@ img{max-width:100%}
 .pm-wiz-done-btn:active{filter:brightness(1.12)}
 
 /* hub grid */
-.pm-hub-intro{display:flex;gap:10px;align-items:flex-start;padding:14px 16px;margin-bottom:18px;
-  background:#F4F3FF;border-radius:var(--r-md)}
-.pm-hub-intro p{margin:0;font-family:var(--font-sans);font-size:13.5px;line-height:1.5;color:var(--gray-600)}
 .pm-hub-grid{display:flex;flex-direction:column;gap:12px}
-.pm-hub-tile{display:flex;flex-direction:column;gap:8px;width:100%;text-align:left;cursor:pointer;
-  background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--r-md);padding:16px}
-.pm-hub-tile:hover{border-color:var(--brand-gold)}
-.pm-hub-tile:active{background:var(--gray-50)}
-.pm-hub-tile--completed{background:var(--surface-sunken)}
-.pm-hub-tile-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.pm-hub-tile-top .ti{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15.5px;color:var(--brand-navy)}
-.pm-hub-badge{flex:none;padding:3px 10px;border-radius:100px;font-family:var(--font-sans);font-weight:var(--fw-semibold);
-  font-size:11px;letter-spacing:.02em;text-transform:uppercase;background:var(--surface-sunken);color:var(--gray-500)}
-.pm-hub-badge--in_progress{background:#FCF4E4;color:#8A5303}
-.pm-hub-badge--completed{background:#EAF6F0;color:#1E7A5C}
-.pm-hub-tile-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.pm-hub-tile-bottom .su{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-sans);font-size:12.5px;color:var(--gray-500)}
-.pm-hub-score{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:13px;color:var(--brand-gold)}
 
 /* ===== Goal Focus — "Let's work on your goal" (relocated from My Learning,
    sits above the Prosperity Spiral; ported/adapted from lm2-progress-*) ===== */
@@ -854,22 +805,29 @@ img{max-width:100%}
 .pm-steps-back:active{opacity:.7}
 
 /* ===== "How it works" — self-assessment explainer inside the hub ===== */
-.pm-hub-help{display:inline-flex;align-items:center;gap:5px;min-height:44px;margin:-10px 0 6px;border:none;background:none;
-  cursor:pointer;padding:0 4px;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;color:var(--gray-500)}
-.pm-hub-help:active{opacity:.7}
 
 /* ===== "Track your goals" — collapse/expand slide-over, mirrors the
    "Complete your profile" pattern: a collapsed summary row that expands
    into Goal Focus + the Prosperity Spiral + Today's Targets together. ===== */
-.pm-goals-viewport{margin:16px 16px 4px;overflow:hidden;border-radius:16px;transition:height .38s cubic-bezier(.22,.61,.36,1)}
-.pm-goals-slider{display:flex;align-items:flex-start;width:200%;transition:transform .38s cubic-bezier(.22,.61,.36,1)}
-.pm-goals-slider.expanded{transform:translateX(-50%)}
-.pm-goals-pane{width:50%;flex:none;box-sizing:border-box;margin:0}
-.pm-goals-collapsed{display:block;width:50%;padding:18px 16px;background:var(--surface-sunken);
-  border:none;border-radius:16px;cursor:pointer;font:inherit;color:inherit;text-align:left;
+.pm-goals-collapsed{display:block;width:50%;padding:18px 16px 20px;background:var(--surface-card);
+  border:1px solid var(--border-default);border-radius:16px;cursor:pointer;font:inherit;color:inherit;text-align:left;
   -webkit-tap-highlight-color:transparent}
-.pm-goals-collapsed:active{background:var(--gray-150)}
+.pm-goals-collapsed:active{background:var(--surface-sunken)}
 .pm-goals-collapsed-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pm-goals-collapsed .pm-steps-h{font-size:22px;line-height:1.2;color:var(--brand-navy)}
+.pm-goals-collapsed .pm-steps-sub{margin-top:4px;font-size:15px;color:var(--gray-600)}
+/* collapsed preview: divider · "TODAY'S TARGETS" label · first two open tasks · "+N more" */
+.pm-goals-preview{margin-top:14px;padding-top:14px;border-top:1px solid var(--border-default)}
+.pm-goals-preview-h{display:flex;align-items:center;gap:8px;font-family:var(--font-sans);font-weight:var(--fw-bold);
+  font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--brand-gold-700,#8A5303)}
+.pm-goals-preview-list{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.pm-goals-preview-list li{position:relative;padding-left:20px;font-family:var(--font-sans);font-size:15px;line-height:1.4;
+  color:var(--text-heading)}
+.pm-goals-preview-list li::before{content:"";position:absolute;left:1px;top:.55em;width:7px;height:7px;border-radius:50%;
+  background:var(--brand-gold)}
+.pm-goals-preview-more{display:block;margin-top:10px;font-family:var(--font-sans);font-weight:var(--fw-semibold);
+  font-size:15px;color:var(--gray-500)}
+.pm-goals-preview-empty{margin:10px 0 0;font-family:var(--font-sans);font-size:15px;line-height:1.4;color:var(--gray-500)}
 .pm-goals-expanded{display:flex;flex-direction:column}
 .pm-goals-back{display:flex;align-items:center;gap:4px;align-self:flex-start;margin:0 0 4px 20px;padding:0;
   border:none;background:none;cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-bold);
@@ -916,3 +874,239 @@ img{max-width:100%}
 .pm-edit-save{flex:1;min-height:50px;border:none;border-radius:10px;cursor:pointer;background:var(--brand-navy);color:#fff;
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:16px;transition:background .15s ease}
 .pm-edit-save:hover{background:var(--brand-navy-700,#201d54)}
+
+/* ===========================================================================
+   "Track your goals" pane + "Get to know you" overlay — Sept 2026 pass.
+   Bands: Expert green · Needs improving gold · Needs more practice orange ·
+   Needs study red (see PM_BANDS in profile-mobile.jsx).
+   =========================================================================== */
+
+/* ---- slider: the visible pane is in-flow, the other rides off-screen.
+   position:relative on the slider so the off-stage pane's left:50%/width:50%
+   resolve against the 800px slider, not the 400px viewport. ---- */
+.pm-goals-viewport{margin:16px 16px 4px;overflow:hidden;border-radius:16px}
+.pm-goals-slider{position:relative;display:flex;align-items:flex-start;width:200%;transition:transform .38s cubic-bezier(.22,.61,.36,1)}
+.pm-goals-slider.expanded{transform:translateX(-50%)}
+.pm-goals-pane{width:50%;flex:none;box-sizing:border-box;margin:0}
+.pm-goals-slider.expanded .pm-goals-expanded{margin-left:50%}
+.pm-goals-pane.is-offstage{position:absolute;top:0;visibility:hidden;transition:visibility 0s linear .38s}
+.pm-goals-collapsed.is-offstage{left:0}
+.pm-goals-expanded.is-offstage{left:50%;margin-left:0}
+.pm-goals-expanded{padding-bottom:4px}
+.pm-goals-back{min-height:44px;padding-right:8px;border-radius:8px}
+.pm-goals-expanded .pm-card{margin-top:12px}
+.pm-goals-expanded .pm-card:first-of-type{margin-top:4px}
+.pm-steps-track.is-empty{background:var(--gray-150)}
+
+/* gate progress dots */
+.pm-goals-gate-dots{display:flex;gap:6px}
+.pm-goals-gate-dots span{width:22px;height:6px;border-radius:100px;background:var(--gray-200)}
+.pm-goals-gate-dots span.on{background:var(--brand-gold)}
+
+/* ---- pane card shell: collapse toggle pinned top-right, ⓘ 12px after title ---- */
+.pm-pane-card{position:relative;padding:18px 18px 18px}
+.pm-pane-card.is-collapsed{padding-bottom:14px}
+.pm-pane-hd{display:flex;align-items:center;gap:12px;padding-right:44px;min-height:32px}
+.pm-pane-hd h2{margin:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--text-heading);line-height:1.25}
+.pm-pane-info{position:relative;flex:none;width:28px;height:28px;margin:-2px 0;border:none;border-radius:50%;background:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;color:var(--gray-500);-webkit-tap-highlight-color:transparent}
+.pm-pane-info::before{content:"";position:absolute;inset:-8px}         /* 44×44 hit area */
+.pm-pane-info:hover,.pm-pane-info:active{background:var(--surface-sunken)}
+.pm-pane-sub{margin:4px 0 0;font-family:var(--font-sans);font-size:13.5px;line-height:1.45;color:var(--gray-500)}
+.pm-pane-toggle{position:absolute;top:10px;right:10px;width:44px;height:44px;border:none;border-radius:50%;background:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+.pm-pane-toggle:hover,.pm-pane-toggle:active{background:var(--surface-sunken)}
+.pm-pane-toggle iconify-icon{transition:transform .25s ease}
+.pm-pane-card.is-collapsed .pm-pane-toggle iconify-icon{transform:rotate(180deg)}
+.pm-pane-body{margin-top:14px}
+
+/* ---- Goal Focus: band-coloured conic dial ---- */
+.pm-goal-card{background:var(--surface-card);border-color:var(--border-default)}
+.pm-goal-main .eyebrow{color:var(--gray-600)}
+.pm-goal-ring{background:conic-gradient(var(--band,#CE9957) calc(var(--pct) * 1%),var(--surface-sunken) 0);width:96px;height:96px}
+.pm-goal-ring::before{inset:10px}
+.pm-goal-ring .n{color:var(--band-text,var(--text-heading));font-size:21px}
+
+/* ---- Spiral rows: label · bar · score, bar tinted by band ---- */
+.pm-spiral-row{gap:12px;min-height:48px;padding:8px 0}
+.pm-spiral-row .label{width:132px;white-space:normal;line-height:1.25;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.pm-spiral-chip{display:inline-block;padding:2px 7px;border-radius:100px;background:#FCE8E6;color:#A8231D;font-family:var(--font-sans);
+  font-weight:var(--fw-bold);font-size:10px;letter-spacing:.02em;text-transform:uppercase;white-space:nowrap}
+.pm-spiral-row .bar{height:8px}
+.pm-spiral-row .score{min-width:30px;font-variant-numeric:tabular-nums}
+.pm-spiral-sentence{margin:12px 0 0;font-family:var(--font-sans);font-size:14px;line-height:1.5;color:var(--gray-600)}
+.pm-spiral-sentence b{color:var(--text-heading)}
+.pm-spiral-tim{display:flex;align-items:center;gap:12px;width:100%;min-height:64px;margin-top:14px;padding:10px 12px;box-sizing:border-box;
+  border:1px solid var(--border-default);border-radius:14px;background:var(--surface-sunken);cursor:pointer;text-align:left;font:inherit;color:inherit;
+  -webkit-tap-highlight-color:transparent}
+.pm-spiral-tim:active{background:var(--gray-150)}
+.pm-spiral-tim-av{position:relative;flex:none;width:44px;height:44px}
+.pm-spiral-tim-av img{display:block;width:44px;height:44px;border-radius:50%;object-fit:cover}
+.pm-spiral-tim-play{position:absolute;right:-3px;bottom:-3px;width:20px;height:20px;border-radius:50%;background:var(--brand-navy);
+  border:2px solid var(--surface-sunken);display:flex;align-items:center;justify-content:center;padding-left:1px}
+.pm-spiral-tim-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pm-spiral-tim-copy .ti{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14px;color:var(--text-heading)}
+.pm-spiral-tim-copy .su{font-family:var(--font-sans);font-size:12.5px;line-height:1.35;color:var(--gray-500)}
+.pm-tim-poster{position:relative;height:150px;margin:0 0 14px;border-radius:14px;overflow:hidden;background:var(--brand-navy);
+  display:flex;align-items:center;justify-content:center}
+.pm-tim-poster img{width:100%;height:100%;object-fit:cover;opacity:.55}
+.pm-tim-poster-play{position:absolute;width:56px;height:56px;border-radius:50%;background:rgba(41,37,105,.85);border:2px solid #fff;
+  display:flex;align-items:center;justify-content:center;padding-left:3px}
+.pm-tim-poster-dur{position:absolute;right:10px;bottom:10px;padding:2px 8px;border-radius:6px;background:rgba(0,0,0,.6);color:#fff;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:11.5px}
+
+/* ---- Today's Targets: checkbox · priority chevron · task + caption · pts chip ---- */
+.pm-target-rows{display:flex;flex-direction:column;gap:8px}
+.pm-target-row{display:flex;align-items:center;gap:0;width:100%;min-height:64px;box-sizing:border-box;
+  border:1px solid var(--border-default);border-radius:14px;background:var(--surface-card);padding:4px 8px 4px 0;overflow:hidden;
+  transition:background .25s ease,border-color .25s ease}
+.pm-target-row.done{background:var(--surface-sunken);border-color:transparent}
+.pm-target-check{flex:none;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  -webkit-tap-highlight-color:transparent}
+.pm-target-check .circle{width:24px;height:24px;border-radius:50%;border:2px solid var(--gray-300);background:var(--surface-card);
+  display:flex;align-items:center;justify-content:center;transition:background .18s ease,border-color .18s ease,transform .18s ease}
+.pm-target-check:active .circle{transform:scale(.92)}
+.pm-target-row.done .pm-target-check .circle{background:var(--brand-navy);border-color:var(--brand-navy)}
+.pm-target-main{flex:1;min-width:0;display:flex;align-items:center;gap:8px;min-height:56px;padding:6px 0 6px 0;border:none;background:none;
+  cursor:pointer;text-align:left;font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}
+.pm-target-main:active{opacity:.75}
+.pm-target-prio{flex:none;width:18px;display:flex;align-items:center;justify-content:center}
+.pm-target-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pm-target-copy .tx{font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:14px;line-height:1.3;color:var(--text-primary)}
+.pm-target-copy .cap{font-family:var(--font-sans);font-size:12px;line-height:1.3;color:var(--gray-500)}
+.pm-target-row.done .pm-target-copy .tx{color:var(--gray-500);text-decoration:line-through}
+.pm-target-pts{flex:none;display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:100px;background:var(--brand-gold-100,#f7efe3);
+  color:#8A5303;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:11px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pm-target-pts.earned{background:#EAF6F0;color:#1E7A5C}
+.pm-target-foot{margin:12px 0 0;font-family:var(--font-sans);font-size:12.5px;color:var(--gray-500)}
+/* a new target fades and expands in; the one just ticked settles */
+.pm-target-row.is-entering{animation:pm-target-in .55s cubic-bezier(.22,.61,.36,1) both}
+@keyframes pm-target-in{0%{opacity:0;max-height:0;transform:translateY(-8px) scale(.97);margin-top:-8px}
+  60%{opacity:1}100%{opacity:1;max-height:120px;transform:none;margin-top:0}}
+.pm-target-row.is-settling{animation:pm-target-settle .5s ease both}
+@keyframes pm-target-settle{0%{transform:scale(1)}35%{transform:scale(.985)}100%{transform:scale(1)}}
+
+/* ---- wizard: header spacer/help, segmented progress, near-black copy ---- */
+.pm-wiz-hd-spacer{flex:none;width:44px}
+.pm-wiz-hd-ti--with-help{display:inline-flex;align-items:center;justify-content:center;gap:2px}
+.pm-wiz-help{flex:none;width:44px;height:44px;margin:-10px 0;border:none;border-radius:50%;background:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+.pm-wiz-help:hover,.pm-wiz-help:active{background:var(--surface-sunken)}
+.pm-wiz-seg{flex:1;display:flex;gap:4px}
+.pm-wiz-seg>span{flex:1;height:7px;border-radius:100px;background:var(--gray-150);transition:background .25s ease}
+.pm-wiz-seg>span.done{background:var(--brand-gold)}
+.pm-wiz-seg>span.on{background:var(--brand-gold);box-shadow:0 0 0 2px color-mix(in srgb,var(--brand-gold) 30%,transparent)}
+.pm-wiz-q{color:#1F1F1F}
+.pm-wiz-opt-tx{color:#1F1F1F}
+.pm-wiz-opt-letter{color:#1F1F1F}
+
+/* ---- result: band-coloured dial, "19 of 28" beneath, band chip ---- */
+.pm-wiz-result-lottie{margin:-12px auto -34px;pointer-events:none}
+.pm-wiz-result-ring{background:conic-gradient(var(--band,var(--brand-gold)) calc(var(--pct) * 1%),var(--surface-sunken) 0);margin-bottom:10px}
+.pm-wiz-result-ring .n{color:var(--band-text,var(--text-heading));font-size:30px}
+.pm-wiz-result-raw{margin:0 0 10px;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14px;color:var(--gray-600);font-variant-numeric:tabular-nums}
+.pm-wiz-result-band{display:inline-block;margin:0 0 14px;padding:6px 14px;border-radius:100px;font-family:var(--font-sans);
+  font-weight:var(--fw-bold);font-size:13px;letter-spacing:.01em}
+.pm-wiz-result-band--arch{background:#F4F3FF;color:#4A40D6;font-size:16px}
+
+/* ---- hub: intro note + single-row tiles ---- */
+.pm-hub-intro{display:flex;gap:12px;align-items:flex-start;padding:14px 14px 14px 12px;margin-bottom:16px;
+  background:#F4F3FF;border:1px solid #E2DEFB;border-radius:14px}
+.pm-hub-intro-ic{flex:none;width:36px;height:36px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 1px 3px rgba(108,99,255,.18)}
+.pm-hub-intro-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.pm-hub-intro-copy b{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:14px;color:#3F37B8}
+.pm-hub-intro-copy p{margin:0;font-family:var(--font-sans);font-size:13.5px;line-height:1.5;color:var(--gray-600)}
+.pm-hub-intro-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.pm-hub-intro-chips span{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;background:#fff;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:11.5px;color:#4A40D6}
+.pm-hub-tile{position:relative;display:flex;flex-direction:row;align-items:center;gap:14px;width:100%;min-height:92px;text-align:left;cursor:pointer;
+  background:var(--wash,var(--surface-card));border:1px solid var(--line,var(--border-default));border-radius:16px;padding:14px 14px 14px 14px;
+  font:inherit;color:inherit;transition:transform .15s ease,box-shadow .15s ease;-webkit-tap-highlight-color:transparent}
+.pm-hub-tile:hover{box-shadow:0 4px 14px rgba(41,37,105,.08)}
+.pm-hub-tile:active{transform:scale(.99)}
+.pm-hub-ic{flex:none;width:56px;height:56px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 1px 3px rgba(12,12,13,.08)}
+.pm-hub-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pm-hub-copy .ti{padding-right:92px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15.5px;line-height:1.25;color:var(--brand-navy)}
+.pm-hub-copy .bl{font-family:var(--font-sans);font-size:13px;line-height:1.4;color:var(--gray-600)}
+.pm-hub-copy .tm{display:inline-flex;align-items:center;gap:5px;margin-top:2px;font-family:var(--font-sans);font-size:12.5px;color:var(--gray-500)}
+.pm-hub-score{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:12.5px;color:#1E7A5C}
+.pm-hub-badge{position:absolute;top:12px;right:12px;display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:100px;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:10.5px;letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;
+  background:rgba(255,255,255,.85);color:var(--gray-600)}
+.pm-hub-badge--in_progress{background:#FCF4E4;color:#8A5303}
+.pm-hub-badge--completed{background:#fff;color:#1E7A5C}
+.pm-hub-chev{flex:none;width:32px;height:32px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 1px 3px rgba(12,12,13,.08)}
+
+/* ---- Spiral: stacked header (sub under title, circled controls right) + 2×2 ring tiles ---- */
+.pm-pane-card--stacked .pm-pane-sub{margin-top:6px;padding-right:44px;color:var(--gray-600);font-size:14px}
+.pm-pane-card--stacked .pm-pane-sub b{color:var(--text-heading)}
+.pm-spiral-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pm-spiral-tile{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 6px 16px;cursor:pointer;text-align:center;
+  background:var(--surface-card);border:1px solid color-mix(in srgb,var(--band) 40%,var(--border-default));border-radius:16px;
+  font:inherit;color:inherit;-webkit-tap-highlight-color:transparent;transition:transform .15s ease,box-shadow .15s ease}
+.pm-spiral-tile:hover{box-shadow:0 4px 14px rgba(41,37,105,.08)}
+.pm-spiral-tile:active{transform:scale(.99)}
+.pm-spiral-ring{position:relative;width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:conic-gradient(var(--band) calc(var(--pct) * 1%),var(--gray-150) 0)}
+.pm-spiral-ring::before{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--surface-card)}
+.pm-spiral-ring .n{position:relative;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:28px;color:var(--brand-navy);
+  line-height:1;font-variant-numeric:tabular-nums}
+.pm-spiral-tile-name{margin-top:4px;max-width:100%;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15px;line-height:1.2;color:var(--brand-navy);white-space:nowrap;letter-spacing:-.01em}
+.pm-spiral-tile-chip{display:inline-block;padding:4px 10px;border-radius:100px;background:var(--band-soft);color:var(--band-text);
+  font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.pm-spiral-tile-chip.start{background:#EDEBFF;color:#4A40D6}
+.pm-spiral-tile-avg{font-family:var(--font-sans);font-size:13.5px;color:var(--gray-600)}
+.pm-target-date{display:block;margin-bottom:2px;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;color:var(--brand-gold-700,#8A5303)}
+
+/* ===== header points pill — same rules as mobilechrome.css (PMTopBar mounts
+   window.PFPointsPillC; ProfileMobile doesn't load mobilechrome.css) ===== */
+/* header points pill — lifetime gamification points; tap → Rewards Dashboard */
+.m-pts{position:relative;display:inline-flex;align-items:center;gap:4px;height:40px;padding:0 14px 0 6px;border-radius:var(--r-pill);border:none;cursor:pointer;
+  background:var(--surface-sunken);color:#E9293A;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;line-height:1;letter-spacing:-.01em;
+  -webkit-tap-highlight-color:transparent;transition:background-color .2s ease,box-shadow .2s ease,border-color .2s ease}
+.m-pts:active{background:var(--gray-200)}
+.m-pts-ic{position:relative;flex:none;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+.m-pts-ic-fb{display:flex;align-items:center;justify-content:center;width:30px;height:30px}
+/* the red-lips artwork spans ~86% of its 512px canvas, so the svg is scaled up
+   around its centre to sit at icon size in the 30px slot */
+.m-pts-ic-anim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s ease}
+.m-pts-ic-anim.on{opacity:1}
+.m-pts-ic-anim svg{display:block;width:30px!important;height:30px!important;transform:scale(1.15);transform-origin:50% 50%;overflow:visible}
+.m-pts-n{display:inline-block;font-variant-numeric:tabular-nums;transform-origin:50% 50%}
+.m-pts-n.pop{animation:m-pts-pop .6s cubic-bezier(.22,.61,.36,1)}
+@keyframes m-pts-pop{0%{transform:scale(1)}35%{transform:scale(1.22);color:var(--brand-gold)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.m-pts-n.pop{animation:none}.m-pts,.m-pts-ic-anim{transition:none}}
+
+/* earn emphasis — the pill is now the only feedback for a like/comment payout
+   (the floating "+N points" chip beside the button was removed): navy tint +
+   expanding ring on the pill, number pops (above), and a "+N" delta floats up
+   from the number and fades. */
+.m-pts.earn{background:rgba(233,41,58,.12);animation:m-pts-ring .9s ease-out}
+@keyframes m-pts-ring{0%{box-shadow:0 0 0 0 rgba(233,41,58,.45)}100%{box-shadow:0 0 0 12px rgba(233,41,58,0)}}
+.m-pts-delta{position:absolute;right:10px;top:-2px;pointer-events:none;font-family:var(--font-sans);font-weight:var(--fw-bold);
+  font-size:13px;line-height:1;color:#E9293A;text-shadow:0 1px 0 var(--surface-card);
+  animation:m-pts-delta 1.4s cubic-bezier(.22,.61,.36,1) forwards}
+@keyframes m-pts-delta{0%{opacity:0;transform:translateY(8px) scale(.8)}18%{opacity:1;transform:translateY(-6px) scale(1.1)}
+  65%{opacity:1;transform:translateY(-14px) scale(1)}100%{opacity:0;transform:translateY(-22px) scale(1)}}
+@media (prefers-reduced-motion:reduce){.m-pts.earn{animation:none}.m-pts-delta{animation:none;transform:translateY(-14px)}}
+
+/* floating tally — the pill's stand-in while the header is hidden (scrolled
+   away) or covered (Comments sheet, drawer…): see PointsTally in the jsx. Sits
+   under the status bar, above any sheet; drops in on .on and slides back up
+   when the class is removed after the hold. */
+.m-pts-tally{position:absolute;left:50%;top:56px;z-index:9800;pointer-events:none;visibility:hidden;opacity:0;
+  transform:translate(-50%,-160%);transition:transform .32s cubic-bezier(.4,0,.2,1),opacity .28s ease,visibility 0s linear .32s}
+.m-pts-tally.on{visibility:visible;opacity:1;transform:translate(-50%,0);transition:none;
+  animation:m-pts-tally-in .5s cubic-bezier(.22,1.06,.36,1) both}
+@keyframes m-pts-tally-in{0%{opacity:0;transform:translate(-50%,-160%)}100%{opacity:1;transform:translate(-50%,0)}}
+.m-pts-tally .m-pts{pointer-events:auto;height:44px;padding:0 18px 0 8px;font-size:17px;background:var(--surface-card);
+  border:1px solid var(--border-default);box-shadow:0 12px 32px rgba(16,24,40,.22),0 2px 6px rgba(16,24,40,.08)}
+.m-pts-tally .m-pts.earn{background:#fde8ea;animation:m-pts-tally-ring .9s ease-out}
+@keyframes m-pts-tally-ring{0%{box-shadow:0 0 0 0 rgba(233,41,58,.45),0 12px 32px rgba(16,24,40,.22)}
+  100%{box-shadow:0 0 0 12px rgba(233,41,58,0),0 12px 32px rgba(16,24,40,.22)}}
+/* the "+N" would float up into the Dynamic Island here, so it rises beside the pill instead */
+.m-pts-tally .m-pts-delta{right:auto;left:calc(100% + 6px);top:14px;text-shadow:none}
+@media (prefers-reduced-motion:reduce){.m-pts-tally,.m-pts-tally.on{transition:none;animation:none}.m-pts-tally .m-pts.earn{animation:none}}

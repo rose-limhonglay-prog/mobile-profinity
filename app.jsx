@@ -122,7 +122,10 @@ const {
 
 /* ---- real on-brand imagery (from the Profinity Design System assets) ----- */
 const IMG = {
-  toxin: "assets/clinic-toxin-guide.png",
+  /* clinic-toxin-guide.png is a truncated export (cut at 192 KiB, only the
+     top ~240px decode, the rest renders blank) — until it is re-exported the
+     intact portrait toxin image stands in for it. */
+  toxin: "assets/ff-sqimg1-toxin-swap.jpg",
   collage: "assets/clinic-treatment-collage.png",
   lip: "assets/clinic-lip-design.png",
   gold: "assets/texture-gold.png",
@@ -1661,6 +1664,20 @@ const SAMPLE_LONG_TEXT_POST = {
   commentList: thread("This is exactly the reminder I needed before my clinic day tomorrow.")
 };
 
+/* Sample image-carousel post — `sample.type: "carousel"` renders on web as a
+   single-slide Instagram/LinkedIn-style carousel (WebImageCarousel: one image
+   at a time, prev/next arrows, dots + counter, click-to-fullscreen) instead of
+   the Facebook-style photo grid the "gallery" type uses on web. Mobile falls
+   back to MediaCarousel's swipe strip. Pinned near the top of the web feed. */
+const SAMPLE_CAROUSEL_POST = {
+  id: "ff_carousel1", author: TIM, withOthers: "Miranda Pearce and 6 others", time: "1h",
+  hashtags: ["case-study", "protocol"],
+  sample: { type: "carousel", images: [IMG.p5img1, IMG.p5img2, IMG.p5img3, IMG.p5img4, IMG.p5img5] },
+  body: "Cheek-to-jawline balancing case, one slide per stage — step through the plan from consult markings to the two-week review.",
+  likes: "964", comments: "73", shares: "41", actioned: false,
+  commentList: thread("Love this format — one stage at a time makes the plan so much easier to follow.")
+};
+
 /* Sample social live-stream post — a member broadcasting right now (as
    opposed to `live: true`, which marks a finished broadcast kept as a
    replay). Renders a portrait stream frame with a LIVE badge + viewer count
@@ -2278,7 +2295,7 @@ const TIER_FEED_SEQUENCES = {
    persona-preview switcher never loses a post's likes/comments state, and
    Search can still find posts that only some tiers' sequences contain. */
 const ALL_FEED_SEQUENCE_POSTS = Object.values(
-  [LIVE_NOW_POST, SAMPLE_LONG_TEXT_POST, ...FREE_FEED_SEQUENCE, ...CONFIDENCE_FEED_SEQUENCE, ...MASTERY_FEED_SEQUENCE].reduce(
+  [LIVE_NOW_POST, SAMPLE_LONG_TEXT_POST, SAMPLE_CAROUSEL_POST, ...FREE_FEED_SEQUENCE, ...CONFIDENCE_FEED_SEQUENCE, ...MASTERY_FEED_SEQUENCE].reduce(
     (m, p) => { m[p.id] = p; return m; }, {}
   )
 );
@@ -2563,44 +2580,7 @@ function burstReaction(wrap, key, reward) {
 const REACT_POINTS = 15;
 const COMMENT_POINTS = 15;
 
-/* Owl that rides inside the points chip — the same Lottie as the per-step
-   "+N points" toast on Profile (PMPointsToast in profile-mobile.jsx), so a
-   like/comment payout looks identical to a "Verify your credentials" payout. */
-const PTS_OWL_LOTTIE_SRC = "https://lottie.host/cc6c5973-9f61-481c-85ed-0fe2089a9176/CwHL9yTPJJ.json";
-const PTS_LOTTIE_LIB_SRC = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
-let _ptsOwlData = null;
 
-/* Lazy-loads lottie-web (same data-pf-lottie marker as tour.js so the two
-   never double-inject) and prefetches the owl JSON, so the first chip already
-   animates instead of showing the sparkle fallback. */
-function ensurePtsOwl(cb) {
-  if (typeof document === "undefined") return;
-  if (!_ptsOwlData && !ensurePtsOwl._fetching) {
-    ensurePtsOwl._fetching = true;
-    fetch(PTS_OWL_LOTTIE_SRC).then((r) => r.json()).then((d) => {_ptsOwlData = d;}).catch(() => {});
-  }
-  if (window.lottie) {if (cb) cb();return;}
-  if (!document.querySelector("script[data-pf-lottie]")) {
-    const sc = document.createElement("script");
-    sc.src = PTS_LOTTIE_LIB_SRC;
-    sc.async = true;
-    sc.setAttribute("data-pf-lottie", "1");
-    document.head.appendChild(sc);
-  }
-  if (cb) {
-    const iv = setInterval(() => {if (window.lottie) {clearInterval(iv);cb();}}, 120);
-    setTimeout(() => clearInterval(iv), 8000);
-  }
-}
-if (typeof window !== "undefined") setTimeout(() => ensurePtsOwl(), 1200);
-
-/* Lightweight, non-blocking reward moment: a gold-rimmed pill reading
-   "+15 points" with the waving owl settles in just above `anchor`, holds for a
-   beat and fades away — a 1:1 copy of the profile checklist's per-step toast
-   (.pm-pts-toast: .4s drop-in, 2.2s hold, .3s fade-out, no travel, no specks).
-   Appended to <body> as position:fixed so it escapes overflow:hidden cards,
-   the comments sheet and the scaled device frame (same trick as burstFrom). */
-const PTS_POP_IN_MS = 400, PTS_POP_HOLD_MS = 2200, PTS_POP_OUT_MS = 300;
 
 /* Visual scale of the IOSDevice preview frame containing `el` (1 on a real
    phone or any unframed page). Body-level portals — the reaction bar, the
@@ -2615,79 +2595,14 @@ function frameScaleOf(el) {
   return s > 0 && isFinite(s) ? s : 1;
 }
 
+/* Reward moment for a like/comment payout. Deliberately no floating
+   "+N points" chip beside the button any more — the only feedback is the
+   header points pill (PointsPillM / PointsPillC), which listens for this event,
+   books the points, counts up, flashes a gold ring and floats a "+N" delta.
+   `anchor` is kept in the signature so existing call sites stay unchanged. */
 function popPoints(anchor, amount) {
-  if (!anchor || typeof window === "undefined") return;
-  const rect = anchor.getBoundingClientRect();
-  if (!rect.width && !rect.height) return;
-  const s = frameScaleOf(anchor);
-  const cx = rect.left + rect.width / 2;
-  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  const pill = document.createElement("div");
-  pill.className = "pf-pts-pop";
-  pill.setAttribute("role", "status");
-  pill.setAttribute("aria-live", "polite");
-  const owl = document.createElement("span");
-  owl.className = "pf-pts-pop-owl";
-  owl.setAttribute("aria-hidden", "true");
-  pill.appendChild(owl);
-  let owlAnim = null;
-  if (window.lottie && _ptsOwlData) {
-    owlAnim = window.lottie.loadAnimation({ container: owl, renderer: "svg", loop: true, autoplay: true,
-      animationData: _ptsOwlData, rendererSettings: { preserveAspectRatio: "xMidYMid meet" } });
-  } else {
-    ensurePtsOwl();
-    const ic = document.createElement("iconify-icon");
-    ic.setAttribute("icon", "lucide:sparkles");
-    ic.style.cssText = "font-size:20px;line-height:0;color:var(--brand-navy)";
-    owl.appendChild(ic);
-  }
-  const tx = document.createElement("span");
-  tx.textContent = "+" + amount + " points";
-  pill.appendChild(tx);
-  document.body.appendChild(pill);
-  // Sit the pill just above the anchor — like the profile toast straddling
-  // the top edge of the step it paid out — and keep it fully on-screen when
-  // the anchor hugs a viewport edge (the like button sits ~16px from the left
-  // of a mobile card; a composer can sit right at the bottom of the comments
-  // sheet). In the desktop preview the anchor lives inside the scaled
-  // IOSDevice frame, so clamp to the frame's screen box rather than the
-  // browser viewport — otherwise the pill spills past the phone's edge.
-  const frame = anchor.closest && anchor.closest("[data-ios-device]");
-  const fr = frame ? frame.getBoundingClientRect() : null;
-  const bx0 = fr ? fr.left : 0, bx1 = fr ? fr.right : window.innerWidth;
-  const by0 = fr ? fr.top : 0, by1 = fr ? fr.bottom : window.innerHeight;
-  // offsetWidth/Height are pre-transform, so scale them to on-screen size.
-  const half = (pill.offsetWidth / 2 + 10) * s;
-  const ph = (pill.offsetHeight || 52) * s;
-  const px = Math.min(Math.max(cx, bx0 + half), bx1 - half);
-  const py = Math.min(Math.max(rect.top - ph / 2 - 4 * s, by0 + 90 * s), by1 - 30 * s);
-  pill.style.left = px + "px";
-  pill.style.top = py + "px";
-
-  const dur = PTS_POP_IN_MS + PTS_POP_HOLD_MS + PTS_POP_OUT_MS;
-  const inEnd = PTS_POP_IN_MS / dur, outStart = (PTS_POP_IN_MS + PTS_POP_HOLD_MS) / dur;
-  // Fold the frame scale into every keyframe so the pill matches the phone.
-  const base = "translate(-50%,-50%) scale(" + s + ")";
-  pill.style.transform = base;
-  const frames = reduce ?
-  [
-  { transform: base + " scale(1)", opacity: 0, easing: "ease" },
-  { transform: base + " scale(1)", opacity: 1, offset: inEnd },
-  { transform: base + " scale(1)", opacity: 1, offset: outStart, easing: "ease" },
-  { transform: base + " scale(1)", opacity: 0 }] :
-
-  [
-  { transform: base + " translateY(-10px) scale(.92)", opacity: 0, easing: "cubic-bezier(.22,.61,.36,1)" },
-  { transform: base + " translateY(0) scale(1)", opacity: 1, offset: inEnd },
-  { transform: base + " translateY(0) scale(1)", opacity: 1, offset: outStart, easing: "ease" },
-  { transform: base + " translateY(-6px) scale(.96)", opacity: 0 }];
-
-  if (pill.animate) {
-    const a = pill.animate(frames, { duration: dur, fill: "forwards" });
-    a.onfinish = () => pill.remove();
-  }
-  setTimeout(() => {if (owlAnim) owlAnim.destroy();pill.remove();}, dur + 200);
+  if (typeof window === "undefined") return;
+  try { window.dispatchEvent(new CustomEvent("pf:points-earned", { detail: { amount } })); } catch (e) { /* older WebView */ }
 }
 
 /* Instagram-style "double tap to love": tracks tap timing per media element
@@ -4035,6 +3950,107 @@ function MediaCarousel({ images, aspect, onLoveReact }) {
   );
 }
 
+/* Web-only single-slide image carousel (Instagram/LinkedIn style) for
+   sample.type === "carousel" posts: one full-width slide at a time, prev/next
+   arrow buttons for mouse users, scroll-snap so a trackpad/touch swipe still
+   works, arrow-key navigation, dot indicators + counter, and click-to-
+   fullscreen (same .sm-fs viewer MediaCarousel uses). */
+function WebImageCarousel({ images, onLoveReact }) {
+  const [idx, setIdx] = useState(0);
+  const [fs, setFs] = useState(false);
+  const [fsIdx, setFsIdx] = useState(0);
+  const ref = useRef(null);
+  const fsRef = useRef(null);
+  const { wrap, heartNode } = useDoubleTapLove(onLoveReact || (() => {}));
+  const total = images ? images.length : 0;
+  const go = (i) => {
+    const el = ref.current;
+    if (!el) return;
+    const next = Math.max(0, Math.min(total - 1, i));
+    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+    setIdx(next);
+  };
+  const onScroll = () => {
+    const el = ref.current;
+    if (!el || !el.clientWidth) return;
+    setIdx(Math.max(0, Math.min(total - 1, Math.round(el.scrollLeft / el.clientWidth))));
+  };
+  const onKey = (e) => {
+    if (e.key === "ArrowRight") {e.preventDefault();go(idx + 1);} else
+    if (e.key === "ArrowLeft") {e.preventDefault();go(idx - 1);}
+  };
+  const fsGo = (i) => {
+    const el = fsRef.current;
+    if (!el) return;
+    const next = Math.max(0, Math.min(total - 1, i));
+    el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+    setFsIdx(next);
+  };
+  useEffect(() => {
+    if (!fs) return;
+    const onDocKey = (e) => {
+      if (e.key === "Escape") setFs(false); else
+      if (e.key === "ArrowRight") fsGo(fsIdx + 1); else
+      if (e.key === "ArrowLeft") fsGo(fsIdx - 1);
+    };
+    document.addEventListener("keydown", onDocKey);
+    return () => document.removeEventListener("keydown", onDocKey);
+  }, [fs, fsIdx, total]);
+  useEffect(() => {
+    if (fs && fsRef.current) fsRef.current.scrollLeft = fsIdx * fsRef.current.clientWidth;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fs]);
+  if (!total) return null;
+  const multi = total > 1;
+  const openFullscreen = (i) => {setFsIdx(i);setFs(true);};
+  const onFsScroll = () => {
+    const el = fsRef.current;
+    if (!el || !el.clientWidth) return;
+    setFsIdx(Math.round(el.scrollLeft / el.clientWidth));
+  };
+  return (
+    <div className="wc-wrap">
+      <div className="wc-track" ref={ref} onScroll={onScroll} onKeyDown={onKey} tabIndex={0}
+      role="region" aria-roledescription="carousel" aria-label={"Image carousel, " + total + " images"}>
+        {images.map((src, i) =>
+        <img key={i} src={src} className="wc-slide" alt={"Image " + (i + 1) + " of " + total}
+        onClick={wrap(() => openFullscreen(i))} />
+        )}
+      </div>
+      {multi && idx > 0 &&
+      <button type="button" className="wc-arrow wc-prev" aria-label="Previous image" onClick={() => go(idx - 1)}>
+          <IconifyIcon name="lucide:chevron-left" size={22} color="var(--brand-navy)" />
+        </button>}
+      {multi && idx < total - 1 &&
+      <button type="button" className="wc-arrow wc-next" aria-label="Next image" onClick={() => go(idx + 1)}>
+          <IconifyIcon name="lucide:chevron-right" size={22} color="var(--brand-navy)" />
+        </button>}
+      {multi && <span className="mc-count">{idx + 1}/{total}</span>}
+      {multi && <SlidingDots count={total} idx={idx} />}
+      {heartNode}
+      {fs &&
+      <div className="sm-fs" onClick={(e) => {e.stopPropagation();}}>
+          <div className="mc-fs-track" onScroll={onFsScroll} ref={fsRef}>
+            {images.map((src, i) => <img key={i} src={src} alt={"Image " + (i + 1) + " of " + total} />)}
+          </div>
+          {fsIdx > 0 &&
+        <button type="button" className="wc-arrow wc-prev wc-fs-arrow" aria-label="Previous image" onClick={() => fsGo(fsIdx - 1)}>
+              <IconifyIcon name="lucide:chevron-left" size={24} color="var(--white)" />
+            </button>}
+          {fsIdx < total - 1 &&
+        <button type="button" className="wc-arrow wc-next wc-fs-arrow" aria-label="Next image" onClick={() => fsGo(fsIdx + 1)}>
+              <IconifyIcon name="lucide:chevron-right" size={24} color="var(--white)" />
+            </button>}
+          <button type="button" className="sm-fs-close" aria-label="Close fullscreen" onClick={() => setFs(false)}>
+            <IconifyIcon name="lucide:x" size={24} color="var(--white)" />
+          </button>
+          <span className="mc-fs-count">{fsIdx + 1}/{total}</span>
+        </div>
+      }
+    </div>
+  );
+}
+
 /* Sample media for demo posts: a video player, a vertical reel, and a 10-image
    swipeable gallery. Rendered inside the DS PostCard's body slot. */
 /* Floating avatars of people you follow who reacted — overlaid bottom-left on
@@ -4323,6 +4339,14 @@ function SampleMedia({ sample, postId, saved, onSave, onReport, onLoveReact, aut
         {webPlayerNode}
       </>);
 
+  }
+
+  // single-slide image carousel — web gets arrows/dots/counter, mobile reuses
+  // the swipeable MediaCarousel strip (already the native carousel there)
+  if (sample.type === "carousel") {
+    return isWeb ?
+    <WebImageCarousel images={sample.images} onLoveReact={onLoveReact} /> :
+    <MediaCarousel images={sample.images} onLoveReact={onLoveReact} />;
   }
 
   // gallery
@@ -5768,6 +5792,8 @@ function Feed({ channel } = {}) {
   ...userPosts.map((p) => ({ item: p, mode: "full" })),
   { item: LIVE_NOW_POST, mode: "full" },
   { item: SAMPLE_LONG_TEXT_POST, mode: "full" },
+  // web-only sample: the single-slide image carousel (see SAMPLE_CAROUSEL_POST)
+  ...(typeof window !== "undefined" && !window.PF_EMBED ? [{ item: SAMPLE_CAROUSEL_POST, mode: "full" }] : []),
   ...eventRegPosts.map((p) => ({ item: p, mode: "full" })),
   ...tierTagItems,
   ...sequenceBase.map((p) => {

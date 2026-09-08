@@ -186,7 +186,22 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
 
 .evtf-row { display: flex; flex-direction: column; gap: 8px; }
 .evtf-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-.evtf-label { font-size: 13.5px; font-weight: 600; color: var(--gray-700); }
+.evtf-label { display: flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 600; color: var(--gray-700); }
+.evtf-info { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
+  border-radius: 50%; color: var(--gray-450); cursor: help; outline: none; }
+.evtf-info iconify-icon { font-size: 16px; }
+.evtf-info:hover, .evtf-info:focus-visible { color: var(--brand-navy); }
+.evtf-info .evtf-tip { position: absolute; left: 0; top: calc(100% + 8px); z-index: 6; width: max-content; max-width: 280px;
+  padding: 8px 11px; border-radius: 8px; background: var(--brand-navy); color: #fff; font-size: 12px; font-weight: 500;
+  line-height: 1.45; text-align: left; white-space: normal; pointer-events: none;
+  opacity: 0; visibility: hidden; transform: translateY(-4px); transition: opacity .15s ease, transform .15s ease, visibility .15s; }
+.evtf-info .evtf-tip::before { content: ""; position: absolute; left: 5px; top: -5px; width: 10px; height: 10px;
+  background: var(--brand-navy); transform: rotate(45deg); border-radius: 2px; }
+.evtf-info:hover .evtf-tip, .evtf-info:focus-visible .evtf-tip { opacity: 1; visibility: visible; transform: translateY(0); }
+.evtf-url-wrap .evtf-info { flex: none; margin-left: 4px; }
+.evtf-url-wrap .evtf-info iconify-icon { color: inherit; font-size: 16px; }
+.evtf-url-wrap .evtf-info .evtf-tip { left: auto; right: 0; }
+.evtf-url-wrap .evtf-info .evtf-tip::before { left: auto; right: 5px; }
 .evtf-label .req { color: var(--error); margin-left: 3px; }
 .evtf-hint { font-size: 12px; color: var(--gray-450); }
 .evtf-err { font-size: 12px; font-weight: 600; color: var(--error); }
@@ -341,3 +356,6 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
 .evtf-att-status.declined, .evtf-att-status.no_show { background: #fdecea; color: var(--error); }
 .evtf-drawer-foot { flex: none; display: flex; gap: 10px; padding: 16px 24px; border-top: 1px solid var(--border-default); }
 .evtf-invite-inline { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+
+/* Host rows in the Create/Edit form reuse the attendee row; a real photo replaces the initials disc. */
+.evtf-att-photo { object-fit: cover; background: var(--gray-100); }

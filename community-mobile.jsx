@@ -288,11 +288,15 @@ function SideMenuCM({ open, onClose }) {
 }
 
 function CMTopBar({ onMenu, onMessages }) {
+  /* Shared header points pill from mobilechrome.jsx (lifetime points, taps
+     through to Rewards). Resolved at render so script order doesn't matter. */
+  const PointsPill = window.PFPointsPillC;
   return (
     <header className="cm-top">
       <button className="cm-burger" aria-label="Menu" onClick={onMenu}><DSCM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
       <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
       <span className="grow" />
+      {PointsPill && <PointsPill />}
       <button className="cm-iconbtn" aria-label="Search"><DSCM.Icon name="search" size={21} color="var(--brand-navy)" /></button>
       <button className="cm-iconbtn" aria-label="Notifications">
         <DSCM.IconifyIcon name="lucide:bell" size={21} color="var(--brand-navy)" /><span className="dot">12</span>

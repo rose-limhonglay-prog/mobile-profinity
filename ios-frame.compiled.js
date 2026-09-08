@@ -423,7 +423,8 @@ function IOSDevice({
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
-      overflow: 'auto'
+      overflowX: 'hidden',
+      overflowY: 'auto'
     }
   }, children), keyboard && /*#__PURE__*/React.createElement(IOSKeyboard, {
     dark: dark

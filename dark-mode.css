@@ -79,6 +79,13 @@
 }
 [data-theme="dark"] .m-iconbtn { background: rgba(206, 153, 87, 0.12); }
 [data-theme="dark"] .m-iconbtn:active { background: rgba(206, 153, 87, 0.22); }
+[data-theme="dark"] .m-pts { background: rgba(233, 41, 58, 0.16); color: #FE6559; }
+[data-theme="dark"] .m-pts-delta { color: #FE6559; }
+[data-theme="dark"] .m-pts.earn { background: rgba(233, 41, 58, 0.28); }
+[data-theme="dark"] .m-pts:active { background: rgba(233, 41, 58, 0.26); }
+[data-theme="dark"] .m-screen.chrome-float .m-pts { background: rgba(38, 34, 70, 0.6); border-color: rgba(255, 255, 255, 0.14); }
+[data-theme="dark"] .m-pts-tally .m-pts { background: rgba(38, 34, 70, 0.96); border-color: rgba(255, 255, 255, 0.14); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5); }
+[data-theme="dark"] .m-pts-tally .m-pts.earn { background: #4b2a33; }
 [data-theme="dark"] .m-top .m-iconbtn svg,
 [data-theme="dark"] .pm-top .pm-iconbtn svg,
 [data-theme="dark"] .cm-top .cm-iconbtn svg,

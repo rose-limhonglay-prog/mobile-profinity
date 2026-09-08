@@ -217,7 +217,7 @@ function LBRow({
     size: 38,
     style: r.isKaty ? {
       flex: "none",
-      background: "linear-gradient(135deg,#63AEFF,#3F86D4)"
+      background: "linear-gradient(135deg,#FDBF38,#F39E3D)"
     } : {
       flex: "none"
     }

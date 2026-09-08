@@ -143,6 +143,303 @@
     if (i === SM_TIER_LADDER_C.length - 1) return null;
     return SM_TIER_LADDER_C[i + 1];
   }
+
+  /* ===== header points pill ===================================================
+     The member's lifetime gamification points, sat between the logo and the
+     search icon. Icon is the red-lips Lottie (lottie.host yaURgbT5P7) fed
+   as raw JSON through
+     lottie-web (never the lottie.host /embed iframe — it caches hard and
+     ignores re-publishes). Reads window.PFLoyalty when loyalty-engine.js is on
+     the page and falls back to the engine's seeded headline otherwise; a
+     `pf:points-earned` event (dispatched by popPoints in app.jsx) bumps the
+     total live and books it in the engine so Rewards stays in step.
+      The number reads in the artwork's lipstick red (#E9293A, #FE6559 in dark mode); the tooltip
+     still reads lifetime points against the engine's beakerFullPoints scale. */
+  const PTS_LOTTIE_SRCC = "https://lottie.host/fb136996-c391-43d9-8292-4b95782aa9d0/yaURgbT5P7.json";
+  const PTS_LOTTIE_LIBC = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
+  const PTS_FALLBACKC = 14000;
+  const PTS_FULL_FALLBACKC = 20000;
+  let ptsLottiePromiseC = null;
+  function ptsLottieDataC() {
+    if (!ptsLottiePromiseC) {
+      ptsLottiePromiseC = fetch(PTS_LOTTIE_SRCC).then(r => r.ok ? r.json() : null).catch(() => {
+        ptsLottiePromiseC = null;
+        return null;
+      });
+    }
+    return ptsLottiePromiseC;
+  }
+  /* Same data-pf-lottie marker as app.jsx / tour.js so the lib is injected once. */
+  function ptsEnsureLottieLibC() {
+    if (window.lottie || document.querySelector("script[data-pf-lottie]")) return;
+    const sc = document.createElement("script");
+    sc.src = PTS_LOTTIE_LIBC;
+    sc.async = true;
+    sc.setAttribute("data-pf-lottie", "1");
+    document.head.appendChild(sc);
+  }
+  function ptsReduceMotionC() {
+    return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+  function ptsReadTotalC() {
+    const eng = window.PFLoyalty;
+    if (eng) {
+      try {
+        return Math.max(0, Math.round(eng.getState().lifetimePoints || 0));
+      } catch (e) {/* fall through */}
+    }
+    return PTS_FALLBACKC;
+  }
+  /* Lifetime points scale for the pill's tooltip — the engine's
+     beakerFullPoints config (20,000), shared with the Rewards card. */
+  function ptsReadFullC() {
+    const eng = window.PFLoyalty;
+    if (eng && eng.getConfig) {
+      try {
+        return Math.max(1, +eng.getConfig().beakerFullPoints || PTS_FULL_FALLBACKC);
+      } catch (e) {/* fall through */}
+    }
+    return PTS_FULL_FALLBACKC;
+  }
+  function PointsIconC() {
+    const host = React.useRef(null);
+    const [ready, setReady] = useStateC(false);
+    useEffectC(() => {
+      let anim,
+        iv,
+        cancelled = false;
+      const still = ptsReduceMotionC();
+      function start() {
+        if (cancelled || !window.lottie || !host.current) return;
+        ptsLottieDataC().then(data => {
+          if (!data || cancelled || !host.current) return;
+          anim = window.lottie.loadAnimation({
+            container: host.current,
+            renderer: "svg",
+            loop: !still,
+            autoplay: !still,
+            animationData: data,
+            rendererSettings: {
+              preserveAspectRatio: "xMidYMid meet",
+              progressiveLoad: false
+            }
+          });
+          anim.addEventListener("DOMLoaded", () => {
+            if (cancelled) return;
+            if (still) anim.goToAndStop(0, true);
+            setReady(true);
+          });
+        });
+      }
+      ptsEnsureLottieLibC();
+      if (window.lottie) start();else {
+        iv = setInterval(() => {
+          if (window.lottie) {
+            clearInterval(iv);
+            iv = null;
+            start();
+          }
+        }, 120);
+        setTimeout(() => {
+          if (iv) clearInterval(iv);
+        }, 8000);
+      }
+      return () => {
+        cancelled = true;
+        if (anim) anim.destroy();
+        if (iv) clearInterval(iv);
+      };
+    }, []);
+    return /*#__PURE__*/React.createElement("span", {
+      className: "m-pts-ic",
+      "aria-hidden": "true"
+    }, !ready && /*#__PURE__*/React.createElement("span", {
+      className: "m-pts-ic-fb"
+    }, /*#__PURE__*/React.createElement(DSC.IconifyIcon, {
+      name: "lucide:syringe",
+      size: 18,
+      color: "#E9293A"
+    })), /*#__PURE__*/React.createElement("span", {
+      ref: host,
+      className: "m-pts-ic-anim" + (ready ? " on" : "")
+    }));
+  }
+
+  /* Tweened display value: eases from the previous total to the new one so an
+     earned +15 visibly ticks the counter up instead of jumping. */
+  function usePointsCountUpC(target) {
+    const [shown, setShown] = useStateC(target);
+    const from = React.useRef(target);
+    useEffectC(() => {
+      const start = from.current;
+      if (start === target) return;
+      if (ptsReduceMotionC() || typeof requestAnimationFrame !== "function") {
+        from.current = target;
+        setShown(target);
+        return;
+      }
+      const t0 = performance.now(),
+        dur = 650;
+      let raf;
+      const tick = now => {
+        const p = Math.min(1, (now - t0) / dur),
+          e = 1 - Math.pow(1 - p, 3);
+        const v = Math.round(start + (target - start) * e);
+        setShown(v);
+        if (p < 1) raf = requestAnimationFrame(tick);else from.current = target;
+      };
+      raf = requestAnimationFrame(tick);
+      return () => {
+        cancelAnimationFrame(raf);
+        from.current = target;
+      };
+    }, [target]);
+    return shown;
+  }
+
+  /* ---- floating tally: the pill's stand-in while the header can't be seen ----
+     Hold time after the last payout before the tally slides away. */
+  const PTS_TALLY_HOLDC = 2400;
+  /* True when the header pill is actually on screen: it needs a box inside the
+     viewport, no faded/hidden ancestor, and it must win a hit-test at its own
+     centre — a header slid away with translateY(-100%) + pointer-events:none, a
+     pill faded out in chrome-float, or any sheet / scrim lying over it
+     (Comments, drawer, modal) all fail that. */
+  function ptsPillVisibleC(el) {
+    if (!el || typeof document === "undefined" || !document.elementFromPoint) return true;
+    const r = el.getBoundingClientRect();
+    if (!r.width || !r.height) return false;
+    const cx = r.left + r.width / 2,
+      cy = r.top + r.height / 2;
+    if (cx < 0 || cy < 0 || cx >= window.innerWidth || cy >= window.innerHeight) return false;
+    for (let n = el; n && n !== document.body; n = n.parentElement) {
+      const cs = getComputedStyle(n);
+      if (cs.opacity === "0" || cs.visibility === "hidden" || cs.display === "none") return false;
+    }
+    const hit = document.elementFromPoint(cx, cy);
+    return !!(hit && el.contains(hit));
+  }
+  /* Screen root the tally is portaled into: escapes the hidden header's
+     transform and (z-index 9800) floats above the Comments sheet. */
+  function ptsTallyHostC(el) {
+    return el && el.closest && el.closest(".m-screen, .lm-screen, .ml-screen, .ag-screen, .cm-screen, .pm-screen, .ev-screen") || document.body;
+  }
+  /* Drops in under the status bar with the same icon, shows the same total
+     counting up with the "+N" delta, and slides away PTS_TALLY_HOLDC after the
+     last payout. Mounted on first use and then kept (hidden) so the Lottie
+     isn't reloaded for every payout. */
+  function PointsTallyC({
+    host,
+    on,
+    shown,
+    bump,
+    delta
+  }) {
+    return ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
+      className: "m-pts-tally" + (on ? " on" : ""),
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      tabIndex: -1,
+      className: "m-pts" + (delta && on ? " earn" : ""),
+      onClick: () => goC("RewardsDashboard.html")
+    }, /*#__PURE__*/React.createElement(PointsIconC, null), /*#__PURE__*/React.createElement("span", {
+      key: bump,
+      className: "m-pts-n" + (bump ? " pop" : "")
+    }, shown.toLocaleString("en-GB")), delta && on && /*#__PURE__*/React.createElement("span", {
+      key: delta.key,
+      className: "m-pts-delta",
+      "aria-hidden": "true"
+    }, "+", delta.amt))), host);
+  }
+  function PointsPillC() {
+    const [total, setTotal] = useStateC(ptsReadTotalC);
+    const [full, setFull] = useStateC(ptsReadFullC);
+    const [bump, setBump] = useStateC(0);
+    // last payout, shown as a floating "+N" delta over the pill for ~1.4s
+    const [delta, setDelta] = useStateC(null);
+    // floating tally (PointsTallyC) shown when the pill itself isn't visible
+    const pillRef = React.useRef(null);
+    const [tally, setTally] = useStateC(false);
+    const [tallyHost, setTallyHost] = useStateC(null);
+    const tallyTimer = React.useRef(null);
+    useEffectC(() => {
+      const refresh = () => {
+        setTotal(ptsReadTotalC());
+        setFull(ptsReadFullC());
+      };
+      const onEarn = e => {
+        const amt = e && e.detail ? Math.round(+e.detail.amount || 0) : 0;
+        if (!amt) return;
+        const eng = window.PFLoyalty;
+        if (eng) {
+          try {
+            /* detail.booked: the sender already wrote the ledger entry itself
+               (Profile's Today's Targets) — just re-read, don't award twice. */
+            if (e.detail.booked) {/* already in the engine */} else if (eng.awardPoints) eng.awardPoints(amt, e.detail.label, e.detail.actionId);else eng.setState({
+              lifetimePoints: (eng.getState().lifetimePoints || 0) + amt
+            });
+            refresh();
+          } catch (err) {
+            setTotal(t => t + amt);
+          }
+        } else {
+          setTotal(t => t + amt);
+        }
+        setBump(b => b + 1);
+        setDelta({
+          amt,
+          key: Date.now()
+        });
+        if (!ptsPillVisibleC(pillRef.current)) {
+          setTallyHost(h => h || ptsTallyHostC(pillRef.current));
+          setTally(true);
+          clearTimeout(tallyTimer.current);
+          tallyTimer.current = setTimeout(() => setTally(false), PTS_TALLY_HOLDC);
+        }
+      };
+      /* Another tab (Rewards, Profile) changed the shared engine state. */
+      const onStorage = e => {
+        if (!e.key || e.key === "pf-loyalty-state-v1" || e.key === "pf-loyalty-config-v1") refresh();
+      };
+      window.addEventListener("pf:points-earned", onEarn);
+      window.addEventListener("storage", onStorage);
+      return () => {
+        window.removeEventListener("pf:points-earned", onEarn);
+        window.removeEventListener("storage", onStorage);
+        clearTimeout(tallyTimer.current);
+      };
+    }, []);
+    const shown = usePointsCountUpC(total);
+    useEffectC(() => {
+      if (!delta) return;
+      const t = setTimeout(() => setDelta(null), 1500);
+      return () => clearTimeout(t);
+    }, [delta]);
+    const fill = Math.min(1, total / full);
+    const label = total.toLocaleString("en-GB") + " points, " + Math.round(fill * 100) + "% of " + full.toLocaleString("en-GB") + ". Open rewards";
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+      ref: pillRef,
+      type: "button",
+      className: "m-pts" + (delta ? " earn" : ""),
+      "aria-label": label,
+      title: total.toLocaleString("en-GB") + " / " + full.toLocaleString("en-GB") + " pts",
+      onClick: () => goC("RewardsDashboard.html")
+    }, /*#__PURE__*/React.createElement(PointsIconC, null), /*#__PURE__*/React.createElement("span", {
+      key: bump,
+      className: "m-pts-n" + (bump ? " pop" : "")
+    }, shown.toLocaleString("en-GB")), delta && /*#__PURE__*/React.createElement("span", {
+      key: delta.key,
+      className: "m-pts-delta",
+      "aria-hidden": "true"
+    }, "+", delta.amt)), tallyHost && /*#__PURE__*/React.createElement(PointsTallyC, {
+      host: tallyHost,
+      on: tally,
+      shown: shown,
+      bump: bump,
+      delta: delta
+    }));
+  }
   function MTopBarC({
     onMenu,
     onBell,
@@ -164,9 +461,10 @@
       alt: "PROfinity Academy"
     }), /*#__PURE__*/React.createElement("span", {
       className: "grow"
-    }), /*#__PURE__*/React.createElement("button", {
+    }), /*#__PURE__*/React.createElement(PointsPillC, null), /*#__PURE__*/React.createElement("button", {
       className: "m-iconbtn",
-      "aria-label": "Search"
+      "aria-label": "Search",
+      onClick: () => goC("SearchMobile.html")
     }, /*#__PURE__*/React.createElement(DSC.Icon, {
       name: "search",
       size: 20,
@@ -1411,4 +1709,9 @@
     }));
   }
   window.MobileChromeC = MobileChromeC;
+  /* The header points icon (doctor Lottie) — exposed for other pages. */
+  window.PFPointsIconC = PointsIconC;
+  /* The header points pill itself — mounted by pages that keep their own top
+     bar (ProfileMobile's PMTopBar) so the lifetime total reads the same. */
+  window.PFPointsPillC = PointsPillC;
 })();

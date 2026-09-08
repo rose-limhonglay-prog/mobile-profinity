@@ -75,6 +75,8 @@
 
   var DEFAULT_CONFIG = {
     creditConversionRate: 0.10,
+    weeklyPointsTarget: 500,   // Mon–Sun points goal (getWeekPoints); no longer drives the beaker
+    beakerFullPoints: 20000,   // lifetime points at which the beaker mascot (header pill, Rewards card) reads full
     creditExpiryMonths: 12,
     streakFreezeCost: 500,
     tierMultipliers: DEFAULT_TIER_MULTIPLIERS,
@@ -422,6 +424,41 @@
 
   function formatNumber(n) { return Math.round(n).toLocaleString("en-GB"); }
 
+  /* Points earned since 00:00 Monday of the current week (positive ledger
+     deltas only). Drives the fill level of the header beaker. */
+  function weekStartMs(now) {
+    var d = now ? new Date(now) : new Date();
+    var dow = (d.getDay() + 6) % 7; // Mon=0 … Sun=6
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow).getTime();
+  }
+  function getWeekPoints(state) {
+    state = state || getState();
+    var from = weekStartMs();
+    return (state.ledger || []).reduce(function (s, t) {
+      var ts = new Date(t.ts).getTime();
+      return s + (t.pointsDelta > 0 && ts >= from ? t.pointsDelta : 0);
+    }, 0);
+  }
+  /* Book a payout that was already decided elsewhere (the newsfeed's fixed
+     +15 like/comment reward) so it shows in the ledger, lifetime total and
+     this week's beaker fill. Skips the caps — those live in completeAction. */
+  function awardPoints(amount, label, actionId) {
+    amount = Math.max(0, Math.round(+amount || 0));
+    if (!amount) return getState();
+    var state = getState();
+    var credits = Math.round(amount * getConfig().creditConversionRate);
+    var txn = {
+      id: uid("txn"), ts: nowIso(), actionId: actionId || "evt_react_post", label: label || "Newsfeed engagement",
+      pointsDelta: amount, creditsDelta: credits, guardrailFlags: null, adminId: null, adjustmentReason: null
+    };
+    return setState({
+      lifetimePoints: state.lifetimePoints + amount,
+      spendableCredits: state.spendableCredits + credits,
+      rollingPoints30: (state.rollingPoints30 || 0) + amount,
+      ledger: state.ledger.concat([txn])
+    });
+  }
+
   window.PFLoyalty = {
     TIER_KEYS: TIER_KEYS,
     MOCK_DIRECTORY: MOCK_DIRECTORY,
@@ -437,6 +474,7 @@
     checkIn: checkIn, setStreakAtRisk: setStreakAtRisk, freezeStreak: freezeStreak,
     spendCreditsToFreezeStreak: spendCreditsToFreezeStreak, restoreBrokenStreak: restoreBrokenStreak,
     evaluateAchievements: evaluateAchievements,
+    getWeekPoints: getWeekPoints, awardPoints: awardPoints,
     formatNumber: formatNumber
   };
 })();

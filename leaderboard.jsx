@@ -110,7 +110,7 @@ function LBRow({ r, meRef, prizeFor }) {
           <LBLottie src={LB_MEDAL[r.rank]} size={44} />
         </span>}
       <DSLB.Avatar name={r.name} src={r.avatar} size={38}
-        style={r.isKaty ? { flex: "none", background: "linear-gradient(135deg,#63AEFF,#3F86D4)" } : { flex: "none" }} />
+        style={r.isKaty ? { flex: "none", background: "linear-gradient(135deg,#FDBF38,#F39E3D)" } : { flex: "none" }} />
       <span className="tx">
         <b>{r.name}{r.isKaty ? " (You)" : ""}</b>
         {prizeFor(r.rank) && <i>{prizeFor(r.rank)}</i>}

@@ -27,15 +27,16 @@ img { max-width: 100%; }
 
 /* ===== hide-on-scroll chrome (matches the newsfeed) ===== */
 .lm-screen .m-top { transition: background .28s ease, border-color .28s ease; }
-.lm-screen .m-top img, .lm-screen .m-burger, .lm-screen .m-iconbtn { transition: opacity .28s ease, transform .3s cubic-bezier(.4,0,.2,1); }
+.lm-screen .m-top img, .lm-screen .m-burger, .lm-screen .m-iconbtn, .lm-screen .m-pts { transition: opacity .28s ease, transform .3s cubic-bezier(.4,0,.2,1); }
 /* once scrolled, drop the bar container — a dedicated Search/Saved pair floats over the content instead */
 .lm-screen.chrome-float .m-top { position: absolute; top: 0; left: 0; right: 0; z-index: 20; background: transparent;
   -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom-color: transparent; }
 .lm-screen.chrome-float .m-top img,
 .lm-screen.chrome-float .m-burger { opacity: 0; transform: translateY(-8px); pointer-events: none; }
-.lm-screen.chrome-float .m-top .m-iconbtn { opacity: 0; pointer-events: none; }
+.lm-screen.chrome-float .m-top .m-iconbtn,
+.lm-screen.chrome-float .m-top .m-pts { opacity: 0; pointer-events: none; }
 @media (prefers-reduced-motion: reduce) {
-  .lm-screen .m-top, .lm-screen .m-top img, .lm-screen .m-burger, .lm-screen .m-iconbtn,
+  .lm-screen .m-top, .lm-screen .m-top img, .lm-screen .m-burger, .lm-screen .m-iconbtn, .lm-screen .m-pts,
   .lm-tabs, .lm-tab, .lm2-float-icons { transition: none; }
 }
 

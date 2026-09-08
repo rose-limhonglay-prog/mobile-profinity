@@ -222,7 +222,10 @@ function IOSDevice({
       {/* nav + content */}
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         {title !== undefined && <IOSNavBar title={title} dark={dark} />}
-        <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>
+        {/* overflowX hidden: off-canvas drawers (notifications / messages
+            panels parked at translateX(100%)) must never give the phone a
+            horizontal scrollbar strip under the dock */}
+        <div style={{ flex: 1, overflowX: 'hidden', overflowY: 'auto' }}>{children}</div>
         {keyboard && <IOSKeyboard dark={dark} />}
       </div>
       {/* home indicator — always on top */}

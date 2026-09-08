@@ -1117,7 +1117,7 @@ function ConferenceViewDM({ onScroll, toast }) {
 /* ---------------------------------------------------------------------------
    Menu tab — inbox hub
    --------------------------------------------------------------------------- */
-function MenuViewDM({ counts, onNav, onScroll }) {
+function MenuViewDM({ counts, onNav, onScroll, onTestPush }) {
   const rows = [
     { key: "requests", label: "Message requests", icon: "lucide:mail-plus", n: counts.requests, hi: counts.requests > 0 },
     { key: "archived", label: "Archived chats", icon: "lucide:archive", n: counts.archived },
@@ -1164,8 +1164,54 @@ function MenuViewDM({ counts, onNav, onScroll }) {
             <DSDM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
           </button>
         </div>
+        <div className="dm-sec-h">Testing</div>
+        <div className="dm-menu">
+          <button type="button" className="dm-menu-row" onClick={onTestPush}>
+            <span className="dm-menu-ic"><DSDM.IconifyIcon name="lucide:bell-ring" size={21} color="var(--brand-navy)" /></span>
+            <span className="dm-menu-label">Preview a notification</span>
+            <span className="dm-menu-n">sample</span>
+          </button>
+        </div>
         <div style={{ height: 16 }} />
       </div>
+    </div>);
+}
+
+/* ---------------------------------------------------------------------------
+   Sample push banner (Messages page only, for testing) — an incoming message
+   slides in under the Dynamic Island; tap opens the thread, auto-dismisses.
+   --------------------------------------------------------------------------- */
+const PUSH_SAMPLES_DM = [
+  { convId: "sarahc", from: "sarahc", text: "Katy, are the follow-up photos from your lip case ready for Thursday? 📸" },
+  { convId: "g-casereview", from: "tim", text: "Reminder — case review starts in 15 minutes. Bring your before/afters!" },
+  { convId: "miranda", from: "miranda", text: "Your Technique Tuesday seat is confirmed. See you there!" }];
+
+function PushBannerDM({ push, onOpen, onClose }) {
+  const people = usePeopleDM();
+  const [leaving, setLeaving] = useStateDM(false);
+  useEffectDM(() => {
+    setLeaving(false);
+    const t1 = window.setTimeout(() => setLeaving(true), 6400);
+    const t2 = window.setTimeout(onClose, 6800);
+    return () => { window.clearTimeout(t1); window.clearTimeout(t2); };
+  }, [push.id]);
+  const sender = people.get(push.from);
+  return (
+    <div className={"dm-push" + (leaving ? " leaving" : "")} role="status" aria-live="polite">
+      <button type="button" className="dm-push-main" onClick={onOpen} aria-label={"Open message from " + (sender ? sender.name : "") }>
+        <span className="dm-push-av"><DMFace name={sender ? sender.name : "?"} src={sender && sender.avatar} size={44} /></span>
+        <span className="dm-push-body">
+          <span className="dm-push-top">
+            <span className="dm-push-app"><DSDM.IconifyIcon name="lucide:message-circle" size={12} color="#fff" />Messages</span>
+            <span className="dm-push-time">now</span>
+          </span>
+          <span className="dm-push-name">{sender ? sender.name : ""}{push.convName ? <span className="dm-push-ctx"> · {push.convName}</span> : null}</span>
+          <span className="dm-push-text">{push.text}</span>
+        </span>
+      </button>
+      <button type="button" className="dm-push-close" aria-label="Dismiss notification" onClick={onClose}>
+        <DSDM.IconifyIcon name="lucide:x" size={16} color="var(--gray-600)" />
+      </button>
     </div>);
 }
 
@@ -1221,6 +1267,8 @@ function MessagesAppDM() {
   const [toastState, setToastState] = useStateDM(null);
   const toastTimer = useRefDM(null);
   const [compact, onScroll] = useScrollDockDM(tab + ":" + route.name);
+  const [push, setPush] = useStateDM(null);
+  const pushSeq = useRefDM(0);
 
   useEffectDM(() => saveStoreDM(store), [store]);
   useEffectDM(() => () => { if (toastTimer.current) window.clearTimeout(toastTimer.current); }, []);
@@ -1258,6 +1306,27 @@ function MessagesAppDM() {
   const archived = convs.filter((c) => c.archived);
   const unreadTotal = active.reduce((n, c) => n + (c.unread || 0), 0);
   const current = route.id ? convs.find((c) => c.id === route.id) : null;
+
+  /* ---- sample push (testing) — adds a real incoming message, then banners it ---- */
+  const firePush = useCallbackDM(() => {
+    const sample = PUSH_SAMPLES_DM[pushSeq.current % PUSH_SAMPLES_DM.length];
+    pushSeq.current += 1;
+    const msg = { id: midDM(), from: sample.from, text: sample.text, ts: Date.now(), reactions: {} };
+    const inThread = route.name === "thread" && route.id === sample.convId;
+    setStore((s) => s.conversations.some((c) => c.id === sample.convId) ?
+      { ...s, conversations: s.conversations.map((c) => c.id !== sample.convId ? c : {
+        ...c, archived: false, unread: inThread ? 0 : (c.unread || 0) + 1, messages: c.messages.concat([msg]) }) } :
+      /* no thread with this person yet — the incoming message starts one */
+      { ...s, conversations: [{ id: sample.convId, kind: "dm", personId: sample.from, unread: 1, messages: [msg] }].concat(s.conversations) });
+    if (inThread) return;
+    const conv = store.conversations.find((c) => c.id === sample.convId);
+    setPush({ id: Date.now(), convId: sample.convId, from: sample.from, text: sample.text, convName: conv && conv.kind === "group" ? conv.name : null });
+  }, [route, store.conversations]);
+  useEffectDM(() => {
+    if (paramDM("nopush") !== null) return;
+    const t = window.setTimeout(() => firePush(), 6000);
+    return () => window.clearTimeout(t);
+  }, []);
 
   /* ---- mutations ---- */
   const updateConv = (id, fn) => setStore((s) => ({ ...s, conversations: s.conversations.map((c) => c.id === id ? fn(c) : c) }));
@@ -1378,7 +1447,7 @@ function MessagesAppDM() {
   } else if (tab === "conference") {
     view = <ConferenceViewDM onScroll={onScroll} toast={toast} />;
   } else if (tab === "menu") {
-    view = <MenuViewDM counts={counts} onNav={(k) => setRoute({ name: k })} onScroll={onScroll} />;
+    view = <MenuViewDM counts={counts} onNav={(k) => setRoute({ name: k })} onScroll={onScroll} onTestPush={() => { setTab("chats"); setRoute({ name: "list" }); window.setTimeout(firePush, 350); }} />;
   } else {
     view = <ChatsViewDM convs={active} archivedCount={archived.length} requestsCount={store.requests.length}
       onOpen={(c) => openThread(c, "list")} onOpenPerson={(id) => openThreadWith(id)} onActions={setRowActions} onCompose={() => setRoute({ name: "compose" })}
@@ -1435,6 +1504,8 @@ function MessagesAppDM() {
         </SheetDM>
 
         <ToastDM toast={toastState} />
+        {push && <PushBannerDM key={push.id} push={push} onClose={() => setPush(null)}
+          onOpen={() => { const c = store.conversations.find((x) => x.id === push.convId); setPush(null); setTab("chats"); if (c) openThread(c, "list"); else openThreadWith(push.from); }} />}
       </div>
     </PeopleCtxDM.Provider>);
 }

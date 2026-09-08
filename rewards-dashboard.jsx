@@ -81,24 +81,108 @@ function NotificationPreview({ hoursLabel, body }) {
   );
 }
 
-function StreakRiskBanner({ state, onSimResolve }) {
+/* Streak-at-risk banner (sits between the tier progress card and the stat
+   tiles). The streak lapses 24h after the last check-in, so the banner shows
+   whenever the member hasn't checked in for 12h+ (the engine's own same-day
+   threshold) and counts down live to that moment; an explicit riskDeadline
+   (demo button / server nudge) takes precedence. Checking in clears it. */
+const RDB_STREAK_WINDOW_MS = 24 * 3600000;
+const RDB_STREAK_WARN_MS = 12 * 3600000;
+function rdbStreakDeadline(streak) {
+  if (!streak || !streak.current || streak.frozen) return null;
+  if (streak.riskDeadline) return new Date(streak.riskDeadline).getTime();
+  const last = streak.lastCheckIn ? new Date(streak.lastCheckIn).getTime() : 0;
+  if (!last || Date.now() - last < RDB_STREAK_WARN_MS) return null;
+  return last + RDB_STREAK_WINDOW_MS;
+}
+function StreakRiskBanner({ state }) {
   const [now, setNow] = useStateRDB(() => Date.now());
   useEffectRDB(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
-  if (!state.streak.riskDeadline) return null;
-  const remaining = new Date(state.streak.riskDeadline).getTime() - now;
+  const deadline = rdbStreakDeadline(state.streak);
+  if (!deadline) return null;
+  const remaining = deadline - now;
+  const days = state.streak.current;
   return (
-    <div className="rdb-risk-banner">
-      <div className="rdb-risk-head"><DSRDB.IconifyIcon name="lucide:flame" size={20} color="#fff" /><span>Your {state.streak.current}-Day Streak is at Risk!</span></div>
-      <div className="rdb-risk-clock">Expires in {fmtClock(remaining)}</div>
-      <div className="rdb-risk-ctas">
-        <button className="ml-btn ml-btn-sm" type="button" onClick={() => { PF_RDB.completeAction("evt_webinar_attend"); onSimResolve(); }}>Read daily article</button>
-        <button className="ml-btn ml-btn-sm" style={{ background: "rgba(255,255,255,.22)", color: "#fff" }} type="button" onClick={() => goRDB("RewardsStore.html")}>Share a reward</button>
-      </div>
+    <section className="rdb-risk-banner" aria-label={"Your " + days + "-day streak is at risk"}>
+      <div className="rdb-risk-head"><DSRDB.IconifyIcon name="lucide:flame" size={22} color="#fff" /><span>Your {days}-Day Streak is at Risk!</span></div>
+      <div className="rdb-risk-clock" aria-live="off">Expires in {fmtClock(remaining)}</div>
       <div className="rdb-notif-stack">
-        <NotificationPreview hoursLabel="· 6h before" body={"Don't lose your " + state.streak.current + "-day streak — check in before it expires!"} />
+        <NotificationPreview hoursLabel="· 6h before" body={"Don't lose your " + days + "-day streak — check in before it expires!"} />
         <NotificationPreview hoursLabel="· 2h before" body={"Last call! Your streak expires in 2 hours."} />
       </div>
-    </div>
+    </section>
+  );
+}
+
+/* Progress-card mascot: a looping Lottie (lottie.host wCXgQ6B9gz) fed as raw
+   JSON through lottie-web — never the /embed iframe, which caches hard and
+   ignores re-publishes. Replaced the shared smiling-beaker (PointsIconC) on
+   2026-09-08; the header points pill (mobile.jsx / mobilechrome.jsx) has its
+   own red-lips Lottie (yaURgbT5P7), number in #E9293A. The tooltip still
+   reports lifetime points against the engine's beakerFullPoints scale. */
+const RDB_MASCOT_SRC = "https://lottie.host/92d8e0be-53e8-48cf-874d-627c6d4affd5/wCXgQ6B9gz.json";
+const RDB_LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
+let rdbMascotPromise = null;
+function rdbMascotData() {
+  if (!rdbMascotPromise) {
+    rdbMascotPromise = fetch(RDB_MASCOT_SRC).then((r) => r.ok ? r.json() : null).catch(() => { rdbMascotPromise = null; return null; });
+  }
+  return rdbMascotPromise;
+}
+/* Same data-pf-lottie marker as mobilechrome.jsx / app.jsx so the lib is injected once. */
+function rdbEnsureLottieLib() {
+  if (window.lottie || document.querySelector("script[data-pf-lottie]")) return;
+  const sc = document.createElement("script");
+  sc.src = RDB_LOTTIE_LIB;
+  sc.async = true;
+  sc.setAttribute("data-pf-lottie", "1");
+  document.head.appendChild(sc);
+}
+function rdbReduceMotion() {
+  return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+}
+function rdbBeakerFull() {
+  try { return Math.max(1, +PF_RDB.getConfig().beakerFullPoints || 20000); } catch (e) { return 20000; }
+}
+function rdbReadLifetime() {
+  try { return Math.max(0, Math.round(PF_RDB.getState().lifetimePoints || 0)); } catch (e) { return 0; }
+}
+function RdbBeaker() {
+  const host = React.useRef(null);
+  const [ready, setReady] = useStateRDB(false);
+  const [pts, setPts] = useStateRDB(rdbReadLifetime);
+  useEffectRDB(() => {
+    const refresh = () => setPts(rdbReadLifetime());
+    window.addEventListener("pf:points-earned", refresh);
+    window.addEventListener("storage", refresh);
+    return () => { window.removeEventListener("pf:points-earned", refresh); window.removeEventListener("storage", refresh); };
+  }, []);
+  useEffectRDB(() => {
+    let anim, iv, cancelled = false;
+    const still = rdbReduceMotion();
+    function start() {
+      if (cancelled || !window.lottie || !host.current) return;
+      rdbMascotData().then((data) => {
+        if (!data || cancelled || !host.current) return;
+        anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: !still, autoplay: !still, animationData: data,
+          rendererSettings: { preserveAspectRatio: "xMidYMid meet", progressiveLoad: false } });
+        anim.addEventListener("DOMLoaded", () => {
+          if (cancelled) return;
+          if (still) anim.goToAndStop(0, true);
+          setReady(true);
+        });
+      });
+    }
+    rdbEnsureLottieLib();
+    if (window.lottie) start();
+    else { iv = setInterval(() => { if (window.lottie) { clearInterval(iv); iv = null; start(); } }, 120); setTimeout(() => { if (iv) clearInterval(iv); }, 8000); }
+    return () => { cancelled = true; if (anim) anim.destroy(); if (iv) clearInterval(iv); };
+  }, []);
+  return (
+    <span className="rdb-lottie rdb-beaker" aria-hidden="true" title={PF_RDB.formatNumber(pts) + " / " + PF_RDB.formatNumber(rdbBeakerFull()) + " pts"}>
+      {!ready && <span className="rdb-beaker-fb"><DSRDB.IconifyIcon name="lucide:flask-conical" size={56} color="#FF465C" /></span>}
+      <span ref={host} className={"rdb-beaker-anim" + (ready ? " on" : "")} />
+    </span>
   );
 }
 
@@ -114,11 +198,8 @@ function RdbHeader({ state, tier, onOpenWallet }) {
           <DSRDB.IconifyIcon name="lucide:wallet" size={15} color="#fff" />{PF_RDB.formatNumber(state.spendableCredits)}
         </button>
       </div>
-      <span className="rdb-tierpill"><DSRDB.IconifyIcon name="lucide:crown" size={12} color="#fff" /> {tier} Membership</span>
       <div className="rdb-progress-card">
-        <span className="rdb-lottie" aria-hidden="true">
-          <iframe src="https://lottie.host/embed/6f0e55a1-dc57-49d4-b476-c3bf42c31413/GbttNIK744.json" title="" scrolling="no" style={{ width: "88px", height: "88px", border: "none", background: "transparent" }} />
-        </span>
+        <RdbBeaker />
         <div className="rdb-progress-body">
           <div className="rdb-progress-top">
             <span>{progress.current ? progress.current.name : "Unranked"}</span>
@@ -176,7 +257,7 @@ function RdbQuickNav() {
       {items.map((it) => (
         <button key={it.label} className="rdb-quicknav-item" type="button" onClick={() => goRDB(it.href)}>
           <span className="rdb-quicknav-icon">
-            <DSRDB.IconifyIcon name={it.icon} size={20} color="var(--brand-navy)" />
+            <DSRDB.IconifyIcon name={it.icon} size={20} color="#fff" />
             {it.dot ? <span className="rdb-quicknav-dot" aria-hidden="true" /> : null}
           </span>
           <span>
@@ -209,7 +290,7 @@ function RdbNextReward({ state, config }) {
   const affordable = config.storeItems.filter((i) => i.cost <= state.spendableCredits + 500).sort((a, b) => a.cost - b.cost)[0] || config.storeItems[0];
   return (
     <button className="ml-card rdb-next-reward" type="button" onClick={() => goRDB("RewardsStore.html")}>
-      <span className="rdb-next-reward-icon"><DSRDB.IconifyIcon name="lucide:gift" size={22} color="#fff" /></span>
+      <span className="rdb-next-reward-icon"><DSRDB.IconifyIcon name="lucide:gift" size={22} color="#561F22" /></span>
       <span className="rdb-next-reward-main"><span className="ti">Next Available Reward</span><span className="su">{affordable.name} · {PF_RDB.formatNumber(affordable.cost)} credits</span></span>
       <DSRDB.IconifyIcon name="lucide:chevron-right" size={18} color="var(--gray-400)" />
     </button>
@@ -229,7 +310,7 @@ function RewardsDashboardHome() {
       <MobileChromeC />
       <div className="lm-scroll">
         <RdbHeader state={state} tier={state.user.membershipTier} onOpenWallet={() => setWalletOpen(true)} />
-        <StreakRiskBanner state={state} onSimResolve={() => { refresh(); flash("Nice — streak saved!"); }} />
+        <StreakRiskBanner state={state} />
         <div style={{ padding: "0 20px" }}>
           <RdbEngagementCards state={state} />
           <div className="ml-sec-h"><h2>Jump back in</h2></div>

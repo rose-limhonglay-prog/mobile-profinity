@@ -254,7 +254,7 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 }
 
 /* ===== slide-in drawer (Messages panel, opened from header icon) ===== */
-.m-drawer-wrap{position:absolute;inset:0;z-index:200;pointer-events:none}
+.m-drawer-wrap{position:absolute;inset:0;z-index:200;pointer-events:none;overflow:hidden}
 .m-drawer-wrap.open{pointer-events:auto}
 .m-drawer-scrim{position:absolute;inset:0;background:rgba(16,24,40,.4);opacity:0;transition:opacity .25s ease}
 .m-drawer-wrap.open .m-drawer-scrim{opacity:1}
@@ -494,3 +494,53 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
   background:#fff;box-shadow:0 1px 3px rgba(16,24,40,.3);transition:transform .18s ease;pointer-events:none;
   display:flex;align-items:center;justify-content:center}
 .sm-switch.on .sm-knob{transform:translateX(22px)}
+
+/* ===== header points pill — same rules as mobilechrome.css (CMTopBar mounts
+   window.PFPointsPillC; CommunityMobile doesn't load mobilechrome.css) ===== */
+/* header points pill — lifetime gamification points; tap → Rewards Dashboard */
+.m-pts{position:relative;display:inline-flex;align-items:center;gap:4px;height:40px;padding:0 14px 0 6px;border-radius:var(--r-pill);border:none;cursor:pointer;
+  background:var(--surface-sunken);color:#E9293A;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;line-height:1;letter-spacing:-.01em;
+  -webkit-tap-highlight-color:transparent;transition:background-color .2s ease,box-shadow .2s ease,border-color .2s ease}
+.m-pts:active{background:var(--gray-200)}
+.m-pts-ic{position:relative;flex:none;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+.m-pts-ic-fb{display:flex;align-items:center;justify-content:center;width:30px;height:30px}
+/* the red-lips artwork spans ~86% of its 512px canvas, so the svg is scaled up
+   around its centre to sit at icon size in the 30px slot */
+.m-pts-ic-anim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s ease}
+.m-pts-ic-anim.on{opacity:1}
+.m-pts-ic-anim svg{display:block;width:30px!important;height:30px!important;transform:scale(1.15);transform-origin:50% 50%;overflow:visible}
+.m-pts-n{display:inline-block;font-variant-numeric:tabular-nums;transform-origin:50% 50%}
+.m-pts-n.pop{animation:m-pts-pop .6s cubic-bezier(.22,.61,.36,1)}
+@keyframes m-pts-pop{0%{transform:scale(1)}35%{transform:scale(1.22);color:var(--brand-gold)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.m-pts-n.pop{animation:none}.m-pts,.m-pts-ic-anim{transition:none}}
+
+/* earn emphasis — the pill is now the only feedback for a like/comment payout
+   (the floating "+N points" chip beside the button was removed): navy tint +
+   expanding ring on the pill, number pops (above), and a "+N" delta floats up
+   from the number and fades. */
+.m-pts.earn{background:rgba(233,41,58,.12);animation:m-pts-ring .9s ease-out}
+@keyframes m-pts-ring{0%{box-shadow:0 0 0 0 rgba(233,41,58,.45)}100%{box-shadow:0 0 0 12px rgba(233,41,58,0)}}
+.m-pts-delta{position:absolute;right:10px;top:-2px;pointer-events:none;font-family:var(--font-sans);font-weight:var(--fw-bold);
+  font-size:13px;line-height:1;color:#E9293A;text-shadow:0 1px 0 var(--surface-card);
+  animation:m-pts-delta 1.4s cubic-bezier(.22,.61,.36,1) forwards}
+@keyframes m-pts-delta{0%{opacity:0;transform:translateY(8px) scale(.8)}18%{opacity:1;transform:translateY(-6px) scale(1.1)}
+  65%{opacity:1;transform:translateY(-14px) scale(1)}100%{opacity:0;transform:translateY(-22px) scale(1)}}
+@media (prefers-reduced-motion:reduce){.m-pts.earn{animation:none}.m-pts-delta{animation:none;transform:translateY(-14px)}}
+
+/* floating tally — the pill's stand-in while the header is hidden (scrolled
+   away) or covered (Comments sheet, drawer…): see PointsTally in the jsx. Sits
+   under the status bar, above any sheet; drops in on .on and slides back up
+   when the class is removed after the hold. */
+.m-pts-tally{position:absolute;left:50%;top:56px;z-index:9800;pointer-events:none;visibility:hidden;opacity:0;
+  transform:translate(-50%,-160%);transition:transform .32s cubic-bezier(.4,0,.2,1),opacity .28s ease,visibility 0s linear .32s}
+.m-pts-tally.on{visibility:visible;opacity:1;transform:translate(-50%,0);transition:none;
+  animation:m-pts-tally-in .5s cubic-bezier(.22,1.06,.36,1) both}
+@keyframes m-pts-tally-in{0%{opacity:0;transform:translate(-50%,-160%)}100%{opacity:1;transform:translate(-50%,0)}}
+.m-pts-tally .m-pts{pointer-events:auto;height:44px;padding:0 18px 0 8px;font-size:17px;background:var(--surface-card);
+  border:1px solid var(--border-default);box-shadow:0 12px 32px rgba(16,24,40,.22),0 2px 6px rgba(16,24,40,.08)}
+.m-pts-tally .m-pts.earn{background:#fde8ea;animation:m-pts-tally-ring .9s ease-out}
+@keyframes m-pts-tally-ring{0%{box-shadow:0 0 0 0 rgba(233,41,58,.45),0 12px 32px rgba(16,24,40,.22)}
+  100%{box-shadow:0 0 0 12px rgba(233,41,58,0),0 12px 32px rgba(16,24,40,.22)}}
+/* the "+N" would float up into the Dynamic Island here, so it rises beside the pill instead */
+.m-pts-tally .m-pts-delta{right:auto;left:calc(100% + 6px);top:14px;text-shadow:none}
+@media (prefers-reduced-motion:reduce){.m-pts-tally,.m-pts-tally.on{transition:none;animation:none}.m-pts-tally .m-pts.earn{animation:none}}
