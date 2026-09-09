@@ -262,8 +262,9 @@
 }
 
 /* admin-pinned posts (styles.css .pf-pinned-*) */
-[data-theme="dark"] .pf-pinned-card{background:color-mix(in srgb, var(--brand-gold) 10%, var(--surface-card));
+[data-theme="dark"] .pf-pinned-box{background:color-mix(in srgb, var(--brand-gold) 10%, var(--surface-card));
   border-color:color-mix(in srgb, var(--brand-gold) 40%, transparent)}
-[data-theme="dark"] .pf-pin-chip{background:color-mix(in srgb, var(--brand-gold) 18%, var(--surface-card));color:var(--brand-gold)}
-[data-theme="dark"] .pf-pinned-card-tag-btn{color:var(--text-secondary)}
+[data-theme="dark"] .pf-pinned-box-av{border-color:var(--surface-card)}
+[data-theme="dark"] .pf-pin-chip,[data-theme="dark"] .pf-pinned-mini-kind{background:color-mix(in srgb, var(--brand-gold) 18%, var(--surface-card));color:var(--brand-gold)}
+[data-theme="dark"] .pf-pinned-card-tag-btn,[data-theme="dark"] .pf-pinned-box-hint{color:var(--text-secondary)}
 [data-theme="dark"] .pf-pinned-card-tag-btn:hover{color:var(--brand-gold)}

@@ -3603,6 +3603,52 @@ const SAMPLE_PINNED_POST = {
   actioned: false,
   commentList: thread("Hello from Leeds! Two years injecting, here to learn the full-face approach 🙌")
 };
+const SAMPLE_PINNED_IMAGE_POST = {
+  id: "ff_pinned2",
+  author: TIM,
+  keepAuthor: true,
+  time: "3d",
+  hashtags: ["masterclass"],
+  media: [IMG.communityPoster],
+  body: "This week's Technique Tuesday: full-face assessment before you ever pick up a syringe. Live Tuesday 8PM UK / 4PM ET — replay in My Learning the next morning. Bring your questions.",
+  likes: "2.1K",
+  comments: "138",
+  shares: "210",
+  actioned: false,
+  commentList: thread("Blocked out my Tuesday evening for this one — the assessment framework changed how I consult.")
+};
+const SAMPLE_PINNED_POLL_POST = {
+  id: "ff_pinned3",
+  author: PROFINITY,
+  keepAuthor: true,
+  time: "5d",
+  hashtags: ["community"],
+  body: "Help us plan next month's masterclass — vote for the topic you want covered in depth 👇",
+  poll: {
+    question: "Which masterclass should we run next?",
+    options: [{
+      label: "Lip complications & rescue",
+      pct: 38
+    }, {
+      label: "Tear trough assessment",
+      pct: 27
+    }, {
+      label: "Jawline & chin planning",
+      pct: 21
+    }, {
+      label: "Clinic pricing & consults",
+      pct: 14
+    }],
+    votes: 2300
+  },
+  likes: "1.6K",
+  comments: "302",
+  shares: "58",
+  actioned: false,
+  commentList: thread("Lip complications please — the one topic nobody teaches properly.")
+};
+/* All three web-only pinned samples (video, image, poll), in pin order. */
+const SAMPLE_PINNED_POSTS = [SAMPLE_PINNED_POST, SAMPLE_PINNED_IMAGE_POST, SAMPLE_PINNED_POLL_POST];
 const PORTRAIT_IMG_POST_1 = {
   id: "ff_ptimg1",
   author: MIRANDA,
@@ -4701,7 +4747,7 @@ const TIER_FEED_SEQUENCES = {
    to seed interaction state and search so switching tiers via the live
    persona-preview switcher never loses a post's likes/comments state, and
    Search can still find posts that only some tiers' sequences contain. */
-const ALL_FEED_SEQUENCE_POSTS = Object.values([LIVE_NOW_POST, SAMPLE_LONG_TEXT_POST, SAMPLE_CAROUSEL_POST, SAMPLE_PINNED_POST, ...FREE_FEED_SEQUENCE, ...CONFIDENCE_FEED_SEQUENCE, ...MASTERY_FEED_SEQUENCE].reduce((m, p) => {
+const ALL_FEED_SEQUENCE_POSTS = Object.values([LIVE_NOW_POST, SAMPLE_LONG_TEXT_POST, SAMPLE_CAROUSEL_POST, ...SAMPLE_PINNED_POSTS, ...FREE_FEED_SEQUENCE, ...CONFIDENCE_FEED_SEQUENCE, ...MASTERY_FEED_SEQUENCE].reduce((m, p) => {
   m[p.id] = p;
   return m;
 }, {}));
@@ -10783,6 +10829,505 @@ function ShareSheet({
   const host = typeof document !== "undefined" && document.querySelector(".m-screen, .cm-screen, .lm-screen, .pm-screen, .ev-screen");
   return host ? ReactDOM.createPortal(sheet, host) : sheet;
 }
+
+/* ===== Web share modal — Facebook-style dialog for the desktop newsfeed =====
+   Three stacked zones: a compose row (avatar · destination chip · audience
+   chip · caption · Share now), a horizontal "Send in Messages" rail of
+   contacts, and a "Share to" row of round action tiles. Mobile keeps the
+   full-page ShareSheet above; FeedPost picks between them on PF_EMBED. */
+const WEB_SHARE_AUDIENCES = [{
+  k: "public",
+  label: "Public",
+  sub: "Anyone on Profinity",
+  icon: "lucide:globe"
+}, {
+  k: "members",
+  label: "Members",
+  sub: "Profinity members only",
+  icon: "lucide:users"
+}, {
+  k: "tier",
+  label: "My tier",
+  sub: "Members in your tier and above",
+  icon: "lucide:crown"
+}, {
+  k: "me",
+  label: "Only me",
+  sub: "Just you",
+  icon: "lucide:lock"
+}];
+const WEB_SHARE_CONTACTS = [TIM, MIRANDA, SARAH, PRIYA, AMIR, MARK, BETH, OWEN, RACHEL, LEO];
+function WebShareDrop({
+  label,
+  className,
+  onClose,
+  children
+}) {
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, []);
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    onClick: onClose,
+    style: {
+      position: "fixed",
+      inset: 0,
+      zIndex: 1105
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-dd" + (className ? " " + className : ""),
+    role: "dialog",
+    "aria-label": label
+  }, children));
+}
+function WebShareModal({
+  post,
+  onClose,
+  onShare
+}) {
+  const shRank = Math.max(0, SHARE_TIER_ORDER.indexOf(shareTier()));
+  const dests = SHARE_DESTINATIONS.map(d => ({
+    ...d,
+    locked: d.tier > shRank
+  }));
+  const [dest, setDest] = useState("feed");
+  const [aud, setAud] = useState("public");
+  const [pop, setPop] = useState(null); // null | "dest" | "aud" | "emoji" | "profile"
+  const [caption, setCaption] = useState("");
+  const [sent, setSent] = useState({});
+  const [note, setNote] = useState(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(true);
+  const closeRef = useRef(null);
+  const taRef = useRef(null);
+  const railRef = useRef(null);
+  const noteTimer = useRef(null);
+  useEffect(() => {
+    const prev = document.activeElement;
+    if (closeRef.current) closeRef.current.focus();
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      clearTimeout(noteTimer.current);
+      if (prev && prev.focus) prev.focus();
+    };
+  }, []);
+  const flash = msg => {
+    setNote(msg);
+    clearTimeout(noteTimer.current);
+    noteTimer.current = setTimeout(() => setNote(null), 1900);
+  };
+  const syncRail = () => {
+    const el = railRef.current;
+    if (!el) return;
+    setCanPrev(el.scrollLeft > 4);
+    setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  };
+  useEffect(() => {
+    syncRail();
+  }, []);
+  const scrollRail = dir => {
+    const el = railRef.current;
+    if (el) el.scrollBy({
+      left: dir * Math.max(200, el.clientWidth - 80),
+      behavior: "smooth"
+    });
+  };
+  const chosen = dests.find(d => d.k === dest);
+  const audience = WEB_SHARE_AUDIENCES.find(a => a.k === aud);
+  const firstName = n => n.replace(/^(Dr\.?|Nurse)\s+/i, "").split(" ")[0];
+  const postUrl = () => {
+    const base = typeof location !== "undefined" ? location.origin + location.pathname : "";
+    return base + "#post-" + (post && post.id ? post.id : "");
+  };
+  const shareText = () => {
+    const who = post && post.author ? post.author.name : "a member";
+    return "Check out this post from " + who + " on Profinity";
+  };
+  const insertEmoji = em => {
+    const ta = taRef.current;
+    const start = ta ? ta.selectionStart : caption.length;
+    const end = ta ? ta.selectionEnd : caption.length;
+    const next = caption.slice(0, start) + em + caption.slice(end);
+    setCaption(next);
+    const caret = start + em.length;
+    requestAnimationFrame(() => {
+      if (ta) {
+        ta.focus();
+        try {
+          ta.setSelectionRange(caret, caret);
+        } catch (e) {}
+      }
+    });
+  };
+  const submit = () => onShare({
+    destKey: chosen.k,
+    destLabel: chosen.k === "feed" ? "your feed" : chosen.label,
+    caption: caption.trim()
+  });
+  const sendTo = p => {
+    if (sent[p.name]) return;
+    setSent(s => ({
+      ...s,
+      [p.name]: true
+    }));
+    flash("Sent to " + firstName(p.name));
+  };
+  const copyLink = () => {
+    const url = postUrl();
+    const done = () => flash("Link copied");
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, done);else done();
+  };
+  const openWhatsApp = () => {
+    window.open("https://wa.me/?text=" + encodeURIComponent(shareText() + " " + postUrl()), "_blank", "noopener");
+  };
+  const openEmail = () => {
+    window.location.href = "mailto:?subject=" + encodeURIComponent(shareText()) + "&body=" + encodeURIComponent(shareText() + "\n\n" + postUrl());
+  };
+  const focusRail = () => {
+    const el = railRef.current && railRef.current.querySelector("button");
+    if (el) el.focus();
+    flash("Pick someone above to send in Messages");
+  };
+  const tiles = [{
+    k: "messages",
+    label: "Messages",
+    icon: "lucide:send",
+    onClick: focusRail
+  }, {
+    k: "whatsapp",
+    label: "WhatsApp",
+    icon: "mdi:whatsapp",
+    onClick: openWhatsApp
+  }, {
+    k: "copy",
+    label: "Copy link",
+    icon: "lucide:link",
+    onClick: copyLink
+  }, {
+    k: "channel",
+    label: "Channel",
+    icon: "lucide:users",
+    onClick: () => setPop("dest")
+  }, {
+    k: "profile",
+    label: "Member's profile",
+    icon: "lucide:user-plus",
+    onClick: () => setPop(p => p === "profile" ? null : "profile")
+  }, {
+    k: "email",
+    label: "Email",
+    icon: "lucide:mail",
+    onClick: openEmail
+  }];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-modal",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-labelledby": "pfw-sh-title",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "pfw-sh-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-sh-title",
+    id: "pfw-sh-title"
+  }, "Share"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cover-x pfw-sh-x",
+    "aria-label": "Close",
+    ref: closeRef,
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 20,
+    color: "var(--text-heading)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-scroll"
+  }, /*#__PURE__*/React.createElement("section", {
+    className: "pfw-sh-compose",
+    "aria-label": "Share to your feed"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-who"
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: ME.name,
+    src: ME.avatar,
+    size: 44
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-who-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-sh-name"
+  }, ME.name), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-chips"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-sh-chip-wrap"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-sh-chip" + (pop === "dest" ? " on" : ""),
+    "aria-haspopup": "dialog",
+    "aria-expanded": pop === "dest",
+    onClick: () => setPop(p => p === "dest" ? null : "dest")
+  }, chosen.k !== "feed" && /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: chosen.icon,
+    size: 13,
+    color: "var(--text-primary)"
+  }), chosen.k === "feed" ? "Feed" : chosen.label, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:chevron-down",
+    size: 13,
+    color: "var(--text-primary)"
+  })), pop === "dest" && /*#__PURE__*/React.createElement(WebShareDrop, {
+    label: "Share destination",
+    onClose: () => setPop(null)
+  }, /*#__PURE__*/React.createElement("div", {
+    role: "radiogroup",
+    "aria-label": "Destination"
+  }, dests.map(d => /*#__PURE__*/React.createElement("button", {
+    key: d.k,
+    type: "button",
+    role: "radio",
+    "aria-checked": !d.locked && dest === d.k,
+    disabled: d.locked,
+    className: "pf-share-dd-opt" + (d.locked ? " locked" : "") + (!d.locked && dest === d.k ? " on" : ""),
+    onClick: () => {
+      if (d.locked) return;
+      setDest(d.k);
+      setPop(null);
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: d.locked ? "lucide:lock" : d.icon,
+    size: 18,
+    color: d.locked ? "var(--gray-450)" : "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, d.k === "feed" ? "Feed" : d.label), /*#__PURE__*/React.createElement("i", null, d.locked ? "Upgrade to share here" : d.sub)), !d.locked && dest === d.k && /*#__PURE__*/React.createElement("span", {
+    className: "ck"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:check",
+    size: 12,
+    color: "#fff"
+  }))))))), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-sh-chip-wrap"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-sh-chip" + (pop === "aud" ? " on" : ""),
+    "aria-haspopup": "dialog",
+    "aria-expanded": pop === "aud",
+    onClick: () => setPop(p => p === "aud" ? null : "aud")
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: audience.icon,
+    size: 13,
+    color: "var(--text-primary)"
+  }), audience.label, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:chevron-down",
+    size: 13,
+    color: "var(--text-primary)"
+  })), pop === "aud" && /*#__PURE__*/React.createElement(WebShareDrop, {
+    label: "Who can see this",
+    onClose: () => setPop(null)
+  }, /*#__PURE__*/React.createElement("div", {
+    role: "radiogroup",
+    "aria-label": "Audience"
+  }, WEB_SHARE_AUDIENCES.map(a => /*#__PURE__*/React.createElement("button", {
+    key: a.k,
+    type: "button",
+    role: "radio",
+    "aria-checked": aud === a.k,
+    className: "pf-share-dd-opt" + (aud === a.k ? " on" : ""),
+    onClick: () => {
+      setAud(a.k);
+      setPop(null);
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: a.icon,
+    size: 18,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, a.label), /*#__PURE__*/React.createElement("i", null, a.sub)), aud === a.k && /*#__PURE__*/React.createElement("span", {
+    className: "ck"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:check",
+    size: 12,
+    color: "#fff"
+  })))))))))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-write"
+  }, /*#__PURE__*/React.createElement("textarea", {
+    ref: taRef,
+    className: "pfw-sh-ta",
+    rows: 2,
+    placeholder: "Say something about this…",
+    "aria-label": "Say something about this",
+    value: caption,
+    onChange: e => setCaption(e.target.value)
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-sh-emoji-anchor"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-sh-emoji" + (pop === "emoji" ? " on" : ""),
+    "aria-label": "Add emoji",
+    title: "Emoji",
+    "aria-haspopup": "dialog",
+    "aria-expanded": pop === "emoji",
+    onClick: () => setPop(p => p === "emoji" ? null : "emoji")
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:smile",
+    size: 24,
+    color: "var(--gray-500)"
+  })), pop === "emoji" && /*#__PURE__*/React.createElement(PfwPopover, {
+    label: "Pick an emoji",
+    width: 244,
+    onClose: () => setPop(null)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-emoji-grid",
+    role: "menu"
+  }, COMMENT_EMOJI.map(em => /*#__PURE__*/React.createElement("button", {
+    key: em,
+    type: "button",
+    role: "menuitem",
+    onClick: () => {
+      insertEmoji(em);
+      setPop(null);
+    }
+  }, em)))))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-cta-row"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-sh-cta",
+    onClick: submit
+  }, "Share now"))), /*#__PURE__*/React.createElement("section", {
+    className: "pfw-sh-section",
+    "aria-label": "Send in Messages"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-sec-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-sh-sec-title"
+  }, "Send in Messages"), /*#__PURE__*/React.createElement("a", {
+    className: "pfw-sh-sec-link",
+    href: "Messages.html",
+    "aria-label": "Open Messages"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:message-circle",
+    size: 18,
+    color: "var(--text-primary)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-rail-wrap"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-rail",
+    ref: railRef,
+    onScroll: syncRail,
+    role: "list"
+  }, WEB_SHARE_CONTACTS.map(p => {
+    const done = !!sent[p.name];
+    return /*#__PURE__*/React.createElement("button", {
+      key: p.name,
+      type: "button",
+      role: "listitem",
+      className: "pfw-sh-contact" + (done ? " sent" : ""),
+      "aria-label": done ? "Sent to " + p.name : "Send to " + p.name,
+      "aria-pressed": done,
+      onClick: () => sendTo(p)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "av"
+    }, /*#__PURE__*/React.createElement(Avatar, {
+      name: p.name,
+      src: p.avatar,
+      size: 80
+    }), done && /*#__PURE__*/React.createElement("span", {
+      className: "ck"
+    }, /*#__PURE__*/React.createElement(IconifyIcon, {
+      name: "lucide:check",
+      size: 13,
+      color: "#fff"
+    }))), /*#__PURE__*/React.createElement("span", {
+      className: "nm"
+    }, done ? "Sent" : p.name));
+  })), canNext && /*#__PURE__*/React.createElement("span", {
+    className: "pfw-sh-rail-fade",
+    "aria-hidden": "true"
+  }), canPrev && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-sh-rail-btn prev",
+    "aria-label": "Scroll contacts left",
+    onClick: () => scrollRail(-1)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:chevron-left",
+    size: 22,
+    color: "var(--text-primary)"
+  })), canNext && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-sh-rail-btn next",
+    "aria-label": "Scroll contacts right",
+    onClick: () => scrollRail(1)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 22,
+    color: "var(--text-primary)"
+  })))), /*#__PURE__*/React.createElement("section", {
+    className: "pfw-sh-section",
+    "aria-label": "Share to"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-sec-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-sh-sec-title"
+  }, "Share to")), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-tiles-wrap"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-tiles"
+  }, tiles.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.k,
+    type: "button",
+    className: "pfw-sh-tile" + (pop === "profile" && t.k === "profile" ? " on" : ""),
+    onClick: t.onClick,
+    "aria-haspopup": t.k === "profile" || t.k === "channel" ? "dialog" : undefined,
+    "aria-expanded": t.k === "profile" ? pop === "profile" : undefined
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: t.icon,
+    size: 26,
+    color: "var(--text-heading)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lb"
+  }, t.label)))), pop === "profile" && /*#__PURE__*/React.createElement(WebShareDrop, {
+    label: "Share to a member's profile",
+    className: "up",
+    onClose: () => setPop(null)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-dd-hd"
+  }, "Share to a member's profile"), WEB_SHARE_CONTACTS.map(p => /*#__PURE__*/React.createElement("button", {
+    key: p.name,
+    type: "button",
+    className: "pf-share-dd-opt",
+    onClick: () => {
+      setPop(null);
+      flash("Shared to " + firstName(p.name) + "'s profile");
+    }
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: p.name,
+    src: p.avatar,
+    size: 36
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, p.name)))))))), note && /*#__PURE__*/React.createElement("div", {
+    className: "pfw-sh-note",
+    role: "status"
+  }, note)));
+}
 function FeedPost({
   post,
   st,
@@ -11140,11 +11685,15 @@ function FeedPost({
     onAddReply: onAddReply
   }), reportedOpen && /*#__PURE__*/React.createElement(ReportedModal, {
     onClose: () => setReportedOpen(false)
-  }), shareOpen && /*#__PURE__*/React.createElement(ShareSheet, {
+  }), shareOpen && (typeof window !== "undefined" && !window.PF_EMBED ? /*#__PURE__*/React.createElement(WebShareModal, {
     post: post,
     onClose: () => setShareOpen(false),
     onShare: doShare
-  }), toast && /*#__PURE__*/React.createElement("div", {
+  }) : /*#__PURE__*/React.createElement(ShareSheet, {
+    post: post,
+    onClose: () => setShareOpen(false),
+    onShare: doShare
+  })), toast && /*#__PURE__*/React.createElement("div", {
     className: "pf-share-toast",
     role: "status"
   }, toast));
@@ -11989,7 +12538,7 @@ function readUserPosts() {
 const PF_PINNED_KEY = "pf-pinned-posts";
 /* Ships with the sample announcement pinned until an admin first pins or
    unpins anything (an explicit empty list is respected, not re-seeded). */
-const PF_PINNED_DEFAULTS = [SAMPLE_PINNED_POST.id];
+const PF_PINNED_DEFAULTS = SAMPLE_PINNED_POSTS.map(p => p.id);
 function readPinnedIds() {
   try {
     const raw = localStorage.getItem(PF_PINNED_KEY);
@@ -12006,21 +12555,22 @@ function writePinnedIds(ids) {
   } catch (e) {}
 }
 
-/* Per-viewer "minimized" pinned posts: the pin stays at the top, but the
-   card collapses to a one-line preview until the viewer expands it again.
-   Stored separately from the admin pin list so it never affects other users. */
-const PF_PINNED_MIN_KEY = "pf-pinned-minimized";
-function readMinimizedPins() {
+/* Pinned posts start minimized (a one-line preview) so several pins don't
+   push the feed down; the viewer expands the ones they want. Only the
+   expanded ids are stored, per viewer, so every new pin also starts
+   minimized and nothing here affects the admin's pin list. */
+const PF_PINNED_EXPANDED_KEY = "pf-pinned-expanded";
+function readExpandedPins() {
   try {
-    const list = JSON.parse(localStorage.getItem(PF_PINNED_MIN_KEY)) || [];
+    const list = JSON.parse(localStorage.getItem(PF_PINNED_EXPANDED_KEY)) || [];
     return list.filter(id => typeof id === "string");
   } catch (e) {
     return [];
   }
 }
-function writeMinimizedPins(ids) {
+function writeExpandedPins(ids) {
   try {
-    localStorage.setItem(PF_PINNED_MIN_KEY, JSON.stringify(ids));
+    localStorage.setItem(PF_PINNED_EXPANDED_KEY, JSON.stringify(ids));
   } catch (e) {}
 }
 
@@ -12033,7 +12583,8 @@ function PinnedMiniCard({
 }) {
   const author = post.author || {};
   const thumb = post.media && post.media.length ? post.media[0] : post.sample && (post.sample.poster || post.sample.cover) ? post.sample.poster || post.sample.cover : post.liveNow ? post.liveNow.frame : null;
-  const snippet = post.body || post.title || (post.poll ? "Poll" : post.questionnaire ? "Knowledge check" : post.liveNow ? "Live now" : "");
+  const snippet = post.poll ? "Poll · " + post.poll.question : post.body || post.title || (post.questionnaire ? "Knowledge check" : post.liveNow ? "Live now" : "");
+  const kindIcon = post.poll ? "lucide:bar-chart-3" : post.sample && post.sample.src ? "fluent:play-16-filled" : null;
   return /*#__PURE__*/React.createElement("div", {
     className: "pf-pinned-mini",
     role: "button",
@@ -12061,11 +12612,17 @@ function PinnedMiniCard({
     className: "pf-pinned-mini-time"
   }, "· ", post.time)), /*#__PURE__*/React.createElement("div", {
     className: "pf-pinned-mini-snip"
-  }, snippet)), thumb && /*#__PURE__*/React.createElement("img", {
+  }, snippet)), thumb ? /*#__PURE__*/React.createElement("img", {
     className: "pf-pinned-mini-thumb",
     src: thumb,
     alt: ""
-  }), /*#__PURE__*/React.createElement("span", {
+  }) : kindIcon ? /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-mini-kind"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: kindIcon,
+    size: 20,
+    color: "var(--brand-navy)"
+  })) : null, /*#__PURE__*/React.createElement("span", {
     className: "pf-pinned-mini-expand",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
@@ -12086,19 +12643,118 @@ function PinChip() {
   }), "Pinned");
 }
 
-/* Block of pinned posts that sits above the regular feed (no header — each
-   pinned card carries its own gold Pinned tag and Minimize control). */
-function PinnedSection({
-  innerRef,
-  children
+/* Single accordion holding every pinned post. Closed: one header row (gold
+   Pinned tag, stacked author avatars, "N pinned posts", chevron). Open: the
+   posts listed as compact rows; a row expands in place to the full card,
+   with a Minimize link to collapse it again. */
+const PF_PINNED_OPEN_KEY = "pf-pinned-open";
+function readPinsOpen() {
+  try {
+    return localStorage.getItem(PF_PINNED_OPEN_KEY) === "1";
+  } catch (e) {
+    return false;
+  }
+}
+function writePinsOpen(open) {
+  try {
+    localStorage.setItem(PF_PINNED_OPEN_KEY, open ? "1" : "0");
+  } catch (e) {}
+}
+function PinnedBox({
+  items,
+  open,
+  onToggle,
+  expandedIds,
+  onToggleItem,
+  renderItem,
+  innerRef
 }) {
+  const n = items.length;
+  const authors = [];
+  items.forEach(({
+    item
+  }) => {
+    const a = item.author || {};
+    if (a.name && !authors.some(x => x.name === a.name)) authors.push(a);
+  });
+  /* Web: the whole accordion sticks just under the top nav while the feed
+     scrolls (the open list gets its own scroll so it can't outgrow the
+     viewport). The mobile embed keeps it in normal flow — its header is an
+     overlay inside a separate scroll container. */
+  const sticky = typeof window !== "undefined" && !window.PF_EMBED;
   return /*#__PURE__*/React.createElement("section", {
-    className: "pf-pinned-section",
+    className: "pf-pinned-box" + (open ? " open" : "") + (sticky ? " sticky" : ""),
     ref: innerRef,
     "aria-label": "Pinned posts"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pf-pinned-list"
-  }, children));
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-pinned-box-head",
+    onClick: onToggle,
+    "aria-expanded": open
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-card-tag-tx"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "fluent:pin-16-filled",
+    size: 15,
+    color: "#fff"
+  }), "Pinned"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-box-avs",
+    "aria-hidden": "true"
+  }, authors.slice(0, 3).map((a, i) => /*#__PURE__*/React.createElement("span", {
+    key: a.name,
+    className: "pf-pinned-box-av",
+    style: {
+      marginLeft: i ? -10 : 0
+    }
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: a.name,
+    src: a.avatar,
+    size: 28
+  })))), /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-box-count"
+  }, n, " pinned ", n === 1 ? "post" : "posts"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-box-hint"
+  }, open ? "Hide" : "Show"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-box-chev"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:chevron-down",
+    size: 22,
+    color: "var(--brand-navy)"
+  }))), open && /*#__PURE__*/React.createElement("div", {
+    className: "pf-pinned-box-list"
+  }, items.map(x => {
+    const expanded = expandedIds.includes(x.item.id);
+    if (!expanded) {
+      return /*#__PURE__*/React.createElement("div", {
+        key: x.item.id,
+        className: "pf-pinned-box-row"
+      }, /*#__PURE__*/React.createElement(PinnedMiniCard, {
+        post: x.item,
+        onExpand: () => onToggleItem(x.item.id)
+      }));
+    }
+    return /*#__PURE__*/React.createElement("div", {
+      key: x.item.id,
+      className: "pf-pinned-box-item"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "pf-pinned-box-item-bar"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "pf-pinned-box-item-lbl"
+    }, /*#__PURE__*/React.createElement(IconifyIcon, {
+      name: "fluent:pin-12-filled",
+      size: 12,
+      color: "var(--brand-gold)"
+    }), "Pinned post"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "pf-pinned-card-tag-btn",
+      onClick: () => onToggleItem(x.item.id),
+      "aria-expanded": "true"
+    }, "Minimize", /*#__PURE__*/React.createElement(IconifyIcon, {
+      name: "lucide:chevron-up",
+      size: 15,
+      color: "currentColor"
+    }))), renderItem(x));
+  })));
 }
 
 /* Event-registration social proof — one seed post (Rose Lim, a fixture
@@ -12227,10 +12883,15 @@ function Feed({
   const saveFlow = useSaveFlow();
   /* Admin pin state — see PF_PINNED_KEY. */
   const [pinnedIds, setPinnedIds] = useState(readPinnedIds);
-  const [minimizedPins, setMinimizedPins] = useState(readMinimizedPins);
-  const toggleMinimizePin = id => setMinimizedPins(list => {
+  const [pinsOpen, setPinsOpen] = useState(readPinsOpen);
+  const togglePinsOpen = () => setPinsOpen(o => {
+    writePinsOpen(!o);
+    return !o;
+  });
+  const [expandedPins, setExpandedPins] = useState(readExpandedPins);
+  const toggleMinimizePin = id => setExpandedPins(list => {
     const next = list.includes(id) ? list.filter(x => x !== id) : [...list, id];
-    writeMinimizedPins(next);
+    writeExpandedPins(next);
     return next;
   });
   const [pinToast, setPinToast] = useState(null);
@@ -12244,6 +12905,10 @@ function Feed({
     const next = willPin ? [id, ...pinnedIds.filter(x => x !== id)] : pinnedIds.filter(x => x !== id);
     setPinnedIds(next);
     writePinnedIds(next);
+    if (willPin) {
+      setPinsOpen(true);
+      writePinsOpen(true);
+    }
     if (pinToastTimer.current) clearTimeout(pinToastTimer.current);
     setPinToast(willPin ? "Pinned to the top of the feed" : "Unpinned from the top of the feed");
     pinToastTimer.current = setTimeout(() => setPinToast(null), 2400);
@@ -12382,10 +13047,10 @@ function Feed({
   ...(typeof window !== "undefined" && !window.PF_EMBED ? [{
     item: SAMPLE_CAROUSEL_POST,
     mode: "full"
-  }, {
-    item: SAMPLE_PINNED_POST,
+  }, ...SAMPLE_PINNED_POSTS.map(p => ({
+    item: p,
     mode: "full"
-  }] : []), ...eventRegPosts.map(p => ({
+  }))] : []), ...eventRegPosts.map(p => ({
     item: p,
     mode: "full"
   })), ...tierTagItems, ...sequenceBase.map(p => {
@@ -12661,36 +13326,15 @@ function Feed({
       ...t,
       [k]: v
     }))
-  }), pinnedItems.length > 0 && /*#__PURE__*/React.createElement(PinnedSection, {
+  }), pinnedItems.length > 0 && /*#__PURE__*/React.createElement(PinnedBox, {
+    items: pinnedItems,
+    open: pinsOpen,
+    onToggle: togglePinsOpen,
+    expandedIds: expandedPins,
+    onToggleItem: toggleMinimizePin,
+    renderItem: renderFeedItem,
     innerRef: pinnedRef
-  }, pinnedItems.map(x => {
-    const mini = minimizedPins.includes(x.item.id);
-    return /*#__PURE__*/React.createElement("div", {
-      key: x.item.id,
-      className: "pf-pinned-card" + (mini ? " is-mini" : "")
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "pf-pinned-card-tag"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "pf-pinned-card-tag-tx"
-    }, /*#__PURE__*/React.createElement(IconifyIcon, {
-      name: "fluent:pin-16-filled",
-      size: 15,
-      color: "#fff"
-    }), "Pinned"), /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "pf-pinned-card-tag-btn",
-      onClick: () => toggleMinimizePin(x.item.id),
-      "aria-expanded": !mini,
-      "aria-label": mini ? "Expand pinned post" : "Minimize pinned post"
-    }, mini ? "Expand" : "Minimize", /*#__PURE__*/React.createElement(IconifyIcon, {
-      name: mini ? "lucide:chevron-down" : "lucide:chevron-up",
-      size: 15,
-      color: "currentColor"
-    }))), mini ? /*#__PURE__*/React.createElement(PinnedMiniCard, {
-      post: x.item,
-      onExpand: () => toggleMinimizePin(x.item.id)
-    }) : renderFeedItem(x));
-  })), regularItems.map(renderFeedItem), pinToast && /*#__PURE__*/React.createElement("div", {
+  }), regularItems.map(renderFeedItem), pinToast && /*#__PURE__*/React.createElement("div", {
     className: "pf-save-toast",
     role: "status"
   }, /*#__PURE__*/React.createElement("span", {
