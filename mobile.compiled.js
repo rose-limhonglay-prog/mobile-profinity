@@ -116,7 +116,7 @@ function PushNotifBanner() {
 
 /* ===== header points pill ===================================================
    The member's lifetime gamification points, sat between the logo and the
-   search icon. Icon is the red-lips Lottie (lottie.host yaURgbT5P7) fed
+   search icon. Icon is the syringe Lottie (lottie.host TbrupntywS) fed
    as raw JSON through
    lottie-web (never the lottie.host /embed iframe — it caches hard and
    ignores re-publishes). Reads window.PFLoyalty when loyalty-engine.js is on
@@ -124,9 +124,9 @@ function PushNotifBanner() {
    `pf:points-earned` event (dispatched by popPoints in app.jsx) bumps the
    total live and books it in the engine so Rewards stays in step.
 
-   The number reads in the artwork's lipstick red (#E9293A, #FE6559 in dark mode); the tooltip
+   The number reads in the artwork's syringe red (#E9293A, #FE6559 in dark mode); the tooltip
    still reads lifetime points against the engine's beakerFullPoints scale. */
-const PTS_LOTTIE_SRCM = "https://lottie.host/fb136996-c391-43d9-8292-4b95782aa9d0/yaURgbT5P7.json";
+const PTS_LOTTIE_SRCM = "https://lottie.host/10797cf0-5c4b-4f1a-8412-5631c9593ded/TbrupntywS.json";
 const PTS_LOTTIE_LIBM = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
 const PTS_FALLBACKM = 14000;
 const PTS_FULL_FALLBACKM = 20000;

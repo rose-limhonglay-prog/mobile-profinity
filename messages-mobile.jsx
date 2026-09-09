@@ -98,11 +98,11 @@ const CONVERSATIONS_SEED_DM = [
     { from: "tim", text: "Hey Katy! I saw your post about the full-face rejuvenation case.", ago: 138 },
     { from: "me", text: "Thank you! It was a great result, patient was thrilled.", ago: 130 },
     { from: "tim", text: "Do you mind if I share it with my team as a reference?", ago: 125 },
-    { from: "me", text: "Of course, go ahead — sharing the write-up now.", ago: 122 },
+    { from: "me", text: "Of course, go ahead — sharing the write-up now.", image: "assets/post1-img1.png", ago: 122 },
     { from: "tim", text: "Thanks for sharing the case study. Really helpful!", ago: 120, reactions: { "❤️": ["me"] } },
     { from: "tim", text: "Could you also add the product volumes per zone? The team will ask.", ago: 18 }] },
   { id: "g-casereview", kind: "group", name: "Clinical Case Review", memberIds: ["tim", "sarahc", "alex"], roles: { tim: "Admin", sarahc: "Moderator" }, pinned: true, unread: 3, messages: [
-    { from: "sarahc", text: "Uploading tonight's case: 34F, mid-face volume loss, 2ml Voluma.", ago: 95 },
+    { from: "sarahc", text: "Uploading tonight's case: 34F, mid-face volume loss, 2ml Voluma.", image: "assets/post2-img1.png", ago: 95 },
     { from: "tim", text: "Great case. Watch the infraorbital hollow — go deep, small boluses.", ago: 90 },
     { from: "me", text: "Would you cannula or needle for the zygoma here?", ago: 84 },
     { from: "alex", text: "Cannula for the lateral cheek, needle for the bony apex.", ago: 80, reactions: { "👍": ["tim", "me"] } },
@@ -124,9 +124,9 @@ const CONVERSATIONS_SEED_DM = [
   { id: "james", kind: "dm", personId: "james", unread: 0, muted: true, messages: [
     { from: "me", text: "Sent over the full results deck this morning.", ago: 2900 },
     { from: "james", text: "Can we discuss the implications of the results?", ago: 2880 }] },
-  { id: "alex", kind: "dm", personId: "alex", unread: 0, messages: [
-    { from: "alex", text: "The dosing charts you put together are excellent.", ago: 3000 },
-    { from: "alex", text: "Great work on the data analysis!", ago: 2990 }] },
+  /* Alex is the empty-conversation sample: a contact with no messages yet,
+     so the list shows "Start the conversation" and the thread its empty state. */
+  { id: "alex", kind: "dm", personId: "alex", unread: 0, messages: [] },
   { id: "miranda", kind: "dm", personId: "miranda", unread: 0, messages: [
     { from: "me", text: "Sharing the confidence-score writeup with you now.", ago: 4300 },
     { from: "miranda", text: "Perfect, thank you — this is exactly what I needed.", ago: 4290 }] },
@@ -178,7 +178,7 @@ const SAMPLE_REPLIES_DM = [
    Messages drawer ("pf-dm-groups").
    --------------------------------------------------------------------------- */
 const STORE_KEY_DM = "pf-messages-v1";
-const SEED_VERSION_DM = 3;
+const SEED_VERSION_DM = 4;
 const PF_GROUPS_KEY_DM = "pf-dm-groups";
 let MSG_SEQ_DM = 1;
 function midDM() { return "m" + NOW_DM.toString(36) + "-" + (MSG_SEQ_DM++); }
@@ -189,7 +189,7 @@ function buildSeedDM() {
     people: [],
     conversations: CONVERSATIONS_SEED_DM.map((c) => ({
       ...c,
-      messages: c.messages.map((m) => ({ id: midDM(), from: m.from, text: m.text, ts: NOW_DM - m.ago * MIN_DM, reactions: m.reactions || {} }))
+      messages: c.messages.map((m) => ({ id: midDM(), from: m.from, text: m.text, image: m.image || null, ts: NOW_DM - m.ago * MIN_DM, reactions: m.reactions || {} }))
     })),
     requests: REQUESTS_SEED_DM.map((r) => ({ ...r, ts: NOW_DM - r.ago * MIN_DM })),
     deleted: []
@@ -266,6 +266,41 @@ function useNowDM(active) {
 }
 /* long-press (≈480ms, cancels on drag) + context-menu key / right-click.
    Suppresses the trailing click once a long-press has fired. */
+/* Photos picked from the device are downscaled to a JPEG data URL so a
+   conversation with a few pictures still fits comfortably in localStorage. */
+function shrinkImageDM(file, max = 1280) {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.round(img.width * s)), h = Math.max(1, Math.round(img.height * s));
+      try {
+        const cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+        cv.getContext("2d").drawImage(img, 0, 0, w, h);
+        const out = cv.toDataURL("image/jpeg", 0.82);
+        URL.revokeObjectURL(url);
+        resolve(out);
+      } catch (e) { resolve(url); }
+    };
+    img.onerror = () => resolve(url);
+    img.src = url;
+  });
+}
+/* Wrap every case-insensitive occurrence of q in <mark> for in-thread search. */
+function highlightDM(text, q) {
+  if (!q) return text;
+  const lower = text.toLowerCase(), needle = q.toLowerCase();
+  const out = []; let i = 0, k;
+  while ((k = lower.indexOf(needle, i)) >= 0) {
+    if (k > i) out.push(text.slice(i, k));
+    out.push(<mark key={k} className="dm-hl">{text.slice(k, k + needle.length)}</mark>);
+    i = k + needle.length;
+  }
+  if (i < text.length) out.push(text.slice(i));
+  return out;
+}
+
 function usePressDM(onLongPress, enabled = true) {
   const st = useRefDM({ timer: null, fired: false, x: 0, y: 0 });
   const clear = () => { if (st.current.timer) { window.clearTimeout(st.current.timer); st.current.timer = null; } };
@@ -354,7 +389,8 @@ function previewDM(c, people) {
   if (!m) return c.kind === "group" ? c.memberIds.length + 1 + " members · say hello" : "Start the conversation";
   if (m.deleted) return m.from === "me" ? "You deleted a message" : "Message deleted";
   const who = m.from === "me" ? "You" : c.kind === "group" ? stripHonorificDM((people.get(m.from) || {}).name || "").split(" ")[0] : null;
-  return who ? who + ": " + m.text : m.text;
+  const body = m.gif ? "🎞 GIF" : m.sticker ? "✨ Sticker" : m.image ? "📷 " + (m.text || "Photo") : m.text;
+  return who ? who + ": " + body : body;
 }
 function sortConvsDM(list) {
   return list.slice().sort((a, b) => {
@@ -711,13 +747,16 @@ function ReactionBarDM({ current, onPick, onClose }) {
     </div>);
 }
 
-function BubbleDM({ m, c, sender, showSender, onReact, onActions, reactOpen, setReactOpen }) {
+function BubbleDM({ m, c, sender, showSender, onReact, onActions, reactOpen, setReactOpen, onOpenImage, highlight, isHit }) {
   const mine = m.from === "me";
   const press = usePressDM(() => onActions(m), !m.deleted);
   const myReactions = Object.keys(m.reactions || {}).filter((k) => m.reactions[k].includes("me"));
   const isGroup = c.kind === "group";
+  const imgOnly = !!m.image && !m.text;
+  const media = m.gif ? "GIF: " + m.gif.label + ". " : m.sticker ? "Sticker: " + m.sticker.label + ". " : m.image ? "Photo. " : "";
+  const label = (mine ? "You: " : (sender ? sender.name + ": " : "")) + media + (m.text || "") + " Hold for options.";
   return (
-    <div className={"dm-msg" + (mine ? " me" : "") + (isGroup && !mine ? " grouped" : "") + (showSender ? " first" : "")}>
+    <div className={"dm-msg" + (mine ? " me" : "") + (isGroup && !mine ? " grouped" : "") + (showSender ? " first" : "") + (isHit ? " hit" : "")} data-mid={m.id}>
       {isGroup && !mine &&
         <span className="dm-msg-av" aria-hidden={!showSender}>
           {showSender && sender && <DMFace name={sender.name} src={sender.avatar} size={28} />}
@@ -727,10 +766,32 @@ function BubbleDM({ m, c, sender, showSender, onReact, onActions, reactOpen, set
         <div className="dm-msg-line">
           {m.deleted ?
             <span className="dm-bubble tomb" role="note">{mine ? "You deleted this message" : "This message was deleted"}</span> :
+            m.gif ?
             <>
-              <button type="button" className={"dm-bubble" + (mine ? " me" : "")} {...press}
-                aria-label={(mine ? "You: " : (sender ? sender.name + ": " : "")) + m.text + ". Hold for options."}>
-                {m.text}
+              <button type="button" className={"dm-bubble dm-bubble-gif" + (mine ? " me" : "")} {...press} aria-label={label}>
+                <img src={m.gif.src} alt="" draggable="false" />
+                <span className="dm-gif-badge">GIF</span>
+              </button>
+              <button type="button" className="dm-react-trigger" aria-label="Add reaction" aria-expanded={reactOpen}
+                onClick={(e) => { e.stopPropagation(); setReactOpen(reactOpen ? null : m.id); }}>
+                <DSDM.IconifyIcon name="lucide:smile-plus" size={18} color="var(--gray-500)" />
+              </button>
+            </> :
+            m.sticker ?
+            <>
+              <button type="button" className={"dm-bubble dm-bubble-sticker" + (mine ? " me" : "")} {...press} aria-label={label}>
+                <DmStickerDM sticker={m.sticker} size={132} />
+              </button>
+              <button type="button" className="dm-react-trigger" aria-label="Add reaction" aria-expanded={reactOpen}
+                onClick={(e) => { e.stopPropagation(); setReactOpen(reactOpen ? null : m.id); }}>
+                <DSDM.IconifyIcon name="lucide:smile-plus" size={18} color="var(--gray-500)" />
+              </button>
+            </> :
+            <>
+              <button type="button" className={"dm-bubble" + (mine ? " me" : "") + (m.image ? " has-img" : "") + (imgOnly ? " img-only" : "")} {...press}
+                aria-label={label} onClick={m.image && onOpenImage ? () => onOpenImage(m.image) : undefined}>
+                {m.image && <img className="dm-bubble-img" src={m.image} alt="" draggable="false" />}
+                {m.text && <span className="dm-bubble-text">{highlight ? highlightDM(m.text, highlight) : m.text}</span>}
               </button>
               <button type="button" className="dm-react-trigger" aria-label="Add reaction" aria-expanded={reactOpen}
                 onClick={(e) => { e.stopPropagation(); setReactOpen(reactOpen ? null : m.id); }}>
@@ -766,7 +827,286 @@ function EmojiPickerDM({ onPick, onClose }) {
     </div>);
 }
 
-function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete, onMenu, toast }) {
+/* ---------------------------------------------------------------------------
+   Custom stickers (Genmoji-style) + GIFs — sheet opened from the composer.
+   Stickers: base emoji or your avatar + up to three accents on a gradient tile,
+   composed from tapped suggestions and keywords in the description. GIFs come
+   from the local library in assets/gifs. Sent as m.sticker / m.gif.
+   --------------------------------------------------------------------------- */
+const DM_STICKER_BGS_DM = [
+  "linear-gradient(135deg,#ffd5e1,#e6d7ff)",
+  "linear-gradient(135deg,#fde7c8,#ffd0d9)",
+  "linear-gradient(135deg,#d6ecff,#e8d9ff)",
+  "linear-gradient(135deg,#dff6e8,#d8ecff)",
+  "linear-gradient(135deg,#fff1c9,#ffd9c7)"];
+
+const DM_STICKER_SUGGESTIONS_DM = ["me", "❤️", "🤔", "👑"];
+const DM_STICKER_MORE_DM = ["✨", "🔥", "🎉", "👍", "👏", "💉", "👄", "⭐", "😂", "😎", "💪", "🏆", "💰", "🚀", "🙏", "💯"];
+const DM_STICKER_HATS_DM = ["👑", "🎩", "🎓", "🧢"];
+
+/* Local GIF library (assets/gifs, generated in-repo). Tags drive search + chips. */
+const DM_GIFS_DM = [
+  { id: "thank-you", label: "Thank you!", tags: ["thanks", "thank you", "grateful", "pray", "reactions"] },
+  { id: "congrats", label: "Congrats!", tags: ["congrats", "celebrate", "party", "win", "well done"] },
+  { id: "love-it", label: "Love it", tags: ["love", "heart", "reactions", "yes"] },
+  { id: "thinking", label: "Hmm…", tags: ["thinking", "hmm", "reactions", "wondering"] },
+  { id: "on-fire", label: "On fire!", tags: ["fire", "hot", "amazing", "reactions"] },
+  { id: "applause", label: "Bravo!", tags: ["clap", "applause", "congrats", "well done"] },
+  { id: "lol", label: "LOL", tags: ["funny", "laugh", "lol", "haha", "reactions"] },
+  { id: "mind-blown", label: "Mind blown", tags: ["wow", "mind blown", "funny", "reactions"] },
+  { id: "party", label: "Party time", tags: ["party", "celebrate", "congrats", "fun"] },
+  { id: "high-five", label: "High five!", tags: ["high five", "yes", "team", "celebrate"] },
+  { id: "cheers", label: "Cheers!", tags: ["cheers", "celebrate", "congrats", "drink"] },
+  { id: "wow", label: "Wow!", tags: ["wow", "shocked", "reactions"] },
+  { id: "good-job", label: "Good job", tags: ["thumbs up", "yes", "good job", "thanks", "reactions"] },
+  { id: "crown", label: "Queen", tags: ["crown", "queen", "boss", "love"] },
+  { id: "syringe", label: "Inject away", tags: ["syringe", "injector", "clinic", "funny", "filler"] },
+  { id: "rocket", label: "Let's go!", tags: ["rocket", "launch", "lets go", "growth", "yes"] }].
+map((g) => ({ ...g, src: "assets/gifs/" + g.id + ".gif" }));
+const DM_GIF_CHIPS_DM = ["Trending", "Reactions", "Thanks", "Congrats", "Love", "Funny", "Yes"];
+
+function filterGifsDM(query, chip) {
+  const q = query.trim().toLowerCase();
+  if (q) return DM_GIFS_DM.filter((g) => g.label.toLowerCase().includes(q) || g.tags.some((t) => t.includes(q)));
+  if (!chip || chip === "Trending") return DM_GIFS_DM;
+  const c = chip.toLowerCase();
+  return DM_GIFS_DM.filter((g) => g.tags.some((t) => t.includes(c)));
+}
+
+const DM_STICKER_LEXICON_DM = {
+  me: "me", myself: "me", selfie: "me", katy: "me",
+  heart: "❤️", hearts: "❤️", love: "❤️", loving: "❤️",
+  crown: "👑", queen: "👑", king: "👑", royal: "👑",
+  think: "🤔", thinking: "🤔", hmm: "🤔", wondering: "🤔",
+  syringe: "💉", injection: "💉", injector: "💉", filler: "💉", botox: "💉", toxin: "💉",
+  lips: "👄", lip: "👄", kiss: "💋", kisses: "💋",
+  star: "⭐", stars: "⭐", sparkle: "✨", sparkles: "✨", glow: "✨", magic: "✨", shine: "✨",
+  fire: "🔥", hot: "🔥", lit: "🔥", money: "💰", cash: "💰", rich: "💰", revenue: "💰",
+  laugh: "😂", laughing: "😂", lol: "😂", haha: "😂", funny: "😂",
+  party: "🎉", celebrate: "🎉", celebration: "🎉", congrats: "🎉", congratulations: "🎉",
+  thumbs: "👍", thumbsup: "👍", ok: "👍", okay: "👍", yes: "👍", agree: "👍",
+  clap: "👏", clapping: "👏", applause: "👏", bravo: "👏",
+  doctor: "🩺", nurse: "🩺", stethoscope: "🩺", clinic: "🏥", hospital: "🏥",
+  rocket: "🚀", launch: "🚀", smile: "😊", smiling: "😊", happy: "😊",
+  cool: "😎", sunglasses: "😎", shades: "😎", sad: "😢", cry: "😢", crying: "😢",
+  angry: "😠", mad: "😠", wow: "😮", shocked: "😮", surprised: "😮",
+  sleepy: "😴", tired: "😴", sleep: "😴", coffee: "☕", tea: "🍵",
+  cake: "🎂", birthday: "🎂", trophy: "🏆", winner: "🏆", win: "🏆", champion: "🏆",
+  medal: "🏅", gold: "🏅", flower: "🌸", flowers: "💐", rose: "🌹",
+  sun: "☀️", sunny: "☀️", rainbow: "🌈", unicorn: "🦄",
+  muscle: "💪", strong: "💪", flex: "💪", brain: "🧠", smart: "🧠",
+  idea: "💡", lightbulb: "💡", book: "📚", books: "📚", study: "📚", learning: "📚",
+  chart: "📈", growth: "📈", growing: "📈", target: "🎯", goal: "🎯", goals: "🎯",
+  wave: "👋", hi: "👋", hello: "👋", hey: "👋", bye: "👋",
+  pray: "🙏", thanks: "🙏", thank: "🙏", grateful: "🙏", please: "🙏",
+  hundred: "💯", perfect: "💯", check: "✅", done: "✅", tick: "✅",
+  hat: "🎩", graduate: "🎓", graduation: "🎓", cap: "🧢",
+  mastery: "🏅", confidence: "✨", profinity: "👑" };
+
+function composeStickerDM(desc, picks) {
+  const items = [];
+  const push = (v) => { if (v && !items.includes(v)) items.push(v); };
+  picks.forEach(push);
+  desc.toLowerCase().split(/[^a-z0-9]+/).forEach((w) => push(DM_STICKER_LEXICON_DM[w]));
+  (desc.match(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]️?/gu) || []).forEach(push);
+  if (!items.length) return null;
+  const withMe = items.includes("me");
+  const emojis = items.filter((x) => x !== "me");
+  const base = withMe ? "me" : emojis[0];
+  const accents = (withMe ? emojis : emojis.slice(1)).slice(0, 3);
+  const label = desc.trim() || (withMe ? "Me" + (accents.length ? " with " + accents.join(" ") : "") : emojis.join(" "));
+  let h = 0;
+  for (const c of label) h = (h * 31 + c.codePointAt(0)) >>> 0;
+  return { kind: "sticker", base, accents, label, bg: h % DM_STICKER_BGS_DM.length };
+}
+
+function readRecentStickersDM() {
+  try { return JSON.parse(window.localStorage.getItem("pf-dm-stickers") || "[]"); } catch (e) { return []; }
+}
+function saveRecentStickerDM(s) {
+  const list = [s, ...readRecentStickersDM().filter((x) => x.label !== s.label)].slice(0, 12);
+  try { window.localStorage.setItem("pf-dm-stickers", JSON.stringify(list)); } catch (e) { /* private mode */ }
+  return list;
+}
+
+function DmStickerDM({ sticker, size = 120 }) {
+  const hat = sticker.accents.find((a) => DM_STICKER_HATS_DM.includes(a));
+  const rest = sticker.accents.filter((a) => a !== hat);
+  const corners = [{ right: "-3%", top: "-4%" }, { left: "-4%", bottom: "0%" }, { right: "-2%", bottom: "-4%", transform: "rotate(12deg)" }];
+  return (
+    <span className="dm-sticker" role="img" aria-label={"Sticker: " + sticker.label}
+      style={{ width: size, height: size, background: DM_STICKER_BGS_DM[sticker.bg], borderRadius: size * 0.28 }}>
+      {sticker.base === "me" ?
+      <span className="dm-sticker-me"><DMFace name={ME_DM.name} src={ME_DM.avatar} size={Math.round(size * 0.66)} /></span> :
+      <span className="dm-sticker-base" style={{ fontSize: size * 0.56 }}>{sticker.base}</span>}
+      {hat &&
+      <span className="dm-sticker-accent hat" style={{ fontSize: size * 0.34, top: sticker.base === "me" ? "-6%" : "-10%" }}>{hat}</span>}
+      {rest.map((a, i) =>
+      <span key={i} className="dm-sticker-accent" style={{ fontSize: size * 0.3, ...corners[i] }}>{a}</span>
+      )}
+    </span>);
+}
+
+function DmStickerSheetDM({ onClose, onSend, onSendGif, initialMode = "sticker" }) {
+  const [mode, setMode] = useStateDM(initialMode);
+  const [gifQuery, setGifQuery] = useStateDM("");
+  const [gifChip, setGifChip] = useStateDM("Trending");
+  const [gifPick, setGifPick] = useStateDM(null);
+  const [desc, setDesc] = useStateDM("");
+  const [picks, setPicks] = useStateDM([]);
+  const [result, setResult] = useStateDM(null);
+  const [busy, setBusy] = useStateDM(false);
+  const [more, setMore] = useStateDM(false);
+  const [recents] = useStateDM(readRecentStickersDM);
+  const inputRef = useRefDM(null);
+
+  useEffectDM(() => {
+    const draft = composeStickerDM(desc, picks);
+    if (!draft) { setResult(null); setBusy(false); return; }
+    setBusy(true);
+    const t = window.setTimeout(() => { setResult(draft); setBusy(false); }, 900);
+    return () => window.clearTimeout(t);
+  }, [desc, picks.join("|")]);
+
+  useEffectDM(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  function togglePick(k) {
+    setPicks((p) => p.includes(k) ? p.filter((x) => x !== k) : [...p, k]);
+  }
+  function confirm() {
+    if (!result || busy) return;
+    saveRecentStickerDM(result);
+    onSend(result);
+  }
+
+  const list = more ? [...DM_STICKER_SUGGESTIONS_DM, ...DM_STICKER_MORE_DM] : DM_STICKER_SUGGESTIONS_DM;
+  const isGif = mode === "gif";
+  const gifs = filterGifsDM(gifQuery, gifChip);
+  const ready = isGif ? !!gifPick : !!result && !busy;
+  function confirmGif() { if (gifPick) onSendGif(gifPick); }
+  const onConfirm = isGif ? confirmGif : confirm;
+
+  return (
+    <div className="dm-sticker-overlay" onClick={onClose}>
+      <div className="dm-sticker-sheet" role="dialog" aria-label="Create a custom sticker" onClick={(e) => e.stopPropagation()}>
+        <div className="dm-sticker-top">
+          <button className="dm-sticker-circ" aria-label="Close" onClick={onClose}>
+            <DSDM.IconifyIcon name="lucide:x" size={22} color="var(--text-heading)" />
+          </button>
+          <div className="dm-sticker-seg" role="tablist" aria-label="Sticker or GIF">
+            <button role="tab" aria-selected={!isGif} className={!isGif ? "on" : ""} onClick={() => setMode("sticker")}>Sticker</button>
+            <button role="tab" aria-selected={isGif} className={isGif ? "on" : ""} onClick={() => setMode("gif")}>GIF</button>
+          </div>
+          <button className={"dm-sticker-circ confirm" + (ready ? " on" : "")} aria-label={isGif ? "Send GIF" : "Send sticker"}
+            disabled={!ready} onClick={onConfirm}>
+            <DSDM.IconifyIcon name="lucide:check" size={22} color={ready ? "#fff" : "var(--gray-450)"} />
+          </button>
+        </div>
+
+        {isGif &&
+        <div className="dm-gif-pane">
+            <div className="dm-gif-search">
+              <DSDM.IconifyIcon name="lucide:search" size={18} color="var(--gray-450)" />
+              <input type="text" placeholder="Search GIFs" aria-label="Search GIFs" value={gifQuery}
+                onChange={(e) => setGifQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") confirmGif(); }} />
+              {gifQuery &&
+              <button className="dm-sticker-clear" aria-label="Clear search" onClick={() => setGifQuery("")}>
+                  <DSDM.IconifyIcon name="lucide:x" size={14} color="var(--gray-450)" />
+                </button>}
+            </div>
+            <div className="dm-gif-chips">
+              {DM_GIF_CHIPS_DM.map((c) =>
+            <button key={c} className={"dm-gif-chip" + (gifChip === c && !gifQuery ? " on" : "")}
+              onClick={() => { setGifChip(c); setGifQuery(""); }}>{c}</button>
+            )}
+            </div>
+            <div className="dm-gif-grid">
+              {gifs.map((g) =>
+            <button key={g.id} className={"dm-gif-tile" + (gifPick && gifPick.id === g.id ? " on" : "")}
+              aria-label={"GIF: " + g.label} aria-pressed={!!gifPick && gifPick.id === g.id}
+              onClick={() => setGifPick((cur) => cur && cur.id === g.id ? null : g)}>
+                  <img src={g.src} alt={g.label} loading="lazy" />
+                  {gifPick && gifPick.id === g.id &&
+              <span className="dm-gif-tick"><DSDM.IconifyIcon name="lucide:check" size={14} color="#fff" /></span>}
+                </button>
+            )}
+              {gifs.length === 0 && <div className="dm-gif-empty">No GIFs match “{gifQuery}”.</div>}
+            </div>
+            <p className="dm-sticker-beta"><span className="dm-sticker-beta-tag">GIF</span> Tap a GIF to select it, then send with the tick.</p>
+          </div>}
+
+        {!isGif && <>
+        <div className="dm-sticker-stage" onClick={() => inputRef.current && inputRef.current.focus()}>
+          <div className={"dm-sticker-glow" + (busy ? " busy" : "")} />
+          {ready ?
+          <div className="dm-sticker-result" key={result.label + result.base + result.accents.join("")}>
+              <DmStickerDM sticker={result} size={196} />
+              <span className="dm-sticker-caption">{result.label}</span>
+            </div> :
+          busy ?
+          <p className="dm-sticker-hint busy">Creating your sticker…</p> :
+          <p className="dm-sticker-hint">Describe a sticker or add a suggestion from the list.</p>}
+        </div>
+
+        <div className="dm-sticker-sug-h">
+          <span>Suggestions</span>
+          <button onClick={() => setMore((m) => !m)}>{more ? "Show Less" : "Show More"}</button>
+        </div>
+        <div className={"dm-sticker-sug" + (more ? " grid" : "")}>
+          {list.map((k) =>
+          <button key={k} className={"dm-sticker-opt" + (picks.includes(k) ? " on" : "")}
+            aria-label={k === "me" ? "Add yourself" : "Add " + k} aria-pressed={picks.includes(k)} onClick={() => togglePick(k)}>
+              {k === "me" ? <DMFace name={ME_DM.name} src={ME_DM.avatar} size={56} /> : <span className="dm-sticker-opt-emoji">{k}</span>}
+            </button>
+          )}
+          {!more &&
+          <button className="dm-sticker-opt" aria-label="Show more suggestions" onClick={() => setMore(true)}>
+              <DSDM.IconifyIcon name="lucide:smile-plus" size={28} color="var(--text-heading)" />
+            </button>}
+        </div>
+
+        {more && recents.length > 0 &&
+        <>
+            <div className="dm-sticker-sug-h"><span>Your stickers</span></div>
+            <div className="dm-sticker-recents">
+              {recents.map((s, i) =>
+            <button key={i} className="dm-sticker-recent" aria-label={"Use sticker " + s.label}
+              onClick={() => { setResult(s); setBusy(false); }}>
+                  <DmStickerDM sticker={s} size={56} />
+                </button>
+            )}
+            </div>
+          </>}
+
+        <p className="dm-sticker-beta"><span className="dm-sticker-beta-tag">BETA</span> Custom stickers may create unexpected results.</p>
+
+        <div className="dm-sticker-compose">
+          <div className="dm-sticker-field">
+            <DSDM.IconifyIcon name="lucide:sparkles" size={22} color="var(--ai-purple)" />
+            <input ref={inputRef} type="text" placeholder="Describe a sticker" aria-label="Describe a sticker" value={desc}
+              onChange={(e) => setDesc(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") confirm(); }} />
+            {desc &&
+            <button className="dm-sticker-clear" aria-label="Clear description" onClick={() => setDesc("")}>
+                <DSDM.IconifyIcon name="lucide:x" size={14} color="var(--gray-450)" />
+              </button>}
+          </div>
+          <button className={"dm-sticker-circ me" + (picks.includes("me") ? " on" : "")} aria-label="Add yourself to the sticker"
+            aria-pressed={picks.includes("me")} onClick={() => togglePick("me")}>
+            <DSDM.IconifyIcon name="lucide:user-round" size={22} color={picks.includes("me") ? "#fff" : "var(--ai-purple)"} />
+          </button>
+        </div>
+        </>}
+      </div>
+    </div>);
+}
+
+function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete, onMenu, toast, searchOpen, onCloseSearch }) {
   const people = usePeopleDM();
   const [text, setText] = useStateDM("");
   const [emojiOpen, setEmojiOpen] = useStateDM(false);
@@ -774,18 +1114,54 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
   const [actionsFor, setActionsFor] = useStateDM(null);
   const [editing, setEditing] = useStateDM(null);
   const [typing, setTyping] = useStateDM(null);
+  const [attach, setAttach] = useStateDM(null);          // pending photo (data URL) for the next message
+  const [attachOpen, setAttachOpen] = useStateDM(false); // "+" sheet: library / camera / GIF / sticker
+  const [stickerOpen, setStickerOpen] = useStateDM(null); // null | "sticker" | "gif" — custom sticker / GIF sheet
+  const [lightbox, setLightbox] = useStateDM(null);      // full-screen photo viewer
+  const [q, setQ] = useStateDM("");                       // in-conversation search
+  const [hit, setHit] = useStateDM(0);
   const bodyRef = useRefDM(null);
   const inputRef = useRefDM(null);
+  const fileRef = useRefDM(null);
+  const camRef = useRefDM(null);
   const replyTimer = useRefDM(null);
   const now = useNowDM(!!actionsFor || editing !== null);
 
   const name = convNameDM(c, people);
+  const firstName = stripHonorificDM(name).split(" ")[0];
   const person = c.kind === "dm" ? people.get(c.personId) : null;
   const members = c.kind === "group" ? c.memberIds.map(people.get).filter(Boolean) : [];
   const onlineN = members.filter((p) => p.online).length;
+  const isEmpty = c.messages.length === 0;
 
-  useEffectDM(() => { const el = bodyRef.current; if (el) el.scrollTop = el.scrollHeight; }, [c.messages.length, typing, emojiOpen]);
+  const needle = q.trim();
+  const hits = needle ? c.messages.filter((m) => !m.deleted && m.text && m.text.toLowerCase().includes(needle.toLowerCase())).map((m) => m.id) : [];
+  const hitId = hits.length ? hits[Math.min(hit, hits.length - 1)] : null;
+
+  useEffectDM(() => { const el = bodyRef.current; if (el && !searchOpen) el.scrollTop = el.scrollHeight; }, [c.messages.length, typing, emojiOpen]);
   useEffectDM(() => () => { if (replyTimer.current) window.clearTimeout(replyTimer.current); }, []);
+  // new query → jump to the most recent match
+  useEffectDM(() => { setHit(Math.max(0, hits.length - 1)); }, [needle]);
+  useEffectDM(() => {
+    if (!hitId || !bodyRef.current) return;
+    const el = bodyRef.current.querySelector('[data-mid="' + hitId + '"]');
+    if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [hitId]);
+  useEffectDM(() => { if (searchOpen) { setEmojiOpen(false); setActionsFor(null); } else setQ(""); }, [searchOpen]);
+
+  function stepHit(dir) { if (hits.length) setHit((i) => (Math.min(i, hits.length - 1) + dir + hits.length) % hits.length); }
+  function closeSearch() { setQ(""); onCloseSearch && onCloseSearch(); }
+
+  function onPickFile(e) {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!/^image\//.test(f.type)) { toast("Only photos are supported for now"); return; }
+    shrinkImageDM(f).then((url) => {
+      setAttach(url); setAttachOpen(false);
+      requestAnimationFrame(() => inputRef.current && inputRef.current.focus());
+    });
+  }
 
   function simulateReply() {
     const pool = c.kind === "group" ? members : [person].filter(Boolean);
@@ -800,12 +1176,18 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
   }
   function submit() {
     const v = text.trim();
-    if (!v) return;
-    if (editing) { onEdit(c.id, editing.id, v); setEditing(null); setText(""); toast("Message edited"); return; }
-    onSend(c.id, { from: "me", text: v });
+    if (editing) { if (!v) return; onEdit(c.id, editing.id, v); setEditing(null); setText(""); toast("Message edited"); return; }
+    if (!v && !attach) return;
+    onSend(c.id, { from: "me", text: v, image: attach });
     setText("");
+    setAttach(null);
     simulateReply();
   }
+  function sendWave() { onSend(c.id, { from: "me", text: "👋" }); simulateReply(); }
+  function sendSticker(sticker) { onSend(c.id, { from: "me", text: "", sticker }); setStickerOpen(null); simulateReply(); }
+  function sendGif(gif) { onSend(c.id, { from: "me", text: "", gif: { id: gif.id, src: gif.src, label: gif.label } }); setStickerOpen(null); simulateReply(); }
+  function openStickers(mode) { setEmojiOpen(false); setAttachOpen(false); inputRef.current && inputRef.current.blur(); setStickerOpen(mode); }
+  const canSend = !!text.trim() || (!editing && !!attach);
   function startEdit(m) { setEditing(m); setText(m.text); setActionsFor(null); setEmojiOpen(false); requestAnimationFrame(() => inputRef.current && inputRef.current.focus()); }
   function cancelEdit() { setEditing(null); setText(""); }
   function insertEmoji(e) { setText((t) => t + e); }
@@ -816,6 +1198,28 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
 
   return (
     <div className="dm-view dm-thread" data-screen-label={"Thread · " + name}>
+      {searchOpen ?
+      <header className="dm-head dm-thread-head dm-thread-search" role="search">
+        <button type="button" className="dm-iconbtn" aria-label="Close search" onClick={closeSearch}>
+          <DSDM.IconifyIcon name="lucide:arrow-left" size={24} color="var(--gray-900)" />
+        </button>
+        <div className="dm-search dm-search-inline">
+          <DSDM.IconifyIcon name="lucide:search" size={18} color="var(--gray-450)" />
+          <input type="search" value={q} placeholder={"Search in " + (c.kind === "group" ? name : firstName) + "…"} aria-label="Search in conversation" autoFocus
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") stepHit(e.shiftKey ? 1 : -1); if (e.key === "Escape") closeSearch(); }} />
+          {q && <button type="button" className="dm-search-clear" aria-label="Clear search" onClick={() => setQ("")}>
+            <DSDM.IconifyIcon name="lucide:x" size={16} color="var(--gray-600)" />
+          </button>}
+        </div>
+        <span className="dm-search-count" aria-live="polite">{needle ? (hits.length ? (Math.min(hit, hits.length - 1) + 1) + "/" + hits.length : "0") : ""}</span>
+        <button type="button" className="dm-iconbtn sm" aria-label="Older result" disabled={hits.length < 2} onClick={() => stepHit(-1)}>
+          <DSDM.IconifyIcon name="lucide:chevron-up" size={22} color={hits.length < 2 ? "var(--gray-300)" : "var(--brand-navy)"} />
+        </button>
+        <button type="button" className="dm-iconbtn sm" aria-label="Newer result" disabled={hits.length < 2} onClick={() => stepHit(1)}>
+          <DSDM.IconifyIcon name="lucide:chevron-down" size={22} color={hits.length < 2 ? "var(--gray-300)" : "var(--brand-navy)"} />
+        </button>
+      </header> :
       <header className="dm-head dm-thread-head">
         <button type="button" className="dm-iconbtn" aria-label="Back to chats" onClick={onBack}>
           <DSDM.IconifyIcon name="lucide:arrow-left" size={24} color="var(--gray-900)" />
@@ -832,18 +1236,34 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
         <button type="button" className="dm-iconbtn" aria-label="Conversation settings" aria-haspopup="dialog" onClick={onMenu}>
           <DSDM.IconifyIcon name="lucide:more-vertical" size={22} color="var(--brand-navy)" />
         </button>
-      </header>
+      </header>}
 
       <div className="dm-scroll dm-thread-body" ref={bodyRef} onClick={() => { setReactOpen(null); }}>
-        <div className="dm-daychip"><span>{c.messages.length && fmtListTimeDM(c.messages[0].ts) !== fmtClockDM(c.messages[0].ts) ? fmtListTimeDM(c.messages[0].ts) : "Today"}</span></div>
-        {c.messages.map((m, i) => {
-          const prev = c.messages[i - 1];
-          const showSender = !prev || prev.from !== m.from || (m.ts - prev.ts) > 10 * MIN_DM;
-          return (
-            <BubbleDM key={m.id} m={m} c={c} sender={m.from === "me" ? ME_DM : people.get(m.from)} showSender={showSender}
-              onReact={onReact.bind(null, c.id)} onActions={(msg) => setActionsFor(msg)}
-              reactOpen={reactOpen === m.id} setReactOpen={setReactOpen} />);
-        })}
+        {searchOpen && needle && !hits.length &&
+          <div className="dm-search-none" role="status">No messages match “{needle}”</div>}
+        {isEmpty && !typing ?
+          <div className="dm-thread-empty">
+            <ConvAvatarDM c={c} size={84} dot={false} />
+            <b>{c.kind === "group" ? "Welcome to " + name : "Say hello to " + firstName}</b>
+            <p>{c.kind === "group" ?
+              "No messages yet — be the first to post something for the group." :
+              "No messages yet. Send " + firstName + " a message or a photo to get the conversation going."}</p>
+            <button type="button" className="dm-btn dm-btn-navy dm-btn-wave" onClick={sendWave}>
+              <span aria-hidden="true">👋</span> Send a wave
+            </button>
+          </div> :
+          <>
+            {!isEmpty && <div className="dm-daychip"><span>{fmtListTimeDM(c.messages[0].ts) !== fmtClockDM(c.messages[0].ts) ? fmtListTimeDM(c.messages[0].ts) : "Today"}</span></div>}
+            {c.messages.map((m, i) => {
+              const prev = c.messages[i - 1];
+              const showSender = !prev || prev.from !== m.from || (m.ts - prev.ts) > 10 * MIN_DM;
+              return (
+                <BubbleDM key={m.id} m={m} c={c} sender={m.from === "me" ? ME_DM : people.get(m.from)} showSender={showSender}
+                  onReact={onReact.bind(null, c.id)} onActions={(msg) => setActionsFor(msg)}
+                  reactOpen={reactOpen === m.id} setReactOpen={setReactOpen}
+                  onOpenImage={setLightbox} highlight={searchOpen ? needle : ""} isHit={m.id === hitId} />);
+            })}
+          </>}
         {typing &&
           <div className={"dm-msg" + (c.kind === "group" ? " grouped first" : "")}>
             {c.kind === "group" && <span className="dm-msg-av"><DMFace name={typing.name} src={typing.avatar} size={28} /></span>}
@@ -861,20 +1281,38 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
           <button type="button" className="dm-iconbtn sm" aria-label="Cancel edit" onClick={cancelEdit}><DSDM.IconifyIcon name="lucide:x" size={18} color="var(--gray-600)" /></button>
         </div>}
 
+      {attach && !editing &&
+        <div className="dm-attach-bar" role="status">
+          <img className="dm-attach-thumb" src={attach} alt="Attached photo" />
+          <span className="dm-attach-text">Photo attached</span>
+          <button type="button" className="dm-iconbtn sm" aria-label="Remove photo" onClick={() => setAttach(null)}>
+            <DSDM.IconifyIcon name="lucide:x" size={18} color="var(--gray-600)" />
+          </button>
+        </div>}
+
       <div className="dm-composer">
-        <button type="button" className="dm-iconbtn" aria-label="Attach">
-          <DSDM.IconifyIcon name="lucide:plus" size={22} color="var(--brand-navy)" />
+        <button type="button" className={"dm-iconbtn" + (attach ? " on" : "")} aria-label="Add photo" aria-haspopup="dialog" disabled={!!editing}
+          onClick={() => { setEmojiOpen(false); setAttachOpen(true); }}>
+          <DSDM.IconifyIcon name={attach ? "lucide:image-plus" : "lucide:plus"} size={22} color={editing ? "var(--gray-300)" : "var(--brand-navy)"} />
         </button>
+        <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickFile} />
+        <input ref={camRef} type="file" accept="image/*" capture="environment" hidden onChange={onPickFile} />
         <div className="dm-composer-field">
-          <input ref={inputRef} type="text" value={text} placeholder={editing ? "Edit message…" : "Message…"} aria-label={editing ? "Edit message" : "Message"}
+          <input ref={inputRef} type="text" value={text} placeholder={editing ? "Edit message…" : attach ? "Add a caption…" : "Message…"} aria-label={editing ? "Edit message" : "Message"}
             onChange={(e) => setText(e.target.value)} onFocus={() => setEmojiOpen(false)}
             onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape" && editing) cancelEdit(); }} />
+          {!editing && !text.trim() &&
+          <button type="button" className="dm-gif-btn" aria-label="Send a GIF" aria-haspopup="dialog" onClick={() => openStickers("gif")}>GIF</button>}
+          {!editing &&
+          <button type="button" className="dm-iconbtn sm dm-sticker-btn" aria-label="Custom sticker" aria-haspopup="dialog" onClick={() => openStickers("sticker")}>
+            <DSDM.IconifyIcon name="lucide:sticker" size={21} color="var(--ai-purple)" />
+          </button>}
           <button type="button" className={"dm-iconbtn sm dm-emoji-toggle" + (emojiOpen ? " on" : "")} aria-label={emojiOpen ? "Hide emoji" : "Emoji"} aria-expanded={emojiOpen}
             onClick={() => { setEmojiOpen((v) => !v); if (emojiOpen) requestAnimationFrame(() => inputRef.current && inputRef.current.focus()); else inputRef.current && inputRef.current.blur(); }}>
             <DSDM.IconifyIcon name="lucide:smile" size={21} color={emojiOpen ? "#fff" : "var(--gray-600)"} />
           </button>
         </div>
-        <button type="button" className={"dm-send" + (text.trim() ? " on" : "")} aria-label={editing ? "Save edit" : "Send"} disabled={!text.trim()} onClick={submit}>
+        <button type="button" className={"dm-send" + (canSend ? " on" : "")} aria-label={editing ? "Save edit" : "Send"} disabled={!canSend} onClick={submit}>
           <DSDM.IconifyIcon name={editing ? "lucide:check" : "lucide:arrow-up"} size={20} color="#fff" />
         </button>
       </div>
@@ -885,22 +1323,50 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
       <SheetDM open={!!actMsg} onClose={() => setActionsFor(null)} label="Message options">
         {actMsg &&
           <>
-            <div className={"dm-sheet-quote" + (actMsg.from === "me" ? " me" : "")}>{actMsg.text}</div>
+            <div className={"dm-sheet-quote" + (actMsg.from === "me" ? " me" : "") + (actMsg.image || actMsg.gif || actMsg.sticker ? " has-img" : "")}>
+              {actMsg.image && <img className="dm-sheet-quote-img" src={actMsg.image} alt="" />}
+              {actMsg.gif && <img className="dm-sheet-quote-img" src={actMsg.gif.src} alt="" />}
+              {actMsg.sticker && <DmStickerDM sticker={actMsg.sticker} size={64} />}
+              {actMsg.text || (actMsg.gif ? "GIF" : actMsg.sticker ? "Sticker" : actMsg.image ? "Photo" : "")}
+            </div>
             <div className="dm-sheet-reacts" role="toolbar" aria-label="React">
               {REACTIONS_QUICK_DM.map((e) =>
                 <button key={e} type="button" className={"dm-react-opt" + ((actMsg.reactions[e] || []).includes("me") ? " on" : "")} aria-label={"React " + e}
                   onClick={() => { onReact(c.id, actMsg.id, e); setActionsFor(null); }}>{e}</button>)}
             </div>
-            <SheetActionDM icon="lucide:copy" label="Copy text" onClick={() => { try { navigator.clipboard && navigator.clipboard.writeText(actMsg.text); } catch (e) {} setActionsFor(null); toast("Copied"); }} />
+            {actMsg.text && <SheetActionDM icon="lucide:copy" label="Copy text" onClick={() => { try { navigator.clipboard && navigator.clipboard.writeText(actMsg.text); } catch (e) {} setActionsFor(null); toast("Copied"); }} />}
+            {actMsg.image && <SheetActionDM icon="lucide:maximize-2" label="View photo" onClick={() => { setActionsFor(null); setLightbox(actMsg.image); }} />}
             {actMsg.from === "me" &&
               <>
-                <SheetActionDM icon="lucide:pencil" label="Edit message" disabled={!canEdit}
+                <SheetActionDM icon="lucide:pencil" label="Edit message" disabled={!canEdit || !!actMsg.gif || !!actMsg.sticker}
                   sub={canEdit ? fmtCountdownDM(editLeft) + " left to edit" : "Edit window closed (5 min)"} onClick={() => startEdit(actMsg)} />
                 <SheetActionDM icon="lucide:trash-2" label="Delete message" danger onClick={() => { onDelete(c.id, actMsg.id); setActionsFor(null); toast("Message deleted"); }} />
               </>}
             <button type="button" className="dm-sheet-cancel" onClick={() => setActionsFor(null)}>Cancel</button>
           </>}
       </SheetDM>
+
+      {/* "+" — add a photo to the message */}
+      <SheetDM open={attachOpen} onClose={() => setAttachOpen(false)} label="Add to message" title="Add to message">
+        <SheetActionDM icon="lucide:image" label="Photo library" sub="Choose a photo from your device" onClick={() => fileRef.current && fileRef.current.click()} />
+        <SheetActionDM icon="lucide:camera" label="Take photo" sub="Open the camera" onClick={() => camRef.current && camRef.current.click()} />
+        <SheetActionDM icon="lucide:film" label="GIF" sub="Search and send a GIF" onClick={() => openStickers("gif")} />
+        <SheetActionDM icon="lucide:sticker" label="Custom sticker" sub="Describe a sticker or build one from suggestions" onClick={() => openStickers("sticker")} />
+        <button type="button" className="dm-sheet-cancel" onClick={() => setAttachOpen(false)}>Cancel</button>
+      </SheetDM>
+
+      {/* custom sticker / GIF sheet */}
+      {stickerOpen &&
+        <DmStickerSheetDM initialMode={stickerOpen} onClose={() => setStickerOpen(null)} onSend={sendSticker} onSendGif={sendGif} />}
+
+      {/* full-screen photo viewer */}
+      {lightbox &&
+        <div className="dm-lightbox" role="dialog" aria-modal="true" aria-label="Photo" onClick={() => setLightbox(null)}>
+          <button type="button" className="dm-lightbox-close" aria-label="Close photo" autoFocus onClick={() => setLightbox(null)}>
+            <DSDM.IconifyIcon name="lucide:x" size={22} color="#fff" />
+          </button>
+          <img src={lightbox} alt="" onClick={(e) => e.stopPropagation()} />
+        </div>}
     </div>);
 }
 
@@ -1262,12 +1728,14 @@ function MessagesAppDM() {
     return { name: "list" };
   });
   const [rowActions, setRowActions] = useStateDM(null);
+  const [threadSearch, setThreadSearch] = useStateDM(false); // "Search in conversation" from the options sheet
   const [addMembersFor, setAddMembersFor] = useStateDM(null);
   const [confirm, setConfirm] = useStateDM(null);
   const [toastState, setToastState] = useStateDM(null);
   const toastTimer = useRefDM(null);
   const [compact, onScroll] = useScrollDockDM(tab + ":" + route.name);
   const [push, setPush] = useStateDM(null);
+  useEffectDM(() => { if (route.name !== "thread") setThreadSearch(false); }, [route.name, route.id]);
   const pushSeq = useRefDM(0);
 
   useEffectDM(() => saveStoreDM(store), [store]);
@@ -1341,7 +1809,7 @@ function MessagesAppDM() {
     setStore((s) => ({ ...s, conversations: [c].concat(s.conversations) }));
     setRoute({ name: "thread", id: c.id, from: "list" });
   };
-  const sendMessage = (id, m) => updateConv(id, (c) => ({ ...c, messages: c.messages.concat([{ id: midDM(), from: m.from, text: m.text, ts: Date.now(), reactions: {} }]) }));
+  const sendMessage = (id, m) => updateConv(id, (c) => ({ ...c, messages: c.messages.concat([{ id: midDM(), from: m.from, text: m.text || "", image: m.image || null, sticker: m.sticker || null, gif: m.gif || null, ts: Date.now(), reactions: {} }]) }));
   const reactMessage = (id, mid, emoji) => updateConv(id, (c) => ({
     ...c, messages: c.messages.map((m) => {
       if (m.id !== mid) return m;
@@ -1426,7 +1894,7 @@ function MessagesAppDM() {
   if (route.name === "thread" && current) {
     view = <ThreadViewDM key={current.id} c={current} onBack={back} onProfile={() => setRoute({ name: "profile", id: current.id, from: route.from })}
       onSend={sendMessage} onReact={reactMessage} onEdit={editMessage} onDelete={deleteMessage}
-      onMenu={() => setRowActions(current)} toast={toast} />;
+      onMenu={() => setRowActions(current)} toast={toast} searchOpen={threadSearch} onCloseSearch={() => setThreadSearch(false)} />;
   } else if (route.name === "profile" && current) {
     view = <ProfileViewDM c={current} onBack={back} onToggleMute={() => toggleMute(current)} onAddMembers={() => setAddMembersFor(current)}
       onLeave={() => setConfirm({ kind: "leave", c: current })} onOpenThreadWith={(id) => openThreadWith(id)} toast={toast} />;
@@ -1475,6 +1943,13 @@ function MessagesAppDM() {
               {route.name === "thread" &&
                 <SheetActionDM icon={ra.kind === "group" ? "lucide:users" : "lucide:user"} label={ra.kind === "group" ? "View members" : "View profile"}
                   onClick={() => { setRowActions(null); setRoute({ name: "profile", id: ra.id, from: route.from }); }} />}
+              <SheetActionDM icon="lucide:search" label="Search in conversation" disabled={!ra.messages.some((m) => !m.deleted && m.text)}
+                sub={ra.messages.some((m) => !m.deleted && m.text) ? "Find a message by keyword" : "Nothing to search yet"}
+                onClick={() => {
+                  setRowActions(null);
+                  if (route.name !== "thread") openThread(ra, ["archived", "groups"].includes(route.name) ? route.name : "list");
+                  setThreadSearch(true);
+                }} />
               <SheetActionDM icon={ra.pinned ? "lucide:pin-off" : "lucide:pin"} label={ra.pinned ? "Unpin" : "Pin"} onClick={() => { togglePin(ra); setRowActions(null); }} />
               <SheetActionDM icon={ra.archived ? "lucide:archive-restore" : "lucide:archive"} label={ra.archived ? "Unarchive" : "Archive"} onClick={() => { toggleArchive(ra); setRowActions(null); }} />
               <SheetActionDM icon="lucide:user-plus" label="Add members" sub={ra.kind === "dm" ? "Starts a group with " + stripHonorificDM(convNameDM(ra, peopleCtx)).split(" ")[0] : null} onClick={() => { setRowActions(null); setAddMembersFor(ra); }} />

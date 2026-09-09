@@ -31,6 +31,17 @@ img { max-width: 100%; }
 .lm-tab.on .ic iconify-icon { color: #fff !important; }
 .lm-tab:active { transform: scale(.9); }
 
+/* compact tab bar while scrolling down (matches the newsfeed) — narrower pill, icons only */
+.lm-tabs { transition: left .32s cubic-bezier(.22,1,.36,1), right .32s cubic-bezier(.22,1,.36,1), padding .28s cubic-bezier(.22,1,.36,1); }
+.lm-tabs.lm-tabs-compact { left: 13%; right: 13%; padding: 4px 6px; }
+.lm-tab { transition: padding .28s cubic-bezier(.22,1,.36,1), gap .28s ease; }
+.lm-tabs.lm-tabs-compact .lm-tab { padding: 3px 0; gap: 0; }
+.lm-tab .lbl { transition: font-size .28s ease, opacity .2s ease, margin-top .28s ease; overflow: hidden; }
+.lm-tabs.lm-tabs-compact .lm-tab .lbl { font-size: 0; opacity: 0; margin-top: -2px; }
+.lm-tab .ic { transition: background .28s ease, box-shadow .28s ease, width .32s cubic-bezier(.34,1.56,.64,1), height .32s cubic-bezier(.34,1.56,.64,1); }
+.lm-tabs.lm-tabs-compact .lm-tab .ic { width: 38px; height: 26px; }
+.lm-tabs.lm-tabs-compact .lm-tab .ic svg, .lm-tabs.lm-tabs-compact .lm-tab .ic iconify-icon { width: 20px; height: 20px; }
+
 /* .ml-card is defined in mobile-loyalty-shared.css with a literal white
    background (doesn't swap in dark mode) — override it here for this screen. */
 .rdb-screen .ml-card { background: var(--surface-card); }

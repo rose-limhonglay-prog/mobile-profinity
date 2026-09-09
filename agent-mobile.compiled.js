@@ -6,7 +6,8 @@
    =========================================================================== */
 const {
   useState: useStateAG,
-  useEffect: useEffectAG
+  useEffect: useEffectAG,
+  useRef: useRefAG
 } = React;
 const DSAG = window.ProfinityDesignSystem_c2b5cc;
 const MobileChromeC = window.MobileChromeC;
@@ -150,9 +151,11 @@ function AgentCardM({
     color: "var(--gray-450)"
   }), "Coming Soon")));
 }
-function AgTabBar() {
+function AgTabBar({
+  compact
+}) {
   return /*#__PURE__*/React.createElement("nav", {
-    className: "ag-tabs",
+    className: "ag-tabs" + (compact ? " ag-tabs-compact" : ""),
     "aria-label": "Primary"
   }, AG_TABS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
@@ -167,14 +170,22 @@ function AgTabBar() {
     color: t.key === "Agent" ? "#fff" : "var(--gray-450)"
   }), t.dot && /*#__PURE__*/React.createElement("span", {
     className: "dot"
-  }, t.dot)), t.label)));
+  }, t.dot)), /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, t.label))));
 }
 function AgentHome() {
+  const scrollRef = useRefAG(null);
+  const {
+    hidden: chromeHidden,
+    floating: chromeFloat
+  } = window.PFUseHeaderHideC(scrollRef);
   return /*#__PURE__*/React.createElement("div", {
-    className: "ag-screen",
+    className: "ag-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : ""),
     "data-screen-label": "Profinity Agents (mobile)"
   }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement("div", {
-    className: "ag-scroll"
+    className: "ag-scroll",
+    ref: scrollRef
   }, /*#__PURE__*/React.createElement(AgHero, null), /*#__PURE__*/React.createElement("div", {
     className: "ag-list"
   }, AG_AGENTS.map((a, i) => /*#__PURE__*/React.createElement(AgentCardM, {
@@ -184,7 +195,9 @@ function AgentHome() {
     style: {
       height: 20
     }
-  })), /*#__PURE__*/React.createElement(AgTabBar, null));
+  })), /*#__PURE__*/React.createElement(AgTabBar, {
+    compact: chromeHidden
+  }));
 }
 function useDeviceScaleAG() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);

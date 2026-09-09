@@ -630,8 +630,11 @@ const CMTabBar = React.forwardRef(function CMTabBar({ compact }, ref) {
 
 });
 
+/* Hide-on-scroll header (matches the newsfeed): scroll down → the top bar
+   collapses away (the channel row stays pinned); scroll back up a little →
+   it returns floating, with frosted chip icons + logo. Returns { hidden, floating }. */
 function useHeaderHideCM(scrollRef) {
-  const [hidden, setHidden] = React.useState(false);
+  const [state, setState] = React.useState({ hidden: false, floating: false });
   React.useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -639,15 +642,20 @@ function useHeaderHideCM(scrollRef) {
     const onScroll = () => {
       const y = el.scrollTop;
       const delta = y - lastY;
-      if (y < 24) setHidden(false);
-      else if (delta > 6) setHidden(true);
-      else if (delta < -6) setHidden(false);
+      setState((prev) => {
+        let hidden = prev.hidden;
+        if (y < 40) hidden = false;
+        else if (delta > 6) hidden = true;
+        else if (delta < -6) hidden = false;
+        const floating = y > 40;
+        return (hidden === prev.hidden && floating === prev.floating) ? prev : { hidden, floating };
+      });
       lastY = y;
     };
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
-  return hidden;
+  return state;
 }
 
 function CMScreen({ scrollRef }) {
@@ -658,7 +666,7 @@ function CMScreen({ scrollRef }) {
   const tabsRef = React.useRef(null);
   const [headerH, setHeaderH] = React.useState(0);
   const [tabsH, setTabsH] = React.useState(0);
-  const chromeHidden = useHeaderHideCM(scrollRef);
+  const { hidden: chromeHidden, floating: chromeFloat } = useHeaderHideCM(scrollRef);
   React.useLayoutEffect(() => {
     const el = headerRef.current;
     if (!el) return;
@@ -678,7 +686,7 @@ function CMScreen({ scrollRef }) {
     return () => ro.disconnect();
   }, []);
   return (
-    <div className="cm-screen" data-screen-label="Community (mobile)">
+    <div className={"cm-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="Community (mobile)">
       <div ref={headerRef} className={"cm-header-wrap" + (chromeHidden ? " cm-header-hidden" : "")}>
         <CMTopBar onMenu={() => setMenuOpen(true)} onMessages={() => setMsgOpen(true)} />
         <CMHeader channel={channel} setChannel={setChannel} />

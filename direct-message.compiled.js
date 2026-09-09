@@ -245,11 +245,34 @@ function groupDisplayNameDM(members) {
   const names = members.map(m => m.name.replace(/^Dr\s+/, ""));
   return names.length > 2 ? names.slice(0, 2).join(", ") + " +" + (names.length - 2) : names.join(", ");
 }
+
+/* Deep links from elsewhere (live-stream chat, comments) may name someone
+   who isn't a contact yet — seed an empty 1:1 thread from ?name=&avatar=
+   so the conversation can start. A name matching an existing contact
+   reuses that thread instead. */
+function threadFromParamsDM() {
+  const name = getParam("name");
+  if (!name) return null;
+  const known = DM_THREADS_SEED_DM.find(t => t.name === name);
+  if (known) return known;
+  const id = getParam("id") || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return {
+    id,
+    name,
+    avatar: getParam("avatar") || null,
+    online: true,
+    role: getParam("role") || "PROfinity member",
+    seals: [],
+    media: [],
+    files: [],
+    messages: []
+  };
+}
 function loadThreadDM(threadId) {
   const groups = readDmGroupsDM();
   const g = groups.find(x => x.id === threadId);
   if (g) return g;
-  return DM_THREADS_SEED_DM.find(t => t.id === threadId) || DM_THREADS_SEED_DM[0];
+  return DM_THREADS_SEED_DM.find(t => t.id === threadId) || threadFromParamsDM() || DM_THREADS_SEED_DM[0];
 }
 function persistGroupDM(thread) {
   if (!thread.isGroup) return;
@@ -327,6 +350,584 @@ function DmMsgActionsDM({
     color: "var(--text-heading)"
   }), "Edit"));
 }
+
+/* ===== Custom stickers (Genmoji-style) =====
+   The composer's smile button opens a sheet where you describe a sticker
+   and/or tap suggestions (your own avatar, ❤️, 🤔, 👑 …). Keywords in the
+   description map to emoji; the result is composed client-side as a
+   base + up to three accents on a soft gradient tile. Sent stickers render
+   as bubble-less tiles in the thread and are remembered under "Your stickers". */
+const ME_DM = {
+  name: "Katy Wilson",
+  avatar: "assets/avatar-katy.jpg"
+};
+const DM_STICKER_BGS_DM = ["linear-gradient(135deg,#ffd5e1,#e6d7ff)", "linear-gradient(135deg,#fde7c8,#ffd0d9)", "linear-gradient(135deg,#d6ecff,#e8d9ff)", "linear-gradient(135deg,#dff6e8,#d8ecff)", "linear-gradient(135deg,#fff1c9,#ffd9c7)"];
+const DM_STICKER_SUGGESTIONS_DM = ["me", "❤️", "🤔", "👑"];
+const DM_STICKER_MORE_DM = ["✨", "🔥", "🎉", "👍", "👏", "💉", "👄", "⭐", "😂", "😎", "💪", "🏆", "💰", "🚀", "🙏", "💯"];
+const DM_STICKER_HATS_DM = ["👑", "🎩", "🎓", "🧢"];
+
+/* Local GIF library (assets/gifs, generated in-repo). Tags drive search + chips. */
+const DM_GIFS_DM = [{
+  id: "thank-you",
+  label: "Thank you!",
+  tags: ["thanks", "thank you", "grateful", "pray", "reactions"]
+}, {
+  id: "congrats",
+  label: "Congrats!",
+  tags: ["congrats", "celebrate", "party", "win", "well done"]
+}, {
+  id: "love-it",
+  label: "Love it",
+  tags: ["love", "heart", "reactions", "yes"]
+}, {
+  id: "thinking",
+  label: "Hmm…",
+  tags: ["thinking", "hmm", "reactions", "wondering"]
+}, {
+  id: "on-fire",
+  label: "On fire!",
+  tags: ["fire", "hot", "amazing", "reactions"]
+}, {
+  id: "applause",
+  label: "Bravo!",
+  tags: ["clap", "applause", "congrats", "well done"]
+}, {
+  id: "lol",
+  label: "LOL",
+  tags: ["funny", "laugh", "lol", "haha", "reactions"]
+}, {
+  id: "mind-blown",
+  label: "Mind blown",
+  tags: ["wow", "mind blown", "funny", "reactions"]
+}, {
+  id: "party",
+  label: "Party time",
+  tags: ["party", "celebrate", "congrats", "fun"]
+}, {
+  id: "high-five",
+  label: "High five!",
+  tags: ["high five", "yes", "team", "celebrate"]
+}, {
+  id: "cheers",
+  label: "Cheers!",
+  tags: ["cheers", "celebrate", "congrats", "drink"]
+}, {
+  id: "wow",
+  label: "Wow!",
+  tags: ["wow", "shocked", "reactions"]
+}, {
+  id: "good-job",
+  label: "Good job",
+  tags: ["thumbs up", "yes", "good job", "thanks", "reactions"]
+}, {
+  id: "crown",
+  label: "Queen",
+  tags: ["crown", "queen", "boss", "love"]
+}, {
+  id: "syringe",
+  label: "Inject away",
+  tags: ["syringe", "injector", "clinic", "funny", "filler"]
+}, {
+  id: "rocket",
+  label: "Let's go!",
+  tags: ["rocket", "launch", "lets go", "growth", "yes"]
+}].map(g => ({
+  ...g,
+  src: "assets/gifs/" + g.id + ".gif"
+}));
+const DM_GIF_CHIPS_DM = ["Trending", "Reactions", "Thanks", "Congrats", "Love", "Funny", "Yes"];
+function filterGifsDM(query, chip) {
+  const q = query.trim().toLowerCase();
+  if (q) return DM_GIFS_DM.filter(g => g.label.toLowerCase().includes(q) || g.tags.some(t => t.includes(q)));
+  if (!chip || chip === "Trending") return DM_GIFS_DM;
+  const c = chip.toLowerCase();
+  return DM_GIFS_DM.filter(g => g.tags.some(t => t.includes(c)));
+}
+const DM_STICKER_LEXICON_DM = {
+  me: "me",
+  myself: "me",
+  selfie: "me",
+  katy: "me",
+  heart: "❤️",
+  hearts: "❤️",
+  love: "❤️",
+  loving: "❤️",
+  crown: "👑",
+  queen: "👑",
+  king: "👑",
+  royal: "👑",
+  think: "🤔",
+  thinking: "🤔",
+  hmm: "🤔",
+  wondering: "🤔",
+  syringe: "💉",
+  injection: "💉",
+  injector: "💉",
+  filler: "💉",
+  botox: "💉",
+  toxin: "💉",
+  lips: "👄",
+  lip: "👄",
+  kiss: "💋",
+  kisses: "💋",
+  star: "⭐",
+  stars: "⭐",
+  sparkle: "✨",
+  sparkles: "✨",
+  glow: "✨",
+  magic: "✨",
+  shine: "✨",
+  fire: "🔥",
+  hot: "🔥",
+  lit: "🔥",
+  money: "💰",
+  cash: "💰",
+  rich: "💰",
+  revenue: "💰",
+  laugh: "😂",
+  laughing: "😂",
+  lol: "😂",
+  haha: "😂",
+  funny: "😂",
+  party: "🎉",
+  celebrate: "🎉",
+  celebration: "🎉",
+  congrats: "🎉",
+  congratulations: "🎉",
+  thumbs: "👍",
+  thumbsup: "👍",
+  ok: "👍",
+  okay: "👍",
+  yes: "👍",
+  agree: "👍",
+  clap: "👏",
+  clapping: "👏",
+  applause: "👏",
+  bravo: "👏",
+  doctor: "🩺",
+  nurse: "🩺",
+  stethoscope: "🩺",
+  clinic: "🏥",
+  hospital: "🏥",
+  rocket: "🚀",
+  launch: "🚀",
+  smile: "😊",
+  smiling: "😊",
+  happy: "😊",
+  cool: "😎",
+  sunglasses: "😎",
+  shades: "😎",
+  sad: "😢",
+  cry: "😢",
+  crying: "😢",
+  angry: "😠",
+  mad: "😠",
+  wow: "😮",
+  shocked: "😮",
+  surprised: "😮",
+  sleepy: "😴",
+  tired: "😴",
+  sleep: "😴",
+  coffee: "☕",
+  tea: "🍵",
+  cake: "🎂",
+  birthday: "🎂",
+  trophy: "🏆",
+  winner: "🏆",
+  win: "🏆",
+  champion: "🏆",
+  medal: "🏅",
+  gold: "🏅",
+  flower: "🌸",
+  flowers: "💐",
+  rose: "🌹",
+  sun: "☀️",
+  sunny: "☀️",
+  rainbow: "🌈",
+  unicorn: "🦄",
+  muscle: "💪",
+  strong: "💪",
+  flex: "💪",
+  brain: "🧠",
+  smart: "🧠",
+  idea: "💡",
+  lightbulb: "💡",
+  book: "📚",
+  books: "📚",
+  study: "📚",
+  learning: "📚",
+  chart: "📈",
+  growth: "📈",
+  growing: "📈",
+  target: "🎯",
+  goal: "🎯",
+  goals: "🎯",
+  wave: "👋",
+  hi: "👋",
+  hello: "👋",
+  hey: "👋",
+  bye: "👋",
+  pray: "🙏",
+  thanks: "🙏",
+  thank: "🙏",
+  grateful: "🙏",
+  please: "🙏",
+  hundred: "💯",
+  perfect: "💯",
+  check: "✅",
+  done: "✅",
+  tick: "✅",
+  hat: "🎩",
+  graduate: "🎓",
+  graduation: "🎓",
+  cap: "🧢",
+  mastery: "🏅",
+  confidence: "✨",
+  profinity: "👑"
+};
+function composeStickerDM(desc, picks) {
+  const items = [];
+  const push = v => {
+    if (v && !items.includes(v)) items.push(v);
+  };
+  picks.forEach(push);
+  desc.toLowerCase().split(/[^a-z0-9]+/).forEach(w => push(DM_STICKER_LEXICON_DM[w]));
+  (desc.match(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]️?/gu) || []).forEach(push);
+  if (!items.length) return null;
+  const withMe = items.includes("me");
+  const emojis = items.filter(x => x !== "me");
+  const base = withMe ? "me" : emojis[0];
+  const accents = (withMe ? emojis : emojis.slice(1)).slice(0, 3);
+  const label = desc.trim() || (withMe ? "Me" + (accents.length ? " with " + accents.join(" ") : "") : emojis.join(" "));
+  let h = 0;
+  for (const c of label) h = h * 31 + c.codePointAt(0) >>> 0;
+  return {
+    kind: "sticker",
+    base,
+    accents,
+    label,
+    bg: h % DM_STICKER_BGS_DM.length
+  };
+}
+function readRecentStickersDM() {
+  try {
+    return JSON.parse(window.localStorage.getItem("pf-dm-stickers") || "[]");
+  } catch (e) {
+    return [];
+  }
+}
+function saveRecentStickerDM(s) {
+  const list = [s, ...readRecentStickersDM().filter(x => x.label !== s.label)].slice(0, 12);
+  try {
+    window.localStorage.setItem("pf-dm-stickers", JSON.stringify(list));
+  } catch (e) {/* private mode */}
+  return list;
+}
+function DmStickerDM({
+  sticker,
+  size = 120
+}) {
+  const hat = sticker.accents.find(a => DM_STICKER_HATS_DM.includes(a));
+  const rest = sticker.accents.filter(a => a !== hat);
+  const corners = [{
+    right: "-3%",
+    top: "-4%"
+  }, {
+    left: "-4%",
+    bottom: "0%"
+  }, {
+    right: "-2%",
+    bottom: "-4%",
+    transform: "rotate(12deg)"
+  }];
+  return /*#__PURE__*/React.createElement("span", {
+    className: "dm-sticker",
+    role: "img",
+    "aria-label": "Sticker: " + sticker.label,
+    style: {
+      width: size,
+      height: size,
+      background: DM_STICKER_BGS_DM[sticker.bg],
+      borderRadius: size * 0.28
+    }
+  }, sticker.base === "me" ? /*#__PURE__*/React.createElement("span", {
+    className: "dm-sticker-me"
+  }, /*#__PURE__*/React.createElement(DSDM.Avatar, {
+    name: ME_DM.name,
+    src: ME_DM.avatar,
+    size: Math.round(size * 0.66)
+  })) : /*#__PURE__*/React.createElement("span", {
+    className: "dm-sticker-base",
+    style: {
+      fontSize: size * 0.56
+    }
+  }, sticker.base), hat && /*#__PURE__*/React.createElement("span", {
+    className: "dm-sticker-accent hat",
+    style: {
+      fontSize: size * 0.34,
+      top: sticker.base === "me" ? "-6%" : "-10%"
+    }
+  }, hat), rest.map((a, i) => /*#__PURE__*/React.createElement("span", {
+    key: i,
+    className: "dm-sticker-accent",
+    style: {
+      fontSize: size * 0.3,
+      ...corners[i]
+    }
+  }, a)));
+}
+function DmStickerSheetDM({
+  onClose,
+  onSend,
+  onSendGif,
+  initialMode = "sticker"
+}) {
+  const [mode, setMode] = useStateDM(initialMode);
+  const [gifQuery, setGifQuery] = useStateDM("");
+  const [gifChip, setGifChip] = useStateDM("Trending");
+  const [gifPick, setGifPick] = useStateDM(null);
+  const [desc, setDesc] = useStateDM("");
+  const [picks, setPicks] = useStateDM([]);
+  const [result, setResult] = useStateDM(null);
+  const [busy, setBusy] = useStateDM(false);
+  const [more, setMore] = useStateDM(false);
+  const [recents] = useStateDM(readRecentStickersDM);
+  const inputRef = useRefDM(null);
+  useEffectDM(() => {
+    const draft = composeStickerDM(desc, picks);
+    if (!draft) {
+      setResult(null);
+      setBusy(false);
+      return;
+    }
+    setBusy(true);
+    const t = window.setTimeout(() => {
+      setResult(draft);
+      setBusy(false);
+    }, 900);
+    return () => window.clearTimeout(t);
+  }, [desc, picks.join("|")]);
+  useEffectDM(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  function togglePick(k) {
+    setPicks(p => p.includes(k) ? p.filter(x => x !== k) : [...p, k]);
+  }
+  function confirm() {
+    if (!result || busy) return;
+    saveRecentStickerDM(result);
+    onSend(result);
+  }
+  const list = more ? [...DM_STICKER_SUGGESTIONS_DM, ...DM_STICKER_MORE_DM] : DM_STICKER_SUGGESTIONS_DM;
+  const isGif = mode === "gif";
+  const gifs = filterGifsDM(gifQuery, gifChip);
+  const ready = isGif ? !!gifPick : !!result && !busy;
+  function confirmGif() {
+    if (gifPick) onSendGif(gifPick);
+  }
+  const onConfirm = isGif ? confirmGif : confirm;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "dm-sticker-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "dm-sticker-sheet",
+    role: "dialog",
+    "aria-label": "Create a custom sticker",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "dm-sticker-top"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "dm-sticker-circ",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:x",
+    size: 22,
+    color: "var(--text-heading)"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "dm-sticker-seg",
+    role: "tablist",
+    "aria-label": "Sticker or GIF"
+  }, /*#__PURE__*/React.createElement("button", {
+    role: "tab",
+    "aria-selected": !isGif,
+    className: !isGif ? "on" : "",
+    onClick: () => setMode("sticker")
+  }, "Sticker"), /*#__PURE__*/React.createElement("button", {
+    role: "tab",
+    "aria-selected": isGif,
+    className: isGif ? "on" : "",
+    onClick: () => setMode("gif")
+  }, "GIF")), /*#__PURE__*/React.createElement("button", {
+    className: "dm-sticker-circ confirm" + (ready ? " on" : ""),
+    "aria-label": isGif ? "Send GIF" : "Send sticker",
+    disabled: !ready,
+    onClick: onConfirm
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:check",
+    size: 22,
+    color: ready ? "#fff" : "var(--gray-450)"
+  }))), isGif && /*#__PURE__*/React.createElement("div", {
+    className: "dm-gif-pane"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "dm-gif-search"
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:search",
+    size: 18,
+    color: "var(--gray-450)"
+  }), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    placeholder: "Search GIFs",
+    "aria-label": "Search GIFs",
+    value: gifQuery,
+    onChange: e => setGifQuery(e.target.value),
+    onKeyDown: e => {
+      if (e.key === "Enter") confirmGif();
+    }
+  }), gifQuery && /*#__PURE__*/React.createElement("button", {
+    className: "dm-sticker-clear",
+    "aria-label": "Clear search",
+    onClick: () => setGifQuery("")
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:x",
+    size: 14,
+    color: "var(--gray-450)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "dm-gif-chips"
+  }, DM_GIF_CHIPS_DM.map(c => /*#__PURE__*/React.createElement("button", {
+    key: c,
+    className: "dm-gif-chip" + (gifChip === c && !gifQuery ? " on" : ""),
+    onClick: () => {
+      setGifChip(c);
+      setGifQuery("");
+    }
+  }, c))), /*#__PURE__*/React.createElement("div", {
+    className: "dm-gif-grid"
+  }, gifs.map(g => /*#__PURE__*/React.createElement("button", {
+    key: g.id,
+    className: "dm-gif-tile" + (gifPick && gifPick.id === g.id ? " on" : ""),
+    "aria-label": "GIF: " + g.label,
+    "aria-pressed": !!gifPick && gifPick.id === g.id,
+    onClick: () => setGifPick(cur => cur && cur.id === g.id ? null : g)
+  }, /*#__PURE__*/React.createElement("img", {
+    src: g.src,
+    alt: g.label,
+    loading: "lazy"
+  }), gifPick && gifPick.id === g.id && /*#__PURE__*/React.createElement("span", {
+    className: "dm-gif-tick"
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:check",
+    size: 14,
+    color: "#fff"
+  })))), gifs.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "dm-gif-empty"
+  }, "No GIFs match “", gifQuery, "”.")), /*#__PURE__*/React.createElement("p", {
+    className: "dm-sticker-beta"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dm-sticker-beta-tag"
+  }, "GIF"), " Tap a GIF to select it, then send with the tick.")), !isGif && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "dm-sticker-stage",
+    onClick: () => inputRef.current && inputRef.current.focus()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "dm-sticker-glow" + (busy ? " busy" : "")
+  }), ready ? /*#__PURE__*/React.createElement("div", {
+    className: "dm-sticker-result",
+    key: result.label + result.base + result.accents.join("")
+  }, /*#__PURE__*/React.createElement(DmStickerDM, {
+    sticker: result,
+    size: 196
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "dm-sticker-caption"
+  }, result.label)) : busy ? /*#__PURE__*/React.createElement("p", {
+    className: "dm-sticker-hint busy"
+  }, "Creating your sticker…") : /*#__PURE__*/React.createElement("p", {
+    className: "dm-sticker-hint"
+  }, "Describe a sticker or add a suggestion from the list.")), /*#__PURE__*/React.createElement("div", {
+    className: "dm-sticker-sug-h"
+  }, /*#__PURE__*/React.createElement("span", null, "Suggestions"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => setMore(m => !m)
+  }, more ? "Show Less" : "Show More")), /*#__PURE__*/React.createElement("div", {
+    className: "dm-sticker-sug" + (more ? " grid" : "")
+  }, list.map(k => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    className: "dm-sticker-opt" + (picks.includes(k) ? " on" : ""),
+    "aria-label": k === "me" ? "Add yourself" : "Add " + k,
+    "aria-pressed": picks.includes(k),
+    onClick: () => togglePick(k)
+  }, k === "me" ? /*#__PURE__*/React.createElement(DSDM.Avatar, {
+    name: ME_DM.name,
+    src: ME_DM.avatar,
+    size: 56
+  }) : /*#__PURE__*/React.createElement("span", {
+    className: "dm-sticker-opt-emoji"
+  }, k))), !more && /*#__PURE__*/React.createElement("button", {
+    className: "dm-sticker-opt",
+    "aria-label": "Show more suggestions",
+    onClick: () => setMore(true)
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:smile-plus",
+    size: 28,
+    color: "var(--text-heading)"
+  }))), more && recents.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "dm-sticker-sug-h"
+  }, /*#__PURE__*/React.createElement("span", null, "Your stickers")), /*#__PURE__*/React.createElement("div", {
+    className: "dm-sticker-recents"
+  }, recents.map((s, i) => /*#__PURE__*/React.createElement("button", {
+    key: i,
+    className: "dm-sticker-recent",
+    "aria-label": "Use sticker " + s.label,
+    onClick: () => {
+      setResult(s);
+      setBusy(false);
+    }
+  }, /*#__PURE__*/React.createElement(DmStickerDM, {
+    sticker: s,
+    size: 56
+  }))))), /*#__PURE__*/React.createElement("p", {
+    className: "dm-sticker-beta"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dm-sticker-beta-tag"
+  }, "BETA"), " Custom stickers may create unexpected results."), /*#__PURE__*/React.createElement("div", {
+    className: "dm-sticker-compose"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "dm-sticker-field"
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 22,
+    color: "var(--ai-purple)"
+  }), /*#__PURE__*/React.createElement("input", {
+    ref: inputRef,
+    type: "text",
+    placeholder: "Describe a sticker",
+    "aria-label": "Describe a sticker",
+    value: desc,
+    onChange: e => setDesc(e.target.value),
+    onKeyDown: e => {
+      if (e.key === "Enter") confirm();
+    }
+  }), desc && /*#__PURE__*/React.createElement("button", {
+    className: "dm-sticker-clear",
+    "aria-label": "Clear description",
+    onClick: () => setDesc("")
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:x",
+    size: 14,
+    color: "var(--gray-450)"
+  }))), /*#__PURE__*/React.createElement("button", {
+    className: "dm-sticker-circ me" + (picks.includes("me") ? " on" : ""),
+    "aria-label": "Add yourself to the sticker",
+    "aria-pressed": picks.includes("me"),
+    onClick: () => togglePick("me")
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:user-round",
+    size: 22,
+    color: picks.includes("me") ? "#fff" : "var(--ai-purple)"
+  }))))));
+}
 function DmBubblesDM({
   messages,
   showSender,
@@ -351,7 +952,29 @@ function DmBubblesDM({
       className: "dm-bubble-sender"
     }, m.sender), /*#__PURE__*/React.createElement("span", {
       className: "dm-bubble-wrap"
-    }, /*#__PURE__*/React.createElement("span", {
+    }, m.gif ? /*#__PURE__*/React.createElement("span", {
+      className: "dm-bubble dm-bubble-gif" + (m.me ? " me" : ""),
+      onClick: e => {
+        e.stopPropagation();
+        setActionsFor(null);
+        if (!m.me) setPickerFor(cur => cur === i ? null : i);
+      }
+    }, /*#__PURE__*/React.createElement("img", {
+      src: m.gif.src,
+      alt: "GIF: " + m.gif.label
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "dm-gif-badge"
+    }, "GIF")) : m.sticker ? /*#__PURE__*/React.createElement("span", {
+      className: "dm-bubble dm-bubble-sticker" + (m.me ? " me" : ""),
+      onClick: e => {
+        e.stopPropagation();
+        setActionsFor(null);
+        if (!m.me) setPickerFor(cur => cur === i ? null : i);
+      }
+    }, /*#__PURE__*/React.createElement(DmStickerDM, {
+      sticker: m.sticker,
+      size: 132
+    })) : /*#__PURE__*/React.createElement("span", {
       className: "dm-bubble" + (m.me ? " me" : ""),
       onClick: e => {
         e.stopPropagation();
@@ -568,25 +1191,25 @@ function DmInfoScreen({
     className: "dm-info-sec"
   }, /*#__PURE__*/React.createElement("h2", null, "About"), /*#__PURE__*/React.createElement("div", {
     className: "dm-info-about"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, thread.email && /*#__PURE__*/React.createElement("div", {
     className: "dm-info-row"
   }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
     name: "lucide:mail",
     size: 19,
     color: "var(--brand-navy)"
-  }), /*#__PURE__*/React.createElement("span", null, thread.email)), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("span", null, thread.email)), thread.clinic && /*#__PURE__*/React.createElement("div", {
     className: "dm-info-row"
   }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
     name: "lucide:building-2",
     size: 19,
     color: "var(--brand-navy)"
-  }), /*#__PURE__*/React.createElement("span", null, thread.clinic)), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("span", null, thread.clinic)), thread.website && /*#__PURE__*/React.createElement("div", {
     className: "dm-info-row"
   }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
     name: "lucide:globe",
     size: 19,
     color: "var(--brand-navy)"
-  }), /*#__PURE__*/React.createElement("span", null, thread.website)), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("span", null, thread.website)), thread.instagram && /*#__PURE__*/React.createElement("div", {
     className: "dm-info-row"
   }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
     name: "mdi:instagram",
@@ -680,13 +1303,14 @@ function DmAddPeopleScreen({
 }
 function DmPage() {
   const fromPage = getParam("from") || "NewsfeedMobile.html";
-  const threadId = getParam("id") || DM_THREADS_SEED_DM[0].id;
+  const threadId = getParam("id") || (threadFromParamsDM() || DM_THREADS_SEED_DM[0]).id;
   const [thread, setThread] = useStateDM(() => loadThreadDM(threadId));
   const [messages, setMessages] = useStateDM(thread.messages);
   const [text, setText] = useStateDM("");
   const [view, setView] = useStateDM("chat");
   const [typingName, setTypingName] = useStateDM(null);
   const [editingIndex, setEditingIndex] = useStateDM(null);
+  const [stickerOpen, setStickerOpen] = useStateDM(null); // null | "sticker" | "gif"
   const bodyRef = useRefDM(null);
   const replyTimerDM = useRefDM(null);
   useEffectDM(() => {
@@ -743,6 +1367,30 @@ function DmPage() {
       t: "Now"
     }]);
     setText("");
+    triggerReplyDM();
+  }
+  function sendSticker(sticker) {
+    setMessages(all => [...all, {
+      me: true,
+      sticker,
+      text: "Sticker",
+      t: "Now"
+    }]);
+    setStickerOpen(null);
+    triggerReplyDM();
+  }
+  function sendGif(gif) {
+    setMessages(all => [...all, {
+      me: true,
+      gif: {
+        id: gif.id,
+        src: gif.src,
+        label: gif.label
+      },
+      text: "GIF",
+      t: "Now"
+    }]);
+    setStickerOpen(null);
     triggerReplyDM();
   }
   function reactToMessage(index, key) {
@@ -872,7 +1520,21 @@ function DmPage() {
       if (e.key === "Enter") submit();
       if (e.key === "Escape" && editingIndex !== null) cancelEditMessage();
     }
-  }), /*#__PURE__*/React.createElement("button", {
+  }), editingIndex === null && !text.trim() && /*#__PURE__*/React.createElement("button", {
+    className: "dm-attach dm-gif-btn",
+    "aria-label": "Send a GIF",
+    "aria-expanded": stickerOpen === "gif",
+    onClick: () => setStickerOpen("gif")
+  }, "GIF"), editingIndex === null && /*#__PURE__*/React.createElement("button", {
+    className: "dm-attach dm-sticker-btn",
+    "aria-label": "Custom sticker",
+    "aria-expanded": stickerOpen === "sticker",
+    onClick: () => setStickerOpen("sticker")
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:smile-plus",
+    size: 20,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("button", {
     className: "dm-send" + (text.trim() ? " on" : ""),
     "aria-label": editingIndex !== null ? "Save edit" : "Send",
     disabled: !text.trim(),
@@ -881,7 +1543,12 @@ function DmPage() {
     name: editingIndex !== null ? "lucide:check" : "lucide:arrow-up",
     size: 18,
     color: "#fff"
-  }))));
+  }))), stickerOpen && /*#__PURE__*/React.createElement(DmStickerSheetDM, {
+    initialMode: stickerOpen,
+    onClose: () => setStickerOpen(null),
+    onSend: sendSticker,
+    onSendGif: sendGif
+  }));
 }
 function DirectMessageApp() {
   const mobile = useIsMobileDM();

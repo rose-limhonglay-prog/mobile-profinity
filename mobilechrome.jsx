@@ -70,7 +70,7 @@
 
   /* ===== header points pill ===================================================
      The member's lifetime gamification points, sat between the logo and the
-     search icon. Icon is the red-lips Lottie (lottie.host yaURgbT5P7) fed
+     search icon. Icon is the syringe Lottie (lottie.host TbrupntywS) fed
    as raw JSON through
      lottie-web (never the lottie.host /embed iframe — it caches hard and
      ignores re-publishes). Reads window.PFLoyalty when loyalty-engine.js is on
@@ -78,9 +78,9 @@
      `pf:points-earned` event (dispatched by popPoints in app.jsx) bumps the
      total live and books it in the engine so Rewards stays in step.
 
-     The number reads in the artwork's lipstick red (#E9293A, #FE6559 in dark mode); the tooltip
+     The number reads in the artwork's syringe red (#E9293A, #FE6559 in dark mode); the tooltip
      still reads lifetime points against the engine's beakerFullPoints scale. */
-  const PTS_LOTTIE_SRCC = "https://lottie.host/fb136996-c391-43d9-8292-4b95782aa9d0/yaURgbT5P7.json";
+  const PTS_LOTTIE_SRCC = "https://lottie.host/10797cf0-5c4b-4f1a-8412-5631c9593ded/TbrupntywS.json";
   const PTS_LOTTIE_LIBC = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
   const PTS_FALLBACKC = 14000;
   const PTS_FULL_FALLBACKC = 20000;
@@ -274,6 +274,35 @@
         </button>
         {tallyHost && <PointsTallyC host={tallyHost} on={tally} shown={shown} bump={bump} delta={delta} />}
       </React.Fragment>);
+  }
+
+  /* Hide-on-scroll header state shared by every page that mounts the
+     newsfeed-style top bar. Scroll down past 40px → hidden (bar slides up);
+     scroll back up a little → floating (transparent bar, frosted chip icons
+     + logo over the content). Page roots toggle .chrome-hidden/.chrome-float. */
+  function useHeaderHideC(scrollRef) {
+    const [state, setState] = useStateC({ hidden: false, floating: false });
+    useEffectC(() => {
+      const el = scrollRef && scrollRef.current;
+      if (!el) return;
+      let lastY = el.scrollTop;
+      const onScroll = () => {
+        const y = el.scrollTop;
+        const dy = y - lastY;
+        setState((prev) => {
+          let hidden = prev.hidden;
+          if (y < 40) hidden = false;
+          else if (dy > 6) hidden = true;
+          else if (dy < -6) hidden = false;
+          const floating = y > 40;
+          return (hidden === prev.hidden && floating === prev.floating) ? prev : { hidden, floating };
+        });
+        lastY = y;
+      };
+      el.addEventListener("scroll", onScroll, { passive: true });
+      return () => el.removeEventListener("scroll", onScroll);
+    }, []);
+    return state;
   }
 
   function MTopBarC({ onMenu, onBell, onMessages, dark }) {
@@ -891,6 +920,8 @@ function readDmGroupsC() {
   }
 
   window.MobileChromeC = MobileChromeC;
+  /* Scroll-driven header state ({ hidden, floating }) — see useHeaderHideC. */
+  window.PFUseHeaderHideC = useHeaderHideC;
   /* The header points icon (doctor Lottie) — exposed for other pages. */
   window.PFPointsIconC = PointsIconC;
   /* The header points pill itself — mounted by pages that keep their own top

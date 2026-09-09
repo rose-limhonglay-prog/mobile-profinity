@@ -345,6 +345,51 @@
 .pw-composer-action:last-child{border-right:none}
 .pw-composer-action:hover{background:var(--surface-sunken)}
 
+/* ---------- Upcoming lives ---------- */
+.pw-lives-card{scroll-margin-top:100px}
+.pw-lives-card .pw-card-hd{margin-bottom:14px}
+.pw-lives-count{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;color:var(--gray-500)}
+.pw-lives-add{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r-pill);border:1px solid var(--border-default);
+  background:none;cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13.5px;color:var(--brand-navy);transition:background .15s ease}
+.pw-lives-add:hover{background:var(--surface-sunken)}
+.pw-lives-empty{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.pw-lives-empty p{margin:0;flex:1;min-width:220px;font-family:var(--font-sans);font-size:14.5px;line-height:1.5;color:var(--gray-500)}
+.pw-lives-schedule{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:var(--r-pill);border:none;cursor:pointer;
+  background:var(--brand-navy);color:#fff;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:14px}
+.pw-lives-schedule:hover{filter:brightness(1.1)}
+.pw-lives-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.pw-live-row{display:flex;align-items:center;gap:16px;padding:14px 0;border-top:1px solid var(--border-default)}
+.pw-live-row:first-child{border-top:none;padding-top:0}
+.pw-live-date{flex:none;width:58px;padding:8px 0;border-radius:12px;background:var(--surface-sunken);display:flex;flex-direction:column;align-items:center}
+.pw-live-date .d{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:22px;line-height:1.1;color:var(--text-heading)}
+.pw-live-date .m{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--gray-500)}
+.pw-live-row.due .pw-live-date{background:color-mix(in srgb, var(--error) 10%, transparent)}
+.pw-live-row.due .pw-live-date .d{color:var(--error)}
+.pw-live-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pw-live-status{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:11px;
+  letter-spacing:.05em;text-transform:uppercase;color:var(--gray-500)}
+.pw-live-row.due .pw-live-status{color:var(--error)}
+.pw-live-status .dot{width:7px;height:7px;border-radius:50%;background:var(--error);animation:pw-live-pulse 1.2s ease-in-out infinite}
+@keyframes pw-live-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.pw-live-ti{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15.5px;line-height:1.35;color:var(--text-heading)}
+.pw-live-meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-family:var(--font-sans);font-size:13px;color:var(--gray-500)}
+.pw-live-meta .sep{color:var(--gray-400)}
+.pw-live-actions{flex:none;display:flex;align-items:center;gap:8px}
+.pw-live-go{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 16px;border-radius:var(--r-pill);border:none;cursor:pointer;
+  background:var(--error);color:#fff;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:13.5px}
+.pw-live-go:hover{filter:brightness(1.1)}
+.pw-live-cancel{height:38px;padding:0 14px;border-radius:var(--r-pill);border:1px solid var(--border-default);background:none;cursor:pointer;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13.5px;color:var(--gray-600);transition:background .15s ease}
+.pw-live-cancel:hover{background:var(--surface-sunken)}
+.pw-live-confirm{flex:none;display:flex;align-items:center;gap:8px;font-family:var(--font-sans);font-size:13.5px;color:var(--text-primary)}
+.pw-live-confirm button{height:34px;padding:0 12px;border-radius:var(--r-pill);border:none;cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px}
+.pw-live-confirm .yes{background:var(--error);color:#fff}
+.pw-live-confirm .no{background:var(--surface-sunken);color:var(--text-primary)}
+@media (max-width:700px){
+  .pw-live-row{flex-wrap:wrap}
+  .pw-live-actions,.pw-live-confirm{width:100%;padding-left:74px}
+}
+
 /* ---------- Posts card ---------- */
 .pw-posts-card{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--r-lg);
   box-shadow:var(--shadow-card);padding:20px 22px}

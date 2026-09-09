@@ -64,9 +64,11 @@ function fmtRelDate(iso) {
   if (diffH < 24) return Math.round(diffH) + "h ago";
   return Math.round(diffH / 24) + "d ago";
 }
-function RdbTabBar() {
+function RdbTabBar({
+  compact
+}) {
   return /*#__PURE__*/React.createElement("nav", {
-    className: "lm-tabs rdb-tabs",
+    className: "lm-tabs rdb-tabs" + (compact ? " lm-tabs-compact" : ""),
     "aria-label": "Primary"
   }, RDB_TABS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
@@ -81,7 +83,9 @@ function RdbTabBar() {
     color: t.key === "Rewards" ? "#fff" : "#000"
   }), t.dot && /*#__PURE__*/React.createElement("span", {
     className: "dot"
-  }, t.dot)), t.label)));
+  }, t.dot)), /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, t.label))));
 }
 function WalletDropdown({
   state,
@@ -531,11 +535,17 @@ function RewardsDashboardHome() {
     setToast(m);
     setTimeout(() => setToast(null), 2400);
   };
+  const scrollRef = useRefRDB(null);
+  const {
+    hidden: chromeHidden,
+    floating: chromeFloat
+  } = window.PFUseHeaderHideC(scrollRef);
   return /*#__PURE__*/React.createElement("div", {
-    className: "lm-screen rdb-screen",
+    className: "lm-screen rdb-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : ""),
     "data-screen-label": "Rewards Dashboard"
   }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement("div", {
-    className: "lm-scroll"
+    className: "lm-scroll",
+    ref: scrollRef
   }, /*#__PURE__*/React.createElement(RdbHeader, {
     state: state,
     tier: state.user.membershipTier,
@@ -587,7 +597,9 @@ function RewardsDashboardHome() {
     style: {
       height: 90
     }
-  })), /*#__PURE__*/React.createElement(RdbTabBar, null), /*#__PURE__*/React.createElement(WalletDropdown, {
+  })), /*#__PURE__*/React.createElement(RdbTabBar, {
+    compact: chromeHidden
+  }), /*#__PURE__*/React.createElement(WalletDropdown, {
     state: state,
     open: walletOpen,
     onClose: () => setWalletOpen(false)

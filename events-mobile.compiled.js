@@ -284,6 +284,59 @@ const LS_OFFCAM = [{
   host: false,
   camOff: true
 }];
+
+/* Commenter avatars for the live chat — known members resolve to their
+   photo, anyone else falls back to DS Avatar's initials. */
+const LS_CHAT_AVATARS = {
+  "Dr Tim Pearce": "assets/avatar-drtim.png",
+  "Miranda Pearce": "assets/avatar-miranda.jpg",
+  "Katy Wilson": "assets/avatar-katy.jpg",
+  "Grace Lindqvist": "assets/avatar-sarah-collins.jpg",
+  "Amir Khan": "assets/avatar-amir-khan.jpg",
+  "Mark Ellis": "assets/avatar-mark-ellis.jpg",
+  "Priya Nair": "assets/avatar-priya-shah.jpg",
+  "Beth Okafor": "assets/avatar-nurse-beth.jpg"
+};
+/* Host-only clickable links: URLs in a host's message become anchors,
+   everyone else's stay plain text (keeps the chat spam-safe). */
+const LS_CHAT_URL_RE = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/g;
+function lsChatLinkify(text, cls) {
+  const out = [];
+  let last = 0,
+    m;
+  LS_CHAT_URL_RE.lastIndex = 0;
+  while (m = LS_CHAT_URL_RE.exec(text)) {
+    let url = m[0];
+    const trail = url.match(/[.,;:!?)]+$/);
+    if (trail) url = url.slice(0, -trail[0].length);
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const href = /^https?:/i.test(url) ? url : "https://" + url;
+    out.push(/*#__PURE__*/React.createElement("a", {
+      key: out.length,
+      className: cls,
+      href: href,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      onClick: e => e.stopPropagation()
+    }, url.replace(/^https?:\/\//i, "").replace(/\/$/, "")));
+    last = m.index + url.length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
+/* Open a direct message with a commenter — the DM page seeds a fresh
+   thread from name/avatar when they aren't already a contact. */
+const lsChatDmUrl = m => {
+  const q = new URLSearchParams({
+    name: m.name,
+    from: "EventsMobile.html"
+  });
+  const av = m.avatar || LS_CHAT_AVATARS[m.name];
+  if (av) q.set("avatar", av);
+  return "DirectMessage.html?" + q.toString();
+};
+const lsChatAvatar = m => m.avatar || LS_CHAT_AVATARS[m.name] || null;
 const LS_REACT_EMOJI = ["❤️", "💜", "👏", "🔥", "🙌"];
 const LS_COMPOSER_MORE = ["💜", "👏", "🔥", "🙌", "😂"];
 const LS_BASKET_COUNT = 79;
@@ -331,6 +384,9 @@ const LS_CHAT_SEED = [{
 }, {
   name: "Dr Tim Pearce",
   text: "Great turnout tonight, keep the questions coming"
+}, {
+  name: "Dr Tim Pearce",
+  text: "Slides + aftercare checklist for tonight: https://profinity.app/technique-tuesday/notes"
 }, {
   name: "Josh Reilly",
   text: "Does this count toward my CPD hours?"
@@ -1505,10 +1561,233 @@ function LSReactions({
     }
   }, p.emoji)));
 }
+
+/* Long-press (≈450ms hold, cancelled by a 10px drag) opens a comment's
+   options. Right-click / contextmenu does the same on desktop. `ref` is a
+   shared per-list press state; `fire` receives nothing and should open the
+   sheet for the row these handlers are attached to. The row's own onClick
+   should bail when ref.current.fired is set (the tap that ends a long-press). */
+function lsLongPress(ref, fire) {
+  const end = e => {
+    const s = ref.current;
+    if (!s) return;
+    if (s.t) {
+      clearTimeout(s.t);
+      s.t = null;
+    }
+    if (s.el) s.el.classList.remove("pressing");
+  };
+  return {
+    onPointerDown: e => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      end();
+      const el = e.currentTarget;
+      ref.current = {
+        x: e.clientX,
+        y: e.clientY,
+        fired: false,
+        el: el,
+        t: setTimeout(() => {
+          ref.current.fired = true;
+          ref.current.t = null;
+          el.classList.remove("pressing");
+          /* The tap that ends a long-press still produces a click — swallow it
+             so it can't land on whatever the sheet just put under the finger. */
+          const swallow = ev => {
+            ev.stopPropagation();
+            ev.preventDefault();
+          };
+          window.addEventListener("click", swallow, true);
+          setTimeout(() => window.removeEventListener("click", swallow, true), 700);
+          fire();
+        }, 450)
+      };
+      el.classList.add("pressing");
+    },
+    onPointerMove: e => {
+      const s = ref.current;
+      if (!s || !s.t) return;
+      if (Math.abs(e.clientX - s.x) > 10 || Math.abs(e.clientY - s.y) > 10) end();
+    },
+    onPointerUp: end,
+    onPointerCancel: end,
+    onPointerLeave: end,
+    onContextMenu: e => {
+      e.preventDefault();
+      if (!ref.current || !ref.current.fired) fire();
+    }
+  };
+}
+const LS_REPORT_REASONS = ["Spam or scam", "Harassment or bullying", "Misinformation", "Inappropriate content", "Something else"];
+
+/* Report a comment — anyone in the audience can flag one; the host sees the
+   same sheet. Pure prototype: submit just closes and toasts. */
+function LSReportSheet({
+  msg,
+  onCancel,
+  onSubmit
+}) {
+  const [reason, setReason] = useStateEV(null);
+  useEffectEV(() => {
+    const esc = e => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onCancel();
+      }
+    };
+    window.addEventListener("keydown", esc, true);
+    return () => window.removeEventListener("keydown", esc, true);
+  }, [onCancel]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet ls-report",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Report comment"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ev-sheet-scrim",
+    "aria-label": "Close",
+    onClick: onCancel
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet-card"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ev-gate-ic warn"
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:flag",
+    size: 26,
+    color: "var(--error)"
+  })), /*#__PURE__*/React.createElement("h3", {
+    className: "ev-sheet-ttl"
+  }, "Report this comment?"), /*#__PURE__*/React.createElement("p", {
+    className: "ev-sheet-p"
+  }, /*#__PURE__*/React.createElement("b", null, msg.name), ": “", msg.text, "”"), /*#__PURE__*/React.createElement("div", {
+    className: "ls-report-reasons",
+    role: "radiogroup",
+    "aria-label": "Reason"
+  }, LS_REPORT_REASONS.map(r => /*#__PURE__*/React.createElement("button", {
+    key: r,
+    type: "button",
+    role: "radio",
+    "aria-checked": reason === r,
+    className: "ls-report-reason" + (reason === r ? " on" : ""),
+    onClick: () => setReason(r)
+  }, r))), /*#__PURE__*/React.createElement("button", {
+    className: "ev-detail-cta danger",
+    disabled: !reason,
+    onClick: () => onSubmit(reason)
+  }, "Submit report"), /*#__PURE__*/React.createElement("button", {
+    className: "ev-detail-cta ghost",
+    onClick: onCancel
+  }, "Cancel")));
+}
+
+/* Long-press options for one comment: DM + Report for everyone (not on
+   your own), Delete for host/speaker. */
+function LSCommentSheet({
+  msg,
+  isMe,
+  isHost,
+  canDelete,
+  onDm,
+  onReport,
+  onDelete,
+  onClose
+}) {
+  useEffectEV(() => {
+    const esc = e => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", esc, true);
+    return () => window.removeEventListener("keydown", esc, true);
+  }, [onClose]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet ls-cs",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": (isMe ? "Your" : msg.name + "'s") + " comment"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ev-sheet-scrim",
+    "aria-label": "Close",
+    onClick: onClose
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ev-sheet-card ls-cs-card"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ev-sheet-grab"
+  }), /*#__PURE__*/React.createElement(DSEV.Avatar, {
+    name: msg.name,
+    src: lsChatAvatar(msg),
+    size: 64
+  }), /*#__PURE__*/React.createElement("h3", {
+    className: "ev-sheet-ttl"
+  }, isMe ? "Your comment" : msg.name), /*#__PURE__*/React.createElement("p", {
+    className: "ev-sheet-p ls-cs-quote"
+  }, isHost && !isMe && /*#__PURE__*/React.createElement("span", {
+    className: "ls-cs-host"
+  }, "Host"), "“", msg.text, "”"), !isMe && /*#__PURE__*/React.createElement("button", {
+    className: "ev-detail-cta",
+    onClick: () => onDm(msg)
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:send",
+    size: 17,
+    color: "#fff"
+  }), "Send a message"), /*#__PURE__*/React.createElement("div", {
+    className: "ls-cs-row"
+  }, !isMe && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "ls-cs-act",
+    onClick: () => onReport(msg)
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:flag",
+    size: 16,
+    color: "var(--brand-navy)"
+  }), "Report comment"), canDelete && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "ls-cs-act danger",
+    onClick: () => onDelete(msg)
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:trash-2",
+    size: 16,
+    color: "var(--error)"
+  }), "Delete comment")), /*#__PURE__*/React.createElement("button", {
+    className: "ev-detail-cta ghost",
+    onClick: onClose
+  }, "Cancel")));
+}
 function LSChat({
   msgs,
-  onAddReply
+  onAddReply,
+  hosts,
+  meName,
+  onMore
 }) {
+  const pressRef = React.useRef(null);
+  const hostList = hosts || [];
+  const isHost = m => hostList.indexOf(m.name) !== -1;
+  const body = m => isHost(m) ? lsChatLinkify(m.text, "ls-msg-link") : m.text;
+  /* Bubble is a div with button semantics (not a <button>) so host links
+     can sit inside it without nesting interactive elements. */
+  const toggleKey = (e, m) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setReplyFor(replyFor === m.id ? null : m.id);
+    }
+    /* keyboard route to the long-press options */
+    if (e.key === "ContextMenu" || e.shiftKey && e.key === "F10") {
+      e.preventDefault();
+      onMore && onMore(m);
+    }
+  };
+  const canMore = m => onMore && (m.name !== meName || true);
+  const tap = m => {
+    /* the tap that ends a long-press must not toggle the reply box */
+    if (pressRef.current && pressRef.current.fired) {
+      pressRef.current.fired = false;
+      return;
+    }
+    setReplyFor(replyFor === m.id ? null : m.id);
+  };
   const ref = React.useRef(null);
   const [replyFor, setReplyFor] = useStateEV(null);
   const [replyVal, setReplyVal] = useStateEV("");
@@ -1533,17 +1812,35 @@ function LSChat({
   }, msgs.map(m => /*#__PURE__*/React.createElement("div", {
     className: "ls-msg-block",
     key: m.id
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ls-msg-row"
+  }, /*#__PURE__*/React.createElement(DSEV.Avatar, {
+    className: "ls-msg-av",
+    name: m.name,
+    src: lsChatAvatar(m),
+    size: 24
+  }), /*#__PURE__*/React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
     className: "ls-msg",
     "aria-expanded": replyFor === m.id,
-    onClick: () => setReplyFor(replyFor === m.id ? null : m.id)
-  }, /*#__PURE__*/React.createElement("b", null, m.name), " ", m.text), m.replies && m.replies.length > 0 && /*#__PURE__*/React.createElement("div", {
+    "aria-label": m.name + ": " + m.text + ". Tap to reply, hold for options",
+    ...(canMore(m) ? lsLongPress(pressRef, () => onMore(m)) : {}),
+    onClick: () => tap(m),
+    onKeyDown: e => toggleKey(e, m)
+  }, /*#__PURE__*/React.createElement("b", null, m.name), " ", body(m))), m.replies && m.replies.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "ls-msg-replies"
   }, m.replies.map(r => /*#__PURE__*/React.createElement("div", {
-    className: "ls-msg ls-msg-reply",
+    className: "ls-msg-row",
     key: r.id
-  }, /*#__PURE__*/React.createElement("b", null, r.name), " ", r.text))), replyFor === m.id && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(DSEV.Avatar, {
+    className: "ls-msg-av ls-msg-av-sm",
+    name: r.name,
+    src: lsChatAvatar(r),
+    size: 18
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ls-msg ls-msg-reply"
+  }, /*#__PURE__*/React.createElement("b", null, r.name), " ", body(r))))), replyFor === m.id && /*#__PURE__*/React.createElement("div", {
     className: "ls-reply-box"
   }, /*#__PURE__*/React.createElement("input", {
     className: "ls-reply-input",
@@ -2425,9 +2722,11 @@ function LiveStream({
     const t = val.trim();
     if (!t) return;
     const me = PFAEV && PFAEV.ME && PFAEV.ME.name || "You";
+    const meAv = PFAEV && PFAEV.ME && PFAEV.ME.avatar || "assets/avatar-katy.jpg";
     setMsgs(m => m.slice(-40).concat([{
       id: Date.now(),
       name: me,
+      avatar: meAv,
       text: t
     }]));
     setVal("");
@@ -2438,6 +2737,7 @@ function LiveStream({
       replies: (x.replies || []).concat([{
         id: Date.now(),
         name: me,
+        avatar: PFAEV && PFAEV.ME && PFAEV.ME.avatar || "assets/avatar-katy.jpg",
         text
       }])
     }) : x));
@@ -2445,6 +2745,39 @@ function LiveStream({
   const buy = p => {
     setShowcase(false);
     setCheckoutProduct(p);
+  };
+
+  /* Whose links go live in chat: the event's host + co-host, and you while
+     previewing the host role. */
+  const meName = PFAEV && PFAEV.ME && PFAEV.ME.name || "Katy Wilson";
+  const chatHosts = [d.host, d.cohost].filter(Boolean).concat(role === "host" ? [meName] : []);
+  const dmCommenter = m => goEV(lsChatDmUrl(m));
+
+  /* Comment moderation: hosts + speakers can delete; anyone can report. */
+  const [moreMsg, setMoreMsg] = useStateEV(null); // long-pressed comment
+  const [reportMsg, setReportMsg] = useStateEV(null);
+  const [toast, setToast] = useStateEV(null);
+  const toastTimer = React.useRef(null);
+  const showToast = t => {
+    setToast(t);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2600);
+  };
+  useEffectEV(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+  }, []);
+  const deleteMsg = m => {
+    setMoreMsg(null);
+    setMsgs(list => list.filter(x => x.id !== m.id));
+    showToast("Comment deleted");
+  };
+  const reportFromSheet = m => {
+    setMoreMsg(null);
+    setReportMsg(m);
+  };
+  const submitReport = () => {
+    setReportMsg(null);
+    showToast("Thanks — we'll review this comment");
   };
   return /*#__PURE__*/React.createElement("div", {
     className: "ls-screen",
@@ -2467,7 +2800,10 @@ function LiveStream({
     className: "ls-overlay"
   }, /*#__PURE__*/React.createElement(LSChat, {
     msgs: msgs,
-    onAddReply: addReply
+    onAddReply: addReply,
+    hosts: chatHosts,
+    meName: meName,
+    onMore: setMoreMsg
   }), role === "audience" && pushedNum != null && pinnedPopup.phase !== "hidden" && /*#__PURE__*/React.createElement(LSProductCard, {
     product: LS_PRODUCTS.find(p => p.num === pushedNum),
     phase: pinnedPopup.phase,
@@ -2520,7 +2856,27 @@ function LiveStream({
   }), role === "host" && panel === "end" && /*#__PURE__*/React.createElement(LSEndConfirm, {
     onCancel: () => setPanel(null),
     onConfirm: onLeave
-  }), /*#__PURE__*/React.createElement(LSRoleSwitcher, {
+  }), moreMsg && /*#__PURE__*/React.createElement(LSCommentSheet, {
+    msg: moreMsg,
+    isMe: moreMsg.name === meName,
+    isHost: chatHosts.indexOf(moreMsg.name) !== -1,
+    canDelete: role === "host" || role === "speaker",
+    onDm: dmCommenter,
+    onReport: reportFromSheet,
+    onDelete: deleteMsg,
+    onClose: () => setMoreMsg(null)
+  }), reportMsg && /*#__PURE__*/React.createElement(LSReportSheet, {
+    msg: reportMsg,
+    onCancel: () => setReportMsg(null),
+    onSubmit: submitReport
+  }), toast && /*#__PURE__*/React.createElement("div", {
+    className: "ls-toast",
+    role: "status"
+  }, /*#__PURE__*/React.createElement(DSEV.IconifyIcon, {
+    name: "lucide:check-circle-2",
+    size: 18,
+    color: "var(--brand-gold)"
+  }), /*#__PURE__*/React.createElement("span", null, toast)), /*#__PURE__*/React.createElement(LSRoleSwitcher, {
     role: role,
     onChange: setRole
   }));

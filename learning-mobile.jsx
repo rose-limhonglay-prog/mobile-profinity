@@ -398,9 +398,9 @@ function LM2HelpSheet({ open, onClose }) {
 
 }
 
-const LMTabBar = React.forwardRef(function LMTabBar(_props, ref) {
+const LMTabBar = React.forwardRef(function LMTabBar({ compact }, ref) {
   return (
-    <nav ref={ref} className="lm-tabs" aria-label="Primary">
+    <nav ref={ref} className={"lm-tabs" + (compact ? " lm-tabs-compact" : "")} aria-label="Primary">
       {LM_TABS.map((t) =>
       <button key={t.key} className={"lm-tab" + (t.key === "Learning" ? " on" : "")}
       aria-current={t.key === "Learning" ? "page" : undefined} onClick={() => t.href && goL(t.href)}>
@@ -414,19 +414,6 @@ const LMTabBar = React.forwardRef(function LMTabBar(_props, ref) {
     </nav>);
 
 });
-
-function LM2FloatChrome() {
-  return (
-    <div className="lm2-float-icons">
-      <button type="button" className="fi" aria-label="Search">
-        <IconifyL name="lucide:search" size={18} color="var(--brand-navy)" />
-      </button>
-      <button type="button" className="fi" aria-label="Saved" onClick={() => goL("MySaved.html")}>
-        <IconifyL name="lucide:bookmark" size={18} color="var(--brand-navy)" />
-      </button>
-    </div>);
-
-}
 
 function useScrollChromeL(scrollRef) {
   const [state, setState] = useStateL({ hidden: false, floating: false });
@@ -476,7 +463,6 @@ function LearningHome() {
   return (
     <div className={"lm-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="My Learning (mobile)">
       <MobileChromeC />
-      <LM2FloatChrome />
       <div className="lm-scroll" ref={scrollRef}>
 
         <LM2Header freeTier={LM_FREE} tier={LM_TIER} />
@@ -516,7 +502,7 @@ function LearningHome() {
 
         <div style={{ height: 20 }} />
       </div>
-      <LMTabBar />
+      <LMTabBar compact={chromeHidden} />
       <SurveyMobile open={surveyOpen} onClose={() => setSurveyOpen(false)} onComplete={unlockResources} />
       <LM2HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>);

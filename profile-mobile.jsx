@@ -673,6 +673,103 @@ const PM_ACTIVITY = [
   likes: "1.5K", comments: "120", shares: "200"
 }];
 
+/* "Payments" menu — see pmPaymentsFor / PM_PAYMENT_METHODS above. Deep-linkable via
+   ProfileMobile.html#payments (auto-expands + scrolls, like #prosperity-spiral). */
+function PMPaymentsMenu() {
+  const [expanded, setExpanded] = useStatePM(() => window.location.hash === "#payments");
+  const { collapsedRef, expandedRef, height: viewportH } = usePMSlidePaneHeight(expanded, []);
+  const tier = PM_ME.tier;
+  const price = tier ? PM_TIER_PRICE[tier] : null;
+  const primary = PM_PAYMENT_METHODS.find((c) => c.primary) || PM_PAYMENT_METHODS[0];
+  const payments = pmPaymentsFor(tier);
+  const latest = payments[0];
+  const fmt = (n) => "£" + n.toLocaleString();
+
+  useEffectPM(() => {
+    if (window.location.hash !== "#payments") return;
+    const t = setTimeout(() => {
+      const el = document.getElementById("payments");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 420);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div id="payments" className="pm-menu-viewport" style={viewportH != null ? { height: viewportH + "px" } : undefined}>
+      <div className={"pm-menu-slider" + (expanded ? " expanded" : "")}>
+        <button type="button" ref={collapsedRef} className="pm-menu-pane pm-menu-collapsed" aria-label="Payments — tap to view" onClick={() => setExpanded(true)}>
+          <div className="pm-menu-collapsed-top">
+            <h3 className="pm-steps-h">Payments</h3>
+            <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
+          </div>
+          <p className="pm-steps-sub">
+            {tier ? tier + " Path · " + fmt(price) + "/month" : "No active plan"}
+          </p>
+          <div className="pm-menu-preview pm-pay-preview">
+            <span className="pm-pay-cardic"><DSPM.IconifyIcon name="lucide:credit-card" size={16} color="var(--brand-navy)" /></span>
+            <span className="pm-menu-preview-tx"><b>{primary.brand} •• {primary.last4}</b> · Next charge 01 Oct</span>
+            <span className="pm-menu-preview-time">{latest ? fmt(latest.amount) : ""}</span>
+          </div>
+        </button>
+
+        <div ref={expandedRef} className="pm-menu-pane pm-menu-expanded">
+          <button type="button" className="pm-menu-back" onClick={() => setExpanded(false)}>
+            <DSPM.IconifyIcon name="lucide:chevron-left" size={20} color="var(--text-heading)" />Payments
+          </button>
+          <div className="pm-menu-content">
+
+            <div className="pm-pay-plan">
+              <span className="pm-pay-plan-ic"><DSPM.IconifyIcon name="lucide:gem" size={20} color="#fff" /></span>
+              <div className="pm-pay-plan-main">
+                <span className="pm-pay-plan-name">{tier ? tier + " Path" : "No active plan"}</span>
+                <span className="pm-pay-plan-sub">{tier ? fmt(price) + " / month · renews 01 Oct 2026" : "Subscribe to unlock a channel"}</span>
+              </div>
+              <button type="button" className="pm-pay-plan-btn" onClick={() => goPM("MembershipTier.html")}>{tier ? "Manage" : "Subscribe"}</button>
+            </div>
+
+            <h4 className="pm-pay-h">Payment methods</h4>
+            <div className="pm-pay-cards">
+              {PM_PAYMENT_METHODS.map((c) =>
+              <div className={"pm-pay-card" + (c.primary ? " primary" : "")} key={c.last4}>
+                  <span className="pm-pay-cardic"><DSPM.IconifyIcon name="lucide:credit-card" size={18} color="var(--brand-navy)" /></span>
+                  <div className="pm-pay-card-info">
+                    <span className="ti">{c.brand} ending {c.last4}</span>
+                    <span className="su">Expires {c.exp}</span>
+                  </div>
+                  {c.primary ?
+                  <span className="pm-pay-pill">DEFAULT</span> :
+                  <button type="button" className="pm-pay-more" aria-label="Card options"><DSPM.IconifyIcon name="lucide:more-horizontal" size={20} color="var(--gray-450)" /></button>}
+                </div>
+              )}
+              <button type="button" className="pm-pay-add">
+                <DSPM.IconifyIcon name="lucide:plus" size={16} color="var(--brand-navy)" />Add payment method
+              </button>
+            </div>
+
+            <h4 className="pm-pay-h">Recent payments</h4>
+            <div className="pm-pay-list">
+              {payments.map((r, i) =>
+              <div className="pm-pay-row" key={i}>
+                  <span className="pm-pay-date"><b>{r.d}</b><small>{r.m}</small></span>
+                  <div className="pm-pay-row-info">
+                    <span className="ti">{r.label}</span>
+                    <span className="su">{r.sub}</span>
+                  </div>
+                  <div className="pm-pay-amt">
+                    <span className={"n" + (r.status === "Refunded" ? " refund" : "")}>{r.status === "Refunded" ? "−" : ""}{fmt(r.amount)}</span>
+                    <span className={"st" + (r.status === "Refunded" ? " refund" : "")}>{r.status}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <button className="pm-showall" onClick={() => goPM("AccountSettings.html")}>View all invoices</button>
+          </div>
+        </div>
+      </div>
+    </div>);
+
+}
+
 /* ===========================================================================
    Viewing someone else's profile (ProfileMobile.html?id=<key>) — a lighter,
    read-only take on the same page: shared context + a summarised activity
@@ -787,9 +884,32 @@ const SM_EVENTS_PM = [
 { d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM" },
 { d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM" }];
 
+/* "Payments" — current plan, saved payment method and recent invoices,
+   enclosed behind the same collapse/expand shell as Activity and
+   Professional Information. Prices mirror subscribe-checkout / membership-tier. */
+const PM_TIER_PRICE = { Confidence: 97, Mastery: 397, Freedom: 747, "Inner Circle": 1497 };
+
+const PM_PAYMENT_METHODS = [
+{ brand: "Visa", last4: "4242", exp: "08/28", primary: true },
+{ brand: "Mastercard", last4: "8810", exp: "11/27", primary: false }];
+
+/* Subscription rows follow the member's tier (label + price); one-off course /
+   event purchases are fixed. */
+function pmPaymentsFor(tier) {
+  const plan = (tier || "Confidence") + " Path — monthly";
+  const amt = PM_TIER_PRICE[tier || "Confidence"];
+  return [
+  { d: "01", m: "SEP", label: plan, sub: "Visa •• 4242", amount: amt, status: "Paid" },
+  { d: "18", m: "AUG", label: "Lip Filler Techniques", sub: "Course · Visa •• 4242", amount: 249, status: "Paid" },
+  { d: "01", m: "AUG", label: plan, sub: "Visa •• 4242", amount: amt, status: "Paid" },
+  { d: "22", m: "JUL", label: "Confidence Masterclass ticket", sub: "Event · Mastercard •• 8810", amount: 49, status: "Refunded" },
+  { d: "01", m: "JUL", label: plan, sub: "Visa •• 4242", amount: amt, status: "Paid" }];
+}
+
 const SM_PROFILE_BEFORE_PM = [
 { label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
 { label: "Account Settings",   icon: "lucide:graduation-cap",  href: "AccountSettings.html" },
+{ label: "Payments",           icon: "lucide:credit-card",     href: "ProfileMobile.html#payments" },
 { label: "My Saved",           icon: "lucide:bookmark",        href: "MySaved.html" },
 { label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" },
 { label: "Privacy & Security", icon: "lucide:book-open",       href: null }];
@@ -1259,8 +1379,11 @@ const PMTabBar = React.forwardRef(function PMTabBar({ compact }, ref) {
 
 });
 
+/* Hide-on-scroll header (matches the newsfeed): scroll down → the bar slides
+   away; scroll back up a little → it floats transparent over the content with
+   frosted chip icons + logo. Returns { hidden, floating }. */
 function useHeaderHidePM(scrollRef) {
-  const [hidden, setHidden] = useStatePM(false);
+  const [state, setState] = useStatePM({ hidden: false, floating: false });
   useEffectPM(() => {
     const el = scrollRef.current;
     if (!el) return;
@@ -1268,15 +1391,20 @@ function useHeaderHidePM(scrollRef) {
     const onScroll = () => {
       const y = el.scrollTop;
       const delta = y - lastY;
-      if (y < 24) setHidden(false);
-      else if (delta > 6) setHidden(true);
-      else if (delta < -6) setHidden(false);
+      setState((prev) => {
+        let hidden = prev.hidden;
+        if (y < 40) hidden = false;
+        else if (delta > 6) hidden = true;
+        else if (delta < -6) hidden = false;
+        const floating = y > 40;
+        return (hidden === prev.hidden && floating === prev.floating) ? prev : { hidden, floating };
+      });
       lastY = y;
     };
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
-  return hidden;
+  return state;
 }
 
 const PM_STEPS_INIT = [
@@ -2362,6 +2490,137 @@ function PMSection({ title, children }) {
 
 }
 
+/* ---- Upcoming lives ----
+   Lives the member scheduled from Create Post → Live → Schedule (mobile) or
+   the web composer's Go Live → Schedule. Read from the shared
+   "pf-scheduled-lives" localStorage list (the two flows run as separate
+   page loads with no backend). Shown on the member's own profile only; the
+   card hides entirely when there's nothing booked and the viewer isn't a
+   Super User (the only role that can go live). */
+const PM_SCHED_KEY = "pf-scheduled-lives";
+function pmLoadScheduledLives() {
+  try { return JSON.parse(localStorage.getItem(PM_SCHED_KEY)) || []; } catch (e) { return []; }
+}
+function pmSaveScheduledLives(list) {
+  try { localStorage.setItem(PM_SCHED_KEY, JSON.stringify(list)); } catch (e) {}
+}
+/* Super User = the Admin persona. Mobile Create Post persists it under
+   "pf-preview-tier"; the web newsfeed's "Previewing as" panel under
+   "pf-subscription-tier" — accept either so both surfaces agree. */
+function pmIsSuperUser() {
+  try {
+    return localStorage.getItem("pf-preview-tier") === "admin" || localStorage.getItem("pf-subscription-tier") === "admin";
+  } catch (e) { return false; }
+}
+function pmFormatLiveWhen(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return "";
+  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) + " · " +
+    d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+/* "in 3 days" / "in 2 hrs" / "Starting soon" / "Started 10 min ago" */
+function pmLiveCountdown(iso) {
+  const ms = new Date(iso) - Date.now();
+  if (isNaN(ms)) return "";
+  const abs = Math.abs(ms), m = Math.round(abs / 60000), h = Math.round(abs / 3600000), d = Math.round(abs / 86400000);
+  if (ms < 0) return m < 60 ? "Started " + m + " min ago" : "Started " + h + " hr" + (h === 1 ? "" : "s") + " ago";
+  if (m < 15) return "Starting soon";
+  if (m < 60) return "in " + m + " min";
+  if (h < 24) return "in " + h + " hr" + (h === 1 ? "" : "s");
+  return "in " + d + " day" + (d === 1 ? "" : "s");
+}
+
+function PMUpcomingLivesCard() {
+  const [lives, setLives] = useStatePM(pmLoadScheduledLives);
+  const [confirmId, setConfirmId] = useStatePM(null);
+  const superUser = pmIsSuperUser();
+  useEffectPM(() => {
+    const sync = () => setLives(pmLoadScheduledLives());
+    window.addEventListener("storage", sync);
+    window.addEventListener("focus", sync);
+    return () => { window.removeEventListener("storage", sync); window.removeEventListener("focus", sync); };
+  }, []);
+  /* Deep link from the "Live scheduled" confirmation — land on this card. */
+  useEffectPM(() => {
+    if (window.location.hash !== "#upcoming-lives") return;
+    const t = setTimeout(() => {
+      const el = document.getElementById("upcoming-lives");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+    return () => clearTimeout(t);
+  }, []);
+  const cancelLive = (id) => {
+    const next = lives.filter((x) => x.id !== id);
+    pmSaveScheduledLives(next);
+    setLives(next);
+    setConfirmId(null);
+  };
+  const goLive = (item) => goPM("CreatePostMobile.html?mode=live&sched=" + encodeURIComponent(item.id));
+  if (lives.length === 0 && !superUser) return null;
+  const now = Date.now();
+  return (
+    <section id="upcoming-lives" className="pm-card pm-lives-card" data-screen-label="Upcoming lives">
+      <div className="pm-card-hd">
+        <div className="pm-card-hd-ti">
+          <h2>Upcoming lives</h2>
+        </div>
+        {lives.length > 0 && <span className="pm-lives-count">{lives.length} scheduled</span>}
+      </div>
+
+      {lives.length === 0 ? (
+        <div className="pm-lives-empty">
+          <p>No lives scheduled yet. Plan one ahead so your followers know when to tune in.</p>
+          <button type="button" className="pm-lives-schedule" onClick={() => goPM("CreatePostMobile.html?mode=live")}>
+            <DSPM.IconifyIcon name="lucide:calendar-clock" size={17} color="#fff" />Schedule a live
+          </button>
+        </div>
+      ) : (
+        <ul className="pm-lives-list">
+          {lives.map((item) => {
+            const due = new Date(item.startIso).getTime() - now < 15 * 60 * 1000;
+            return (
+              <li key={item.id} className={"pm-live-row" + (due ? " due" : "")}>
+                <div className="pm-live-date" aria-hidden="true">
+                  <span className="d">{new Date(item.startIso).getDate()}</span>
+                  <span className="m">{new Date(item.startIso).toLocaleDateString(undefined, { month: "short" })}</span>
+                </div>
+                <div className="pm-live-main">
+                  <span className="pm-live-status">{due ? <><span className="dot" />Live soon</> : "Scheduled"}</span>
+                  <span className="pm-live-ti">{item.title}</span>
+                  <span className="pm-live-meta">
+                    <DSPM.IconifyIcon name="lucide:clock" size={13} color="var(--gray-500)" />{pmFormatLiveWhen(item.startIso)}
+                    <span className="sep">·</span>{pmLiveCountdown(item.startIso)}
+                    <span className="sep">·</span>{item.dest}
+                  </span>
+                  {superUser && (
+                    confirmId === item.id ? (
+                      <div className="pm-live-confirm">
+                        <span>Cancel this live?</span>
+                        <button type="button" className="yes" onClick={() => cancelLive(item.id)}>Yes, cancel</button>
+                        <button type="button" className="no" onClick={() => setConfirmId(null)}>Keep</button>
+                      </div>
+                    ) : (
+                      <div className="pm-live-actions">
+                        <button type="button" className="pm-live-go" onClick={() => goLive(item)}>
+                          <DSPM.IconifyIcon name="lucide:radio" size={15} color="#fff" />Go live now
+                        </button>
+                        <button type="button" className="pm-live-cancel" onClick={() => setConfirmId(item.id)}>Cancel</button>
+                      </div>
+                    )
+                  )}
+                </div>
+              </li>);
+          })}
+        </ul>
+      )}
+      {lives.length > 0 && superUser && (
+        <button type="button" className="pm-lives-add" onClick={() => goPM("CreatePostMobile.html?mode=live")}>
+          <DSPM.IconifyIcon name="lucide:plus" size={16} color="var(--brand-navy)" />Schedule another live
+        </button>
+      )}
+    </section>);
+}
+
 function PMMentor() {
   const [done, setDone] = useStatePM(false);
   if (done) return null;
@@ -2635,7 +2894,7 @@ function OtherProfileScreen({ user }) {
   const [msgOpen, setMsgOpen] = useStatePM(false);
   const [following, setFollowing] = useStatePM(false);
   const scrollRef = React.useRef(null);
-  const chromeHidden = useHeaderHidePM(scrollRef);
+  const { hidden: chromeHidden } = useHeaderHidePM(scrollRef);
   return (
     <div className="pm-screen" data-screen-label={"Profile — " + user.name}>
       <OtherProfileTopBar name={user.name} onBack={() => goPM("NewsfeedMobile.html")} onMessage={() => setMsgOpen(true)} />
@@ -2867,7 +3126,7 @@ function PMScreen() {
   const [editOpen, setEditOpen] = useStatePM(false);
   const [assessState, setAssessState] = useStatePM(() => pmLoadAssessState());
   const scrollRef = React.useRef(null);
-  const chromeHidden = useHeaderHidePM(scrollRef);
+  const { hidden: chromeHidden, floating: chromeFloat } = useHeaderHidePM(scrollRef);
 
   function saveProfileEdits(updated) {
     const bioJustAdded = !profile.bio && updated.bio && updated.bio.trim().length > 0;
@@ -2904,7 +3163,7 @@ function PMScreen() {
   }
 
   return (
-    <div className="pm-screen" data-screen-label="Profile (mobile)">
+    <div className={"pm-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="Profile (mobile)">
           <PMTopBar onMenu={() => setMenuOpen(true)} onMessages={() => setMsgOpen(true)} />
           <div className="pm-scroll" ref={scrollRef}>
             <div className="pm-ig">
@@ -2950,11 +3209,13 @@ function PMScreen() {
                 </button>
               </div>
             </div>
+            <PMUpcomingLivesCard />
             <ProfileSteps assessState={assessState} onAssessPatch={patchAssessState} />
             <PMGoalsMenu assessState={assessState} />
             <PMMentor />
             <PMActivityMenu />
             <PMProfessionalInfoMenu />
+            <PMPaymentsMenu />
 
             <button className="pm-logout" onClick={() => goPM("NewsfeedMobile.html")}>
               <DSPM.IconifyIcon name="lucide:log-out" size={20} color="var(--error)" />Logout

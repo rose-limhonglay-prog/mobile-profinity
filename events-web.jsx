@@ -109,6 +109,43 @@ const LS_OFFCAM = [
   { id: "grace", name: "Grace Lindqvist", avatar: "assets/avatar-sarah-collins.jpg", mic: false, host: false, camOff: true },
 ];
 
+/* Commenter avatars for the live chat — known members resolve to their
+   photo, anyone else falls back to DS Avatar's initials. */
+const LS_CHAT_AVATARS = {
+  "Dr Tim Pearce": "assets/avatar-drtim.png",
+  "Miranda Pearce": "assets/avatar-miranda.jpg",
+  "Katy Wilson": "assets/avatar-katy.jpg",
+  "Grace Lindqvist": "assets/avatar-sarah-collins.jpg",
+  "Amir Khan": "assets/avatar-amir-khan.jpg",
+  "Mark Ellis": "assets/avatar-mark-ellis.jpg",
+  "Priya Nair": "assets/avatar-priya-shah.jpg",
+  "Beth Okafor": "assets/avatar-nurse-beth.jpg",
+};
+/* Host-only clickable links: URLs in a host's message become anchors,
+   everyone else's stay plain text (keeps the chat spam-safe). */
+const LS_CHAT_URL_RE = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/g;
+function lsChatLinkify(text, cls) {
+  const out = [];
+  let last = 0, m;
+  LS_CHAT_URL_RE.lastIndex = 0;
+  while ((m = LS_CHAT_URL_RE.exec(text))) {
+    let url = m[0];
+    const trail = url.match(/[.,;:!?)]+$/);
+    if (trail) url = url.slice(0, -trail[0].length);
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const href = /^https?:/i.test(url) ? url : "https://" + url;
+    out.push(
+      <a key={out.length} className={cls} href={href} target="_blank" rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}>{url.replace(/^https?:\/\//i, "").replace(/\/$/, "")}</a>
+    );
+    last = m.index + url.length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
+const lsChatAvatar = (m) => m.avatar || LS_CHAT_AVATARS[m.name] || null;
+
 const LS_REACT_EMOJI = ["❤️", "💜", "👏", "🔥", "🙌"];
 const LS_COMPOSER_MORE = ["💜", "👏", "🔥", "🙌", "😂"];
 const LS_BASKET_COUNT = 79;
@@ -131,6 +168,7 @@ const LS_CHAT_SEED = [
   { name: "Priya Nair", text: "Miranda's tip on cannula angle was so useful" },
   { name: "Leah Whitmore", text: "First live session — loving it so far" },
   { name: "Dr Tim Pearce", text: "Great turnout tonight, keep the questions coming" },
+  { name: "Dr Tim Pearce", text: "Slides + aftercare checklist for tonight: https://profinity.app/technique-tuesday/notes" },
   { name: "Josh Reilly", text: "Does this count toward my CPD hours?" },
   { name: "Ingrid Voss", text: "Watching from Oslo, thanks for the early slot!" },
 ];
@@ -688,7 +726,15 @@ function LSReactions({ particles }) {
   );
 }
 
-function LSChat({ msgs, onAddReply }) {
+function LSChat({ msgs, onAddReply, hosts }) {
+  const hostList = hosts || [];
+  const isHost = (m) => hostList.indexOf(m.name) !== -1;
+  const body = (m) => isHost(m) ? lsChatLinkify(m.text, "ls-msg-link") : m.text;
+  /* Bubble is a div with button semantics (not a <button>) so host links
+     can sit inside it without nesting interactive elements. */
+  const toggleKey = (e, m) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setReplyFor(replyFor === m.id ? null : m.id); }
+  };
   const ref = React.useRef(null);
   const [replyFor, setReplyFor] = useStateEW(null);
   const [replyVal, setReplyVal] = useStateEW("");
@@ -710,13 +756,21 @@ function LSChat({ msgs, onAddReply }) {
       <div className="ls-chat-inner">
         {msgs.map((m) => (
           <div className="ls-msg-block" key={m.id}>
-            <button type="button" className="ls-msg" aria-expanded={replyFor === m.id}
-              onClick={() => setReplyFor(replyFor === m.id ? null : m.id)}>
-              <b>{m.name}</b> {m.text}
-            </button>
+            <div className="ls-msg-row">
+              <DSEW.Avatar className="ls-msg-av" name={m.name} src={lsChatAvatar(m)} size={24} />
+              <div role="button" tabIndex={0} className="ls-msg" aria-expanded={replyFor === m.id}
+                onClick={() => setReplyFor(replyFor === m.id ? null : m.id)} onKeyDown={(e) => toggleKey(e, m)}>
+                <b>{m.name}</b> {body(m)}
+              </div>
+            </div>
             {m.replies && m.replies.length > 0 &&
             <div className="ls-msg-replies">
-              {m.replies.map((r) => <div className="ls-msg ls-msg-reply" key={r.id}><b>{r.name}</b> {r.text}</div>)}
+              {m.replies.map((r) => (
+                <div className="ls-msg-row" key={r.id}>
+                  <DSEW.Avatar className="ls-msg-av ls-msg-av-sm" name={r.name} src={lsChatAvatar(r)} size={18} />
+                  <div className="ls-msg ls-msg-reply"><b>{r.name}</b> {body(r)}</div>
+                </div>
+              ))}
             </div>}
             {replyFor === m.id &&
             <div className="ls-reply-box">
@@ -1216,20 +1270,26 @@ function LiveStream({ event, onLeave }) {
     const t = val.trim();
     if (!t) return;
     const me = (PFAEW && PFAEW.ME && PFAEW.ME.name) || ME_EW.name;
-    setMsgs((m) => m.slice(-40).concat([{ id: Date.now(), name: me, text: t }]));
+    const meAv = (PFAEW && PFAEW.ME && PFAEW.ME.avatar) || ME_EW.avatar;
+    setMsgs((m) => m.slice(-40).concat([{ id: Date.now(), name: me, avatar: meAv, text: t }]));
     setVal("");
   };
 
   const addReply = (msgId, text) => {
     const me = (PFAEW && PFAEW.ME && PFAEW.ME.name) || ME_EW.name;
     setMsgs((m) => m.map((x) => x.id === msgId ?
-      Object.assign({}, x, { replies: (x.replies || []).concat([{ id: Date.now(), name: me, text }]) }) : x));
+      Object.assign({}, x, { replies: (x.replies || []).concat([{ id: Date.now(), name: me, avatar: (PFAEW && PFAEW.ME && PFAEW.ME.avatar) || ME_EW.avatar, text }]) }) : x));
   };
 
   const buy = (p) => {
     setShowcase(false);
     setCheckoutProduct(p);
   };
+
+  /* Whose links go live in chat: the event's host + co-host, and you while
+     previewing the host role. */
+  const chatHosts = [d.host, d.cohost].filter(Boolean)
+    .concat(role === "host" ? [(PFAEW && PFAEW.ME && PFAEW.ME.name) || ME_EW.name] : []);
 
   return (
     <div className="ev-call" data-screen-label="Live Stream">
@@ -1272,7 +1332,7 @@ function LiveStream({ event, onLeave }) {
                 phase={role === "speaker" ? speakerPinnedPopup.phase : "visible"}
                 onUnpin={role === "host" ? () => setPushedNum(null) : undefined}
                 onClose={role === "speaker" ? speakerPinnedPopup.dismiss : undefined} />}
-            <LSChat msgs={msgs} onAddReply={addReply} />
+            <LSChat msgs={msgs} onAddReply={addReply} hosts={chatHosts} />
             <LSComposer value={val} onChange={setVal} onSend={send} onReact={spawn}
               onOpenBasket={role === "audience" ? () => { setShowcase(true); pinnedPopup.show(); } : undefined} />
           </aside>

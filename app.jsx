@@ -2925,8 +2925,35 @@ function PostComposer({ onPost, superUser, devRole, onDevRole, lockedAdmin }) {
   const [video, setVideo] = useState(null);
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [liveStage, setLiveStage] = useState(null); // null | "precam" | "live"
-  const [liveDescription, setLiveDescription] = useState("");
+  /* ?golive=1 deep-links straight into the camera stage (Profile's "Go live
+     now" on a scheduled live); ?sched=<id> names the booking so its title
+     prefills and it's cleared from "Upcoming lives" once you go live. */
+  const [scheduledItem] = useState(() => {
+    const id = new URLSearchParams(window.location.search).get("sched");
+    return id ? pfwLoadScheduled().find((x) => x.id === id) || null : null;
+  });
+  const [liveDescription, setLiveDescription] = useState(() => scheduledItem ? scheduledItem.title : "");
+  const [schedModal, setSchedModal] = useState(false);
+  const [scheduled, setScheduled] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  useEffect(() => {
+    if (superUser && new URLSearchParams(window.location.search).get("golive") === "1") setLiveStage("precam");
+  }, [superUser]);
+  const startLive = () => {
+    if (scheduledItem) pfwRemoveScheduled(scheduledItem.id);
+    setLiveStage("live");
+  };
+  const confirmSchedule = ({ title, startIso }) => {
+    const item = {
+      id: "sl" + Date.now(), title, startIso, dest: "Newsfeed",
+      host: { name: ME.name, avatar: ME.avatar }, createdAt: new Date().toISOString()
+    };
+    pfwAddScheduled(item);
+    setSchedModal(false);
+    setLiveStage(null);
+    setLiveDescription("");
+    setScheduled(item);
+  };
   const firstName = (ME.name || "").split(" ")[0];
   const ready = v.trim().length > 0 || images.length > 0 || !!video;
 
@@ -3034,7 +3061,14 @@ function PostComposer({ onPost, superUser, devRole, onDevRole, lockedAdmin }) {
 
       {liveStage === "precam" &&
       <WebGoLiveStage description={liveDescription} onDescriptionChange={setLiveDescription}
-        onClose={() => setLiveStage(null)} onGoLive={() => setLiveStage("live")} />}
+        onClose={() => setLiveStage(null)} onGoLive={startLive} onSchedule={() => setSchedModal(true)} />}
+
+      {schedModal &&
+      <WebScheduleLiveModal defaultTitle={liveDescription} onConfirm={confirmSchedule} onClose={() => setSchedModal(false)} />}
+
+      {scheduled &&
+      <WebScheduledConfirm item={scheduled} onDone={() => setScheduled(null)}
+        onViewProfile={() => (window.pfGo || function (u) { window.location.href = u; })("Profile.html#upcoming-lives")} />}
 
       {liveStage === "live" &&
       <WebBroadcastStage onEnd={endLive} />}
@@ -3269,6 +3303,116 @@ function WebCoverPicker({ video, onConfirm, onClose }) {
     </div>);
 }
 
+/* ---- Scheduled lives (web) ----
+   Same localStorage bridge as create-post-mobile ("pf-scheduled-lives") so a
+   live booked here shows up under "Upcoming lives" on Profile.html and
+   ProfileMobile.html alike. */
+const PFW_SCHED_KEY = "pf-scheduled-lives";
+function pfwLoadScheduled() {
+  try { return JSON.parse(localStorage.getItem(PFW_SCHED_KEY)) || []; } catch (e) { return []; }
+}
+function pfwSaveScheduled(list) {
+  try { localStorage.setItem(PFW_SCHED_KEY, JSON.stringify(list)); } catch (e) {}
+}
+function pfwAddScheduled(item) {
+  const list = pfwLoadScheduled().filter((x) => x.id !== item.id);
+  list.push(item);
+  list.sort((a, b) => new Date(a.startIso) - new Date(b.startIso));
+  pfwSaveScheduled(list);
+}
+function pfwRemoveScheduled(id) {
+  pfwSaveScheduled(pfwLoadScheduled().filter((x) => x.id !== id));
+}
+function pfwToLocalInput(d) {
+  const pad = (n) => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+function pfwDefaultScheduleTime() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(19, 0, 0, 0);
+  return pfwToLocalInput(d);
+}
+function pfwFormatWhen(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return "";
+  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) + " · " +
+    d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+}
+
+/* Centred modal (same family as WebCoverPicker) for booking a live. */
+function WebScheduleLiveModal({ defaultTitle, onConfirm, onClose }) {
+  const [title, setTitle] = useState(defaultTitle || "");
+  const [when, setWhen] = useState(pfwDefaultScheduleTime);
+  const [err, setErr] = useState("");
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  const submit = () => {
+    const d = new Date(when);
+    if (!when || isNaN(d)) { setErr("Pick a date and time."); return; }
+    if (d.getTime() < Date.now() + 5 * 60 * 1000) { setErr("Choose a time at least 5 minutes from now."); return; }
+    onConfirm({ title: title.trim() || "Live with " + ME.name, startIso: d.toISOString() });
+  };
+  return (
+    <div className="pfw-cover-overlay pfw-sched-overlay" onClick={onClose}>
+      <div className="pfw-cover-modal pfw-sched-modal" role="dialog" aria-modal="true" aria-label="Schedule live" onClick={(e) => e.stopPropagation()}>
+        <div className="pfw-cover-top">
+          <span className="pfw-cover-title">Schedule live</span>
+          <button type="button" className="pfw-cover-x" aria-label="Close" onClick={onClose}>
+            <IconifyIcon name="lucide:x" size={16} color="var(--gray-600)" />
+          </button>
+        </div>
+        <p className="pfw-cover-hint">Your followers will see it on your profile under <b>Upcoming lives</b> — you can go live from there when it's time.</p>
+        <div className="pfw-sched-body">
+          <label className="pfw-sched-field">
+            <span>Title</span>
+            <input type="text" value={title} maxLength={80} autoFocus placeholder="e.g. Live Q&A: correcting migrated lip filler"
+              onChange={(e) => setTitle(e.target.value)} />
+          </label>
+          <label className="pfw-sched-field">
+            <span>Date &amp; time</span>
+            <input type="datetime-local" value={when} min={pfwToLocalInput(new Date())}
+              onChange={(e) => { setWhen(e.target.value); setErr(""); }} />
+          </label>
+          <div className="pfw-sched-dest"><IconifyIcon name="lucide:rss" size={15} color="var(--gray-500)" />Streaming to <b>Newsfeed</b></div>
+          {err && <p className="pfw-sched-err" role="alert">{err}</p>}
+        </div>
+        <div className="pfw-cover-actions">
+          <button type="button" className="pfw-cover-roll-btn" onClick={onClose}>Cancel</button>
+          <button type="button" className="pfw-cover-check" onClick={submit}>
+            <IconifyIcon name="lucide:calendar-clock" size={16} color="#fff" style={{ marginRight: 6 }} />
+            Schedule for {pfwFormatWhen(when) || "…"}
+          </button>
+        </div>
+      </div>
+    </div>);
+}
+
+function WebScheduledConfirm({ item, onViewProfile, onDone }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onDone(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  return (
+    <div className="pfw-cover-overlay pfw-sched-overlay" onClick={onDone}>
+      <div className="pfw-sched-confirm" role="dialog" aria-modal="true" aria-label="Live scheduled" onClick={(e) => e.stopPropagation()}>
+        <span className="pfw-sched-confirm-ic"><IconifyIcon name="lucide:calendar-check" size={30} color="var(--success)" /></span>
+        <h3>Live scheduled</h3>
+        <p className="ti">{item.title}</p>
+        <p className="tm"><IconifyIcon name="lucide:clock" size={14} color="var(--gray-500)" />{pfwFormatWhen(item.startIso)} · {item.dest}</p>
+        <p className="note">It's now listed under <b>Upcoming lives</b> on your profile.</p>
+        <div className="pfw-sched-confirm-actions">
+          <button type="button" className="pfw-cover-roll-btn" onClick={onDone}>Done</button>
+          <button type="button" className="pfw-cover-check" onClick={onViewProfile}>View on my profile</button>
+        </div>
+      </div>
+    </div>);
+}
+
 /* Full-screen "go live" camera stage — mirrors create-post-mobile's
    CPLiveStage, minus its channel picker (the web composer only ever posts
    to the main feed). Uses the same static camera stand-in image since this
@@ -3280,7 +3424,7 @@ const PFW_LIVE_TOOLS = [
   { label: "Enhance off", icon: "lucide:sparkles" },
 ];
 
-function WebGoLiveStage({ description, onDescriptionChange, onGoLive, onClose }) {
+function WebGoLiveStage({ description, onDescriptionChange, onGoLive, onSchedule, onClose }) {
   const [descOpen, setDescOpen] = useState(false);
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
@@ -3322,7 +3466,12 @@ function WebGoLiveStage({ description, onDescriptionChange, onGoLive, onClose })
             {description || "Tap to add a description..."}
           </button>
         )}
-        <button type="button" className="pfw-golive-go-btn" onClick={onGoLive}>Go Live</button>
+        <div className="pfw-golive-actions">
+          <button type="button" className="pfw-golive-go-btn" onClick={onGoLive}>Go Live</button>
+          <button type="button" className="pfw-golive-sched-btn" onClick={onSchedule}>
+            <IconifyIcon name="lucide:calendar-clock" size={17} color="#fff" />Schedule
+          </button>
+        </div>
       </div>
     </div>);
 }
@@ -3340,11 +3489,50 @@ const PFW_BCAST_GUESTS = [
   { u: "@gracelindqvist", n: "Grace Lindqvist", av: "assets/waiting-self-preview.png", f: "47.5K followers" },
 ];
 
+/* Commenter avatars for the live chat — known members resolve to their
+   photo, anyone else falls back to DS Avatar's initials. */
+const PFW_BCAST_AVATARS = {
+  "Dr Tim Pearce": "assets/avatar-drtim.png",
+  "Miranda Pearce": "assets/avatar-miranda.jpg",
+  "Katy Wilson": "assets/avatar-katy.jpg",
+  "Grace Lindqvist": "assets/avatar-sarah-collins.jpg",
+  "Amir Khan": "assets/avatar-amir-khan.jpg",
+  "Mark Ellis": "assets/avatar-mark-ellis.jpg",
+  "Priya Nair": "assets/avatar-priya-shah.jpg",
+  "Beth Okafor": "assets/avatar-nurse-beth.jpg",
+};
+/* Host-only clickable links: URLs in a host's message become anchors,
+   everyone else's stay plain text (keeps the chat spam-safe). */
+const PFW_BCAST_URL_RE = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/g;
+function pfwBcastLinkify(text, cls) {
+  const out = [];
+  let last = 0, m;
+  PFW_BCAST_URL_RE.lastIndex = 0;
+  while ((m = PFW_BCAST_URL_RE.exec(text))) {
+    let url = m[0];
+    const trail = url.match(/[.,;:!?)]+$/);
+    if (trail) url = url.slice(0, -trail[0].length);
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const href = /^https?:/i.test(url) ? url : "https://" + url;
+    out.push(
+      <a key={out.length} className={cls} href={href} target="_blank" rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}>{url.replace(/^https?:\/\//i, "").replace(/\/$/, "")}</a>
+    );
+    last = m.index + url.length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
+const pfwBcastAvatar = (c) => c.av || (c.me && ME.avatar) || PFW_BCAST_AVATARS[c.n] || null;
+
 function WebBroadcastStage({ onEnd }) {
   const [secs, setSecs] = useState(0);
   const [chat, setChat] = useState([
     { n: "Miranda Pearce", t: "Just joined — can't wait for this one 👀" },
     { n: "Dr Tim Pearce", t: "Great topic. Are you covering cannula depth?" },
+    /* You're the host on web — your links render clickable for viewers. */
+    { n: ME.name, t: "Course + notes for tonight: https://profinity.app/8d-lip-design", me: true },
   ]);
   const [msg, setMsg] = useState("");
   const [guestSheet, setGuestSheet] = useState(false);
@@ -3428,6 +3616,10 @@ function WebBroadcastStage({ onEnd }) {
     setMsg("");
   };
 
+  /* Hosts for link rendering: you (the broadcaster) plus co-host guests. */
+  const hostNames = [ME.name].concat(guests.map((g) => g.n));
+  const isHostMsg = (c) => c.me || hostNames.indexOf(c.n) !== -1;
+
   const onCam = [].concat(
     [{ n: "You", av: liveCam ? "assets/live-preview-camera.jpg" : ME.avatar, me: true, off: !liveCam }],
     guests.map((g) => ({ n: g.n.split(" ")[0], av: g.av }))
@@ -3471,7 +3663,10 @@ function WebBroadcastStage({ onEnd }) {
 
       <div className="pfw-bcast-chat" ref={chatRef} onScroll={onChatScroll}>
         {chat.map((c, i) => (
-          <div className={"pfw-bcast-msg" + (c.me ? " me" : "") + (c.fresh ? " in" : "")} key={i}><b>{c.n}</b> {c.t}</div>
+          <div className={"pfw-bcast-msg" + (c.me ? " me" : "") + (c.fresh ? " in" : "")} key={i}>
+            <Avatar className="pfw-bcast-msg-av" name={c.n} src={pfwBcastAvatar(c)} size={24} />
+            <span className="pfw-bcast-msg-tx"><b>{c.n}</b> {isHostMsg(c) ? pfwBcastLinkify(c.t, "pfw-bcast-link") : c.t}</span>
+          </div>
         ))}
       </div>
 

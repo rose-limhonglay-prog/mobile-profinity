@@ -34,13 +34,13 @@ function fmtRelDate(iso) {
   return Math.round(diffH / 24) + "d ago";
 }
 
-function RdbTabBar() {
+function RdbTabBar({ compact }) {
   return (
-    <nav className="lm-tabs rdb-tabs" aria-label="Primary">
+    <nav className={"lm-tabs rdb-tabs" + (compact ? " lm-tabs-compact" : "")} aria-label="Primary">
       {RDB_TABS.map((t) => (
         <button key={t.key} className={"lm-tab" + (t.key === "Rewards" ? " on" : "")} aria-current={t.key === "Rewards" ? "page" : undefined} onClick={() => t.href && goRDB(t.href)}>
           <span className="ic"><DSRDB.IconifyIcon name={t.icon} size={24} color={t.key === "Rewards" ? "#fff" : "#000"} />{t.dot && <span className="dot">{t.dot}</span>}</span>
-          {t.label}
+          <span className="lbl">{t.label}</span>
         </button>
       ))}
     </nav>
@@ -304,11 +304,13 @@ function RewardsDashboardHome() {
   const [toast, setToast] = useStateRDB(null);
   const refresh = () => { setState(PF_RDB.getState()); setConfig(PF_RDB.getConfig()); };
   const flash = (m) => { setToast(m); setTimeout(() => setToast(null), 2400); };
+  const scrollRef = useRefRDB(null);
+  const { hidden: chromeHidden, floating: chromeFloat } = window.PFUseHeaderHideC(scrollRef);
 
   return (
-    <div className="lm-screen rdb-screen" data-screen-label="Rewards Dashboard">
+    <div className={"lm-screen rdb-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="Rewards Dashboard">
       <MobileChromeC />
-      <div className="lm-scroll">
+      <div className="lm-scroll" ref={scrollRef}>
         <RdbHeader state={state} tier={state.user.membershipTier} onOpenWallet={() => setWalletOpen(true)} />
         <StreakRiskBanner state={state} />
         <div style={{ padding: "0 20px" }}>
@@ -327,7 +329,7 @@ function RewardsDashboardHome() {
         </div>
         <div style={{ height: 90 }} />
       </div>
-      <RdbTabBar />
+      <RdbTabBar compact={chromeHidden} />
       <WalletDropdown state={state} open={walletOpen} onClose={() => setWalletOpen(false)} />
       {toast && <div className="ml-toast"><DSRDB.IconifyIcon name="lucide:check-circle" size={16} color="#fff" />{toast}</div>}
     </div>

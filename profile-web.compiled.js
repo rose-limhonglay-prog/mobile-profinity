@@ -1563,7 +1563,7 @@ function PWComposerCard() {
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-composer-action",
-    onClick: () => goPW("NewsfeedWeb.html")
+    onClick: () => goPW("NewsfeedWeb.html?golive=1")
   }, /*#__PURE__*/React.createElement(IconifyIconPW, {
     name: "lucide:video",
     size: 20,
@@ -1585,6 +1585,181 @@ function PWComposerCard() {
     size: 20,
     color: "var(--info)"
   }), "Reel")));
+}
+
+/* ---- Upcoming lives ----
+   Lives booked via the newsfeed composer's Go Live → Schedule (web) or
+   Create Post → Live → Schedule (mobile). Read from the shared
+   "pf-scheduled-lives" localStorage list; hidden when empty unless the
+   viewer is a Super User (the only role that can go live). */
+const PW_SCHED_KEY = "pf-scheduled-lives";
+function pwLoadScheduledLives() {
+  try {
+    return JSON.parse(localStorage.getItem(PW_SCHED_KEY)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+function pwSaveScheduledLives(list) {
+  try {
+    localStorage.setItem(PW_SCHED_KEY, JSON.stringify(list));
+  } catch (e) {}
+}
+/* Super User = the Admin persona. Mobile Create Post persists it under
+   "pf-preview-tier"; the web newsfeed's "Previewing as" panel under
+   "pf-subscription-tier" — accept either so both surfaces agree. */
+function pwIsSuperUser() {
+  try {
+    return localStorage.getItem("pf-preview-tier") === "admin" || localStorage.getItem("pf-subscription-tier") === "admin";
+  } catch (e) {
+    return false;
+  }
+}
+function pwFormatLiveWhen(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return "";
+  return d.toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short"
+  }) + " · " + d.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+function pwLiveCountdown(iso) {
+  const ms = new Date(iso) - Date.now();
+  if (isNaN(ms)) return "";
+  const abs = Math.abs(ms),
+    m = Math.round(abs / 60000),
+    h = Math.round(abs / 3600000),
+    d = Math.round(abs / 86400000);
+  if (ms < 0) return m < 60 ? "Started " + m + " min ago" : "Started " + h + " hr" + (h === 1 ? "" : "s") + " ago";
+  if (m < 15) return "Starting soon";
+  if (m < 60) return "in " + m + " min";
+  if (h < 24) return "in " + h + " hr" + (h === 1 ? "" : "s");
+  return "in " + d + " day" + (d === 1 ? "" : "s");
+}
+function PWUpcomingLivesCard() {
+  const [lives, setLives] = useStatePW(pwLoadScheduledLives);
+  const [confirmId, setConfirmId] = useStatePW(null);
+  const superUser = pwIsSuperUser();
+  useEffectPW(() => {
+    const sync = () => setLives(pwLoadScheduledLives());
+    window.addEventListener("storage", sync);
+    window.addEventListener("focus", sync);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("focus", sync);
+    };
+  }, []);
+  useEffectPW(() => {
+    if (window.location.hash !== "#upcoming-lives") return;
+    const t = setTimeout(() => {
+      const el = document.getElementById("upcoming-lives");
+      if (el) el.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }, 250);
+    return () => clearTimeout(t);
+  }, []);
+  const cancelLive = id => {
+    const next = lives.filter(x => x.id !== id);
+    pwSaveScheduledLives(next);
+    setLives(next);
+    setConfirmId(null);
+  };
+  const goLive = item => goPW("NewsfeedWeb.html?golive=1&sched=" + encodeURIComponent(item.id));
+  if (lives.length === 0 && !superUser) return null;
+  const now = Date.now();
+  return /*#__PURE__*/React.createElement("section", {
+    id: "upcoming-lives",
+    className: "pw-card pw-lives-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pw-card-hd"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pw-card-hd-ti"
+  }, /*#__PURE__*/React.createElement("h2", null, "Upcoming lives"), lives.length > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "pw-lives-count"
+  }, lives.length, " scheduled")), superUser && lives.length > 0 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-lives-add",
+    onClick: () => goPW("NewsfeedWeb.html?golive=1")
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:plus",
+    size: 15,
+    color: "var(--brand-navy)"
+  }), "Schedule another")), lives.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "pw-lives-empty"
+  }, /*#__PURE__*/React.createElement("p", null, "No lives scheduled yet. Plan one ahead so your followers know when to tune in."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-lives-schedule",
+    onClick: () => goPW("NewsfeedWeb.html?golive=1")
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:calendar-clock",
+    size: 17,
+    color: "#fff"
+  }), "Schedule a live")) : /*#__PURE__*/React.createElement("ul", {
+    className: "pw-lives-list"
+  }, lives.map(item => {
+    const due = new Date(item.startIso).getTime() - now < 15 * 60 * 1000;
+    return /*#__PURE__*/React.createElement("li", {
+      key: item.id,
+      className: "pw-live-row" + (due ? " due" : "")
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "pw-live-date",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "d"
+    }, new Date(item.startIso).getDate()), /*#__PURE__*/React.createElement("span", {
+      className: "m"
+    }, new Date(item.startIso).toLocaleDateString(undefined, {
+      month: "short"
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "pw-live-main"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "pw-live-status"
+    }, due ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+      className: "dot"
+    }), "Live soon") : "Scheduled"), /*#__PURE__*/React.createElement("span", {
+      className: "pw-live-ti"
+    }, item.title), /*#__PURE__*/React.createElement("span", {
+      className: "pw-live-meta"
+    }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+      name: "lucide:clock",
+      size: 13,
+      color: "var(--gray-500)"
+    }), pwFormatLiveWhen(item.startIso), /*#__PURE__*/React.createElement("span", {
+      className: "sep"
+    }, "·"), pwLiveCountdown(item.startIso), /*#__PURE__*/React.createElement("span", {
+      className: "sep"
+    }, "·"), item.dest)), superUser && (confirmId === item.id ? /*#__PURE__*/React.createElement("div", {
+      className: "pw-live-confirm"
+    }, /*#__PURE__*/React.createElement("span", null, "Cancel this live?"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "yes",
+      onClick: () => cancelLive(item.id)
+    }, "Yes, cancel"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "no",
+      onClick: () => setConfirmId(null)
+    }, "Keep")) : /*#__PURE__*/React.createElement("div", {
+      className: "pw-live-actions"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "pw-live-go",
+      onClick: () => goLive(item)
+    }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+      name: "lucide:radio",
+      size: 15,
+      color: "#fff"
+    }), "Go live now"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "pw-live-cancel",
+      onClick: () => setConfirmId(item.id)
+    }, "Cancel"))));
+  })));
 }
 function PWPostCard({
   p,
@@ -1740,7 +1915,7 @@ function ProfileMain({
     suggestions: p.suggestions
   })), /*#__PURE__*/React.createElement("div", {
     className: "pw-main"
-  }, /*#__PURE__*/React.createElement(PWComposerCard, null), /*#__PURE__*/React.createElement(PWGoalsSection, {
+  }, /*#__PURE__*/React.createElement(PWComposerCard, null), /*#__PURE__*/React.createElement(PWUpcomingLivesCard, null), /*#__PURE__*/React.createElement(PWGoalsSection, {
     assessState: assessState,
     onOpenHub: onOpenHub
   }), /*#__PURE__*/React.createElement(PWPostsCard, null)))));

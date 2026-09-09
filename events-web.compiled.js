@@ -257,6 +257,47 @@ const LS_OFFCAM = [{
   host: false,
   camOff: true
 }];
+
+/* Commenter avatars for the live chat — known members resolve to their
+   photo, anyone else falls back to DS Avatar's initials. */
+const LS_CHAT_AVATARS = {
+  "Dr Tim Pearce": "assets/avatar-drtim.png",
+  "Miranda Pearce": "assets/avatar-miranda.jpg",
+  "Katy Wilson": "assets/avatar-katy.jpg",
+  "Grace Lindqvist": "assets/avatar-sarah-collins.jpg",
+  "Amir Khan": "assets/avatar-amir-khan.jpg",
+  "Mark Ellis": "assets/avatar-mark-ellis.jpg",
+  "Priya Nair": "assets/avatar-priya-shah.jpg",
+  "Beth Okafor": "assets/avatar-nurse-beth.jpg"
+};
+/* Host-only clickable links: URLs in a host's message become anchors,
+   everyone else's stay plain text (keeps the chat spam-safe). */
+const LS_CHAT_URL_RE = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/g;
+function lsChatLinkify(text, cls) {
+  const out = [];
+  let last = 0,
+    m;
+  LS_CHAT_URL_RE.lastIndex = 0;
+  while (m = LS_CHAT_URL_RE.exec(text)) {
+    let url = m[0];
+    const trail = url.match(/[.,;:!?)]+$/);
+    if (trail) url = url.slice(0, -trail[0].length);
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const href = /^https?:/i.test(url) ? url : "https://" + url;
+    out.push(/*#__PURE__*/React.createElement("a", {
+      key: out.length,
+      className: cls,
+      href: href,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      onClick: e => e.stopPropagation()
+    }, url.replace(/^https?:\/\//i, "").replace(/\/$/, "")));
+    last = m.index + url.length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+const lsChatAvatar = m => m.avatar || LS_CHAT_AVATARS[m.name] || null;
 const LS_REACT_EMOJI = ["❤️", "💜", "👏", "🔥", "🙌"];
 const LS_COMPOSER_MORE = ["💜", "👏", "🔥", "🙌", "😂"];
 const LS_BASKET_COUNT = 79;
@@ -304,6 +345,9 @@ const LS_CHAT_SEED = [{
 }, {
   name: "Dr Tim Pearce",
   text: "Great turnout tonight, keep the questions coming"
+}, {
+  name: "Dr Tim Pearce",
+  text: "Slides + aftercare checklist for tonight: https://profinity.app/technique-tuesday/notes"
 }, {
   name: "Josh Reilly",
   text: "Does this count toward my CPD hours?"
@@ -1443,8 +1487,20 @@ function LSReactions({
 }
 function LSChat({
   msgs,
-  onAddReply
+  onAddReply,
+  hosts
 }) {
+  const hostList = hosts || [];
+  const isHost = m => hostList.indexOf(m.name) !== -1;
+  const body = m => isHost(m) ? lsChatLinkify(m.text, "ls-msg-link") : m.text;
+  /* Bubble is a div with button semantics (not a <button>) so host links
+     can sit inside it without nesting interactive elements. */
+  const toggleKey = (e, m) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setReplyFor(replyFor === m.id ? null : m.id);
+    }
+  };
   const ref = React.useRef(null);
   const [replyFor, setReplyFor] = useStateEW(null);
   const [replyVal, setReplyVal] = useStateEW("");
@@ -1469,17 +1525,33 @@ function LSChat({
   }, msgs.map(m => /*#__PURE__*/React.createElement("div", {
     className: "ls-msg-block",
     key: m.id
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ls-msg-row"
+  }, /*#__PURE__*/React.createElement(DSEW.Avatar, {
+    className: "ls-msg-av",
+    name: m.name,
+    src: lsChatAvatar(m),
+    size: 24
+  }), /*#__PURE__*/React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
     className: "ls-msg",
     "aria-expanded": replyFor === m.id,
-    onClick: () => setReplyFor(replyFor === m.id ? null : m.id)
-  }, /*#__PURE__*/React.createElement("b", null, m.name), " ", m.text), m.replies && m.replies.length > 0 && /*#__PURE__*/React.createElement("div", {
+    onClick: () => setReplyFor(replyFor === m.id ? null : m.id),
+    onKeyDown: e => toggleKey(e, m)
+  }, /*#__PURE__*/React.createElement("b", null, m.name), " ", body(m))), m.replies && m.replies.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "ls-msg-replies"
   }, m.replies.map(r => /*#__PURE__*/React.createElement("div", {
-    className: "ls-msg ls-msg-reply",
+    className: "ls-msg-row",
     key: r.id
-  }, /*#__PURE__*/React.createElement("b", null, r.name), " ", r.text))), replyFor === m.id && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(DSEW.Avatar, {
+    className: "ls-msg-av ls-msg-av-sm",
+    name: r.name,
+    src: lsChatAvatar(r),
+    size: 18
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ls-msg ls-msg-reply"
+  }, /*#__PURE__*/React.createElement("b", null, r.name), " ", body(r))))), replyFor === m.id && /*#__PURE__*/React.createElement("div", {
     className: "ls-reply-box"
   }, /*#__PURE__*/React.createElement("input", {
     className: "ls-reply-input",
@@ -2352,9 +2424,11 @@ function LiveStream({
     const t = val.trim();
     if (!t) return;
     const me = PFAEW && PFAEW.ME && PFAEW.ME.name || ME_EW.name;
+    const meAv = PFAEW && PFAEW.ME && PFAEW.ME.avatar || ME_EW.avatar;
     setMsgs(m => m.slice(-40).concat([{
       id: Date.now(),
       name: me,
+      avatar: meAv,
       text: t
     }]));
     setVal("");
@@ -2365,6 +2439,7 @@ function LiveStream({
       replies: (x.replies || []).concat([{
         id: Date.now(),
         name: me,
+        avatar: PFAEW && PFAEW.ME && PFAEW.ME.avatar || ME_EW.avatar,
         text
       }])
     }) : x));
@@ -2373,6 +2448,10 @@ function LiveStream({
     setShowcase(false);
     setCheckoutProduct(p);
   };
+
+  /* Whose links go live in chat: the event's host + co-host, and you while
+     previewing the host role. */
+  const chatHosts = [d.host, d.cohost].filter(Boolean).concat(role === "host" ? [PFAEW && PFAEW.ME && PFAEW.ME.name || ME_EW.name] : []);
   return /*#__PURE__*/React.createElement("div", {
     className: "ev-call",
     "data-screen-label": "Live Stream"
@@ -2447,7 +2526,8 @@ function LiveStream({
     onClose: role === "speaker" ? speakerPinnedPopup.dismiss : undefined
   }), /*#__PURE__*/React.createElement(LSChat, {
     msgs: msgs,
-    onAddReply: addReply
+    onAddReply: addReply,
+    hosts: chatHosts
   }), /*#__PURE__*/React.createElement(LSComposer, {
     value: val,
     onChange: setVal,

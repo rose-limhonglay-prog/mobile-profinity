@@ -4,7 +4,7 @@
    of the mobile app, adds the AI-purple gradient hero + agent catalogue cards.
    Suffixed -AG to avoid global-scope clashes.
    =========================================================================== */
-const { useState: useStateAG, useEffect: useEffectAG } = React;
+const { useState: useStateAG, useEffect: useEffectAG, useRef: useRefAG } = React;
 const DSAG = window.ProfinityDesignSystem_c2b5cc;
 const MobileChromeC = window.MobileChromeC;
 
@@ -109,9 +109,9 @@ function AgentCardM({ a }) {
 
 }
 
-function AgTabBar() {
+function AgTabBar({ compact }) {
   return (
-    <nav className="ag-tabs" aria-label="Primary">
+    <nav className={"ag-tabs" + (compact ? " ag-tabs-compact" : "")} aria-label="Primary">
       {AG_TABS.map((t) =>
       <button key={t.key} className={"ag-tab" + (t.key === "Agent" ? " on" : "")}
       aria-current={t.key === "Agent" ? "page" : undefined} onClick={() => t.href && goAG(t.href)}>
@@ -119,7 +119,7 @@ function AgTabBar() {
             <DSAG.IconifyIcon name={t.icon} size={20} color={t.key === "Agent" ? "#fff" : "var(--gray-450)"} />
             {t.dot && <span className="dot">{t.dot}</span>}
           </span>
-          {t.label}
+          <span className="lbl">{t.label}</span>
         </button>
       )}
     </nav>);
@@ -127,17 +127,19 @@ function AgTabBar() {
 }
 
 function AgentHome() {
+  const scrollRef = useRefAG(null);
+  const { hidden: chromeHidden, floating: chromeFloat } = window.PFUseHeaderHideC(scrollRef);
   return (
-    <div className="ag-screen" data-screen-label="Profinity Agents (mobile)">
+    <div className={"ag-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="Profinity Agents (mobile)">
       <MobileChromeC />
-      <div className="ag-scroll">
+      <div className="ag-scroll" ref={scrollRef}>
         <AgHero />
         <div className="ag-list">
           {AG_AGENTS.map((a, i) => <AgentCardM key={i} a={a} />)}
         </div>
         <div style={{ height: 20 }} />
       </div>
-      <AgTabBar />
+      <AgTabBar compact={chromeHidden} />
     </div>);
 
 }

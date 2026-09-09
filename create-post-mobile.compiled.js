@@ -482,6 +482,200 @@ const CP_LIVE_TOOLS = [{
   icon: "lucide:sparkles"
 }];
 
+/* ---- Scheduled lives ----
+   A Super User can schedule a live instead of going live right away. The
+   booking is written to localStorage ("pf-scheduled-lives") so the member's
+   profile page (ProfileMobile / Profile web) can list it under "Upcoming
+   lives" — the two run as separate page loads with no backend, exactly like
+   the credential-verification bridge. */
+const CP_SCHED_KEY = "pf-scheduled-lives";
+function cpLoadScheduled() {
+  try {
+    return JSON.parse(localStorage.getItem(CP_SCHED_KEY)) || [];
+  } catch (e) {
+    return [];
+  }
+}
+function cpSaveScheduled(list) {
+  try {
+    localStorage.setItem(CP_SCHED_KEY, JSON.stringify(list));
+  } catch (e) {}
+}
+function cpAddScheduled(item) {
+  const list = cpLoadScheduled().filter(x => x.id !== item.id);
+  list.push(item);
+  list.sort((a, b) => new Date(a.startIso) - new Date(b.startIso));
+  cpSaveScheduled(list);
+  return list;
+}
+function cpRemoveScheduled(id) {
+  cpSaveScheduled(cpLoadScheduled().filter(x => x.id !== id));
+}
+/* Local-time value for <input type="datetime-local"> (YYYY-MM-DDTHH:MM). */
+function cpToLocalInput(d) {
+  const pad = n => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+function cpDefaultScheduleTime() {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(19, 0, 0, 0);
+  return cpToLocalInput(d);
+}
+function cpFormatWhen(iso) {
+  const d = new Date(iso);
+  if (isNaN(d)) return "";
+  const day = d.toLocaleDateString(undefined, {
+    weekday: "short",
+    day: "numeric",
+    month: "short"
+  });
+  const time = d.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit"
+  });
+  return day + " · " + time;
+}
+
+/* Bottom sheet for picking a title + date/time — reuses the create-post
+   .cp-sheet shell so it feels like the "Post to" picker. */
+function CPScheduleLiveSheet({
+  dest,
+  defaultTitle,
+  onConfirm,
+  onClose
+}) {
+  const [title, setTitle] = React.useState(defaultTitle || "");
+  const [when, setWhen] = React.useState(cpDefaultScheduleTime);
+  const [err, setErr] = React.useState("");
+  React.useEffect(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  const submit = () => {
+    const d = new Date(when);
+    if (!when || isNaN(d)) {
+      setErr("Pick a date and time.");
+      return;
+    }
+    if (d.getTime() < Date.now() + 5 * 60 * 1000) {
+      setErr("Choose a time at least 5 minutes from now.");
+      return;
+    }
+    onConfirm({
+      title: title.trim() || "Live with " + PFACP.ME.name,
+      startIso: d.toISOString()
+    });
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet cp-sched-sheet",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Schedule live",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-sheet-grip",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet-hd"
+  }, /*#__PURE__*/React.createElement("h3", null, "Schedule live"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-sheet-done",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:x",
+    size: 20,
+    color: "var(--gray-600)"
+  }))), /*#__PURE__*/React.createElement("p", {
+    className: "cp-sched-sub"
+  }, "Your followers will see it on your profile under ", /*#__PURE__*/React.createElement("b", null, "Upcoming lives"), " — you can go live from there when it's time."), /*#__PURE__*/React.createElement("label", {
+    className: "cp-sched-field"
+  }, /*#__PURE__*/React.createElement("span", null, "Title"), /*#__PURE__*/React.createElement("input", {
+    type: "text",
+    value: title,
+    maxLength: 80,
+    placeholder: "e.g. Live Q&A: correcting migrated lip filler",
+    onChange: e => setTitle(e.target.value)
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "cp-sched-field"
+  }, /*#__PURE__*/React.createElement("span", null, "Date & time"), /*#__PURE__*/React.createElement("input", {
+    type: "datetime-local",
+    value: when,
+    min: cpToLocalInput(new Date()),
+    onChange: e => {
+      setWhen(e.target.value);
+      setErr("");
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "cp-sched-dest"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: dest === "feed" ? "lucide:rss" : "lucide:users",
+    size: 15,
+    color: "var(--gray-500)"
+  }), "Streaming to ", /*#__PURE__*/React.createElement("b", null, dest === "feed" ? "Newsfeed" : dest)), err && /*#__PURE__*/React.createElement("p", {
+    className: "cp-sched-err",
+    role: "alert"
+  }, err), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-sched-go",
+    onClick: submit
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:calendar-clock",
+    size: 18,
+    color: "#fff"
+  }), "Schedule for ", cpFormatWhen(when) || "…")));
+}
+
+/* Confirmation after scheduling — a small centred card over the camera
+   stage with a straight path to the profile listing. */
+function CPScheduledConfirm({
+  item,
+  onViewProfile,
+  onDone
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet-overlay cp-sched-confirm-overlay",
+    onClick: onDone
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-sched-confirm",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Live scheduled",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-sched-confirm-ic"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:calendar-check",
+    size: 28,
+    color: "var(--success)"
+  })), /*#__PURE__*/React.createElement("h3", null, "Live scheduled"), /*#__PURE__*/React.createElement("p", {
+    className: "ti"
+  }, item.title), /*#__PURE__*/React.createElement("p", {
+    className: "tm"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:clock",
+    size: 14,
+    color: "var(--gray-500)"
+  }), cpFormatWhen(item.startIso), " · ", item.dest), /*#__PURE__*/React.createElement("p", {
+    className: "note"
+  }, "It's now listed under ", /*#__PURE__*/React.createElement("b", null, "Upcoming lives"), " on your profile."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-sched-confirm-primary",
+    onClick: onViewProfile
+  }, "View on my profile"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-sched-confirm-secondary",
+    onClick: onDone
+  }, "Done")));
+}
+
 /* Full-screen "go live" camera stage — replaces the whole compose screen
    while mode === "live". Uses a static photo as a stand-in for a live
    camera feed since this prototype has no real capture pipeline. */
@@ -492,7 +686,8 @@ function CPLiveStage({
   onOpenChannelSheet,
   description,
   onDescriptionChange,
-  onGoLive
+  onGoLive,
+  onSchedule
 }) {
   const [descOpen, setDescOpen] = React.useState(false);
   return /*#__PURE__*/React.createElement("div", {
@@ -557,10 +752,21 @@ function CPLiveStage({
     type: "button",
     className: "cp-live-desc-btn",
     onClick: () => setDescOpen(true)
-  }, description || "Tap to add a description..."), /*#__PURE__*/React.createElement("button", {
+  }, description || "Tap to add a description..."), /*#__PURE__*/React.createElement("div", {
+    className: "cp-live-actions"
+  }, /*#__PURE__*/React.createElement("button", {
     className: "cp-live-go-btn",
     onClick: onGoLive
-  }, "Go Live")));
+  }, "Go Live"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-live-sched-btn",
+    "aria-label": "Schedule a live",
+    onClick: onSchedule
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:calendar-clock",
+    size: 20,
+    color: "#fff"
+  }), /*#__PURE__*/React.createElement("span", null, "Schedule")))));
 }
 
 /* Full-screen live broadcast — mounted once the host taps "Go Live" (no page
@@ -588,6 +794,115 @@ const CP_BCAST_GUESTS = [{
   av: "assets/waiting-self-preview.png",
   f: "47.5K followers"
 }];
+
+/* Commenter avatars for the live chat — known members resolve to their
+   photo, anyone else falls back to DS Avatar's initials. */
+const CP_BCAST_AVATARS = {
+  "Dr Tim Pearce": "assets/avatar-drtim.png",
+  "Miranda Pearce": "assets/avatar-miranda.jpg",
+  "Katy Wilson": "assets/avatar-katy.jpg",
+  "Grace Lindqvist": "assets/avatar-sarah-collins.jpg",
+  "Amir Khan": "assets/avatar-amir-khan.jpg",
+  "Mark Ellis": "assets/avatar-mark-ellis.jpg",
+  "Priya Nair": "assets/avatar-priya-shah.jpg",
+  "Beth Okafor": "assets/avatar-nurse-beth.jpg"
+};
+/* Host-only clickable links: URLs in a host's message become anchors,
+   everyone else's stay plain text (keeps the chat spam-safe). */
+const CP_BCAST_URL_RE = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/g;
+function cpBcastLinkify(text, cls) {
+  const out = [];
+  let last = 0,
+    m;
+  CP_BCAST_URL_RE.lastIndex = 0;
+  while (m = CP_BCAST_URL_RE.exec(text)) {
+    let url = m[0];
+    const trail = url.match(/[.,;:!?)]+$/);
+    if (trail) url = url.slice(0, -trail[0].length);
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const href = /^https?:/i.test(url) ? url : "https://" + url;
+    out.push(/*#__PURE__*/React.createElement("a", {
+      key: out.length,
+      className: cls,
+      href: href,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      onClick: e => e.stopPropagation()
+    }, url.replace(/^https?:\/\//i, "").replace(/\/$/, "")));
+    last = m.index + url.length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
+/* Open a direct message with a commenter — the DM page seeds a fresh
+   thread from name/avatar when they aren't already a contact. */
+const cpBcastDmUrl = (c, av) => {
+  const q = new URLSearchParams({
+    name: c.n,
+    from: location.pathname.split("/").pop() || "NewsfeedMobile.html"
+  });
+  if (av) q.set("avatar", av);
+  return "DirectMessage.html?" + q.toString();
+};
+/* Long-press (≈450ms hold, cancelled by a 10px drag) opens a comment's
+   options. Right-click / contextmenu does the same on desktop. `ref` is a
+   shared per-list press state; `fire` receives nothing and should open the
+   sheet for the row these handlers are attached to. The row's own onClick
+   should bail when ref.current.fired is set (the tap that ends a long-press). */
+function cpLongPress(ref, fire) {
+  const end = e => {
+    const s = ref.current;
+    if (!s) return;
+    if (s.t) {
+      clearTimeout(s.t);
+      s.t = null;
+    }
+    if (s.el) s.el.classList.remove("pressing");
+  };
+  return {
+    onPointerDown: e => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      end();
+      const el = e.currentTarget;
+      ref.current = {
+        x: e.clientX,
+        y: e.clientY,
+        fired: false,
+        el: el,
+        t: setTimeout(() => {
+          ref.current.fired = true;
+          ref.current.t = null;
+          el.classList.remove("pressing");
+          /* The tap that ends a long-press still produces a click — swallow it
+             so it can't land on whatever the sheet just put under the finger. */
+          const swallow = ev => {
+            ev.stopPropagation();
+            ev.preventDefault();
+          };
+          window.addEventListener("click", swallow, true);
+          setTimeout(() => window.removeEventListener("click", swallow, true), 700);
+          fire();
+        }, 450)
+      };
+      el.classList.add("pressing");
+    },
+    onPointerMove: e => {
+      const s = ref.current;
+      if (!s || !s.t) return;
+      if (Math.abs(e.clientX - s.x) > 10 || Math.abs(e.clientY - s.y) > 10) end();
+    },
+    onPointerUp: end,
+    onPointerCancel: end,
+    onPointerLeave: end,
+    onContextMenu: e => {
+      e.preventDefault();
+      if (!ref.current || !ref.current.fired) fire();
+    }
+  };
+}
+const CP_REPORT_REASONS = ["Spam or scam", "Harassment or bullying", "Misinformation", "Inappropriate content", "Something else"];
+const cpBcastAvatar = c => c.av || c.me && PFACP.ME.avatar || CP_BCAST_AVATARS[c.n] || null;
 function CPBroadcastStage({
   dest,
   watch,
@@ -595,13 +910,20 @@ function CPBroadcastStage({
   onClose
 }) {
   const [secs, setSecs] = React.useState(0);
-  const [chat, setChat] = React.useState([{
+  const [chat, setChat] = React.useState(() => [
+  /* Host messages may carry links (viewers see Miranda hosting; when you
+     broadcast, you're the host and your own links go live). */
+  {
     n: "Miranda Pearce",
-    t: "Just joined — can't wait for this one 👀"
+    t: watch ? "Welcome in! Tonight's checklist: https://profinity.app/lip-migration-checklist" : "Just joined — can't wait for this one 👀"
   }, {
     n: "Dr Tim Pearce",
     t: "Great topic. Are you covering cannula depth?"
-  }]);
+  }].concat(watch ? [] : [{
+    n: PFACP.ME.name,
+    t: "Course + notes for tonight: https://profinity.app/8d-lip-design",
+    me: true
+  }]));
   const [msg, setMsg] = React.useState("");
   const [guestSheet, setGuestSheet] = React.useState(false);
   const [guests, setGuests] = React.useState(() => {
@@ -624,6 +946,36 @@ function CPBroadcastStage({
   const [hearts, setHearts] = React.useState([]);
   const [confirmEnd, setConfirmEnd] = React.useState(false);
   const [keepPost, setKeepPost] = React.useState(true);
+  const [who, setWho] = React.useState(null); // commenter sheet (tap a chat message)
+  const [whoMode, setWhoMode] = React.useState("who"); // who | report
+  const [reason, setReason] = React.useState(null);
+  const [toast, setToast] = React.useState(null);
+  const toastTimer = React.useRef(null);
+  const showToast = t => {
+    setToast(t);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2600);
+  };
+  React.useEffect(() => () => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+  }, []);
+  const openWho = c => {
+    setWho(c);
+    setWhoMode("who");
+    setReason(null);
+  };
+  const pressRef = React.useRef(null);
+  /* Moderation: the broadcaster (and co-hosts on stage) can delete; viewers can report. */
+  const canDelete = !watch;
+  const deleteMsg = c => {
+    setChat(list => list.filter(x => x !== c));
+    setWho(null);
+    showToast("Comment deleted");
+  };
+  const submitReport = () => {
+    setWho(null);
+    showToast("Thanks — we'll review this comment");
+  };
   const liveRef = React.useRef(null);
   const chatRef = React.useRef(null);
   const chatAtBottom = React.useRef(true);
@@ -647,12 +999,12 @@ function CPBroadcastStage({
     const k = e => {
       if (e.key !== "Escape") return;
       /* Topmost sheet closes first; only then does Escape reach the broadcast itself. */
-      if (guestSheet) setGuestSheet(false);else if (confirmEnd) setConfirmEnd(false);
+      if (who) setWho(null);else if (guestSheet) setGuestSheet(false);else if (confirmEnd) setConfirmEnd(false);
       /* While hosting, Escape asks first rather than dropping the broadcast. */else if (!watch) setConfirmEnd(true);else close();
     };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
-  }, [confirmEnd, guestSheet, watch]);
+  }, [confirmEnd, guestSheet, watch, who]);
 
   /* Audience reactions drift up the right edge while the broadcast runs. */
   React.useEffect(() => {
@@ -747,6 +1099,11 @@ function CPBroadcastStage({
     }));
     setMsg("");
   };
+
+  /* Who counts as a host for link rendering: the broadcaster (you, or
+     Miranda when watching) plus any guests brought on as co-hosts. */
+  const hostNames = (watch ? ["Miranda Pearce"] : [PFACP.ME.name]).concat(guests.map(g => g.n));
+  const isHostMsg = c => c.me && !watch || hostNames.indexOf(c.n) !== -1;
   const onCam = [].concat([{
     n: "You",
     av: liveCam ? "assets/live-preview-camera.jpg" : PFACP.ME.avatar,
@@ -830,9 +1187,26 @@ function CPBroadcastStage({
     ref: chatRef,
     onScroll: onChatScroll
   }, chat.map((c, i) => /*#__PURE__*/React.createElement("div", {
-    className: "cp-bcast-msg" + (c.me ? " me" : "") + (c.fresh ? " in" : ""),
+    className: "cp-bcast-msg" + (c.me ? " me" : "") + (c.fresh ? " in" : "") + (!c.me || canDelete ? " has-opts" : ""),
     key: i
-  }, /*#__PURE__*/React.createElement("b", null, c.n), " ", c.t))), /*#__PURE__*/React.createElement("div", {
+    /* long-press (or right-click) opens the options sheet; keyboard users get Enter/Space */,
+    ...(!c.me || canDelete ? cpLongPress(pressRef, () => openWho(c)) : {}),
+    tabIndex: c.me && !canDelete ? undefined : 0,
+    "aria-label": c.me && !canDelete ? undefined : "Hold for options on " + (c.me ? "your" : c.n + "'s") + " comment",
+    onKeyDown: e => {
+      if ((!c.me || canDelete) && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        openWho(c);
+      }
+    }
+  }, /*#__PURE__*/React.createElement(DSCP.Avatar, {
+    className: "cp-bcast-msg-av",
+    name: c.n,
+    src: cpBcastAvatar(c),
+    size: 22
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "cp-bcast-msg-tx"
+  }, /*#__PURE__*/React.createElement("b", null, c.n), " ", isHostMsg(c) ? cpBcastLinkify(c.t, "cp-bcast-link") : c.t)))), /*#__PURE__*/React.createElement("div", {
     className: "cp-bcast-hearts",
     "aria-hidden": "true"
   }, hearts.map(h => /*#__PURE__*/React.createElement("span", {
@@ -908,7 +1282,86 @@ function CPBroadcastStage({
     type: "button",
     "aria-label": "React " + e,
     onClick: () => sendReact(e)
-  }, e)))))), guestSheet && /*#__PURE__*/React.createElement("div", {
+  }, e)))))), who && /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-guest cp-bcast-who",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": who.n,
+    onClick: e => {
+      if (e.target === e.currentTarget) setWho(null);
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-guest-card cp-bcast-who-card"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-sheet-grip"
+  }), whoMode === "who" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DSCP.Avatar, {
+    name: who.n,
+    src: cpBcastAvatar(who),
+    size: 64
+  }), /*#__PURE__*/React.createElement("h3", null, who.me ? "Your comment" : who.n), /*#__PURE__*/React.createElement("p", {
+    className: "cp-bcast-guest-p cp-bcast-who-quote"
+  }, "“", who.t, "”"), !who.me && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-bcast-who-dm",
+    onClick: () => goCP(cpBcastDmUrl(who, cpBcastAvatar(who)))
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:send",
+    size: 17,
+    color: "#fff"
+  }), "Send a message"), /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-who-row"
+  }, !who.me && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-bcast-who-act",
+    onClick: () => setWhoMode("report")
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:flag",
+    size: 16,
+    color: "var(--brand-navy)"
+  }), "Report comment"), canDelete && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-bcast-who-act danger",
+    onClick: () => deleteMsg(who)
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:trash-2",
+    size: 16,
+    color: "var(--error)"
+  }), "Delete comment"))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "cp-bcast-who-flag"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:flag",
+    size: 26,
+    color: "var(--error)"
+  })), /*#__PURE__*/React.createElement("h3", null, "Report this comment?"), /*#__PURE__*/React.createElement("p", {
+    className: "cp-bcast-guest-p cp-bcast-who-quote"
+  }, /*#__PURE__*/React.createElement("b", null, who.n), ": “", who.t, "”"), /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-who-reasons",
+    role: "radiogroup",
+    "aria-label": "Reason"
+  }, CP_REPORT_REASONS.map(r => /*#__PURE__*/React.createElement("button", {
+    key: r,
+    type: "button",
+    role: "radio",
+    "aria-checked": reason === r,
+    className: "cp-bcast-who-reason" + (reason === r ? " on" : ""),
+    onClick: () => setReason(r)
+  }, r))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-bcast-who-dm danger",
+    disabled: !reason,
+    onClick: submitReport
+  }, "Submit report")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-bcast-who-cancel",
+    onClick: () => setWho(null)
+  }, "Cancel"))), toast && /*#__PURE__*/React.createElement("div", {
+    className: "cp-bcast-toast",
+    role: "status"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:check-circle-2",
+    size: 18,
+    color: "var(--brand-gold)"
+  }), /*#__PURE__*/React.createElement("span", null, toast)), guestSheet && /*#__PURE__*/React.createElement("div", {
     className: "cp-bcast-guest",
     role: "dialog",
     "aria-modal": "true",
@@ -1198,7 +1651,15 @@ function CPScreen() {
   const bcastParams = new URLSearchParams(window.location.search);
   const isSocial = typeof window !== "undefined" && !!window.PF_SOCIAL_STREAM;
   const watchMode = bcastParams.get("watch") === "1";
-  const [mode, setMode] = React.useState(() => isSocial || watchMode ? "broadcast" : "post");
+  /* ?mode=live deep-links straight into the camera stage (used by the
+     profile page's "Go live now" on a scheduled live); ?sched=<id> names
+     the booking so its title prefills and it's cleared once you go live. */
+  const schedParam = bcastParams.get("sched");
+  const scheduledItem = React.useMemo(() => schedParam ? cpLoadScheduled().find(x => x.id === schedParam) || null : null, [schedParam]);
+  const deepLive = bcastParams.get("mode") === "live" && cpIsSuperUser();
+  const [mode, setMode] = React.useState(() => isSocial || watchMode ? "broadcast" : deepLive ? "live" : "post");
+  const [schedSheet, setSchedSheet] = React.useState(false);
+  const [scheduled, setScheduled] = React.useState(null);
   const [devSuperUser, setDevSuperUserRaw] = React.useState(cpIsSuperUser);
   const setDevSuperUser = next => {
     try {
@@ -1206,7 +1667,7 @@ function CPScreen() {
     } catch (e) {}
     setDevSuperUserRaw(next);
   };
-  const [liveDescription, setLiveDescription] = React.useState("");
+  const [liveDescription, setLiveDescription] = React.useState(() => scheduledItem ? scheduledItem.title : "");
   const [text, setText] = React.useState("");
   const [channels, setChannels] = React.useState(() => {
     try {
@@ -1358,12 +1819,46 @@ function CPScreen() {
       onOpenChannelSheet: () => setChanSheet(true),
       description: liveDescription,
       onDescriptionChange: setLiveDescription,
-      onGoLive: () => setMode("broadcast")
+      onGoLive: () => {
+        if (scheduledItem) cpRemoveScheduled(scheduledItem.id);
+        setMode("broadcast");
+      },
+      onSchedule: () => setSchedSheet(true)
     }), chanSheet && /*#__PURE__*/React.createElement(CPChannelSheet, {
       dests: destOptions,
       value: dest,
       onPick: setDest,
       onClose: () => setChanSheet(false)
+    }), schedSheet && /*#__PURE__*/React.createElement(CPScheduleLiveSheet, {
+      dest: dest,
+      defaultTitle: liveDescription,
+      onClose: () => setSchedSheet(false),
+      onConfirm: ({
+        title,
+        startIso
+      }) => {
+        const item = {
+          id: "sl" + Date.now(),
+          title,
+          startIso,
+          dest: dest === "feed" ? "Newsfeed" : dest,
+          host: {
+            name: PFACP.ME.name,
+            avatar: PFACP.ME.avatar
+          },
+          createdAt: new Date().toISOString()
+        };
+        cpAddScheduled(item);
+        setSchedSheet(false);
+        setScheduled(item);
+      }
+    }), scheduled && /*#__PURE__*/React.createElement(CPScheduledConfirm, {
+      item: scheduled,
+      onViewProfile: () => goCP("ProfileMobile.html#upcoming-lives"),
+      onDone: () => {
+        setScheduled(null);
+        goCP(backTo);
+      }
     }));
   }
   if (mode === "broadcast") {

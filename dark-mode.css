@@ -64,9 +64,21 @@
   background: rgba(13, 12, 29, .72);
   border-color: var(--border-default);
 }
-[data-theme="dark"] .m-screen.chrome-float .m-top,
-[data-theme="dark"] .lm-screen.chrome-float .m-top {
+[data-theme="dark"] .chrome-float .m-top,
+[data-theme="dark"] .chrome-float .pm-top {
   background: transparent;
+}
+/* floating header chips (icons / burger / points pill) on every page */
+[data-theme="dark"] .chrome-float .m-top .m-iconbtn,
+[data-theme="dark"] .chrome-float .m-top .m-burger,
+[data-theme="dark"] .chrome-float .pm-top .pm-iconbtn,
+[data-theme="dark"] .chrome-float .pm-top .pm-burger,
+[data-theme="dark"] .chrome-float .cm-top .cm-iconbtn,
+[data-theme="dark"] .chrome-float .cm-top .cm-burger,
+[data-theme="dark"] .chrome-float .m-pts,
+[data-theme="dark"] .chrome-float .pm-top .m-pts,
+[data-theme="dark"] .chrome-float .cm-top .m-pts {
+  background: rgba(38, 34, 70, 0.6); border-color: rgba(255, 255, 255, 0.14);
 }
 [data-theme="dark"] .m-tabs {
   background: linear-gradient(180deg, rgba(38,34,70,.36), rgba(20,18,42,.44));

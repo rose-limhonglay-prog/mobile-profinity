@@ -722,10 +722,12 @@ function LM2HelpSheet({
     onClick: onClose
   }, "Got it")));
 }
-const LMTabBar = React.forwardRef(function LMTabBar(_props, ref) {
+const LMTabBar = React.forwardRef(function LMTabBar({
+  compact
+}, ref) {
   return /*#__PURE__*/React.createElement("nav", {
     ref: ref,
-    className: "lm-tabs",
+    className: "lm-tabs" + (compact ? " lm-tabs-compact" : ""),
     "aria-label": "Primary"
   }, LM_TABS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
@@ -744,28 +746,6 @@ const LMTabBar = React.forwardRef(function LMTabBar(_props, ref) {
     className: "lbl"
   }, t.label))));
 });
-function LM2FloatChrome() {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "lm2-float-icons"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "fi",
-    "aria-label": "Search"
-  }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:search",
-    size: 18,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "fi",
-    "aria-label": "Saved",
-    onClick: () => goL("MySaved.html")
-  }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:bookmark",
-    size: 18,
-    color: "var(--brand-navy)"
-  })));
-}
 function useScrollChromeL(scrollRef) {
   const [state, setState] = useStateL({
     hidden: false,
@@ -825,7 +805,7 @@ function LearningHome() {
   return /*#__PURE__*/React.createElement("div", {
     className: "lm-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : ""),
     "data-screen-label": "My Learning (mobile)"
-  }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement(LM2FloatChrome, null), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement("div", {
     className: "lm-scroll",
     ref: scrollRef
   }, /*#__PURE__*/React.createElement(LM2Header, {
@@ -875,7 +855,9 @@ function LearningHome() {
     style: {
       height: 20
     }
-  })), /*#__PURE__*/React.createElement(LMTabBar, null), /*#__PURE__*/React.createElement(SurveyMobile, {
+  })), /*#__PURE__*/React.createElement(LMTabBar, {
+    compact: chromeHidden
+  }), /*#__PURE__*/React.createElement(SurveyMobile, {
     open: surveyOpen,
     onClose: () => setSurveyOpen(false),
     onComplete: unlockResources

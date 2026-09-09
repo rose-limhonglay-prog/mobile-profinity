@@ -130,6 +130,51 @@ const LS_OFFCAM = [
   { id: "grace", name: "Grace Lindqvist", avatar: "assets/avatar-sarah-collins.jpg", mic: false, host: false, camOff: true },
 ];
 
+/* Commenter avatars for the live chat — known members resolve to their
+   photo, anyone else falls back to DS Avatar's initials. */
+const LS_CHAT_AVATARS = {
+  "Dr Tim Pearce": "assets/avatar-drtim.png",
+  "Miranda Pearce": "assets/avatar-miranda.jpg",
+  "Katy Wilson": "assets/avatar-katy.jpg",
+  "Grace Lindqvist": "assets/avatar-sarah-collins.jpg",
+  "Amir Khan": "assets/avatar-amir-khan.jpg",
+  "Mark Ellis": "assets/avatar-mark-ellis.jpg",
+  "Priya Nair": "assets/avatar-priya-shah.jpg",
+  "Beth Okafor": "assets/avatar-nurse-beth.jpg",
+};
+/* Host-only clickable links: URLs in a host's message become anchors,
+   everyone else's stay plain text (keeps the chat spam-safe). */
+const LS_CHAT_URL_RE = /(https?:\/\/[^\s<]+|www\.[^\s<]+)/g;
+function lsChatLinkify(text, cls) {
+  const out = [];
+  let last = 0, m;
+  LS_CHAT_URL_RE.lastIndex = 0;
+  while ((m = LS_CHAT_URL_RE.exec(text))) {
+    let url = m[0];
+    const trail = url.match(/[.,;:!?)]+$/);
+    if (trail) url = url.slice(0, -trail[0].length);
+    if (m.index > last) out.push(text.slice(last, m.index));
+    const href = /^https?:/i.test(url) ? url : "https://" + url;
+    out.push(
+      <a key={out.length} className={cls} href={href} target="_blank" rel="noopener noreferrer"
+        onClick={(e) => e.stopPropagation()}>{url.replace(/^https?:\/\//i, "").replace(/\/$/, "")}</a>
+    );
+    last = m.index + url.length;
+  }
+  if (last < text.length) out.push(text.slice(last));
+  return out;
+}
+
+/* Open a direct message with a commenter — the DM page seeds a fresh
+   thread from name/avatar when they aren't already a contact. */
+const lsChatDmUrl = (m) => {
+  const q = new URLSearchParams({ name: m.name, from: "EventsMobile.html" });
+  const av = m.avatar || LS_CHAT_AVATARS[m.name];
+  if (av) q.set("avatar", av);
+  return "DirectMessage.html?" + q.toString();
+};
+const lsChatAvatar = (m) => m.avatar || LS_CHAT_AVATARS[m.name] || null;
+
 const LS_REACT_EMOJI = ["❤️", "💜", "👏", "🔥", "🙌"];
 const LS_COMPOSER_MORE = ["💜", "👏", "🔥", "🙌", "😂"];
 const LS_BASKET_COUNT = 79;
@@ -152,6 +197,7 @@ const LS_CHAT_SEED = [
   { name: "Priya Nair", text: "Miranda's tip on cannula angle was so useful" },
   { name: "Leah Whitmore", text: "First live session — loving it so far" },
   { name: "Dr Tim Pearce", text: "Great turnout tonight, keep the questions coming" },
+  { name: "Dr Tim Pearce", text: "Slides + aftercare checklist for tonight: https://profinity.app/technique-tuesday/notes" },
   { name: "Josh Reilly", text: "Does this count toward my CPD hours?" },
   { name: "Ingrid Voss", text: "Watching from Oslo, thanks for the early slot!" },
 ];
@@ -728,7 +774,130 @@ function LSReactions({ particles }) {
   );
 }
 
-function LSChat({ msgs, onAddReply }) {
+/* Long-press (≈450ms hold, cancelled by a 10px drag) opens a comment's
+   options. Right-click / contextmenu does the same on desktop. `ref` is a
+   shared per-list press state; `fire` receives nothing and should open the
+   sheet for the row these handlers are attached to. The row's own onClick
+   should bail when ref.current.fired is set (the tap that ends a long-press). */
+function lsLongPress(ref, fire) {
+  const end = (e) => {
+    const s = ref.current;
+    if (!s) return;
+    if (s.t) { clearTimeout(s.t); s.t = null; }
+    if (s.el) s.el.classList.remove("pressing");
+  };
+  return {
+    onPointerDown: (e) => {
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      end();
+      const el = e.currentTarget;
+      ref.current = { x: e.clientX, y: e.clientY, fired: false, el: el,
+        t: setTimeout(() => {
+          ref.current.fired = true; ref.current.t = null; el.classList.remove("pressing");
+          /* The tap that ends a long-press still produces a click — swallow it
+             so it can't land on whatever the sheet just put under the finger. */
+          const swallow = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+          window.addEventListener("click", swallow, true);
+          setTimeout(() => window.removeEventListener("click", swallow, true), 700);
+          fire();
+        }, 450) };
+      el.classList.add("pressing");
+    },
+    onPointerMove: (e) => {
+      const s = ref.current;
+      if (!s || !s.t) return;
+      if (Math.abs(e.clientX - s.x) > 10 || Math.abs(e.clientY - s.y) > 10) end();
+    },
+    onPointerUp: end, onPointerCancel: end, onPointerLeave: end,
+    onContextMenu: (e) => { e.preventDefault(); if (!ref.current || !ref.current.fired) fire(); },
+  };
+}
+
+const LS_REPORT_REASONS = ["Spam or scam", "Harassment or bullying", "Misinformation", "Inappropriate content", "Something else"];
+
+/* Report a comment — anyone in the audience can flag one; the host sees the
+   same sheet. Pure prototype: submit just closes and toasts. */
+function LSReportSheet({ msg, onCancel, onSubmit }) {
+  const [reason, setReason] = useStateEV(null);
+  useEffectEV(() => {
+    const esc = (e) => { if (e.key === "Escape") { e.stopPropagation(); onCancel(); } };
+    window.addEventListener("keydown", esc, true);
+    return () => window.removeEventListener("keydown", esc, true);
+  }, [onCancel]);
+  return (
+    <div className="ev-sheet ls-report" role="dialog" aria-modal="true" aria-label="Report comment">
+      <button className="ev-sheet-scrim" aria-label="Close" onClick={onCancel} />
+      <div className="ev-sheet-card">
+        <span className="ev-gate-ic warn"><DSEV.IconifyIcon name="lucide:flag" size={26} color="var(--error)" /></span>
+        <h3 className="ev-sheet-ttl">Report this comment?</h3>
+        <p className="ev-sheet-p"><b>{msg.name}</b>: “{msg.text}”</p>
+        <div className="ls-report-reasons" role="radiogroup" aria-label="Reason">
+          {LS_REPORT_REASONS.map((r) => (
+            <button key={r} type="button" role="radio" aria-checked={reason === r}
+              className={"ls-report-reason" + (reason === r ? " on" : "")} onClick={() => setReason(r)}>{r}</button>
+          ))}
+        </div>
+        <button className="ev-detail-cta danger" disabled={!reason} onClick={() => onSubmit(reason)}>Submit report</button>
+        <button className="ev-detail-cta ghost" onClick={onCancel}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+/* Long-press options for one comment: DM + Report for everyone (not on
+   your own), Delete for host/speaker. */
+function LSCommentSheet({ msg, isMe, isHost, canDelete, onDm, onReport, onDelete, onClose }) {
+  useEffectEV(() => {
+    const esc = (e) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } };
+    window.addEventListener("keydown", esc, true);
+    return () => window.removeEventListener("keydown", esc, true);
+  }, [onClose]);
+  return (
+    <div className="ev-sheet ls-cs" role="dialog" aria-modal="true" aria-label={(isMe ? "Your" : msg.name + "'s") + " comment"}>
+      <button className="ev-sheet-scrim" aria-label="Close" onClick={onClose} />
+      <div className="ev-sheet-card ls-cs-card">
+        <span className="ev-sheet-grab" />
+        <DSEV.Avatar name={msg.name} src={lsChatAvatar(msg)} size={64} />
+        <h3 className="ev-sheet-ttl">{isMe ? "Your comment" : msg.name}</h3>
+        <p className="ev-sheet-p ls-cs-quote">{isHost && !isMe && <span className="ls-cs-host">Host</span>}“{msg.text}”</p>
+        {!isMe &&
+        <button className="ev-detail-cta" onClick={() => onDm(msg)}>
+          <DSEV.IconifyIcon name="lucide:send" size={17} color="#fff" />Send a message
+        </button>}
+        <div className="ls-cs-row">
+          {!isMe &&
+          <button type="button" className="ls-cs-act" onClick={() => onReport(msg)}>
+            <DSEV.IconifyIcon name="lucide:flag" size={16} color="var(--brand-navy)" />Report comment
+          </button>}
+          {canDelete &&
+          <button type="button" className="ls-cs-act danger" onClick={() => onDelete(msg)}>
+            <DSEV.IconifyIcon name="lucide:trash-2" size={16} color="var(--error)" />Delete comment
+          </button>}
+        </div>
+        <button className="ev-detail-cta ghost" onClick={onClose}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
+function LSChat({ msgs, onAddReply, hosts, meName, onMore }) {
+  const pressRef = React.useRef(null);
+  const hostList = hosts || [];
+  const isHost = (m) => hostList.indexOf(m.name) !== -1;
+  const body = (m) => isHost(m) ? lsChatLinkify(m.text, "ls-msg-link") : m.text;
+  /* Bubble is a div with button semantics (not a <button>) so host links
+     can sit inside it without nesting interactive elements. */
+  const toggleKey = (e, m) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setReplyFor(replyFor === m.id ? null : m.id); }
+    /* keyboard route to the long-press options */
+    if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) { e.preventDefault(); onMore && onMore(m); }
+  };
+  const canMore = (m) => onMore && (m.name !== meName || true);
+  const tap = (m) => {
+    /* the tap that ends a long-press must not toggle the reply box */
+    if (pressRef.current && pressRef.current.fired) { pressRef.current.fired = false; return; }
+    setReplyFor(replyFor === m.id ? null : m.id);
+  };
   const ref = React.useRef(null);
   const [replyFor, setReplyFor] = useStateEV(null);
   const [replyVal, setReplyVal] = useStateEV("");
@@ -750,13 +919,23 @@ function LSChat({ msgs, onAddReply }) {
       <div className="ls-chat-inner">
         {msgs.map((m) => (
           <div className="ls-msg-block" key={m.id}>
-            <button type="button" className="ls-msg" aria-expanded={replyFor === m.id}
-              onClick={() => setReplyFor(replyFor === m.id ? null : m.id)}>
-              <b>{m.name}</b> {m.text}
-            </button>
+            <div className="ls-msg-row">
+              <DSEV.Avatar className="ls-msg-av" name={m.name} src={lsChatAvatar(m)} size={24} />
+              <div role="button" tabIndex={0} className="ls-msg" aria-expanded={replyFor === m.id}
+                aria-label={m.name + ": " + m.text + ". Tap to reply, hold for options"}
+                {...(canMore(m) ? lsLongPress(pressRef, () => onMore(m)) : {})}
+                onClick={() => tap(m)} onKeyDown={(e) => toggleKey(e, m)}>
+                <b>{m.name}</b> {body(m)}
+              </div>
+            </div>
             {m.replies && m.replies.length > 0 &&
             <div className="ls-msg-replies">
-              {m.replies.map((r) => <div className="ls-msg ls-msg-reply" key={r.id}><b>{r.name}</b> {r.text}</div>)}
+              {m.replies.map((r) => (
+                <div className="ls-msg-row" key={r.id}>
+                  <DSEV.Avatar className="ls-msg-av ls-msg-av-sm" name={r.name} src={lsChatAvatar(r)} size={18} />
+                  <div className="ls-msg ls-msg-reply"><b>{r.name}</b> {body(r)}</div>
+                </div>
+              ))}
             </div>}
             {replyFor === m.id &&
             <div className="ls-reply-box">
@@ -1261,19 +1440,48 @@ function LiveStream({ event, onLeave }) {
     const t = val.trim();
     if (!t) return;
     const me = (PFAEV && PFAEV.ME && PFAEV.ME.name) || "You";
-    setMsgs((m) => m.slice(-40).concat([{ id: Date.now(), name: me, text: t }]));
+    const meAv = (PFAEV && PFAEV.ME && PFAEV.ME.avatar) || "assets/avatar-katy.jpg";
+    setMsgs((m) => m.slice(-40).concat([{ id: Date.now(), name: me, avatar: meAv, text: t }]));
     setVal("");
   };
 
   const addReply = (msgId, text) => {
     const me = (PFAEV && PFAEV.ME && PFAEV.ME.name) || "You";
     setMsgs((m) => m.map((x) => x.id === msgId ?
-      Object.assign({}, x, { replies: (x.replies || []).concat([{ id: Date.now(), name: me, text }]) }) : x));
+      Object.assign({}, x, { replies: (x.replies || []).concat([{ id: Date.now(), name: me, avatar: (PFAEV && PFAEV.ME && PFAEV.ME.avatar) || "assets/avatar-katy.jpg", text }]) }) : x));
   };
 
   const buy = (p) => {
     setShowcase(false);
     setCheckoutProduct(p);
+  };
+
+  /* Whose links go live in chat: the event's host + co-host, and you while
+     previewing the host role. */
+  const meName = (PFAEV && PFAEV.ME && PFAEV.ME.name) || "Katy Wilson";
+  const chatHosts = [d.host, d.cohost].filter(Boolean).concat(role === "host" ? [meName] : []);
+  const dmCommenter = (m) => goEV(lsChatDmUrl(m));
+
+  /* Comment moderation: hosts + speakers can delete; anyone can report. */
+  const [moreMsg, setMoreMsg] = useStateEV(null); // long-pressed comment
+  const [reportMsg, setReportMsg] = useStateEV(null);
+  const [toast, setToast] = useStateEV(null);
+  const toastTimer = React.useRef(null);
+  const showToast = (t) => {
+    setToast(t);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2600);
+  };
+  useEffectEV(() => () => { if (toastTimer.current) clearTimeout(toastTimer.current); }, []);
+  const deleteMsg = (m) => {
+    setMoreMsg(null);
+    setMsgs((list) => list.filter((x) => x.id !== m.id));
+    showToast("Comment deleted");
+  };
+  const reportFromSheet = (m) => { setMoreMsg(null); setReportMsg(m); };
+  const submitReport = () => {
+    setReportMsg(null);
+    showToast("Thanks — we'll review this comment");
   };
 
   return (
@@ -1286,7 +1494,7 @@ function LiveStream({ event, onLeave }) {
       {/* Everything below floats over the full-bleed camera feed — the
           stage is the whole screen, not just a top strip. */}
       <div className="ls-overlay">
-        <LSChat msgs={msgs} onAddReply={addReply} />
+        <LSChat msgs={msgs} onAddReply={addReply} hosts={chatHosts} meName={meName} onMore={setMoreMsg} />
 
         {role === "audience" && pushedNum != null && pinnedPopup.phase !== "hidden" &&
           <LSProductCard product={LS_PRODUCTS.find((p) => p.num === pushedNum)} phase={pinnedPopup.phase} onBuy={buy} onClose={pinnedPopup.dismiss} />}
@@ -1319,6 +1527,13 @@ function LiveStream({ event, onLeave }) {
         <LSHostShowcase pushedNum={pushedNum} onTogglePush={setPushedNum} viewers={viewers} onClose={() => setPanel(null)} />}
       {role === "host" && panel === "end" &&
         <LSEndConfirm onCancel={() => setPanel(null)} onConfirm={onLeave} />}
+
+      {moreMsg &&
+        <LSCommentSheet msg={moreMsg} isMe={moreMsg.name === meName} isHost={chatHosts.indexOf(moreMsg.name) !== -1}
+          canDelete={role === "host" || role === "speaker"} onDm={dmCommenter} onReport={reportFromSheet}
+          onDelete={deleteMsg} onClose={() => setMoreMsg(null)} />}
+      {reportMsg && <LSReportSheet msg={reportMsg} onCancel={() => setReportMsg(null)} onSubmit={submitReport} />}
+      {toast && <div className="ls-toast" role="status"><DSEV.IconifyIcon name="lucide:check-circle-2" size={18} color="var(--brand-gold)" /><span>{toast}</span></div>}
 
       <LSRoleSwitcher role={role} onChange={setRole} />
     </div>

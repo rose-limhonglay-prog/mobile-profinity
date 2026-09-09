@@ -473,7 +473,14 @@ img{max-width:100%}
   font-family:var(--font-sans);font-size:13.5px;line-height:1.4}
 .ls-msg:hover{background:var(--gray-150)}
 .ls-msg b{font-weight:var(--fw-semibold);color:var(--brand-navy);margin-right:4px}
-.ls-msg-reply{margin-top:6px;background:var(--surface-page)}
+.ls-msg-row{display:flex;align-items:flex-start;gap:8px;max-width:100%}
+.ls-msg-row .ls-msg{min-width:0}
+.ls-msg-av{margin-top:3px;border:1.5px solid var(--border-default)!important}
+.ls-msg-av-sm{margin-top:9px}
+.ls-msg-reply{margin-top:6px;background:var(--surface-page);cursor:default}
+.ls-msg-link{color:var(--brand-navy);font-weight:var(--fw-semibold);text-decoration:underline;text-decoration-color:rgba(41,37,105,.4);text-underline-offset:2px;overflow-wrap:anywhere}
+.ls-msg-link:hover,.ls-msg-link:focus-visible{color:var(--brand-gold);text-decoration-color:var(--brand-gold)}
+#pf-root .ls-msg[role="button"]:focus-visible{outline:2px solid var(--brand-gold);outline-offset:2px}
 .ls-msg-replies{margin:6px 0 0 14px;padding-left:10px;border-left:2px solid var(--border-default);display:flex;flex-direction:column;gap:6px}
 .ls-reply-box{margin-top:6px;display:flex;align-items:center;gap:8px}
 .ls-reply-input{flex:1;height:36px;padding:0 12px;border-radius:var(--r-pill);border:1px solid var(--border-default);
