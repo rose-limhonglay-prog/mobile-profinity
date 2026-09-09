@@ -2919,10 +2919,355 @@ function ComposerIconButton({ icon, color, label, onClick, disabled }) {
 
 }
 
+/* Post categories — the same nine buckets CreatePostMobile's "Select
+   category" offers, rendered here as icon chips instead of bare checkboxes.
+   `chip` is the short form the posted card shows as a #tag (the DS PostCard
+   collapses hashtag labels, so "Regenerative Therapy (Clinic)" would come
+   out as #regenerativetherapy(clinic) otherwise). */
+const PFW_POST_CATEGORIES = [
+  { slug: "cat-exercise", label: "Exercise", chip: "Exercise", icon: "lucide:dumbbell", accent: "#F97316" },
+  { slug: "cat-diet", label: "Diet", chip: "Diet", icon: "lucide:apple", accent: "#22C55E" },
+  { slug: "cat-sleep", label: "Sleep", chip: "Sleep", icon: "lucide:moon", accent: "#6366F1" },
+  { slug: "cat-recovery", label: "Recovery", chip: "Recovery", icon: "lucide:heart-pulse", accent: "#EC4899" },
+  { slug: "cat-business", label: "Business", chip: "Business", icon: "lucide:briefcase", accent: "#0EA5E9" },
+  { slug: "cat-regen-clinic", label: "Regenerative Therapy (Clinic)", chip: "RegenClinic", icon: "lucide:stethoscope", accent: "#14B8A6" },
+  { slug: "cat-regen-home", label: "Regenerative Therapy (Home)", chip: "RegenHome", icon: "lucide:house", accent: "#8B5CF6" },
+  { slug: "cat-social", label: "Social Connection", chip: "Social", icon: "lucide:users", accent: "#F59E0B" },
+  { slug: "cat-supplement", label: "Supplement & Medicine", chip: "Supplements", icon: "lucide:pill", accent: "#EF4444" }];
+
+const PFW_CATEGORY_MAP = PFW_POST_CATEGORIES.reduce((m, c) => { m[c.slug] = c; return m; }, {});
+/* Category slugs -> hashtag-shaped objects the DS PostCard already knows how
+   to render as chips, so a categorised post needs no new card markup. */
+function categoryTags(slugs) {
+  return (slugs || []).map((s) => PFW_CATEGORY_MAP[s]).filter(Boolean).map((c) => ({ slug: c.slug, label: c.chip, icon: c.icon }));
+}
+
+function PostCategoryPicker({ value, onChange }) {
+  /* Functional update so rapid successive taps never clobber each other. */
+  const toggle = (slug) => onChange((prev) => prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]);
+  return (
+    <section className="pfw-cat" aria-label="Select category">
+      <div className="pfw-cat-head">
+        <div className="pfw-cat-heading">
+          <span className="pfw-cat-title">Category</span>
+          <span className="pfw-cat-sub">{value.length ? value.length + " selected" : "Pick what this post is about"}</span>
+        </div>
+        {value.length > 0 &&
+        <button type="button" className="pfw-cat-clear" onClick={() => onChange([])}>Clear</button>}
+      </div>
+      <div className="pfw-cat-grid" role="group" aria-label="Categories">
+        {PFW_POST_CATEGORIES.map((c) => {
+          const on = value.includes(c.slug);
+          return (
+            <button key={c.slug} type="button" role="checkbox" aria-checked={on}
+            className={"pfw-cat-chip" + (on ? " on" : "")} style={{ "--cat": c.accent }}
+            onClick={() => toggle(c.slug)}>
+              <span className="pfw-cat-ico"><IconifyIcon name={c.icon} size={15} color={on ? "#fff" : c.accent} /></span>
+              <span className="pfw-cat-label">{c.label}</span>
+              <span className="pfw-cat-check" aria-hidden="true"><IconifyIcon name="lucide:check" size={12} color="#fff" /></span>
+            </button>);
+        })}
+      </div>
+    </section>);
+}
+
+/* ---- "Add to your post" options (web) ----
+   Photo / Camera / Video / Document / Mention / Emoji / Poll / Location /
+   Aa background — the same set CreatePostMobile offers, as labelled colour
+   buttons. Background swatches are copied from create-post-mobile's
+   CP_BACKGROUNDS so a styled post looks identical on both surfaces. */
+const PFW_BACKGROUNDS = [
+  { id: "none", label: "No background", css: "", fg: "var(--text-primary)" },
+  { id: "navy", label: "Navy", css: "linear-gradient(150deg,#292569,#3d3688)", fg: "#fff" },
+  { id: "gold", label: "Gold", css: "linear-gradient(150deg,#ce9957,#a26301)", fg: "#fff" },
+  { id: "purple", label: "AI purple", css: "linear-gradient(150deg,#6c63ff,#4022a8)", fg: "#fff" },
+  { id: "teal", label: "Clinical teal", css: "linear-gradient(150deg,#25515c,#173840)", fg: "#fff" },
+  { id: "cream", label: "Cream", css: "linear-gradient(150deg,#fcf4e4,#f3e3c8)", fg: "var(--brand-navy)" },
+  { id: "navygold", label: "Navy to gold", css: "linear-gradient(150deg,#292569 40%,#ce9957)", fg: "#fff" },
+  { id: "sunrise", label: "Sunrise", css: "linear-gradient(150deg,#e58f0c,#be1e2d)", fg: "#fff" },
+  { id: "mint", label: "Mint", css: "linear-gradient(150deg,#2a9568,#186b4a)", fg: "#fff" },
+  { id: "slate", label: "Slate", css: "linear-gradient(150deg,#475467,#1f2937)", fg: "#fff" },
+  { id: "blush", label: "Blush", css: "linear-gradient(150deg,#f7d6de,#e9afbe)", fg: "var(--brand-navy)" },
+  { id: "ink", label: "Ink", css: "#101828", fg: "#fff" }];
+
+const PFW_MENTION_PEOPLE = [TIM, MIRANDA, PROFINITY, AMIR, PRIYA, SARAH, MARK, BETH, OWEN, RACHEL, LEO];
+
+const PFW_PLACES = [
+  "Harley Street, London", "London, United Kingdom", "Manchester, United Kingdom", "Birmingham, United Kingdom",
+  "Leeds, United Kingdom", "Edinburgh, United Kingdom", "Bristol, United Kingdom", "Dublin, Ireland",
+  "Dubai, United Arab Emirates", "Sydney, Australia", "Profinity HQ"];
+
+const PFW_DOC_ACCEPT = ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv";
+
+function pfwFileSize(bytes) {
+  if (!bytes && bytes !== 0) return "";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+function pfwDocKind(doc) {
+  const ext = (doc.name || "").split(".").pop().toLowerCase();
+  if (ext === "pdf") return { tag: "PDF", color: "#e0432f", icon: "lucide:file-text" };
+  if (ext === "doc" || ext === "docx") return { tag: "DOC", color: "#2b5fb4", icon: "lucide:file-text" };
+  if (ext === "ppt" || ext === "pptx") return { tag: "PPT", color: "#d2521c", icon: "lucide:presentation" };
+  if (ext === "xls" || ext === "xlsx" || ext === "csv") return { tag: "XLS", color: "#1f8a4c", icon: "lucide:sheet" };
+  return { tag: ext.toUpperCase().slice(0, 4) || "FILE", color: "#475467", icon: "lucide:file" };
+}
+
+/* Attached document card — in the composer (with a remove button) and on
+   the posted card (read-only, opens the file in a new tab). */
+function DocAttachment({ doc, onRemove }) {
+  const kind = pfwDocKind(doc);
+  const inner = (
+    <>
+      <span className="pfw-doc-ico" style={{ background: kind.color }}>
+        <IconifyIcon name={kind.icon} size={20} color="#fff" />
+        <span className="pfw-doc-tag">{kind.tag}</span>
+      </span>
+      <span className="pfw-doc-meta">
+        <span className="pfw-doc-name">{doc.name}</span>
+        <span className="pfw-doc-sub">{[kind.tag + " document", pfwFileSize(doc.size)].filter(Boolean).join(" · ")}</span>
+      </span>
+    </>);
+  return (
+    <div className={"pfw-doc" + (onRemove ? "" : " is-link")}>
+      {onRemove
+        ? <div className="pfw-doc-main">{inner}</div>
+        : <a className="pfw-doc-main" href={doc.url || "#"} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>{inner}</a>}
+      {onRemove
+        ? <button type="button" className="pfw-doc-x" aria-label="Remove document" onClick={onRemove}>
+            <IconifyIcon name="lucide:x" size={14} color="var(--text-secondary)" />
+          </button>
+        : <span className="pfw-doc-open"><IconifyIcon name="lucide:download" size={16} color="var(--text-secondary)" /></span>}
+    </div>);
+}
+
+/* Small popover anchored above the option row; the transparent fixed
+   backdrop closes it on outside click (same pattern as EmojiPicker). */
+function PfwPopover({ label, width, onClose, children }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, []);
+  return (
+    <>
+      <div onClick={onClose} style={{ position: "fixed", inset: 0, zIndex: 1105 }} />
+      <div className="pfw-cp-pop" role="dialog" aria-label={label} style={{ width }}>{children}</div>
+    </>);
+}
+
+function WebMentionPicker({ onPick, onClose }) {
+  const [q, setQ] = useState("");
+  const inputRef = useRef(null);
+  useEffect(() => { if (inputRef.current) inputRef.current.focus(); }, []);
+  const list = PFW_MENTION_PEOPLE.filter((p) => p.name.toLowerCase().includes(q.trim().toLowerCase()));
+  return (
+    <PfwPopover label="Mention someone" width={300} onClose={onClose}>
+      <div className="pfw-pop-search">
+        <IconifyIcon name="lucide:at-sign" size={15} color="var(--text-secondary)" />
+        <input ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search people" />
+      </div>
+      <div className="pfw-pop-list" role="listbox">
+        {list.map((p) =>
+        <button key={p.name} type="button" role="option" className="pfw-pop-item" onClick={() => onPick(p)}>
+          <Avatar name={p.name} src={p.avatar} size={30} />
+          <span className="pfw-pop-item-name">{p.name}</span>
+          {p.seals && p.seals.includes("verified") && <IconifyIcon name="lucide:badge-check" size={14} color="var(--info, #1d7fc4)" />}
+        </button>)}
+        {list.length === 0 && <div className="pfw-pop-empty">No one matches “{q}”</div>}
+      </div>
+    </PfwPopover>);
+}
+
+function WebLocationPicker({ value, onPick, onClose }) {
+  const [q, setQ] = useState("");
+  const [locating, setLocating] = useState(false);
+  const inputRef = useRef(null);
+  useEffect(() => { if (inputRef.current) inputRef.current.focus(); }, []);
+  const list = PFW_PLACES.filter((p) => p.toLowerCase().includes(q.trim().toLowerCase()));
+  const custom = q.trim() && !PFW_PLACES.some((p) => p.toLowerCase() === q.trim().toLowerCase());
+  const useCurrent = () => {
+    if (!navigator.geolocation) { onPick({ name: "Current location" }); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setLocating(false); onPick({ name: "Current location", lat: pos.coords.latitude, lng: pos.coords.longitude }); },
+      () => { setLocating(false); onPick({ name: "Current location" }); },
+      { timeout: 6000 });
+  };
+  return (
+    <PfwPopover label="Add a location" width={320} onClose={onClose}>
+      <div className="pfw-pop-search">
+        <IconifyIcon name="lucide:search" size={15} color="var(--text-secondary)" />
+        <input ref={inputRef} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Where are you?" />
+      </div>
+      <div className="pfw-pop-list" role="listbox">
+        <button type="button" className="pfw-pop-item is-current" onClick={useCurrent} disabled={locating}>
+          <span className="pfw-pop-item-ico"><IconifyIcon name="lucide:locate-fixed" size={16} color="var(--info, #1d7fc4)" /></span>
+          <span className="pfw-pop-item-name">{locating ? "Locating…" : "Use my current location"}</span>
+        </button>
+        {custom &&
+        <button type="button" className="pfw-pop-item" onClick={() => onPick({ name: q.trim() })}>
+          <span className="pfw-pop-item-ico"><IconifyIcon name="lucide:map-pin" size={16} color="#d03b3b" /></span>
+          <span className="pfw-pop-item-name">Use “{q.trim()}”</span>
+        </button>}
+        {list.map((p) =>
+        <button key={p} type="button" role="option" aria-selected={value && value.name === p}
+        className={"pfw-pop-item" + (value && value.name === p ? " on" : "")} onClick={() => onPick({ name: p })}>
+          <span className="pfw-pop-item-ico"><IconifyIcon name="lucide:map-pin" size={16} color="#d03b3b" /></span>
+          <span className="pfw-pop-item-name">{p}</span>
+          {value && value.name === p && <IconifyIcon name="lucide:check" size={14} color="var(--brand-navy)" />}
+        </button>)}
+      </div>
+      {value &&
+      <button type="button" className="pfw-pop-foot" onClick={() => onPick(null)}>
+        <IconifyIcon name="lucide:x" size={13} color="var(--error)" />Remove location
+      </button>}
+    </PfwPopover>);
+}
+
+/* Aa — background style grid (centered mini-modal). */
+function WebBackgroundPicker({ value, onPick, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, []);
+  return (
+    <div className="pfw-cover-overlay" onClick={onClose}>
+      <div className="pfw-mini-modal" role="dialog" aria-modal="true" aria-label="Background style" onClick={(e) => e.stopPropagation()}>
+        <header className="pfw-cover-top">
+          <span className="pfw-cover-title">Background</span>
+          <button type="button" className="pfw-cover-x" aria-label="Done" onClick={onClose}>
+            <IconifyIcon name="lucide:x" size={18} color="var(--text-heading)" />
+          </button>
+        </header>
+        <p className="pfw-cover-hint">Give a text-only post a colour backdrop. Photos and videos are cleared when a style is picked.</p>
+        <div className="pfw-bg-grid" role="radiogroup" aria-label="Background style">
+          {PFW_BACKGROUNDS.map((b) => {
+            const on = (value ? value.id : "none") === b.id;
+            return (
+              <button key={b.id} type="button" role="radio" aria-checked={on} aria-label={b.label} title={b.label}
+              className={"pfw-bg-swatch" + (on ? " on" : "") + (b.id === "none" ? " none" : "")}
+              style={b.css ? { background: b.css, color: b.fg } : undefined}
+              onClick={() => { onPick(b.id === "none" ? null : { id: b.id, css: b.css, fg: b.fg }); onClose(); }}>
+                {b.id === "none" ? <IconifyIcon name="lucide:ban" size={20} color="var(--gray-450, #98a2b3)" /> : <span className="pfw-bg-aa">Aa</span>}
+                {on && b.id !== "none" && <span className="pfw-bg-ck"><IconifyIcon name="lucide:check" size={14} color="var(--brand-navy)" /></span>}
+              </button>);
+          })}
+        </div>
+      </div>
+    </div>);
+}
+
+/* Camera — live webcam preview captured to a still (data URL) that joins the
+   photo attachments. Falls back to a file picker if the camera is refused. */
+function WebCameraCapture({ onCapture, onClose }) {
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const [error, setError] = useState(null);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } };
+    document.addEventListener("keydown", onKey, true);
+    let cancelled = false;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError("Camera isn't available in this browser.");
+    } else {
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false }).then((stream) => {
+        if (cancelled) { stream.getTracks().forEach((t) => t.stop()); return; }
+        streamRef.current = stream;
+        if (videoRef.current) { videoRef.current.srcObject = stream; videoRef.current.onloadedmetadata = () => setReady(true); }
+      }).catch(() => setError("We couldn't access your camera. Check permissions, or upload a photo instead."));
+    }
+    return () => {
+      cancelled = true;
+      document.removeEventListener("keydown", onKey, true);
+      if (streamRef.current) streamRef.current.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
+  const snap = () => {
+    const vEl = videoRef.current;
+    if (!vEl || !vEl.videoWidth) return;
+    const c = document.createElement("canvas");
+    c.width = vEl.videoWidth; c.height = vEl.videoHeight;
+    const ctx = c.getContext("2d");
+    ctx.translate(c.width, 0); ctx.scale(-1, 1); // un-mirror the selfie preview
+    ctx.drawImage(vEl, 0, 0, c.width, c.height);
+    onCapture(c.toDataURL("image/jpeg", 0.9));
+  };
+  const upload = () => {
+    const input = document.createElement("input");
+    input.type = "file"; input.accept = "image/*"; input.capture = "environment";
+    input.onchange = (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      const r = new FileReader(); r.onload = () => onCapture(r.result); r.readAsDataURL(f);
+    };
+    input.click();
+  };
+  return (
+    <div className="pfw-cover-overlay" onClick={onClose}>
+      <div className="pfw-mini-modal pfw-cam" role="dialog" aria-modal="true" aria-label="Take a photo" onClick={(e) => e.stopPropagation()}>
+        <header className="pfw-cover-top">
+          <span className="pfw-cover-title">Take a photo</span>
+          <button type="button" className="pfw-cover-x" aria-label="Cancel" onClick={onClose}>
+            <IconifyIcon name="lucide:x" size={18} color="var(--text-heading)" />
+          </button>
+        </header>
+        <div className="pfw-cam-view">
+          <video ref={videoRef} autoPlay muted playsInline className={ready ? "" : "hidden"} />
+          {!ready && !error && <span className="pfw-cam-msg"><IconifyIcon name="lucide:camera" size={28} color="rgba(255,255,255,.6)" />Starting camera…</span>}
+          {error && <span className="pfw-cam-msg"><IconifyIcon name="lucide:video-off" size={28} color="rgba(255,255,255,.6)" />{error}</span>}
+        </div>
+        <div className="pfw-cover-actions">
+          <button type="button" className="pfw-cover-roll-btn" onClick={upload}>
+            <IconifyIcon name="lucide:image" size={16} color="var(--brand-navy)" />Upload a photo instead
+          </button>
+          <button type="button" className="pfw-cam-shutter" disabled={!ready} onClick={snap} aria-label="Take photo">
+            <IconifyIcon name="lucide:camera" size={18} color="#fff" />Capture
+          </button>
+        </div>
+      </div>
+    </div>);
+}
+
+/* Poll builder — the post text is the question; 2–4 answer options here. */
+function WebPollEditor({ options, onChange, onRemove }) {
+  const setAt = (i, val) => onChange(options.map((o, j) => j === i ? val : o));
+  const remove = (i) => onChange(options.filter((_, j) => j !== i));
+  return (
+    <div className="pfw-poll-ed" aria-label="Poll options">
+      <div className="pfw-poll-ed-head">
+        <span className="pfw-poll-ed-title"><IconifyIcon name="lucide:bar-chart-2" size={15} color="#1d7fc4" />Poll</span>
+        <span className="pfw-poll-ed-sub">Your text above is the question</span>
+        <button type="button" className="pfw-cat-clear" onClick={onRemove}>Remove poll</button>
+      </div>
+      {options.map((o, i) =>
+      <div key={i} className="pfw-poll-ed-row">
+        <span className="pfw-poll-ed-n">{i + 1}</span>
+        <input value={o} maxLength={60} placeholder={"Option " + (i + 1)} onChange={(e) => setAt(i, e.target.value)} />
+        {options.length > 2 &&
+        <button type="button" className="pfw-poll-ed-x" aria-label={"Remove option " + (i + 1)} onClick={() => remove(i)}>
+          <IconifyIcon name="lucide:x" size={14} color="var(--text-secondary)" />
+        </button>}
+      </div>)}
+      {options.length < 4 &&
+      <button type="button" className="pfw-poll-ed-add" onClick={() => onChange([...options, ""])}>
+        <IconifyIcon name="lucide:plus" size={15} color="var(--brand-navy)" />Add option
+      </button>}
+    </div>);
+}
+
 function PostComposer({ onPost, superUser, devRole, onDevRole, lockedAdmin }) {
   const [v, setV] = useState("");
   const [images, setImages] = useState([]);
   const [video, setVideo] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [poll, setPoll] = useState(null);          // null | { options: string[] }
+  const [doc, setDoc] = useState(null);            // { name, size, type, url }
+  const [location, setLocation] = useState(null);  // { name, lat?, lng? }
+  const [bg, setBg] = useState(null);              // { id, css, fg }
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [liveStage, setLiveStage] = useState(null); // null | "precam" | "live"
   /* ?golive=1 deep-links straight into the camera stage (Profile's "Go live
@@ -2955,14 +3300,38 @@ function PostComposer({ onPost, superUser, devRole, onDevRole, lockedAdmin }) {
     setScheduled(item);
   };
   const firstName = (ME.name || "").split(" ")[0];
-  const ready = v.trim().length > 0 || images.length > 0 || !!video;
+  const pollOptions = poll ? poll.options.map((o) => o.trim()).filter(Boolean) : [];
+  const ready = poll
+    ? v.trim().length > 0 && pollOptions.length >= 2
+    : v.trim().length > 0 || images.length > 0 || !!video || !!doc;
 
   const submit = () => {
     if (!ready) return;
-    onPost({ body: v.trim(), media: images, video });
-    setV(""); setImages([]); setVideo(null);
+    onPost({
+      body: v.trim(), media: images, video, categories,
+      poll: poll ? { question: v.trim(), options: pollOptions.map((label) => ({ label, pct: 0 })), votes: 0 } : null,
+      document: doc, location, bg: images.length === 0 && !video && !poll ? bg : null
+    });
+    setV(""); setImages([]); setVideo(null); setCategories([]);
+    setPoll(null); setDoc(null); setLocation(null); setBg(null);
     setModalOpen(false);
   };
+
+  const pickDocument = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = PFW_DOC_ACCEPT;
+    input.onchange = (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (doc && doc.url) { try { URL.revokeObjectURL(doc.url); } catch (err) {} }
+      setDoc({ name: file.name, size: file.size, type: file.type, url: URL.createObjectURL(file) });
+    };
+    input.click();
+  };
+  /* Photos/video and a backdrop are mutually exclusive (same rule as mobile). */
+  const pickBg = (next) => { setBg(next); if (next) { setImages([]); if (video) removeVideo(); } };
+  const togglePoll = () => setPoll((p) => p ? null : { options: ["", ""] });
 
   const openModal = () => setModalOpen(true);
   const openModalAnd = (fn) => () => { setModalOpen(true); fn(); };
@@ -3051,6 +3420,11 @@ function PostComposer({ onPost, superUser, devRole, onDevRole, lockedAdmin }) {
       {modalOpen &&
       <CreatePostModal
         v={v} setV={setV} images={images} setImages={setImages} video={video}
+        categories={categories} setCategories={setCategories}
+        poll={poll} setPoll={setPoll} togglePoll={togglePoll}
+        doc={doc} setDoc={setDoc} pickDocument={pickDocument}
+        location={location} setLocation={setLocation}
+        bg={bg} pickBg={pickBg}
         pickImages={pickImages} pickVideo={pickVideo} removeVideo={removeVideo}
         submit={submit} ready={ready} firstName={firstName}
         coverPickerOpen={coverPickerOpen} setCoverPickerOpen={setCoverPickerOpen}
@@ -3082,8 +3456,31 @@ function PostComposer({ onPost, superUser, devRole, onDevRole, lockedAdmin }) {
    WebCoverPicker below). Holds the real textarea plus the image/video
    preview and re-exposes the Photo/Video pickers so attachments can be
    added or swapped without leaving the overlay. */
-function CreatePostModal({ v, setV, images, setImages, video, pickImages, pickVideo, removeVideo, submit, ready, firstName, coverPickerOpen, setCoverPickerOpen, handleCoverConfirm, superUser, devRole, onDevRole, lockedAdmin, onGoLive, onClose }) {
+function CreatePostModal({ v, setV, images, setImages, video, categories, setCategories, poll, setPoll, togglePoll, doc, setDoc, pickDocument, location, setLocation, bg, pickBg, pickImages, pickVideo, removeVideo, submit, ready, firstName, coverPickerOpen, setCoverPickerOpen, handleCoverConfirm, superUser, devRole, onDevRole, lockedAdmin, onGoLive, onClose }) {
   const textareaRef = useRef(null);
+  const [pop, setPop] = useState(null);       // null | "mention" | "emoji-field" | "location"
+  const [bgOpen, setBgOpen] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+
+  /* Drop text at the caret (mentions, emoji) and put the caret after it. */
+  const insertText = (text) => {
+    const ta = textareaRef.current;
+    const start = ta ? ta.selectionStart : v.length;
+    const end = ta ? ta.selectionEnd : v.length;
+    const lead = start > 0 && !/\s$/.test(v.slice(0, start)) && text.startsWith("@") ? " " : "";
+    const next = v.slice(0, start) + lead + text + v.slice(end);
+    setV(next);
+    const caret = start + lead.length + text.length;
+    requestAnimationFrame(() => { if (ta) { ta.focus(); try { ta.setSelectionRange(caret, caret); } catch (e) {} } });
+  };
+
+  const hasMedia = images.length > 0 || !!video;
+  const options = [
+    { key: "photo", icon: "lucide:image", label: "Photo", color: "#2d9d5a", onClick: pickImages, disabled: !!video || !!poll || !!bg },
+    { key: "camera", icon: "lucide:camera", label: "Camera", color: "#292569", onClick: () => setCameraOpen(true), disabled: !!video || !!poll || !!bg || images.length >= 5 },
+    { key: "video", icon: "lucide:video", label: "Video", color: "#c8323a", onClick: pickVideo, disabled: images.length > 0 || !!poll || !!bg },
+    { key: "doc", icon: "lucide:file-text", label: "Document", color: "#e56c1b", onClick: pickDocument, disabled: !!poll, active: !!doc },
+    { key: "poll", icon: "lucide:bar-chart-2", label: "Poll", color: "#1d7fc4", onClick: togglePoll, disabled: hasMedia || !!bg || !!doc, active: !!poll }];
 
   useEffect(() => {
     if (textareaRef.current) textareaRef.current.focus();
@@ -3123,10 +3520,58 @@ function CreatePostModal({ v, setV, images, setImages, video, pickImages, pickVi
         </div>
 
         <div className="pfw-cp-body">
-          <textarea ref={textareaRef}
-          value={v} onChange={(e) => setV(e.target.value)}
-          placeholder={"What's on your mind, " + firstName + "?"}
-          className="pfw-cp-textarea" />
+          {/* Facebook-style quick chips above the field: Mention and
+              Location. Their pickers drop down beneath the chip. */}
+          <div className="pfw-cp-quick">
+            <span className="pfw-cp-quick-item">
+              <button type="button" className={"pfw-cp-chip" + (pop === "mention" ? " on" : "")}
+              aria-haspopup="dialog" aria-expanded={pop === "mention"} onClick={() => setPop(pop === "mention" ? null : "mention")}>
+                <IconifyIcon name="lucide:at-sign" size={17} color="currentColor" />Mention
+              </button>
+              {pop === "mention" &&
+              <WebMentionPicker onPick={(p) => { insertText("@" + p.name + " "); setPop(null); }} onClose={() => setPop(null)} />}
+            </span>
+            <span className="pfw-cp-quick-item">
+              <button type="button" className={"pfw-cp-chip" + (pop === "location" || location ? " on" : "") + (location ? " has-value" : "")}
+              aria-haspopup="dialog" aria-expanded={pop === "location"} onClick={() => setPop(pop === "location" ? null : "location")}>
+                <IconifyIcon name="lucide:map-pin" size={17} color={location ? "#d03b3b" : "currentColor"} />
+                <span className="pfw-cp-chip-label">{location ? location.name : "Location"}</span>
+              </button>
+              {location &&
+              <button type="button" className="pfw-cp-chip-x" aria-label="Remove location" onClick={() => setLocation(null)}>
+                <IconifyIcon name="lucide:x" size={13} color="var(--text-secondary)" />
+              </button>}
+              {pop === "location" &&
+              <WebLocationPicker value={location} onPick={(loc) => { setLocation(loc); setPop(null); }} onClose={() => setPop(null)} />}
+            </span>
+          </div>
+
+          <div className={"pfw-cp-write" + (bg ? " has-bg" : "")} style={bg ? { background: bg.css, "--bg-fg": bg.fg } : undefined}>
+            <textarea ref={textareaRef}
+            value={v} onChange={(e) => setV(e.target.value)}
+            placeholder={poll ? "Ask your question…" : "What's on your mind, " + firstName + "?"}
+            className="pfw-cp-textarea" />
+            {/* In-field shortcuts (Facebook-style): rainbow "Aa" opens the
+                background styles, the smiley drops an emoji at the caret. */}
+            <button type="button" className="pfw-cp-aa-fab" aria-label="Background style" title="Background style"
+            disabled={hasMedia || !!poll} onClick={() => setBgOpen(true)}>Aa</button>
+            <button type="button" className={"pfw-cp-emoji-fab" + (pop === "emoji-field" ? " on" : "")} aria-label="Add emoji" title="Emoji"
+            onClick={() => setPop(pop === "emoji-field" ? null : "emoji-field")}>
+              <IconifyIcon name="lucide:smile" size={22} color={bg ? bg.fg : "var(--text-secondary)"} />
+            </button>
+            {pop === "emoji-field" &&
+            <PfwPopover label="Pick an emoji" width={244} onClose={() => setPop(null)}>
+              <div className="pfw-emoji-grid" role="menu">
+                {COMMENT_EMOJI.map((em) =>
+                <button key={em} type="button" role="menuitem" onClick={() => { insertText(em); setPop(null); }}>{em}</button>)}
+              </div>
+            </PfwPopover>}
+          </div>
+
+          {poll &&
+          <WebPollEditor options={poll.options} onChange={(options) => setPoll({ options })} onRemove={() => setPoll(null)} />}
+
+          {doc && <DocAttachment doc={doc} onRemove={() => setDoc(null)} />}
 
           {images.length > 0 &&
           <div className="pfw-cp-images">
@@ -3152,23 +3597,35 @@ function CreatePostModal({ v, setV, images, setImages, video, pickImages, pickVi
               <button type="button" className="pfw-video-edit" onClick={() => setCoverPickerOpen(true)}>Edit cover</button>
             </div>
           </div>}
+
+          <PostCategoryPicker value={categories} onChange={setCategories} />
         </div>
 
         <div className="pfw-cp-addrow" aria-label="Add to your post">
-          <div className="pfw-cp-add-icons">
-            <ComposerIconButton icon="lucide:image" color="var(--success)" label="Add photo" onClick={pickImages} disabled={!!video} />
-            <ComposerIconButton icon="lucide:video" color="var(--error)" label="Add video" onClick={pickVideo} disabled={images.length > 0} />
-            {superUser &&
-            <button type="button" className="pfw-cp-live-btn" aria-label="Go live" onClick={onGoLive}>
-              <IconifyIcon name="lucide:radio" size={15} color="var(--error)" />Live
-            </button>}
-          </div>
+          {options.map((o) =>
+          <button key={o.key} type="button" title={o.iconOnly ? o.label : undefined} aria-label={o.label}
+          aria-pressed={o.active || undefined} disabled={o.disabled}
+          className={"pfw-cp-opt" + (o.active ? " on" : "") + (o.iconOnly ? " icon-only" : "")}
+          style={{ "--opt": o.color }} onClick={o.onClick}>
+            <span className="pfw-cp-opt-ico"><IconifyIcon name={o.icon} size={15} color="#fff" /></span>
+            {!o.iconOnly && <span className="pfw-cp-opt-label">{o.label}</span>}
+          </button>)}
+          {superUser &&
+          <button type="button" className="pfw-cp-opt" aria-label="Go live" style={{ "--opt": "#e0432f" }} onClick={onGoLive}>
+            <span className="pfw-cp-opt-ico"><IconifyIcon name="lucide:radio" size={15} color="#fff" /></span>
+            <span className="pfw-cp-opt-label">Live</span>
+          </button>}
+
         </div>
 
         <button type="button" className="pfw-cp-post-btn" disabled={!ready} onClick={submit}>Post</button>
 
         {coverPickerOpen && video &&
         <WebCoverPicker video={video} onConfirm={handleCoverConfirm} onClose={() => setCoverPickerOpen(false)} />}
+        {bgOpen &&
+        <WebBackgroundPicker value={bg} onPick={pickBg} onClose={() => setBgOpen(false)} />}
+        {cameraOpen &&
+        <WebCameraCapture onCapture={(src) => { setImages((prev) => [...prev, src].slice(0, 5)); setCameraOpen(false); }} onClose={() => setCameraOpen(false)} />}
       </div>
     </div>);
 
@@ -4595,7 +5052,7 @@ function Poll({ poll }) {
         className={"pf-poll-opt" + (answered ? " answered" : "") + (voted === i ? " selected" : "")}
         disabled={answered}
         onClick={() => setVoted(i)}>
-            {answered && <span className="pf-poll-fill" style={{ width: o.pct + "%" }} />}
+            {answered && <span className="pf-poll-fill" style={{ width: (poll.votes ? o.pct : voted === i ? 100 : 0) + "%" }} />}
             <span className="pf-poll-opt-row">
               {answered ?
             voted === i && <span className="pf-poll-check"><IconifyIcon name="lucide:check" size={12} color="var(--white)" /></span> :
@@ -4603,7 +5060,7 @@ function Poll({ poll }) {
             <span className="pf-poll-radio" />
             }
               <span className="pf-poll-label">{o.label}</span>
-              {answered && <span className="pf-poll-pct">{o.pct}%</span>}
+              {answered && <span className="pf-poll-pct">{poll.votes ? o.pct : voted === i ? 100 : 0}%</span>}
             </span>
           </button>
         )}
@@ -5228,11 +5685,12 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
       <PostCard {...post} commentList={[]}
       time={post.liveNow
         ? <span className="pf-livenow-meta">is live now · {post.liveNow.viewers} watching</span>
-        : post.tierTag || post.live
+        : post.tierTag || post.live || post.location
         ? <>{post.time}{post.tierTag && <TierTagChip tag={post.tierTag} />}{post.live &&
-            <span className="pf-live-chip"><IconifyIcon name="lucide:radio" size={11} color="var(--error)" />Live replay</span>}</>
+            <span className="pf-live-chip"><IconifyIcon name="lucide:radio" size={11} color="var(--error)" />Live replay</span>}{post.location &&
+            <span className="pf-loc-chip"><IconifyIcon name="lucide:map-pin" size={11} color="#d03b3b" />{post.location.name}</span>}</>
         : post.time}
-      hashtags={hideTags || post.questionnaire || post.poll || post.liveNow ? [] : resolveHashtags(post.hashtags)}
+      hashtags={hideTags || post.questionnaire || post.poll || post.liveNow ? [] : [...resolveHashtags(post.hashtags), ...categoryTags(post.categories)]}
       title={post.author === PROFINITY ? null : post.title}
       body={post.questionnaire || post.poll || post.liveNow ? null : post.bg
         ? <div className="pf-post-bg" style={{ background: post.bg.css, color: post.bg.fg }}>
@@ -5257,6 +5715,7 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
           author={post.author} likes={st.likes} commentsCount={st.commentsCount} shares={st.shares} liked={st.liked}
           comments={comments} onLike={handleLike} onComment={handleComment} onShare={handleShare} />
         : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} aspect={post.aspect} onLoveReact={handleDoubleTapLove} /> : null}
+        {post.document && <div className="pf-doc-inset"><DocAttachment doc={post.document} /></div>}
         {isReel &&
         <ReelActionsRow likes={st.likes} comments={st.commentsCount} shares={st.shares}
           liked={st.liked} saved={st.saved}
@@ -5949,10 +6408,12 @@ function Feed({ channel } = {}) {
   /* Composer submits straight into the feed — same post shape + localStorage
      key ("pf-newsfeed-user-posts") that CreatePostMobile writes, so posts
      made from either surface show up on both. */
-  const addPost = ({ body, media, video, live }) => {
+  const addPost = ({ body, media, video, live, categories, poll, document: doc, location, bg }) => {
     const sample = video ? { type: "video", poster: video.cover, src: video.src, ratio: video.ratio, duration: video.duration } : null;
     const post = { id: "u" + Date.now(), author: { name: ME.name, avatar: ME.avatar, seals: ["gb", "verified"] },
-      time: "Just now", body, media: media || [], sample, live: !!live, likes: "0", comments: "0", shares: "0", commentList: [] };
+      time: "Just now", body, media: media || [], sample, live: !!live, categories: categories || [],
+      ...(poll ? { poll } : {}), ...(doc ? { document: doc } : {}), ...(location ? { location } : {}), ...(bg ? { bg } : {}),
+      likes: "0", comments: "0", shares: "0", commentList: [] };
     try { localStorage.setItem(PF_USER_POSTS_KEY, JSON.stringify([post, ...readUserPosts()])); } catch (e) {}
     setUserPosts((list) => [post, ...list]);
     setState((s) => ({ ...s, [post.id]: { liked: false, saved: false, actioned: post.actioned, likes: post.likes, base: post.likes, reaction: null, shares: post.shares, sharesBase: post.shares, comments: withIds(post.commentList), commentsCount: post.comments } }));
