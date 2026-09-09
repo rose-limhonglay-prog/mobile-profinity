@@ -846,7 +846,7 @@ function pfTagActiveNavPW(activeLabel) {
     const active = label === activeLabel;
     b.style.setProperty("-webkit-appearance", "none", "important");
     b.style.setProperty("appearance", "none", "important");
-    b.style.setProperty("background", active ? "rgb(225, 223, 242)" : "none", "important");
+    b.style.setProperty("background", active ? "var(--pf-nav-active-bg, rgb(225, 223, 242))" : "none", "important");
     b.style.setProperty("transition", "background .18s ease", "important");
     const path = b.querySelector("svg path");
     if (path) path.style.setProperty("fill", active ? "currentColor" : "", "important");
@@ -1140,17 +1140,17 @@ function PWComposerCard() {
         <button type="button" className="pw-composer-pill" onClick={() => goPW("NewsfeedWeb.html")}>
           {"What's on your mind, " + firstName + "?"}
         </button>
-      </div>
-      <div className="pw-composer-actions">
-        <button type="button" className="pw-composer-action" onClick={() => goPW("NewsfeedWeb.html?golive=1")}>
-          <IconifyIconPW name="lucide:video" size={20} color="var(--error)" />Live video
-        </button>
-        <button type="button" className="pw-composer-action" onClick={() => goPW("NewsfeedWeb.html")}>
-          <IconifyIconPW name="lucide:image" size={20} color="var(--success)" />Photo/video
-        </button>
-        <button type="button" className="pw-composer-action" onClick={() => goPW("NewsfeedWeb.html")}>
-          <IconifyIconPW name="lucide:clapperboard" size={20} color="var(--info)" />Reel
-        </button>
+        <div className="pw-composer-actions">
+          <button type="button" className="pw-composer-action" aria-label="Live video" title="Live video" onClick={() => goPW("NewsfeedWeb.html?golive=1")}>
+            <IconifyIconPW name="fluent:video-24-filled" size={30} color="#E8455D" />
+          </button>
+          <button type="button" className="pw-composer-action" aria-label="Photo" title="Photo" onClick={() => goPW("NewsfeedWeb.html")}>
+            <IconifyIconPW name="fluent:image-multiple-24-filled" size={30} color="#3DBE5B" />
+          </button>
+          <button type="button" className="pw-composer-action" aria-label="Reel" title="Reel" onClick={() => goPW("NewsfeedWeb.html")}>
+            <IconifyIconPW name="fluent:movies-and-tv-24-filled" size={30} color="#E8455D" />
+          </button>
+        </div>
       </div>
     </section>);
 

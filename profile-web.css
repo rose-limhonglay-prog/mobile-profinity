@@ -329,20 +329,18 @@
 .pw-channel-list{display:flex;flex-direction:column;gap:4px}
 .pw-suggestion-list{display:flex;flex-direction:column;gap:18px}
 
-/* ---------- composer card ---------- */
-.pw-composer-card{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--r-lg);
-  box-shadow:var(--shadow-card);padding:18px 20px;display:flex;flex-direction:column;gap:16px}
-.pw-composer-top{display:flex;align-items:center;gap:12px}
-.pw-composer-avatar{flex:none;width:44px;height:44px;border-radius:50%;object-fit:cover}
-.pw-composer-pill{flex:1;min-width:0;text-align:left;padding:12px 18px;border-radius:var(--r-pill);
-  border:1px solid var(--border-default);background:var(--surface-sunken);cursor:pointer;
-  font-family:var(--font-sans);font-size:15px;color:var(--gray-500);transition:background .15s ease}
-.pw-composer-pill:hover{background:var(--gray-150)}
-.pw-composer-actions{display:flex;align-items:center;border-top:1px solid var(--border-default);padding-top:10px}
-.pw-composer-action{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 4px;
-  border:none;border-right:1px solid var(--border-default);background:none;cursor:pointer;border-radius:var(--r-sm);
-  font-family:var(--font-sans);font-size:14px;font-weight:var(--fw-medium);color:var(--gray-600);transition:background .15s ease}
-.pw-composer-action:last-child{border-right:none}
+/* ---------- composer card (single row: avatar, pill, filled quick-attach icons) ---------- */
+.pw-composer-card{background:var(--surface-card);border:1px solid var(--border-default);border-radius:16px;
+  box-shadow:var(--shadow-card);padding:14px 18px;display:flex;flex-direction:column;gap:10px}
+.pw-composer-top{display:flex;align-items:center;gap:14px;min-width:0}
+.pw-composer-avatar{flex:none;width:48px;height:48px;border-radius:50%;object-fit:cover}
+.pw-composer-pill{flex:1;min-width:0;text-align:left;padding:13px 20px;border-radius:var(--r-pill);
+  border:none;background:var(--surface-sunken);cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:var(--font-sans);font-size:20px;line-height:1.2;color:var(--text-secondary);transition:background .15s ease}
+.pw-composer-pill:hover{background:var(--gray-150,var(--gray-100))}
+.pw-composer-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;padding-right:4px}
+.pw-composer-action{display:flex;align-items:center;justify-content:center;width:42px;height:42px;flex:none;
+  border:none;background:none;cursor:pointer;border-radius:var(--r-pill);transition:background .15s ease}
 .pw-composer-action:hover{background:var(--surface-sunken)}
 
 /* ---------- Upcoming lives ---------- */

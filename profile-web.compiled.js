@@ -1112,7 +1112,7 @@ function pfTagActiveNavPW(activeLabel) {
     const active = label === activeLabel;
     b.style.setProperty("-webkit-appearance", "none", "important");
     b.style.setProperty("appearance", "none", "important");
-    b.style.setProperty("background", active ? "rgb(225, 223, 242)" : "none", "important");
+    b.style.setProperty("background", active ? "var(--pf-nav-active-bg, rgb(225, 223, 242))" : "none", "important");
     b.style.setProperty("transition", "background .18s ease", "important");
     const path = b.querySelector("svg path");
     if (path) path.style.setProperty("fill", active ? "currentColor" : "", "important");
@@ -1558,33 +1558,39 @@ function PWComposerCard() {
     type: "button",
     className: "pw-composer-pill",
     onClick: () => goPW("NewsfeedWeb.html")
-  }, "What's on your mind, " + firstName + "?")), /*#__PURE__*/React.createElement("div", {
+  }, "What's on your mind, " + firstName + "?"), /*#__PURE__*/React.createElement("div", {
     className: "pw-composer-actions"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-composer-action",
+    "aria-label": "Live video",
+    title: "Live video",
     onClick: () => goPW("NewsfeedWeb.html?golive=1")
   }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:video",
-    size: 20,
-    color: "var(--error)"
-  }), "Live video"), /*#__PURE__*/React.createElement("button", {
+    name: "fluent:video-24-filled",
+    size: 30,
+    color: "#E8455D"
+  })), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-composer-action",
+    "aria-label": "Photo",
+    title: "Photo",
     onClick: () => goPW("NewsfeedWeb.html")
   }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:image",
-    size: 20,
-    color: "var(--success)"
-  }), "Photo/video"), /*#__PURE__*/React.createElement("button", {
+    name: "fluent:image-multiple-24-filled",
+    size: 30,
+    color: "#3DBE5B"
+  })), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-composer-action",
+    "aria-label": "Reel",
+    title: "Reel",
     onClick: () => goPW("NewsfeedWeb.html")
   }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:clapperboard",
-    size: 20,
-    color: "var(--info)"
-  }), "Reel")));
+    name: "fluent:movies-and-tv-24-filled",
+    size: 30,
+    color: "#E8455D"
+  })))));
 }
 
 /* ---- Upcoming lives ----

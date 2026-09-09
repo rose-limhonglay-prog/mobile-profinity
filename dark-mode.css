@@ -268,3 +268,70 @@
 [data-theme="dark"] .pf-pin-chip,[data-theme="dark"] .pf-pinned-mini-kind{background:color-mix(in srgb, var(--brand-gold) 18%, var(--surface-card));color:var(--brand-gold)}
 [data-theme="dark"] .pf-pinned-card-tag-btn,[data-theme="dark"] .pf-pinned-box-hint{color:var(--text-secondary)}
 [data-theme="dark"] .pf-pinned-card-tag-btn:hover{color:var(--brand-gold)}
+
+/* ============================================================
+   Web — tokens that had no dark value (soft tints used as fills)
+   ============================================================ */
+[data-theme="dark"] {
+  --ai-purple-100: #1c1a3d;
+  --ai-purple-200: #2a2760;
+  --brand-gold-100: #2a2318;
+  --success-bg: #12291f;
+  --info-bg: #0f2236;
+  --warning-bg: #2c2410;
+  --error-bg: #2d1518;
+  --level-beginner-bg: #12291f;
+  --level-intermediate-bg: #2a2318;
+  --level-advanced-bg: #2b1530;
+  /* TopNav active tab tint — painted inline by pfTagActiveNav in app.jsx /
+     community-web.jsx / learning.jsx / profile-web.jsx */
+  --pf-nav-active-bg: rgba(206, 153, 87, .14);
+}
+
+/* ============================================================
+   Web — notification toasts, bell panel, confirm toast (notifications.css)
+   ============================================================ */
+[data-theme="dark"] .pf-toast,
+[data-theme="dark"] #pf-notif-panel,
+[data-theme="dark"] #pf-confirm-toast {
+  background: var(--surface-card);
+  border-color: var(--border-default);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, .55);
+}
+[data-theme="dark"] .pf-toast-icon,
+[data-theme="dark"] .pf-notif-row-icon {
+  background: color-mix(in srgb, var(--pf-accent, #6c63ff) 18%, var(--surface-card));
+}
+[data-theme="dark"] .pf-toast--billing { --pf-accent: #9aa0b4; }
+[data-theme="dark"] .pf-toast-title,
+[data-theme="dark"] .pf-notif-row-title,
+[data-theme="dark"] #pf-confirm-toast { color: var(--text-primary); }
+[data-theme="dark"] .pf-toast-text,
+[data-theme="dark"] .pf-notif-row-text { color: var(--text-secondary); }
+[data-theme="dark"] .pf-toast-time,
+[data-theme="dark"] .pf-notif-row-time,
+[data-theme="dark"] .pf-notif-section-label,
+[data-theme="dark"] .pf-notif-empty { color: var(--text-muted); }
+[data-theme="dark"] .pf-toast-close { color: var(--text-muted); }
+[data-theme="dark"] .pf-notif-row:hover,
+[data-theme="dark"] .pf-notif-settings-link:hover { background: var(--surface-sunken); }
+[data-theme="dark"] .pf-notif-row.pf-unread { background: rgba(108, 99, 255, .10); }
+[data-theme="dark"] .pf-notif-footer { border-top-color: var(--border-default); }
+[data-theme="dark"] .pf-toggle { background: var(--gray-300); }
+
+/* ============================================================
+   Web — page-specific light surfaces
+   ============================================================ */
+/* My Learning: locked-courses panel + free/paid preview toggle */
+[data-theme="dark"] .lrn2-locked,
+[data-theme="dark"] .lrn2-toggle-switch { background: var(--surface-card); }
+[data-theme="dark"] .lrn2-toggle-switch:hover,
+[data-theme="dark"] .lrn2-toggle-status.free { background: var(--surface-sunken); }
+/* Sub-module: current sibling row */
+[data-theme="dark"] .smw-sibling.on { background: rgba(108, 99, 255, .14); }
+/* Account settings: verify-credentials banner */
+[data-theme="dark"] .asw-verify { background: #2a1f12; }
+/* Create post (web): the Camera option is brand-navy, invisible on dark */
+[data-theme="dark"] .pfw-cp-opt[aria-label="Camera"] { --opt: #7c76d9; }
+/* Agents catalogue: page wash is color-mix(ai-purple 5%, white) in agents.css */
+[data-theme="dark"] .app.wa-screen { background: var(--surface-page); }

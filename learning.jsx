@@ -295,7 +295,7 @@ function pfTagActiveNav(activeLabel) {
     const active = label === activeLabel;
     b.style.setProperty("-webkit-appearance", "none", "important");
     b.style.setProperty("appearance", "none", "important");
-    b.style.setProperty("background", active ? "rgb(225, 223, 242)" : "none", "important");
+    b.style.setProperty("background", active ? "var(--pf-nav-active-bg, rgb(225, 223, 242))" : "none", "important");
     b.style.setProperty("transition", "background .18s ease", "important");
     const path = b.querySelector("svg path");
     if (path) path.style.setProperty("fill", active ? "currentColor" : "", "important");
