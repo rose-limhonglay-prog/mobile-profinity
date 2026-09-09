@@ -260,3 +260,10 @@
   background: linear-gradient(180deg, rgba(206,153,87,.92), rgba(206,153,87,.98));
   box-shadow: 0 4px 14px rgba(206,153,87,.4), inset 0 1px 0 rgba(255,255,255,.2);
 }
+
+/* admin-pinned posts (styles.css .pf-pinned-*) */
+[data-theme="dark"] .pf-pinned-card{background:color-mix(in srgb, var(--brand-gold) 10%, var(--surface-card));
+  border-color:color-mix(in srgb, var(--brand-gold) 40%, transparent)}
+[data-theme="dark"] .pf-pin-chip{background:color-mix(in srgb, var(--brand-gold) 18%, var(--surface-card));color:var(--brand-gold)}
+[data-theme="dark"] .pf-pinned-card-tag-btn{color:var(--text-secondary)}
+[data-theme="dark"] .pf-pinned-card-tag-btn:hover{color:var(--brand-gold)}

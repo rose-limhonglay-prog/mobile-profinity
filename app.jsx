@@ -1692,6 +1692,23 @@ const LIVE_NOW_POST = {
   commentList: thread("Joining from Manchester — perfect timing, just finished clinic 🙌")
 };
 
+/* Sample admin-pinned announcement — pinned by default on the web newsfeed
+   (see PF_PINNED_DEFAULTS) so the Pinned Posts block is visible without
+   first switching to the Admin persona. Unpinning it drops it back into the
+   feed as a normal post; it's web-only like SAMPLE_CAROUSEL_POST. */
+const SAMPLE_PINNED_POST = {
+  id: "ff_pinned1", author: PROFINITY, keepAuthor: true, time: "2d",
+  hashtags: ["community"],
+  /* viewer:true → PinnedVideoTile in the feed (portrait clip letterboxed in
+     a black 16:9 tile) and a click opens FullVideoViewer, the full-page
+     reel-style player. The bundled clip is landscape, so it's cover-cropped
+     to 9:16 — swap in a real portrait clip via src when one is available. */
+  sample: { type: "video", src: "assets/sample-reel.mp4", viewer: true, ratio: 9 / 16 },
+  body: "Welcome to the PROfinity Academy community! 👋 Say hello in the comments and tell us where you're injecting from.",
+  likes: "1.2K", comments: "214", shares: "96", actioned: false,
+  commentList: thread("Hello from Leeds! Two years injecting, here to learn the full-face approach 🙌")
+};
+
 const PORTRAIT_IMG_POST_1 = {
   id: "ff_ptimg1", author: MIRANDA, time: "5h",
   hashtags: ["patient", "case-study"],
@@ -2295,7 +2312,7 @@ const TIER_FEED_SEQUENCES = {
    persona-preview switcher never loses a post's likes/comments state, and
    Search can still find posts that only some tiers' sequences contain. */
 const ALL_FEED_SEQUENCE_POSTS = Object.values(
-  [LIVE_NOW_POST, SAMPLE_LONG_TEXT_POST, SAMPLE_CAROUSEL_POST, ...FREE_FEED_SEQUENCE, ...CONFIDENCE_FEED_SEQUENCE, ...MASTERY_FEED_SEQUENCE].reduce(
+  [LIVE_NOW_POST, SAMPLE_LONG_TEXT_POST, SAMPLE_CAROUSEL_POST, SAMPLE_PINNED_POST, ...FREE_FEED_SEQUENCE, ...CONFIDENCE_FEED_SEQUENCE, ...MASTERY_FEED_SEQUENCE].reduce(
     (m, p) => { m[p.id] = p; return m; }, {}
   )
 );
@@ -2912,9 +2929,9 @@ function CommentComposer({ placeholder, onSubmit, autoFocus, small, focusKey }) 
    panel flipped to Super user. Normal users never see a Live entry point. */
 function ComposerIconButton({ icon, color, label, onClick, disabled }) {
   return (
-    <button type="button" onClick={onClick} aria-label={label} disabled={disabled}
-    style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 34, height: 34, flexShrink: 0, borderRadius: "var(--r-pill)", border: "none", cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.35 : 1, background: "transparent" }}>
-      <IconifyIcon name={icon} size={19} color={color} />
+    <button type="button" className="pfw-composer-icon" onClick={onClick} aria-label={label} title={label} disabled={disabled}
+    style={{ cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.35 : 1 }}>
+      <IconifyIcon name={icon} size={30} color={color} />
     </button>);
 
 }
@@ -3397,24 +3414,23 @@ function PostComposer({ onPost, superUser, devRole, onDevRole, lockedAdmin }) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10, background: "var(--surface-card)", border: "1px solid var(--border-default)", borderRadius: "var(--r-md)", boxShadow: "var(--shadow-card)", padding: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <Avatar name={ME.name} src={ME.avatar} size={44} />
-        <button type="button" className="pfw-cp-pill-trigger" aria-haspopup="dialog" onClick={openModal}
-        style={{ flex: 1, textAlign: "left", display: "flex", alignItems: "center", gap: 4, background: "var(--surface-sunken)", border: "1px solid var(--border-default)", borderRadius: "var(--r-pill)", padding: "9px 9px 9px 18px", cursor: "pointer" }}>
-          <span style={{ flex: 1, fontFamily: "var(--font-sans)", fontSize: "var(--fs-body-lg)", color: v ? "var(--text-primary)" : "var(--text-secondary)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+    <div className="pfw-composer-card">
+      <div className="pfw-composer-row">
+        <Avatar name={ME.name} src={ME.avatar} size={48} />
+        <button type="button" className="pfw-cp-pill-trigger" aria-haspopup="dialog" onClick={openModal}>
+          <span className="pfw-cp-pill-text" style={{ color: v ? "var(--text-primary)" : "var(--text-secondary)" }}>
             {v || "What's on your mind, " + firstName + "?"}
           </span>
         </button>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, borderTop: "1px solid var(--border-default)", paddingTop: 10 }}>
-        <ComposerIconButton icon="lucide:video" color="var(--error)" label="Add video" onClick={openModalAnd(pickVideo)} disabled={images.length > 0} />
-        <ComposerIconButton icon="lucide:image" color="var(--success)" label="Add photo" onClick={openModalAnd(pickImages)} disabled={!!video} />
-        <ComposerIconButton icon="lucide:clapperboard" color="var(--reaction-love)" label="Add reel" onClick={openModal} />
-        {superUser &&
-        <button type="button" className="pfw-golive-pill" aria-label="Go live" onClick={() => setLiveStage("precam")}>
-          <IconifyIcon name="lucide:radio" size={15} color="var(--error)" />Go Live
-        </button>}
+        <div className="pfw-composer-quick">
+          <ComposerIconButton icon="fluent:video-24-filled" color="#E8455D" label="Add video" onClick={openModalAnd(pickVideo)} disabled={images.length > 0} />
+          <ComposerIconButton icon="fluent:image-multiple-24-filled" color="#3DBE5B" label="Add photo" onClick={openModalAnd(pickImages)} disabled={!!video} />
+          <ComposerIconButton icon="fluent:movies-and-tv-24-filled" color="#E8455D" label="Add reel" onClick={openModal} />
+          {superUser &&
+          <button type="button" className="pfw-golive-pill" aria-label="Go live" onClick={() => setLiveStage("precam")}>
+            <IconifyIcon name="lucide:radio" size={15} color="var(--error)" />Go Live
+          </button>}
+        </div>
       </div>
 
       {modalOpen &&
@@ -4894,7 +4910,151 @@ function LiveNowMedia({ live, author, onLoveReact }) {
     </div>);
 }
 
-function SampleMedia({ sample, postId, saved, onSave, onReport, onLoveReact, author, likes, commentsCount, shares, liked, comments, onLike, onComment, onShare }) {
+/* Feed tile for a real portrait clip: black 16:9 letterbox with the 9:16
+   video centred (like a vertical video in the Facebook feed), autoplaying
+   muted with a light scrubber. Clicking anywhere opens FullVideoViewer. */
+function fmtClock(sec) {
+  if (!isFinite(sec) || sec < 0) sec = 0;
+  const m = Math.floor(sec / 60), s = Math.floor(sec % 60);
+  return m + ":" + (s < 10 ? "0" : "") + s;
+}
+function PinnedVideoTile({ sample, author, caption, likes, commentsCount, shares, liked, saved, onLike, onComment, onShare, onSave, onLoveReact }) {
+  const vidRef = useRef(null);
+  const [open, setOpen] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const [playing, setPlaying] = useState(true);
+  const [t, setT] = useState({ cur: 0, dur: 0 });
+  useEffect(() => {
+    const v = vidRef.current;
+    if (!v) return;
+    if (open) v.pause(); else if (playing) v.play().catch(() => {});
+  }, [open, playing]);
+  const onTime = () => { const v = vidRef.current; if (v) setT({ cur: v.currentTime, dur: v.duration || 0 }); };
+  const pct = t.dur ? Math.min(100, t.cur / t.dur * 100) : 0;
+  return (
+    <>
+      <div className="pf-vid-tile" role="button" tabIndex={0} aria-label="Open video"
+      onClick={() => setOpen(true)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setOpen(true); } }}>
+        <div className="pf-vid-frame">
+          <video ref={vidRef} src={sample.src} muted={muted} autoPlay loop playsInline preload="metadata"
+          onTimeUpdate={onTime} onLoadedMetadata={onTime} />
+        </div>
+        <div className="pf-vid-bar" onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="pf-vid-ctl" aria-label={playing ? "Pause" : "Play"}
+          onClick={() => setPlaying((p) => !p)}>
+            <IconifyIcon name={playing ? "fluent:pause-16-filled" : "fluent:play-16-filled"} size={16} color="#fff" />
+          </button>
+          <span className="pf-vid-time">{fmtClock(t.cur)} / {fmtClock(t.dur)}</span>
+          <span className="pf-vid-track"><span className="pf-vid-fill" style={{ width: pct + "%" }} /></span>
+          <span className="pf-vid-spacer" />
+          <button type="button" className="pf-vid-ctl" aria-label={muted ? "Unmute" : "Mute"} onClick={() => setMuted((m) => !m)}>
+            <IconifyIcon name={muted ? "lucide:volume-x" : "lucide:volume-2"} size={17} color="#fff" />
+          </button>
+        </div>
+      </div>
+      {open && <FullVideoViewer sample={sample} author={author} caption={caption} muted={muted} setMuted={setMuted}
+        likes={likes} commentsCount={commentsCount} shares={shares} liked={liked} saved={saved}
+        onLike={onLike} onComment={onComment} onShare={onShare} onSave={onSave} onClose={() => setOpen(false)} />}
+    </>);
+}
+
+/* Full-page reel-style player (web): black backdrop, the portrait clip
+   centred at viewport height, close + logo top-left, mute/list/search inside
+   the frame, author + Subscribe + caption over the bottom, and a vertical
+   action rail (like / comments / shares / more) beside the video. Rendered
+   through a portal so it escapes the post card's overflow:hidden. */
+function FullVideoViewer({ sample, author, caption, muted, setMuted, likes, commentsCount, shares, liked, saved, onLike, onComment, onShare, onSave, onClose }) {
+  const vidRef = useRef(null);
+  const [playing, setPlaying] = useState(true);
+  const [subscribed, setSubscribed] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [t, setT] = useState({ cur: 0, dur: 0 });
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, [onClose]);
+  useEffect(() => {
+    const v = vidRef.current;
+    if (!v) return;
+    if (playing) v.play().catch(() => {}); else v.pause();
+  }, [playing]);
+  const onTime = () => { const v = vidRef.current; if (v) setT({ cur: v.currentTime, dur: v.duration || 0 }); };
+  const pct = t.dur ? Math.min(100, t.cur / t.dur * 100) : 0;
+  const a = author || {};
+  const node =
+    <div className="pf-fsv" role="dialog" aria-modal="true" aria-label="Video">
+      <div className="pf-fsv-topleft">
+        <button type="button" className="pf-fsv-round pf-fsv-close" aria-label="Close" onClick={onClose}>
+          <IconifyIcon name="lucide:x" size={22} color="#1c1e21" />
+        </button>
+        <img className="pf-fsv-logo" src="assets/profinity-icon.jpg" alt="PROfinity" />
+      </div>
+      <div className="pf-fsv-stage">
+        <div className="pf-fsv-frame" onClick={() => setPlaying((p) => !p)}>
+          <video ref={vidRef} src={sample.src} muted={muted} autoPlay loop playsInline
+          onTimeUpdate={onTime} onLoadedMetadata={onTime} />
+          {!playing &&
+          <span className="pf-fsv-bigplay"><IconifyIcon name="fluent:play-16-filled" size={34} color="#fff" /></span>}
+          <div className="pf-fsv-frame-top" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="pf-fsv-glass" aria-label={muted ? "Unmute" : "Mute"} onClick={() => setMuted((m) => !m)}>
+              <IconifyIcon name={muted ? "lucide:volume-x" : "lucide:volume-2"} size={22} color="#fff" />
+            </button>
+            <span className="pf-fsv-spacer" />
+            <button type="button" className="pf-fsv-glass" aria-label="Playlist"><IconifyIcon name="lucide:list" size={22} color="#fff" /></button>
+            <button type="button" className="pf-fsv-glass" aria-label="Search"><IconifyIcon name="lucide:search" size={22} color="#fff" /></button>
+          </div>
+          <div className="pf-fsv-meta" onClick={(e) => e.stopPropagation()}>
+            <div className="pf-fsv-author">
+              <Avatar name={a.name} src={a.avatar} size={44} />
+              <span className="pf-fsv-name">{a.name}</span>
+              {a.seals && <VerificationSeals seals={a.seals} size={16} />}
+              <span className="pf-fsv-dot">·</span>
+              <button type="button" className="pf-fsv-sub" onClick={() => setSubscribed((x) => !x)}>{subscribed ? "Subscribed" : "Subscribe"}</button>
+            </div>
+            {caption && <div className="pf-fsv-caption">{caption}</div>}
+          </div>
+          <div className="pf-fsv-progress"><span style={{ width: pct + "%" }} /></div>
+        </div>
+        <div className="pf-fsv-rail" onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="pf-fsv-act" aria-label={liked ? "Unlike" : "Like"} onClick={onLike}>
+            <IconifyIcon name={liked ? "fluent:thumb-like-20-filled" : "lucide:thumbs-up"} size={30} color={liked ? "#5b6ee1" : "#fff"} />
+            {likes && <span>{likes}</span>}
+          </button>
+          <button type="button" className="pf-fsv-act" aria-label="Comments" onClick={() => { onClose(); onComment && onComment(); }}>
+            <IconifyIcon name="lucide:message-circle" size={30} color="#fff" />
+            <span>{commentsCount}</span>
+          </button>
+          <button type="button" className="pf-fsv-act" aria-label="Share" onClick={() => { onClose(); onShare && onShare(); }}>
+            <IconifyIcon name="lucide:forward" size={30} color="#fff" />
+            <span>{shares}</span>
+          </button>
+          <div className="pf-fsv-more-wrap">
+            <button type="button" className="pf-fsv-act" aria-label="More options" aria-haspopup="menu" aria-expanded={moreOpen}
+            onClick={() => setMoreOpen((o) => !o)}>
+              <IconifyIcon name="lucide:more-horizontal" size={30} color="#fff" />
+            </button>
+            {moreOpen &&
+            <div className="pf-post-menu pf-fsv-menu" role="menu">
+              <button type="button" role="menuitem" className="pf-post-menu-item" onClick={() => { setMoreOpen(false); onSave && onSave(); }}>
+                <IconifyIcon name={saved ? "lucide:bookmark-minus" : "lucide:bookmark"} size={18} color="var(--gray-700)" />
+                {saved ? "Remove from saved" : "Save video"}
+              </button>
+            </div>}
+          </div>
+        </div>
+      </div>
+      <div className="pf-fsv-nav">
+        <button type="button" className="pf-fsv-round" aria-label="Previous video"><IconifyIcon name="lucide:chevron-up" size={26} color="#1c1e21" /></button>
+        <button type="button" className="pf-fsv-round" aria-label="Next video"><IconifyIcon name="lucide:chevron-down" size={26} color="#1c1e21" /></button>
+      </div>
+    </div>;
+  return ReactDOM.createPortal(node, document.body);
+}
+
+function SampleMedia({ sample, postId, saved, onSave, onReport, onLoveReact, author, likes, commentsCount, shares, liked, comments, onLike, onComment, onShare, caption }) {
   const galleryRef = useRef(null);
   const videoRef = useRef(null);
   const [idx, setIdx] = useState(0);
@@ -4928,6 +5088,16 @@ function SampleMedia({ sample, postId, saved, onSave, onReport, onLoveReact, aut
      demo posts which only ever carry a poster image standing in for video)
      gets a real, playable <video> instead of the faux poster + fake
      progress bar below. */
+  if (sample.type === "video" && sample.src && sample.viewer) {
+    return (
+      <>
+        <PinnedVideoTile sample={sample} author={author} caption={caption}
+          likes={likes} commentsCount={commentsCount} shares={shares} liked={liked} saved={saved}
+          onLike={onLike} onComment={onComment} onShare={onShare} onSave={onSave} onLoveReact={onLoveReact} />
+        {heartNode}
+      </>);
+  }
+
   if (sample.type === "video" && sample.src) {
     return (
       <>
@@ -5299,7 +5469,7 @@ function ReportedModal({ onClose }) {
 /* Shared "..." menu for post cards that don't render through the DS PostCard
    (ChannelFeedCard, CourseCommentCard) — mirrors the menu PostCard itself
    opens from its own "..." icon, so every post gets the same two actions. */
-function PostMoreMenu({ saved, onSave, onReport, iconColor = "var(--gray-400)" }) {
+function PostMoreMenu({ saved, onSave, onReport, menuItems = [], iconColor = "var(--gray-400)" }) {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (!open) return;
@@ -5321,6 +5491,14 @@ function PostMoreMenu({ saved, onSave, onReport, iconColor = "var(--gray-400)" }
           <IconifyIcon name={saved ? "lucide:bookmark-minus" : "lucide:bookmark"} size={18} color="var(--gray-700)" />
           {saved ? "Remove from saved" : "Save post"}
         </button>
+        {menuItems.map((mi, i) =>
+        <button key={mi.key || i} type="button" role="menuitem"
+          className={"pf-post-menu-item" + (mi.danger ? " pf-post-menu-item--danger" : "")}
+          onClick={() => { setOpen(false); mi.onClick && mi.onClick(); }}>
+          {mi.icon && <IconifyIcon name={mi.icon} size={18} color={mi.color || "var(--gray-700)"} />}
+          {mi.label}
+        </button>
+        )}
         <button type="button" role="menuitem" className="pf-post-menu-item pf-post-menu-item--danger"
           onClick={() => { setOpen(false); onReport && onReport(); }}>
           <IconifyIcon name="lucide:flag" size={18} color="var(--error)" />
@@ -5330,6 +5508,15 @@ function PostMoreMenu({ saved, onSave, onReport, iconColor = "var(--gray-400)" }
       }
     </div>
   );
+}
+
+/* Admin-only "Pin to top" / "Unpin" entry appended to every post card's
+   "..." menu (DS PostCard + PostMoreMenu both take the same menuItems shape).
+   Non-admin viewers get an empty list, so the menu is unchanged for them. */
+function pinMenuItemsFor(pinned, canPin, onPin) {
+  if (!canPin) return [];
+  return [{ key: "pin", label: pinned ? "Unpin from top" : "Pin to top of feed",
+    icon: pinned ? "lucide:pin-off" : "lucide:pin", color: "var(--brand-navy)", onClick: onPin }];
 }
 
 /* The same collections a viewer sees on the My Saved screen (my-saved.jsx's
@@ -5614,7 +5801,7 @@ function ShareSheet({ post, onClose, onShare }) {
   return host ? ReactDOM.createPortal(sheet, host) : sheet;
 }
 
-function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, onShare, onSave, onAddComment, onAddReply }) {
+function FeedPost({ post, st, hideTags, pinned, canPin, onPin, onToggleLike, onReact, onDoubleTapLove, onShare, onSave, onAddComment, onAddReply }) {
   const ref = useRef(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [replyFor, setReplyFor] = useState(null);
@@ -5685,8 +5872,8 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
       <PostCard {...post} commentList={[]}
       time={post.liveNow
         ? <span className="pf-livenow-meta">is live now · {post.liveNow.viewers} watching</span>
-        : post.tierTag || post.live || post.location
-        ? <>{post.time}{post.tierTag && <TierTagChip tag={post.tierTag} />}{post.live &&
+        : post.tierTag || post.live || post.location || pinned
+        ? <>{post.time}{pinned && <PinChip />}{post.tierTag && <TierTagChip tag={post.tierTag} />}{post.live &&
             <span className="pf-live-chip"><IconifyIcon name="lucide:radio" size={11} color="var(--error)" />Live replay</span>}{post.location &&
             <span className="pf-loc-chip"><IconifyIcon name="lucide:map-pin" size={11} color="#d03b3b" />{post.location.name}</span>}</>
         : post.time}
@@ -5713,7 +5900,7 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
         ? <SampleMedia sample={post.sample} postId={post.id}
           saved={st.saved} onSave={onSave} onReport={() => setReportedOpen(true)} onLoveReact={handleDoubleTapLove}
           author={post.author} likes={st.likes} commentsCount={st.commentsCount} shares={st.shares} liked={st.liked}
-          comments={comments} onLike={handleLike} onComment={handleComment} onShare={handleShare} />
+          comments={comments} onLike={handleLike} onComment={handleComment} onShare={handleShare} caption={post.body} />
         : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} aspect={post.aspect} onLoveReact={handleDoubleTapLove} /> : null}
         {post.document && <div className="pf-doc-inset"><DocAttachment doc={post.document} /></div>}
         {isReel &&
@@ -5729,6 +5916,7 @@ function FeedPost({ post, st, hideTags, onToggleLike, onReact, onDoubleTapLove, 
       liked={st.liked} saved={st.saved} actioned={false} likes={st.likes} shares={st.shares} comments={st.commentsCount}
       onLike={handleLike} onSave={onSave} onComment={handleComment} onShare={handleShare}
       onReport={() => setReportedOpen(true)}
+      menuItems={pinMenuItemsFor(pinned, canPin, onPin)}
       onReactionsClick={() => setLikesOpen(true)}
       onHashtagClick={goToHashtag}
       style={{ boxShadow: "none", border: "none", borderRadius: 0, background: "transparent", padding: "24px 8px" }} />
@@ -5957,7 +6145,7 @@ function EventRegPostCard({ post }) {
    Deliberately lighter than FeedPost — no media carousel, no full comment
    thread — this is "a tagged post in your feed", not the full community
    thread view (that still lives on the Community screen itself). */
-function ChannelFeedCard({ post, st, onToggleLike, onReact, onDoubleTapLove, onSave, onShare, onAddComment, onAddReply }) {
+function ChannelFeedCard({ post, st, pinned, canPin, onPin, onToggleLike, onReact, onDoubleTapLove, onSave, onShare, onAddComment, onAddReply }) {
   const meta = BUCKET_META[post.bucket] || { label: "Community", color: "var(--gray-500)" };
   const [replying, setReplying] = useState(false);
   const [likesOpen, setLikesOpen] = useState(false);
@@ -5988,6 +6176,7 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onDoubleTapLove, onS
             <span className="pf-chcard-tag pf-inline-chan">
               {meta.label}
             </span>
+            {pinned && <PinChip />}
             {post.unlockBadge &&
             <span className="pf-chcard-unlock">
                 <IconifyIcon name="lucide:lock-open" size={12} color="var(--brand-navy)" />Unlocked
@@ -5995,7 +6184,8 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onDoubleTapLove, onS
             }
           </div>
         </div>
-        <PostMoreMenu saved={st.saved} onSave={onSave} onReport={() => setReportedOpen(true)} />
+        <PostMoreMenu saved={st.saved} onSave={onSave} onReport={() => setReportedOpen(true)}
+          menuItems={pinMenuItemsFor(pinned, canPin, onPin)} />
       </div>
       <p className="pf-chcard-body">{post.body}</p>
       {(post.sample || post.media && post.media.length > 0) &&
@@ -6050,7 +6240,7 @@ function ChannelFeedCard({ post, st, onToggleLike, onReact, onDoubleTapLove, onS
    course X" header as the locked teaser, plus a lesson-promo strip below
    the comment — doubles as a soft upsell into that lesson for anyone who
    hasn't taken it yet, or a refresher link for those who have. */
-function CourseCommentCard({ post, st, onToggleLike, onReact, onSave, onAddComment, onShare }) {
+function CourseCommentCard({ post, st, pinned, canPin, onPin, onToggleLike, onReact, onSave, onAddComment, onShare }) {
   const [replying, setReplying] = useState(false);
   const [likesOpen, setLikesOpen] = useState(false);
   const [reportedOpen, setReportedOpen] = useState(false);
@@ -6078,6 +6268,7 @@ function CourseCommentCard({ post, st, onToggleLike, onReact, onSave, onAddComme
           </div>
           <div className="pf-chcard-tags">
             <div className="pf-ccard-head-time">{post.time}</div>
+            {pinned && <PinChip />}
             {post.unlockBadge &&
             <span className="pf-chcard-unlock">
                 <IconifyIcon name="lucide:lock-open" size={12} color="var(--brand-navy)" />Unlocked
@@ -6085,7 +6276,8 @@ function CourseCommentCard({ post, st, onToggleLike, onReact, onSave, onAddComme
             }
           </div>
         </div>
-        <PostMoreMenu saved={st.saved} onSave={onSave} onReport={() => setReportedOpen(true)} />
+        <PostMoreMenu saved={st.saved} onSave={onSave} onReport={() => setReportedOpen(true)}
+          menuItems={pinMenuItemsFor(pinned, canPin, onPin)} />
       </div>
       <div className="pf-ccard-body"><ClampText text={post.body} lines={4} /></div>
       {lesson &&
@@ -6318,6 +6510,88 @@ function readUserPosts() {
   } catch (e) { return []; }
 }
 
+/* Admin-pinned posts: an ordered list of post ids (most recently pinned
+   first) an Admin viewer hoists to the top of the newsfeed via the post's
+   "..." menu. Persisted across reloads (unlike composed user posts) so a pin
+   made on the web newsfeed also shows on the mobile/community embeds, which
+   all render this same Feed. Ids that no longer resolve to a visible post
+   (e.g. a composed post that was cleared on reload) are simply skipped. */
+const PF_PINNED_KEY = "pf-pinned-posts";
+/* Ships with the sample announcement pinned until an admin first pins or
+   unpins anything (an explicit empty list is respected, not re-seeded). */
+const PF_PINNED_DEFAULTS = [SAMPLE_PINNED_POST.id];
+function readPinnedIds() {
+  try {
+    const raw = localStorage.getItem(PF_PINNED_KEY);
+    if (raw === null) return PF_PINNED_DEFAULTS;
+    const list = JSON.parse(raw) || [];
+    return list.filter((id) => typeof id === "string");
+  } catch (e) { return PF_PINNED_DEFAULTS; }
+}
+function writePinnedIds(ids) {
+  try { localStorage.setItem(PF_PINNED_KEY, JSON.stringify(ids)); } catch (e) {}
+}
+
+/* Per-viewer "minimized" pinned posts: the pin stays at the top, but the
+   card collapses to a one-line preview until the viewer expands it again.
+   Stored separately from the admin pin list so it never affects other users. */
+const PF_PINNED_MIN_KEY = "pf-pinned-minimized";
+function readMinimizedPins() {
+  try {
+    const list = JSON.parse(localStorage.getItem(PF_PINNED_MIN_KEY)) || [];
+    return list.filter((id) => typeof id === "string");
+  } catch (e) { return []; }
+}
+function writeMinimizedPins(ids) {
+  try { localStorage.setItem(PF_PINNED_MIN_KEY, JSON.stringify(ids)); } catch (e) {}
+}
+
+/* Compact preview a minimized pinned post collapses to — avatar, author,
+   a one-line snippet and (if any) a media thumbnail. Clicking anywhere
+   expands the full card again. */
+function PinnedMiniCard({ post, onExpand }) {
+  const author = post.author || {};
+  const thumb = post.media && post.media.length ? post.media[0] :
+  post.sample && (post.sample.poster || post.sample.cover) ? post.sample.poster || post.sample.cover :
+  post.liveNow ? post.liveNow.frame : null;
+  const snippet = post.body || post.title || (post.poll ? "Poll" : post.questionnaire ? "Knowledge check" : post.liveNow ? "Live now" : "");
+  return (
+    <div className="pf-pinned-mini" role="button" tabIndex={0} onClick={onExpand}
+    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onExpand(); } }}
+    aria-label="Expand pinned post">
+      <Avatar name={author.name} src={author.avatar} size={38} />
+      <div className="pf-pinned-mini-main">
+        <div className="pf-pinned-mini-name">
+          <span>{author.name}</span>
+          {author.seals && <VerificationSeals seals={author.seals} size={14} />}
+          {post.time && <span className="pf-pinned-mini-time">· {post.time}</span>}
+        </div>
+        <div className="pf-pinned-mini-snip">{snippet}</div>
+      </div>
+      {thumb && <img className="pf-pinned-mini-thumb" src={thumb} alt="" />}
+      <span className="pf-pinned-mini-expand" aria-hidden="true">
+        <IconifyIcon name="lucide:chevron-down" size={18} color="var(--brand-navy)" />
+      </span>
+    </div>);
+}
+
+/* Small "PINNED" marker shown in a pinned post's header meta row. */
+function PinChip() {
+  return (
+    <span className="pf-pin-chip">
+      <IconifyIcon name="fluent:pin-12-filled" size={11} color="var(--brand-navy)" />Pinned
+    </span>);
+}
+
+/* Block of pinned posts that sits above the regular feed (no header — each
+   pinned card carries its own gold Pinned tag and Minimize control). */
+function PinnedSection({ innerRef, children }) {
+  return (
+    <section className="pf-pinned-section" ref={innerRef} aria-label="Pinned posts">
+      <div className="pf-pinned-list">{children}</div>
+    </section>);
+}
+
 /* Event-registration social proof — one seed post (Rose Lim, a fixture
    clinician) plus this session's own registrations, written by
    EventsMobile's Register Now / Join Waitlist flow to "pf-event-regs"
@@ -6397,6 +6671,30 @@ function Feed({ channel } = {}) {
   const [composerRole, setComposerRole] = useState("normal"); // dev "Posting as": normal | super
   const [upgradeFor, setUpgradeFor] = useState(null);
   const saveFlow = useSaveFlow();
+  /* Admin pin state — see PF_PINNED_KEY. */
+  const [pinnedIds, setPinnedIds] = useState(readPinnedIds);
+  const [minimizedPins, setMinimizedPins] = useState(readMinimizedPins);
+  const toggleMinimizePin = (id) => setMinimizedPins((list) => {
+    const next = list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
+    writeMinimizedPins(next);
+    return next;
+  });
+  const [pinToast, setPinToast] = useState(null);
+  const pinToastTimer = useRef(null);
+  const pinnedRef = useRef(null);
+  useEffect(() => () => { if (pinToastTimer.current) clearTimeout(pinToastTimer.current); }, []);
+  const togglePin = (id) => {
+    const willPin = !pinnedIds.includes(id);
+    const next = willPin ? [id, ...pinnedIds.filter((x) => x !== id)] : pinnedIds.filter((x) => x !== id);
+    setPinnedIds(next);
+    writePinnedIds(next);
+    if (pinToastTimer.current) clearTimeout(pinToastTimer.current);
+    setPinToast(willPin ? "Pinned to the top of the feed" : "Unpinned from the top of the feed");
+    pinToastTimer.current = setTimeout(() => setPinToast(null), 2400);
+    if (willPin) setTimeout(() => {
+      if (pinnedRef.current && pinnedRef.current.scrollIntoView) pinnedRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+  };
 
   const toggle = (id, key) => setState((s) => ({ ...s, [id]: { ...s[id], [key]: !s[id][key] } }));
   const toggleSave = (id) => {
@@ -6421,6 +6719,8 @@ function Feed({ channel } = {}) {
 
   const viewerCurrent = PERSONA_MAP[viewerPersona] || PERSONA_MAP.confidence;
   const composerSuperUser = viewerCurrent.admin || composerRole === "super";
+  /* Only the Admin persona gets the Pin/Unpin action; everyone sees the result. */
+  const canPin = !!viewerCurrent.admin;
   const bucketResolved = resolveBucketFeed(viewerPersona, bucketToggles);
   /* Tier-tagged posts stack with the membership ladder: each tier sees its
      own tag plus every tag below it (see tierTagPostsFor). */
@@ -6449,7 +6749,7 @@ function Feed({ channel } = {}) {
   { item: LIVE_NOW_POST, mode: "full" },
   { item: SAMPLE_LONG_TEXT_POST, mode: "full" },
   // web-only sample: the single-slide image carousel (see SAMPLE_CAROUSEL_POST)
-  ...(typeof window !== "undefined" && !window.PF_EMBED ? [{ item: SAMPLE_CAROUSEL_POST, mode: "full" }] : []),
+  ...(typeof window !== "undefined" && !window.PF_EMBED ? [{ item: SAMPLE_CAROUSEL_POST, mode: "full" }, { item: SAMPLE_PINNED_POST, mode: "full" }] : []),
   ...eventRegPosts.map((p) => ({ item: p, mode: "full" })),
   ...tierTagItems,
   ...sequenceBase.map((p) => {
@@ -6473,17 +6773,19 @@ function Feed({ channel } = {}) {
   bucketResolved.filter(({ item: p }) => p.bucket === channel) :
   feedItems;
 
-  return (
-    <main className="feed" data-screen-label="Home feed">
-      {!channel && !window.PF_EMBED && <PostComposer onPost={addPost} superUser={composerSuperUser}
-      devRole={composerRole} onDevRole={setComposerRole} lockedAdmin={viewerCurrent.admin} />}
-      {!channel && !window.PF_EMBED &&
-      <ComposerDevToggle role={composerRole} onChange={setComposerRole} lockedAdmin={viewerCurrent.admin} />}
-      {!channel &&
-      <FeedPreviewPanel persona={viewerPersona} onPersona={setViewerPersona}
-      toggles={bucketToggles} onToggle={(k, v) => setBucketToggles((t) => ({ ...t, [k]: v }))} />
-      }
-      {visibleFeedItems.map(({ item: p, mode }) => {
+  /* Admin-pinned posts are lifted out of wherever the sequence placed them
+     and rendered first (in pin order, newest pin on top) inside the
+     collapsible Pinned Posts block; everything else keeps its designed
+     order below. Pins only apply to posts actually present in this view. */
+  const pinnedSet = new Set(pinnedIds);
+  const pinnedItems = pinnedIds.
+  map((id) => visibleFeedItems.find((x) => x.item.id === id)).
+  filter(Boolean).
+  map((x) => ({ ...x, pinned: true }));
+  const regularItems = pinnedItems.length ? visibleFeedItems.filter((x) => !pinnedSet.has(x.item.id)) : visibleFeedItems;
+
+  const renderFeedItem = ({ item: p, mode, pinned }) => {
+    const pinProps = { pinned: !!pinned, canPin, onPin: () => togglePin(p.id) };
         if (mode === "teaser") {
           return <TeaserPost key={p.id} post={p} onUpgrade={() => setUpgradeFor(p)} />;
         }
@@ -6521,7 +6823,7 @@ function Feed({ channel } = {}) {
            not split into a separate surface — so it gets the compact card. */
         if (p.channel) {
           return (
-            <ChannelFeedCard key={p.id} post={p} st={st}
+            <ChannelFeedCard key={p.id} post={p} st={st} {...pinProps}
             onToggleLike={onToggleLike} onReact={setReaction} onDoubleTapLove={onDoubleTapLove} onAddComment={onAddComment}
             onAddReply={(cid, text) => setState((s) => {
               const cur = s[p.id];
@@ -6539,7 +6841,7 @@ function Feed({ channel } = {}) {
         }
         if (p.bucket === "coursecomment") {
           return (
-            <CourseCommentCard key={p.id} post={p} st={st}
+            <CourseCommentCard key={p.id} post={p} st={st} {...pinProps}
             onToggleLike={onToggleLike} onReact={setReaction} onAddComment={onAddComment}
             onSave={() => toggleSave(p.id)}
             onShare={() => setState((s) => {
@@ -6549,7 +6851,7 @@ function Feed({ channel } = {}) {
 
         }
         return (
-          <FeedPost key={p.id} post={p} st={st}
+          <FeedPost key={p.id} post={p} st={st} {...pinProps}
           onToggleLike={onToggleLike}
           onReact={setReaction}
           onDoubleTapLove={onDoubleTapLove}
@@ -6571,7 +6873,46 @@ function Feed({ channel } = {}) {
           onSave={() => toggleSave(p.id)} />);
 
 
-      })}
+  };
+
+  return (
+    <main className="feed" data-screen-label="Home feed">
+      {!channel && !window.PF_EMBED && <PostComposer onPost={addPost} superUser={composerSuperUser}
+      devRole={composerRole} onDevRole={setComposerRole} lockedAdmin={viewerCurrent.admin} />}
+      {!channel && !window.PF_EMBED &&
+      <ComposerDevToggle role={composerRole} onChange={setComposerRole} lockedAdmin={viewerCurrent.admin} />}
+      {!channel &&
+      <FeedPreviewPanel persona={viewerPersona} onPersona={setViewerPersona}
+      toggles={bucketToggles} onToggle={(k, v) => setBucketToggles((t) => ({ ...t, [k]: v }))} />
+      }
+      {pinnedItems.length > 0 &&
+      <PinnedSection innerRef={pinnedRef}>
+        {pinnedItems.map((x) => {
+          const mini = minimizedPins.includes(x.item.id);
+          return (
+            <div key={x.item.id} className={"pf-pinned-card" + (mini ? " is-mini" : "")}>
+              <div className="pf-pinned-card-tag">
+                <span className="pf-pinned-card-tag-tx">
+                  <IconifyIcon name="fluent:pin-16-filled" size={15} color="#fff" />Pinned
+                </span>
+                <button type="button" className="pf-pinned-card-tag-btn" onClick={() => toggleMinimizePin(x.item.id)}
+                aria-expanded={!mini} aria-label={mini ? "Expand pinned post" : "Minimize pinned post"}>
+                  {mini ? "Expand" : "Minimize"}
+                  <IconifyIcon name={mini ? "lucide:chevron-down" : "lucide:chevron-up"} size={15} color="currentColor" />
+                </button>
+              </div>
+              {mini ? <PinnedMiniCard post={x.item} onExpand={() => toggleMinimizePin(x.item.id)} /> : renderFeedItem(x)}
+            </div>);
+        })}
+      </PinnedSection>
+      }
+      {regularItems.map(renderFeedItem)}
+      {pinToast &&
+      <div className="pf-save-toast" role="status">
+        <span className="pf-save-toast-ck"><IconifyIcon name="lucide:pin" size={12} color="#0a0a0a" /></span>
+        <span className="pf-save-toast-tx">{pinToast}</span>
+      </div>
+      }
       {upgradeFor &&
       <UpgradeModal label={(BUCKET_META[upgradeFor.bucket] || {}).label}
       bucket={upgradeFor.bucket}

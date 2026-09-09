@@ -3575,6 +3575,34 @@ const LIVE_NOW_POST = {
   actioned: false,
   commentList: thread("Joining from Manchester — perfect timing, just finished clinic 🙌")
 };
+
+/* Sample admin-pinned announcement — pinned by default on the web newsfeed
+   (see PF_PINNED_DEFAULTS) so the Pinned Posts block is visible without
+   first switching to the Admin persona. Unpinning it drops it back into the
+   feed as a normal post; it's web-only like SAMPLE_CAROUSEL_POST. */
+const SAMPLE_PINNED_POST = {
+  id: "ff_pinned1",
+  author: PROFINITY,
+  keepAuthor: true,
+  time: "2d",
+  hashtags: ["community"],
+  /* viewer:true → PinnedVideoTile in the feed (portrait clip letterboxed in
+     a black 16:9 tile) and a click opens FullVideoViewer, the full-page
+     reel-style player. The bundled clip is landscape, so it's cover-cropped
+     to 9:16 — swap in a real portrait clip via src when one is available. */
+  sample: {
+    type: "video",
+    src: "assets/sample-reel.mp4",
+    viewer: true,
+    ratio: 9 / 16
+  },
+  body: "Welcome to the PROfinity Academy community! 👋 Say hello in the comments and tell us where you're injecting from.",
+  likes: "1.2K",
+  comments: "214",
+  shares: "96",
+  actioned: false,
+  commentList: thread("Hello from Leeds! Two years injecting, here to learn the full-face approach 🙌")
+};
 const PORTRAIT_IMG_POST_1 = {
   id: "ff_ptimg1",
   author: MIRANDA,
@@ -4673,7 +4701,7 @@ const TIER_FEED_SEQUENCES = {
    to seed interaction state and search so switching tiers via the live
    persona-preview switcher never loses a post's likes/comments state, and
    Search can still find posts that only some tiers' sequences contain. */
-const ALL_FEED_SEQUENCE_POSTS = Object.values([LIVE_NOW_POST, SAMPLE_LONG_TEXT_POST, SAMPLE_CAROUSEL_POST, ...FREE_FEED_SEQUENCE, ...CONFIDENCE_FEED_SEQUENCE, ...MASTERY_FEED_SEQUENCE].reduce((m, p) => {
+const ALL_FEED_SEQUENCE_POSTS = Object.values([LIVE_NOW_POST, SAMPLE_LONG_TEXT_POST, SAMPLE_CAROUSEL_POST, SAMPLE_PINNED_POST, ...FREE_FEED_SEQUENCE, ...CONFIDENCE_FEED_SEQUENCE, ...MASTERY_FEED_SEQUENCE].reduce((m, p) => {
   m[p.id] = p;
   return m;
 }, {}));
@@ -5744,27 +5772,775 @@ function ComposerIconButton({
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
+    className: "pfw-composer-icon",
     onClick: onClick,
     "aria-label": label,
+    title: label,
     disabled: disabled,
     style: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      width: 34,
-      height: 34,
-      flexShrink: 0,
-      borderRadius: "var(--r-pill)",
-      border: "none",
       cursor: disabled ? "default" : "pointer",
-      opacity: disabled ? 0.35 : 1,
-      background: "transparent"
+      opacity: disabled ? 0.35 : 1
     }
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
     name: icon,
-    size: 19,
+    size: 30,
     color: color
   }));
+}
+
+/* Post categories — the same nine buckets CreatePostMobile's "Select
+   category" offers, rendered here as icon chips instead of bare checkboxes.
+   `chip` is the short form the posted card shows as a #tag (the DS PostCard
+   collapses hashtag labels, so "Regenerative Therapy (Clinic)" would come
+   out as #regenerativetherapy(clinic) otherwise). */
+const PFW_POST_CATEGORIES = [{
+  slug: "cat-exercise",
+  label: "Exercise",
+  chip: "Exercise",
+  icon: "lucide:dumbbell",
+  accent: "#F97316"
+}, {
+  slug: "cat-diet",
+  label: "Diet",
+  chip: "Diet",
+  icon: "lucide:apple",
+  accent: "#22C55E"
+}, {
+  slug: "cat-sleep",
+  label: "Sleep",
+  chip: "Sleep",
+  icon: "lucide:moon",
+  accent: "#6366F1"
+}, {
+  slug: "cat-recovery",
+  label: "Recovery",
+  chip: "Recovery",
+  icon: "lucide:heart-pulse",
+  accent: "#EC4899"
+}, {
+  slug: "cat-business",
+  label: "Business",
+  chip: "Business",
+  icon: "lucide:briefcase",
+  accent: "#0EA5E9"
+}, {
+  slug: "cat-regen-clinic",
+  label: "Regenerative Therapy (Clinic)",
+  chip: "RegenClinic",
+  icon: "lucide:stethoscope",
+  accent: "#14B8A6"
+}, {
+  slug: "cat-regen-home",
+  label: "Regenerative Therapy (Home)",
+  chip: "RegenHome",
+  icon: "lucide:house",
+  accent: "#8B5CF6"
+}, {
+  slug: "cat-social",
+  label: "Social Connection",
+  chip: "Social",
+  icon: "lucide:users",
+  accent: "#F59E0B"
+}, {
+  slug: "cat-supplement",
+  label: "Supplement & Medicine",
+  chip: "Supplements",
+  icon: "lucide:pill",
+  accent: "#EF4444"
+}];
+const PFW_CATEGORY_MAP = PFW_POST_CATEGORIES.reduce((m, c) => {
+  m[c.slug] = c;
+  return m;
+}, {});
+/* Category slugs -> hashtag-shaped objects the DS PostCard already knows how
+   to render as chips, so a categorised post needs no new card markup. */
+function categoryTags(slugs) {
+  return (slugs || []).map(s => PFW_CATEGORY_MAP[s]).filter(Boolean).map(c => ({
+    slug: c.slug,
+    label: c.chip,
+    icon: c.icon
+  }));
+}
+function PostCategoryPicker({
+  value,
+  onChange
+}) {
+  /* Functional update so rapid successive taps never clobber each other. */
+  const toggle = slug => onChange(prev => prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]);
+  return /*#__PURE__*/React.createElement("section", {
+    className: "pfw-cat",
+    "aria-label": "Select category"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cat-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cat-heading"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cat-title"
+  }, "Category"), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cat-sub"
+  }, value.length ? value.length + " selected" : "Pick what this post is about")), value.length > 0 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cat-clear",
+    onClick: () => onChange([])
+  }, "Clear")), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cat-grid",
+    role: "group",
+    "aria-label": "Categories"
+  }, PFW_POST_CATEGORIES.map(c => {
+    const on = value.includes(c.slug);
+    return /*#__PURE__*/React.createElement("button", {
+      key: c.slug,
+      type: "button",
+      role: "checkbox",
+      "aria-checked": on,
+      className: "pfw-cat-chip" + (on ? " on" : ""),
+      style: {
+        "--cat": c.accent
+      },
+      onClick: () => toggle(c.slug)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "pfw-cat-ico"
+    }, /*#__PURE__*/React.createElement(IconifyIcon, {
+      name: c.icon,
+      size: 15,
+      color: on ? "#fff" : c.accent
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "pfw-cat-label"
+    }, c.label), /*#__PURE__*/React.createElement("span", {
+      className: "pfw-cat-check",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(IconifyIcon, {
+      name: "lucide:check",
+      size: 12,
+      color: "#fff"
+    })));
+  })));
+}
+
+/* ---- "Add to your post" options (web) ----
+   Photo / Camera / Video / Document / Mention / Emoji / Poll / Location /
+   Aa background — the same set CreatePostMobile offers, as labelled colour
+   buttons. Background swatches are copied from create-post-mobile's
+   CP_BACKGROUNDS so a styled post looks identical on both surfaces. */
+const PFW_BACKGROUNDS = [{
+  id: "none",
+  label: "No background",
+  css: "",
+  fg: "var(--text-primary)"
+}, {
+  id: "navy",
+  label: "Navy",
+  css: "linear-gradient(150deg,#292569,#3d3688)",
+  fg: "#fff"
+}, {
+  id: "gold",
+  label: "Gold",
+  css: "linear-gradient(150deg,#ce9957,#a26301)",
+  fg: "#fff"
+}, {
+  id: "purple",
+  label: "AI purple",
+  css: "linear-gradient(150deg,#6c63ff,#4022a8)",
+  fg: "#fff"
+}, {
+  id: "teal",
+  label: "Clinical teal",
+  css: "linear-gradient(150deg,#25515c,#173840)",
+  fg: "#fff"
+}, {
+  id: "cream",
+  label: "Cream",
+  css: "linear-gradient(150deg,#fcf4e4,#f3e3c8)",
+  fg: "var(--brand-navy)"
+}, {
+  id: "navygold",
+  label: "Navy to gold",
+  css: "linear-gradient(150deg,#292569 40%,#ce9957)",
+  fg: "#fff"
+}, {
+  id: "sunrise",
+  label: "Sunrise",
+  css: "linear-gradient(150deg,#e58f0c,#be1e2d)",
+  fg: "#fff"
+}, {
+  id: "mint",
+  label: "Mint",
+  css: "linear-gradient(150deg,#2a9568,#186b4a)",
+  fg: "#fff"
+}, {
+  id: "slate",
+  label: "Slate",
+  css: "linear-gradient(150deg,#475467,#1f2937)",
+  fg: "#fff"
+}, {
+  id: "blush",
+  label: "Blush",
+  css: "linear-gradient(150deg,#f7d6de,#e9afbe)",
+  fg: "var(--brand-navy)"
+}, {
+  id: "ink",
+  label: "Ink",
+  css: "#101828",
+  fg: "#fff"
+}];
+const PFW_MENTION_PEOPLE = [TIM, MIRANDA, PROFINITY, AMIR, PRIYA, SARAH, MARK, BETH, OWEN, RACHEL, LEO];
+const PFW_PLACES = ["Harley Street, London", "London, United Kingdom", "Manchester, United Kingdom", "Birmingham, United Kingdom", "Leeds, United Kingdom", "Edinburgh, United Kingdom", "Bristol, United Kingdom", "Dublin, Ireland", "Dubai, United Arab Emirates", "Sydney, Australia", "Profinity HQ"];
+const PFW_DOC_ACCEPT = ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.csv";
+function pfwFileSize(bytes) {
+  if (!bytes && bytes !== 0) return "";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+function pfwDocKind(doc) {
+  const ext = (doc.name || "").split(".").pop().toLowerCase();
+  if (ext === "pdf") return {
+    tag: "PDF",
+    color: "#e0432f",
+    icon: "lucide:file-text"
+  };
+  if (ext === "doc" || ext === "docx") return {
+    tag: "DOC",
+    color: "#2b5fb4",
+    icon: "lucide:file-text"
+  };
+  if (ext === "ppt" || ext === "pptx") return {
+    tag: "PPT",
+    color: "#d2521c",
+    icon: "lucide:presentation"
+  };
+  if (ext === "xls" || ext === "xlsx" || ext === "csv") return {
+    tag: "XLS",
+    color: "#1f8a4c",
+    icon: "lucide:sheet"
+  };
+  return {
+    tag: ext.toUpperCase().slice(0, 4) || "FILE",
+    color: "#475467",
+    icon: "lucide:file"
+  };
+}
+
+/* Attached document card — in the composer (with a remove button) and on
+   the posted card (read-only, opens the file in a new tab). */
+function DocAttachment({
+  doc,
+  onRemove
+}) {
+  const kind = pfwDocKind(doc);
+  const inner = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-doc-ico",
+    style: {
+      background: kind.color
+    }
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: kind.icon,
+    size: 20,
+    color: "#fff"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-doc-tag"
+  }, kind.tag)), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-doc-meta"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-doc-name"
+  }, doc.name), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-doc-sub"
+  }, [kind.tag + " document", pfwFileSize(doc.size)].filter(Boolean).join(" · "))));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pfw-doc" + (onRemove ? "" : " is-link")
+  }, onRemove ? /*#__PURE__*/React.createElement("div", {
+    className: "pfw-doc-main"
+  }, inner) : /*#__PURE__*/React.createElement("a", {
+    className: "pfw-doc-main",
+    href: doc.url || "#",
+    target: "_blank",
+    rel: "noreferrer",
+    onClick: e => e.stopPropagation()
+  }, inner), onRemove ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-doc-x",
+    "aria-label": "Remove document",
+    onClick: onRemove
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 14,
+    color: "var(--text-secondary)"
+  })) : /*#__PURE__*/React.createElement("span", {
+    className: "pfw-doc-open"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:download",
+    size: 16,
+    color: "var(--text-secondary)"
+  })));
+}
+
+/* Small popover anchored above the option row; the transparent fixed
+   backdrop closes it on outside click (same pattern as EmojiPicker). */
+function PfwPopover({
+  label,
+  width,
+  onClose,
+  children
+}) {
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, []);
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    onClick: onClose,
+    style: {
+      position: "fixed",
+      inset: 0,
+      zIndex: 1105
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cp-pop",
+    role: "dialog",
+    "aria-label": label,
+    style: {
+      width
+    }
+  }, children));
+}
+function WebMentionPicker({
+  onPick,
+  onClose
+}) {
+  const [q, setQ] = useState("");
+  const inputRef = useRef(null);
+  useEffect(() => {
+    if (inputRef.current) inputRef.current.focus();
+  }, []);
+  const list = PFW_MENTION_PEOPLE.filter(p => p.name.toLowerCase().includes(q.trim().toLowerCase()));
+  return /*#__PURE__*/React.createElement(PfwPopover, {
+    label: "Mention someone",
+    width: 300,
+    onClose: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-pop-search"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:at-sign",
+    size: 15,
+    color: "var(--text-secondary)"
+  }), /*#__PURE__*/React.createElement("input", {
+    ref: inputRef,
+    value: q,
+    onChange: e => setQ(e.target.value),
+    placeholder: "Search people"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-pop-list",
+    role: "listbox"
+  }, list.map(p => /*#__PURE__*/React.createElement("button", {
+    key: p.name,
+    type: "button",
+    role: "option",
+    className: "pfw-pop-item",
+    onClick: () => onPick(p)
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: p.name,
+    src: p.avatar,
+    size: 30
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-pop-item-name"
+  }, p.name), p.seals && p.seals.includes("verified") && /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:badge-check",
+    size: 14,
+    color: "var(--info, #1d7fc4)"
+  }))), list.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "pfw-pop-empty"
+  }, "No one matches “", q, "”")));
+}
+function WebLocationPicker({
+  value,
+  onPick,
+  onClose
+}) {
+  const [q, setQ] = useState("");
+  const [locating, setLocating] = useState(false);
+  const inputRef = useRef(null);
+  useEffect(() => {
+    if (inputRef.current) inputRef.current.focus();
+  }, []);
+  const list = PFW_PLACES.filter(p => p.toLowerCase().includes(q.trim().toLowerCase()));
+  const custom = q.trim() && !PFW_PLACES.some(p => p.toLowerCase() === q.trim().toLowerCase());
+  const useCurrent = () => {
+    if (!navigator.geolocation) {
+      onPick({
+        name: "Current location"
+      });
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(pos => {
+      setLocating(false);
+      onPick({
+        name: "Current location",
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude
+      });
+    }, () => {
+      setLocating(false);
+      onPick({
+        name: "Current location"
+      });
+    }, {
+      timeout: 6000
+    });
+  };
+  return /*#__PURE__*/React.createElement(PfwPopover, {
+    label: "Add a location",
+    width: 320,
+    onClose: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-pop-search"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:search",
+    size: 15,
+    color: "var(--text-secondary)"
+  }), /*#__PURE__*/React.createElement("input", {
+    ref: inputRef,
+    value: q,
+    onChange: e => setQ(e.target.value),
+    placeholder: "Where are you?"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-pop-list",
+    role: "listbox"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-pop-item is-current",
+    onClick: useCurrent,
+    disabled: locating
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-pop-item-ico"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:locate-fixed",
+    size: 16,
+    color: "var(--info, #1d7fc4)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-pop-item-name"
+  }, locating ? "Locating…" : "Use my current location")), custom && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-pop-item",
+    onClick: () => onPick({
+      name: q.trim()
+    })
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-pop-item-ico"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:map-pin",
+    size: 16,
+    color: "#d03b3b"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-pop-item-name"
+  }, "Use “", q.trim(), "”")), list.map(p => /*#__PURE__*/React.createElement("button", {
+    key: p,
+    type: "button",
+    role: "option",
+    "aria-selected": value && value.name === p,
+    className: "pfw-pop-item" + (value && value.name === p ? " on" : ""),
+    onClick: () => onPick({
+      name: p
+    })
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-pop-item-ico"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:map-pin",
+    size: 16,
+    color: "#d03b3b"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-pop-item-name"
+  }, p), value && value.name === p && /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:check",
+    size: 14,
+    color: "var(--brand-navy)"
+  })))), value && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-pop-foot",
+    onClick: () => onPick(null)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 13,
+    color: "var(--error)"
+  }), "Remove location"));
+}
+
+/* Aa — background style grid (centered mini-modal). */
+function WebBackgroundPicker({
+  value,
+  onPick,
+  onClose
+}) {
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => document.removeEventListener("keydown", onKey, true);
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cover-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-mini-modal",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Background style",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "pfw-cover-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cover-title"
+  }, "Background"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cover-x",
+    "aria-label": "Done",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 18,
+    color: "var(--text-heading)"
+  }))), /*#__PURE__*/React.createElement("p", {
+    className: "pfw-cover-hint"
+  }, "Give a text-only post a colour backdrop. Photos and videos are cleared when a style is picked."), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-bg-grid",
+    role: "radiogroup",
+    "aria-label": "Background style"
+  }, PFW_BACKGROUNDS.map(b => {
+    const on = (value ? value.id : "none") === b.id;
+    return /*#__PURE__*/React.createElement("button", {
+      key: b.id,
+      type: "button",
+      role: "radio",
+      "aria-checked": on,
+      "aria-label": b.label,
+      title: b.label,
+      className: "pfw-bg-swatch" + (on ? " on" : "") + (b.id === "none" ? " none" : ""),
+      style: b.css ? {
+        background: b.css,
+        color: b.fg
+      } : undefined,
+      onClick: () => {
+        onPick(b.id === "none" ? null : {
+          id: b.id,
+          css: b.css,
+          fg: b.fg
+        });
+        onClose();
+      }
+    }, b.id === "none" ? /*#__PURE__*/React.createElement(IconifyIcon, {
+      name: "lucide:ban",
+      size: 20,
+      color: "var(--gray-450, #98a2b3)"
+    }) : /*#__PURE__*/React.createElement("span", {
+      className: "pfw-bg-aa"
+    }, "Aa"), on && b.id !== "none" && /*#__PURE__*/React.createElement("span", {
+      className: "pfw-bg-ck"
+    }, /*#__PURE__*/React.createElement(IconifyIcon, {
+      name: "lucide:check",
+      size: 14,
+      color: "var(--brand-navy)"
+    })));
+  }))));
+}
+
+/* Camera — live webcam preview captured to a still (data URL) that joins the
+   photo attachments. Falls back to a file picker if the camera is refused. */
+function WebCameraCapture({
+  onCapture,
+  onClose
+}) {
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const [error, setError] = useState(null);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    let cancelled = false;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError("Camera isn't available in this browser.");
+    } else {
+      navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user"
+        },
+        audio: false
+      }).then(stream => {
+        if (cancelled) {
+          stream.getTracks().forEach(t => t.stop());
+          return;
+        }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = () => setReady(true);
+        }
+      }).catch(() => setError("We couldn't access your camera. Check permissions, or upload a photo instead."));
+    }
+    return () => {
+      cancelled = true;
+      document.removeEventListener("keydown", onKey, true);
+      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    };
+  }, []);
+  const snap = () => {
+    const vEl = videoRef.current;
+    if (!vEl || !vEl.videoWidth) return;
+    const c = document.createElement("canvas");
+    c.width = vEl.videoWidth;
+    c.height = vEl.videoHeight;
+    const ctx = c.getContext("2d");
+    ctx.translate(c.width, 0);
+    ctx.scale(-1, 1); // un-mirror the selfie preview
+    ctx.drawImage(vEl, 0, 0, c.width, c.height);
+    onCapture(c.toDataURL("image/jpeg", 0.9));
+  };
+  const upload = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.capture = "environment";
+    input.onchange = e => {
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = () => onCapture(r.result);
+      r.readAsDataURL(f);
+    };
+    input.click();
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cover-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-mini-modal pfw-cam",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Take a photo",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "pfw-cover-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cover-title"
+  }, "Take a photo"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cover-x",
+    "aria-label": "Cancel",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 18,
+    color: "var(--text-heading)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cam-view"
+  }, /*#__PURE__*/React.createElement("video", {
+    ref: videoRef,
+    autoPlay: true,
+    muted: true,
+    playsInline: true,
+    className: ready ? "" : "hidden"
+  }), !ready && !error && /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cam-msg"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:camera",
+    size: 28,
+    color: "rgba(255,255,255,.6)"
+  }), "Starting camera…"), error && /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cam-msg"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:video-off",
+    size: 28,
+    color: "rgba(255,255,255,.6)"
+  }), error)), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cover-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cover-roll-btn",
+    onClick: upload
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:image",
+    size: 16,
+    color: "var(--brand-navy)"
+  }), "Upload a photo instead"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cam-shutter",
+    disabled: !ready,
+    onClick: snap,
+    "aria-label": "Take photo"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:camera",
+    size: 18,
+    color: "#fff"
+  }), "Capture"))));
+}
+
+/* Poll builder — the post text is the question; 2–4 answer options here. */
+function WebPollEditor({
+  options,
+  onChange,
+  onRemove
+}) {
+  const setAt = (i, val) => onChange(options.map((o, j) => j === i ? val : o));
+  const remove = i => onChange(options.filter((_, j) => j !== i));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pfw-poll-ed",
+    "aria-label": "Poll options"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-poll-ed-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-poll-ed-title"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:bar-chart-2",
+    size: 15,
+    color: "#1d7fc4"
+  }), "Poll"), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-poll-ed-sub"
+  }, "Your text above is the question"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cat-clear",
+    onClick: onRemove
+  }, "Remove poll")), options.map((o, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "pfw-poll-ed-row"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-poll-ed-n"
+  }, i + 1), /*#__PURE__*/React.createElement("input", {
+    value: o,
+    maxLength: 60,
+    placeholder: "Option " + (i + 1),
+    onChange: e => setAt(i, e.target.value)
+  }), options.length > 2 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-poll-ed-x",
+    "aria-label": "Remove option " + (i + 1),
+    onClick: () => remove(i)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 14,
+    color: "var(--text-secondary)"
+  })))), options.length < 4 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-poll-ed-add",
+    onClick: () => onChange([...options, ""])
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:plus",
+    size: 15,
+    color: "var(--brand-navy)"
+  }), "Add option"));
 }
 function PostComposer({
   onPost,
@@ -5776,6 +6552,11 @@ function PostComposer({
   const [v, setV] = useState("");
   const [images, setImages] = useState([]);
   const [video, setVideo] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [poll, setPoll] = useState(null); // null | { options: string[] }
+  const [doc, setDoc] = useState(null); // { name, size, type, url }
+  const [location, setLocation] = useState(null); // { name, lat?, lng? }
+  const [bg, setBg] = useState(null); // { id, css, fg }
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [liveStage, setLiveStage] = useState(null); // null | "precam" | "live"
   /* ?golive=1 deep-links straight into the camera stage (Profile's "Go live
@@ -5818,19 +6599,69 @@ function PostComposer({
     setScheduled(item);
   };
   const firstName = (ME.name || "").split(" ")[0];
-  const ready = v.trim().length > 0 || images.length > 0 || !!video;
+  const pollOptions = poll ? poll.options.map(o => o.trim()).filter(Boolean) : [];
+  const ready = poll ? v.trim().length > 0 && pollOptions.length >= 2 : v.trim().length > 0 || images.length > 0 || !!video || !!doc;
   const submit = () => {
     if (!ready) return;
     onPost({
       body: v.trim(),
       media: images,
-      video
+      video,
+      categories,
+      poll: poll ? {
+        question: v.trim(),
+        options: pollOptions.map(label => ({
+          label,
+          pct: 0
+        })),
+        votes: 0
+      } : null,
+      document: doc,
+      location,
+      bg: images.length === 0 && !video && !poll ? bg : null
     });
     setV("");
     setImages([]);
     setVideo(null);
+    setCategories([]);
+    setPoll(null);
+    setDoc(null);
+    setLocation(null);
+    setBg(null);
     setModalOpen(false);
   };
+  const pickDocument = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = PFW_DOC_ACCEPT;
+    input.onchange = e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      if (doc && doc.url) {
+        try {
+          URL.revokeObjectURL(doc.url);
+        } catch (err) {}
+      }
+      setDoc({
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        url: URL.createObjectURL(file)
+      });
+    };
+    input.click();
+  };
+  /* Photos/video and a backdrop are mutually exclusive (same rule as mobile). */
+  const pickBg = next => {
+    setBg(next);
+    if (next) {
+      setImages([]);
+      if (video) removeVideo();
+    }
+  };
+  const togglePoll = () => setPoll(p => p ? null : {
+    options: ["", ""]
+  });
   const openModal = () => setModalOpen(true);
   const openModalAnd = fn => () => {
     setModalOpen(true);
@@ -5918,77 +6749,40 @@ function PostComposer({
     setLiveDescription("");
   };
   return /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      flexDirection: "column",
-      gap: 10,
-      background: "var(--surface-card)",
-      border: "1px solid var(--border-default)",
-      borderRadius: "var(--r-md)",
-      boxShadow: "var(--shadow-card)",
-      padding: 16
-    }
+    className: "pfw-composer-card"
   }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 12
-    }
+    className: "pfw-composer-row"
   }, /*#__PURE__*/React.createElement(Avatar, {
     name: ME.name,
     src: ME.avatar,
-    size: 44
+    size: 48
   }), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pfw-cp-pill-trigger",
     "aria-haspopup": "dialog",
-    onClick: openModal,
-    style: {
-      flex: 1,
-      textAlign: "left",
-      display: "flex",
-      alignItems: "center",
-      gap: 4,
-      background: "var(--surface-sunken)",
-      border: "1px solid var(--border-default)",
-      borderRadius: "var(--r-pill)",
-      padding: "9px 9px 9px 18px",
-      cursor: "pointer"
-    }
+    onClick: openModal
   }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cp-pill-text",
     style: {
-      flex: 1,
-      fontFamily: "var(--font-sans)",
-      fontSize: "var(--fs-body-lg)",
-      color: v ? "var(--text-primary)" : "var(--text-secondary)",
-      minWidth: 0,
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap"
+      color: v ? "var(--text-primary)" : "var(--text-secondary)"
     }
-  }, v || "What's on your mind, " + firstName + "?"))), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      alignItems: "center",
-      gap: 6,
-      borderTop: "1px solid var(--border-default)",
-      paddingTop: 10
-    }
+  }, v || "What's on your mind, " + firstName + "?")), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-composer-quick"
   }, /*#__PURE__*/React.createElement(ComposerIconButton, {
-    icon: "lucide:video",
-    color: "var(--error)",
+    icon: "fluent:video-24-filled",
+    color: "#E8455D",
     label: "Add video",
     onClick: openModalAnd(pickVideo),
     disabled: images.length > 0
   }), /*#__PURE__*/React.createElement(ComposerIconButton, {
-    icon: "lucide:image",
-    color: "var(--success)",
+    icon: "fluent:image-multiple-24-filled",
+    color: "#3DBE5B",
     label: "Add photo",
     onClick: openModalAnd(pickImages),
     disabled: !!video
   }), /*#__PURE__*/React.createElement(ComposerIconButton, {
-    icon: "lucide:clapperboard",
-    color: "var(--reaction-love)",
+    icon: "fluent:movies-and-tv-24-filled",
+    color: "#E8455D",
     label: "Add reel",
     onClick: openModal
   }), superUser && /*#__PURE__*/React.createElement("button", {
@@ -6000,12 +6794,24 @@ function PostComposer({
     name: "lucide:radio",
     size: 15,
     color: "var(--error)"
-  }), "Go Live")), modalOpen && /*#__PURE__*/React.createElement(CreatePostModal, {
+  }), "Go Live"))), modalOpen && /*#__PURE__*/React.createElement(CreatePostModal, {
     v: v,
     setV: setV,
     images: images,
     setImages: setImages,
     video: video,
+    categories: categories,
+    setCategories: setCategories,
+    poll: poll,
+    setPoll: setPoll,
+    togglePoll: togglePoll,
+    doc: doc,
+    setDoc: setDoc,
+    pickDocument: pickDocument,
+    location: location,
+    setLocation: setLocation,
+    bg: bg,
+    pickBg: pickBg,
     pickImages: pickImages,
     pickVideo: pickVideo,
     removeVideo: removeVideo,
@@ -6057,6 +6863,18 @@ function CreatePostModal({
   images,
   setImages,
   video,
+  categories,
+  setCategories,
+  poll,
+  setPoll,
+  togglePoll,
+  doc,
+  setDoc,
+  pickDocument,
+  location,
+  setLocation,
+  bg,
+  pickBg,
   pickImages,
   pickVideo,
   removeVideo,
@@ -6074,6 +6892,67 @@ function CreatePostModal({
   onClose
 }) {
   const textareaRef = useRef(null);
+  const [pop, setPop] = useState(null); // null | "mention" | "emoji-field" | "location"
+  const [bgOpen, setBgOpen] = useState(false);
+  const [cameraOpen, setCameraOpen] = useState(false);
+
+  /* Drop text at the caret (mentions, emoji) and put the caret after it. */
+  const insertText = text => {
+    const ta = textareaRef.current;
+    const start = ta ? ta.selectionStart : v.length;
+    const end = ta ? ta.selectionEnd : v.length;
+    const lead = start > 0 && !/\s$/.test(v.slice(0, start)) && text.startsWith("@") ? " " : "";
+    const next = v.slice(0, start) + lead + text + v.slice(end);
+    setV(next);
+    const caret = start + lead.length + text.length;
+    requestAnimationFrame(() => {
+      if (ta) {
+        ta.focus();
+        try {
+          ta.setSelectionRange(caret, caret);
+        } catch (e) {}
+      }
+    });
+  };
+  const hasMedia = images.length > 0 || !!video;
+  const options = [{
+    key: "photo",
+    icon: "lucide:image",
+    label: "Photo",
+    color: "#2d9d5a",
+    onClick: pickImages,
+    disabled: !!video || !!poll || !!bg
+  }, {
+    key: "camera",
+    icon: "lucide:camera",
+    label: "Camera",
+    color: "#292569",
+    onClick: () => setCameraOpen(true),
+    disabled: !!video || !!poll || !!bg || images.length >= 5
+  }, {
+    key: "video",
+    icon: "lucide:video",
+    label: "Video",
+    color: "#c8323a",
+    onClick: pickVideo,
+    disabled: images.length > 0 || !!poll || !!bg
+  }, {
+    key: "doc",
+    icon: "lucide:file-text",
+    label: "Document",
+    color: "#e56c1b",
+    onClick: pickDocument,
+    disabled: !!poll,
+    active: !!doc
+  }, {
+    key: "poll",
+    icon: "lucide:bar-chart-2",
+    label: "Poll",
+    color: "#1d7fc4",
+    onClick: togglePoll,
+    disabled: hasMedia || !!bg || !!doc,
+    active: !!poll
+  }];
   useEffect(() => {
     if (textareaRef.current) textareaRef.current.focus();
     const onKey = e => {
@@ -6129,12 +7008,109 @@ function CreatePostModal({
     onClick: () => onDevRole(r.key)
   }, r.name))))), /*#__PURE__*/React.createElement("div", {
     className: "pfw-cp-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cp-quick"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cp-quick-item"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cp-chip" + (pop === "mention" ? " on" : ""),
+    "aria-haspopup": "dialog",
+    "aria-expanded": pop === "mention",
+    onClick: () => setPop(pop === "mention" ? null : "mention")
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:at-sign",
+    size: 17,
+    color: "currentColor"
+  }), "Mention"), pop === "mention" && /*#__PURE__*/React.createElement(WebMentionPicker, {
+    onPick: p => {
+      insertText("@" + p.name + " ");
+      setPop(null);
+    },
+    onClose: () => setPop(null)
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cp-quick-item"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cp-chip" + (pop === "location" || location ? " on" : "") + (location ? " has-value" : ""),
+    "aria-haspopup": "dialog",
+    "aria-expanded": pop === "location",
+    onClick: () => setPop(pop === "location" ? null : "location")
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:map-pin",
+    size: 17,
+    color: location ? "#d03b3b" : "currentColor"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cp-chip-label"
+  }, location ? location.name : "Location")), location && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cp-chip-x",
+    "aria-label": "Remove location",
+    onClick: () => setLocation(null)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 13,
+    color: "var(--text-secondary)"
+  })), pop === "location" && /*#__PURE__*/React.createElement(WebLocationPicker, {
+    value: location,
+    onPick: loc => {
+      setLocation(loc);
+      setPop(null);
+    },
+    onClose: () => setPop(null)
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pfw-cp-write" + (bg ? " has-bg" : ""),
+    style: bg ? {
+      background: bg.css,
+      "--bg-fg": bg.fg
+    } : undefined
   }, /*#__PURE__*/React.createElement("textarea", {
     ref: textareaRef,
     value: v,
     onChange: e => setV(e.target.value),
-    placeholder: "What's on your mind, " + firstName + "?",
+    placeholder: poll ? "Ask your question…" : "What's on your mind, " + firstName + "?",
     className: "pfw-cp-textarea"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cp-aa-fab",
+    "aria-label": "Background style",
+    title: "Background style",
+    disabled: hasMedia || !!poll,
+    onClick: () => setBgOpen(true)
+  }, "Aa"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cp-emoji-fab" + (pop === "emoji-field" ? " on" : ""),
+    "aria-label": "Add emoji",
+    title: "Emoji",
+    onClick: () => setPop(pop === "emoji-field" ? null : "emoji-field")
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:smile",
+    size: 22,
+    color: bg ? bg.fg : "var(--text-secondary)"
+  })), pop === "emoji-field" && /*#__PURE__*/React.createElement(PfwPopover, {
+    label: "Pick an emoji",
+    width: 244,
+    onClose: () => setPop(null)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pfw-emoji-grid",
+    role: "menu"
+  }, COMMENT_EMOJI.map(em => /*#__PURE__*/React.createElement("button", {
+    key: em,
+    type: "button",
+    role: "menuitem",
+    onClick: () => {
+      insertText(em);
+      setPop(null);
+    }
+  }, em))))), poll && /*#__PURE__*/React.createElement(WebPollEditor, {
+    options: poll.options,
+    onChange: options => setPoll({
+      options
+    }),
+    onRemove: () => setPoll(null)
+  }), doc && /*#__PURE__*/React.createElement(DocAttachment, {
+    doc: doc,
+    onRemove: () => setDoc(null)
   }), images.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "pfw-cp-images"
   }, images.map((src, i) => /*#__PURE__*/React.createElement("div", {
@@ -6182,33 +7158,49 @@ function CreatePostModal({
     type: "button",
     className: "pfw-video-edit",
     onClick: () => setCoverPickerOpen(true)
-  }, "Edit cover")))), /*#__PURE__*/React.createElement("div", {
+  }, "Edit cover"))), /*#__PURE__*/React.createElement(PostCategoryPicker, {
+    value: categories,
+    onChange: setCategories
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pfw-cp-addrow",
     "aria-label": "Add to your post"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pfw-cp-add-icons"
-  }, /*#__PURE__*/React.createElement(ComposerIconButton, {
-    icon: "lucide:image",
-    color: "var(--success)",
-    label: "Add photo",
-    onClick: pickImages,
-    disabled: !!video
-  }), /*#__PURE__*/React.createElement(ComposerIconButton, {
-    icon: "lucide:video",
-    color: "var(--error)",
-    label: "Add video",
-    onClick: pickVideo,
-    disabled: images.length > 0
-  }), superUser && /*#__PURE__*/React.createElement("button", {
+  }, options.map(o => /*#__PURE__*/React.createElement("button", {
+    key: o.key,
     type: "button",
-    className: "pfw-cp-live-btn",
+    title: o.iconOnly ? o.label : undefined,
+    "aria-label": o.label,
+    "aria-pressed": o.active || undefined,
+    disabled: o.disabled,
+    className: "pfw-cp-opt" + (o.active ? " on" : "") + (o.iconOnly ? " icon-only" : ""),
+    style: {
+      "--opt": o.color
+    },
+    onClick: o.onClick
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cp-opt-ico"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: o.icon,
+    size: 15,
+    color: "#fff"
+  })), !o.iconOnly && /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cp-opt-label"
+  }, o.label))), superUser && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pfw-cp-opt",
     "aria-label": "Go live",
+    style: {
+      "--opt": "#e0432f"
+    },
     onClick: onGoLive
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cp-opt-ico"
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
     name: "lucide:radio",
     size: 15,
-    color: "var(--error)"
-  }), "Live"))), /*#__PURE__*/React.createElement("button", {
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pfw-cp-opt-label"
+  }, "Live"))), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pfw-cp-post-btn",
     disabled: !ready,
@@ -6217,6 +7209,16 @@ function CreatePostModal({
     video: video,
     onConfirm: handleCoverConfirm,
     onClose: () => setCoverPickerOpen(false)
+  }), bgOpen && /*#__PURE__*/React.createElement(WebBackgroundPicker, {
+    value: bg,
+    onPick: pickBg,
+    onClose: () => setBgOpen(false)
+  }), cameraOpen && /*#__PURE__*/React.createElement(WebCameraCapture, {
+    onCapture: src => {
+      setImages(prev => [...prev, src].slice(0, 5));
+      setCameraOpen(false);
+    },
+    onClose: () => setCameraOpen(false)
   })));
 }
 
@@ -8225,6 +9227,366 @@ function LiveNowMedia({
     color: "var(--white)"
   }), live.viewers), heartNode);
 }
+
+/* Feed tile for a real portrait clip: black 16:9 letterbox with the 9:16
+   video centred (like a vertical video in the Facebook feed), autoplaying
+   muted with a light scrubber. Clicking anywhere opens FullVideoViewer. */
+function fmtClock(sec) {
+  if (!isFinite(sec) || sec < 0) sec = 0;
+  const m = Math.floor(sec / 60),
+    s = Math.floor(sec % 60);
+  return m + ":" + (s < 10 ? "0" : "") + s;
+}
+function PinnedVideoTile({
+  sample,
+  author,
+  caption,
+  likes,
+  commentsCount,
+  shares,
+  liked,
+  saved,
+  onLike,
+  onComment,
+  onShare,
+  onSave,
+  onLoveReact
+}) {
+  const vidRef = useRef(null);
+  const [open, setOpen] = useState(false);
+  const [muted, setMuted] = useState(true);
+  const [playing, setPlaying] = useState(true);
+  const [t, setT] = useState({
+    cur: 0,
+    dur: 0
+  });
+  useEffect(() => {
+    const v = vidRef.current;
+    if (!v) return;
+    if (open) v.pause();else if (playing) v.play().catch(() => {});
+  }, [open, playing]);
+  const onTime = () => {
+    const v = vidRef.current;
+    if (v) setT({
+      cur: v.currentTime,
+      dur: v.duration || 0
+    });
+  };
+  const pct = t.dur ? Math.min(100, t.cur / t.dur * 100) : 0;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "pf-vid-tile",
+    role: "button",
+    tabIndex: 0,
+    "aria-label": "Open video",
+    onClick: () => setOpen(true),
+    onKeyDown: e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        setOpen(true);
+      }
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-vid-frame"
+  }, /*#__PURE__*/React.createElement("video", {
+    ref: vidRef,
+    src: sample.src,
+    muted: muted,
+    autoPlay: true,
+    loop: true,
+    playsInline: true,
+    preload: "metadata",
+    onTimeUpdate: onTime,
+    onLoadedMetadata: onTime
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pf-vid-bar",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-vid-ctl",
+    "aria-label": playing ? "Pause" : "Play",
+    onClick: () => setPlaying(p => !p)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: playing ? "fluent:pause-16-filled" : "fluent:play-16-filled",
+    size: 16,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pf-vid-time"
+  }, fmtClock(t.cur), " / ", fmtClock(t.dur)), /*#__PURE__*/React.createElement("span", {
+    className: "pf-vid-track"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-vid-fill",
+    style: {
+      width: pct + "%"
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pf-vid-spacer"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-vid-ctl",
+    "aria-label": muted ? "Unmute" : "Mute",
+    onClick: () => setMuted(m => !m)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: muted ? "lucide:volume-x" : "lucide:volume-2",
+    size: 17,
+    color: "#fff"
+  })))), open && /*#__PURE__*/React.createElement(FullVideoViewer, {
+    sample: sample,
+    author: author,
+    caption: caption,
+    muted: muted,
+    setMuted: setMuted,
+    likes: likes,
+    commentsCount: commentsCount,
+    shares: shares,
+    liked: liked,
+    saved: saved,
+    onLike: onLike,
+    onComment: onComment,
+    onShare: onShare,
+    onSave: onSave,
+    onClose: () => setOpen(false)
+  }));
+}
+
+/* Full-page reel-style player (web): black backdrop, the portrait clip
+   centred at viewport height, close + logo top-left, mute/list/search inside
+   the frame, author + Subscribe + caption over the bottom, and a vertical
+   action rail (like / comments / shares / more) beside the video. Rendered
+   through a portal so it escapes the post card's overflow:hidden. */
+function FullVideoViewer({
+  sample,
+  author,
+  caption,
+  muted,
+  setMuted,
+  likes,
+  commentsCount,
+  shares,
+  liked,
+  saved,
+  onLike,
+  onComment,
+  onShare,
+  onSave,
+  onClose
+}) {
+  const vidRef = useRef(null);
+  const [playing, setPlaying] = useState(true);
+  const [subscribed, setSubscribed] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [t, setT] = useState({
+    cur: 0,
+    dur: 0
+  });
+  useEffect(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
+  useEffect(() => {
+    const v = vidRef.current;
+    if (!v) return;
+    if (playing) v.play().catch(() => {});else v.pause();
+  }, [playing]);
+  const onTime = () => {
+    const v = vidRef.current;
+    if (v) setT({
+      cur: v.currentTime,
+      dur: v.duration || 0
+    });
+  };
+  const pct = t.dur ? Math.min(100, t.cur / t.dur * 100) : 0;
+  const a = author || {};
+  const node = /*#__PURE__*/React.createElement("div", {
+    className: "pf-fsv",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Video"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-fsv-topleft"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-fsv-round pf-fsv-close",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:x",
+    size: 22,
+    color: "#1c1e21"
+  })), /*#__PURE__*/React.createElement("img", {
+    className: "pf-fsv-logo",
+    src: "assets/profinity-icon.jpg",
+    alt: "PROfinity"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pf-fsv-stage"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-fsv-frame",
+    onClick: () => setPlaying(p => !p)
+  }, /*#__PURE__*/React.createElement("video", {
+    ref: vidRef,
+    src: sample.src,
+    muted: muted,
+    autoPlay: true,
+    loop: true,
+    playsInline: true,
+    onTimeUpdate: onTime,
+    onLoadedMetadata: onTime
+  }), !playing && /*#__PURE__*/React.createElement("span", {
+    className: "pf-fsv-bigplay"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "fluent:play-16-filled",
+    size: 34,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pf-fsv-frame-top",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-fsv-glass",
+    "aria-label": muted ? "Unmute" : "Mute",
+    onClick: () => setMuted(m => !m)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: muted ? "lucide:volume-x" : "lucide:volume-2",
+    size: 22,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pf-fsv-spacer"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-fsv-glass",
+    "aria-label": "Playlist"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:list",
+    size: 22,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-fsv-glass",
+    "aria-label": "Search"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:search",
+    size: 22,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pf-fsv-meta",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-fsv-author"
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: a.name,
+    src: a.avatar,
+    size: 44
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pf-fsv-name"
+  }, a.name), a.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+    seals: a.seals,
+    size: 16
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pf-fsv-dot"
+  }, "·"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-fsv-sub",
+    onClick: () => setSubscribed(x => !x)
+  }, subscribed ? "Subscribed" : "Subscribe")), caption && /*#__PURE__*/React.createElement("div", {
+    className: "pf-fsv-caption"
+  }, caption)), /*#__PURE__*/React.createElement("div", {
+    className: "pf-fsv-progress"
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: pct + "%"
+    }
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pf-fsv-rail",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-fsv-act",
+    "aria-label": liked ? "Unlike" : "Like",
+    onClick: onLike
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: liked ? "fluent:thumb-like-20-filled" : "lucide:thumbs-up",
+    size: 30,
+    color: liked ? "#5b6ee1" : "#fff"
+  }), likes && /*#__PURE__*/React.createElement("span", null, likes)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-fsv-act",
+    "aria-label": "Comments",
+    onClick: () => {
+      onClose();
+      onComment && onComment();
+    }
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:message-circle",
+    size: 30,
+    color: "#fff"
+  }), /*#__PURE__*/React.createElement("span", null, commentsCount)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-fsv-act",
+    "aria-label": "Share",
+    onClick: () => {
+      onClose();
+      onShare && onShare();
+    }
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:forward",
+    size: 30,
+    color: "#fff"
+  }), /*#__PURE__*/React.createElement("span", null, shares)), /*#__PURE__*/React.createElement("div", {
+    className: "pf-fsv-more-wrap"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-fsv-act",
+    "aria-label": "More options",
+    "aria-haspopup": "menu",
+    "aria-expanded": moreOpen,
+    onClick: () => setMoreOpen(o => !o)
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:more-horizontal",
+    size: 30,
+    color: "#fff"
+  })), moreOpen && /*#__PURE__*/React.createElement("div", {
+    className: "pf-post-menu pf-fsv-menu",
+    role: "menu"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    role: "menuitem",
+    className: "pf-post-menu-item",
+    onClick: () => {
+      setMoreOpen(false);
+      onSave && onSave();
+    }
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: saved ? "lucide:bookmark-minus" : "lucide:bookmark",
+    size: 18,
+    color: "var(--gray-700)"
+  }), saved ? "Remove from saved" : "Save video"))))), /*#__PURE__*/React.createElement("div", {
+    className: "pf-fsv-nav"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-fsv-round",
+    "aria-label": "Previous video"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:chevron-up",
+    size: 26,
+    color: "#1c1e21"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-fsv-round",
+    "aria-label": "Next video"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:chevron-down",
+    size: 26,
+    color: "#1c1e21"
+  }))));
+  return ReactDOM.createPortal(node, document.body);
+}
 function SampleMedia({
   sample,
   postId,
@@ -8240,7 +9602,8 @@ function SampleMedia({
   comments,
   onLike,
   onComment,
-  onShare
+  onShare,
+  caption
 }) {
   const galleryRef = useRef(null);
   const videoRef = useRef(null);
@@ -8288,6 +9651,23 @@ function SampleMedia({
      demo posts which only ever carry a poster image standing in for video)
      gets a real, playable <video> instead of the faux poster + fake
      progress bar below. */
+  if (sample.type === "video" && sample.src && sample.viewer) {
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PinnedVideoTile, {
+      sample: sample,
+      author: author,
+      caption: caption,
+      likes: likes,
+      commentsCount: commentsCount,
+      shares: shares,
+      liked: liked,
+      saved: saved,
+      onLike: onLike,
+      onComment: onComment,
+      onShare: onShare,
+      onSave: onSave,
+      onLoveReact: onLoveReact
+    }), heartNode);
+  }
   if (sample.type === "video" && sample.src) {
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "sm-video sm-video-real",
@@ -8483,7 +9863,7 @@ function Poll({
   }, answered && /*#__PURE__*/React.createElement("span", {
     className: "pf-poll-fill",
     style: {
-      width: o.pct + "%"
+      width: (poll.votes ? o.pct : voted === i ? 100 : 0) + "%"
     }
   }), /*#__PURE__*/React.createElement("span", {
     className: "pf-poll-opt-row"
@@ -8499,7 +9879,7 @@ function Poll({
     className: "pf-poll-label"
   }, o.label), answered && /*#__PURE__*/React.createElement("span", {
     className: "pf-poll-pct"
-  }, o.pct, "%"))))), /*#__PURE__*/React.createElement("div", {
+  }, poll.votes ? o.pct : voted === i ? 100 : 0, "%"))))), /*#__PURE__*/React.createElement("div", {
     className: "pf-poll-foot"
   }, totalVotes.toLocaleString(), " votes · ", answered ? "Thanks for voting" : "Tap an option to vote"));
 }
@@ -8796,6 +10176,7 @@ function PostMoreMenu({
   saved,
   onSave,
   onReport,
+  menuItems = [],
   iconColor = "var(--gray-400)"
 }) {
   const [open, setOpen] = useState(false);
@@ -8848,7 +10229,20 @@ function PostMoreMenu({
     name: saved ? "lucide:bookmark-minus" : "lucide:bookmark",
     size: 18,
     color: "var(--gray-700)"
-  }), saved ? "Remove from saved" : "Save post"), /*#__PURE__*/React.createElement("button", {
+  }), saved ? "Remove from saved" : "Save post"), menuItems.map((mi, i) => /*#__PURE__*/React.createElement("button", {
+    key: mi.key || i,
+    type: "button",
+    role: "menuitem",
+    className: "pf-post-menu-item" + (mi.danger ? " pf-post-menu-item--danger" : ""),
+    onClick: () => {
+      setOpen(false);
+      mi.onClick && mi.onClick();
+    }
+  }, mi.icon && /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: mi.icon,
+    size: 18,
+    color: mi.color || "var(--gray-700)"
+  }), mi.label)), /*#__PURE__*/React.createElement("button", {
     type: "button",
     role: "menuitem",
     className: "pf-post-menu-item pf-post-menu-item--danger",
@@ -8861,6 +10255,20 @@ function PostMoreMenu({
     size: 18,
     color: "var(--error)"
   }), "Report post")));
+}
+
+/* Admin-only "Pin to top" / "Unpin" entry appended to every post card's
+   "..." menu (DS PostCard + PostMoreMenu both take the same menuItems shape).
+   Non-admin viewers get an empty list, so the menu is unchanged for them. */
+function pinMenuItemsFor(pinned, canPin, onPin) {
+  if (!canPin) return [];
+  return [{
+    key: "pin",
+    label: pinned ? "Unpin from top" : "Pin to top of feed",
+    icon: pinned ? "lucide:pin-off" : "lucide:pin",
+    color: "var(--brand-navy)",
+    onClick: onPin
+  }];
 }
 
 /* The same collections a viewer sees on the My Saved screen (my-saved.jsx's
@@ -9379,6 +10787,9 @@ function FeedPost({
   post,
   st,
   hideTags,
+  pinned,
+  canPin,
+  onPin,
   onToggleLike,
   onReact,
   onDoubleTapLove,
@@ -9493,7 +10904,7 @@ function FeedPost({
     commentList: [],
     time: post.liveNow ? /*#__PURE__*/React.createElement("span", {
       className: "pf-livenow-meta"
-    }, "is live now · ", post.liveNow.viewers, " watching") : post.tierTag || post.live ? /*#__PURE__*/React.createElement(React.Fragment, null, post.time, post.tierTag && /*#__PURE__*/React.createElement(TierTagChip, {
+    }, "is live now · ", post.liveNow.viewers, " watching") : post.tierTag || post.live || post.location || pinned ? /*#__PURE__*/React.createElement(React.Fragment, null, post.time, pinned && /*#__PURE__*/React.createElement(PinChip, null), post.tierTag && /*#__PURE__*/React.createElement(TierTagChip, {
       tag: post.tierTag
     }), post.live && /*#__PURE__*/React.createElement("span", {
       className: "pf-live-chip"
@@ -9501,8 +10912,14 @@ function FeedPost({
       name: "lucide:radio",
       size: 11,
       color: "var(--error)"
-    }), "Live replay")) : post.time,
-    hashtags: hideTags || post.questionnaire || post.poll || post.liveNow ? [] : resolveHashtags(post.hashtags),
+    }), "Live replay"), post.location && /*#__PURE__*/React.createElement("span", {
+      className: "pf-loc-chip"
+    }, /*#__PURE__*/React.createElement(IconifyIcon, {
+      name: "lucide:map-pin",
+      size: 11,
+      color: "#d03b3b"
+    }), post.location.name)) : post.time,
+    hashtags: hideTags || post.questionnaire || post.poll || post.liveNow ? [] : [...resolveHashtags(post.hashtags), ...categoryTags(post.categories)],
     title: post.author === PROFINITY ? null : post.title,
     body: post.questionnaire || post.poll || post.liveNow ? null : post.bg ? /*#__PURE__*/React.createElement("div", {
       className: "pf-post-bg",
@@ -9552,12 +10969,17 @@ function FeedPost({
       comments: comments,
       onLike: handleLike,
       onComment: handleComment,
-      onShare: handleShare
+      onShare: handleShare,
+      caption: post.body
     }) : post.media && post.media.length > 0 ? /*#__PURE__*/React.createElement(MediaCarousel, {
       images: post.media,
       aspect: post.aspect,
       onLoveReact: handleDoubleTapLove
-    }) : null, isReel && /*#__PURE__*/React.createElement(ReelActionsRow, {
+    }) : null, post.document && /*#__PURE__*/React.createElement("div", {
+      className: "pf-doc-inset"
+    }, /*#__PURE__*/React.createElement(DocAttachment, {
+      doc: post.document
+    })), isReel && /*#__PURE__*/React.createElement(ReelActionsRow, {
       likes: st.likes,
       comments: st.commentsCount,
       shares: st.shares,
@@ -9585,6 +11007,7 @@ function FeedPost({
     onComment: handleComment,
     onShare: handleShare,
     onReport: () => setReportedOpen(true),
+    menuItems: pinMenuItemsFor(pinned, canPin, onPin),
     onReactionsClick: () => setLikesOpen(true),
     onHashtagClick: goToHashtag,
     style: {
@@ -9935,6 +11358,9 @@ function EventRegPostCard({
 function ChannelFeedCard({
   post,
   st,
+  pinned,
+  canPin,
+  onPin,
   onToggleLike,
   onReact,
   onDoubleTapLove,
@@ -9990,7 +11416,7 @@ function ChannelFeedCard({
     className: "pf-chcard-tags"
   }, /*#__PURE__*/React.createElement("span", {
     className: "pf-chcard-tag pf-inline-chan"
-  }, meta.label), post.unlockBadge && /*#__PURE__*/React.createElement("span", {
+  }, meta.label), pinned && /*#__PURE__*/React.createElement(PinChip, null), post.unlockBadge && /*#__PURE__*/React.createElement("span", {
     className: "pf-chcard-unlock"
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
     name: "lucide:lock-open",
@@ -9999,7 +11425,8 @@ function ChannelFeedCard({
   }), "Unlocked"))), /*#__PURE__*/React.createElement(PostMoreMenu, {
     saved: st.saved,
     onSave: onSave,
-    onReport: () => setReportedOpen(true)
+    onReport: () => setReportedOpen(true),
+    menuItems: pinMenuItemsFor(pinned, canPin, onPin)
   })), /*#__PURE__*/React.createElement("p", {
     className: "pf-chcard-body"
   }, post.body), (post.sample || post.media && post.media.length > 0) && /*#__PURE__*/React.createElement("div", {
@@ -10103,6 +11530,9 @@ function ChannelFeedCard({
 function CourseCommentCard({
   post,
   st,
+  pinned,
+  canPin,
+  onPin,
   onToggleLike,
   onReact,
   onSave,
@@ -10154,7 +11584,7 @@ function CourseCommentCard({
     className: "pf-chcard-tags"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pf-ccard-head-time"
-  }, post.time), post.unlockBadge && /*#__PURE__*/React.createElement("span", {
+  }, post.time), pinned && /*#__PURE__*/React.createElement(PinChip, null), post.unlockBadge && /*#__PURE__*/React.createElement("span", {
     className: "pf-chcard-unlock"
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
     name: "lucide:lock-open",
@@ -10163,7 +11593,8 @@ function CourseCommentCard({
   }), "Unlocked"))), /*#__PURE__*/React.createElement(PostMoreMenu, {
     saved: st.saved,
     onSave: onSave,
-    onReport: () => setReportedOpen(true)
+    onReport: () => setReportedOpen(true),
+    menuItems: pinMenuItemsFor(pinned, canPin, onPin)
   })), /*#__PURE__*/React.createElement("div", {
     className: "pf-ccard-body"
   }, /*#__PURE__*/React.createElement(ClampText, {
@@ -10549,6 +11980,127 @@ function readUserPosts() {
   }
 }
 
+/* Admin-pinned posts: an ordered list of post ids (most recently pinned
+   first) an Admin viewer hoists to the top of the newsfeed via the post's
+   "..." menu. Persisted across reloads (unlike composed user posts) so a pin
+   made on the web newsfeed also shows on the mobile/community embeds, which
+   all render this same Feed. Ids that no longer resolve to a visible post
+   (e.g. a composed post that was cleared on reload) are simply skipped. */
+const PF_PINNED_KEY = "pf-pinned-posts";
+/* Ships with the sample announcement pinned until an admin first pins or
+   unpins anything (an explicit empty list is respected, not re-seeded). */
+const PF_PINNED_DEFAULTS = [SAMPLE_PINNED_POST.id];
+function readPinnedIds() {
+  try {
+    const raw = localStorage.getItem(PF_PINNED_KEY);
+    if (raw === null) return PF_PINNED_DEFAULTS;
+    const list = JSON.parse(raw) || [];
+    return list.filter(id => typeof id === "string");
+  } catch (e) {
+    return PF_PINNED_DEFAULTS;
+  }
+}
+function writePinnedIds(ids) {
+  try {
+    localStorage.setItem(PF_PINNED_KEY, JSON.stringify(ids));
+  } catch (e) {}
+}
+
+/* Per-viewer "minimized" pinned posts: the pin stays at the top, but the
+   card collapses to a one-line preview until the viewer expands it again.
+   Stored separately from the admin pin list so it never affects other users. */
+const PF_PINNED_MIN_KEY = "pf-pinned-minimized";
+function readMinimizedPins() {
+  try {
+    const list = JSON.parse(localStorage.getItem(PF_PINNED_MIN_KEY)) || [];
+    return list.filter(id => typeof id === "string");
+  } catch (e) {
+    return [];
+  }
+}
+function writeMinimizedPins(ids) {
+  try {
+    localStorage.setItem(PF_PINNED_MIN_KEY, JSON.stringify(ids));
+  } catch (e) {}
+}
+
+/* Compact preview a minimized pinned post collapses to — avatar, author,
+   a one-line snippet and (if any) a media thumbnail. Clicking anywhere
+   expands the full card again. */
+function PinnedMiniCard({
+  post,
+  onExpand
+}) {
+  const author = post.author || {};
+  const thumb = post.media && post.media.length ? post.media[0] : post.sample && (post.sample.poster || post.sample.cover) ? post.sample.poster || post.sample.cover : post.liveNow ? post.liveNow.frame : null;
+  const snippet = post.body || post.title || (post.poll ? "Poll" : post.questionnaire ? "Knowledge check" : post.liveNow ? "Live now" : "");
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pf-pinned-mini",
+    role: "button",
+    tabIndex: 0,
+    onClick: onExpand,
+    onKeyDown: e => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onExpand();
+      }
+    },
+    "aria-label": "Expand pinned post"
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: author.name,
+    src: author.avatar,
+    size: 38
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pf-pinned-mini-main"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-pinned-mini-name"
+  }, /*#__PURE__*/React.createElement("span", null, author.name), author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+    seals: author.seals,
+    size: 14
+  }), post.time && /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-mini-time"
+  }, "· ", post.time)), /*#__PURE__*/React.createElement("div", {
+    className: "pf-pinned-mini-snip"
+  }, snippet)), thumb && /*#__PURE__*/React.createElement("img", {
+    className: "pf-pinned-mini-thumb",
+    src: thumb,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-mini-expand",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:chevron-down",
+    size: 18,
+    color: "var(--brand-navy)"
+  })));
+}
+
+/* Small "PINNED" marker shown in a pinned post's header meta row. */
+function PinChip() {
+  return /*#__PURE__*/React.createElement("span", {
+    className: "pf-pin-chip"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "fluent:pin-12-filled",
+    size: 11,
+    color: "var(--brand-navy)"
+  }), "Pinned");
+}
+
+/* Block of pinned posts that sits above the regular feed (no header — each
+   pinned card carries its own gold Pinned tag and Minimize control). */
+function PinnedSection({
+  innerRef,
+  children
+}) {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "pf-pinned-section",
+    ref: innerRef,
+    "aria-label": "Pinned posts"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-pinned-list"
+  }, children));
+}
+
 /* Event-registration social proof — one seed post (Rose Lim, a fixture
    clinician) plus this session's own registrations, written by
    EventsMobile's Register Now / Join Waitlist flow to "pf-event-regs"
@@ -10673,6 +12225,35 @@ function Feed({
   const [composerRole, setComposerRole] = useState("normal"); // dev "Posting as": normal | super
   const [upgradeFor, setUpgradeFor] = useState(null);
   const saveFlow = useSaveFlow();
+  /* Admin pin state — see PF_PINNED_KEY. */
+  const [pinnedIds, setPinnedIds] = useState(readPinnedIds);
+  const [minimizedPins, setMinimizedPins] = useState(readMinimizedPins);
+  const toggleMinimizePin = id => setMinimizedPins(list => {
+    const next = list.includes(id) ? list.filter(x => x !== id) : [...list, id];
+    writeMinimizedPins(next);
+    return next;
+  });
+  const [pinToast, setPinToast] = useState(null);
+  const pinToastTimer = useRef(null);
+  const pinnedRef = useRef(null);
+  useEffect(() => () => {
+    if (pinToastTimer.current) clearTimeout(pinToastTimer.current);
+  }, []);
+  const togglePin = id => {
+    const willPin = !pinnedIds.includes(id);
+    const next = willPin ? [id, ...pinnedIds.filter(x => x !== id)] : pinnedIds.filter(x => x !== id);
+    setPinnedIds(next);
+    writePinnedIds(next);
+    if (pinToastTimer.current) clearTimeout(pinToastTimer.current);
+    setPinToast(willPin ? "Pinned to the top of the feed" : "Unpinned from the top of the feed");
+    pinToastTimer.current = setTimeout(() => setPinToast(null), 2400);
+    if (willPin) setTimeout(() => {
+      if (pinnedRef.current && pinnedRef.current.scrollIntoView) pinnedRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }, 80);
+  };
   const toggle = (id, key) => setState(s => ({
     ...s,
     [id]: {
@@ -10693,7 +12274,12 @@ function Feed({
     body,
     media,
     video,
-    live
+    live,
+    categories,
+    poll,
+    document: doc,
+    location,
+    bg
   }) => {
     const sample = video ? {
       type: "video",
@@ -10714,6 +12300,19 @@ function Feed({
       media: media || [],
       sample,
       live: !!live,
+      categories: categories || [],
+      ...(poll ? {
+        poll
+      } : {}),
+      ...(doc ? {
+        document: doc
+      } : {}),
+      ...(location ? {
+        location
+      } : {}),
+      ...(bg ? {
+        bg
+      } : {}),
       likes: "0",
       comments: "0",
       shares: "0",
@@ -10741,6 +12340,8 @@ function Feed({
   };
   const viewerCurrent = PERSONA_MAP[viewerPersona] || PERSONA_MAP.confidence;
   const composerSuperUser = viewerCurrent.admin || composerRole === "super";
+  /* Only the Admin persona gets the Pin/Unpin action; everyone sees the result. */
+  const canPin = !!viewerCurrent.admin;
   const bucketResolved = resolveBucketFeed(viewerPersona, bucketToggles);
   /* Tier-tagged posts stack with the membership ladder: each tier sees its
      own tag plus every tag below it (see tierTagPostsFor). */
@@ -10781,6 +12382,9 @@ function Feed({
   ...(typeof window !== "undefined" && !window.PF_EMBED ? [{
     item: SAMPLE_CAROUSEL_POST,
     mode: "full"
+  }, {
+    item: SAMPLE_PINNED_POST,
+    mode: "full"
   }] : []), ...eventRegPosts.map(p => ({
     item: p,
     mode: "full"
@@ -10813,31 +12417,27 @@ function Feed({
   const visibleFeedItems = channel ? bucketResolved.filter(({
     item: p
   }) => p.bucket === channel) : feedItems;
-  return /*#__PURE__*/React.createElement("main", {
-    className: "feed",
-    "data-screen-label": "Home feed"
-  }, !channel && !window.PF_EMBED && /*#__PURE__*/React.createElement(PostComposer, {
-    onPost: addPost,
-    superUser: composerSuperUser,
-    devRole: composerRole,
-    onDevRole: setComposerRole,
-    lockedAdmin: viewerCurrent.admin
-  }), !channel && !window.PF_EMBED && /*#__PURE__*/React.createElement(ComposerDevToggle, {
-    role: composerRole,
-    onChange: setComposerRole,
-    lockedAdmin: viewerCurrent.admin
-  }), !channel && /*#__PURE__*/React.createElement(FeedPreviewPanel, {
-    persona: viewerPersona,
-    onPersona: setViewerPersona,
-    toggles: bucketToggles,
-    onToggle: (k, v) => setBucketToggles(t => ({
-      ...t,
-      [k]: v
-    }))
-  }), visibleFeedItems.map(({
+
+  /* Admin-pinned posts are lifted out of wherever the sequence placed them
+     and rendered first (in pin order, newest pin on top) inside the
+     collapsible Pinned Posts block; everything else keeps its designed
+     order below. Pins only apply to posts actually present in this view. */
+  const pinnedSet = new Set(pinnedIds);
+  const pinnedItems = pinnedIds.map(id => visibleFeedItems.find(x => x.item.id === id)).filter(Boolean).map(x => ({
+    ...x,
+    pinned: true
+  }));
+  const regularItems = pinnedItems.length ? visibleFeedItems.filter(x => !pinnedSet.has(x.item.id)) : visibleFeedItems;
+  const renderFeedItem = ({
     item: p,
-    mode
+    mode,
+    pinned
   }) => {
+    const pinProps = {
+      pinned: !!pinned,
+      canPin,
+      onPin: () => togglePin(p.id)
+    };
     if (mode === "teaser") {
       return /*#__PURE__*/React.createElement(TeaserPost, {
         key: p.id,
@@ -10929,6 +12529,7 @@ function Feed({
         key: p.id,
         post: p,
         st: st,
+        ...pinProps,
         onToggleLike: onToggleLike,
         onReact: setReaction,
         onDoubleTapLove: onDoubleTapLove,
@@ -10973,6 +12574,7 @@ function Feed({
         key: p.id,
         post: p,
         st: st,
+        ...pinProps,
         onToggleLike: onToggleLike,
         onReact: setReaction,
         onAddComment: onAddComment,
@@ -10993,6 +12595,7 @@ function Feed({
       key: p.id,
       post: p,
       st: st,
+      ...pinProps,
       onToggleLike: onToggleLike,
       onReact: setReaction,
       onDoubleTapLove: onDoubleTapLove,
@@ -11036,7 +12639,69 @@ function Feed({
       },
       onSave: () => toggleSave(p.id)
     });
-  }), upgradeFor && /*#__PURE__*/React.createElement(UpgradeModal, {
+  };
+  return /*#__PURE__*/React.createElement("main", {
+    className: "feed",
+    "data-screen-label": "Home feed"
+  }, !channel && !window.PF_EMBED && /*#__PURE__*/React.createElement(PostComposer, {
+    onPost: addPost,
+    superUser: composerSuperUser,
+    devRole: composerRole,
+    onDevRole: setComposerRole,
+    lockedAdmin: viewerCurrent.admin
+  }), !channel && !window.PF_EMBED && /*#__PURE__*/React.createElement(ComposerDevToggle, {
+    role: composerRole,
+    onChange: setComposerRole,
+    lockedAdmin: viewerCurrent.admin
+  }), !channel && /*#__PURE__*/React.createElement(FeedPreviewPanel, {
+    persona: viewerPersona,
+    onPersona: setViewerPersona,
+    toggles: bucketToggles,
+    onToggle: (k, v) => setBucketToggles(t => ({
+      ...t,
+      [k]: v
+    }))
+  }), pinnedItems.length > 0 && /*#__PURE__*/React.createElement(PinnedSection, {
+    innerRef: pinnedRef
+  }, pinnedItems.map(x => {
+    const mini = minimizedPins.includes(x.item.id);
+    return /*#__PURE__*/React.createElement("div", {
+      key: x.item.id,
+      className: "pf-pinned-card" + (mini ? " is-mini" : "")
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "pf-pinned-card-tag"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "pf-pinned-card-tag-tx"
+    }, /*#__PURE__*/React.createElement(IconifyIcon, {
+      name: "fluent:pin-16-filled",
+      size: 15,
+      color: "#fff"
+    }), "Pinned"), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "pf-pinned-card-tag-btn",
+      onClick: () => toggleMinimizePin(x.item.id),
+      "aria-expanded": !mini,
+      "aria-label": mini ? "Expand pinned post" : "Minimize pinned post"
+    }, mini ? "Expand" : "Minimize", /*#__PURE__*/React.createElement(IconifyIcon, {
+      name: mini ? "lucide:chevron-down" : "lucide:chevron-up",
+      size: 15,
+      color: "currentColor"
+    }))), mini ? /*#__PURE__*/React.createElement(PinnedMiniCard, {
+      post: x.item,
+      onExpand: () => toggleMinimizePin(x.item.id)
+    }) : renderFeedItem(x));
+  })), regularItems.map(renderFeedItem), pinToast && /*#__PURE__*/React.createElement("div", {
+    className: "pf-save-toast",
+    role: "status"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-save-toast-ck"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:pin",
+    size: 12,
+    color: "#0a0a0a"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pf-save-toast-tx"
+  }, pinToast)), upgradeFor && /*#__PURE__*/React.createElement(UpgradeModal, {
     label: (BUCKET_META[upgradeFor.bucket] || {}).label,
     bucket: upgradeFor.bucket,
     currentTier: viewerCurrent.paid && !viewerCurrent.admin ? viewerPersona : null,

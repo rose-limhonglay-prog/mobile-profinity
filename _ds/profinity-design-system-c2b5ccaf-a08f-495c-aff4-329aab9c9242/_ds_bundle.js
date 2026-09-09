@@ -2936,6 +2936,7 @@ function PostCard({
   onReport,
   onReactionsClick,
   onHashtagClick,
+  menuItems = [],
   style = {}
 }) {
   const [menuOpen, setMenuOpen] = React.useState(false);
@@ -3054,7 +3055,20 @@ function PostCard({
     name: saved ? "lucide:bookmark-minus" : "lucide:bookmark",
     size: 18,
     color: "var(--gray-700)"
-  }), saved ? "Remove from saved" : "Save post"), /*#__PURE__*/React.createElement("button", {
+  }), saved ? "Remove from saved" : "Save post"), menuItems.map((mi, i) => /*#__PURE__*/React.createElement("button", {
+    key: mi.key || i,
+    type: "button",
+    role: "menuitem",
+    className: "pf-post-menu-item" + (mi.danger ? " pf-post-menu-item--danger" : "") + (mi.className ? " " + mi.className : ""),
+    onClick: function () {
+      setMenuOpen(false);
+      mi.onClick && mi.onClick();
+    }
+  }, mi.icon && /*#__PURE__*/React.createElement(__ds_scope.IconifyIcon, {
+    name: mi.icon,
+    size: 18,
+    color: mi.color || "var(--gray-700)"
+  }), mi.label)), /*#__PURE__*/React.createElement("button", {
     type: "button",
     role: "menuitem",
     className: "pf-post-menu-item pf-post-menu-item--danger",
