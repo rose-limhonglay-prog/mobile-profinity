@@ -2144,7 +2144,8 @@ function MobileHome() {
     ref: scrollRefM,
     style: {
       paddingTop: chromeHidden ? 0 : headerH,
-      paddingBottom: tabsH + 34
+      paddingBottom: tabsH + 34,
+      "--m-stick": chromeHidden ? "58px" : "0px"
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "m-pull-refresh",

@@ -1733,3 +1733,22 @@ img{max-width:100%}
   .pfw-sh-contact{width:96px}
 }
 @media (prefers-reduced-motion:reduce){.pfw-sh-overlay,.pfw-sh-modal,.pfw-sh-dd,.pfw-sh-note{animation:none}}
+
+/* FullVideoViewer inside the phone frame (mobile embed) — fills the device
+   screen; rail overlays bottom-right, close top-left under the island */
+.pf-fsv.pf-fsv--m{position:absolute;inset:0;z-index:300;border-radius:inherit}
+.pf-fsv--m .pf-fsv-stage{gap:0}
+.pf-fsv--m .pf-fsv-frame{height:100%;width:100%;aspect-ratio:auto;max-width:none;border-radius:0}
+.pf-fsv--m .pf-fsv-topleft{top:62px;left:14px}
+.pf-fsv--m .pf-fsv-logo{display:none}
+.pf-fsv--m .pf-fsv-round{width:40px;height:40px;background:rgba(80,80,80,.55)}
+.pf-fsv--m .pf-fsv-round iconify-icon,.pf-fsv--m .pf-fsv-round svg{color:#fff}
+.pf-fsv--m .pf-fsv-frame-top{top:62px;left:66px;right:14px}
+.pf-fsv--m .pf-fsv-glass{width:40px;height:40px}
+.pf-fsv--m .pf-fsv-rail{position:absolute;right:10px;bottom:120px;padding:0;gap:16px;z-index:3;align-self:auto}
+.pf-fsv--m .pf-fsv-act{font-size:13px;gap:3px}
+.pf-fsv--m .pf-fsv-act iconify-icon{width:26px;height:26px}
+.pf-fsv--m .pf-fsv-meta{padding:90px 72px 118px 16px}
+.pf-fsv--m .pf-fsv-name,.pf-fsv--m .pf-fsv-sub,.pf-fsv--m .pf-fsv-caption{font-size:15px}
+.pf-fsv--m .pf-fsv-nav{display:none}
+.pf-fsv--m .pf-fsv-progress{bottom:96px}

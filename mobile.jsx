@@ -1222,7 +1222,7 @@ function MobileHome() {
     <div className={"m-screen" + (chromeHidden ? " chrome-hidden" : "") + (chromeFloat ? " chrome-float" : "")} data-screen-label="Home (mobile)">
       <PushNotifBanner />
       <MTopBar ref={headerRefM} onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} onMessages={() => setMsgOpen(true)} />
-      <div className="m-scroll" ref={scrollRefM} style={{ paddingTop: chromeHidden ? 0 : headerH, paddingBottom: tabsH + 34 }}>
+      <div className="m-scroll" ref={scrollRefM} style={{ paddingTop: chromeHidden ? 0 : headerH, paddingBottom: tabsH + 34, "--m-stick": chromeHidden ? "58px" : "0px" }}>
         <div className="m-pull-refresh" style={{ height: pull, transition: dragging ? "none" : "height .25s cubic-bezier(.22,.61,.36,1)" }}>
           <div className={"m-pull-spinner" + (refreshing ? " is-spinning" : "")} style={!refreshing ? { transform: `rotate(${pull * 3.2}deg)` } : undefined}>
             <DSM.IconifyIcon name="lucide:refresh-cw" size={18} color="var(--brand-navy)" />

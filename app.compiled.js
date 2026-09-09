@@ -3588,8 +3588,9 @@ const SAMPLE_PINNED_POST = {
   hashtags: ["community"],
   /* viewer:true → PinnedVideoTile in the feed (portrait clip letterboxed in
      a black 16:9 tile) and a click opens FullVideoViewer, the full-page
-     reel-style player. The bundled clip is landscape, so it's cover-cropped
-     to 9:16 — swap in a real portrait clip via src when one is available. */
+     reel-style player (full-frame inside the phone on mobile). The bundled
+     clip is landscape, so it's cover-cropped to 9:16 — swap in a real
+     portrait clip via src when one is available. */
   sample: {
     type: "video",
     src: "assets/sample-reel.mp4",
@@ -3647,7 +3648,8 @@ const SAMPLE_PINNED_POLL_POST = {
   actioned: false,
   commentList: thread("Lip complications please — the one topic nobody teaches properly.")
 };
-/* All three web-only pinned samples (video, image, poll), in pin order. */
+/* The three default pinned samples (video, image, poll), in pin order —
+   shown on web and inside the mobile embed alike. */
 const SAMPLE_PINNED_POSTS = [SAMPLE_PINNED_POST, SAMPLE_PINNED_IMAGE_POST, SAMPLE_PINNED_POLL_POST];
 const PORTRAIT_IMG_POST_1 = {
   id: "ff_ptimg1",
@@ -9450,8 +9452,26 @@ function FullVideoViewer({
   };
   const pct = t.dur ? Math.min(100, t.cur / t.dur * 100) : 0;
   const a = author || {};
+  /* Mobile embed: mount inside the phone's .m-screen (absolute, full frame)
+     so the player fills the device rather than the whole desktop window.
+     Portalling straight into .m-screen crashes React (that element's
+     children are reconciled by MobileHome), so we own a throwaway host div
+     appended to it and portal into that instead. */
+  const embed = typeof window !== "undefined" && !!window.PF_EMBED;
+  const [host] = useState(() => {
+    if (!embed) return document.body;
+    const screen = document.querySelector(".m-screen, .cm-screen");
+    if (!screen) return document.body;
+    const el = document.createElement("div");
+    el.className = "pf-fsv-host";
+    screen.appendChild(el);
+    return el;
+  });
+  useEffect(() => () => {
+    if (host !== document.body && host.parentNode) host.parentNode.removeChild(host);
+  }, [host]);
   const node = /*#__PURE__*/React.createElement("div", {
-    className: "pf-fsv",
+    className: "pf-fsv" + (embed ? " pf-fsv--m" : ""),
     role: "dialog",
     "aria-modal": "true",
     "aria-label": "Video"
@@ -9631,7 +9651,7 @@ function FullVideoViewer({
     size: 26,
     color: "#1c1e21"
   }))));
-  return ReactDOM.createPortal(node, document.body);
+  return ReactDOM.createPortal(node, host);
 }
 function SampleMedia({
   sample,
@@ -12681,9 +12701,9 @@ function PinnedBox({
      scrolls (the open list gets its own scroll so it can't outgrow the
      viewport). The mobile embed keeps it in normal flow — its header is an
      overlay inside a separate scroll container. */
-  const sticky = typeof window !== "undefined" && !window.PF_EMBED;
+  const embed = typeof window !== "undefined" && !!window.PF_EMBED;
   return /*#__PURE__*/React.createElement("section", {
-    className: "pf-pinned-box" + (open ? " open" : "") + (sticky ? " sticky" : ""),
+    className: "pf-pinned-box" + (open ? " open" : "") + (embed ? " pf-pinned-box--m" : " sticky"),
     ref: innerRef,
     "aria-label": "Pinned posts"
   }, /*#__PURE__*/React.createElement("button", {
@@ -13047,10 +13067,12 @@ function Feed({
   ...(typeof window !== "undefined" && !window.PF_EMBED ? [{
     item: SAMPLE_CAROUSEL_POST,
     mode: "full"
-  }, ...SAMPLE_PINNED_POSTS.map(p => ({
+  }] : []),
+  // the three default pinned samples (video / image / poll) — web and mobile
+  ...SAMPLE_PINNED_POSTS.map(p => ({
     item: p,
     mode: "full"
-  }))] : []), ...eventRegPosts.map(p => ({
+  })), ...eventRegPosts.map(p => ({
     item: p,
     mode: "full"
   })), ...tierTagItems, ...sequenceBase.map(p => {
@@ -13373,7 +13395,7 @@ function pfTagActiveNav(activeLabel) {
     const active = label === activeLabel;
     b.style.setProperty("-webkit-appearance", "none", "important");
     b.style.setProperty("appearance", "none", "important");
-    b.style.setProperty("background", active ? "rgb(225, 223, 242)" : "none", "important");
+    b.style.setProperty("background", active ? "var(--pf-nav-active-bg, rgb(225, 223, 242))" : "none", "important");
     b.style.setProperty("transition", "background .18s ease", "important");
     // the current page's icon stays filled to match the highlight
     const path = b.querySelector("svg path");

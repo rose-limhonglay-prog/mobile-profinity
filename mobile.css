@@ -623,3 +623,32 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
 .mp-expand:active{background:var(--gray-200)}
 .mp-expand:focus-visible,.mp-compose:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
 .mp-row[data-thread-id]:focus-visible{outline:2px solid var(--brand-navy);outline-offset:-2px;border-radius:10px}
+
+/* ===== pinned posts accordion (app.jsx PinnedBox, .pf-pinned-box--m) =====
+   inset card like the channel posts; sticks under the top bar while the
+   feed scrolls. The scroll container's padding-top already offsets sticky
+   children below the top bar; --m-stick (set by MobileHome) adds a Dynamic
+   Island clearance only while the bar is hidden */
+.m-scroll .pf-pinned-box--m{position:sticky;top:var(--m-stick,0px);z-index:20;margin:10px 12px;padding:10px;
+  border-radius:18px;box-shadow:0 6px 18px rgba(31,26,77,.10);transition:top .28s cubic-bezier(.22,.61,.36,1)}
+.m-scroll .pf-pinned-box--m .pf-pinned-box-head{gap:10px}
+.m-scroll .pf-pinned-box--m .pf-pinned-card-tag-tx{padding:6px 12px;font-size:13px}
+.m-scroll .pf-pinned-box--m .pf-pinned-box-avs{display:none}
+.m-scroll .pf-pinned-box--m .pf-pinned-box-count{font-size:14px}
+.m-scroll .pf-pinned-box--m .pf-pinned-box-hint{display:none}
+.m-scroll .pf-pinned-box--m .pf-pinned-box-list{gap:8px;margin-top:10px;max-height:calc(100% - 0px);}
+.m-scroll .pf-pinned-box--m.open .pf-pinned-box-list{max-height:min(560px, calc(100vh - 260px));overflow-y:auto;
+  scrollbar-width:none;overscroll-behavior:contain}
+.m-scroll .pf-pinned-box--m .pf-pinned-box-list::-webkit-scrollbar{display:none}
+.m-scroll .pf-pinned-box--m .pf-pinned-box-list > *{flex:none}
+.m-scroll .pf-pinned-box--m .pf-pinned-mini{padding:10px 12px;gap:10px}
+.m-scroll .pf-pinned-box--m .pf-pinned-mini-name{font-size:14px}
+.m-scroll .pf-pinned-box--m .pf-pinned-mini-snip{font-size:13px}
+.m-scroll .pf-pinned-box--m .pf-pinned-mini-thumb,.m-scroll .pf-pinned-box--m .pf-pinned-mini-kind{width:40px;height:40px}
+.m-scroll .pf-pinned-box--m .pf-pinned-mini-expand{display:none}
+.m-scroll .pf-pinned-box--m .pf-pinned-box-item{border-radius:14px}
+.m-scroll .pf-pinned-box--m .pf-pinned-box-item-bar{padding:6px 6px 6px 14px}
+/* the expanded post inside the box keeps the flat mobile card look but
+   drops the full-width separator treatment */
+.m-scroll .pf-pinned-box--m .post-wrap{padding:16px 14px !important}
+.m-scroll .pf-pinned-box--m .pf-media-bleed{margin:0 -14px !important}
