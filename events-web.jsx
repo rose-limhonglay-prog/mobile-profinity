@@ -850,7 +850,7 @@ function LSProductCard({ product, phase, onBuy, onClose }) {
   return (
     <div className={"ls-product" + (phase === "out" ? " out" : "")}>
       <button className="x" aria-label="Dismiss offer" title="Dismiss" onClick={onClose}>
-        <span className="dot"><DSEW.IconifyIcon name="lucide:x" size={13} color="var(--gray-500)" /></span>
+        <span className="dot"><DSEW.IconifyIcon name="lucide:x" size={13} color="#fff" /></span>
       </button>
       <span className="thumb"><img src={product.img} alt="" /><b>{product.num}</b></span>
       <span className="tx">
@@ -994,7 +994,7 @@ function LSPinnedForViewers({ product, phase, onUnpin, onClose }) {
     <div className={"ls-pinned" + (phase === "out" ? " out" : "")}>
       {onClose &&
         <button className="x" aria-label="Dismiss" title="Dismiss" onClick={onClose}>
-          <span className="dot"><DSEW.IconifyIcon name="lucide:x" size={13} color="var(--gray-500)" /></span>
+          <span className="dot"><DSEW.IconifyIcon name="lucide:x" size={13} color="#fff" /></span>
         </button>}
       <span className="thumb"><img src={product.img} alt="" /></span>
       <span className="tx">

@@ -1689,7 +1689,7 @@ function LSProductCard({
   }, /*#__PURE__*/React.createElement(DSEW.IconifyIcon, {
     name: "lucide:x",
     size: 13,
-    color: "var(--gray-500)"
+    color: "#fff"
   }))), /*#__PURE__*/React.createElement("span", {
     className: "thumb"
   }, /*#__PURE__*/React.createElement("img", {
@@ -1940,7 +1940,7 @@ function LSPinnedForViewers({
   }, /*#__PURE__*/React.createElement(DSEW.IconifyIcon, {
     name: "lucide:x",
     size: 13,
-    color: "var(--gray-500)"
+    color: "#fff"
   }))), /*#__PURE__*/React.createElement("span", {
     className: "thumb"
   }, /*#__PURE__*/React.createElement("img", {
