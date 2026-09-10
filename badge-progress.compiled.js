@@ -38,11 +38,22 @@ function BadgeProgressScreen() {
       setToast("That action has hit its cap for now — try again later.");
     } else {
       setToast("+" + res.pointsAwarded + " pts, +" + res.creditsAwarded + " credits earned!");
+      /* same event popPoints (app.jsx) fires so any header points pill / tally listening on the page bumps */
+      try {
+        window.dispatchEvent(new CustomEvent("pf:points-earned", {
+          detail: {
+            amount: res.pointsAwarded
+          }
+        }));
+      } catch (e) {/* older WebView */}
     }
     setTimeout(() => setToast(null), 2400);
+    /* crossing the next threshold hands off to the Milestone Splash (same as Ways to Earn) */
+    if (res.leveledUp) setTimeout(() => goBPR("MilestoneSplash.html"), 900);
   };
   const pct = progress.pct;
   const deg = Math.round(pct / 100 * 360);
+  const ringLabel = pct >= 100 ? "Maxed out!" : pct >= 60 ? "Almost there!" : "Keep going!";
   return /*#__PURE__*/React.createElement("div", {
     className: "ml-screen bpr-screen",
     "data-screen-label": "Badge Progress"
@@ -65,7 +76,7 @@ function BadgeProgressScreen() {
     size: 19,
     color: "var(--gray-700)"
   }))), /*#__PURE__*/React.createElement("div", {
-    className: "ml-scroll"
+    className: "ml-scroll bpr-scroll"
   }, /*#__PURE__*/React.createElement("div", {
     className: "bpr-ring-wrap"
   }, /*#__PURE__*/React.createElement("div", {
@@ -79,7 +90,7 @@ function BadgeProgressScreen() {
     className: "bpr-ring-pct"
   }, pct, "%"), /*#__PURE__*/React.createElement("div", {
     className: "bpr-ring-label"
-  }, pct < 100 ? "Almost there!" : "Maxed out!"))), /*#__PURE__*/React.createElement("div", {
+  }, ringLabel))), /*#__PURE__*/React.createElement("div", {
     className: "bpr-ring-caption"
   }, PF_BPR.formatNumber(state.lifetimePoints), " / ", progress.next ? PF_BPR.formatNumber(progress.next.threshold) : PF_BPR.formatNumber(progress.current.threshold), " pts"), /*#__PURE__*/React.createElement("div", {
     className: "bpr-ring-sub"

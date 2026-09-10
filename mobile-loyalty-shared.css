@@ -8,15 +8,21 @@
    =========================================================================== */
 .ml-screen { position: relative; height: 100%; display: flex; flex-direction: column; background: var(--surface-page); font-family: var(--font-sans); }
 .ml-top { display: flex; align-items: center; gap: 12px; padding: 18px 20px 14px; background: var(--surface-page); flex-shrink: 0; }
-.ml-back { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-default); background: var(--white);
+.ml-back { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-default); background: var(--surface-card);
   display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+/* Inside the IOSDevice frame the status bar is absolutely positioned over the
+   screen, so the back-header needs to start below it (same 60px clearance
+   leaderboard / rewards-store / badge-progress use) and the scroll area needs
+   to clear the home indicator. On a real phone the safe-area insets do this. */
+.device-stage .ml-top { padding-top: 60px; }
+.device-stage .ml-scroll { padding-bottom: 48px; }
 .ml-top h1 { margin: 0; font-size: 18px; font-weight: 700; color: var(--gray-900); flex: 1; }
-.ml-top-action { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-default); background: var(--white);
+.ml-top-action { width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--border-default); background: var(--surface-card);
   display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
 
 .ml-scroll { flex: 1; overflow-y: auto; padding: 0 20px 28px; -webkit-overflow-scrolling: touch; }
 
-.ml-card { background: var(--white); border: 1px solid var(--border-default); border-radius: 16px; padding: 18px; margin-bottom: 16px; }
+.ml-card { background: var(--surface-card); border: 1px solid var(--border-default); border-radius: 16px; padding: 18px; margin-bottom: 16px; }
 .ml-sec-h { display: flex; align-items: center; justify-content: space-between; margin: 22px 0 12px; }
 .ml-sec-h h2 { margin: 0; font-size: 16px; font-weight: 700; color: var(--gray-900); }
 .ml-sec-h:first-child { margin-top: 4px; }
@@ -44,3 +50,12 @@
 .ml-toast { position: fixed; left: 50%; bottom: 100px; transform: translateX(-50%); background: var(--gray-900); color: #fff;
   font-size: 13px; font-weight: 600; padding: 12px 18px; border-radius: 999px; z-index: 60; box-shadow: 0 8px 24px rgba(0,0,0,.25);
   display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+
+/* ---- native mobile (< 768px): no device frame, the screen owns the viewport ---- */
+@media (max-width: 768px) {
+  html, body { height: 100%; overflow: hidden; margin: 0; padding: 0; }
+  .app:not(.device-stage) { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background: var(--surface-page); }
+  .app:not(.device-stage) .ml-screen { height: 100vh; height: 100dvh; overflow: hidden; }
+  .app:not(.device-stage) .ml-top { padding-top: calc(18px + env(safe-area-inset-top, 0px)); }
+  .app:not(.device-stage) .ml-scroll { padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px)); }
+}

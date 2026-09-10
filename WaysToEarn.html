@@ -16,19 +16,26 @@
   <link rel="stylesheet" href="mobile-loyalty-shared.css" />
   <link rel="stylesheet" href="ways-to-earn.css" />
   <link rel="stylesheet" href="dark-mode.css" />
+  <link rel="stylesheet" href="coach.css" />
 </head>
 <body>
   <div id="pf-root"></div>
 
   <script src="vendor/react.production.min.js"></script>
   <script src="vendor/react-dom.production.min.js"></script>
-  <script src="vendor/iconify-icon.min.js" data-iconify></script>
+  <!-- NOT the bare iconify-icon script: claims the data-iconify slot, bulk-loads
+       the glyphs this page uses so nothing renders 0×0 -->
+  <script>window.PF_ICONS_EXTRA = { lucide: ["chevron-left", "crown", "zap", "check"] };</script>
+  <script src="icons-preload.js" data-iconify></script>
 
   <script src="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/_ds_bundle.js"></script>
+
+  <script src="pagetrans.js"></script>
 
   <script src="ios-frame.compiled.js"></script>
 
   <script src="loyalty-engine.js"></script>
   <script src="ways-to-earn.compiled.js"></script>
+  <script src="coach.js"></script>
 </body>
 </html>

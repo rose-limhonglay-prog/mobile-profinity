@@ -11,7 +11,11 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
   font-family: var(--font-sans); color: var(--text-primary); }
 img { max-width: 100%; }
 
-.lm-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-card); position: relative; }
+.lm-screen { height: 100%; display: flex; flex-direction: column; background: #F9F7F4; position: relative;
+  /* course titles only (user request 2026-09-10) */
+  --font-title: "Times New Roman", Times, serif; }
+/* warm off-white page surface for My Learning (user request 2026-09-10); dark mode keeps the token */
+[data-theme="dark"] .lm-screen { background: var(--surface-card); }
 
 /* ===== Native mobile mode (no device frame — real phone browser) =====
    Without this, .app has no explicit height on a real phone viewport and
@@ -46,7 +50,6 @@ img { max-width: 100%; }
 .lm2-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .lm2-head.has-sub .lm2-head-row { margin-bottom: 6px; }
 .lm2-head-greet { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 21px; color: var(--text-heading); line-height: 1.2; }
-.lm2-sun { font-size: 18px; }
 .lm2-tierpill { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: var(--r-pill);
   background: linear-gradient(135deg, #292569, #453f9e); color: #fff; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 12px; white-space: nowrap; }
 .lm2-head-avatar { flex: none; width: 46px; height: 46px; border-radius: 50%; object-fit: cover;
@@ -109,7 +112,7 @@ img { max-width: 100%; }
 .lm2-herocard .thumb { position: relative; height: 168px; background-size: cover; background-position: center; }
 .lm2-herocard .thumb .lvl { position: absolute; left: 12px; top: 12px; }
 .lm2-herocard .body { padding: 16px; }
-.lm2-herocard .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 18px; color: var(--text-heading); margin-bottom: 12px; }
+.lm2-herocard .ti { font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 18px; color: var(--text-heading); margin-bottom: 12px; }
 .lm2-progrow { display: flex; align-items: center; gap: 10px; }
 .lm2-progrow .bar { flex: 1; min-width: 0; height: 7px; border-radius: var(--r-pill); background: var(--gray-150); overflow: hidden; }
 .lm2-progrow .bar > span { display: block; height: 100%; border-radius: var(--r-pill); background: linear-gradient(90deg, #f4ad3d, #e7820a); }
@@ -150,7 +153,7 @@ img { max-width: 100%; }
 .lm2-coursecard-wide .thumb { position: relative; width: 100%; height: 180px; background-size: cover; background-position: center; }
 .lm2-coursecard-wide .thumb .lvl { position: absolute; left: 10px; top: 10px; font-size: 11px !important; padding: 4px 10px !important; }
 .lm2-coursecard-wide .body { padding: 13px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
-.lm2-coursecard-wide .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 16px; color: var(--brand-navy); line-height: 1.25; }
+.lm2-coursecard-wide .ti { font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 16px; color: var(--brand-navy); line-height: 1.25; }
 .lm2-coursecard-wide .prog { display: flex; align-items: center; gap: 8px; }
 .lm2-coursecard-wide .prog .bar { flex: 1; display: block; height: 6px; border-radius: var(--r-pill); background: var(--gray-150); overflow: hidden; }
 .lm2-coursecard-wide .prog .bar > span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--premium-orange); }
@@ -178,7 +181,7 @@ img { max-width: 100%; }
 .lm2-coursecard .thumb { position: relative; height: 180px; background-size: cover; background-position: center; }
 .lm2-coursecard .thumb .lvl { position: absolute; left: 10px; top: 10px; font-size: 11px !important; padding: 4px 10px !important; }
 .lm2-coursecard .body { padding: 13px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
-.lm2-coursecard .ti { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--text-heading); line-height: 1.25;
+.lm2-coursecard .ti { font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 15px; color: var(--text-heading); line-height: 1.25;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .lm2-coursecard .ds { font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); line-height: 1.4;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

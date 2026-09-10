@@ -24,7 +24,13 @@ function achievementCount(state, badge) {
 }
 function BadgeGalleryScreen() {
   const [config] = useStateBGL(() => PF_BGL.getConfig());
-  const [state] = useStateBGL(() => PF_BGL.getState());
+  // Achievements are only evaluated when an action/redeem/check-in runs, so a
+  // badge whose criteria were already met (e.g. a 45-day longest streak vs a
+  // 30-day Streak Master) could show 30/30 yet still locked. Settle that first.
+  const [state] = useStateBGL(() => {
+    PF_BGL.evaluateAchievements();
+    return PF_BGL.getState();
+  });
   const progress = useMemoBGL(() => PF_BGL.getBadgeProgress(state), [state]);
   return /*#__PURE__*/React.createElement("div", {
     className: "ml-screen bgl-screen",
@@ -133,9 +139,26 @@ function useIsMobileBGL() {
   }, []);
   return mobile;
 }
+
+/* App-wide theme: dark-mode-init.js stamps data-theme on <html> from pf-theme;
+   follow it so the device frame's status bar / home indicator flip too. */
+function useIsDarkBGL() {
+  const read = () => document.documentElement.getAttribute("data-theme") === "dark";
+  const [dark, setDark] = useStateBGL(read);
+  React.useEffect(() => {
+    const mo = new MutationObserver(() => setDark(read()));
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"]
+    });
+    return () => mo.disconnect();
+  }, []);
+  return dark;
+}
 function BadgeGalleryApp() {
   const mobile = useIsMobileBGL();
   const scale = useDeviceScaleBGL();
+  const dark = useIsDarkBGL();
   const vars = {
     "--action-primary": "var(--brand-navy)",
     "--action-primary-hover": "var(--brand-navy-700)"
@@ -160,7 +183,8 @@ function BadgeGalleryApp() {
     }
   }, /*#__PURE__*/React.createElement(IOSDevice, {
     width: 440,
-    height: 956
+    height: 956,
+    dark: dark
   }, /*#__PURE__*/React.createElement(BadgeGalleryScreen, null))));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(BadgeGalleryApp, null));

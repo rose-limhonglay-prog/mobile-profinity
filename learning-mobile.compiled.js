@@ -253,11 +253,7 @@ function LM2Header({
     className: "lm2-head-row"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm2-head-greet"
-  }, "Good morning, Katy! ", /*#__PURE__*/React.createElement("span", {
-    className: "lm2-sun",
-    role: "img",
-    "aria-label": "sun"
-  }, "☀️")), freeTier ? /*#__PURE__*/React.createElement("img", {
+  }, "Good morning, Katy!"), freeTier ? /*#__PURE__*/React.createElement("img", {
     className: "lm2-head-avatar",
     src: "assets/avatar-katy.jpg",
     alt: "Katy"
@@ -898,7 +894,7 @@ function LearningMobileApp() {
       className: "app",
       style: {
         ...vars,
-        background: "var(--surface-page)"
+        background: "#F9F7F4"
       }
     }, /*#__PURE__*/React.createElement(LearningHome, null));
   }

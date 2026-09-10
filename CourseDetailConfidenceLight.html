@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-
-  <script src="dark-mode-init.js"></script>
-  <title>PROfinity — Badge Gallery (mobile)</title>
+  <title>PROfinity — Course Detail (Confidence · light)</title>
 
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fonts.css" />
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/colors.css" />
@@ -13,9 +11,12 @@
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/spacing.css" />
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fig-tokens.css" />
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/styles.css" />
-  <link rel="stylesheet" href="mobile-loyalty-shared.css" />
-  <link rel="stylesheet" href="badge-gallery.css" />
-  <link rel="stylesheet" href="dark-mode.css" />
+  <link rel="stylesheet" href="mobilechrome.css" />
+  <!-- shell: body, device stage, .lm-tabs tab bar, .lm2-sec-h headings -->
+  <link rel="stylesheet" href="learning-mobile.css" />
+  <link rel="stylesheet" href="lesson-confidence.css" />
+  <link rel="stylesheet" href="coach.css" />
+  <link rel="stylesheet" href="tour.css" />
 </head>
 <body>
   <div id="pf-root"></div>
@@ -23,8 +24,7 @@
   <script src="vendor/react.production.min.js"></script>
   <script src="vendor/react-dom.production.min.js"></script>
   <!-- NOT the bare iconify-icon script: claims the data-iconify slot, bulk-loads
-       the glyphs this page uses (plus the badge icons below) so nothing renders 0×0 -->
-  <script>window.PF_ICONS_EXTRA = { lucide: ["zap", "gem", "flame", "users", "star", "check-circle", "award", "trophy", "medal", "shield-check", "sparkles", "heart-handshake"] };</script>
+       the icon collections, then boots the component so ~90 glyphs resolve. -->
   <script src="icons-preload.js" data-iconify></script>
 
   <script src="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/_ds_bundle.js"></script>
@@ -32,8 +32,14 @@
   <script src="pagetrans.js"></script>
 
   <script src="ios-frame.compiled.js"></script>
-
+  <!-- Variant flags — lesson-confidence.jsx reads window.PF_LC_LIGHT at module
+       scope, so they must be set before the app scripts load. -->
+  <script>window.PF_TIER = "confidence"; window.PF_LC_LIGHT = true;</script>
   <script src="loyalty-engine.js"></script>
-  <script src="badge-gallery.compiled.js"></script>
+  <script src="mobilechrome.compiled.js"></script>
+  <script src="lesson-confidence.compiled.js"></script>
+  <script src="coach.js"></script>
+  <script src="tour.js"></script>
+
 </body>
 </html>

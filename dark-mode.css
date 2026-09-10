@@ -339,3 +339,25 @@
 [data-theme="dark"] .pfw-cp-opt[aria-label="Camera"] { --opt: #7c76d9; }
 /* Agents catalogue: page wash is color-mix(ai-purple 5%, white) in agents.css */
 [data-theme="dark"] .app.wa-screen { background: var(--surface-page); }
+
+/* ============================================================
+   Loyalty — Rewards Store (rewards-store.css) + shared ml- chrome
+   ============================================================ */
+[data-theme="dark"] .ml-back, [data-theme="dark"] .ml-top-action, [data-theme="dark"] .ml-card { background: var(--surface-card); }
+[data-theme="dark"] .str-card-media, [data-theme="dark"] .str-confirm-icon { background: color-mix(in srgb, var(--brand-gold) 14%, var(--surface-card)); }
+[data-theme="dark"] .str-card-media .str-card-ic { background: var(--surface-sunken); box-shadow: none; }
+[data-theme="dark"] .str-balance-chip { background: var(--brand-navy); color: #1a1736; }
+[data-theme="dark"] .str-tab.is-active { color: #1a1736; }
+[data-theme="dark"] .str-scrim { background: rgba(0,0,0,.6); }
+
+/* ============================================================
+   Loyalty drill-in screens (Badge Gallery / Badge Detail / Badge Progress…)
+   Shared ml-* chrome already reads --surface-card; these are the page bits
+   that used the light-only canvas grey or a white circle on a white tile.
+   ============================================================ */
+[data-theme="dark"] .bgl-tile { background: var(--surface-card); }
+[data-theme="dark"] .bgl-tile-icon { background: rgba(255,255,255,.07); }
+[data-theme="dark"] .bgl-tile.is-unlocked { border-color: rgba(206,153,87,.45); }
+[data-theme="dark"] .bgl-tile.is-unlocked .bgl-tile-icon { background: rgba(206,153,87,.16); }
+[data-theme="dark"] .bgl-ladder-current { color: #1a1736; }
+[data-theme="dark"] .ml-demo-btn { background: var(--surface-card); }

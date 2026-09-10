@@ -1,0 +1,271 @@
+/* ===========================================================================
+   PROfinity — My Learning (Confidence tier, mobile)
+   Shared by LearningMobileConfidence.html (deep-navy reader) and
+   LearningMobileConfidenceLight.html (standard light surface).
+   The shell (body, .app.device-stage, .lm-tabs tab bar) comes from
+   learning-mobile.css; everything here is prefixed .lcm-.
+
+   Variant switch: the screen root is .lcm-screen (dark by default) and adds
+   .lc-light when window.PF_LC_LIGHT is set. Every colour below is a token so
+   both variants share one rule set. Glyph colours are NOT set here — the DS
+   IconifyIcon writes them inline, see LC_INK in learning-confidence.jsx.
+   =========================================================================== */
+
+.lcm-screen {
+  /* ---- dark reader palette ---- */
+  /* module / lesson / course titles only (user request 2026-09-10) */
+  --font-title: "Times New Roman", Times, serif;
+  --lcm-bg: #0B1024;
+  --lcm-header-bg: #0B1024;
+  --lcm-card: #141A38;
+  --lcm-card-2: #1B2247;
+  --lcm-line: rgba(255,255,255,.10);
+  --lcm-line-2: rgba(255,255,255,.20);
+  --lcm-text: #FFFFFF;
+  --lcm-text-2: rgba(255,255,255,.76);
+  --lcm-text-3: rgba(255,255,255,.62);
+  --lcm-gold: #CE9957;
+  --lcm-gold-bg: rgba(206,153,87,.16);
+  --lcm-gold-solid: #CE9957;
+  --lcm-on-gold: #0B1024;
+  --lcm-track: rgba(255,255,255,.14);
+  --lcm-circle-bg: rgba(20,26,56,.88);
+  --lcm-circle-border: rgba(255,255,255,.14);
+  --lcm-success: #5CD39A;
+  --lcm-success-bg: rgba(92,211,154,.16);
+  --lcm-chip-bg: rgba(255,255,255,.09);
+  --lcm-marker-bg: rgba(255,255,255,.08);
+  --lcm-focus: #CE9957;
+  --lcm-ramp: linear-gradient(135deg, #A26301, #7A4A03);
+  --lcm-head-h: 104px;
+  /* course-progress card: warm gold wash + ring inks */
+  --lcm-prog-bg: linear-gradient(135deg, rgba(206,153,87,.22) 0%, #141A38 70%);
+  --lcm-prog-line: rgba(206,153,87,.32);
+  --lcm-ring: #CE9957;
+  --lcm-ring-track: rgba(255,255,255,.12);
+  --lcm-ic-bg: rgba(255,255,255,.09);
+  --lcm-ic-bg-active: rgba(255,255,255,.16);
+  --lcm-badge-ring: #0B1024;
+  --lcm-row-line: rgba(255,255,255,.08);
+  --lcm-tick-done: #2E9E6B;
+
+  height: 100%; display: flex; flex-direction: column; position: relative; overflow: hidden;
+  background: var(--lcm-bg); color: var(--lcm-text); font-family: var(--font-sans);
+}
+.lcm-screen.lc-light {
+  --lcm-bg: #F9F7F4; /* warm off-white My Learning surface */
+  --lcm-header-bg: rgba(255,255,255,.9);
+  --lcm-card: #FFFFFF;
+  --lcm-card-2: var(--gray-50);
+  --lcm-line: var(--border-default);
+  --lcm-line-2: var(--border-strong);
+  --lcm-text: var(--brand-navy);
+  --lcm-text-2: var(--gray-600);
+  /* --gray-450 is 4.47:1 on the page surface — use --gray-600 */
+  --lcm-text-3: var(--gray-600);
+  /* #CE9957 on #F9FAFB is ~2.4:1 — gold ink on the light surface is #8A5303 */
+  --lcm-gold: #8A5303;
+  --lcm-gold-bg: rgba(206,153,87,.18);
+  /* solid gold fills keep the brand gold; the glyph on them is navy (5.3:1) */
+  --lcm-gold-solid: var(--brand-gold);
+  --lcm-on-gold: var(--brand-navy);
+  --lcm-track: var(--gray-150);
+  --lcm-circle-bg: rgba(255,255,255,.92);
+  --lcm-circle-border: var(--border-default);
+  --lcm-success: var(--success);
+  --lcm-success-bg: var(--success-bg);
+  --lcm-chip-bg: var(--gray-100);
+  --lcm-marker-bg: var(--gray-100);
+  --lcm-focus: var(--brand-navy);
+  --lcm-prog-bg: linear-gradient(135deg, #FBF1E3 0%, #FFFFFF 72%);
+  --lcm-prog-line: rgba(206,153,87,.28);
+  --lcm-ring: #C9A26A;
+  --lcm-ring-track: #EFE6D8;
+  --lcm-ic-bg: var(--surface-sunken);
+  --lcm-ic-bg-active: var(--gray-200);
+  --lcm-badge-ring: #FFFFFF;
+  --lcm-row-line: var(--border-default);
+  --lcm-tick-done: #2E9E6B;
+}
+
+/* real phone: the frame is gone, so the screen fills the viewport */
+@media (max-width: 768px) {
+  .app:not(.device-stage) .lcm-screen { height: 100vh; height: 100dvh; overflow: hidden; }
+}
+
+.lcm-screen button { font-family: var(--font-sans); }
+.lcm-screen button:focus-visible { outline: 2px solid var(--lcm-focus); outline-offset: 2px; }
+
+/* ===== header: burger · lockup · search · bell · messages =====
+   Light = the shared newsfeed top bar look (frosted white, navy lockup).
+   Dark = the deep-navy reader. Collapses on scroll like the newsfeed:
+   .chrome-float lifts it out of the flow, .chrome-hidden slides it away. */
+.lcm-top { flex: none; z-index: 5; display: flex; align-items: center; gap: 10px;
+  height: var(--lcm-head-h); padding: 52px 16px 10px; background: var(--lcm-header-bg); border-bottom: 1px solid var(--lcm-line);
+  transition: transform .34s cubic-bezier(.4,0,.2,1), opacity .34s cubic-bezier(.4,0,.2,1), background-color .2s ease, border-color .2s ease; }
+.lc-light .lcm-top { -webkit-backdrop-filter: blur(14px) saturate(180%); backdrop-filter: blur(14px) saturate(180%); }
+.lcm-screen.chrome-float .lcm-top { position: absolute; top: 0; left: 0; right: 0; z-index: 20; }
+.lcm-screen.chrome-hidden .lcm-top { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+.lcm-burger { flex: none; width: 40px; height: 40px; margin-left: -8px; border: none; border-radius: 50%; background: none; cursor: pointer; padding: 0;
+  display: flex; align-items: center; justify-content: center; }
+.lcm-burger:active { background: var(--lcm-chip-bg); }
+.lcm-lockup { flex: none; display: flex; align-items: center; }
+.lcm-lockup img { height: 40px; width: auto; max-width: 168px; object-fit: contain; border-radius: 6px; }
+.lcm-grow { flex: 1; min-width: 4px; }
+/* round icon buttons, same footprint as the newsfeed's .m-iconbtn */
+.lcm-ic { position: relative; flex: none; width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; padding: 0;
+  background: var(--lcm-ic-bg); display: flex; align-items: center; justify-content: center; transition: background .15s ease, transform .15s ease; }
+.lcm-ic:active { background: var(--lcm-ic-bg-active); transform: scale(.94); }
+.lcm-ic .dot { position: absolute; top: -2px; right: -2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px;
+  background: var(--error); color: #fff; font-weight: var(--fw-bold); font-size: 10px; line-height: 1;
+  display: flex; align-items: center; justify-content: center; border: 2px solid var(--lcm-badge-ring); }
+
+/* ===== scroll region =====
+   ~150px bottom padding + the safe-area inset so the last card can be brought
+   above the floating dock. */
+.lcm-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative;
+  padding: 8px 0 calc(150px + env(safe-area-inset-bottom, 0px)); }
+.lcm-scroll::-webkit-scrollbar { width: 0; }
+/* once the header leaves the flow, reserve the status-bar inset */
+.lcm-screen.chrome-float .lcm-scroll { padding-top: 60px; }
+
+/* ===== sections ===== */
+.lcm-sec { padding: 0 20px; margin-top: 28px; }
+.lcm-sec-first { margin-top: 20px; }
+.lcm-sec-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.lcm-sec-h h2 { margin: 0; font-weight: var(--fw-bold); font-size: 20px; color: var(--lcm-text); }
+.lcm-sec-h .sub { font-size: 13px; font-weight: var(--fw-semibold); color: var(--lcm-gold); white-space: nowrap; }
+.lcm-eyebrow { display: block; font-weight: var(--fw-bold); font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--lcm-text-3); }
+.lcm-eyebrow-gold { color: var(--lcm-gold); }
+.lcm-eyebrow-strong { color: var(--lcm-text); font-size: 13px; letter-spacing: .1em; }
+/* section header whose title is an eyebrow ("LESSON MODULES · 4 of 5 completed") */
+.lcm-sec-h-eyebrow { align-items: center; margin-bottom: 10px; }
+.lcm-sec-h-eyebrow h2 { font-size: 12.5px; }
+.lcm-sec-h-eyebrow .sub { color: var(--lcm-text-2); font-weight: var(--fw-regular); font-size: 14px; }
+
+/* shared card chrome */
+.lcm-card { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px; border-radius: 16px; cursor: pointer; text-align: left;
+  border: 1px solid var(--lcm-line); background: var(--lcm-card); color: var(--lcm-text); transition: background .15s ease, transform .15s ease; }
+.lcm-card:hover { background: var(--lcm-card-2); }
+.lcm-card:active { transform: scale(.985); }
+.lc-light .lcm-card { box-shadow: 0 2px 10px rgba(16,24,40,.05); }
+
+/* circular arrow actions */
+.lcm-arrow { flex: none; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.lcm-arrow-gold { background: var(--lcm-gold-solid); box-shadow: 0 4px 12px rgba(206,153,87,.3); }
+.lcm-arrow-white { background: #FFFFFF; box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+
+/* ===== course progress card =====
+   Warm gold wash, ring left, stat + inline bar + "to go" right, chevron. */
+.lcm-prog { padding: 20px 16px 20px 18px; gap: 18px; background: var(--lcm-prog-bg); border-color: var(--lcm-prog-line); border-radius: 18px; }
+.lcm-prog:hover { background: var(--lcm-prog-bg); }
+.lcm-ring { flex: none; }
+.lcm-ring circle { transition: stroke-dashoffset .5s ease; }
+.lcm-ring-n { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 21px; fill: var(--lcm-text); }
+.lcm-prog-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.lcm-prog-stat { font-size: 15px; line-height: 1.3; color: var(--lcm-text-2); font-variant-numeric: tabular-nums; }
+.lcm-prog-stat b { font-weight: var(--fw-bold); font-size: 26px; line-height: 1; color: var(--lcm-text); margin-right: 2px; }
+.lcm-prog-total { color: var(--lcm-text); font-weight: var(--fw-semibold); }
+.lcm-prog-bar { display: block; margin: 6px 0 4px; }
+.lcm-prog-left { font-size: 15px; line-height: 1.3; color: var(--lcm-text-2); }
+.lcm-prog-arrow { flex: none; display: flex; }
+/* the DS ProgressBar paints a light-grey track inline; re-ink it for the reader */
+.lcm-screen:not(.lc-light) .lcm-prog-bar > div > div:first-child { background: var(--lcm-track) !important; }
+
+/* ===== current lesson card =====
+   Eyebrow + module line with a bookmark, big title, then the still bleeding to
+   the card's edges with an expand control in its corner. */
+.lcm-cur { display: block; padding: 0; overflow: hidden; border-radius: 18px; cursor: default; }
+.lcm-cur:hover { background: var(--lcm-card); }
+.lcm-cur:active { transform: none; }
+.lcm-cur-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 20px 0 20px; }
+.lcm-cur-tx { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.lcm-cur-mod { font-size: 15px; line-height: 1.3; color: var(--lcm-text-2); }
+.lcm-save { flex: none; width: 44px; height: 44px; margin: -8px -10px 0 0; border: none; border-radius: 50%; background: none; cursor: pointer; padding: 0;
+  display: flex; align-items: center; justify-content: center; transition: background .15s ease, transform .15s ease; }
+.lcm-save:hover { background: var(--lcm-chip-bg); }
+.lcm-save:active { transform: scale(.92); }
+.lcm-save.on { background: var(--lcm-gold-bg); }
+.lcm-title { margin: 6px 0 14px; padding: 0 20px; font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 30px; line-height: 1.15; color: var(--lcm-text); text-wrap: balance; }
+.lcm-still { position: relative; display: block; width: 100%; aspect-ratio: 4 / 3; overflow: hidden; cursor: pointer;
+  padding: 0; border: none; border-radius: 0; background: var(--lcm-card-2); }
+.lcm-still img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.lcm-expand { position: absolute; right: 16px; bottom: 16px; width: 48px; height: 48px; border-radius: 12px;
+  background: rgba(30,32,50,.78); display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 18px rgba(0,0,0,.28); transition: transform .15s ease; }
+.lcm-still:active .lcm-expand { transform: scale(.94); }
+.lcm-still:hover .lcm-expand { background: rgba(30,32,50,.9); }
+
+/* ===== lesson modules =====
+   One bordered list card; numbered title left, duration + tick right. */
+.lcm-rows { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column;
+  border: 1px solid var(--lcm-line); border-radius: 16px; background: var(--lcm-card); overflow: hidden; }
+.lc-light .lcm-rows { box-shadow: 0 2px 10px rgba(16,24,40,.05); }
+.lcm-rows li + li { border-top: 1px solid var(--lcm-row-line); }
+.lcm-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 66px; padding: 12px 16px 12px 20px;
+  border: none; border-radius: 0; background: none; cursor: pointer; text-align: left; color: var(--lcm-text); transition: background .15s ease; }
+.lcm-row:hover { background: var(--lcm-card-2); }
+.lcm-row.on { background: var(--lcm-gold-bg); }
+.lcm-row-title { flex: 1; min-width: 0; font-family: var(--font-title); font-size: 17px; line-height: 1.3; font-weight: var(--fw-regular); color: var(--lcm-text-2); }
+.lcm-row-n { font-variant-numeric: tabular-nums; }
+.lcm-row.on .lcm-row-title { color: var(--lcm-text); font-weight: var(--fw-medium); }
+.lcm-row-dur { flex: none; font-size: 15px; font-variant-numeric: tabular-nums; color: var(--lcm-text-3); }
+.lcm-tick { flex: none; width: 28px; height: 28px; margin-left: 6px; border-radius: 50%; border: 1.5px solid var(--lcm-line-2);
+  display: flex; align-items: center; justify-content: center; }
+.lcm-tick.done { background: var(--lcm-tick-done); border-color: var(--lcm-tick-done); }
+
+/* Continue to next lesson — gold, inside this section */
+.lcm-continue { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 52px; margin-top: 16px; padding: 0 16px;
+  border: none; border-radius: 14px; cursor: pointer; background: var(--lcm-gold-solid); color: var(--lcm-on-gold);
+  font-weight: var(--fw-semibold); font-size: 15px; box-shadow: 0 8px 22px rgba(206,153,87,.28); transition: filter .15s ease, transform .15s ease; }
+.lcm-continue:hover { filter: brightness(1.04); }
+.lcm-continue:active { transform: scale(.985); filter: brightness(.94); }
+
+/* ===== related courses ===== */
+.lcm-list { display: flex; flex-direction: column; gap: 12px; }
+.lcm-course { padding: 12px; }
+.lcm-course-thumb { position: relative; flex: none; width: 96px; height: 96px; border-radius: 12px; overflow: hidden; background: var(--lcm-card-2); }
+.lcm-course-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lcm-course-chip { position: absolute; left: 6px; bottom: 6px; padding: 3px 7px; border-radius: var(--r-pill); background: rgba(11,16,36,.82); color: #fff;
+  font-weight: var(--fw-semibold); font-size: 10.5px; }
+.lcm-course-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.lcm-course-title { font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 15.5px; line-height: 1.3; color: var(--lcm-text); }
+.lcm-course-blurb { font-size: 12.5px; line-height: 1.45; color: var(--lcm-text-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ===== free resources ===== */
+.lcm-res-ic { flex: none; width: 48px; height: 48px; border-radius: 14px; background: var(--lcm-gold-bg); display: flex; align-items: center; justify-content: center; }
+.lcm-res-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.lcm-res-title { font-weight: var(--fw-bold); font-size: 15px; line-height: 1.3; }
+.lcm-res-sub { font-size: 12.5px; line-height: 1.45; color: var(--lcm-text-2); }
+
+/* ===== deep-gold ramp cards (Discover your journey · Unlock more with Mastery) ===== */
+.lcm-ramp { display: flex; align-items: center; gap: 14px; width: 100%; padding: 18px 16px; border: none; border-radius: 18px; cursor: pointer; text-align: left;
+  background: var(--lcm-ramp); color: #FFFFFF; box-shadow: 0 12px 30px rgba(122,74,3,.32); transition: transform .15s ease, box-shadow .15s ease; }
+.lcm-ramp:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(122,74,3,.38); }
+.lcm-ramp:active { transform: scale(.985); }
+.lcm-ramp:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.lcm-ramp-ic { flex: none; width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28);
+  display: flex; align-items: center; justify-content: center; }
+.lcm-ramp-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.lcm-ramp-title { font-weight: var(--fw-bold); font-size: 16.5px; line-height: 1.25; }
+.lcm-ramp-body { font-size: 13px; line-height: 1.45; color: rgba(255,255,255,.9); }
+.lcm-ramp-cta { margin-top: 4px; font-weight: var(--fw-semibold); font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ===== tab bar (from learning-mobile.css) re-inked for the dark reader ===== */
+.lcm-screen:not(.lc-light) .lm-tabs { background: rgba(20,26,56,.84); border-color: rgba(255,255,255,.14);
+  box-shadow: 0 12px 34px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.08); }
+.lcm-screen:not(.lc-light) .lm-tab { color: rgba(255,255,255,.82); }
+.lcm-screen:not(.lc-light) .lm-tab.on { color: #fff; }
+.lcm-screen:not(.lc-light) .lm-tab.on .ic { background: #CE9957; box-shadow: 0 4px 12px rgba(206,153,87,.35); }
+.lcm-screen:not(.lc-light) .lm-tab.on .ic iconify-icon, .lcm-screen:not(.lc-light) .lm-tab.on .ic svg { color: #0B1024 !important; }
+.lcm-screen:not(.lc-light) .lm-tab.on .ic svg [stroke]:not([stroke="none"]) { stroke: #0B1024 !important; }
+.lcm-screen:not(.lc-light) .lm-tab.on .ic svg [fill]:not([fill="none"]) { fill: #0B1024 !important; }
+
+/* ===== Ava =====
+   coach.js mounts the bookmark tab into .lcm-screen. Inset it a few px so
+   the rounded tab stays inside the device frame, and lift it clear of the dock. */
+.lcm-screen .pf-ava-tab { right: 3px; bottom: 132px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lcm-top, .lcm-ic, .lcm-card, .lcm-ramp, .lcm-continue, .lcm-ring circle, .lcm-expand, .lcm-save { transition: none; }
+}

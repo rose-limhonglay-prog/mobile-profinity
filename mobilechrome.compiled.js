@@ -20,7 +20,10 @@
      read and write — this file doesn't load app.jsx, so it keeps its own
      tiny copy rather than depending on window.PFApp. */
   const PF_TIER_KEY_C = "pf-subscription-tier";
+  /* A shell that pins a variant (window.PF_TIER, set before the app scripts
+     load) wins over the stored tier — same rule as learning-mobile.jsx. */
   function getUserTierC() {
+    if (window.PF_TIER) return window.PF_TIER;
     try {
       return localStorage.getItem(PF_TIER_KEY_C) || "free";
     } catch (e) {
@@ -1744,6 +1747,9 @@
     }));
   }
   window.MobileChromeC = MobileChromeC;
+  /* The side menu on its own — for pages that keep their own top bar but
+     still open the shared drawer (the Confidence My Learning page). */
+  window.PFSideMenuC = SideMenuC;
   /* Scroll-driven header state ({ hidden, floating }) — see useHeaderHideC. */
   window.PFUseHeaderHideC = useHeaderHideC;
   /* The header points icon (doctor Lottie) — exposed for other pages. */
@@ -1751,4 +1757,8 @@
   /* The header points pill itself — mounted by pages that keep their own top
      bar (ProfileMobile's PMTopBar) so the lifetime total reads the same. */
   window.PFPointsPillC = PointsPillC;
+  /* The notifications + messages drawers — for pages with their own top bar
+     that still want the shared bell / message-circle buttons to work. */
+  window.PFNotificationsPanelC = NotificationsPanelC;
+  window.PFMessagesPanelC = MessagesPanelC;
 })();

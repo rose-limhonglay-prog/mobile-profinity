@@ -34,12 +34,19 @@ function BadgeProgressScreen() {
     const res = PF_BPR.completeAction(id);
     setState(PF_BPR.getState());
     if (res.capped) { setToast("That action has hit its cap for now — try again later."); }
-    else { setToast("+" + res.pointsAwarded + " pts, +" + res.creditsAwarded + " credits earned!"); }
+    else {
+      setToast("+" + res.pointsAwarded + " pts, +" + res.creditsAwarded + " credits earned!");
+      /* same event popPoints (app.jsx) fires so any header points pill / tally listening on the page bumps */
+      try { window.dispatchEvent(new CustomEvent("pf:points-earned", { detail: { amount: res.pointsAwarded } })); } catch (e) { /* older WebView */ }
+    }
     setTimeout(() => setToast(null), 2400);
+    /* crossing the next threshold hands off to the Milestone Splash (same as Ways to Earn) */
+    if (res.leveledUp) setTimeout(() => goBPR("MilestoneSplash.html"), 900);
   };
 
   const pct = progress.pct;
   const deg = Math.round((pct / 100) * 360);
+  const ringLabel = pct >= 100 ? "Maxed out!" : pct >= 60 ? "Almost there!" : "Keep going!";
 
   return (
     <div className="ml-screen bpr-screen" data-screen-label="Badge Progress">
@@ -48,12 +55,12 @@ function BadgeProgressScreen() {
         <h1>Badge Progress</h1>
         <button className="ml-top-action" aria-label="Badge Gallery" onClick={() => goBPR("BadgeGallery.html")}><DSBPR.IconifyIcon name="lucide:award" size={19} color="var(--gray-700)" /></button>
       </div>
-      <div className="ml-scroll">
+      <div className="ml-scroll bpr-scroll">
         <div className="bpr-ring-wrap">
           <div className="bpr-ring" style={{ background: `conic-gradient(var(--brand-gold) ${deg}deg, var(--gray-200) 0deg)` }}>
             <div className="bpr-ring-inner">
               <div className="bpr-ring-pct">{pct}%</div>
-              <div className="bpr-ring-label">{pct < 100 ? "Almost there!" : "Maxed out!"}</div>
+              <div className="bpr-ring-label">{ringLabel}</div>
             </div>
           </div>
           <div className="bpr-ring-caption">{PF_BPR.formatNumber(state.lifetimePoints)} / {progress.next ? PF_BPR.formatNumber(progress.next.threshold) : PF_BPR.formatNumber(progress.current.threshold)} pts</div>

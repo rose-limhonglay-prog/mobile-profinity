@@ -25,7 +25,7 @@
     ".ag-screen", ".cd-screen", ".rl-screen", ".sr-screen", ".cp-screen",
     ".ms-screen", ".as-screen", ".ns-screen", ".ds-screen", ".cc-screen",
     ".sc-screen", ".ma-screen", ".mt-screen", ".dm-screen", ".ls-screen",
-    ".wa-screen"
+    ".lcm-screen", ".wa-screen"
   ].join(", ");
   /* Any screen root not covered above still carries data-screen-label — last resort only. */
   var FALLBACK_HOST_SELECTOR = "[data-screen-label]";

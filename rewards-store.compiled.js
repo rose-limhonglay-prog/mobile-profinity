@@ -16,6 +16,29 @@ function goSTR(url) {
     window.location.href = u;
   })(url);
 }
+
+/* Artwork fallback for items without an image: a glyph per item, then per
+   category, then sparkles — so the grid reads as distinct rewards rather than
+   a wall of identical placeholders. */
+const STR_ITEM_ICONS = {
+  dinner_drtim: "lucide:utensils",
+  mentorship_1on1: "lucide:users",
+  event_seats: "lucide:ticket",
+  clinical_tools: "lucide:stethoscope",
+  amazon_voucher_25: "lucide:gift",
+  spotify_premium_3mo: "lucide:music",
+  pf_hoodie: "lucide:shirt"
+};
+const STR_CATEGORY_ICONS = {
+  Signature: "lucide:crown",
+  Experiences: "lucide:ticket",
+  Clinical: "lucide:stethoscope",
+  Vouchers: "lucide:gift",
+  Merch: "lucide:shopping-bag"
+};
+function iconForSTR(item) {
+  return item.icon || STR_ITEM_ICONS[item.id] || STR_CATEGORY_ICONS[item.category] || "lucide:sparkles";
+}
 function StoreConfirm({
   item,
   onCancel,
@@ -60,11 +83,13 @@ function StoreCard({
   }, item.image ? /*#__PURE__*/React.createElement("img", {
     src: item.image,
     alt: ""
-  }) : /*#__PURE__*/React.createElement(DSSTR.IconifyIcon, {
-    name: "lucide:sparkles",
-    size: 30,
+  }) : /*#__PURE__*/React.createElement("span", {
+    className: "str-card-ic"
+  }, /*#__PURE__*/React.createElement(DSSTR.IconifyIcon, {
+    name: iconForSTR(item),
+    size: 26,
     color: "var(--brand-gold)"
-  }), locked && /*#__PURE__*/React.createElement("span", {
+  })), locked && /*#__PURE__*/React.createElement("span", {
     className: "str-lock-badge"
   }, /*#__PURE__*/React.createElement(DSSTR.IconifyIcon, {
     name: "lucide:lock",

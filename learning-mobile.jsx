@@ -123,7 +123,7 @@ function LM2Header({ freeTier, tier }) {
   return (
     <div className={"lm2-head" + (freeTier ? " has-sub" : "")} data-screen-label="Header">
       <div className="lm2-head-row">
-        <div className="lm2-head-greet">Good morning, Katy! <span className="lm2-sun" role="img" aria-label="sun">☀️</span></div>
+        <div className="lm2-head-greet">Good morning, Katy!</div>
         {freeTier ?
         <img className="lm2-head-avatar" src="assets/avatar-katy.jpg" alt="Katy" /> :
 
@@ -536,7 +536,7 @@ function LearningMobileApp() {
   const scale = useDeviceScaleL();
   const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
   if (mobile) {
-    return <div className="app" style={{ ...vars, background: "var(--surface-page)" }}><LearningHome /></div>;
+    return <div className="app" style={{ ...vars, background: "#F9F7F4" }}><LearningHome /></div>;
   }
   return (
     <div className="app device-stage" style={{ ...vars, backgroundColor: "rgb(217, 218, 225)" }}>

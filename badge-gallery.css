@@ -9,7 +9,7 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
   font-family: var(--font-sans); color: var(--text-primary); }
 img { max-width: 100%; }
 
-.bgl-ladder { display: flex; justify-content: space-between; background: var(--white); border: 1px solid var(--border-default);
+.bgl-ladder { display: flex; justify-content: space-between; background: var(--surface-card); border: 1px solid var(--border-default);
   border-radius: 16px; padding: 16px 10px; }
 .bgl-ladder-item { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; position: relative; }
 .bgl-ladder-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
@@ -22,7 +22,7 @@ img { max-width: 100%; }
 .bgl-tile { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 18px 12px; border-radius: 16px;
   border: 1px solid var(--border-default); background: var(--gray-50); cursor: pointer; font-family: inherit; text-align: center; }
 .bgl-tile.is-unlocked { background: var(--brand-gold-100); border-color: var(--brand-gold-soft); }
-.bgl-tile-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--white); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
+.bgl-tile-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--surface-card); display: flex; align-items: center; justify-content: center; margin-bottom: 4px; }
 .bgl-tile-name { font-size: 13px; font-weight: 700; color: var(--gray-900); }
 .bgl-tile-progress { font-size: 11px; color: var(--gray-500); margin-top: 4px; }
 .bgl-tile-earned { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; color: var(--success); margin-top: 4px; }
