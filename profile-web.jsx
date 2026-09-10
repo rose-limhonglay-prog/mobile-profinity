@@ -1193,6 +1193,8 @@ function pwLiveCountdown(iso) {
   return "in " + d + " day" + (d === 1 ? "" : "s");
 }
 
+/* Temporarily hidden (2026-09-10) — flip to true to bring the card back. */
+const PW_SHOW_UPCOMING_LIVES = false;
 function PWUpcomingLivesCard() {
   const [lives, setLives] = useStatePW(pwLoadScheduledLives);
   const [confirmId, setConfirmId] = useStatePW(null);
@@ -1383,7 +1385,7 @@ function ProfileMain({ assessState, onOpenHub }) {
           </div>
           <div className="pw-main">
             <PWComposerCard />
-            <PWUpcomingLivesCard />
+            {PW_SHOW_UPCOMING_LIVES && <PWUpcomingLivesCard />}
             <PWGoalsSection assessState={assessState} onOpenHub={onOpenHub} />
             <PWPostsCard />
           </div>

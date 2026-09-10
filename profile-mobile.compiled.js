@@ -4074,6 +4074,9 @@ function pmLiveCountdown(iso) {
   if (h < 24) return "in " + h + " hr" + (h === 1 ? "" : "s");
   return "in " + d + " day" + (d === 1 ? "" : "s");
 }
+
+/* Temporarily hidden (2026-09-10) — flip to true to bring the card back. */
+const PM_SHOW_UPCOMING_LIVES = false;
 function PMUpcomingLivesCard() {
   const [lives, setLives] = useStatePM(pmLoadScheduledLives);
   const [confirmId, setConfirmId] = useStatePM(null);
@@ -5170,7 +5173,7 @@ function PMScreen() {
     name: "lucide:settings",
     size: 20,
     color: "var(--text-heading)"
-  })))), /*#__PURE__*/React.createElement(PMUpcomingLivesCard, null), /*#__PURE__*/React.createElement(ProfileSteps, {
+  })))), PM_SHOW_UPCOMING_LIVES && /*#__PURE__*/React.createElement(PMUpcomingLivesCard, null), /*#__PURE__*/React.createElement(ProfileSteps, {
     assessState: assessState,
     onAssessPatch: patchAssessState
   }), /*#__PURE__*/React.createElement(PMGoalsMenu, {

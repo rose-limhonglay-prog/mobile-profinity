@@ -1646,6 +1646,9 @@ function pwLiveCountdown(iso) {
   if (h < 24) return "in " + h + " hr" + (h === 1 ? "" : "s");
   return "in " + d + " day" + (d === 1 ? "" : "s");
 }
+
+/* Temporarily hidden (2026-09-10) — flip to true to bring the card back. */
+const PW_SHOW_UPCOMING_LIVES = false;
 function PWUpcomingLivesCard() {
   const [lives, setLives] = useStatePW(pwLoadScheduledLives);
   const [confirmId, setConfirmId] = useStatePW(null);
@@ -1921,7 +1924,7 @@ function ProfileMain({
     suggestions: p.suggestions
   })), /*#__PURE__*/React.createElement("div", {
     className: "pw-main"
-  }, /*#__PURE__*/React.createElement(PWComposerCard, null), /*#__PURE__*/React.createElement(PWUpcomingLivesCard, null), /*#__PURE__*/React.createElement(PWGoalsSection, {
+  }, /*#__PURE__*/React.createElement(PWComposerCard, null), PW_SHOW_UPCOMING_LIVES && /*#__PURE__*/React.createElement(PWUpcomingLivesCard, null), /*#__PURE__*/React.createElement(PWGoalsSection, {
     assessState: assessState,
     onOpenHub: onOpenHub
   }), /*#__PURE__*/React.createElement(PWPostsCard, null)))));

@@ -2530,6 +2530,8 @@ function pmLiveCountdown(iso) {
   return "in " + d + " day" + (d === 1 ? "" : "s");
 }
 
+/* Temporarily hidden (2026-09-10) — flip to true to bring the card back. */
+const PM_SHOW_UPCOMING_LIVES = false;
 function PMUpcomingLivesCard() {
   const [lives, setLives] = useStatePM(pmLoadScheduledLives);
   const [confirmId, setConfirmId] = useStatePM(null);
@@ -3209,7 +3211,7 @@ function PMScreen() {
                 </button>
               </div>
             </div>
-            <PMUpcomingLivesCard />
+            {PM_SHOW_UPCOMING_LIVES && <PMUpcomingLivesCard />}
             <ProfileSteps assessState={assessState} onAssessPatch={patchAssessState} />
             <PMGoalsMenu assessState={assessState} />
             <PMMentor />
