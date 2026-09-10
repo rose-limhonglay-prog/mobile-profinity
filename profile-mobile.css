@@ -952,6 +952,17 @@ img{max-width:100%}
 .pm-goals-expanded.is-offstage{left:50%;margin-left:0}
 .pm-goals-expanded{padding-bottom:4px}
 .pm-goals-back{min-height:44px;padding-right:8px;border-radius:8px}
+/* header row: back button + league-standing pill (matches the Leaderboard's
+   "Your league" #rank pill) */
+.pm-goals-title{display:flex;align-items:center;gap:8px}
+.pm-goals-head .pm-goals-back{gap:6px}
+.pm-goals-head{display:flex;align-items:center;gap:10px;margin:0 0 4px 20px}
+.pm-goals-head .pm-goals-back{margin:0;align-self:center}
+.pm-goals-rank{flex:none;display:inline-flex;align-items:center;justify-content:center;min-height:28px;padding:0 12px;
+  border:none;border-radius:999px;background:var(--brand-navy);color:#fff;cursor:pointer;
+  font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:14px;line-height:1;letter-spacing:.01em;
+  -webkit-tap-highlight-color:transparent}
+.pm-goals-rank:active{opacity:.75}
 .pm-goals-expanded .pm-card{margin-top:12px}
 .pm-goals-expanded .pm-card:first-of-type{margin-top:4px}
 .pm-steps-track.is-empty{background:var(--gray-150)}

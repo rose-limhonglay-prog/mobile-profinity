@@ -211,6 +211,7 @@
    ============================================================ */
 [data-theme="dark"] .pm-ig-btn     { color: var(--text-heading); border-color: var(--border-strong); background: var(--surface-sunken); }
 [data-theme="dark"] .pm-ig-btn.navy { background: var(--brand-navy); color: #fff; border-color: transparent; }
+[data-theme="dark"] .pm-goals-rank  { background: var(--brand-navy); color: #1a1736; }
 [data-theme="dark"] .pm-sec-h h2   { color: var(--text-heading); }
 [data-theme="dark"] .pm-tab.on     { color: var(--brand-navy); }
 [data-theme="dark"] .pm-tabs {

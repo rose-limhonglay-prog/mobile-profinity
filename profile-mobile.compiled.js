@@ -840,10 +840,36 @@ function PMGoalsGateCard({
    goes position:absolute (.is-offstage) and rides off-screen. No measured
    heights — these screens grow after first layout (icon web components
    upgrade, chips wrap, Poppins loads), so any single measurement is stale. */
+/* League standing shown beside the "Track your goals" header — the same
+   rank the Leaderboard's "Your league" card computes: Katy's live rolling
+   30-day points (window.PFLoyalty) merged into the mock clinician field.
+   Mirror of LB_FIELD in leaderboard.jsx — keep the points in sync. */
+const PM_LEAGUE_FIELD_POINTS = [9840, 8120, 6790, 5310, 4980, 4400, 3920, 3510, 3105, 2640, 2210, 1890, 1655, 1420];
+function pmLeagueRank() {
+  const engine = window.PFLoyalty;
+  let mine = 2100;
+  try {
+    if (engine && engine.getState) mine = engine.getState().rollingPoints30 || 0;
+  } catch (e) {}
+  return 1 + PM_LEAGUE_FIELD_POINTS.filter(p => p > mine).length;
+}
 function PMGoalsMenu({
   assessState
 }) {
   const [expanded, setExpanded] = useStatePM(false);
+
+  /* Rank re-reads whenever points land (ticking a target, etc.) so the pill
+     matches the Leaderboard without a reload. */
+  const [leagueRank, setLeagueRank] = useStatePM(() => pmLeagueRank());
+  useEffectPM(() => {
+    const sync = () => setLeagueRank(pmLeagueRank());
+    window.addEventListener("pf:points-earned", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("pf:points-earned", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
 
   /* Deep link from LearningMobile's "See your full Prosperity Spiral" points
      at #prosperity-spiral, which lives inside the collapsed-by-default menu —
@@ -882,8 +908,12 @@ function PMGoalsMenu({
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-goals-collapsed-top"
   }, /*#__PURE__*/React.createElement("h3", {
-    className: "pm-steps-h"
-  }, "Track your goals"), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    className: "pm-steps-h pm-goals-title"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:target",
+    size: 22,
+    color: "var(--brand-gold)"
+  }), "Track your goals"), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 20,
     color: "var(--gray-400)"
@@ -916,6 +946,8 @@ function PMGoalsMenu({
   }, "Complete ‘Get to know you’ to unlock your forecast — tap to start")))), /*#__PURE__*/React.createElement("div", {
     className: "pm-goals-pane pm-goals-expanded" + (expanded ? "" : " is-offstage"),
     "aria-hidden": !expanded
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-goals-head"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-goals-back",
@@ -925,7 +957,18 @@ function PMGoalsMenu({
     name: "lucide:chevron-left",
     size: 20,
     color: "var(--text-heading)"
-  }), "Track your goals"), unlocked ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PMTargetsCard, {
+  }), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:target",
+    size: 22,
+    color: "var(--brand-gold)"
+  }), "Track your goals"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-goals-rank",
+    tabIndex: expanded ? 0 : -1,
+    "aria-label": "Your league standing: number " + leagueRank + " — see the full leaderboard",
+    title: "See the full leaderboard",
+    onClick: () => goPM("Leaderboard.html")
+  }, "#", leagueRank)), unlocked ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PMTargetsCard, {
     assessState: assessState
   }), /*#__PURE__*/React.createElement(PMGoalFocusCard, {
     assessState: assessState

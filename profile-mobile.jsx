@@ -497,8 +497,30 @@ function PMGoalsGateCard({ doneCount }) {
    goes position:absolute (.is-offstage) and rides off-screen. No measured
    heights — these screens grow after first layout (icon web components
    upgrade, chips wrap, Poppins loads), so any single measurement is stale. */
+/* League standing shown beside the "Track your goals" header — the same
+   rank the Leaderboard's "Your league" card computes: Katy's live rolling
+   30-day points (window.PFLoyalty) merged into the mock clinician field.
+   Mirror of LB_FIELD in leaderboard.jsx — keep the points in sync. */
+const PM_LEAGUE_FIELD_POINTS = [9840, 8120, 6790, 5310, 4980, 4400, 3920, 3510, 3105, 2640, 2210, 1890, 1655, 1420];
+function pmLeagueRank() {
+  const engine = window.PFLoyalty;
+  let mine = 2100;
+  try { if (engine && engine.getState) mine = engine.getState().rollingPoints30 || 0; } catch (e) {}
+  return 1 + PM_LEAGUE_FIELD_POINTS.filter((p) => p > mine).length;
+}
+
 function PMGoalsMenu({ assessState }) {
   const [expanded, setExpanded] = useStatePM(false);
+
+  /* Rank re-reads whenever points land (ticking a target, etc.) so the pill
+     matches the Leaderboard without a reload. */
+  const [leagueRank, setLeagueRank] = useStatePM(() => pmLeagueRank());
+  useEffectPM(() => {
+    const sync = () => setLeagueRank(pmLeagueRank());
+    window.addEventListener("pf:points-earned", sync);
+    window.addEventListener("storage", sync);
+    return () => { window.removeEventListener("pf:points-earned", sync); window.removeEventListener("storage", sync); };
+  }, []);
 
   /* Deep link from LearningMobile's "See your full Prosperity Spiral" points
      at #prosperity-spiral, which lives inside the collapsed-by-default menu —
@@ -533,7 +555,9 @@ function PMGoalsMenu({ assessState }) {
           aria-hidden={expanded} tabIndex={expanded ? -1 : 0}
           aria-label={unlocked ? "Track your goals — tap to view" : "Track your goals — assessment required, tap to start"} onClick={tapCollapsed}>
           <div className="pm-goals-collapsed-top">
-            <h3 className="pm-steps-h">Track your goals</h3>
+            <h3 className="pm-steps-h pm-goals-title">
+              <DSPM.IconifyIcon name="lucide:target" size={22} color="var(--brand-gold)" />Track your goals
+            </h3>
             <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
           </div>
           <p className="pm-steps-sub">Goal Focus, Prosperity Spiral &amp; Today's Targets</p>
@@ -560,9 +584,15 @@ function PMGoalsMenu({ assessState }) {
         </button>
 
         <div className={"pm-goals-pane pm-goals-expanded" + (expanded ? "" : " is-offstage")} aria-hidden={!expanded}>
-          <button type="button" className="pm-goals-back" tabIndex={expanded ? 0 : -1} onClick={() => setExpanded(false)}>
-            <DSPM.IconifyIcon name="lucide:chevron-left" size={20} color="var(--text-heading)" />Track your goals
-          </button>
+          <div className="pm-goals-head">
+            <button type="button" className="pm-goals-back" tabIndex={expanded ? 0 : -1} onClick={() => setExpanded(false)}>
+              <DSPM.IconifyIcon name="lucide:chevron-left" size={20} color="var(--text-heading)" />
+              <DSPM.IconifyIcon name="lucide:target" size={22} color="var(--brand-gold)" />Track your goals
+            </button>
+            <button type="button" className="pm-goals-rank" tabIndex={expanded ? 0 : -1}
+              aria-label={"Your league standing: number " + leagueRank + " — see the full leaderboard"}
+              title="See the full leaderboard" onClick={() => goPM("Leaderboard.html")}>#{leagueRank}</button>
+          </div>
           {unlocked ?
           <>
               <PMTargetsCard assessState={assessState} />
