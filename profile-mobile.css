@@ -971,14 +971,7 @@ img{max-width:100%}
 .pm-league-card.is-collapsed{padding-bottom:14px}
 .pm-league-hd{display:flex;align-items:center;gap:14px;padding-right:52px;min-height:40px}
 .pm-league-hd h2{margin:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--text-heading);line-height:1.25}
-.pm-league-rank{cursor:default;min-height:26px;padding:0 11px;font-size:13px;position:relative;isolation:isolate;
-  animation:pm-league-beat 1.6s ease-in-out infinite;transform-origin:center}
-/* heartbeat: two quick beats then rest, with a soft pulse ring behind */
-.pm-league-rank::after{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--brand-navy);opacity:0;
-  animation:pm-league-ring 1.6s ease-out infinite;z-index:-1}
-@keyframes pm-league-beat{0%,28%,100%{transform:scale(1)}7%{transform:scale(1.14)}14%{transform:scale(1)}21%{transform:scale(1.1)}}
-@keyframes pm-league-ring{0%{transform:scale(1);opacity:.45}45%,100%{transform:scale(1.7);opacity:0}}
-@media (prefers-reduced-motion:reduce){.pm-league-rank,.pm-league-rank::after{animation:none}.pm-league-rank::after{display:none}}
+.pm-league-rank{cursor:default;min-height:26px;padding:0 11px;font-size:13px}
 .pm-league-toggle{position:absolute;top:12px;right:12px;width:44px;height:44px;border:none;border-radius:50%;
   background:rgba(255,255,255,.75);cursor:pointer;display:flex;align-items:center;justify-content:center;
   -webkit-tap-highlight-color:transparent}
@@ -994,7 +987,15 @@ img{max-width:100%}
 .pm-league-row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:15.5px;color:var(--text-body,#222)}
 .pm-league-row .pts{flex:none;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px;color:var(--gray-600)}
-.pm-league-row.me{background:var(--pm-league-bg);border-color:var(--pm-league-line)}
+.pm-league-row.me{background:var(--pm-league-bg);border-color:var(--pm-league-line);position:relative;isolation:isolate;
+  animation:pm-league-beat 1.8s ease-in-out infinite;transform-origin:center}
+/* heartbeat on the member's row: two quick beats then rest, with a soft gold
+   ring breathing out behind it */
+.pm-league-row.me::after{content:"";position:absolute;inset:-1px;border-radius:inherit;border:2px solid var(--pm-league-line);
+  opacity:0;animation:pm-league-ring 1.8s ease-out infinite;pointer-events:none;z-index:-1}
+@keyframes pm-league-beat{0%,30%,100%{transform:scale(1)}7%{transform:scale(1.035)}14%{transform:scale(1)}21%{transform:scale(1.025)}}
+@keyframes pm-league-ring{0%{transform:scale(1);opacity:.9}50%,100%{transform:scale(1.06,1.3);opacity:0}}
+@media (prefers-reduced-motion:reduce){.pm-league-row.me{animation:none}.pm-league-row.me::after{display:none}}
 .pm-league-row.me .rk,.pm-league-row.me .pts{color:var(--pm-league-gold)}
 .pm-league-row.me .nm{font-weight:var(--fw-bold);color:var(--text-heading)}
 .pm-league-cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;margin-top:10px;
