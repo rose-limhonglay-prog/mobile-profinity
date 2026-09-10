@@ -131,21 +131,21 @@ const PM_BANDS = [{
   soft: "#EAF6F0"
 }, {
   key: "improving",
-  label: "Needs improving",
+  label: "Growing strong",
   min: 60,
   color: "#CE9957",
   text: "#8A5303",
   soft: "#FCF4E4"
 }, {
   key: "practice",
-  label: "Needs more practice",
+  label: "Building momentum",
   min: 40,
   color: "#E7820A",
   text: "#9A4B00",
   soft: "#FDEEDD"
 }, {
   key: "study",
-  label: "Needs study",
+  label: "Just getting started",
   min: 0,
   color: "#C8362F",
   text: "#A8231D",
@@ -450,7 +450,7 @@ function PMGoalFocusCard({
     icon: "lucide:trophy",
     coach: "Why is " + weakest.key + " my goal focus right now, and what should I do first?",
     coachLabel: "Ask Ava about this goal"
-  }, /*#__PURE__*/React.createElement("p", null, "Your goal is always your ", /*#__PURE__*/React.createElement("b", null, "lowest-scoring pillar"), ". Each pillar's score is your ", /*#__PURE__*/React.createElement("b", null, "Get to know you"), " baseline (worth up to 60%) plus the course progress you've made in that area."), /*#__PURE__*/React.createElement("p", null, "The dial's colour is its band: ", /*#__PURE__*/React.createElement("b", null, "Expert"), ", ", /*#__PURE__*/React.createElement("b", null, "Needs improving"), ", ", /*#__PURE__*/React.createElement("b", null, "Needs more practice"), " or ", /*#__PURE__*/React.createElement("b", null, "Needs study"), ". When this pillar overtakes another, your goal switches automatically.")));
+  }, /*#__PURE__*/React.createElement("p", null, "Your goal is always your ", /*#__PURE__*/React.createElement("b", null, "lowest-scoring pillar"), ". Each pillar's score is your ", /*#__PURE__*/React.createElement("b", null, "Get to know you"), " baseline (worth up to 60%) plus the course progress you've made in that area."), /*#__PURE__*/React.createElement("p", null, "The dial's colour is its band: ", /*#__PURE__*/React.createElement("b", null, "Expert"), ", ", /*#__PURE__*/React.createElement("b", null, "Growing strong"), ", ", /*#__PURE__*/React.createElement("b", null, "Building momentum"), " or ", /*#__PURE__*/React.createElement("b", null, "Just getting started"), ". When this pillar overtakes another, your goal switches automatically.")));
 }
 
 /* The Prosperity Spiral — a 2×2 grid of pillar tiles ordered weakest →
@@ -463,7 +463,7 @@ const PM_BAND_CHIP = {
   expert: "Strong",
   improving: "Growing",
   practice: "Building",
-  study: "Needs study"
+  study: "Starting out"
 };
 function PMSpiralCard({
   assessState
@@ -547,7 +547,7 @@ function PMSpiralCard({
     icon: "lucide:sparkles",
     coach: "Explain how my Spiral Score is calculated and what I can do this week to raise it.",
     coachLabel: "Ask Ava to explain mine"
-  }, /*#__PURE__*/React.createElement("p", null, "Your Spiral is a snapshot of how balanced your business is across the four areas every successful clinic needs: ", /*#__PURE__*/React.createElement("b", null, "Sales"), ", ", /*#__PURE__*/React.createElement("b", null, "Marketing"), ", ", /*#__PURE__*/React.createElement("b", null, "Clinical Skills"), " and ", /*#__PURE__*/React.createElement("b", null, "Business Systems"), "."), /*#__PURE__*/React.createElement("p", null, "Each ring is coloured by its band — green ", /*#__PURE__*/React.createElement("b", null, "Strong"), ", gold ", /*#__PURE__*/React.createElement("b", null, "Growing"), ", orange ", /*#__PURE__*/React.createElement("b", null, "Building"), ", red ", /*#__PURE__*/React.createElement("b", null, "Needs study"), " — and “vs average” compares you with other PROfinity clinics. A pillar climbs when you act on it: finishing a lesson, completing a target, posting a case study, following up with a patient."), /*#__PURE__*/React.createElement("p", null, "A weak pillar isn't a bad grade — it's where Ava recommends you start, because the fastest way to grow a clinic is usually to lift its lowest pillar first.")), /*#__PURE__*/React.createElement(PMInfoModal, {
+  }, /*#__PURE__*/React.createElement("p", null, "Your Spiral is a snapshot of how balanced your business is across the four areas every successful clinic needs: ", /*#__PURE__*/React.createElement("b", null, "Sales"), ", ", /*#__PURE__*/React.createElement("b", null, "Marketing"), ", ", /*#__PURE__*/React.createElement("b", null, "Clinical Skills"), " and ", /*#__PURE__*/React.createElement("b", null, "Business Systems"), "."), /*#__PURE__*/React.createElement("p", null, "Each ring is coloured by its band — green ", /*#__PURE__*/React.createElement("b", null, "Strong"), ", gold ", /*#__PURE__*/React.createElement("b", null, "Growing"), ", orange ", /*#__PURE__*/React.createElement("b", null, "Building"), ", red ", /*#__PURE__*/React.createElement("b", null, "Starting out"), " — and “vs average” compares you with other PROfinity clinics. A pillar climbs when you act on it: finishing a lesson, completing a target, posting a case study, following up with a patient."), /*#__PURE__*/React.createElement("p", null, "A weak pillar isn't a bad grade — it's where Ava recommends you start, because the fastest way to grow a clinic is usually to lift its lowest pillar first.")), /*#__PURE__*/React.createElement(PMInfoModal, {
     open: tim,
     onClose: () => setTim(false),
     title: "Why balance beats brilliance",
@@ -2878,10 +2878,6 @@ function PMAssessWizard({
   useEffectPM(() => {
     if (!finished) onProgress(answers);
   }, [answers]);
-  /* Warm the celebration animation while the user is still answering. */
-  useEffectPM(() => {
-    if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) pmLottieData();
-  }, []);
   const cur = questions[step];
   function pick(i) {
     const next = answers.slice();
@@ -2973,68 +2969,6 @@ function PMAssessWizard({
     onClose: onClose
   })));
 }
-
-/* Assessment-complete celebration — raw JSON through lottie-web
-   (loadAnimation), never the lottie.host /embed iframe: the iframe caches
-   hard and ignores re-publishes, and ?v= cache-busters break its route.
-   Skipped entirely under prefers-reduced-motion. */
-const PM_RESULT_LOTTIE = "https://lottie.host/d343b01e-a214-4708-97e8-51a7f92d98bf/HFXvByPBoo.json";
-/* The JSON is ~185KB from a cold CDN edge, so it's fetched once when the
-   wizard opens (well before the result screen) and shared by every result. */
-let pmLottiePromise = null;
-function pmLottieData() {
-  if (!pmLottiePromise) {
-    pmLottiePromise = fetch(PM_RESULT_LOTTIE).then(r => r.ok ? r.json() : null).catch(() => {
-      pmLottiePromise = null;
-      return null;
-    });
-  }
-  return pmLottiePromise;
-}
-function PMResultLottie({
-  size
-}) {
-  const host = React.useRef(null);
-  useEffectPM(() => {
-    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let anim,
-      iv,
-      cancelled = false;
-    function start() {
-      if (cancelled || !window.lottie || !host.current) return;
-      pmLottieData().then(animationData => {
-        if (!animationData || cancelled || !host.current) return;
-        anim = window.lottie.loadAnimation({
-          container: host.current,
-          renderer: "svg",
-          loop: false,
-          autoplay: true,
-          animationData
-        });
-      });
-    }
-    if (window.lottie) start();else iv = setInterval(() => {
-      if (window.lottie) {
-        clearInterval(iv);
-        start();
-      }
-    }, 120);
-    return () => {
-      cancelled = true;
-      if (anim) anim.destroy();
-      if (iv) clearInterval(iv);
-    };
-  }, []);
-  return /*#__PURE__*/React.createElement("div", {
-    ref: host,
-    className: "pm-wiz-result-lottie",
-    style: {
-      width: size,
-      height: size
-    },
-    "aria-hidden": "true"
-  });
-}
 function pmResultInterpretation(band) {
   switch (band.key) {
     case "expert":
@@ -3062,9 +2996,7 @@ function PMAssessResult({
     const band = pmBand(pct);
     return /*#__PURE__*/React.createElement("div", {
       className: "pm-wiz-body pm-wiz-result"
-    }, /*#__PURE__*/React.createElement(PMResultLottie, {
-      size: 150
-    }), /*#__PURE__*/React.createElement("h3", null, "Assessment complete"), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("h3", null, "Assessment complete"), /*#__PURE__*/React.createElement("div", {
       className: "pm-wiz-result-ring",
       style: {
         "--pct": pct,
@@ -3104,9 +3036,7 @@ function PMAssessResult({
   const arch = PM_ARCHETYPES[dominant];
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-wiz-body pm-wiz-result"
-  }, /*#__PURE__*/React.createElement(PMResultLottie, {
-    size: 150
-  }), /*#__PURE__*/React.createElement("h3", null, "Your Vision Profile"), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("h3", null, "Your Vision Profile"), /*#__PURE__*/React.createElement("span", {
     className: "pm-wiz-result-band pm-wiz-result-band--arch"
   }, arch.name), /*#__PURE__*/React.createElement("p", {
     className: "pm-wiz-result-note"

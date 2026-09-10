@@ -67,9 +67,9 @@ const PM_PILLARS = [
    tint and on white. `color` is the bar / dial fill. */
 const PM_BANDS = [
 { key: "expert", label: "Expert", min: 80, color: "#2A9568", text: "#1E7A5C", soft: "#EAF6F0" },
-{ key: "improving", label: "Needs improving", min: 60, color: "#CE9957", text: "#8A5303", soft: "#FCF4E4" },
-{ key: "practice", label: "Needs more practice", min: 40, color: "#E7820A", text: "#9A4B00", soft: "#FDEEDD" },
-{ key: "study", label: "Needs study", min: 0, color: "#C8362F", text: "#A8231D", soft: "#FCE8E6" }];
+{ key: "improving", label: "Growing strong", min: 60, color: "#CE9957", text: "#8A5303", soft: "#FCF4E4" },
+{ key: "practice", label: "Building momentum", min: 40, color: "#E7820A", text: "#9A4B00", soft: "#FDEEDD" },
+{ key: "study", label: "Just getting started", min: 0, color: "#C8362F", text: "#A8231D", soft: "#FCE8E6" }];
 function pmBand(score) { return PM_BANDS.find((b) => score >= b.min) || PM_BANDS[PM_BANDS.length - 1]; }
 
 /* Tapping any pillar (Spiral row, target row, Goal Focus CTA) opens that
@@ -262,7 +262,7 @@ function PMGoalFocusCard({ assessState }) {
       <PMInfoModal open={info} onClose={() => setInfo(false)} title="How your goal is chosen" icon="lucide:trophy"
         coach={"Why is " + weakest.key + " my goal focus right now, and what should I do first?"} coachLabel="Ask Ava about this goal">
         <p>Your goal is always your <b>lowest-scoring pillar</b>. Each pillar's score is your <b>Get to know you</b> baseline (worth up to 60%) plus the course progress you've made in that area.</p>
-        <p>The dial's colour is its band: <b>Expert</b>, <b>Needs improving</b>, <b>Needs more practice</b> or <b>Needs study</b>. When this pillar overtakes another, your goal switches automatically.</p>
+        <p>The dial's colour is its band: <b>Expert</b>, <b>Growing strong</b>, <b>Building momentum</b> or <b>Just getting started</b>. When this pillar overtakes another, your goal switches automatically.</p>
       </PMInfoModal>
     </PMPaneCard>);
 }
@@ -273,7 +273,7 @@ function PMGoalFocusCard({ assessState }) {
    average. The sub-line sits under the title, with the ⓘ and collapse
    controls side by side on the right. */
 const PM_PILLAR_AVERAGE = 56; // community average per pillar (mock)
-const PM_BAND_CHIP = { expert: "Strong", improving: "Growing", practice: "Building", study: "Needs study" };
+const PM_BAND_CHIP = { expert: "Strong", improving: "Growing", practice: "Building", study: "Starting out" };
 
 function PMSpiralCard({ assessState }) {
   const [info, setInfo] = useStatePM(false);
@@ -316,7 +316,7 @@ function PMSpiralCard({ assessState }) {
       <PMInfoModal open={info} onClose={() => setInfo(false)} title="How the Prosperity Spiral works" icon="lucide:sparkles"
         coach="Explain how my Spiral Score is calculated and what I can do this week to raise it." coachLabel="Ask Ava to explain mine">
         <p>Your Spiral is a snapshot of how balanced your business is across the four areas every successful clinic needs: <b>Sales</b>, <b>Marketing</b>, <b>Clinical Skills</b> and <b>Business Systems</b>.</p>
-        <p>Each ring is coloured by its band — green <b>Strong</b>, gold <b>Growing</b>, orange <b>Building</b>, red <b>Needs study</b> — and “vs average” compares you with other PROfinity clinics. A pillar climbs when you act on it: finishing a lesson, completing a target, posting a case study, following up with a patient.</p>
+        <p>Each ring is coloured by its band — green <b>Strong</b>, gold <b>Growing</b>, orange <b>Building</b>, red <b>Starting out</b> — and “vs average” compares you with other PROfinity clinics. A pillar climbs when you act on it: finishing a lesson, completing a target, posting a case study, following up with a patient.</p>
         <p>A weak pillar isn't a bad grade — it's where Ava recommends you start, because the fastest way to grow a clinic is usually to lift its lowest pillar first.</p>
       </PMInfoModal>
 
@@ -1776,8 +1776,6 @@ function PMAssessWizard({ assessKey, def, initialAnswers, onProgress, onComplete
   const [finished, setFinished] = useStatePM(false);
 
   useEffectPM(() => { if (!finished) onProgress(answers); }, [answers]);
-  /* Warm the celebration animation while the user is still answering. */
-  useEffectPM(() => { if (!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) pmLottieData(); }, []);
 
   const cur = questions[step];
 
@@ -1839,39 +1837,6 @@ function PMAssessWizard({ assessKey, def, initialAnswers, onProgress, onComplete
     </div>);
 }
 
-/* Assessment-complete celebration — raw JSON through lottie-web
-   (loadAnimation), never the lottie.host /embed iframe: the iframe caches
-   hard and ignores re-publishes, and ?v= cache-busters break its route.
-   Skipped entirely under prefers-reduced-motion. */
-const PM_RESULT_LOTTIE = "https://lottie.host/d343b01e-a214-4708-97e8-51a7f92d98bf/HFXvByPBoo.json";
-/* The JSON is ~185KB from a cold CDN edge, so it's fetched once when the
-   wizard opens (well before the result screen) and shared by every result. */
-let pmLottiePromise = null;
-function pmLottieData() {
-  if (!pmLottiePromise) {
-    pmLottiePromise = fetch(PM_RESULT_LOTTIE).then((r) => r.ok ? r.json() : null).catch(() => { pmLottiePromise = null; return null; });
-  }
-  return pmLottiePromise;
-}
-function PMResultLottie({ size }) {
-  const host = React.useRef(null);
-  useEffectPM(() => {
-    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let anim, iv, cancelled = false;
-    function start() {
-      if (cancelled || !window.lottie || !host.current) return;
-      pmLottieData().then((animationData) => {
-        if (!animationData || cancelled || !host.current) return;
-        anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: false, autoplay: true, animationData });
-      });
-    }
-    if (window.lottie) start();
-    else iv = setInterval(() => { if (window.lottie) { clearInterval(iv); start(); } }, 120);
-    return () => { cancelled = true; if (anim) anim.destroy(); if (iv) clearInterval(iv); };
-  }, []);
-  return <div ref={host} className="pm-wiz-result-lottie" style={{ width: size, height: size }} aria-hidden="true" />;
-}
-
 function pmResultInterpretation(band) {
   switch (band.key) {
     case "expert": return "This is already a real strength for your practice — keep leaning into what's working.";
@@ -1891,7 +1856,6 @@ function PMAssessResult({ scored, answers, onClose }) {
     const band = pmBand(pct);
     return (
       <div className="pm-wiz-body pm-wiz-result">
-        <PMResultLottie size={150} />
         <h3>Assessment complete</h3>
         <div className="pm-wiz-result-ring" style={{ "--pct": pct, "--band": band.color, "--band-text": band.text }}
           role="img" aria-label={pct + " percent — " + raw + " of " + max + " points — " + band.label}>
@@ -1909,7 +1873,6 @@ function PMAssessResult({ scored, answers, onClose }) {
   const arch = PM_ARCHETYPES[dominant];
   return (
     <div className="pm-wiz-body pm-wiz-result">
-      <PMResultLottie size={150} />
       <h3>Your Vision Profile</h3>
       <span className="pm-wiz-result-band pm-wiz-result-band--arch">{arch.name}</span>
       <p className="pm-wiz-result-note">{arch.desc}</p>
