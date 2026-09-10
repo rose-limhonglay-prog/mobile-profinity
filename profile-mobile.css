@@ -971,7 +971,14 @@ img{max-width:100%}
 .pm-league-card.is-collapsed{padding-bottom:14px}
 .pm-league-hd{display:flex;align-items:center;gap:14px;padding-right:52px;min-height:40px}
 .pm-league-hd h2{margin:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--text-heading);line-height:1.25}
-.pm-league-rank{cursor:default;min-height:26px;padding:0 11px;font-size:13px}
+.pm-league-rank{cursor:default;min-height:26px;padding:0 11px;font-size:13px;position:relative;isolation:isolate;
+  animation:pm-league-beat 1.6s ease-in-out infinite;transform-origin:center}
+/* heartbeat: two quick beats then rest, with a soft pulse ring behind */
+.pm-league-rank::after{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--brand-navy);opacity:0;
+  animation:pm-league-ring 1.6s ease-out infinite;z-index:-1}
+@keyframes pm-league-beat{0%,28%,100%{transform:scale(1)}7%{transform:scale(1.14)}14%{transform:scale(1)}21%{transform:scale(1.1)}}
+@keyframes pm-league-ring{0%{transform:scale(1);opacity:.45}45%,100%{transform:scale(1.7);opacity:0}}
+@media (prefers-reduced-motion:reduce){.pm-league-rank,.pm-league-rank::after{animation:none}.pm-league-rank::after{display:none}}
 .pm-league-toggle{position:absolute;top:12px;right:12px;width:44px;height:44px;border:none;border-radius:50%;
   background:rgba(255,255,255,.75);cursor:pointer;display:flex;align-items:center;justify-content:center;
   -webkit-tap-highlight-color:transparent}

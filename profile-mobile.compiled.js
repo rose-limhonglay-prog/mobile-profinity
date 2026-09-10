@@ -900,8 +900,8 @@ function pmLeagueStandings() {
     ...r,
     isMe: false
   })).concat([{
-    name: "You",
-    avatar: "assets/avatar-katy.jpg",
+    name: PM_ME.name + " (You)",
+    avatar: PM_ME.avatar,
     points: mine,
     isMe: true
   }]).sort((a, b) => b.points - a.points).map((r, i) => ({
@@ -916,10 +916,6 @@ function pmLeagueStandings() {
     below: rows[meIdx + 1] || null
   };
 }
-function pmLeagueRank() {
-  return pmLeagueStandings().me.rank;
-}
-
 /* "Your league" — the member's standing in the rolling 30-day league with the
    clinician one place above and one below, so the gap to close is concrete.
    Same data as the Leaderboard page; "See the full leaderboard" opens it. */
@@ -1002,19 +998,6 @@ function PMGoalsMenu({
   assessState
 }) {
   const [expanded, setExpanded] = useStatePM(false);
-
-  /* Rank re-reads whenever points land (ticking a target, etc.) so the pill
-     matches the Leaderboard without a reload. */
-  const [leagueRank, setLeagueRank] = useStatePM(() => pmLeagueRank());
-  useEffectPM(() => {
-    const sync = () => setLeagueRank(pmLeagueRank());
-    window.addEventListener("pf:points-earned", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener("pf:points-earned", sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
 
   /* Deep link from LearningMobile's "See your full Prosperity Spiral" points
      at #prosperity-spiral, which lives inside the collapsed-by-default menu —
@@ -1106,14 +1089,7 @@ function PMGoalsMenu({
     name: "lucide:target",
     size: 22,
     color: "var(--brand-gold)"
-  }), "Track your goals"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pm-goals-rank",
-    tabIndex: expanded ? 0 : -1,
-    "aria-label": "Your league standing: number " + leagueRank + " — see the full leaderboard",
-    title: "See the full leaderboard",
-    onClick: () => goPM("Leaderboard.html")
-  }, "#", leagueRank)), unlocked ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PMTargetsCard, {
+  }), "Track your goals")), unlocked ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PMTargetsCard, {
     assessState: assessState
   }), /*#__PURE__*/React.createElement(PMGoalFocusCard, {
     assessState: assessState
