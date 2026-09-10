@@ -163,8 +163,7 @@
 .pw-wiz-next:not(:disabled):hover{filter:brightness(1.12)}
 
 /* result / reveal screens */
-.pw-wiz-result{align-items:center;text-align:center;padding-top:6px}
-.pw-wiz-result-lottie{margin:0 auto 6px}
+.pw-wiz-result{align-items:center;text-align:center;padding-top:18px}
 .pw-wiz-result h3{margin:0 0 18px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:22px;color:var(--text-heading)}
 .pw-wiz-result-ring{position:relative;width:150px;height:150px;border-radius:50%;margin:0 auto 16px;display:flex;flex-direction:column;
   align-items:center;justify-content:center;background:conic-gradient(var(--brand-gold) calc(var(--pct) * 1%),var(--surface-sunken) 0)}

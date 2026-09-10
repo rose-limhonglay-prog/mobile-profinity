@@ -859,47 +859,6 @@ function PWAssessWizard({
     onClose: onClose
   })));
 }
-
-/* Assessment-complete celebration — raw JSON through lottie-web
-   (loadAnimation), never the lottie.host /embed iframe: the iframe caches
-   hard and ignores re-publishes, and ?v= cache-busters break its route. */
-function PWResultLottie({
-  size
-}) {
-  const host = React.useRef(null);
-  useEffectPW(() => {
-    let anim, iv;
-    function start() {
-      if (!window.lottie || !host.current) return;
-      anim = window.lottie.loadAnimation({
-        container: host.current,
-        renderer: "svg",
-        loop: false,
-        autoplay: true,
-        path: "https://lottie.host/d343b01e-a214-4708-97e8-51a7f92d98bf/HFXvByPBoo.json"
-      });
-    }
-    if (window.lottie) start();else iv = setInterval(() => {
-      if (window.lottie) {
-        clearInterval(iv);
-        start();
-      }
-    }, 120);
-    return () => {
-      if (anim) anim.destroy();
-      if (iv) clearInterval(iv);
-    };
-  }, []);
-  return /*#__PURE__*/React.createElement("div", {
-    ref: host,
-    className: "pw-wiz-result-lottie",
-    style: {
-      width: size,
-      height: size
-    },
-    "aria-hidden": "true"
-  });
-}
 function pwResultInterpretation(pct) {
   if (pct >= 75) return "This is already a real strength for your practice — keep leaning into what's working.";
   if (pct >= 50) return "You're solidly ahead of where most clinics start in this area.";
@@ -917,9 +876,7 @@ function PWAssessResult({
     const pct = Math.round(raw / max * 100);
     return /*#__PURE__*/React.createElement("div", {
       className: "pw-wiz-body pw-wiz-result"
-    }, /*#__PURE__*/React.createElement(PWResultLottie, {
-      size: 150
-    }), /*#__PURE__*/React.createElement("h3", null, "Assessment complete"), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("h3", null, "Assessment complete"), /*#__PURE__*/React.createElement("div", {
       className: "pw-wiz-result-ring",
       style: {
         "--pct": pct
@@ -953,9 +910,7 @@ function PWAssessResult({
   const arch = PW_ARCHETYPES[dominant];
   return /*#__PURE__*/React.createElement("div", {
     className: "pw-wiz-body pw-wiz-result"
-  }, /*#__PURE__*/React.createElement(PWResultLottie, {
-    size: 150
-  }), /*#__PURE__*/React.createElement("h3", null, "Your Vision Profile"), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("h3", null, "Your Vision Profile"), /*#__PURE__*/React.createElement("span", {
     className: "pw-wiz-result-pill pw-wiz-result-pill--arch"
   }, arch.name), /*#__PURE__*/React.createElement("p", {
     className: "pw-wiz-result-note"

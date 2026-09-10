@@ -695,27 +695,6 @@ function PWAssessWizard({ assessKey, def, initialAnswers, onProgress, onComplete
 
 }
 
-/* Assessment-complete celebration — raw JSON through lottie-web
-   (loadAnimation), never the lottie.host /embed iframe: the iframe caches
-   hard and ignores re-publishes, and ?v= cache-busters break its route. */
-function PWResultLottie({ size }) {
-  const host = React.useRef(null);
-  useEffectPW(() => {
-    let anim, iv;
-    function start() {
-      if (!window.lottie || !host.current) return;
-      anim = window.lottie.loadAnimation({
-        container: host.current, renderer: "svg", loop: false, autoplay: true,
-        path: "https://lottie.host/d343b01e-a214-4708-97e8-51a7f92d98bf/HFXvByPBoo.json"
-      });
-    }
-    if (window.lottie) start();
-    else iv = setInterval(() => { if (window.lottie) { clearInterval(iv); start(); } }, 120);
-    return () => { if (anim) anim.destroy(); if (iv) clearInterval(iv); };
-  }, []);
-  return <div ref={host} className="pw-wiz-result-lottie" style={{ width: size, height: size }} aria-hidden="true" />;
-}
-
 function pwResultInterpretation(pct) {
   if (pct >= 75) return "This is already a real strength for your practice — keep leaning into what's working.";
   if (pct >= 50) return "You're solidly ahead of where most clinics start in this area.";
@@ -730,7 +709,6 @@ function PWAssessResult({ scored, answers, onClose }) {
     const pct = Math.round((raw / max) * 100);
     return (
       <div className="pw-wiz-body pw-wiz-result">
-        <PWResultLottie size={150} />
         <h3>Assessment complete</h3>
         <div className="pw-wiz-result-ring" style={{ "--pct": pct }} role="img" aria-label={raw + " of " + max + " points"}>
           <span className="n">{raw}</span>
@@ -748,7 +726,6 @@ function PWAssessResult({ scored, answers, onClose }) {
   const arch = PW_ARCHETYPES[dominant];
   return (
     <div className="pw-wiz-body pw-wiz-result">
-      <PWResultLottie size={150} />
       <h3>Your Vision Profile</h3>
       <span className="pw-wiz-result-pill pw-wiz-result-pill--arch">{arch.name}</span>
       <p className="pw-wiz-result-note">{arch.desc}</p>
