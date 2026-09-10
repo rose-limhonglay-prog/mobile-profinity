@@ -844,14 +844,159 @@ function PMGoalsGateCard({
    rank the Leaderboard's "Your league" card computes: Katy's live rolling
    30-day points (window.PFLoyalty) merged into the mock clinician field.
    Mirror of LB_FIELD in leaderboard.jsx — keep the points in sync. */
-const PM_LEAGUE_FIELD_POINTS = [9840, 8120, 6790, 5310, 4980, 4400, 3920, 3510, 3105, 2640, 2210, 1890, 1655, 1420];
-function pmLeagueRank() {
+const PM_LEAGUE_FIELD = [{
+  name: "Dr Tim Pearce",
+  avatar: "assets/avatar-drtim.png",
+  points: 9840
+}, {
+  name: "Miranda Pearce",
+  avatar: "assets/avatar-miranda.jpg",
+  points: 8120
+}, {
+  name: "Sofia Alarcón",
+  points: 6790
+}, {
+  name: "Jonas Adeyemi",
+  points: 5310
+}, {
+  name: "Grace Lindqvist",
+  points: 4980
+}, {
+  name: "Hana Kobayashi",
+  points: 4400
+}, {
+  name: "Ravi Chandran",
+  points: 3920
+}, {
+  name: "Olivia Marsh",
+  points: 3510
+}, {
+  name: "Deniz Aydın",
+  points: 3105
+}, {
+  name: "Priya Nandwani",
+  points: 2640
+}, {
+  name: "Liam O'Connor",
+  points: 2210
+}, {
+  name: "Amara Okafor",
+  points: 1890
+}, {
+  name: "Ben Fischer",
+  points: 1655
+}, {
+  name: "Noor Haddad",
+  points: 1420
+}];
+/* Full ranking with Katy merged in, plus her row and its neighbours. */
+function pmLeagueStandings() {
   const engine = window.PFLoyalty;
   let mine = 2100;
   try {
     if (engine && engine.getState) mine = engine.getState().rollingPoints30 || 0;
   } catch (e) {}
-  return 1 + PM_LEAGUE_FIELD_POINTS.filter(p => p > mine).length;
+  const rows = PM_LEAGUE_FIELD.map(r => ({
+    ...r,
+    isMe: false
+  })).concat([{
+    name: "You",
+    avatar: "assets/avatar-katy.jpg",
+    points: mine,
+    isMe: true
+  }]).sort((a, b) => b.points - a.points).map((r, i) => ({
+    ...r,
+    rank: i + 1
+  }));
+  const meIdx = rows.findIndex(r => r.isMe);
+  return {
+    rows,
+    me: rows[meIdx],
+    above: rows[meIdx - 1] || null,
+    below: rows[meIdx + 1] || null
+  };
+}
+function pmLeagueRank() {
+  return pmLeagueStandings().me.rank;
+}
+
+/* "Your league" — the member's standing in the rolling 30-day league with the
+   clinician one place above and one below, so the gap to close is concrete.
+   Same data as the Leaderboard page; "See the full leaderboard" opens it. */
+function PMLeagueCard() {
+  const [open, setOpen] = useStatePM(true);
+  const [standings, setStandings] = useStatePM(() => pmLeagueStandings());
+  useEffectPM(() => {
+    const sync = () => setStandings(pmLeagueStandings());
+    window.addEventListener("pf:points-earned", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("pf:points-earned", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+  const {
+    me,
+    above,
+    below
+  } = standings;
+  const fmt = n => n.toLocaleString("en-GB");
+  const bodyId = React.useId ? React.useId() : undefined;
+  const firstName = above ? above.name.replace(/^Dr\s+/, "").split(" ")[0] : "";
+  const gap = above ? above.points - me.points : 0;
+  const rows = [above, me, below].filter(Boolean);
+  return /*#__PURE__*/React.createElement("section", {
+    className: "pm-sec pm-card pm-league-card" + (open ? "" : " is-collapsed"),
+    "data-screen-label": "Your league"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-league-hd"
+  }, /*#__PURE__*/React.createElement("h2", null, "Your league"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-goals-rank pm-league-rank",
+    "aria-label": "Ranked number " + me.rank
+  }, "#", me.rank), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-league-toggle",
+    "aria-expanded": open,
+    "aria-controls": bodyId,
+    "aria-label": (open ? "Collapse" : "Expand") + " Your league",
+    onClick: () => setOpen(o => !o)
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-up",
+    size: 20,
+    color: "var(--text-heading)"
+  }))), open && /*#__PURE__*/React.createElement("div", {
+    className: "pm-league-body",
+    id: bodyId
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "pm-league-sub"
+  }, above ? /*#__PURE__*/React.createElement(React.Fragment, null, "Last 30 days · ", /*#__PURE__*/React.createElement("b", null, fmt(gap), " pts"), " behind ", firstName, " — finish today's targets to close it.") : /*#__PURE__*/React.createElement(React.Fragment, null, "Last 30 days · you're leading the league — finish today's targets to stay there.")), /*#__PURE__*/React.createElement("div", {
+    className: "pm-league-rows"
+  }, rows.map(r => /*#__PURE__*/React.createElement("div", {
+    key: r.rank,
+    className: "pm-league-row" + (r.isMe ? " me" : ""),
+    "aria-current": r.isMe ? "true" : undefined
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rk"
+  }, r.rank), /*#__PURE__*/React.createElement(DSPM.Avatar, {
+    name: r.isMe ? PM_ME.name : r.name,
+    src: r.avatar,
+    size: 38,
+    style: {
+      flex: "none"
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "nm"
+  }, r.name), /*#__PURE__*/React.createElement("span", {
+    className: "pts"
+  }, fmt(r.points))))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-league-cta",
+    onClick: () => goPM("Leaderboard.html")
+  }, "See the full leaderboard", /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:arrow-right",
+    size: 18,
+    color: "currentColor"
+  }))));
 }
 function PMGoalsMenu({
   assessState
@@ -972,7 +1117,7 @@ function PMGoalsMenu({
     assessState: assessState
   }), /*#__PURE__*/React.createElement(PMGoalFocusCard, {
     assessState: assessState
-  }), /*#__PURE__*/React.createElement(PMSpiralCard, {
+  }), /*#__PURE__*/React.createElement(PMLeagueCard, null), /*#__PURE__*/React.createElement(PMSpiralCard, {
     assessState: assessState
   })) : /*#__PURE__*/React.createElement(PMGoalsGateCard, {
     doneCount: doneCount

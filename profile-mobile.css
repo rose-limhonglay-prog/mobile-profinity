@@ -963,6 +963,38 @@ img{max-width:100%}
   font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:14px;line-height:1;letter-spacing:.01em;
   -webkit-tap-highlight-color:transparent}
 .pm-goals-rank:active{opacity:.75}
+
+/* ===== "Your league" — rolling 30-day standing with the neighbours above
+   and below. Cream card so it reads as the loyalty/leaderboard family. ===== */
+.pm-league-card{--pm-league-bg:#FCF4E4;--pm-league-line:#F2D08A;--pm-league-gold:#8A5303;
+  position:relative;padding:18px;background:var(--pm-league-bg);border-color:transparent}
+.pm-league-card.is-collapsed{padding-bottom:14px}
+.pm-league-hd{display:flex;align-items:center;gap:14px;padding-right:52px;min-height:40px}
+.pm-league-hd h2{margin:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--text-heading);line-height:1.25}
+.pm-league-rank{cursor:default;min-height:26px;padding:0 11px;font-size:13px}
+.pm-league-toggle{position:absolute;top:12px;right:12px;width:44px;height:44px;border:none;border-radius:50%;
+  background:rgba(255,255,255,.75);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent}
+.pm-league-toggle iconify-icon{transition:transform .25s ease}
+.pm-league-card.is-collapsed .pm-league-toggle iconify-icon{transform:rotate(180deg)}
+.pm-league-body{margin-top:14px}
+.pm-league-sub{margin:0 0 16px;font-family:var(--font-sans);font-size:15px;line-height:1.45;color:var(--gray-600)}
+.pm-league-sub b{color:var(--text-heading);font-weight:var(--fw-semibold)}
+.pm-league-rows{display:flex;flex-direction:column;gap:8px}
+.pm-league-row{display:flex;align-items:center;gap:12px;min-height:60px;padding:0 16px;box-sizing:border-box;
+  border:1px solid var(--border-default);border-radius:12px;background:var(--surface-card)}
+.pm-league-row .rk{flex:none;width:22px;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;color:var(--gray-500)}
+.pm-league-row .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:15.5px;color:var(--text-body,#222)}
+.pm-league-row .pts{flex:none;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px;color:var(--gray-600)}
+.pm-league-row.me{background:var(--pm-league-bg);border-color:var(--pm-league-line)}
+.pm-league-row.me .rk,.pm-league-row.me .pts{color:var(--pm-league-gold)}
+.pm-league-row.me .nm{font-weight:var(--fw-bold);color:var(--text-heading)}
+.pm-league-cta{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;margin-top:10px;
+  border:1px solid var(--border-default);border-radius:12px;background:var(--surface-card);cursor:pointer;
+  font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15px;color:var(--brand-navy);
+  -webkit-tap-highlight-color:transparent}
+.pm-league-cta:active{opacity:.75}
 .pm-goals-expanded .pm-card{margin-top:12px}
 .pm-goals-expanded .pm-card:first-of-type{margin-top:4px}
 .pm-steps-track.is-empty{background:var(--gray-150)}
