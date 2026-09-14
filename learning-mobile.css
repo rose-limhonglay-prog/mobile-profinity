@@ -11,6 +11,11 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
   font-family: var(--font-sans); color: var(--text-primary); }
 img { max-width: 100%; }
 
+/* My Learning brand navy (user, 2026-09-11): everything that reads var(--brand-navy)
+   inside the screen — headings, icons, buttons, tab dock, drawer — becomes #0C1928.
+   Tokens derived from it on :root are re-pointed here too. */
+.lm-screen { --brand-navy: #0C1928; --brand-navy-700: #081120; --brand-navy-900: #050B15;
+  --text-heading: #0C1928; --surface-brand: #0C1928; --action-brand: #0C1928; --action-brand-hover: #081120; --action-brand-active: #050B15; }
 .lm-screen { height: 100%; display: flex; flex-direction: column; background: #F9F7F4; position: relative;
   /* course titles only (user request 2026-09-10) */
   --font-title: "Times New Roman", Times, serif; }
@@ -49,16 +54,17 @@ img { max-width: 100%; }
 .lm2-head { flex: none; padding: 18px 20px 4px; }
 .lm2-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
 .lm2-head.has-sub .lm2-head-row { margin-bottom: 6px; }
-.lm2-head-greet { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 21px; color: var(--text-heading); line-height: 1.2; }
+.lm2-head-greet { display: flex; align-items: center; gap: 8px; font-family: var(--font-title); /* user, 2026-09-11 */ font-weight: var(--fw-bold); font-size: 21px; color: var(--text-heading); line-height: 1.2; }
+.lm2-head-greet iconify-icon, .lm2-head-greet svg { flex: none; }
 .lm2-tierpill { flex: none; display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: var(--r-pill);
-  background: linear-gradient(135deg, #292569, #453f9e); color: #fff; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 12px; white-space: nowrap; }
+  background: linear-gradient(135deg, #0C1928, #1E3A5C); color: #fff; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 12px; white-space: nowrap; }
 .lm2-head-avatar { flex: none; width: 46px; height: 46px; border-radius: 50%; object-fit: cover;
   box-shadow: 0 1px 4px rgba(12,12,13,.14); }
 .lm2-head-sub { margin: 0 0 14px; font-family: var(--font-sans); font-size: 14.5px; color: var(--gray-500); }
 
 /* ===== My Goal & Dream Clinic — aspirational banner, not current state ===== */
 .lm2-goalcard { margin: 14px 20px 0; padding: 18px 20px; border-radius: var(--r-lg);
-  background: linear-gradient(135deg, #292569, #3a3491); color: #fff; }
+  background: linear-gradient(135deg, #0C1928, #17304D); color: #fff; }
 .lm2-goal-head { display: flex; align-items: center; gap: 10px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 16px; }
 .lm2-goal-icon { flex: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   background: rgba(255,255,255,.16); }
@@ -88,8 +94,8 @@ img { max-width: 100%; }
 
 /* ===== Free-tier "Unlock more with Confidence" subscribe upsell ===== */
 .lm2-subscribe { display: flex; align-items: center; gap: 14px; margin: 14px 20px 0; padding: 20px;
-  border-radius: var(--r-lg); background: linear-gradient(135deg, #2d2872, #4038a3);
-  box-shadow: 0 10px 28px rgba(28,24,72,.28); }
+  border-radius: var(--r-lg); background: linear-gradient(135deg, #0C1928, #1E3A5C); /* My Learning navy (user, 2026-09-11) */
+  box-shadow: 0 10px 28px rgba(12,25,40,.28); }
 .lm2-subscribe .ic { flex: none; width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.16);
   display: flex; align-items: center; justify-content: center; }
 .lm2-subscribe .tx { flex: 1; min-width: 0; }
@@ -102,8 +108,8 @@ img { max-width: 100%; }
 .lm2-subscribe-btn:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 
 .lm2-sec-h { display: flex; align-items: baseline; justify-content: space-between; padding: 22px 20px 12px; }
-.lm2-sec-h h2 { margin: 0; font-family: var(--font-sans); font-size: 20px; font-weight: var(--fw-bold); color: var(--brand-navy); }
-.lm2-sec-h a { font-family: var(--font-sans); font-size: 14.5px; font-weight: var(--fw-semibold); color: var(--ai-purple); text-decoration: none; }
+.lm2-sec-h h2 { margin: 0; font-family: var(--font-sans); font-size: 12.5px; font-weight: var(--fw-bold); letter-spacing: .1em; text-transform: uppercase; color: #0C1928; } /* same label style as "Explore related content" (.lm2-related-h) — user, 2026-09-11 */
+.lm2-sec-h a { font-family: var(--font-sans); font-size: 14.5px; font-weight: var(--fw-semibold); color: #0C1928; text-decoration: none; } /* See All / View All links in the page navy (user, 2026-09-11) */
 
 /* ===== Continue Learning — full-bleed hero card, navy top accent marks it as "the active thing" ===== */
 .lm2-hero { margin-top: 20px; }
@@ -115,7 +121,7 @@ img { max-width: 100%; }
 .lm2-herocard .ti { font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 18px; color: var(--text-heading); margin-bottom: 12px; }
 .lm2-progrow { display: flex; align-items: center; gap: 10px; }
 .lm2-progrow .bar { flex: 1; min-width: 0; height: 7px; border-radius: var(--r-pill); background: var(--gray-150); overflow: hidden; }
-.lm2-progrow .bar > span { display: block; height: 100%; border-radius: var(--r-pill); background: linear-gradient(90deg, #f4ad3d, #e7820a); }
+.lm2-progrow .bar > span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--brand-gold); } /* course progress bars are brand gold (user, 2026-09-11) */
 .lm2-progrow .pct { flex: none; font-family: var(--font-sans); font-size: 13px; color: var(--gray-500); }
 .lm2-herocard .note { margin: 10px 0 0; font-family: var(--font-sans); font-size: 14px; line-height: 1.4; color: var(--gray-600); }
 .lm2-cta { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; min-height: 50px; margin-top: 14px; cursor: pointer;
@@ -128,6 +134,27 @@ img { max-width: 100%; }
   border: 1px solid var(--border-default); box-shadow: 0 1px 3px rgba(12,12,13,.05); }
 
 /* My Courses — sunken band with hairline borders, breaks up the run of white cards */
+/* ===== Explore related content (under My Courses) ===== */
+.lm2-related { padding: 24px 20px 0; }
+.lm2-related-h { margin: 0 0 14px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 12.5px; letter-spacing: .1em; text-transform: uppercase; color: #0C1928; }
+.lm2-related-list { display: flex; flex-direction: column; gap: 14px; }
+.lm2-relcard { display: flex; align-items: center; gap: 16px; width: 100%; padding: 14px 16px 14px 14px; border-radius: 16px; cursor: pointer; text-align: left;
+  border: 1px solid var(--border-default); background: var(--surface-card); color: var(--brand-navy); box-shadow: 0 2px 10px rgba(16,24,40,.05);
+  transition: transform .15s ease, background .15s ease; }
+.lm2-relcard:hover { background: var(--gray-50); }
+.lm2-relcard:active { transform: scale(.985); }
+.lm2-relcard:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+.lm2-relcard-thumb { flex: none; width: 100px; height: 82px; border-radius: 10px; overflow: hidden; background: var(--gray-100); }
+.lm2-relcard-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.lm2-relcard-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.lm2-relcard-title { font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 17.5px; line-height: 1.25; color: var(--brand-navy); }
+.lm2-relcard-blurb { font-family: var(--font-sans); font-size: 14px; line-height: 1.45; color: var(--gray-600); }
+/* paid course price pill (2026-09-11) — gold on the light surface (#8A5303 passes AA) */
+.lm2-relcard-price { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; margin-top: 2px; padding: 4px 9px; border-radius: 999px;
+  background: rgba(206,153,87,.16); color: #8A5303; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 12.5px; line-height: 1; font-variant-numeric: tabular-nums; }
+.lm2-relcard-go { flex: none; width: 40px; height: 40px; border-radius: 50%; background: #0C1928; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(12,25,40,.28); } /* navy, not gold (user, 2026-09-11) */
+
 .lm2-courseband { margin-top: 20px; padding: 4px 0 24px; background: var(--surface-sunken);
   border-top: 1px solid var(--border-default); border-bottom: 1px solid var(--border-default); }
 
@@ -156,7 +183,7 @@ img { max-width: 100%; }
 .lm2-coursecard-wide .ti { font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 16px; color: var(--brand-navy); line-height: 1.25; }
 .lm2-coursecard-wide .prog { display: flex; align-items: center; gap: 8px; }
 .lm2-coursecard-wide .prog .bar { flex: 1; display: block; height: 6px; border-radius: var(--r-pill); background: var(--gray-150); overflow: hidden; }
-.lm2-coursecard-wide .prog .bar > span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--premium-orange); }
+.lm2-coursecard-wide .prog .bar > span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--brand-gold); }
 .lm2-coursecard-wide .prog .pct { flex: none; font-family: var(--font-sans); font-size: 12px; color: var(--gray-500); white-space: nowrap; }
 .lm2-coursecard-wide .ds { font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); line-height: 1.4;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -195,6 +222,13 @@ img { max-width: 100%; }
   background: var(--surface-card); border: 1px solid var(--ai-purple); border-radius: var(--r-md);
   font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 12.5px; color: var(--ai-purple); white-space: nowrap; }
 .lm-ghost:active { background: rgba(108,99,255,.08); }
+/* My Courses: See All link + Learn More buttons in the page navy (user, 2026-09-11) */
+.lm2-courseband .lm2-sec-h a { color: #0C1928; }
+.lm2-courseband .lm-ghost { border-color: #0C1928; color: #0C1928; }
+.lm2-courseband .lm-ghost:active { background: rgba(12,25,40,.08); }
+/* in-progress cards: filled Continue · n% */
+.lm2-courseband .lm-ghost.lm-fill { background: #0C1928; color: #fff; border-color: #0C1928; }
+.lm2-courseband .lm-ghost.lm-fill:active { background: #081120; }
 
 /* Free Resources — locked (survey gate) or unlocked (already completed the survey) */
 .lm2-freeres { margin-top: 20px; }
@@ -215,10 +249,10 @@ img { max-width: 100%; }
 .lm2-pathsec { margin: 24px 20px 0; }
 .lm2-pathcard { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; cursor: pointer;
   border: none; border-radius: 18px; padding: 22px;
-  background: linear-gradient(135deg, #3B3592, #292569 60%, #1C1848);
-  box-shadow: 0 10px 28px rgba(28,24,72,.28);
+  background: linear-gradient(135deg, #1E3A5C, #0C1928 60%, #060E18); /* My Learning navy (user, 2026-09-11) */
+  box-shadow: 0 10px 28px rgba(12,25,40,.28);
   transition: transform .18s cubic-bezier(.22,1,.36,1), box-shadow .18s ease; }
-.lm2-pathcard:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(28,24,72,.34); }
+.lm2-pathcard:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(12,25,40,.34); }
 .lm2-pathcard:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .lm2-pathcard .chip { flex: none; width: 52px; height: 52px; border-radius: 16px; background: rgba(255,255,255,.16);
   display: flex; align-items: center; justify-content: center; }

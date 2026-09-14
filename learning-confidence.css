@@ -12,6 +12,8 @@
    =========================================================================== */
 
 .lcm-screen {
+  /* My Learning brand navy (user, 2026-09-11) — feeds every var(--brand-navy) below and in the .lm-tabs dock */
+  --brand-navy: #0C1928; --brand-navy-700: #081120; --text-heading: #0C1928;
   /* ---- dark reader palette ---- */
   /* module / lesson / course titles only (user request 2026-09-10) */
   --font-title: "Times New Roman", Times, serif;
@@ -171,6 +173,8 @@
 .lcm-prog-arrow { flex: none; display: flex; }
 /* the DS ProgressBar paints a light-grey track inline; re-ink it for the reader */
 .lcm-screen:not(.lc-light) .lcm-prog-bar > div > div:first-child { background: var(--lcm-track) !important; }
+/* course progress bar fill is brand gold; the text beside it is untouched (user, 2026-09-11) */
+.lcm-prog-bar > div > div > div { background: var(--brand-gold) !important; }
 
 /* ===== current lesson card =====
    Eyebrow + module line with a bookmark, big title, then the still bleeding to
@@ -244,8 +248,6 @@
 .lcm-ramp:hover { transform: translateY(-2px); box-shadow: 0 16px 36px rgba(122,74,3,.38); }
 .lcm-ramp:active { transform: scale(.985); }
 .lcm-ramp:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
-.lcm-ramp-ic { flex: none; width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.28);
-  display: flex; align-items: center; justify-content: center; }
 .lcm-ramp-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .lcm-ramp-title { font-weight: var(--fw-bold); font-size: 16.5px; line-height: 1.25; }
 .lcm-ramp-body { font-size: 13px; line-height: 1.45; color: rgba(255,255,255,.9); }
@@ -269,3 +271,6 @@
 @media (prefers-reduced-motion: reduce) {
   .lcm-top, .lcm-ic, .lcm-card, .lcm-ramp, .lcm-continue, .lcm-ring circle, .lcm-expand, .lcm-save { transition: none; }
 }
+
+/* paid related courses (2026-09-11): lock badge on the thumb */
+.lcm-course-lock { left: auto; right: 6px; padding: 4px 5px; display: inline-flex; align-items: center; justify-content: center; }

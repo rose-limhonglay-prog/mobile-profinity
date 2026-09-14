@@ -37,7 +37,6 @@ img{max-width:100%}
 .acw-filter.on{background:var(--brand-navy);border-color:var(--brand-navy);color:var(--white)}
 .acw-filter:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
 
-.acw-coach-row{margin:18px 0 8px}
 
 .acw-empty{margin:40px 0;text-align:center;font-family:var(--font-sans);font-size:var(--fs-body-lg);color:var(--gray-500)}
 

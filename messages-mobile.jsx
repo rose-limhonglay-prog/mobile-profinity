@@ -228,7 +228,14 @@ function loadStoreDM() {
   if (!store) store = buildSeedDM();
   return mergeExternalGroupsDM(store);
 }
-function saveStoreDM(store) { try { localStorage.setItem(STORE_KEY_DM, JSON.stringify(store)); } catch (e) {} }
+function saveStoreDM(store) {
+  try {
+    // Large videos are kept as blob: URLs for this session only; a data: URL (small clip) persists.
+    const out = { ...store, conversations: store.conversations.map((c) => ({ ...c, messages: c.messages.map((m) =>
+      m.video && m.video.src && /^blob:/.test(m.video.src) ? { ...m, video: { ...m.video, src: null, poster: m.video.poster || null } } : m) })) };
+    localStorage.setItem(STORE_KEY_DM, JSON.stringify(out));
+  } catch (e) {}
+}
 
 /* ---------------------------------------------------------------------------
    Small hooks
@@ -268,6 +275,44 @@ function useNowDM(active) {
    Suppresses the trailing click once a long-press has fired. */
 /* Photos picked from the device are downscaled to a JPEG data URL so a
    conversation with a few pictures still fits comfortably in localStorage. */
+/* Video attachments: grab a poster frame (for the attach bar, bubble and quote) and decide how to keep the file.
+   Clips up to VIDEO_INLINE_MAX_DM are read as data: URLs so they survive a reload; anything bigger stays a blob: URL for the session. */
+const VIDEO_INLINE_MAX_DM = 2.5 * 1024 * 1024;
+function videoPosterDM(src, timeoutMs = 2500) {
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = (v) => { if (!done) { done = true; resolve(v); } };
+    const t = setTimeout(() => finish(null), timeoutMs);
+    try {
+      const vid = document.createElement("video");
+      vid.muted = true; vid.playsInline = true; vid.preload = "auto"; vid.src = src;
+      vid.onloadeddata = () => { try { vid.currentTime = Math.min(0.1, (vid.duration || 1) / 2); } catch (e) { finish(null); } };
+      vid.onseeked = () => {
+        try {
+          const s = Math.min(1, 640 / Math.max(vid.videoWidth || 1, vid.videoHeight || 1));
+          const cv = document.createElement("canvas"); cv.width = Math.max(1, Math.round(vid.videoWidth * s)); cv.height = Math.max(1, Math.round(vid.videoHeight * s));
+          cv.getContext("2d").drawImage(vid, 0, 0, cv.width, cv.height);
+          clearTimeout(t); finish(cv.toDataURL("image/jpeg", 0.78));
+        } catch (e) { clearTimeout(t); finish(null); }
+      };
+      vid.onerror = () => { clearTimeout(t); finish(null); };
+    } catch (e) { clearTimeout(t); finish(null); }
+  });
+}
+function readVideoDM(file) {
+  return new Promise((resolve) => {
+    const blob = URL.createObjectURL(file);
+    const base = { name: file.name || "Video", size: file.size || 0, type: file.type || "video/mp4" };
+    videoPosterDM(blob).then((poster) => {
+      if (file.size > VIDEO_INLINE_MAX_DM) { resolve({ ...base, src: blob, poster, session: true }); return; }
+      const r = new FileReader();
+      r.onload = () => { URL.revokeObjectURL(blob); resolve({ ...base, src: r.result, poster, session: false }); };
+      r.onerror = () => resolve({ ...base, src: blob, poster, session: true });
+      r.readAsDataURL(file);
+    });
+  });
+}
+function fmtBytesDM(n) { return n >= 1024 * 1024 ? (n / 1024 / 1024).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB"; }
 function shrinkImageDM(file, max = 1280) {
   return new Promise((resolve) => {
     const url = URL.createObjectURL(file);
@@ -389,7 +434,7 @@ function previewDM(c, people) {
   if (!m) return c.kind === "group" ? c.memberIds.length + 1 + " members · say hello" : "Start the conversation";
   if (m.deleted) return m.from === "me" ? "You deleted a message" : "Message deleted";
   const who = m.from === "me" ? "You" : c.kind === "group" ? stripHonorificDM((people.get(m.from) || {}).name || "").split(" ")[0] : null;
-  const body = m.gif ? "🎞 GIF" : m.sticker ? "✨ Sticker" : m.image ? "📷 " + (m.text || "Photo") : m.text;
+  const body = m.gif ? "🎞 GIF" : m.sticker ? "✨ Sticker" : m.video ? "🎬 " + (m.text || "Video") : m.image ? "📷 " + (m.text || "Photo") : m.text;
   return who ? who + ": " + body : body;
 }
 function sortConvsDM(list) {
@@ -437,6 +482,24 @@ function SheetActionDM({ icon, label, sub, danger, disabled, onClick }) {
         {sub && <span className="dm-sheet-act-sub">{sub}</span>}
       </span>
     </button>);
+}
+/* "+" popover in the thread composer: Messenger-style floating list anchored above the button */
+function PlusMenuDM({ items, onClose }) {
+  const ref = useRefDM(null);
+  useEffectDM(() => {
+    const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } };
+    document.addEventListener("keydown", onKey);
+    const raf = requestAnimationFrame(() => { if (ref.current) ref.current.focus({ preventScroll: true }); }); // focus the menu, not a row — no row should look pre-selected
+    return () => { document.removeEventListener("keydown", onKey); cancelAnimationFrame(raf); };
+  }, []);
+  return (
+    <div className="dm-plus-menu" role="menu" aria-label="Add to message" tabIndex={-1} ref={ref}>
+      {items.map((it) =>
+        <button key={it.label} type="button" role="menuitem" className="dm-plus-item" onClick={it.onClick}>
+          <span className="dm-plus-ic"><DSDM.IconifyIcon name={it.icon} size={22} color="var(--text-heading)" /></span>
+          <span className="dm-plus-label">{it.label}</span>
+        </button>)}
+    </div>);
 }
 function ToastDM({ toast }) {
   if (!toast) return null;
@@ -752,8 +815,8 @@ function BubbleDM({ m, c, sender, showSender, onReact, onActions, reactOpen, set
   const press = usePressDM(() => onActions(m), !m.deleted);
   const myReactions = Object.keys(m.reactions || {}).filter((k) => m.reactions[k].includes("me"));
   const isGroup = c.kind === "group";
-  const imgOnly = !!m.image && !m.text;
-  const media = m.gif ? "GIF: " + m.gif.label + ". " : m.sticker ? "Sticker: " + m.sticker.label + ". " : m.image ? "Photo. " : "";
+  const imgOnly = !!(m.image || m.video) && !m.text;
+  const media = m.gif ? "GIF: " + m.gif.label + ". " : m.sticker ? "Sticker: " + m.sticker.label + ". " : m.video ? "Video. " : m.image ? "Photo. " : "";
   const label = (mine ? "You: " : (sender ? sender.name + ": " : "")) + media + (m.text || "") + " Hold for options.";
   return (
     <div className={"dm-msg" + (mine ? " me" : "") + (isGroup && !mine ? " grouped" : "") + (showSender ? " first" : "") + (isHit ? " hit" : "")} data-mid={m.id}>
@@ -788,9 +851,19 @@ function BubbleDM({ m, c, sender, showSender, onReact, onActions, reactOpen, set
               </button>
             </> :
             <>
-              <button type="button" className={"dm-bubble" + (mine ? " me" : "") + (m.image ? " has-img" : "") + (imgOnly ? " img-only" : "")} {...press}
-                aria-label={label} onClick={m.image && onOpenImage ? () => onOpenImage(m.image) : undefined}>
+              <button type="button" className={"dm-bubble" + (mine ? " me" : "") + (m.image || m.video ? " has-img" : "") + (imgOnly ? " img-only" : "")} {...press}
+                aria-label={label} onClick={m.image && onOpenImage ? () => onOpenImage({ kind: "image", src: m.image }) : m.video && m.video.src && onOpenImage ? () => onOpenImage({ kind: "video", src: m.video.src, poster: m.video.poster }) : undefined}>
                 {m.image && <img className="dm-bubble-img" src={m.image} alt="" draggable="false" />}
+                {m.video && (m.video.src ?
+                  <span className="dm-bubble-video" aria-hidden="true">
+                    {m.video.poster ? <img className="dm-bubble-img" src={m.video.poster} alt="" draggable="false" /> :
+                      <video className="dm-bubble-img" src={m.video.src} muted playsInline preload="metadata" />}
+                    <span className="dm-video-play"><DSDM.IconifyIcon name="lucide:play" size={22} color="#fff" /></span>
+                  </span> :
+                  <span className="dm-bubble-video gone" aria-hidden="true">
+                    <DSDM.IconifyIcon name="lucide:video-off" size={22} color="var(--gray-500)" />
+                    <span>Video no longer available</span>
+                  </span>)}
                 {m.text && <span className="dm-bubble-text">{highlight ? highlightDM(m.text, highlight) : m.text}</span>}
               </button>
               <button type="button" className="dm-react-trigger" aria-label="Add reaction" aria-expanded={reactOpen}
@@ -1115,7 +1188,7 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
   const [editing, setEditing] = useStateDM(null);
   const [typing, setTyping] = useStateDM(null);
   const [attach, setAttach] = useStateDM(null);          // pending photo (data URL) for the next message
-  const [attachOpen, setAttachOpen] = useStateDM(false); // "+" sheet: library / camera / GIF / sticker
+  const [attachOpen, setAttachOpen] = useStateDM(false); // "+" popover: stickers / GIFs / emoji / photos
   const [stickerOpen, setStickerOpen] = useStateDM(null); // null | "sticker" | "gif" — custom sticker / GIF sheet
   const [lightbox, setLightbox] = useStateDM(null);      // full-screen photo viewer
   const [q, setQ] = useStateDM("");                       // in-conversation search
@@ -1124,6 +1197,7 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
   const inputRef = useRefDM(null);
   const fileRef = useRefDM(null);
   const camRef = useRefDM(null);
+  const vidRef = useRefDM(null);
   const replyTimer = useRefDM(null);
   const now = useNowDM(!!actionsFor || editing !== null);
 
@@ -1156,11 +1230,13 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
     const f = e.target.files && e.target.files[0];
     e.target.value = "";
     if (!f) return;
-    if (!/^image\//.test(f.type)) { toast("Only photos are supported for now"); return; }
-    shrinkImageDM(f).then((url) => {
-      setAttach(url); setAttachOpen(false);
-      requestAnimationFrame(() => inputRef.current && inputRef.current.focus());
-    });
+    const done = (a) => { setAttach(a); setAttachOpen(false); requestAnimationFrame(() => inputRef.current && inputRef.current.focus()); };
+    if (/^video\//.test(f.type)) {
+      readVideoDM(f).then((v) => { done({ kind: "video", ...v }); if (v.session) toast("Large video — kept for this session only"); });
+      return;
+    }
+    if (!/^image\//.test(f.type)) { toast("Only photos and videos are supported"); return; }
+    shrinkImageDM(f).then((url) => done({ kind: "image", src: url }));
   }
 
   function simulateReply() {
@@ -1178,7 +1254,8 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
     const v = text.trim();
     if (editing) { if (!v) return; onEdit(c.id, editing.id, v); setEditing(null); setText(""); toast("Message edited"); return; }
     if (!v && !attach) return;
-    onSend(c.id, { from: "me", text: v, image: attach });
+    onSend(c.id, { from: "me", text: v, image: attach && attach.kind === "image" ? attach.src : null,
+      video: attach && attach.kind === "video" ? { src: attach.src, poster: attach.poster || null, name: attach.name, size: attach.size } : null });
     setText("");
     setAttach(null);
     simulateReply();
@@ -1283,34 +1360,43 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
 
       {attach && !editing &&
         <div className="dm-attach-bar" role="status">
-          <img className="dm-attach-thumb" src={attach} alt="Attached photo" />
-          <span className="dm-attach-text">Photo attached</span>
-          <button type="button" className="dm-iconbtn sm" aria-label="Remove photo" onClick={() => setAttach(null)}>
+          {attach.kind === "video" ?
+            <span className="dm-attach-thumb video">
+              {attach.poster ? <img src={attach.poster} alt="" /> : <video src={attach.src} muted playsInline preload="metadata" />}
+              <span className="dm-video-play sm"><DSDM.IconifyIcon name="lucide:play" size={14} color="#fff" /></span>
+            </span> :
+            <img className="dm-attach-thumb" src={attach.src} alt="Attached photo" />}
+          <span className="dm-attach-text">{attach.kind === "video" ? "Video attached" + (attach.size ? " · " + fmtBytesDM(attach.size) : "") : "Photo attached"}</span>
+          <button type="button" className="dm-iconbtn sm" aria-label={attach.kind === "video" ? "Remove video" : "Remove photo"} onClick={() => setAttach(null)}>
             <DSDM.IconifyIcon name="lucide:x" size={18} color="var(--gray-600)" />
           </button>
         </div>}
 
       <div className="dm-composer">
-        <button type="button" className={"dm-iconbtn" + (attach ? " on" : "")} aria-label="Add photo" aria-haspopup="dialog" disabled={!!editing}
-          onClick={() => { setEmojiOpen(false); setAttachOpen(true); }}>
-          <DSDM.IconifyIcon name={attach ? "lucide:image-plus" : "lucide:plus"} size={22} color={editing ? "var(--gray-300)" : "var(--brand-navy)"} />
+        <button type="button" className={"dm-iconbtn dm-plus" + (attachOpen ? " open" : attach ? " on" : "")} aria-label={attachOpen ? "Close menu" : "Add to message"}
+          aria-haspopup="menu" aria-expanded={attachOpen} disabled={!!editing}
+          onClick={() => { setEmojiOpen(false); inputRef.current && inputRef.current.blur(); setAttachOpen((v) => !v); }}>
+          <DSDM.IconifyIcon name={attach && !attachOpen ? (attach.kind === "video" ? "lucide:video" : "lucide:image-plus") : "lucide:plus"} size={22} color={editing ? "var(--gray-300)" : "var(--brand-navy)"} />
         </button>
-        <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPickFile} />
+        {/* "+" popover — stickers, GIFs, emoji, photos (Messenger-style, anchored above the button) */}
+        {attachOpen &&
+          <>
+            <div className="dm-plus-scrim" onClick={() => setAttachOpen(false)} />
+            <PlusMenuDM onClose={() => setAttachOpen(false)} items={[
+              { icon: "lucide:sticker", label: "Stickers", onClick: () => openStickers("sticker") },
+              { icon: "lucide:film", label: "GIFs", onClick: () => openStickers("gif") },
+              { icon: "lucide:smile", label: "Emoji", onClick: () => { setAttachOpen(false); setEmojiOpen(true); } },
+              { icon: "lucide:image", label: "Photo or video", onClick: () => { setAttachOpen(false); fileRef.current && fileRef.current.click(); } },
+              { icon: "lucide:camera", label: "Take photo", onClick: () => { setAttachOpen(false); camRef.current && camRef.current.click(); } },
+              { icon: "lucide:video", label: "Record video", onClick: () => { setAttachOpen(false); vidRef.current && vidRef.current.click(); } }]} />
+          </>}
+        <input ref={fileRef} type="file" accept="image/*,video/*" hidden onChange={onPickFile} />
         <input ref={camRef} type="file" accept="image/*" capture="environment" hidden onChange={onPickFile} />
+        <input ref={vidRef} type="file" accept="video/*" capture="environment" hidden onChange={onPickFile} />
         <div className="dm-composer-field">
           <input ref={inputRef} type="text" value={text} placeholder={editing ? "Edit message…" : attach ? "Add a caption…" : "Message…"} aria-label={editing ? "Edit message" : "Message"}
             onChange={(e) => setText(e.target.value)} onFocus={() => setEmojiOpen(false)}
             onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape" && editing) cancelEdit(); }} />
-          {!editing && !text.trim() &&
-          <button type="button" className="dm-gif-btn" aria-label="Send a GIF" aria-haspopup="dialog" onClick={() => openStickers("gif")}>GIF</button>}
-          {!editing &&
-          <button type="button" className="dm-iconbtn sm dm-sticker-btn" aria-label="Custom sticker" aria-haspopup="dialog" onClick={() => openStickers("sticker")}>
-            <DSDM.IconifyIcon name="lucide:sticker" size={21} color="var(--ai-purple)" />
-          </button>}
-          <button type="button" className={"dm-iconbtn sm dm-emoji-toggle" + (emojiOpen ? " on" : "")} aria-label={emojiOpen ? "Hide emoji" : "Emoji"} aria-expanded={emojiOpen}
-            onClick={() => { setEmojiOpen((v) => !v); if (emojiOpen) requestAnimationFrame(() => inputRef.current && inputRef.current.focus()); else inputRef.current && inputRef.current.blur(); }}>
-            <DSDM.IconifyIcon name="lucide:smile" size={21} color={emojiOpen ? "#fff" : "var(--gray-600)"} />
-          </button>
         </div>
         <button type="button" className={"dm-send" + (canSend ? " on" : "")} aria-label={editing ? "Save edit" : "Send"} disabled={!canSend} onClick={submit}>
           <DSDM.IconifyIcon name={editing ? "lucide:check" : "lucide:arrow-up"} size={20} color="#fff" />
@@ -1323,11 +1409,13 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
       <SheetDM open={!!actMsg} onClose={() => setActionsFor(null)} label="Message options">
         {actMsg &&
           <>
-            <div className={"dm-sheet-quote" + (actMsg.from === "me" ? " me" : "") + (actMsg.image || actMsg.gif || actMsg.sticker ? " has-img" : "")}>
+            <div className={"dm-sheet-quote" + (actMsg.from === "me" ? " me" : "") + (actMsg.image || actMsg.video || actMsg.gif || actMsg.sticker ? " has-img" : "")}>
               {actMsg.image && <img className="dm-sheet-quote-img" src={actMsg.image} alt="" />}
+              {actMsg.video && (actMsg.video.poster ? <img className="dm-sheet-quote-img" src={actMsg.video.poster} alt="" /> :
+                actMsg.video.src ? <video className="dm-sheet-quote-img" src={actMsg.video.src} muted playsInline preload="metadata" /> : null)}
               {actMsg.gif && <img className="dm-sheet-quote-img" src={actMsg.gif.src} alt="" />}
               {actMsg.sticker && <DmStickerDM sticker={actMsg.sticker} size={64} />}
-              {actMsg.text || (actMsg.gif ? "GIF" : actMsg.sticker ? "Sticker" : actMsg.image ? "Photo" : "")}
+              {actMsg.text || (actMsg.gif ? "GIF" : actMsg.sticker ? "Sticker" : actMsg.video ? "Video" : actMsg.image ? "Photo" : "")}
             </div>
             <div className="dm-sheet-reacts" role="toolbar" aria-label="React">
               {REACTIONS_QUICK_DM.map((e) =>
@@ -1335,7 +1423,8 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
                   onClick={() => { onReact(c.id, actMsg.id, e); setActionsFor(null); }}>{e}</button>)}
             </div>
             {actMsg.text && <SheetActionDM icon="lucide:copy" label="Copy text" onClick={() => { try { navigator.clipboard && navigator.clipboard.writeText(actMsg.text); } catch (e) {} setActionsFor(null); toast("Copied"); }} />}
-            {actMsg.image && <SheetActionDM icon="lucide:maximize-2" label="View photo" onClick={() => { setActionsFor(null); setLightbox(actMsg.image); }} />}
+            {actMsg.image && <SheetActionDM icon="lucide:maximize-2" label="View photo" onClick={() => { setActionsFor(null); setLightbox({ kind: "image", src: actMsg.image }); }} />}
+            {actMsg.video && actMsg.video.src && <SheetActionDM icon="lucide:play" label="Play video" onClick={() => { setActionsFor(null); setLightbox({ kind: "video", src: actMsg.video.src, poster: actMsg.video.poster }); }} />}
             {actMsg.from === "me" &&
               <>
                 <SheetActionDM icon="lucide:pencil" label="Edit message" disabled={!canEdit || !!actMsg.gif || !!actMsg.sticker}
@@ -1346,26 +1435,19 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
           </>}
       </SheetDM>
 
-      {/* "+" — add a photo to the message */}
-      <SheetDM open={attachOpen} onClose={() => setAttachOpen(false)} label="Add to message" title="Add to message">
-        <SheetActionDM icon="lucide:image" label="Photo library" sub="Choose a photo from your device" onClick={() => fileRef.current && fileRef.current.click()} />
-        <SheetActionDM icon="lucide:camera" label="Take photo" sub="Open the camera" onClick={() => camRef.current && camRef.current.click()} />
-        <SheetActionDM icon="lucide:film" label="GIF" sub="Search and send a GIF" onClick={() => openStickers("gif")} />
-        <SheetActionDM icon="lucide:sticker" label="Custom sticker" sub="Describe a sticker or build one from suggestions" onClick={() => openStickers("sticker")} />
-        <button type="button" className="dm-sheet-cancel" onClick={() => setAttachOpen(false)}>Cancel</button>
-      </SheetDM>
-
       {/* custom sticker / GIF sheet */}
       {stickerOpen &&
         <DmStickerSheetDM initialMode={stickerOpen} onClose={() => setStickerOpen(null)} onSend={sendSticker} onSendGif={sendGif} />}
 
-      {/* full-screen photo viewer */}
+      {/* full-screen photo / video viewer */}
       {lightbox &&
-        <div className="dm-lightbox" role="dialog" aria-modal="true" aria-label="Photo" onClick={() => setLightbox(null)}>
-          <button type="button" className="dm-lightbox-close" aria-label="Close photo" autoFocus onClick={() => setLightbox(null)}>
+        <div className="dm-lightbox" role="dialog" aria-modal="true" aria-label={lightbox.kind === "video" ? "Video" : "Photo"} onClick={() => setLightbox(null)}>
+          <button type="button" className="dm-lightbox-close" aria-label={lightbox.kind === "video" ? "Close video" : "Close photo"} autoFocus onClick={() => setLightbox(null)}>
             <DSDM.IconifyIcon name="lucide:x" size={22} color="#fff" />
           </button>
-          <img src={lightbox} alt="" onClick={(e) => e.stopPropagation()} />
+          {lightbox.kind === "video" ?
+            <video src={lightbox.src} poster={lightbox.poster || undefined} controls autoPlay playsInline onClick={(e) => e.stopPropagation()} /> :
+            <img src={lightbox.src} alt="" onClick={(e) => e.stopPropagation()} />}
         </div>}
     </div>);
 }
@@ -1809,7 +1891,7 @@ function MessagesAppDM() {
     setStore((s) => ({ ...s, conversations: [c].concat(s.conversations) }));
     setRoute({ name: "thread", id: c.id, from: "list" });
   };
-  const sendMessage = (id, m) => updateConv(id, (c) => ({ ...c, messages: c.messages.concat([{ id: midDM(), from: m.from, text: m.text || "", image: m.image || null, sticker: m.sticker || null, gif: m.gif || null, ts: Date.now(), reactions: {} }]) }));
+  const sendMessage = (id, m) => updateConv(id, (c) => ({ ...c, messages: c.messages.concat([{ id: midDM(), from: m.from, text: m.text || "", image: m.image || null, video: m.video || null, sticker: m.sticker || null, gif: m.gif || null, ts: Date.now(), reactions: {} }]) }));
   const reactMessage = (id, mid, emoji) => updateConv(id, (c) => ({
     ...c, messages: c.messages.map((m) => {
       if (m.id !== mid) return m;

@@ -39,12 +39,13 @@ const LC_LIGHT = !!window.PF_LC_LIGHT;
    Gold #CE9957 fails AA on the light surface (~2.4:1) → #8A5303 there. */
 const LC_INK = {
   gold: LC_LIGHT ? "#8A5303" : "#CE9957",
-  text: LC_LIGHT ? "#292569" : "#FFFFFF",
+  text: LC_LIGHT ? "#0C1928" : "#FFFFFF",
+  /* My Learning navy */
   body: LC_LIGHT ? "#475467" : "rgba(255,255,255,.76)",
   muted: LC_LIGHT ? "#475467" : "rgba(255,255,255,.62)",
   success: LC_LIGHT ? "#2a9568" : "#5CD39A",
   /* glyph on a #CE9957 circle — navy reads 5.3:1 on light, #0B1024 7.5:1 on dark */
-  onGold: LC_LIGHT ? "#292569" : "#0B1024",
+  onGold: LC_LIGHT ? "#0C1928" : "#0B1024",
   /* glyph on the deep-gold ramp (#A26301 → #7A4A03) — white ink */
   onRamp: "#FFFFFF",
   /* glyph inside the white circle on that ramp */
@@ -66,6 +67,8 @@ const LC_URLS = {
      (?play=1) in the same variant. Lesson.html is the standard lesson page
      (lesson.jsx) and stays untouched. */
   lesson: LC_LIGHT ? "CourseDetailConfidenceLight.html" : "CourseDetailConfidence.html",
+  /* Confidence catalogue browser in the same variant */
+  allCourses: LC_LIGHT ? "AllCoursesConfidenceLight.html" : "AllCoursesConfidence.html",
   theme: LC_LIGHT ? "light" : "dark"
 };
 function goLC(url) {
@@ -154,22 +157,29 @@ const LC_MODULE = {
 function lessonDoneLC(l, done) {
   return !!l.base || done.indexOf(l.key) !== -1;
 }
+
+/* Related courses are paid — the course page (lesson-confidence.jsx) lists
+   their lessons but gates starting behind CourseCheckout.html. Prices match
+   LX_PRICES there. */
 const LC_RELATED = [{
   title: "Temple Filler",
   level: "Advanced",
   lessons: 14,
+  price: 342,
   image: "assets/course-temple-filler.webp",
   blurb: "Master safe injection techniques with anatomical precision."
 }, {
   title: "Advanced Lip Techniques",
   level: "Advanced",
   lessons: 18,
+  price: 342,
   image: "assets/course-advanced-lip-techniques.jpg",
   blurb: "Build on 8D with layered volume, borders and perioral balance."
 }, {
   title: "Complications Management",
   level: "Advanced",
   lessons: 12,
+  price: 450,
   image: "assets/course-complications.jpg",
   blurb: "Recognise, prevent and manage vascular and other complications."
 }];
@@ -216,11 +226,13 @@ function lessonUrlLC(idx) {
   }).toString();
 }
 function courseUrlLC(c) {
-  return "CourseDetail.html?" + new URLSearchParams({
+  const p = {
     title: c.title,
     instr: "Dr. Tim Pearce",
     pct: 0
-  }).toString();
+  };
+  if (c.price) p.price = c.price;
+  return "CourseDetail.html?" + new URLSearchParams(p).toString();
 }
 
 /* ---------------------------------------------------------------- header -- */
@@ -502,11 +514,18 @@ function LCRelated() {
     alt: ""
   }), /*#__PURE__*/React.createElement("span", {
     className: "lcm-course-chip"
-  }, c.lessons, " lessons")), /*#__PURE__*/React.createElement("span", {
+  }, c.lessons, " lessons"), c.price > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "lcm-course-chip lcm-course-lock",
+    "aria-label": "Paid course"
+  }, /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
+    name: "lucide:lock",
+    size: 11,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("span", {
     className: "lcm-course-tx"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lcm-eyebrow lcm-eyebrow-gold"
-  }, c.level), /*#__PURE__*/React.createElement("span", {
+  }, c.level, c.price ? " · £" + c.price : ""), /*#__PURE__*/React.createElement("span", {
     className: "lcm-course-title"
   }, c.title), /*#__PURE__*/React.createElement("span", {
     className: "lcm-course-blurb"
@@ -558,7 +577,6 @@ function LCFreeResources() {
 /* White ink needs the deep-gold ramp (#A26301 → #7A4A03); on the light gold
    white sits at ~2.1:1, so the surface is darkened rather than the text. */
 function LCRampCard({
-  icon,
   title,
   body,
   cta,
@@ -573,13 +591,6 @@ function LCRampCard({
     className: "lcm-ramp",
     onClick: onClick
   }, /*#__PURE__*/React.createElement("span", {
-    className: "lcm-ramp-ic",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
-    name: icon,
-    size: 22,
-    color: LC_INK.onRamp
-  })), /*#__PURE__*/React.createElement("span", {
     className: "lcm-ramp-tx"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lcm-ramp-title"
@@ -688,13 +699,11 @@ function LearningConfidence() {
     nextIdx: currentIdx
   }), /*#__PURE__*/React.createElement(LCRelated, null), /*#__PURE__*/React.createElement(LCFreeResources, null), /*#__PURE__*/React.createElement(LCRampCard, {
     label: "Discover your journey",
-    icon: "lucide:route",
     title: "Discover your journey",
     body: "We sequence your next-best courses from Recommended, New & Popular — one clear step at a time toward your goal.",
-    onClick: () => goLC("AllCoursesMobile.html")
+    onClick: () => goLC(LC_URLS.allCourses)
   }), /*#__PURE__*/React.createElement(LCRampCard, {
     label: "Unlock more with Mastery",
-    icon: "lucide:crown",
     title: "Unlock more with Mastery",
     body: "Every course in the catalogue, live case reviews and the Mastery community channels.",
     cta: "See what's included",
@@ -738,8 +747,8 @@ function LearningConfidenceApp() {
   const mobile = useIsMobileLC();
   const scale = useDeviceScaleLC();
   const vars = {
-    "--action-primary": "var(--brand-navy)",
-    "--action-primary-hover": "var(--brand-navy-700)"
+    "--action-primary": "#0C1928",
+    "--action-primary-hover": "#081120"
   };
   const pageBg = LC_LIGHT ? "#F9F7F4" : "#0B1024";
   if (mobile) {

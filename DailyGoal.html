@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <script src="dark-mode-init.js"></script>
+  <title>PROfinity — Daily Goal Reached (mobile)</title>
+
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fonts.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/colors.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/typography.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/spacing.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fig-tokens.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/styles.css" />
+  <link rel="stylesheet" href="mobile-loyalty-shared.css" />
+  <link rel="stylesheet" href="daily-goal.css" />
+  <link rel="stylesheet" href="dark-mode.css" />
+</head>
+<body>
+  <div id="pf-root"></div>
+
+  <script src="vendor/react.production.min.js"></script>
+  <script src="vendor/react-dom.production.min.js"></script>
+  <!-- NOT the bare iconify-icon script: claims the data-iconify slot, bulk-loads
+       the glyphs this page uses so nothing renders 0×0 -->
+  <script>window.PF_ICONS_EXTRA = { lucide: ["x", "target", "flame", "check-check", "share", "arrow-right", "check", "download", "more-horizontal"] };</script>
+  <script src="icons-preload.js" data-iconify></script>
+  <!-- raw-JSON Lottie player (the lottie.host /embed iframe caches aggressively) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
+  <!-- snapshots the share card to a PNG for "PROfinity" (feed post) and "Save" -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script src="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/_ds_bundle.js"></script>
+
+  <script src="pagetrans.js"></script>
+
+  <script src="ios-frame.compiled.js"></script>
+
+  <script src="loyalty-engine.js"></script>
+  <script src="daily-goal.compiled.js"></script>
+</body>
+</html>

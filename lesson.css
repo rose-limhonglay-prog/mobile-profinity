@@ -12,6 +12,8 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
   font-family: var(--font-sans); color: var(--text-primary); }
 
+/* My Learning brand navy (user, 2026-09-11) */
+.ls-screen { --brand-navy: #0C1928; --brand-navy-700: #081120; --text-heading: #0C1928; }
 .ls-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-page); position: relative; }
 
 /* ---------- top bar ---------- */
@@ -81,7 +83,7 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .ls-scroll::-webkit-scrollbar { width: 0; }
 
 /* ---------- video ---------- */
-.ls-video { position: relative; height: 232px; overflow: hidden; background: linear-gradient(150deg,#1a1550 0%,#292569 45%,#7c2d3f 100%);
+.ls-video { position: relative; height: 232px; overflow: hidden; background: linear-gradient(150deg,#1a1550 0%,#0C1928 45%,#7c2d3f 100%);
   display: flex; flex-direction: column; justify-content: flex-end; }
 .ls-video-eyebrow { position: absolute; top: 14px; left: 16px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 10.5px;
   letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.55); }

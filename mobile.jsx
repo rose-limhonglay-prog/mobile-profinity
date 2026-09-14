@@ -62,7 +62,7 @@ function PushNotifBanner() {
 
 /* ===== header points pill ===================================================
    The member's lifetime gamification points, sat between the logo and the
-   search icon. Icon is the syringe Lottie (lottie.host TbrupntywS) fed
+   search icon. Icon is the smiling-face Lottie (lottie.host ArWGbXL6R3) fed
    as raw JSON through
    lottie-web (never the lottie.host /embed iframe — it caches hard and
    ignores re-publishes). Reads window.PFLoyalty when loyalty-engine.js is on
@@ -70,9 +70,9 @@ function PushNotifBanner() {
    `pf:points-earned` event (dispatched by popPoints in app.jsx) bumps the
    total live and books it in the engine so Rewards stays in step.
 
-   The number reads in the artwork's syringe red (#E9293A, #FE6559 in dark mode); the tooltip
+   The number reads gold (#D9A21B, #F5C542 in dark mode) and the earn tint is the artwork's amber (#FCC25D); the tooltip
    still reads lifetime points against the engine's beakerFullPoints scale. */
-const PTS_LOTTIE_SRCM = "https://lottie.host/10797cf0-5c4b-4f1a-8412-5631c9593ded/TbrupntywS.json";
+const PTS_LOTTIE_SRCM = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
 const PTS_LOTTIE_LIBM = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
 const PTS_FALLBACKM = 14000;
 const PTS_FULL_FALLBACKM = 20000;
@@ -135,7 +135,7 @@ function PointsIconM() {
   }, []);
   return (
     <span className="m-pts-ic" aria-hidden="true">
-      {!ready && <span className="m-pts-ic-fb"><DSM.IconifyIcon name="lucide:syringe" size={18} color="#E9293A" /></span>}
+      {!ready && <span className="m-pts-ic-fb"><DSM.IconifyIcon name="lucide:smile" size={18} color="#FCC25D" /></span>}
       <span ref={host} className={"m-pts-ic-anim" + (ready ? " on" : "")} />
     </span>);
 }

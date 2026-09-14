@@ -42,13 +42,13 @@ function resolveLightLX() {
 function inkLX(light) {
   return {
     gold: light ? "#8A5303" : "#CE9957",
-    text: light ? "#292569" : "#FFFFFF",
+    text: light ? "#0C1928" : "#FFFFFF", /* My Learning navy */
     body: light ? "#475467" : "rgba(255,255,255,.76)",
     muted: light ? "#475467" : "rgba(255,255,255,.62)",
     success: light ? "#2a9568" : "#5CD39A",
     onNavy: "#FFFFFF",
     onGold: light ? "#FFFFFF" : "#0B1024",
-    outline: light ? "#292569" : "#FFFFFF"
+    outline: light ? "#0C1928" : "#FFFFFF"
   };
 }
 function lockupLX(light) { return light ? "assets/profinity-academy-logo-full.png" : "assets/profinity-logo-dark.jpg"; }
@@ -350,9 +350,29 @@ function buildGenericCourseLX(params) {
         { name: "Orientation", dur: "3:04" },
         { name: "Core Technique Walkthrough", dur: "2:14" },
         { name: "Common Pitfalls to Avoid", dur: "5:24" }] }] },
-    { title: "Level 2", sections: [], unlock: "Unlocks when you complete Level 1." },
-    { title: "Level 3", sections: [], unlock: "Unlocks when you complete Level 2." },
-    { title: "End of Success Path Quiz", quiz: true, sections: [
+    /* every level is open and listed up front (user, 2026-09-11) so a buyer
+       can see the whole course before paying — no "Unlocks when…" rows */
+    { title: "Level 2", open: true,
+      sections: [
+      { name: "Core Technique",
+        desc: `Anatomy, product choice and the ${title.toLowerCase()} technique itself, demonstrated step by step on a real patient.`,
+        bullets: [],
+        lessons: [
+        { name: "Anatomy & Danger Zones", dur: "6:12" },
+        { name: "Product Selection & Dosing", dur: "4:48" },
+        { name: "Injection Technique Demonstration", dur: "8:31" },
+        { name: "Aftercare Protocol", dur: "3:05" }] }] },
+    { title: "Level 3", open: true,
+      sections: [
+      { name: "Advanced Practice",
+        desc: "Complications, case reviews and how to bring this treatment into your clinic with confidence.",
+        bullets: [],
+        lessons: [
+        { name: "Managing Complications", dur: "7:20" },
+        { name: "Case Study Review", dur: "5:56" },
+        { name: "Consultation & Consent Checklist", dur: "4 pages", kind: "pdf" },
+        { name: "Building Your Treatment Menu", dur: "3:44" }] }] },
+    { title: "End of Success Path Quiz", quiz: true, open: true, sections: [
       { name: "Final Assessment", desc: "Twenty questions across assessment, technique and aftercare.", bullets: [],
         lessons: [{ name: title + " success path quiz", dur: "20 Qs", kind: "quiz" }] }] }]
   };
@@ -374,6 +394,63 @@ function lessonIdxFromParamsLX(flat) {
   return i === -1 ? null : i;
 }
 
+/* ---------------------------------------------------------------- paid courses -- */
+/* Related courses are paid. The course page still lists every level, module
+   and lesson, but nothing can be started until the course is bought: the CTA
+   goes to CourseCheckout.html, which writes the slug into
+   localStorage["pf-purchased-courses"] (the same key course-detail.jsx and
+   course-checkout.jsx share) and returns here unlocked. Prices are keyed by
+   slug so every route into these courses is paid; ?price= overrides. */
+const LX_PURCHASED_KEY = "pf-purchased-courses";
+const LX_PRICES = {
+  "temple-filler": 342,
+  "profinity-membership": 199,
+  "advanced-lip-techniques": 342,
+  "complications-management": 450,
+  /* My Learning → Explore related content */
+  "functional-anatomy": 198,
+  "treatment-approaches": 246,
+  "safety-injection-essentials": 294,
+  /* backfill once one of the above is bought */
+  "cheek-contouring": 246,
+  "jawline-sculpting": 294,
+  "tear-trough-treatment": 342 };
+
+function priceLX(slug) {
+  const q = Number(LX_PARAMS.get("price"));
+  if (q > 0) return q;
+  return LX_PRICES[slug] || 0;
+}
+
+function readPurchasedLX() {
+  try {
+    const arr = JSON.parse(window.localStorage.getItem(LX_PURCHASED_KEY));
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) { return []; }
+}
+
+function usePurchasedLX() {
+  const [list, setList] = useStateLX(readPurchasedLX);
+  useEffectLX(() => {
+    const onStorage = (e) => { if (!e.key || e.key === LX_PURCHASED_KEY) setList(readPurchasedLX()); };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+  return list;
+}
+
+/* Checkout for this course; `ret` brings the buyer back to this exact page
+   (CourseDetail / CourseDetailConfidence / …Light) once paid. */
+function checkoutUrlLX(course) {
+  const p = new URLSearchParams({ title: course.title, instr: "Dr. Tim Pearce", price: course.price });
+  if (LX_COURSES[course.slug]) p.set("course", course.slug);
+  const back = { course: course.slug, title: course.title };
+  const dur = LX_PARAMS.get("dur"); if (dur) back.dur = dur;
+  p.set("ret", window.location.pathname.split("/").pop() + "?" + new URLSearchParams(back).toString());
+  return "CourseCheckout.html?" + p.toString();
+}
+LX_COURSE.price = priceLX(LX_COURSE.slug);
+
 const LX_RESOURCES = [
 { name: "Lip anatomy reference chart.pdf", size: "1.8 MB" },
 { name: "Lip assessment checklist.pdf", size: "240 KB" },
@@ -381,8 +458,8 @@ const LX_RESOURCES = [
 
 /* These are courses — route to the course page, never to a lesson index. */
 const LX_RELATED = [
-{ title: "Temple Filler", lessons: 12, dur: "1h 40m", image: "assets/course-temple-filler.webp" },
-{ title: "Profinity Membership", lessons: 6, dur: "45m", image: "assets/course-membership-banner.jpg" }];
+{ title: "Temple Filler", lessons: 12, dur: "1h 40m", image: "assets/course-temple-filler.webp", price: LX_PRICES["temple-filler"] },
+{ title: "Profinity Membership", lessons: 6, dur: "45m", image: "assets/course-membership-banner.jpg", price: LX_PRICES["profinity-membership"] }];
 
 
 const LX_DEFAULT_COMMENTS = [
@@ -444,29 +521,35 @@ function genericContentLX(item) {
 }
 
 function courseUrlLX(c) {
-  return "CourseDetail.html?" + new URLSearchParams({ title: c.title, instr: "Dr. Tim Pearce", dur: c.dur, pct: 0 }).toString();
+  const p = { title: c.title, instr: "Dr. Tim Pearce", dur: c.dur, pct: 0 };
+  if (c.price) p.price = c.price;
+  return "CourseDetail.html?" + new URLSearchParams(p).toString();
 }
 
 /* ---------------------------------------------------------------- pieces -- */
 function LXHeader() {
   return (
     <header className="lc-top" data-screen-label="Header">
+      {/* the course page header is navy in both variants, so its ink is white
+          and the lockup is the dark-surface one */}
       <button type="button" className="lc-back" aria-label="Back" onClick={() => goLX(LX_BACK_URL)}>
-        <DSLX.IconifyIcon name="lucide:chevron-left" size={22} color={LX_INK.text} />
+        <DSLX.IconifyIcon name="lucide:chevron-left" size={22} color="#FFFFFF" />
       </button>
-      <div className="lc-lockup"><img src={LX_LOCKUP} alt="PROfinity Academy" /></div>
+      <div className="lc-lockup"><img src={lockupLX(false)} alt="PROfinity Academy" /></div>
       <button type="button" className="lc-avatar" aria-label="Your profile" onClick={() => goLX("ProfileMobile.html")}>
         <img src={LX_ME.avatar} alt={LX_ME.name} />
       </button>
     </header>);
 }
 
-function LXHero({ item, course }) {
+function LXHero({ item, course, locked }) {
   const fill = Math.round(item.groupPos / item.groupTotal * 100);
   return (
     <section className="lc-hero" data-screen-label="Hero">
       <span className="lc-eyebrow">{eyebrowLX(item, course)}</span>
       <h1 className="lc-title">{item.name}</h1>
+      {/* no lesson progress on a paid course that hasn't been bought yet */}
+      {!locked && <>
       <div className="lc-prog-row">
         <span className="lc-prog-label">Lesson progress</span>
         <span className="lc-prog-count">{item.groupPos} of {item.groupTotal}</span>
@@ -474,28 +557,32 @@ function LXHero({ item, course }) {
       <div className="lc-track" role="progressbar" aria-valuemin={0} aria-valuemax={item.groupTotal} aria-valuenow={item.groupPos} aria-label="Lesson progress">
         <span style={{ width: fill + "%" }} />
       </div>
+      </>}
     </section>);
 }
 
-function LXMarker({ done, kind }) {
+function LXMarker({ done, kind, locked }) {
   if (done) {
     return <span className="lc-marker done"><DSLX.IconifyIcon name="lucide:check" size={15} color={LX_INK.success} strokeWidth={2.5} /></span>;
+  }
+  if (locked) {
+    return <span className="lc-marker lock"><DSLX.IconifyIcon name="lucide:lock" size={13} color={LX_INK.muted} /></span>;
   }
   const icon = kind === "pdf" ? "lucide:file-text" : kind === "quiz" ? "lucide:list-checks" : "fluent:play-16-filled";
   return <span className="lc-marker"><DSLX.IconifyIcon name={icon} size={13} color={LX_INK.gold} /></span>;
 }
 
-function LXLessonRow({ lesson, done, current, onSelect }) {
+function LXLessonRow({ lesson, done, current, locked, onSelect }) {
   return (
-    <button type="button" className={"lc-lesson" + (done ? " done" : "") + (current ? " on" : "")}
+    <button type="button" className={"lc-lesson" + (done ? " done" : "") + (current ? " on" : "") + (locked ? " locked" : "")}
     aria-current={current ? "true" : undefined} onClick={onSelect}>
-      <LXMarker done={done} kind={lesson.kind} />
+      <LXMarker done={done} kind={lesson.kind} locked={locked && !done} />
       <span className="lc-lesson-name">{lesson.name}</span>
       <span className="lc-lesson-dur">{lesson.dur}</span>
     </button>);
 }
 
-function LXSubModule({ sub, done, currentName, onSelect }) {
+function LXSubModule({ sub, done, currentName, locked, onSelect }) {
   const [open, setOpen] = useStateLX(!!sub.open);
   return (
     <div className="lc-sub">
@@ -508,7 +595,7 @@ function LXSubModule({ sub, done, currentName, onSelect }) {
       {open &&
       <div className="lc-sub-body">
           {sub.lessons.map((l) =>
-        <LXLessonRow key={l.name} lesson={l} done={done.indexOf(l.name) !== -1} current={currentName === l.name} onSelect={() => onSelect(l.name)} />
+        <LXLessonRow key={l.name} lesson={l} done={done.indexOf(l.name) !== -1} current={currentName === l.name} locked={locked} onSelect={() => onSelect(l.name)} />
         )}
           <button type="button" className="lc-sub-about" onClick={() => goLX("SubModule.html?s=" + slugLX(sub.name))}>
             About this sub-module
@@ -518,21 +605,30 @@ function LXSubModule({ sub, done, currentName, onSelect }) {
     </div>);
 }
 
-function LXSection({ section, done, currentName, onSelect }) {
+function LXSection({ section, done, currentName, locked, onSelect }) {
   return (
     <div className="lc-section">
       <div className="lc-section-head">
         <span className="lc-section-name">{section.name}</span>
-        {section.free && <span className="lc-free">Free</span>}
+        {section.free && !locked && <span className="lc-free">Free</span>}
+        {locked && <span className="lc-free lc-paid">Paid</span>}
       </div>
       <p className="lc-section-desc">{section.desc}</p>
       {section.bullets && section.bullets.length > 0 &&
       <ul className="lc-bullets">{section.bullets.map((b, i) => <li key={i}>{b}</li>)}</ul>}
-      {(section.subs || []).map((s) => <LXSubModule key={s.name} sub={s} done={done} currentName={currentName} onSelect={onSelect} />)}
+      {/* lessons that sit directly on the module (generic / related courses
+          have no sub-modules) — so the buyer can see what's inside */}
+      {section.lessons && section.lessons.length > 0 &&
+      <div className="lc-lessons">
+          {section.lessons.map((l) =>
+        <LXLessonRow key={l.name} lesson={l} done={done.indexOf(l.name) !== -1} current={currentName === l.name} locked={locked} onSelect={() => onSelect(l.name)} />
+        )}
+        </div>}
+      {(section.subs || []).map((s) => <LXSubModule key={s.name} sub={s} done={done} currentName={currentName} locked={locked} onSelect={onSelect} />)}
     </div>);
 }
 
-function LXLevel({ level, done, currentName, onSelect }) {
+function LXLevel({ level, done, currentName, locked, onSelect }) {
   const [open, setOpen] = useStateLX(!!level.open);
   const pct = pctLX(levelLessonNamesLX(level), done);
   const empty = !level.sections || level.sections.length === 0;
@@ -552,42 +648,152 @@ function LXLevel({ level, done, currentName, onSelect }) {
           <span>{level.unlock || "Unlocks when you complete the previous level."}</span>
         </div> :
       <div className="lc-level-body">
-          {level.sections.map((s) => <LXSection key={s.name} section={s} done={done} currentName={currentName} onSelect={onSelect} />)}
+          {level.sections.map((s) => <LXSection key={s.name} section={s} done={done} currentName={currentName} locked={locked} onSelect={onSelect} />)}
         </div>)}
     </div>);
 }
 
-function LXCourseContent({ course, done, total, currentName, onSelect }) {
+function LXCourseContent({ course, done, total, currentName, locked, onSelect }) {
   const doneCount = done.filter((n) => flattenLX(course).some((l) => l.name === n)).length;
   return (
     <section data-screen-label="Course content">
       <div className="lc-sec">
         <h2>Course content</h2>
-        <span className="sub">{doneCount} of {total} completed</span>
+        <span className="sub">{locked ? total + " lessons · buy to start" : doneCount + " of " + total + " completed"}</span>
       </div>
       <div className="lc-levels">
-        {course.levels.map((lvl) => <LXLevel key={lvl.title} level={lvl} done={done} currentName={currentName} onSelect={onSelect} />)}
+        {course.levels.map((lvl) => <LXLevel key={lvl.title} level={lvl} done={done} currentName={currentName} locked={locked} onSelect={onSelect} />)}
       </div>
     </section>);
 }
 
-function LXResources({ onToast }) {
+function LXResources({ onToast, compact, locked, onLocked }) {
   return (
     <section data-screen-label="Resources">
-      <div className="lc-sec"><h2>Resources</h2></div>
+      {compact ?
+      <p className="lc-body lc-res-intro">Downloads for this lesson — tap to save a copy.</p> :
+      <div className="lc-sec"><h2>Resources</h2></div>}
       <div className="lc-res-list">
         {LX_RESOURCES.map((r) =>
-        <button type="button" className="lc-res" key={r.name} onClick={() => onToast("Downloading " + r.name)}>
+        <button type="button" className="lc-res" key={r.name} onClick={() => locked ? onLocked() : onToast("Downloading " + r.name)}>
             <span className="lc-res-ic"><DSLX.IconifyIcon name="lucide:file-text" size={20} color={LX_INK.gold} /></span>
             <span className="lc-res-tx">
               <span className="lc-res-name">{r.name}</span>
               <span className="lc-res-meta" style={{ display: "block" }}>PDF · {r.size}</span>
             </span>
-            <span className="lc-res-dl"><DSLX.IconifyIcon name="lucide:download" size={16} color={LX_INK.text} /></span>
+            <span className="lc-res-dl"><DSLX.IconifyIcon name={locked ? "lucide:lock" : "lucide:download"} size={16} color={locked ? LX_INK.muted : LX_INK.text} /></span>
           </button>
         )}
       </div>
     </section>);
+}
+
+/* Shown on a paid course that hasn't been bought: what's inside, the price,
+   and the one way in. */
+function LXPaywall({ course, total, onBuy }) {
+  return (
+    <section className="lc-paywall" data-screen-label="Paid course">
+      <span className="lc-paywall-ic"><DSLX.IconifyIcon name="lucide:lock" size={20} color={LX_INK.gold} /></span>
+      <div className="lc-paywall-tx">
+        <span className="lc-paywall-eyebrow">Paid course</span>
+        <h3 className="lc-paywall-title">Buy to start this course</h3>
+        <p className="lc-paywall-body">Browse every level, module and lesson below. Buy the course to start the lessons, download the resources and take the success path quiz.</p>
+        <ul className="lc-paywall-list">
+          <li><DSLX.IconifyIcon name="lucide:check" size={14} color={LX_INK.gold} strokeWidth={2.5} />{total} lessons across {course.levels.filter((l) => !l.quiz).length} levels</li>
+          <li><DSLX.IconifyIcon name="lucide:check" size={14} color={LX_INK.gold} strokeWidth={2.5} />One-time payment · lifetime access</li>
+          <li><DSLX.IconifyIcon name="lucide:check" size={14} color={LX_INK.gold} strokeWidth={2.5} />Certificate on completion</li>
+        </ul>
+        <div className="lc-paywall-row">
+          <span className="lc-paywall-price"><small>One-time</small>£{course.price}</span>
+          <button type="button" className="lc-btn lc-btn-gold" onClick={onBuy}>
+            <DSLX.IconifyIcon name="lucide:shopping-bag" size={16} color={LX_INK.onGold} />
+            Buy course
+          </button>
+        </div>
+      </div>
+    </section>);
+}
+
+/* ---- Share lesson sheet ----
+   Bottom sheet mirroring the newsfeed ShareSheet's two zones: a horizontal
+   "Send in Messages" rail of DM contacts (ids match messages-mobile.jsx
+   threads) and a "Share to" row of round tiles. Every action closes the
+   sheet and confirms with the page toast; nothing here needs a backend. */
+const LX_SHARE_CONTACTS = [
+  { id: "tim", name: "Dr Tim", avatar: "assets/avatar-drtim.png" },
+  { id: "miranda", name: "Miranda", avatar: "assets/avatar-miranda.jpg" },
+  { id: "sarahc", name: "Dr Sarah", avatar: "assets/avatar-sarah-collins.jpg" },
+  { id: "amir", name: "Dr Amir", avatar: "assets/avatar-amir-khan.jpg" },
+  { id: "mark", name: "Mark", avatar: "assets/avatar-mark-ellis.jpg" },
+  { id: "beth", name: "Beth", avatar: "assets/avatar-nurse-beth.jpg" },
+  { id: "priya", name: "Priya", avatar: "assets/avatar-priya-shah.jpg" }];
+
+function copyLX(text) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(() => {});
+  } catch (e) {}
+}
+
+function LXShareSheet({ item, course, url, onClose, onDone }) {
+  useEffectLX(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const title = item.name + " · " + course.title;
+  const shareNative = () => {
+    if (navigator.share) {
+      navigator.share({ title, text: "Take a look at this lesson on PROfinity", url }).catch(() => {});
+      onDone("");
+      return;
+    }
+    copyLX(url); onDone("Lesson link copied");
+  };
+  const tiles = [
+    { k: "copy", label: "Copy link", icon: "lucide:link", run: () => { copyLX(url); onDone("Lesson link copied"); } },
+    { k: "feed", label: "Newsfeed", icon: "lucide:newspaper", run: () => onDone("Shared to your newsfeed") },
+    { k: "dm", label: "Messages", icon: "lucide:message-circle", run: () => goLX("Messages.html") },
+    { k: "more", label: "More", icon: "lucide:more-horizontal", run: shareNative }];
+  return (
+    <div className="lc-share" role="dialog" aria-modal="true" aria-label="Share lesson" data-screen-label="Share lesson">
+      <button type="button" className="lc-share-scrim" aria-label="Close" onClick={onClose} />
+      <div className="lc-share-card">
+        <span className="lc-share-grab" aria-hidden="true" />
+        <div className="lc-share-hd">
+          <h3>Share lesson</h3>
+          <button type="button" className="lc-share-x" aria-label="Close" onClick={onClose}>
+            <DSLX.IconifyIcon name="lucide:x" size={18} color={LX_INK.text} />
+          </button>
+        </div>
+
+        <div className="lc-share-prev">
+          <img src={course.still} alt="" />
+          <div className="lc-share-prev-tx">
+            <span className="lc-share-prev-eyebrow">{eyebrowLX(item, course)}</span>
+            <span className="lc-share-prev-name">{item.name}</span>
+            <span className="lc-share-prev-course">{course.title}</span>
+          </div>
+        </div>
+
+        <div className="lc-share-sec">Send in Messages</div>
+        <div className="lc-share-rail">
+          {LX_SHARE_CONTACTS.map((c) =>
+          <button type="button" className="lc-share-person" key={c.id} onClick={() => onDone("Lesson sent to " + c.name)}>
+              <DSLX.Avatar name={c.name} src={c.avatar} size={52} />
+              <span>{c.name}</span>
+            </button>)}
+        </div>
+
+        <div className="lc-share-sec">Share to</div>
+        <div className="lc-share-tiles">
+          {tiles.map((t) =>
+          <button type="button" className="lc-share-tile" key={t.k} onClick={t.run}>
+              <span className="lc-share-tile-ic"><DSLX.IconifyIcon name={t.icon} size={22} color={LX_INK.text} /></span>
+              <span>{t.label}</span>
+            </button>)}
+        </div>
+      </div>
+    </div>);
 }
 
 function LXRelated() {
@@ -604,8 +810,12 @@ function LXRelated() {
               <span className="lc-course-chip">{c.lessons} lessons</span>
             </span>
             <span className="lc-course-tx">
-              <span className="lc-course-eyebrow">Course</span>
+              <span className="lc-course-eyebrow">{c.price ? "Paid course" : "Course"}</span>
               <span className="lc-course-title" style={{ display: "block" }}>{c.title}</span>
+              {c.price > 0 &&
+              <span className="lc-course-price">
+                <DSLX.IconifyIcon name="lucide:lock" size={11} color={LX_INK.gold} />£{c.price}
+              </span>}
             </span>
             <span className="lc-course-arrow" aria-hidden="true">
               <DSLX.IconifyIcon name="lucide:arrow-right" size={18} color={LX_INK.onGold} />
@@ -736,8 +946,14 @@ function fmtTimeLX(s) {
   return m + ":" + (r < 10 ? "0" : "") + r;
 }
 
-function LXVideo({ item, course, onComplete }) {
+function LXVideo({ item, course, onComplete, onPrev, onNext }) {
   const ref = useRefLX(null);
+  const rootRef = useRefLX(null);
+  /* Landscape "theatre" mode: the same <video> (playback keeps going) fills the
+     screen in a stage rotated 90°, sized from the .lc-screen box. Exit via the
+     chevron, the minimise button or Esc. */
+  const [fs, setFs] = useStateLX(false);
+  const [stage, setStage] = useStateLX({ w: 0, h: 0 });
   const [v, setV] = useStateLX({ playing: false, started: false, ended: false, muted: false, cur: 0, dur: 0 });
   const [chrome, setChrome] = useStateLX(true);
   const hideTimer = useRefLX(null);
@@ -747,10 +963,24 @@ function LXVideo({ item, course, onComplete }) {
     doneRef.current = false;
     setV({ playing: false, started: false, ended: false, muted: false, cur: 0, dur: 0 });
     setChrome(true);
+    setFs(false);
     const el = ref.current;
     if (el) { el.pause(); el.currentTime = 0; el.muted = false; }
     return () => clearTimeout(hideTimer.current);
   }, [item.name]);
+
+  useEffectLX(() => {
+    if (!fs) return;
+    const measure = () => {
+      const scr = rootRef.current && rootRef.current.closest(".lc-screen");
+      if (scr) setStage({ w: scr.clientWidth, h: scr.clientHeight });
+    };
+    measure();
+    const onKey = (e) => { if (e.key === "Escape") setFs(false); };
+    window.addEventListener("resize", measure);
+    window.addEventListener("keydown", onKey);
+    return () => { window.removeEventListener("resize", measure); window.removeEventListener("keydown", onKey); };
+  }, [fs]);
 
   const poke = () => {
     setChrome(true);
@@ -762,11 +992,9 @@ function LXVideo({ item, course, onComplete }) {
   const skip = (d) => { const e = el(); if (!e) return; e.currentTime = Math.max(0, Math.min(e.duration || 0, e.currentTime + d)); poke(); };
   const seek = (ev) => { const e = el(); if (!e || !e.duration) return; e.currentTime = Number(ev.target.value) / 1000 * e.duration; poke(); };
   const mute = () => { const e = el(); if (!e) return; e.muted = !e.muted; setV((s) => ({ ...s, muted: e.muted })); poke(); };
-  const full = () => {
-    const e = el(); if (!e) return;
-    if (e.requestFullscreen) e.requestFullscreen().catch(() => {});
-    else if (e.webkitEnterFullscreen) e.webkitEnterFullscreen();
-  };
+  const full = () => { setFs(true); poke(); };
+  const exitFull = () => { setFs(false); poke(); };
+  const stop = (e) => e.stopPropagation();
   const onTime = () => {
     const e = el(); if (!e) return;
     setV((s) => ({ ...s, cur: e.currentTime, dur: e.duration || 0 }));
@@ -780,16 +1008,33 @@ function LXVideo({ item, course, onComplete }) {
   const pct = v.dur ? v.cur / v.dur * 100 : 0;
   const showChrome = chrome || !v.playing;
   return (
-    <div className={"lc-media lc-video" + (showChrome ? " chrome" : "")} data-screen-label="Video"
+    <div ref={rootRef} className={"lc-media lc-video" + (showChrome ? " chrome" : "") + (fs ? " lc-vfull" : "")} data-screen-label={fs ? "Video · full screen" : "Video"}
     onClick={toggle} onMouseMove={poke} onTouchStart={poke}>
+      <div className="lc-vstage" style={fs && stage.w ? { width: stage.h, height: stage.w } : undefined}>
       <video ref={ref} src={LX_VIDEO_SRC} poster={course.still} playsInline preload="metadata"
       onPlay={() => setV((s) => ({ ...s, playing: true, started: true, ended: false }))}
       onPause={() => setV((s) => ({ ...s, playing: false }))}
       onTimeUpdate={onTime} onLoadedMetadata={onTime} onEnded={onEnded} />
       <div className="lc-vshade" aria-hidden="true" />
-      {!v.started &&
+      {!v.started && !fs &&
       <span className="lc-vdur" aria-hidden="true"><DSLX.IconifyIcon name="lucide:clock" size={12} color="#fff" />{item.dur}</span>}
+      {fs &&
+      <div className="lc-vtop" onClick={stop}>
+        <button type="button" className="lc-vplain" aria-label="Exit full screen" onClick={exitFull}>
+          <DSLX.IconifyIcon name="lucide:chevron-down" size={24} color="#fff" />
+        </button>
+        <span className="lc-vtop-title">{item.name}</span>
+        <span className="lc-vtop-r">
+          <button type="button" className="lc-vplain" aria-label="Cast"><DSLX.IconifyIcon name="lucide:cast" size={22} color="#fff" /></button>
+          <button type="button" className="lc-vplain" aria-label="AirPlay"><DSLX.IconifyIcon name="lucide:airplay" size={22} color="#fff" /></button>
+          <button type="button" className="lc-vplain" aria-label="Playback settings"><DSLX.IconifyIcon name="lucide:settings-2" size={22} color="#fff" /></button>
+        </span>
+      </div>}
       <div className="lc-vcenter" onClick={(e) => e.stopPropagation()}>
+        {fs &&
+        <button type="button" className="lc-vplain lc-vtrack" aria-label="Previous lesson" disabled={!onPrev} onClick={() => onPrev && onPrev()}>
+          <DSLX.IconifyIcon name="lucide:skip-back" size={26} color="#fff" />
+        </button>}
         <button type="button" className="lc-vskip" aria-label="Back 10 seconds" onClick={() => skip(-10)}>
           <DSLX.IconifyIcon name="lucide:rotate-ccw" size={22} color="#fff" /><span>10</span>
         </button>
@@ -799,8 +1044,14 @@ function LXVideo({ item, course, onComplete }) {
         <button type="button" className="lc-vskip" aria-label="Forward 10 seconds" onClick={() => skip(10)}>
           <DSLX.IconifyIcon name="lucide:rotate-cw" size={22} color="#fff" /><span>10</span>
         </button>
+        {fs &&
+        <button type="button" className="lc-vplain lc-vtrack" aria-label="Next lesson" disabled={!onNext} onClick={() => onNext && onNext()}>
+          <DSLX.IconifyIcon name="lucide:skip-forward" size={26} color="#fff" />
+        </button>}
       </div>
       <div className="lc-vbar" onClick={(e) => e.stopPropagation()}>
+        {fs &&
+        <button type="button" className="lc-vplain" aria-label="Lesson notes"><DSLX.IconifyIcon name="lucide:notebook-pen" size={20} color="#fff" /></button>}
         <span className="lc-vtime">{fmtTimeLX(v.cur)}</span>
         <input type="range" className="lc-vrange" min={0} max={1000} value={Math.round(pct * 10)} onChange={seek} aria-label="Seek"
         style={{ "--fill": pct + "%" }} />
@@ -808,9 +1059,10 @@ function LXVideo({ item, course, onComplete }) {
         <button type="button" className="lc-vic" aria-label={v.muted ? "Unmute" : "Mute"} onClick={mute}>
           <DSLX.IconifyIcon name={v.muted ? "lucide:volume-x" : "lucide:volume-2"} size={18} color="#fff" />
         </button>
-        <button type="button" className="lc-vic" aria-label="Full screen" onClick={full}>
-          <DSLX.IconifyIcon name="lucide:maximize" size={17} color="#fff" />
+        <button type="button" className="lc-vic" aria-label={fs ? "Exit full screen" : "Full screen"} onClick={fs ? exitFull : full}>
+          <DSLX.IconifyIcon name={fs ? "lucide:minimize" : "lucide:maximize"} size={17} color="#fff" />
         </button>
+      </div>
       </div>
     </div>);
 }
@@ -1009,7 +1261,9 @@ function LXPlayer({ course, flat, idx, done, onClose, onSelect, onMarkDone, onTo
   const kind = item.kind || "video";
   const content = genericContentLX(item);
   const scrollRef = useRefLX(null);
-  useEffectLX(() => { if (scrollRef.current) scrollRef.current.scrollTo({ top: 0 }); }, [idx]);
+  /* Details | Resources sub-tabs under the media; back to Details on each lesson */
+  const [tab, setTab] = useStateLX("details");
+  useEffectLX(() => { setTab("details"); if (scrollRef.current) scrollRef.current.scrollTo({ top: 0 }); }, [idx]);
 
   const complete = () => {
     if (isDone) return;
@@ -1036,24 +1290,39 @@ function LXPlayer({ course, flat, idx, done, onClose, onSelect, onMarkDone, onTo
   return (
     <div className="lc-player" data-screen-label={"Lesson player · " + kind}>
       <header className="lc-ptop">
+        {/* navy header like the course page — white ink in both variants */}
         <button type="button" className="lc-back" aria-label="Back to course" onClick={onClose}>
-          <DSLX.IconifyIcon name="lucide:chevron-left" size={22} color={LX_INK.text} />
+          <DSLX.IconifyIcon name="lucide:chevron-left" size={22} color="#FFFFFF" />
         </button>
         <div className="lc-ptitle">
           <span className="lc-peyebrow">{eyebrowLX(item, course)}</span>
           <span className="lc-pname">{item.name}</span>
         </div>
         <button type="button" className="lc-back" aria-label="Share lesson" onClick={onShare}>
-          <DSLX.IconifyIcon name="lucide:share-2" size={18} color={LX_INK.text} />
+          <DSLX.IconifyIcon name="lucide:share-2" size={18} color="#FFFFFF" />
         </button>
       </header>
 
       <div className="lc-pscroll" ref={scrollRef}>
-        <LXCourseProgress course={course} flat={flat} done={done} onOpen={onClose} />
         {kind === "pdf" ? <LXDoc item={item} course={course} onComplete={complete} onToast={onToast} /> :
         kind === "quiz" ? <LXQuiz item={item} onComplete={complete} /> :
-        <LXVideo item={item} course={course} onComplete={complete} />}
+        <LXVideo item={item} course={course} onComplete={complete}
+          onPrev={idx > 0 ? () => onSelect(idx - 1) : null} onNext={next ? () => onSelect(idx + 1) : null} />}
 
+        <div className="lc-ptabs" role="tablist" aria-label="Lesson sections">
+          <button type="button" role="tab" className={"lc-ptab" + (tab === "details" ? " on" : "")} aria-selected={tab === "details"} onClick={() => setTab("details")}>Details</button>
+          <button type="button" role="tab" className={"lc-ptab" + (tab === "resources" ? " on" : "")} aria-selected={tab === "resources"} onClick={() => setTab("resources")}>
+            Resources <span className="lc-ptab-n">({LX_RESOURCES.length})</span>
+          </button>
+        </div>
+
+        {tab === "resources" &&
+        <div role="tabpanel" className="lc-ppanel">
+          <h1 className="lc-title lc-ptitle-full">{item.name}</h1>
+          <LXResources compact onToast={onToast} />
+        </div>}
+
+        {tab === "details" && <div role="tabpanel" className="lc-ppanel">
         <div className="lc-pmeta">
           <span className="lc-chip"><DSLX.IconifyIcon name={kindIcon} size={13} color={LX_INK.gold} />{kind === "pdf" ? "PDF" : item.dur}</span>
           <span className="lc-chip">Lesson {item.groupPos} of {item.groupTotal}</span>
@@ -1091,6 +1360,7 @@ function LXPlayer({ course, flat, idx, done, onClose, onSelect, onMarkDone, onTo
           </section>}
 
         <LXAvaCard lessonName={item.name} courseTitle={course.title} />
+        </div>}
         <div style={{ height: 16 }} />
       </div>
 
@@ -1108,6 +1378,9 @@ function CourseDetailConfidence() {
   const course = LX_COURSE;
   const flat = useMemoLX(() => flattenLX(course), []);
   const [done, markDone] = useLessonsDoneLX();
+  const purchased = usePurchasedLX();
+  /* paid course, not bought yet: browse only — nothing plays until checkout */
+  const locked = course.price > 0 && purchased.indexOf(course.slug) === -1;
 
   /* current lesson = first not-yet-completed lesson, else the first */
   const [curIdx, setCurIdx] = useStateLX(() => {
@@ -1150,8 +1423,14 @@ function CourseDetailConfidence() {
   /* Lesson player — full-screen over this page. ?play=1 opens it on load (the
      Confidence learning page deep-links here); opening pushes a history entry
      so the browser/phone back gesture closes it; the URL tracks the lesson. */
-  const [playing, setPlaying] = useStateLX(() => LX_PARAMS.get("play") === "1");
+  const [playing, setPlaying] = useStateLX(() => !locked && LX_PARAMS.get("play") === "1");
   const pushedRef = useRefLX(false);
+  /* Light variant: both the course header and the player header are navy, so
+     the device frame's status bar uses white ink throughout. */
+  useEffectLX(() => {
+    document.body.classList.toggle("lc-navy-status", LX_LIGHT);
+    return () => document.body.classList.remove("lc-navy-status");
+  }, [LX_LIGHT]);
   const syncUrl = (i, play) => {
     try {
       const u = new URL(window.location.href);
@@ -1163,7 +1442,10 @@ function CourseDetailConfidence() {
       return u;
     } catch (e) { return null; }
   };
+  const buyCourse = () => goLX(checkoutUrlLX(course));
+  const nudgeBuy = () => showToast("Buy this course to start its lessons");
   const openPlayer = (i) => {
+    if (locked) { nudgeBuy(); return; }
     setCurIdx(i);
     if (playing) { const u = syncUrl(i, true); if (u) history.replaceState(history.state, "", u); return; }
     const u = syncUrl(i, true);
@@ -1190,8 +1472,9 @@ function CourseDetailConfidence() {
   const selectLesson = (name) => {
     const i = flat.findIndex((l) => l.name === name);
     if (i === -1) return;
-    if (flat[i].kind === "pdf") { openPlayer(i); return; }
+    if (flat[i].kind === "pdf" && !locked) { openPlayer(i); return; }
     setCurIdx(i);
+    if (locked) nudgeBuy();
     if (scrollRef.current) scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -1202,29 +1485,30 @@ function CourseDetailConfidence() {
     openPlayer(curDone && next ? curIdx + 1 : curIdx);
   };
 
-  const shareLesson = () => {
-    const url = window.location.href.split("#")[0] + "#" + slugLX(cur.name);
-    const data = { title: cur.name + " · " + course.title, text: "Take a look at this lesson on PROfinity", url };
-    if (navigator.share) { navigator.share(data).catch(() => {}); return; }
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).catch(() => {});
-    showToast("Lesson link copied");
-  };
+  /* Share lesson — opens the in-app share sheet (Messages rail + share-to
+     tiles). ?share=1 opens it on load for design review. */
+  const [shareOpen, setShareOpen] = useStateLX(() => LX_PARAMS.get("share") === "1");
+  const shareLesson = () => setShareOpen(true);
+  const shareUrl = window.location.href.split("#")[0].replace(/[?&]share=1/, "") + "#" + slugLX(cur.name);
+  const shareDone = (msg) => { setShareOpen(false); if (msg) showToast(msg); };
 
-  const continueLabel = !next ? (curDone ? "Course complete" : "Finish course") : curDone ? "Next lesson" : "Continue lesson";
+  const continueLabel = !next ? (curDone ? "Course complete" : "Finish course") : "Continue lesson";
 
   return (
     <div className={"lc-screen" + (LX_LIGHT ? " lc-light" : "")} data-screen-label={"Course Detail · Confidence (" + (LX_LIGHT ? "light" : "dark") + ")"}>
       <LXHeader />
 
       <div className="lc-scroll" ref={scrollRef}>
-        <LXHero item={cur} course={course} />
+        <LXHero item={cur} course={course} locked={locked} />
 
-        <button type="button" className="lc-still" data-screen-label="Still" onClick={() => openPlayer(curIdx)}
-        aria-label={(cur.kind === "pdf" ? "Open " : cur.kind === "quiz" ? "Start " : "Play ") + cur.name}>
+        <button type="button" className={"lc-still" + (locked ? " locked" : "")} data-screen-label="Still" onClick={() => openPlayer(curIdx)}
+        aria-label={locked ? "Buy this course to play " + cur.name : (cur.kind === "pdf" ? "Open " : cur.kind === "quiz" ? "Start " : "Play ") + cur.name}>
           <img src={course.still} alt="" />
+          {/* no play / lock button on a locked course — the image is browse-only */}
+          {!locked &&
           <span className={"lc-still-play" + (cur.kind ? " doc" : "")} aria-hidden="true">
             <DSLX.IconifyIcon name={cur.kind === "pdf" ? "lucide:file-text" : cur.kind === "quiz" ? "lucide:list-checks" : "fluent:play-16-filled"} size={22} color="#0B1024" />
-          </span>
+          </span>}
           <span className="lc-still-dur" aria-hidden="true">
             <DSLX.IconifyIcon name={cur.kind === "pdf" ? "lucide:file-text" : "lucide:clock"} size={12} color="#fff" />{cur.dur}
           </span>
@@ -1232,16 +1516,20 @@ function CourseDetailConfidence() {
 
         <p className="lc-intro">{content.intro}</p>
 
+        {locked && <LXPaywall course={course} total={flat.length} onBuy={buyCourse} />}
+
+        {/* locked: the paywall card's Buy button is the only CTA */}
+        {!locked &&
         <div className="lc-ctas" data-screen-label="CTAs">
           <button type="button" className="lc-btn lc-btn-fill" onClick={continueLesson} disabled={!next && curDone}>
-            <DSLX.IconifyIcon name={curDone ? "lucide:check" : "fluent:play-16-filled"} size={16} color={LX_INK.onNavy} />
             {continueLabel}
+            <DSLX.IconifyIcon name="lucide:arrow-right" size={17} color={LX_INK.onNavy} />
           </button>
           <button type="button" className="lc-btn lc-btn-outline" onClick={shareLesson}>
             <DSLX.IconifyIcon name="lucide:share-2" size={17} color={LX_INK.outline} />
             Share lesson
           </button>
-        </div>
+        </div>}
 
         <section data-screen-label="In this lesson">
           <div className="lc-sec"><h2>In this lesson</h2></div>
@@ -1256,9 +1544,9 @@ function CourseDetailConfidence() {
           </ul>
         </section>
 
-        <LXCourseContent course={course} done={done} total={flat.length} currentName={cur.name} onSelect={selectLesson} />
+        <LXCourseContent course={course} done={done} total={flat.length} currentName={cur.name} locked={locked} onSelect={selectLesson} />
 
-        <LXResources onToast={showToast} />
+        <LXResources onToast={showToast} locked={locked} onLocked={nudgeBuy} />
 
         <LXRelated />
 
@@ -1269,9 +1557,11 @@ function CourseDetailConfidence() {
         <div style={{ height: 12 }} />
       </div>
 
-      {playing &&
+      {playing && !locked &&
       <LXPlayer course={course} flat={flat} idx={curIdx} done={done} onClose={closePlayer} onSelect={playerSelect}
       onMarkDone={markDone} onToast={showToast} onShare={shareLesson} />}
+
+      {shareOpen && <LXShareSheet item={cur} course={course} url={shareUrl} onClose={() => setShareOpen(false)} onDone={shareDone} />}
 
       {toast && <div className="lc-toast" role="status">{toast}</div>}
       <LXTabBar compact={compact} />
@@ -1304,7 +1594,7 @@ function CourseDetailConfidenceApp() {
   useThemeSyncLX();
   const mobile = useIsMobileLX();
   const scale = useDeviceScaleLX();
-  const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
+  const vars = { "--action-primary": "#0C1928", "--action-primary-hover": "#081120" };
   const pageBg = LX_LIGHT ? "#F9F7F4" : "#0B1024";
   if (mobile) {
     return <div className="app" style={{ ...vars, background: pageBg }}><CourseDetailConfidence /></div>;

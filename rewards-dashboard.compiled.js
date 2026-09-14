@@ -129,7 +129,7 @@ function WalletDropdown({
   }, "Go to Rewards Store", /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
     name: "lucide:arrow-right",
     size: 16,
-    color: "#fff"
+    color: "#3D2A00"
   }))));
 }
 function NotificationPreview({
@@ -187,7 +187,7 @@ function StreakRiskBanner({
   }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
     name: "lucide:flame",
     size: 22,
-    color: "#fff"
+    color: "#3D2A00"
   }), /*#__PURE__*/React.createElement("span", null, "Your ", days, "-Day Streak is at Risk!")), /*#__PURE__*/React.createElement("div", {
     className: "rdb-risk-clock",
     "aria-live": "off"
@@ -202,13 +202,13 @@ function StreakRiskBanner({
   })));
 }
 
-/* Progress-card mascot: a looping Lottie (lottie.host wCXgQ6B9gz) fed as raw
+/* Progress-card mascot: a looping smiling-face Lottie (lottie.host ArWGbXL6R3) fed as raw
    JSON through lottie-web — never the /embed iframe, which caches hard and
    ignores re-publishes. Replaced the shared smiling-beaker (PointsIconC) on
    2026-09-08; the header points pill (mobile.jsx / mobilechrome.jsx) has its
-   own red-lips Lottie (yaURgbT5P7), number in #E9293A. The tooltip still
+   same smiling-face Lottie, number in gold #D9A21B. The tooltip still
    reports lifetime points against the engine's beakerFullPoints scale. */
-const RDB_MASCOT_SRC = "https://lottie.host/92d8e0be-53e8-48cf-874d-627c6d4affd5/wCXgQ6B9gz.json";
+const RDB_MASCOT_SRC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
 const RDB_LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
 let rdbMascotPromise = null;
 function rdbMascotData() {
@@ -312,9 +312,9 @@ function RdbBeaker() {
   }, !ready && /*#__PURE__*/React.createElement("span", {
     className: "rdb-beaker-fb"
   }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
-    name: "lucide:flask-conical",
+    name: "lucide:smile",
     size: 56,
-    color: "#FF465C"
+    color: "#FCC25D"
   })), /*#__PURE__*/React.createElement("span", {
     ref: host,
     className: "rdb-beaker-anim" + (ready ? " on" : "")
@@ -334,15 +334,7 @@ function RdbHeader({
     className: "rdb-head-row"
   }, /*#__PURE__*/React.createElement("div", {
     className: "rdb-head-greet"
-  }, greet, ", ", state.user.name, "!"), /*#__PURE__*/React.createElement("button", {
-    className: "rdb-wallet-chip",
-    type: "button",
-    onClick: onOpenWallet
-  }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
-    name: "lucide:wallet",
-    size: 15,
-    color: "#fff"
-  }), PF_RDB.formatNumber(state.spendableCredits))), /*#__PURE__*/React.createElement("div", {
+  }, greet, ", ", state.user.name, "!")), /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-card"
   }, /*#__PURE__*/React.createElement(RdbBeaker, null), /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-body"
@@ -361,7 +353,7 @@ function RdbHeader({
   }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
     name: "lucide:star",
     size: 11,
-    color: "#fff"
+    color: "#3D2A00"
   })) : null), progress.next ? /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-scale"
   }, /*#__PURE__*/React.createElement("span", null, PF_RDB.formatNumber(state.lifetimePoints), " pts"), /*#__PURE__*/React.createElement("span", null, PF_RDB.formatNumber((state.lifetimePoints || 0) + (progress.remaining || 0)), " pts")) : null, /*#__PURE__*/React.createElement("div", {
@@ -411,8 +403,11 @@ function RdbEngagementCards({
     className: "rdb-eng-value"
   }, PF_RDB.formatNumber(state.spendableCredits)), /*#__PURE__*/React.createElement("div", {
     className: "rdb-eng-label"
-  }, "Spendable Credits")), /*#__PURE__*/React.createElement("div", {
-    className: "ml-card rdb-eng-card"
+  }, "Spendable Credits")), /*#__PURE__*/React.createElement("button", {
+    className: "ml-card rdb-eng-card rdb-eng-link",
+    type: "button",
+    onClick: () => goRDB("CheckInStreak.html"),
+    "aria-label": "Active streak: " + state.streak.current + " days. Open check-in streak"
   }, /*#__PURE__*/React.createElement("span", {
     className: "rdb-eng-lottie",
     "aria-hidden": "true"
@@ -430,7 +425,11 @@ function RdbEngagementCards({
     className: "rdb-eng-value"
   }, state.streak.current, " Days"), /*#__PURE__*/React.createElement("div", {
     className: "rdb-eng-label"
-  }, "Active Streak")));
+  }, "Active Streak ", /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 12,
+    color: "var(--gray-400)"
+  }))));
 }
 function RdbQuickNav() {
   const items = [{
@@ -586,6 +585,19 @@ function RewardsDashboardHome() {
       goRDB("MilestoneSplash.html");
     }
   }, "Demo: simulate 50k milestone"), /*#__PURE__*/React.createElement("button", {
+    className: "ml-demo-btn",
+    type: "button",
+    onClick: () => {
+      if (window.PFEarnStreak) window.PFEarnStreak.show(375);
+    }
+  }, "Demo: 5 in a row"), /*#__PURE__*/React.createElement("button", {
+    className: "ml-demo-btn",
+    type: "button",
+    onClick: () => {
+      if (window.PFDailyGoal) window.PFDailyGoal.reset();
+      goRDB("DailyGoal.html?ret=RewardsDashboard.html");
+    }
+  }, "Demo: daily goal reached"), /*#__PURE__*/React.createElement("button", {
     className: "ml-demo-btn",
     type: "button",
     onClick: () => {

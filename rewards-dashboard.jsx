@@ -66,7 +66,7 @@ function WalletDropdown({ state, open, onClose }) {
             </div>
           ))}
         </div>
-        <button className="ml-btn ml-btn-gold" type="button" onClick={() => goRDB("RewardsStore.html")}>Go to Rewards Store<DSRDB.IconifyIcon name="lucide:arrow-right" size={16} color="#fff" /></button>
+        <button className="ml-btn ml-btn-gold" type="button" onClick={() => goRDB("RewardsStore.html")}>Go to Rewards Store<DSRDB.IconifyIcon name="lucide:arrow-right" size={16} color="#3D2A00" /></button>
       </div>
     </div>
   );
@@ -104,7 +104,7 @@ function StreakRiskBanner({ state }) {
   const days = state.streak.current;
   return (
     <section className="rdb-risk-banner" aria-label={"Your " + days + "-day streak is at risk"}>
-      <div className="rdb-risk-head"><DSRDB.IconifyIcon name="lucide:flame" size={22} color="#fff" /><span>Your {days}-Day Streak is at Risk!</span></div>
+      <div className="rdb-risk-head"><DSRDB.IconifyIcon name="lucide:flame" size={22} color="#3D2A00" /><span>Your {days}-Day Streak is at Risk!</span></div>
       <div className="rdb-risk-clock" aria-live="off">Expires in {fmtClock(remaining)}</div>
       <div className="rdb-notif-stack">
         <NotificationPreview hoursLabel="· 6h before" body={"Don't lose your " + days + "-day streak — check in before it expires!"} />
@@ -114,13 +114,13 @@ function StreakRiskBanner({ state }) {
   );
 }
 
-/* Progress-card mascot: a looping Lottie (lottie.host wCXgQ6B9gz) fed as raw
+/* Progress-card mascot: a looping smiling-face Lottie (lottie.host ArWGbXL6R3) fed as raw
    JSON through lottie-web — never the /embed iframe, which caches hard and
    ignores re-publishes. Replaced the shared smiling-beaker (PointsIconC) on
    2026-09-08; the header points pill (mobile.jsx / mobilechrome.jsx) has its
-   own red-lips Lottie (yaURgbT5P7), number in #E9293A. The tooltip still
+   same smiling-face Lottie, number in gold #D9A21B. The tooltip still
    reports lifetime points against the engine's beakerFullPoints scale. */
-const RDB_MASCOT_SRC = "https://lottie.host/92d8e0be-53e8-48cf-874d-627c6d4affd5/wCXgQ6B9gz.json";
+const RDB_MASCOT_SRC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
 const RDB_LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
 let rdbMascotPromise = null;
 function rdbMascotData() {
@@ -180,7 +180,7 @@ function RdbBeaker() {
   }, []);
   return (
     <span className="rdb-lottie rdb-beaker" aria-hidden="true" title={PF_RDB.formatNumber(pts) + " / " + PF_RDB.formatNumber(rdbBeakerFull()) + " pts"}>
-      {!ready && <span className="rdb-beaker-fb"><DSRDB.IconifyIcon name="lucide:flask-conical" size={56} color="#FF465C" /></span>}
+      {!ready && <span className="rdb-beaker-fb"><DSRDB.IconifyIcon name="lucide:smile" size={56} color="#FCC25D" /></span>}
       <span ref={host} className={"rdb-beaker-anim" + (ready ? " on" : "")} />
     </span>
   );
@@ -194,9 +194,6 @@ function RdbHeader({ state, tier, onOpenWallet }) {
     <div className="rdb-head">
       <div className="rdb-head-row">
         <div className="rdb-head-greet">{greet}, {state.user.name}!</div>
-        <button className="rdb-wallet-chip" type="button" onClick={onOpenWallet}>
-          <DSRDB.IconifyIcon name="lucide:wallet" size={15} color="#fff" />{PF_RDB.formatNumber(state.spendableCredits)}
-        </button>
       </div>
       <div className="rdb-progress-card">
         <RdbBeaker />
@@ -207,7 +204,7 @@ function RdbHeader({ state, tier, onOpenWallet }) {
           </div>
           <div className="ml-progress-track rdb-progress-track">
             <div className="ml-progress-fill" style={{ width: progress.pct + "%" }} />
-            {progress.next ? <span className="rdb-progress-marker" title={PF_RDB.formatNumber(progress.next.threshold || 0) + " pts"}><DSRDB.IconifyIcon name="lucide:star" size={11} color="#fff" /></span> : null}
+            {progress.next ? <span className="rdb-progress-marker" title={PF_RDB.formatNumber(progress.next.threshold || 0) + " pts"}><DSRDB.IconifyIcon name="lucide:star" size={11} color="#3D2A00" /></span> : null}
           </div>
           {progress.next ? (
             <div className="rdb-progress-scale">
@@ -235,11 +232,11 @@ function RdbEngagementCards({ state }) {
         <div className="rdb-eng-value">{PF_RDB.formatNumber(state.spendableCredits)}</div>
         <div className="rdb-eng-label">Spendable Credits</div>
       </div>
-      <div className="ml-card rdb-eng-card">
+      <button className="ml-card rdb-eng-card rdb-eng-link" type="button" onClick={() => goRDB("CheckInStreak.html")} aria-label={"Active streak: " + state.streak.current + " days. Open check-in streak"}>
         <span className="rdb-eng-lottie" aria-hidden="true"><iframe src="https://lottie.host/embed/d7ce0087-b4ad-4b7a-b657-558f841da6e5/pSvC2r0DRZ.json" title="" scrolling="no" style={{ width: "52px", height: "52px", border: "none", background: "transparent" }} /></span>
         <div className="rdb-eng-value">{state.streak.current} Days</div>
-        <div className="rdb-eng-label">Active Streak</div>
-      </div>
+        <div className="rdb-eng-label">Active Streak <DSRDB.IconifyIcon name="lucide:chevron-right" size={12} color="var(--gray-400)" /></div>
+      </button>
     </div>
   );
 }
@@ -325,6 +322,8 @@ function RewardsDashboardHome() {
         <div className="ml-demo-bar">
           <button className="ml-demo-btn" type="button" onClick={() => { PF_RDB.setStreakAtRisk(6); refresh(); }}>Demo: simulate streak at risk</button>
           <button className="ml-demo-btn" type="button" onClick={() => { PF_RDB.setState({ lifetimePoints: 49700 }); goRDB("MilestoneSplash.html"); }}>Demo: simulate 50k milestone</button>
+          <button className="ml-demo-btn" type="button" onClick={() => { if (window.PFEarnStreak) window.PFEarnStreak.show(375); }}>Demo: 5 in a row</button>
+          <button className="ml-demo-btn" type="button" onClick={() => { if (window.PFDailyGoal) window.PFDailyGoal.reset(); goRDB("DailyGoal.html?ret=RewardsDashboard.html"); }}>Demo: daily goal reached</button>
           <button className="ml-demo-btn" type="button" onClick={() => { PF_RDB.resetDemo(); refresh(); flash("Demo data reset."); }}>Reset demo data</button>
         </div>
         <div style={{ height: 90 }} />

@@ -65,6 +65,11 @@ function getCourseFromQueryCC() {
 }
 
 function buildCourseDetailUrlCC(course) {
+  /* ?ret= — the course page that sent us here (CourseDetail / Confidence /
+     Light variant), so paying lands back on the same shell. Same-folder
+     CourseDetail*.html only. */
+  const ret = new URLSearchParams(window.location.search).get("ret") || "";
+  if (/^CourseDetail[A-Za-z]*\.html(\?[^#]*)?$/.test(ret)) return ret;
   if (course.courseParam) return "CourseDetail.html?course=" + course.courseParam;
   const p = new URLSearchParams({ title: course.title, instr: course.instr, grad: course.grad });
   return "CourseDetail.html?" + p.toString();

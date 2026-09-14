@@ -115,12 +115,6 @@ function AllCoursesWebApp() {
           </div>
         </div>
 
-        <div className="acw-coach-row">
-          <button type="button" className="pf-coach-link" data-coach="I'm looking at the course catalog — which course should I take next to grow my clinic?">
-            <IconifyACW name="lucide:sparkles" size={14} color="var(--ai-purple)" />Which course should I take next?
-          </button>
-        </div>
-
         {courses.length === 0 ? (
           <p className="acw-empty">No courses match your search.</p>
         ) : (

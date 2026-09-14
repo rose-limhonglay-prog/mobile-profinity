@@ -25,7 +25,7 @@
     ".ag-screen", ".cd-screen", ".rl-screen", ".sr-screen", ".cp-screen",
     ".ms-screen", ".as-screen", ".ns-screen", ".ds-screen", ".cc-screen",
     ".sc-screen", ".ma-screen", ".mt-screen", ".dm-screen", ".ls-screen",
-    ".lcm-screen", ".wa-screen"
+    ".lcm-screen", ".acc-screen", ".wa-screen"
   ].join(", ");
   /* Any screen root not covered above still carries data-screen-label — last resort only. */
   var FALLBACK_HOST_SELECTOR = "[data-screen-label]";
@@ -35,10 +35,10 @@
   try { reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
 
   var QUICK_CHIPS = [
-    { label: "Review my progress", prompt: "Review my progress across the Prosperity Spiral and tell me what to focus on next." },
-    { label: "Plan today's targets", prompt: "Help me plan today's targets so I make progress on my £80k/month clinic goal." },
-    { label: "Marketing tip", prompt: "Give me one marketing action I can take today to get more visibility." },
-    { label: "Pricing help", prompt: "How should I think about pricing my treatments this month?" }
+    { icon: "lucide:bar-chart-2", label: "Review my progress", prompt: "Review my progress across the Prosperity Spiral and tell me what to focus on next." },
+    { icon: "lucide:list-checks", label: "Plan today's targets", prompt: "Help me plan today's targets so I make progress on my £80k/month clinic goal." },
+    { icon: "lucide:megaphone", label: "Marketing tip", prompt: "Give me one marketing action I can take today to get more visibility." },
+    { icon: "lucide:tag", label: "Pricing help", prompt: "How should I think about pricing my treatments this month?" }
   ];
 
   function replyFor(prompt) {
@@ -96,23 +96,38 @@
       '<div id="pf-ava-sheet-wrap" class="pf-ava-sheet-wrap">' +
         '<div class="pf-ava-scrim" id="pf-ava-scrim"></div>' +
         '<div class="pf-ava-sheet" role="dialog" aria-modal="true" aria-label="Ava, your AI coach">' +
-          '<span class="pf-ava-handle" aria-hidden="true"></span>' +
           '<header class="pf-ava-head">' +
-            '<span class="pf-ava-head-orb"><iconify-icon icon="lucide:sparkles" width="20" height="20" style="color:#fff"></iconify-icon></span>' +
-            '<span class="pf-ava-head-main"><b>Ava</b><span>Your coach &middot; Online</span></span>' +
-            '<button type="button" class="pf-ava-close" id="pf-ava-close" aria-label="Close Ava">' +
-              '<iconify-icon icon="lucide:x" width="20" height="20" style="color:#fff"></iconify-icon>' +
-            '</button>' +
+            '<span class="pf-ava-head-glow pf-ava-head-glow-a" aria-hidden="true"></span>' +
+            '<span class="pf-ava-head-glow pf-ava-head-glow-b" aria-hidden="true"></span>' +
+            '<span class="pf-ava-handle" aria-hidden="true"></span>' +
+            '<div class="pf-ava-head-row">' +
+              '<span class="pf-ava-head-orb">' +
+                '<span class="pf-ava-head-halo" aria-hidden="true"></span>' +
+                '<iconify-icon icon="lucide:sparkles" width="22" height="22" style="color:#fff"></iconify-icon>' +
+              '</span>' +
+              '<span class="pf-ava-head-main">' +
+                '<span class="pf-ava-head-title"><b>Ava</b><em class="pf-ava-head-badge">AI coach</em></span>' +
+                '<span class="pf-ava-head-status"><i aria-hidden="true"></i>Online &middot; replies instantly</span>' +
+              '</span>' +
+              '<button type="button" class="pf-ava-close" id="pf-ava-close" aria-label="Close Ava">' +
+                '<iconify-icon icon="lucide:x" width="20" height="20" style="color:#fff"></iconify-icon>' +
+              '</button>' +
+            '</div>' +
           '</header>' +
           '<div class="pf-ava-thread" id="pf-ava-thread"></div>' +
-          '<div class="pf-ava-chips" id="pf-ava-chips"></div>' +
-          '<div class="pf-ava-inputrow">' +
-            '<input type="text" id="pf-ava-input" class="pf-ava-input" placeholder="Ask Ava anything…" aria-label="Message Ava" />' +
-            '<button type="button" class="pf-ava-send" id="pf-ava-send" aria-label="Send message">' +
-              '<iconify-icon icon="lucide:arrow-up" width="19" height="19" style="color:#fff"></iconify-icon>' +
-            '</button>' +
+          '<div class="pf-ava-footer">' +
+            '<div class="pf-ava-chips-label"><iconify-icon icon="lucide:sparkles" width="12" height="12" style="color:var(--ai-purple)"></iconify-icon><span>Quick actions</span></div>' +
+            '<div class="pf-ava-chips" id="pf-ava-chips"></div>' +
+            '<div class="pf-ava-inputrow">' +
+              '<div class="pf-ava-composer">' +
+                '<input type="text" id="pf-ava-input" class="pf-ava-input" placeholder="Ask Ava anything…" aria-label="Message Ava" />' +
+                '<button type="button" class="pf-ava-send" id="pf-ava-send" aria-label="Send message">' +
+                  '<iconify-icon icon="lucide:arrow-up" width="19" height="19" style="color:#fff"></iconify-icon>' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+            '<p class="pf-ava-disclaimer">AI can make mistakes. Verify important outputs.</p>' +
           '</div>' +
-          '<p class="pf-ava-disclaimer">AI can make mistakes. Verify important outputs.</p>' +
         '</div>' +
       '</div>';
 
@@ -133,7 +148,7 @@
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "pf-ava-chip";
-      btn.innerHTML = '<iconify-icon icon="lucide:sparkles" width="14" height="14" style="color:var(--ai-purple)"></iconify-icon><span>' + c.label + '</span>';
+      btn.innerHTML = '<span class="pf-ava-chip-ic"><iconify-icon icon="' + c.icon + '" width="16" height="16" style="color:var(--ai-purple)"></iconify-icon></span><span>' + c.label + '</span>';
       btn.addEventListener("click", function () { sendMessage(c.prompt); });
       el.chips.appendChild(btn);
     });
@@ -177,39 +192,71 @@
 
   function isForceExpandedHost() {
     var host = el.root && el.root.parentElement;
-    return !!(host && host.classList && (host.classList.contains("lm-screen") || host.classList.contains("wa-screen")));
+    /* .lm-screen (mobile My Learning) used to be forced open too; it now
+       starts minimised and behaves like every other mobile screen. */
+    return !!(host && host.classList && host.classList.contains("wa-screen"));
+  }
+
+  function avatarNode() {
+    var av = document.createElement("span");
+    av.className = "pf-ava-avatar";
+    av.setAttribute("aria-hidden", "true");
+    av.innerHTML = '<iconify-icon icon="lucide:sparkles" width="14" height="14" style="color:#fff"></iconify-icon>';
+    return av;
   }
 
   function addBubble(who, text, withActions) {
     var row = document.createElement("div");
     row.className = "pf-ava-bubblerow " + (who === "user" ? "me" : "ava");
+    var col = row;
     if (who !== "user") {
-      var label = document.createElement("div");
-      label.className = "pf-ava-bubble-label";
-      label.innerHTML = '<iconify-icon icon="lucide:sparkles" width="14" height="14" style="color:var(--ai-purple)"></iconify-icon><b>Ava</b>';
-      row.appendChild(label);
+      row.appendChild(avatarNode());
+      col = document.createElement("div");
+      col.className = "pf-ava-msg";
+      row.appendChild(col);
     }
     var bubble = document.createElement("div");
     bubble.className = "pf-ava-bubble";
     bubble.textContent = text;
-    row.appendChild(bubble);
+    col.appendChild(bubble);
     if (withActions) {
       var actions = document.createElement("div");
       actions.className = "pf-ava-bubble-actions";
       var addBtn = document.createElement("button");
       addBtn.type = "button";
       addBtn.className = "pf-ava-addtarget";
-      addBtn.innerHTML = '<iconify-icon icon="lucide:plus" width="15" height="15" style="color:var(--brand-navy)"></iconify-icon> Add to my targets';
+      addBtn.innerHTML = '<span class="pf-ava-addtarget-ic"><iconify-icon icon="lucide:plus" width="14" height="14" style="color:#fff"></iconify-icon></span><span>Add to my targets</span>';
       addBtn.addEventListener("click", function () {
         addTarget(withActions);
         addBtn.disabled = true;
-        addBtn.innerHTML = '<iconify-icon icon="lucide:check" width="15" height="15" style="color:var(--success)"></iconify-icon> Added to targets';
+        addBtn.classList.add("added");
+        addBtn.innerHTML = '<span class="pf-ava-addtarget-ic"><iconify-icon icon="lucide:check" width="14" height="14" style="color:#fff"></iconify-icon></span><span>Added to targets</span>';
       });
       actions.appendChild(addBtn);
-      row.appendChild(actions);
+      col.appendChild(actions);
     }
     el.thread.appendChild(row);
     el.thread.scrollTop = el.thread.scrollHeight;
+  }
+
+  /* "Ava is typing…" placeholder shown while her reply is pending */
+  function showTyping() {
+    hideTyping();
+    var row = document.createElement("div");
+    row.className = "pf-ava-bubblerow ava pf-ava-typing-row";
+    row.id = "pf-ava-typing";
+    row.setAttribute("aria-label", "Ava is typing");
+    row.appendChild(avatarNode());
+    var col = document.createElement("div");
+    col.className = "pf-ava-msg";
+    col.innerHTML = '<div class="pf-ava-bubble pf-ava-typing"><i></i><i></i><i></i></div>';
+    row.appendChild(col);
+    el.thread.appendChild(row);
+    el.thread.scrollTop = el.thread.scrollHeight;
+  }
+  function hideTyping() {
+    var t = el.thread && el.thread.querySelector("#pf-ava-typing");
+    if (t) t.parentNode.removeChild(t);
   }
 
   function sendMessage(text) {
@@ -220,9 +267,11 @@
     addBubble("user", text.trim(), false);
     el.input.value = "";
     var reply = replyFor(text);
+    if (!reduceMotion) showTyping();
     setTimeout(function () {
+      hideTyping();
       addBubble("ava", reply.text, reply.outcome);
-    }, 450);
+    }, reduceMotion ? 300 : 900);
   }
 
   function submitInput() {

@@ -12,10 +12,13 @@
 
 .lc-screen {
   /* ---- dark reader palette ---- */
+  /* My Learning brand navy (user, 2026-09-11): #0C1928 for every var(--brand-navy) in this reader */
+  --brand-navy: #0C1928; --brand-navy-700: #081120; --text-heading: #0C1928;
   /* module / lesson / course titles only (user request 2026-09-10) */
   --font-title: "Times New Roman", Times, serif;
   --lc-bg: #0B1024;
   --lc-header-bg: #0B1024;
+  --lc-top-bg: #0B1024; /* course page header */
   --lc-card: #141A38;
   --lc-card-2: #1B2247;
   --lc-line: rgba(255,255,255,.10);
@@ -27,8 +30,8 @@
   --lc-gold-bg: rgba(206,153,87,.16);
   --lc-accent: #CE9957;
   --lc-track: rgba(255,255,255,.14);
-  --lc-level: linear-gradient(135deg, #332D80, #292569);
-  --lc-cta-bg: #292569;
+  --lc-level: linear-gradient(135deg, #1E3A5C, #0C1928);
+  --lc-cta-bg: #0C1928;
   --lc-cta-border: rgba(255,255,255,.18);
   --lc-cta-text: #FFFFFF;
   --lc-outline-border: rgba(255,255,255,.34);
@@ -52,6 +55,7 @@
 .lc-screen.lc-light {
   --lc-bg: #F9F7F4; /* warm off-white My Learning surface */
   --lc-header-bg: #FFFFFF;
+  --lc-top-bg: var(--brand-navy); /* course page header is navy in light too (user, 2026-09-11) */
   --lc-card: #FFFFFF;
   --lc-card-2: var(--gray-50);
   --lc-line: var(--border-default);
@@ -94,7 +98,13 @@
 
 /* ===== header: back · lockup · avatar ===== */
 .lc-top { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 56px 20px 12px; background: var(--lc-header-bg); border-bottom: 1px solid var(--lc-line); }
+  padding: 56px 20px 12px; background: var(--lc-top-bg); border-bottom: 1px solid var(--lc-line); }
+.lc-light .lc-top { border-bottom-color: transparent; }
+.lc-top .lc-back { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.22); }
+/* device-frame status bar over the navy header (class set by CourseDetailConfidence while the player is closed) */
+body.lc-navy-status .ios-statusbar span { color: #FFFFFF !important; }
+body.lc-navy-status .ios-statusbar svg [fill]:not([fill="none"]) { fill: #FFFFFF !important; }
+body.lc-navy-status .ios-statusbar svg [stroke]:not([stroke="none"]) { stroke: #FFFFFF !important; }
 .lc-back { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--lc-circle-border);
   background: var(--lc-circle-bg); cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .lc-lockup { flex: 1; min-width: 0; display: flex; justify-content: center; }
@@ -116,7 +126,7 @@
 .lc-prog-label { font-weight: var(--fw-semibold); font-size: 13px; color: var(--lc-text-2); }
 .lc-prog-count { font-weight: var(--fw-bold); font-size: 13px; color: var(--lc-text); }
 .lc-track { height: 5px; border-radius: var(--r-pill); background: var(--lc-track); overflow: hidden; }
-.lc-track > span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--lc-accent); transition: width .35s ease; }
+.lc-track > span { display: block; height: 100%; border-radius: var(--r-pill); background: var(--brand-gold); transition: width .35s ease; } /* progress bars are brand gold (user, 2026-09-11) */
 
 /* ===== still (4:3, no caption) ===== */
 .lc-still { margin: 18px 20px 0; aspect-ratio: 4 / 3; border-radius: var(--r-lg); overflow: hidden; background: var(--lc-card);
@@ -243,7 +253,7 @@
 
 /* ===== Talk this through with Ava ===== */
 .lc-ava { display: flex; align-items: center; gap: 14px; margin: 28px 20px 0; padding: 18px; border-radius: 18px;
-  background: linear-gradient(135deg, #3B3592, #292569 60%, #1C1848); color: #fff; box-shadow: 0 10px 28px rgba(28,24,72,.28); }
+  background: linear-gradient(135deg, #1E3A5C, #0C1928 60%, #060E18); color: #fff; box-shadow: 0 10px 28px rgba(12,25,40,.28); }
 .lc-ava .orb { flex: none; width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,.16); display: flex; align-items: center; justify-content: center; }
 .lc-ava .tx { flex: 1; min-width: 0; }
 .lc-ava .ti { font-weight: var(--fw-bold); font-size: 16px; }
@@ -288,12 +298,16 @@
 .lc-player { position: absolute; inset: 0; z-index: 36; display: flex; flex-direction: column; background: var(--lc-bg); color: var(--lc-text);
   animation: lc-player-in .3s cubic-bezier(.22,1,.36,1); }
 @keyframes lc-player-in { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
-.lc-ptop { flex: none; display: flex; align-items: center; gap: 12px; padding: 56px 16px 12px; background: var(--lc-header-bg); border-bottom: 1px solid var(--lc-line); }
+/* player header: navy like the course page (user, 2026-09-11) */
+.lc-ptop { flex: none; display: flex; align-items: center; gap: 12px; padding: 56px 16px 12px; background: var(--lc-top-bg); border-bottom: 1px solid var(--lc-line); }
 .lc-ptitle { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
-.lc-peyebrow { max-width: 100%; font-weight: var(--fw-bold); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--lc-gold);
+.lc-light .lc-ptop { border-bottom-color: transparent; }
+.lc-ptop .lc-back { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.22); }
+.lc-peyebrow { max-width: 100%; font-weight: var(--fw-bold); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: #CE9957;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lc-pname { max-width: 100%; margin-top: 2px; font-family: var(--font-title); font-weight: var(--fw-semibold); font-size: 14px; color: var(--lc-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lc-pscroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 110px; position: relative; }
+.lc-pname { max-width: 100%; margin-top: 2px; font-family: var(--font-title); font-weight: var(--fw-semibold); font-size: 14px; color: #FFFFFF; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* not position:relative — the full-screen video (absolute) must size to .lc-player, not the scroll box */
+.lc-pscroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 110px; }
 .lc-pscroll::-webkit-scrollbar { width: 0; height: 0; }
 
 /* course progress at the top of the player — minimised strip by default
@@ -322,12 +336,13 @@
   background: none; color: var(--lc-text); font: inherit; font-size: 12.5px; font-weight: var(--fw-semibold); cursor: pointer; white-space: nowrap; }
 .lc-cprog-open:active { opacity: .8; }
 .lc-screen:not(.lc-light) .lc-cprog-bar > div > div:first-child { background: var(--lc-track) !important; }
+.lc-cprog-bar > div > div > div { background: var(--brand-gold) !important; }
 
 /* Up next in <group> — navy gradient tiles, duration in gold, arrow top-right */
 .lc-upnext { display: flex; flex-direction: column; gap: 14px; margin: 0 20px; }
 .lc-uptile { position: relative; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px; min-height: 170px; padding: 20px 22px;
   border: none; border-radius: 16px; cursor: pointer; text-align: left; color: #FFFFFF;
-  background: radial-gradient(120% 140% at 30% 0%, #2B2670 0%, #1A1846 55%, #0F0E33 100%);
+  background: radial-gradient(120% 140% at 30% 0%, #1E3A5C 0%, #12253D 55%, #0C1928 100%);
   box-shadow: 0 10px 26px rgba(18,16,60,.28); transition: transform .15s ease; }
 .lc-uptile:active { transform: scale(.985); }
 .lc-uptile:focus-visible { outline: 2px solid #CE9957; outline-offset: 2px; }
@@ -339,6 +354,15 @@
 .lc-pbar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; padding: 18px 20px calc(18px + env(safe-area-inset-bottom, 0px));
   background: linear-gradient(to top, var(--lc-bg) 68%, transparent); }
 .lc-pbar .lc-btn { width: 100%; }
+/* Details | Resources sub-tabs under the media */
+.lc-ptabs { display: flex; gap: 4px; margin: 0 20px; border-bottom: 1px solid var(--lc-line); }
+.lc-ptab { position: relative; min-height: 48px; padding: 0 16px; border: none; background: none; cursor: pointer; color: var(--lc-text-2);
+  font-weight: var(--fw-semibold); font-size: 15px; transition: color .15s ease; }
+.lc-ptab:hover { color: var(--lc-text); }
+.lc-ptab.on { color: var(--lc-text); }
+.lc-ptab.on::after { content: ""; position: absolute; left: 12px; right: 12px; bottom: -1px; height: 3px; border-radius: 3px 3px 0 0; background: var(--lc-accent); }
+.lc-ptab-n { font-weight: var(--fw-medium); color: var(--lc-text-3); }
+.lc-res-intro { margin-bottom: 14px; }
 .lc-pmeta { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 20px 0; }
 .lc-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0 11px; border-radius: var(--r-pill); background: var(--lc-chip-bg);
   font-size: 12.5px; font-weight: var(--fw-semibold); color: var(--lc-text-2); }
@@ -349,6 +373,24 @@
 .lc-media { position: relative; margin: 0; }
 .lc-video { aspect-ratio: 16 / 9; overflow: hidden; background: #000; cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
 .lc-video video { display: block; width: 100%; height: 100%; object-fit: cover; background: #000; }
+/* ===== landscape full-screen (theatre) mode =====
+   .lc-vfull covers the whole player; .lc-vstage is sized screen-height × screen-width
+   by LXVideo and rotated 90° so the video reads landscape on the portrait phone. */
+.lc-vstage { position: relative; width: 100%; height: 100%; }
+.lc-vfull { position: absolute; inset: 0; z-index: 60; aspect-ratio: auto; margin: 0; background: #000; }
+.lc-vfull .lc-vstage { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(90deg); transform-origin: center; }
+.lc-vfull video { object-fit: contain; }
+.lc-vtop { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 8px; padding: 12px 14px; transition: opacity .25s ease; }
+.lc-vtop-title { flex: 1; min-width: 0; margin-left: 4px; font-size: 14px; font-weight: var(--fw-semibold); color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-vtop-r { margin-left: auto; display: flex; gap: 4px; }
+.lc-vplain { flex: none; width: 44px; height: 44px; border: none; border-radius: 50%; background: none; cursor: pointer; padding: 0;
+  display: flex; align-items: center; justify-content: center; transition: background .15s ease; }
+.lc-vplain:hover { background: rgba(255,255,255,.12); }
+.lc-vplain:disabled { opacity: .35; cursor: default; }
+.lc-vfull .lc-vcenter { gap: 40px; }
+.lc-vfull .lc-vbar { padding: 10px 24px 18px; gap: 12px; }
+.lc-vfull .lc-vtime { font-size: 13px; }
+.lc-video:not(.chrome) .lc-vtop { opacity: 0; pointer-events: none; }
 .lc-vshade { position: absolute; inset: 0; pointer-events: none; transition: opacity .25s ease;
   background: linear-gradient(to bottom, rgba(0,0,0,.28), rgba(0,0,0,0) 32%, rgba(0,0,0,0) 55%, rgba(0,0,0,.62)); }
 .lc-vdur { position: absolute; top: 12px; right: 12px; display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border-radius: var(--r-pill);
@@ -382,18 +424,18 @@
 @keyframes lc-page-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .lc-page-hd { display: flex; justify-content: space-between; gap: 10px; padding-bottom: 8px; margin-bottom: 14px; border-bottom: 1px solid #E5E7EB;
   font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; font-weight: var(--fw-bold); color: #8A5303; }
-.lc-page h3 { margin: 0; font-size: 17px; line-height: 1.25; font-weight: var(--fw-bold); color: #292569; }
+.lc-page h3 { margin: 0; font-size: 17px; line-height: 1.25; font-weight: var(--fw-bold); color: #0C1928; }
 .lc-page-sub { margin: 4px 0 0; font-size: 11.5px; color: #667085; }
 .lc-page-body { margin: 12px 0 0; font-size: 12.5px; line-height: 1.6; color: #344054; }
 .lc-page-rows { margin: 14px 0 0; }
 .lc-page-rows > div { display: grid; grid-template-columns: 92px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px dashed #E5E7EB; font-size: 12px; line-height: 1.4; }
-.lc-page-rows dt { margin: 0; font-weight: var(--fw-bold); color: #292569; }
+.lc-page-rows dt { margin: 0; font-weight: var(--fw-bold); color: #0C1928; }
 .lc-page-rows dd { margin: 0; color: #344054; }
 .lc-page-checks { margin: 12px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; }
 .lc-page-checks li { display: flex; align-items: flex-start; gap: 10px; font-size: 12px; line-height: 1.45; color: #344054; }
 .lc-page-checks .bx { flex: none; width: 14px; height: 14px; margin-top: 1px; border: 1.5px solid #8A5303; border-radius: 3px; }
 .lc-page-fields { margin: 14px 0 0; display: flex; flex-direction: column; gap: 14px; }
-.lc-page-fields > div { display: flex; flex-direction: column; gap: 5px; font-size: 11px; font-weight: var(--fw-semibold); color: #292569; }
+.lc-page-fields > div { display: flex; flex-direction: column; gap: 5px; font-size: 11px; font-weight: var(--fw-semibold); color: #0C1928; }
 .lc-page-fields i { display: block; height: 1px; background: #98A2B3; }
 .lc-page-ft { margin-top: auto; padding-top: 16px; font-size: 10px; color: #98A2B3; text-align: right; }
 .lc-doc-nav { display: flex; align-items: center; justify-content: center; gap: 18px; margin-top: 12px; }
@@ -444,3 +486,69 @@
   .lc-player, .lc-page { animation: none; }
   .lc-vshade, .lc-vcenter, .lc-vbar, .lc-still-play { transition: none; }
 }
+
+/* ---------------------------------------------------------------- paid course (2026-09-11) -- */
+/* Related courses are paid: the page lists everything but nothing starts until
+   the course is bought. Gold CTA = the one way in. */
+.lc-screen { --lc-on-gold: #0B1024; }
+.lc-screen.lc-light { --lc-on-gold: #FFFFFF; }
+.lc-btn-gold { background: var(--lc-gold); color: var(--lc-on-gold); border: 1px solid transparent; font-weight: var(--fw-bold); }
+.lc-free.lc-paid { color: var(--lc-gold); background: var(--lc-gold-bg); }
+
+.lc-paywall { display: flex; gap: 14px; margin: 18px 20px 0; padding: 16px; border-radius: var(--r-lg);
+  background: var(--lc-cprog-bg); border: 1px solid var(--lc-cprog-line); }
+.lc-paywall-ic { flex: none; width: 40px; height: 40px; border-radius: 50%; background: var(--lc-gold-bg); border: 1px solid var(--lc-cprog-line);
+  display: flex; align-items: center; justify-content: center; }
+.lc-paywall-tx { flex: 1; min-width: 0; }
+.lc-paywall-eyebrow { display: block; font-weight: var(--fw-bold); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--lc-gold); }
+.lc-paywall-title { margin: 4px 0 0; font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 18px; line-height: 1.25; color: var(--lc-text); }
+.lc-paywall-body { margin: 8px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--lc-text-2); }
+.lc-paywall-list { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.lc-paywall-list li { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.4; color: var(--lc-text-2); }
+.lc-paywall-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--lc-line); }
+.lc-paywall-price { display: flex; flex-direction: column; font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 24px; line-height: 1; color: var(--lc-text); font-variant-numeric: tabular-nums; }
+.lc-paywall-price small { font-family: var(--font-sans); font-weight: var(--fw-medium); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; color: var(--lc-text-3); margin-bottom: 4px; }
+.lc-paywall-row .lc-btn { min-height: 44px; padding: 0 18px; flex: none; }
+
+/* locked lesson rows: lock marker, quieter name, no "current" tint */
+.lc-marker.lock { background: var(--lc-chip-bg); border-color: var(--lc-line); }
+.lc-lesson.locked .lc-lesson-name { color: var(--lc-text-2); }
+.lc-lesson.locked.on { background: transparent; }
+.lc-lesson.locked:hover { background: var(--lc-chip-bg); }
+
+/* locked still: dimmed frame, lock in the play spot, price tag */
+.lc-still.locked img { filter: brightness(.55) saturate(.8); }
+
+/* related-course card price */
+.lc-course-price { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; padding: 3px 8px; border-radius: var(--r-pill);
+  background: var(--lc-gold-bg); color: var(--lc-gold); font-weight: var(--fw-bold); font-size: 12px; line-height: 1; font-variant-numeric: tabular-nums; }
+
+/* ---- Share lesson sheet ---- */
+.lc-share { position: absolute; inset: 0; z-index: 60; display: flex; flex-direction: column; justify-content: flex-end; }
+.lc-share-scrim { position: absolute; inset: 0; border: 0; padding: 0; background: rgba(4,8,24,.62); cursor: pointer; animation: lc-share-fade .2s ease; }
+@keyframes lc-share-fade { from { opacity: 0; } to { opacity: 1; } }
+.lc-share-card { position: relative; background: var(--lc-card); color: var(--lc-text); border-radius: 24px 24px 0 0;
+  padding: 8px 20px calc(24px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -12px 40px rgba(0,0,0,.35);
+  animation: lc-share-up .32s cubic-bezier(.22,1,.36,1); }
+@keyframes lc-share-up { from { transform: translateY(100%); } to { transform: none; } }
+.lc-share-grab { display: block; width: 40px; height: 4px; margin: 0 auto 10px; border-radius: 2px; background: var(--lc-line-2); }
+.lc-share-hd { display: flex; align-items: center; justify-content: space-between; }
+.lc-share-hd h3 { margin: 0; font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 19px; line-height: 1.2; color: var(--lc-text); }
+.lc-share-x { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--lc-chip-bg); cursor: pointer; }
+.lc-share-prev { display: flex; gap: 12px; align-items: center; margin-top: 14px; padding: 10px; border-radius: var(--r-lg); background: var(--lc-card-2); border: 1px solid var(--lc-line); }
+.lc-share-prev img { flex: none; width: 72px; height: 52px; object-fit: cover; border-radius: 10px; }
+.lc-share-prev-tx { display: flex; flex-direction: column; min-width: 0; }
+.lc-share-prev-eyebrow { font-weight: var(--fw-bold); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--lc-gold); }
+.lc-share-prev-name { margin-top: 2px; font-weight: var(--fw-semibold); font-size: 14.5px; line-height: 1.3; color: var(--lc-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-share-prev-course { font-size: 12.5px; color: var(--lc-text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-share-sec { margin: 18px 0 10px; font-weight: var(--fw-semibold); font-size: 13px; letter-spacing: .02em; color: var(--lc-text-2); }
+.lc-share-rail { display: flex; gap: 14px; margin: 0 -20px; padding: 2px 20px; overflow-x: auto; scrollbar-width: none; }
+.lc-share-rail::-webkit-scrollbar { display: none; }
+.lc-share-person { flex: none; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 60px; border: 0; padding: 0; background: transparent; cursor: pointer; color: var(--lc-text-2); font-size: 11.5px; line-height: 1.2; }
+.lc-share-person span { max-width: 60px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-share-person:active { opacity: .7; }
+.lc-share-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.lc-share-tile { display: flex; flex-direction: column; align-items: center; gap: 7px; border: 0; padding: 0; background: transparent; cursor: pointer; color: var(--lc-text-2); font-size: 12px; line-height: 1.2; }
+.lc-share-tile-ic { display: inline-flex; align-items: center; justify-content: center; width: 54px; height: 54px; border-radius: 50%; background: var(--lc-chip-bg); border: 1px solid var(--lc-line); }
+.lc-share-tile:active .lc-share-tile-ic { filter: brightness(.9); }
+@media (prefers-reduced-motion: reduce) { .lc-share-scrim, .lc-share-card { animation: none; } }

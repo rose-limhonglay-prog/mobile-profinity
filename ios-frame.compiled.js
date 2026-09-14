@@ -23,6 +23,7 @@ function IOSStatusBar({
 }) {
   const c = dark ? '#fff' : '#000';
   return /*#__PURE__*/React.createElement("div", {
+    className: "ios-statusbar",
     style: {
       display: 'flex',
       gap: 154,

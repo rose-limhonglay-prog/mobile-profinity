@@ -55,17 +55,24 @@ function markPurchasedCC(slug) {
 function getCourseFromQueryCC() {
   const params = new URLSearchParams(window.location.search);
   const title = params.get("title") || "Course";
-  const slug = params.get("course") || slugifyCC(title);
+  const courseParam = params.get("course") || "";
+  const slug = courseParam || slugifyCC(title);
   return {
     slug,
+    courseParam,
     title,
     instr: params.get("instr") || "Dr. Tim Pearce",
     grad: params.get("grad") || "linear-gradient(140deg,#6172f3 0%,#3b82f6 100%)",
-    price: Number(params.get("price") || 0),
-    returnTo: params.get("returnTo") || ""
+    price: Number(params.get("price") || 0)
   };
 }
 function buildCourseDetailUrlCC(course) {
+  /* ?ret= — the course page that sent us here (CourseDetail / Confidence /
+     Light variant), so paying lands back on the same shell. Same-folder
+     CourseDetail*.html only. */
+  const ret = new URLSearchParams(window.location.search).get("ret") || "";
+  if (/^CourseDetail[A-Za-z]*\.html(\?[^#]*)?$/.test(ret)) return ret;
+  if (course.courseParam) return "CourseDetail.html?course=" + course.courseParam;
   const p = new URLSearchParams({
     title: course.title,
     instr: course.instr,
@@ -79,7 +86,7 @@ function CourseCheckout() {
   const [paying, setPaying] = useStateCC(false);
   const vat = Math.round(course.price * VAT_RATE_CC);
   const total = course.price + vat;
-  const detailUrl = course.returnTo || buildCourseDetailUrlCC(course);
+  const detailUrl = buildCourseDetailUrlCC(course);
   function handlePay() {
     setPaying(true);
     markPurchasedCC(course.slug);

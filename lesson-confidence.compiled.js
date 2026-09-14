@@ -50,13 +50,14 @@ function resolveLightLX() {
 function inkLX(light) {
   return {
     gold: light ? "#8A5303" : "#CE9957",
-    text: light ? "#292569" : "#FFFFFF",
+    text: light ? "#0C1928" : "#FFFFFF",
+    /* My Learning navy */
     body: light ? "#475467" : "rgba(255,255,255,.76)",
     muted: light ? "#475467" : "rgba(255,255,255,.62)",
     success: light ? "#2a9568" : "#5CD39A",
     onNavy: "#FFFFFF",
     onGold: light ? "#FFFFFF" : "#0B1024",
-    outline: light ? "#292569" : "#FFFFFF"
+    outline: light ? "#0C1928" : "#FFFFFF"
   };
 }
 function lockupLX(light) {
@@ -455,17 +456,56 @@ function buildGenericCourseLX(params) {
           dur: "5:24"
         }]
       }]
-    }, {
+    },
+    /* every level is open and listed up front (user, 2026-09-11) so a buyer
+       can see the whole course before paying — no "Unlocks when…" rows */
+    {
       title: "Level 2",
-      sections: [],
-      unlock: "Unlocks when you complete Level 1."
+      open: true,
+      sections: [{
+        name: "Core Technique",
+        desc: `Anatomy, product choice and the ${title.toLowerCase()} technique itself, demonstrated step by step on a real patient.`,
+        bullets: [],
+        lessons: [{
+          name: "Anatomy & Danger Zones",
+          dur: "6:12"
+        }, {
+          name: "Product Selection & Dosing",
+          dur: "4:48"
+        }, {
+          name: "Injection Technique Demonstration",
+          dur: "8:31"
+        }, {
+          name: "Aftercare Protocol",
+          dur: "3:05"
+        }]
+      }]
     }, {
       title: "Level 3",
-      sections: [],
-      unlock: "Unlocks when you complete Level 2."
+      open: true,
+      sections: [{
+        name: "Advanced Practice",
+        desc: "Complications, case reviews and how to bring this treatment into your clinic with confidence.",
+        bullets: [],
+        lessons: [{
+          name: "Managing Complications",
+          dur: "7:20"
+        }, {
+          name: "Case Study Review",
+          dur: "5:56"
+        }, {
+          name: "Consultation & Consent Checklist",
+          dur: "4 pages",
+          kind: "pdf"
+        }, {
+          name: "Building Your Treatment Menu",
+          dur: "3:44"
+        }]
+      }]
     }, {
       title: "End of Success Path Quiz",
       quiz: true,
+      open: true,
       sections: [{
         name: "Final Assessment",
         desc: "Twenty questions across assessment, technique and aftercare.",
@@ -497,6 +537,73 @@ function lessonIdxFromParamsLX(flat) {
   const i = flat.findIndex(l => l.li === li && l.si === si && l.ni === ni && l.subIdx === sub);
   return i === -1 ? null : i;
 }
+
+/* ---------------------------------------------------------------- paid courses -- */
+/* Related courses are paid. The course page still lists every level, module
+   and lesson, but nothing can be started until the course is bought: the CTA
+   goes to CourseCheckout.html, which writes the slug into
+   localStorage["pf-purchased-courses"] (the same key course-detail.jsx and
+   course-checkout.jsx share) and returns here unlocked. Prices are keyed by
+   slug so every route into these courses is paid; ?price= overrides. */
+const LX_PURCHASED_KEY = "pf-purchased-courses";
+const LX_PRICES = {
+  "temple-filler": 342,
+  "profinity-membership": 199,
+  "advanced-lip-techniques": 342,
+  "complications-management": 450,
+  /* My Learning → Explore related content */
+  "functional-anatomy": 198,
+  "treatment-approaches": 246,
+  "safety-injection-essentials": 294,
+  /* backfill once one of the above is bought */
+  "cheek-contouring": 246,
+  "jawline-sculpting": 294,
+  "tear-trough-treatment": 342
+};
+function priceLX(slug) {
+  const q = Number(LX_PARAMS.get("price"));
+  if (q > 0) return q;
+  return LX_PRICES[slug] || 0;
+}
+function readPurchasedLX() {
+  try {
+    const arr = JSON.parse(window.localStorage.getItem(LX_PURCHASED_KEY));
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) {
+    return [];
+  }
+}
+function usePurchasedLX() {
+  const [list, setList] = useStateLX(readPurchasedLX);
+  useEffectLX(() => {
+    const onStorage = e => {
+      if (!e.key || e.key === LX_PURCHASED_KEY) setList(readPurchasedLX());
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
+  return list;
+}
+
+/* Checkout for this course; `ret` brings the buyer back to this exact page
+   (CourseDetail / CourseDetailConfidence / …Light) once paid. */
+function checkoutUrlLX(course) {
+  const p = new URLSearchParams({
+    title: course.title,
+    instr: "Dr. Tim Pearce",
+    price: course.price
+  });
+  if (LX_COURSES[course.slug]) p.set("course", course.slug);
+  const back = {
+    course: course.slug,
+    title: course.title
+  };
+  const dur = LX_PARAMS.get("dur");
+  if (dur) back.dur = dur;
+  p.set("ret", window.location.pathname.split("/").pop() + "?" + new URLSearchParams(back).toString());
+  return "CourseCheckout.html?" + p.toString();
+}
+LX_COURSE.price = priceLX(LX_COURSE.slug);
 const LX_RESOURCES = [{
   name: "Lip anatomy reference chart.pdf",
   size: "1.8 MB"
@@ -513,12 +620,14 @@ const LX_RELATED = [{
   title: "Temple Filler",
   lessons: 12,
   dur: "1h 40m",
-  image: "assets/course-temple-filler.webp"
+  image: "assets/course-temple-filler.webp",
+  price: LX_PRICES["temple-filler"]
 }, {
   title: "Profinity Membership",
   lessons: 6,
   dur: "45m",
-  image: "assets/course-membership-banner.jpg"
+  image: "assets/course-membership-banner.jpg",
+  price: LX_PRICES["profinity-membership"]
 }];
 const LX_DEFAULT_COMMENTS = [{
   author: {
@@ -614,12 +723,14 @@ function genericContentLX(item) {
   };
 }
 function courseUrlLX(c) {
-  return "CourseDetail.html?" + new URLSearchParams({
+  const p = {
     title: c.title,
     instr: "Dr. Tim Pearce",
     dur: c.dur,
     pct: 0
-  }).toString();
+  };
+  if (c.price) p.price = c.price;
+  return "CourseDetail.html?" + new URLSearchParams(p).toString();
 }
 
 /* ---------------------------------------------------------------- pieces -- */
@@ -635,11 +746,11 @@ function LXHeader() {
   }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
     name: "lucide:chevron-left",
     size: 22,
-    color: LX_INK.text
+    color: "#FFFFFF"
   })), /*#__PURE__*/React.createElement("div", {
     className: "lc-lockup"
   }, /*#__PURE__*/React.createElement("img", {
-    src: LX_LOCKUP,
+    src: lockupLX(false),
     alt: "PROfinity Academy"
   })), /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -653,7 +764,8 @@ function LXHeader() {
 }
 function LXHero({
   item,
-  course
+  course,
+  locked
 }) {
   const fill = Math.round(item.groupPos / item.groupTotal * 100);
   return /*#__PURE__*/React.createElement("section", {
@@ -663,7 +775,7 @@ function LXHero({
     className: "lc-eyebrow"
   }, eyebrowLX(item, course)), /*#__PURE__*/React.createElement("h1", {
     className: "lc-title"
-  }, item.name), /*#__PURE__*/React.createElement("div", {
+  }, item.name), !locked && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "lc-prog-row"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lc-prog-label"
@@ -680,11 +792,12 @@ function LXHero({
     style: {
       width: fill + "%"
     }
-  })));
+  }))));
 }
 function LXMarker({
   done,
-  kind
+  kind,
+  locked
 }) {
   if (done) {
     return /*#__PURE__*/React.createElement("span", {
@@ -694,6 +807,15 @@ function LXMarker({
       size: 15,
       color: LX_INK.success,
       strokeWidth: 2.5
+    }));
+  }
+  if (locked) {
+    return /*#__PURE__*/React.createElement("span", {
+      className: "lc-marker lock"
+    }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+      name: "lucide:lock",
+      size: 13,
+      color: LX_INK.muted
     }));
   }
   const icon = kind === "pdf" ? "lucide:file-text" : kind === "quiz" ? "lucide:list-checks" : "fluent:play-16-filled";
@@ -709,16 +831,18 @@ function LXLessonRow({
   lesson,
   done,
   current,
+  locked,
   onSelect
 }) {
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lc-lesson" + (done ? " done" : "") + (current ? " on" : ""),
+    className: "lc-lesson" + (done ? " done" : "") + (current ? " on" : "") + (locked ? " locked" : ""),
     "aria-current": current ? "true" : undefined,
     onClick: onSelect
   }, /*#__PURE__*/React.createElement(LXMarker, {
     done: done,
-    kind: lesson.kind
+    kind: lesson.kind,
+    locked: locked && !done
   }), /*#__PURE__*/React.createElement("span", {
     className: "lc-lesson-name"
   }, lesson.name), /*#__PURE__*/React.createElement("span", {
@@ -729,6 +853,7 @@ function LXSubModule({
   sub,
   done,
   currentName,
+  locked,
   onSelect
 }) {
   const [open, setOpen] = useStateLX(!!sub.open);
@@ -758,6 +883,7 @@ function LXSubModule({
     lesson: l,
     done: done.indexOf(l.name) !== -1,
     current: currentName === l.name,
+    locked: locked,
     onSelect: () => onSelect(l.name)
   })), /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -773,6 +899,7 @@ function LXSection({
   section,
   done,
   currentName,
+  locked,
   onSelect
 }) {
   return /*#__PURE__*/React.createElement("div", {
@@ -781,19 +908,31 @@ function LXSection({
     className: "lc-section-head"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lc-section-name"
-  }, section.name), section.free && /*#__PURE__*/React.createElement("span", {
+  }, section.name), section.free && !locked && /*#__PURE__*/React.createElement("span", {
     className: "lc-free"
-  }, "Free")), /*#__PURE__*/React.createElement("p", {
+  }, "Free"), locked && /*#__PURE__*/React.createElement("span", {
+    className: "lc-free lc-paid"
+  }, "Paid")), /*#__PURE__*/React.createElement("p", {
     className: "lc-section-desc"
   }, section.desc), section.bullets && section.bullets.length > 0 && /*#__PURE__*/React.createElement("ul", {
     className: "lc-bullets"
   }, section.bullets.map((b, i) => /*#__PURE__*/React.createElement("li", {
     key: i
-  }, b))), (section.subs || []).map(s => /*#__PURE__*/React.createElement(LXSubModule, {
+  }, b))), section.lessons && section.lessons.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "lc-lessons"
+  }, section.lessons.map(l => /*#__PURE__*/React.createElement(LXLessonRow, {
+    key: l.name,
+    lesson: l,
+    done: done.indexOf(l.name) !== -1,
+    current: currentName === l.name,
+    locked: locked,
+    onSelect: () => onSelect(l.name)
+  }))), (section.subs || []).map(s => /*#__PURE__*/React.createElement(LXSubModule, {
     key: s.name,
     sub: s,
     done: done,
     currentName: currentName,
+    locked: locked,
     onSelect: onSelect
   })));
 }
@@ -801,6 +940,7 @@ function LXLevel({
   level,
   done,
   currentName,
+  locked,
   onSelect
 }) {
   const [open, setOpen] = useStateLX(!!level.open);
@@ -836,6 +976,7 @@ function LXLevel({
     section: s,
     done: done,
     currentName: currentName,
+    locked: locked,
     onSelect: onSelect
   })))));
 }
@@ -844,6 +985,7 @@ function LXCourseContent({
   done,
   total,
   currentName,
+  locked,
   onSelect
 }) {
   const doneCount = done.filter(n => flattenLX(course).some(l => l.name === n)).length;
@@ -853,22 +995,28 @@ function LXCourseContent({
     className: "lc-sec"
   }, /*#__PURE__*/React.createElement("h2", null, "Course content"), /*#__PURE__*/React.createElement("span", {
     className: "sub"
-  }, doneCount, " of ", total, " completed")), /*#__PURE__*/React.createElement("div", {
+  }, locked ? total + " lessons · buy to start" : doneCount + " of " + total + " completed")), /*#__PURE__*/React.createElement("div", {
     className: "lc-levels"
   }, course.levels.map(lvl => /*#__PURE__*/React.createElement(LXLevel, {
     key: lvl.title,
     level: lvl,
     done: done,
     currentName: currentName,
+    locked: locked,
     onSelect: onSelect
   }))));
 }
 function LXResources({
-  onToast
+  onToast,
+  compact,
+  locked,
+  onLocked
 }) {
   return /*#__PURE__*/React.createElement("section", {
     "data-screen-label": "Resources"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, compact ? /*#__PURE__*/React.createElement("p", {
+    className: "lc-body lc-res-intro"
+  }, "Downloads for this lesson — tap to save a copy.") : /*#__PURE__*/React.createElement("div", {
     className: "lc-sec"
   }, /*#__PURE__*/React.createElement("h2", null, "Resources")), /*#__PURE__*/React.createElement("div", {
     className: "lc-res-list"
@@ -876,7 +1024,7 @@ function LXResources({
     type: "button",
     className: "lc-res",
     key: r.name,
-    onClick: () => onToast("Downloading " + r.name)
+    onClick: () => locked ? onLocked() : onToast("Downloading " + r.name)
   }, /*#__PURE__*/React.createElement("span", {
     className: "lc-res-ic"
   }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
@@ -895,10 +1043,228 @@ function LXResources({
   }, "PDF · ", r.size)), /*#__PURE__*/React.createElement("span", {
     className: "lc-res-dl"
   }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
-    name: "lucide:download",
+    name: locked ? "lucide:lock" : "lucide:download",
     size: 16,
-    color: LX_INK.text
+    color: locked ? LX_INK.muted : LX_INK.text
   }))))));
+}
+
+/* Shown on a paid course that hasn't been bought: what's inside, the price,
+   and the one way in. */
+function LXPaywall({
+  course,
+  total,
+  onBuy
+}) {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "lc-paywall",
+    "data-screen-label": "Paid course"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lc-paywall-ic"
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:lock",
+    size: 20,
+    color: LX_INK.gold
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "lc-paywall-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lc-paywall-eyebrow"
+  }, "Paid course"), /*#__PURE__*/React.createElement("h3", {
+    className: "lc-paywall-title"
+  }, "Buy to start this course"), /*#__PURE__*/React.createElement("p", {
+    className: "lc-paywall-body"
+  }, "Browse every level, module and lesson below. Buy the course to start the lessons, download the resources and take the success path quiz."), /*#__PURE__*/React.createElement("ul", {
+    className: "lc-paywall-list"
+  }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:check",
+    size: 14,
+    color: LX_INK.gold,
+    strokeWidth: 2.5
+  }), total, " lessons across ", course.levels.filter(l => !l.quiz).length, " levels"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:check",
+    size: 14,
+    color: LX_INK.gold,
+    strokeWidth: 2.5
+  }), "One-time payment · lifetime access"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:check",
+    size: 14,
+    color: LX_INK.gold,
+    strokeWidth: 2.5
+  }), "Certificate on completion")), /*#__PURE__*/React.createElement("div", {
+    className: "lc-paywall-row"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lc-paywall-price"
+  }, /*#__PURE__*/React.createElement("small", null, "One-time"), "£", course.price), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-btn lc-btn-gold",
+    onClick: onBuy
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:shopping-bag",
+    size: 16,
+    color: LX_INK.onGold
+  }), "Buy course"))));
+}
+
+/* ---- Share lesson sheet ----
+   Bottom sheet mirroring the newsfeed ShareSheet's two zones: a horizontal
+   "Send in Messages" rail of DM contacts (ids match messages-mobile.jsx
+   threads) and a "Share to" row of round tiles. Every action closes the
+   sheet and confirms with the page toast; nothing here needs a backend. */
+const LX_SHARE_CONTACTS = [{
+  id: "tim",
+  name: "Dr Tim",
+  avatar: "assets/avatar-drtim.png"
+}, {
+  id: "miranda",
+  name: "Miranda",
+  avatar: "assets/avatar-miranda.jpg"
+}, {
+  id: "sarahc",
+  name: "Dr Sarah",
+  avatar: "assets/avatar-sarah-collins.jpg"
+}, {
+  id: "amir",
+  name: "Dr Amir",
+  avatar: "assets/avatar-amir-khan.jpg"
+}, {
+  id: "mark",
+  name: "Mark",
+  avatar: "assets/avatar-mark-ellis.jpg"
+}, {
+  id: "beth",
+  name: "Beth",
+  avatar: "assets/avatar-nurse-beth.jpg"
+}, {
+  id: "priya",
+  name: "Priya",
+  avatar: "assets/avatar-priya-shah.jpg"
+}];
+function copyLX(text) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(() => {});
+  } catch (e) {}
+}
+function LXShareSheet({
+  item,
+  course,
+  url,
+  onClose,
+  onDone
+}) {
+  useEffectLX(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const title = item.name + " · " + course.title;
+  const shareNative = () => {
+    if (navigator.share) {
+      navigator.share({
+        title,
+        text: "Take a look at this lesson on PROfinity",
+        url
+      }).catch(() => {});
+      onDone("");
+      return;
+    }
+    copyLX(url);
+    onDone("Lesson link copied");
+  };
+  const tiles = [{
+    k: "copy",
+    label: "Copy link",
+    icon: "lucide:link",
+    run: () => {
+      copyLX(url);
+      onDone("Lesson link copied");
+    }
+  }, {
+    k: "feed",
+    label: "Newsfeed",
+    icon: "lucide:newspaper",
+    run: () => onDone("Shared to your newsfeed")
+  }, {
+    k: "dm",
+    label: "Messages",
+    icon: "lucide:message-circle",
+    run: () => goLX("Messages.html")
+  }, {
+    k: "more",
+    label: "More",
+    icon: "lucide:more-horizontal",
+    run: shareNative
+  }];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lc-share",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Share lesson",
+    "data-screen-label": "Share lesson"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-share-scrim",
+    "aria-label": "Close",
+    onClick: onClose
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lc-share-card"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lc-share-grab",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lc-share-hd"
+  }, /*#__PURE__*/React.createElement("h3", null, "Share lesson"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-share-x",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:x",
+    size: 18,
+    color: LX_INK.text
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "lc-share-prev"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: course.still,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lc-share-prev-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lc-share-prev-eyebrow"
+  }, eyebrowLX(item, course)), /*#__PURE__*/React.createElement("span", {
+    className: "lc-share-prev-name"
+  }, item.name), /*#__PURE__*/React.createElement("span", {
+    className: "lc-share-prev-course"
+  }, course.title))), /*#__PURE__*/React.createElement("div", {
+    className: "lc-share-sec"
+  }, "Send in Messages"), /*#__PURE__*/React.createElement("div", {
+    className: "lc-share-rail"
+  }, LX_SHARE_CONTACTS.map(c => /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-share-person",
+    key: c.id,
+    onClick: () => onDone("Lesson sent to " + c.name)
+  }, /*#__PURE__*/React.createElement(DSLX.Avatar, {
+    name: c.name,
+    src: c.avatar,
+    size: 52
+  }), /*#__PURE__*/React.createElement("span", null, c.name)))), /*#__PURE__*/React.createElement("div", {
+    className: "lc-share-sec"
+  }, "Share to"), /*#__PURE__*/React.createElement("div", {
+    className: "lc-share-tiles"
+  }, tiles.map(t => /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-share-tile",
+    key: t.k,
+    onClick: t.run
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lc-share-tile-ic"
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: t.icon,
+    size: 22,
+    color: LX_INK.text
+  })), /*#__PURE__*/React.createElement("span", null, t.label))))));
 }
 function LXRelated() {
   const related = LX_RELATED.filter(c => slugLX(c.title) !== LX_COURSE.slug);
@@ -925,12 +1291,18 @@ function LXRelated() {
     className: "lc-course-tx"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lc-course-eyebrow"
-  }, "Course"), /*#__PURE__*/React.createElement("span", {
+  }, c.price ? "Paid course" : "Course"), /*#__PURE__*/React.createElement("span", {
     className: "lc-course-title",
     style: {
       display: "block"
     }
-  }, c.title)), /*#__PURE__*/React.createElement("span", {
+  }, c.title), c.price > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "lc-course-price"
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:lock",
+    size: 11,
+    color: LX_INK.gold
+  }), "£", c.price)), /*#__PURE__*/React.createElement("span", {
     className: "lc-course-arrow",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
@@ -1178,9 +1550,20 @@ function fmtTimeLX(s) {
 function LXVideo({
   item,
   course,
-  onComplete
+  onComplete,
+  onPrev,
+  onNext
 }) {
   const ref = useRefLX(null);
+  const rootRef = useRefLX(null);
+  /* Landscape "theatre" mode: the same <video> (playback keeps going) fills the
+     screen in a stage rotated 90°, sized from the .lc-screen box. Exit via the
+     chevron, the minimise button or Esc. */
+  const [fs, setFs] = useStateLX(false);
+  const [stage, setStage] = useStateLX({
+    w: 0,
+    h: 0
+  });
   const [v, setV] = useStateLX({
     playing: false,
     started: false,
@@ -1203,6 +1586,7 @@ function LXVideo({
       dur: 0
     });
     setChrome(true);
+    setFs(false);
     const el = ref.current;
     if (el) {
       el.pause();
@@ -1211,6 +1595,26 @@ function LXVideo({
     }
     return () => clearTimeout(hideTimer.current);
   }, [item.name]);
+  useEffectLX(() => {
+    if (!fs) return;
+    const measure = () => {
+      const scr = rootRef.current && rootRef.current.closest(".lc-screen");
+      if (scr) setStage({
+        w: scr.clientWidth,
+        h: scr.clientHeight
+      });
+    };
+    measure();
+    const onKey = e => {
+      if (e.key === "Escape") setFs(false);
+    };
+    window.addEventListener("resize", measure);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [fs]);
   const poke = () => {
     setChrome(true);
     clearTimeout(hideTimer.current);
@@ -1246,10 +1650,14 @@ function LXVideo({
     poke();
   };
   const full = () => {
-    const e = el();
-    if (!e) return;
-    if (e.requestFullscreen) e.requestFullscreen().catch(() => {});else if (e.webkitEnterFullscreen) e.webkitEnterFullscreen();
+    setFs(true);
+    poke();
   };
+  const exitFull = () => {
+    setFs(false);
+    poke();
+  };
+  const stop = e => e.stopPropagation();
   const onTime = () => {
     const e = el();
     if (!e) return;
@@ -1278,11 +1686,18 @@ function LXVideo({
   const pct = v.dur ? v.cur / v.dur * 100 : 0;
   const showChrome = chrome || !v.playing;
   return /*#__PURE__*/React.createElement("div", {
-    className: "lc-media lc-video" + (showChrome ? " chrome" : ""),
-    "data-screen-label": "Video",
+    ref: rootRef,
+    className: "lc-media lc-video" + (showChrome ? " chrome" : "") + (fs ? " lc-vfull" : ""),
+    "data-screen-label": fs ? "Video · full screen" : "Video",
     onClick: toggle,
     onMouseMove: poke,
     onTouchStart: poke
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lc-vstage",
+    style: fs && stage.w ? {
+      width: stage.h,
+      height: stage.w
+    } : undefined
   }, /*#__PURE__*/React.createElement("video", {
     ref: ref,
     src: LX_VIDEO_SRC,
@@ -1305,17 +1720,67 @@ function LXVideo({
   }), /*#__PURE__*/React.createElement("div", {
     className: "lc-vshade",
     "aria-hidden": "true"
-  }), !v.started && /*#__PURE__*/React.createElement("span", {
+  }), !v.started && !fs && /*#__PURE__*/React.createElement("span", {
     className: "lc-vdur",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
     name: "lucide:clock",
     size: 12,
     color: "#fff"
-  }), item.dur), /*#__PURE__*/React.createElement("div", {
+  }), item.dur), fs && /*#__PURE__*/React.createElement("div", {
+    className: "lc-vtop",
+    onClick: stop
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-vplain",
+    "aria-label": "Exit full screen",
+    onClick: exitFull
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:chevron-down",
+    size: 24,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lc-vtop-title"
+  }, item.name), /*#__PURE__*/React.createElement("span", {
+    className: "lc-vtop-r"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-vplain",
+    "aria-label": "Cast"
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:cast",
+    size: 22,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-vplain",
+    "aria-label": "AirPlay"
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:airplay",
+    size: 22,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-vplain",
+    "aria-label": "Playback settings"
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:settings-2",
+    size: 22,
+    color: "#fff"
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "lc-vcenter",
     onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("button", {
+  }, fs && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-vplain lc-vtrack",
+    "aria-label": "Previous lesson",
+    disabled: !onPrev,
+    onClick: () => onPrev && onPrev()
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:skip-back",
+    size: 26,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lc-vskip",
     "aria-label": "Back 10 seconds",
@@ -1342,10 +1807,28 @@ function LXVideo({
     name: "lucide:rotate-cw",
     size: 22,
     color: "#fff"
-  }), /*#__PURE__*/React.createElement("span", null, "10"))), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("span", null, "10")), fs && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-vplain lc-vtrack",
+    "aria-label": "Next lesson",
+    disabled: !onNext,
+    onClick: () => onNext && onNext()
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:skip-forward",
+    size: 26,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "lc-vbar",
     onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("span", {
+  }, fs && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-vplain",
+    "aria-label": "Lesson notes"
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:notebook-pen",
+    size: 20,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
     className: "lc-vtime"
   }, fmtTimeLX(v.cur)), /*#__PURE__*/React.createElement("input", {
     type: "range",
@@ -1372,13 +1855,13 @@ function LXVideo({
   })), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lc-vic",
-    "aria-label": "Full screen",
-    onClick: full
+    "aria-label": fs ? "Exit full screen" : "Full screen",
+    onClick: fs ? exitFull : full
   }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
-    name: "lucide:maximize",
+    name: fs ? "lucide:minimize" : "lucide:maximize",
     size: 17,
     color: "#fff"
-  }))));
+  })))));
 }
 
 /* Pages for the PDF reader — real content for the two named downloads, a
@@ -1773,7 +2256,10 @@ function LXPlayer({
   const kind = item.kind || "video";
   const content = genericContentLX(item);
   const scrollRef = useRefLX(null);
+  /* Details | Resources sub-tabs under the media; back to Details on each lesson */
+  const [tab, setTab] = useStateLX("details");
   useEffectLX(() => {
+    setTab("details");
     if (scrollRef.current) scrollRef.current.scrollTo({
       top: 0
     });
@@ -1814,7 +2300,7 @@ function LXPlayer({
   }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
     name: "lucide:chevron-left",
     size: 22,
-    color: LX_INK.text
+    color: "#FFFFFF"
   })), /*#__PURE__*/React.createElement("div", {
     className: "lc-ptitle"
   }, /*#__PURE__*/React.createElement("span", {
@@ -1829,16 +2315,11 @@ function LXPlayer({
   }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
     name: "lucide:share-2",
     size: 18,
-    color: LX_INK.text
+    color: "#FFFFFF"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "lc-pscroll",
     ref: scrollRef
-  }, /*#__PURE__*/React.createElement(LXCourseProgress, {
-    course: course,
-    flat: flat,
-    done: done,
-    onOpen: onClose
-  }), kind === "pdf" ? /*#__PURE__*/React.createElement(LXDoc, {
+  }, kind === "pdf" ? /*#__PURE__*/React.createElement(LXDoc, {
     item: item,
     course: course,
     onComplete: complete,
@@ -1849,8 +2330,39 @@ function LXPlayer({
   }) : /*#__PURE__*/React.createElement(LXVideo, {
     item: item,
     course: course,
-    onComplete: complete
+    onComplete: complete,
+    onPrev: idx > 0 ? () => onSelect(idx - 1) : null,
+    onNext: next ? () => onSelect(idx + 1) : null
   }), /*#__PURE__*/React.createElement("div", {
+    className: "lc-ptabs",
+    role: "tablist",
+    "aria-label": "Lesson sections"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    role: "tab",
+    className: "lc-ptab" + (tab === "details" ? " on" : ""),
+    "aria-selected": tab === "details",
+    onClick: () => setTab("details")
+  }, "Details"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    role: "tab",
+    className: "lc-ptab" + (tab === "resources" ? " on" : ""),
+    "aria-selected": tab === "resources",
+    onClick: () => setTab("resources")
+  }, "Resources ", /*#__PURE__*/React.createElement("span", {
+    className: "lc-ptab-n"
+  }, "(", LX_RESOURCES.length, ")"))), tab === "resources" && /*#__PURE__*/React.createElement("div", {
+    role: "tabpanel",
+    className: "lc-ppanel"
+  }, /*#__PURE__*/React.createElement("h1", {
+    className: "lc-title lc-ptitle-full"
+  }, item.name), /*#__PURE__*/React.createElement(LXResources, {
+    compact: true,
+    onToast: onToast
+  })), tab === "details" && /*#__PURE__*/React.createElement("div", {
+    role: "tabpanel",
+    className: "lc-ppanel"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "lc-pmeta"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lc-chip"
@@ -1914,7 +2426,7 @@ function LXPlayer({
   }, nextModName)))), /*#__PURE__*/React.createElement(LXAvaCard, {
     lessonName: item.name,
     courseTitle: course.title
-  }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 16
     }
@@ -1937,6 +2449,9 @@ function CourseDetailConfidence() {
   const course = LX_COURSE;
   const flat = useMemoLX(() => flattenLX(course), []);
   const [done, markDone] = useLessonsDoneLX();
+  const purchased = usePurchasedLX();
+  /* paid course, not bought yet: browse only — nothing plays until checkout */
+  const locked = course.price > 0 && purchased.indexOf(course.slug) === -1;
 
   /* current lesson = first not-yet-completed lesson, else the first */
   const [curIdx, setCurIdx] = useStateLX(() => {
@@ -1977,8 +2492,14 @@ function CourseDetailConfidence() {
   /* Lesson player — full-screen over this page. ?play=1 opens it on load (the
      Confidence learning page deep-links here); opening pushes a history entry
      so the browser/phone back gesture closes it; the URL tracks the lesson. */
-  const [playing, setPlaying] = useStateLX(() => LX_PARAMS.get("play") === "1");
+  const [playing, setPlaying] = useStateLX(() => !locked && LX_PARAMS.get("play") === "1");
   const pushedRef = useRefLX(false);
+  /* Light variant: both the course header and the player header are navy, so
+     the device frame's status bar uses white ink throughout. */
+  useEffectLX(() => {
+    document.body.classList.toggle("lc-navy-status", LX_LIGHT);
+    return () => document.body.classList.remove("lc-navy-status");
+  }, [LX_LIGHT]);
   const syncUrl = (i, play) => {
     try {
       const u = new URL(window.location.href);
@@ -1994,7 +2515,13 @@ function CourseDetailConfidence() {
       return null;
     }
   };
+  const buyCourse = () => goLX(checkoutUrlLX(course));
+  const nudgeBuy = () => showToast("Buy this course to start its lessons");
   const openPlayer = i => {
+    if (locked) {
+      nudgeBuy();
+      return;
+    }
     setCurIdx(i);
     if (playing) {
       const u = syncUrl(i, true);
@@ -2036,11 +2563,12 @@ function CourseDetailConfidence() {
   const selectLesson = name => {
     const i = flat.findIndex(l => l.name === name);
     if (i === -1) return;
-    if (flat[i].kind === "pdf") {
+    if (flat[i].kind === "pdf" && !locked) {
       openPlayer(i);
       return;
     }
     setCurIdx(i);
+    if (locked) nudgeBuy();
     if (scrollRef.current) scrollRef.current.scrollTo({
       top: 0,
       behavior: "smooth"
@@ -2053,21 +2581,17 @@ function CourseDetailConfidence() {
     if (!next && curDone) return;
     openPlayer(curDone && next ? curIdx + 1 : curIdx);
   };
-  const shareLesson = () => {
-    const url = window.location.href.split("#")[0] + "#" + slugLX(cur.name);
-    const data = {
-      title: cur.name + " · " + course.title,
-      text: "Take a look at this lesson on PROfinity",
-      url
-    };
-    if (navigator.share) {
-      navigator.share(data).catch(() => {});
-      return;
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).catch(() => {});
-    showToast("Lesson link copied");
+
+  /* Share lesson — opens the in-app share sheet (Messages rail + share-to
+     tiles). ?share=1 opens it on load for design review. */
+  const [shareOpen, setShareOpen] = useStateLX(() => LX_PARAMS.get("share") === "1");
+  const shareLesson = () => setShareOpen(true);
+  const shareUrl = window.location.href.split("#")[0].replace(/[?&]share=1/, "") + "#" + slugLX(cur.name);
+  const shareDone = msg => {
+    setShareOpen(false);
+    if (msg) showToast(msg);
   };
-  const continueLabel = !next ? curDone ? "Course complete" : "Finish course" : curDone ? "Next lesson" : "Continue lesson";
+  const continueLabel = !next ? curDone ? "Course complete" : "Finish course" : "Continue lesson";
   return /*#__PURE__*/React.createElement("div", {
     className: "lc-screen" + (LX_LIGHT ? " lc-light" : ""),
     "data-screen-label": "Course Detail · Confidence (" + (LX_LIGHT ? "light" : "dark") + ")"
@@ -2076,17 +2600,18 @@ function CourseDetailConfidence() {
     ref: scrollRef
   }, /*#__PURE__*/React.createElement(LXHero, {
     item: cur,
-    course: course
+    course: course,
+    locked: locked
   }), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lc-still",
+    className: "lc-still" + (locked ? " locked" : ""),
     "data-screen-label": "Still",
     onClick: () => openPlayer(curIdx),
-    "aria-label": (cur.kind === "pdf" ? "Open " : cur.kind === "quiz" ? "Start " : "Play ") + cur.name
+    "aria-label": locked ? "Buy this course to play " + cur.name : (cur.kind === "pdf" ? "Open " : cur.kind === "quiz" ? "Start " : "Play ") + cur.name
   }, /*#__PURE__*/React.createElement("img", {
     src: course.still,
     alt: ""
-  }), /*#__PURE__*/React.createElement("span", {
+  }), !locked && /*#__PURE__*/React.createElement("span", {
     className: "lc-still-play" + (cur.kind ? " doc" : ""),
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
@@ -2102,7 +2627,11 @@ function CourseDetailConfidence() {
     color: "#fff"
   }), cur.dur)), /*#__PURE__*/React.createElement("p", {
     className: "lc-intro"
-  }, content.intro), /*#__PURE__*/React.createElement("div", {
+  }, content.intro), locked && /*#__PURE__*/React.createElement(LXPaywall, {
+    course: course,
+    total: flat.length,
+    onBuy: buyCourse
+  }), !locked && /*#__PURE__*/React.createElement("div", {
     className: "lc-ctas",
     "data-screen-label": "CTAs"
   }, /*#__PURE__*/React.createElement("button", {
@@ -2110,11 +2639,11 @@ function CourseDetailConfidence() {
     className: "lc-btn lc-btn-fill",
     onClick: continueLesson,
     disabled: !next && curDone
-  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
-    name: curDone ? "lucide:check" : "fluent:play-16-filled",
-    size: 16,
+  }, continueLabel, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:arrow-right",
+    size: 17,
     color: LX_INK.onNavy
-  }), continueLabel), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lc-btn lc-btn-outline",
     onClick: shareLesson
@@ -2145,9 +2674,12 @@ function CourseDetailConfidence() {
     done: done,
     total: flat.length,
     currentName: cur.name,
+    locked: locked,
     onSelect: selectLesson
   }), /*#__PURE__*/React.createElement(LXResources, {
-    onToast: showToast
+    onToast: showToast,
+    locked: locked,
+    onLocked: nudgeBuy
   }), /*#__PURE__*/React.createElement(LXRelated, null), /*#__PURE__*/React.createElement(LXComments, {
     lessonName: cur.name
   }), /*#__PURE__*/React.createElement(LXAvaCard, {
@@ -2157,7 +2689,7 @@ function CourseDetailConfidence() {
     style: {
       height: 12
     }
-  })), playing && /*#__PURE__*/React.createElement(LXPlayer, {
+  })), playing && !locked && /*#__PURE__*/React.createElement(LXPlayer, {
     course: course,
     flat: flat,
     idx: curIdx,
@@ -2167,6 +2699,12 @@ function CourseDetailConfidence() {
     onMarkDone: markDone,
     onToast: showToast,
     onShare: shareLesson
+  }), shareOpen && /*#__PURE__*/React.createElement(LXShareSheet, {
+    item: cur,
+    course: course,
+    url: shareUrl,
+    onClose: () => setShareOpen(false),
+    onDone: shareDone
   }), toast && /*#__PURE__*/React.createElement("div", {
     className: "lc-toast",
     role: "status"
@@ -2199,8 +2737,8 @@ function CourseDetailConfidenceApp() {
   const mobile = useIsMobileLX();
   const scale = useDeviceScaleLX();
   const vars = {
-    "--action-primary": "var(--brand-navy)",
-    "--action-primary-hover": "var(--brand-navy-700)"
+    "--action-primary": "#0C1928",
+    "--action-primary-hover": "#081120"
   };
   const pageBg = LX_LIGHT ? "#F9F7F4" : "#0B1024";
   if (mobile) {

@@ -614,6 +614,61 @@ function CMHeader({ channel, setChannel }) {
 
 }
 
+/* ===== "N new posts" pill =====
+   Per channel, remember the newest post id the viewer has caught up to
+   (pf-community-seen). On open, every post above that id in the channel
+   counts as new; a channel never caught up on shows the designed "3 new posts".
+   Tapping the pill scrolls to the top and marks the channel seen. Because
+   the demo data is static the pill only comes back after a reset —
+   `?newposts=1` on the URL (or window.PFCommunityNewPosts.reset()) clears
+   the seen state so it reappears for every channel. */
+const CM_SEEN_KEY = "pf-community-seen";
+const CM_NEWPOSTS_DEFAULT = 3;
+function readSeenCM() {
+  try { return JSON.parse(localStorage.getItem(CM_SEEN_KEY) || "{}") || {}; } catch (e) { return {}; }
+}
+function writeSeenCM(bucket, id) {
+  try { const m = readSeenCM(); m[bucket] = id; localStorage.setItem(CM_SEEN_KEY, JSON.stringify(m)); } catch (e) {}
+}
+function channelPostIdsCM(bucket) {
+  /* getAllPosts lists the tier sequences before the bucket catalogue, so a
+     channel post can appear twice; keeping each id's LAST occurrence yields
+     the catalogue order — the same order the channel feed renders in. */
+  try {
+    const seen = new Set(), out = [];
+    const all = PFACM.getAllPosts().filter((p) => p.bucket === bucket);
+    for (let i = all.length - 1; i >= 0; i--) { if (!seen.has(all[i].id)) { seen.add(all[i].id); out.unshift(all[i].id); } }
+    return out;
+  } catch (e) { return []; }
+}
+function countNewPostsCM(bucket) {
+  const ids = channelPostIdsCM(bucket);
+  if (!ids.length) return 0;
+  const seen = readSeenCM()[bucket];
+  const idx = seen ? ids.indexOf(seen) : -1;
+  // never caught up (or the remembered post has left the channel) → +3; otherwise the posts above the last-seen one
+  return Math.min(idx < 0 ? CM_NEWPOSTS_DEFAULT : idx, 9);
+}
+(function resetNewPostsFromUrl() {
+  try {
+    if (new URLSearchParams(location.search).has("newposts")) localStorage.removeItem(CM_SEEN_KEY);
+  } catch (e) {}
+})();
+window.PFCommunityNewPosts = {
+  reset() { try { localStorage.removeItem(CM_SEEN_KEY); } catch (e) {} window.dispatchEvent(new CustomEvent("pf:community-newposts-reset")); },
+  count: countNewPostsCM
+};
+
+function NewPostsPillCM({ count, top, onTap }) {
+  if (!count) return null;
+  return (
+    <button type="button" className="cm-newposts" style={{ top }} onClick={onTap}
+      aria-label={count + " new " + (count === 1 ? "post" : "posts") + ", tap to see " + (count === 1 ? "it" : "them")}>
+      <DSCM.IconifyIcon name="lucide:arrow-up" size={16} color="#fff" />
+      {count} new {count === 1 ? "post" : "posts"}
+    </button>);
+}
+
 const CMTabBar = React.forwardRef(function CMTabBar({ compact }, ref) {
   return (
     <nav ref={ref} className={"cm-tabs" + (compact ? " cm-tabs-compact" : "")} aria-label="Primary">
@@ -668,6 +723,21 @@ function CMScreen({ scrollRef }) {
   const [headerH, setHeaderH] = React.useState(0);
   const [tabsH, setTabsH] = React.useState(0);
   const { hidden: chromeHidden, floating: chromeFloat } = useHeaderHideCM(scrollRef);
+  const bucket = CM_CHANNEL_BUCKET[channel];
+  const [newPosts, setNewPosts] = React.useState(() => countNewPostsCM(bucket));
+  React.useEffect(() => { setNewPosts(countNewPostsCM(bucket)); }, [bucket]);
+  React.useEffect(() => {
+    const onReset = () => setNewPosts(countNewPostsCM(bucket));
+    window.addEventListener("pf:community-newposts-reset", onReset);
+    return () => window.removeEventListener("pf:community-newposts-reset", onReset);
+  }, [bucket]);
+  const seeNewPosts = () => {
+    const s = scrollRef.current;
+    if (s) s.scrollTo({ top: 0, behavior: "smooth" });
+    const ids = channelPostIdsCM(bucket);
+    if (ids.length) writeSeenCM(bucket, ids[0]);
+    setNewPosts(0);
+  };
   React.useLayoutEffect(() => {
     const el = headerRef.current;
     if (!el) return;
@@ -692,8 +762,9 @@ function CMScreen({ scrollRef }) {
         <CMTopBar onMenu={() => setMenuOpen(true)} onMessages={() => setMsgOpen(true)} />
         <CMHeader channel={channel} setChannel={setChannel} />
       </div>
+      <NewPostsPillCM count={newPosts} top={headerH + 12} onTap={seeNewPosts} />
       <div className="cm-scroll" ref={scrollRef} style={{ paddingTop: headerH, paddingBottom: tabsH + 34 }}>
-        <PFACM.Feed channel={CM_CHANNEL_BUCKET[channel]} />
+        <PFACM.Feed channel={bucket} />
         <div className="cm-end">End of newsfeed</div>
       </div>
       <button type="button" className={"m-fab" + (chromeHidden ? " m-fab-compact" : "")} aria-label="Share a Post" onClick={() => {

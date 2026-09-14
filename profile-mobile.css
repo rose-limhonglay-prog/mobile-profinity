@@ -1185,7 +1185,7 @@ img{max-width:100%}
    svg only gets a slight nudge up to read at icon size in the 30px slot */
 .m-pts-ic-anim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s ease}
 .m-pts-ic-anim.on{opacity:1}
-.m-pts-ic-anim svg{display:block;width:30px!important;height:30px!important;transform:scale(1.1);transform-origin:50% 50%;overflow:visible}
+.m-pts-ic-anim svg{display:block;width:30px!important;height:30px!important;transform:scale(1.25);transform-origin:50% 50%;overflow:visible}
 .m-pts-n{display:inline-block;font-variant-numeric:tabular-nums;transform-origin:50% 50%}
 .m-pts-n.pop{animation:m-pts-pop .6s cubic-bezier(.22,.61,.36,1)}
 @keyframes m-pts-pop{0%{transform:scale(1)}35%{transform:scale(1.22);color:#F2C14E}100%{transform:scale(1)}}
@@ -1195,8 +1195,8 @@ img{max-width:100%}
    (the floating "+N points" chip beside the button was removed): navy tint +
    expanding ring on the pill, number pops (above), and a "+N" delta floats up
    from the number and fades. */
-.m-pts.earn{background:rgba(233,41,58,.12);animation:m-pts-ring .9s ease-out}
-@keyframes m-pts-ring{0%{box-shadow:0 0 0 0 rgba(233,41,58,.45)}100%{box-shadow:0 0 0 12px rgba(233,41,58,0)}}
+.m-pts.earn{background:rgba(252,194,93,.12);animation:m-pts-ring .9s ease-out}
+@keyframes m-pts-ring{0%{box-shadow:0 0 0 0 rgba(252,194,93,.45)}100%{box-shadow:0 0 0 12px rgba(252,194,93,0)}}
 .m-pts-delta{position:absolute;right:10px;top:-2px;pointer-events:none;font-family:var(--font-sans);font-weight:var(--fw-bold);
   font-size:13px;line-height:1;color:#D9A21B;text-shadow:0 1px 0 var(--surface-card);
   animation:m-pts-delta 1.4s cubic-bezier(.22,.61,.36,1) forwards}
@@ -1215,9 +1215,9 @@ img{max-width:100%}
 @keyframes m-pts-tally-in{0%{opacity:0;transform:translate(-50%,-160%)}100%{opacity:1;transform:translate(-50%,0)}}
 .m-pts-tally .m-pts{pointer-events:auto;height:44px;padding:0 18px 0 8px;font-size:17px;background:var(--surface-card);
   border:1px solid var(--border-default);box-shadow:0 12px 32px rgba(16,24,40,.22),0 2px 6px rgba(16,24,40,.08)}
-.m-pts-tally .m-pts.earn{background:#fde8ea;animation:m-pts-tally-ring .9s ease-out}
-@keyframes m-pts-tally-ring{0%{box-shadow:0 0 0 0 rgba(233,41,58,.45),0 12px 32px rgba(16,24,40,.22)}
-  100%{box-shadow:0 0 0 12px rgba(233,41,58,0),0 12px 32px rgba(16,24,40,.22)}}
+.m-pts-tally .m-pts.earn{background:#fff3dc;animation:m-pts-tally-ring .9s ease-out}
+@keyframes m-pts-tally-ring{0%{box-shadow:0 0 0 0 rgba(252,194,93,.45),0 12px 32px rgba(16,24,40,.22)}
+  100%{box-shadow:0 0 0 12px rgba(252,194,93,0),0 12px 32px rgba(16,24,40,.22)}}
 /* the "+N" would float up into the Dynamic Island here, so it rises beside the pill instead */
 .m-pts-tally .m-pts-delta{right:auto;left:calc(100% + 6px);top:14px;text-shadow:none}
 @media (prefers-reduced-motion:reduce){.m-pts-tally,.m-pts-tally.on{transition:none;animation:none}.m-pts-tally .m-pts.earn{animation:none}}

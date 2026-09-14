@@ -91,13 +91,13 @@
 }
 [data-theme="dark"] .m-iconbtn { background: rgba(206, 153, 87, 0.12); }
 [data-theme="dark"] .m-iconbtn:active { background: rgba(206, 153, 87, 0.22); }
-[data-theme="dark"] .m-pts { background: rgba(233, 41, 58, 0.16); color: #F5C542; }
+[data-theme="dark"] .m-pts { background: rgba(252, 194, 93, 0.16); color: #F5C542; }
 [data-theme="dark"] .m-pts-delta { color: #F5C542; }
-[data-theme="dark"] .m-pts.earn { background: rgba(233, 41, 58, 0.28); }
-[data-theme="dark"] .m-pts:active { background: rgba(233, 41, 58, 0.26); }
+[data-theme="dark"] .m-pts.earn { background: rgba(252, 194, 93, 0.28); }
+[data-theme="dark"] .m-pts:active { background: rgba(252, 194, 93, 0.26); }
 [data-theme="dark"] .m-screen.chrome-float .m-pts { background: rgba(38, 34, 70, 0.6); border-color: rgba(255, 255, 255, 0.14); }
 [data-theme="dark"] .m-pts-tally .m-pts { background: rgba(38, 34, 70, 0.96); border-color: rgba(255, 255, 255, 0.14); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5); }
-[data-theme="dark"] .m-pts-tally .m-pts.earn { background: #4b2a33; }
+[data-theme="dark"] .m-pts-tally .m-pts.earn { background: #4a3d22; }
 [data-theme="dark"] .m-top .m-iconbtn svg,
 [data-theme="dark"] .pm-top .pm-iconbtn svg,
 [data-theme="dark"] .cm-top .cm-iconbtn svg,
@@ -367,3 +367,22 @@
 [data-theme="dark"] .bgl-tile.is-unlocked .bgl-tile-icon { background: rgba(206,153,87,.16); }
 [data-theme="dark"] .bgl-ladder-current { color: #1a1736; }
 [data-theme="dark"] .ml-demo-btn { background: var(--surface-card); }
+
+/* ============================================================
+   Loyalty — Rewards Dashboard (web) (rewards-web.css)
+   Literal coral/pink washes that don't read a token.
+   ============================================================ */
+[data-theme="dark"] .rw-progress-track { background: rgba(252,194,93,.16); box-shadow: none; }
+[data-theme="dark"] .rw-progress-scale span:last-child,
+[data-theme="dark"] .rw-progress-note + .rw-progress-scale span:last-child,
+[data-theme="dark"] .rw-next-reward-main .su,
+[data-theme="dark"] .rw-kv dd.warn { color: #FDD98F; }
+[data-theme="dark"] .rw-next-reward { background: linear-gradient(120deg, color-mix(in srgb, #FCC25D 14%, var(--surface-card)), color-mix(in srgb, #FCC25D 22%, var(--surface-card))); border-color: rgba(252,194,93,.55); box-shadow: none; }
+[data-theme="dark"] .rw-next-reward-main .nm { color: var(--text-heading); }
+[data-theme="dark"] .rw-activity-ic { background: rgba(252,194,93,.18); }
+[data-theme="dark"] .rw-activity-amt { background: rgba(252,194,93,.16); color: #FDD98F; }
+[data-theme="dark"] .rw-activity-amt.is-spend { background: var(--surface-sunken); }
+[data-theme="dark"] .rw-notif-preview { background: var(--surface-card); }
+[data-theme="dark"] .rw-notif-icon { background: rgba(255,255,255,.08); }
+[data-theme="dark"] .rw-btn-white { background: var(--surface-card); color: #FDD98F; }
+[data-theme="dark"] .rw-toast { background: var(--surface-sunken); border: 1px solid var(--border-default); }

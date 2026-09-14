@@ -42,7 +42,6 @@ const AC_COURSES = [
 { image: IMG_AC.complications, level: "Advanced", title: "Complications Management", description: "Recognise, prevent and manage vascular and other complications.", tags: ["New"] },
 { image: IMG_AC.consultation, level: "Beginner", title: "Consultation & Patient Assessment", description: "Build trust and plan safe, effective treatments from the first visit.", tags: ["Recommended", "Popular"] }];
 
-
 const AC_TABS = [
 { key: "Home", label: "Home", icon: "lucide:home", href: "NewsfeedMobile.html" },
 { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
@@ -50,7 +49,6 @@ const AC_TABS = [
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
 { key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" },
 { key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" }];
-
 
 function ACTabBar() {
   return (
@@ -119,11 +117,6 @@ function AllCoursesHome() {
               {f}
             </button>
           )}
-        </div>
-        <div className="ac-coach-row">
-          <button type="button" className="pf-coach-link" data-coach="I'm looking at the course catalog — which course should I take next to grow my clinic?">
-            <IconifyAC name="lucide:sparkles" size={14} color="var(--ai-purple)" />Which course should I take next?
-          </button>
         </div>
         {courses.length === 0 ?
         <p className="ac-empty">No courses match your search.</p> :

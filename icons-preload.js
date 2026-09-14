@@ -33,13 +33,15 @@
   var ICONS = {
     lucide: [
       "chevron-left", "chevron-right", "chevron-up", "chevron-down", "arrow-left", "arrow-right", "arrow-up-right",
+      "cast", "airplay", "settings-2", "skip-back", "skip-forward", "notebook-pen", "minimize", "maximize",
       "search", "bookmark", "bookmark-check", "share-2", "play", "circle-play", "check", "check-circle-2",
       "file-text", "file", "file-type-2", "download", "folder", "folder-open", "lock", "sparkles", "send",
       "heart", "message-circle", "home", "users", "book-open", "user", "gift", "bell", "menu", "x",
       "clock", "layers", "bar-chart-2", "award", "target", "trophy", "list-checks", "route", "help-circle",
-      "crown", "gem", "badge-check", "log-out", "moon", "sun", "syringe", "more-vertical", "calendar",
+      "crown", "gem", "badge-check", "log-out", "moon", "sun", "cloud-sun", "syringe", "more-vertical", "calendar",
       "graduation-cap", "phone", "phone-call", "maximize-2", "square-pen", "bell-off", "megaphone",
-      "rotate-ccw", "rotate-cw", "skip-forward", "presentation", "info", "flag", "star", "pause", "volume-2", "volume-x", "maximize"],
+      "rotate-ccw", "rotate-cw", "skip-forward", "presentation", "info", "flag", "star", "pause", "volume-2", "volume-x", "maximize",
+      "plus", "tag", "link", "newspaper", "more-horizontal"],
     fluent: ["play-16-filled", "pause-16-filled", "ribbon-star-16-filled"]
   };
   var extra = window.PF_ICONS_EXTRA || {};
