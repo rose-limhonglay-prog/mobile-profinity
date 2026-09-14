@@ -1,0 +1,189 @@
+/* ===========================================================================
+   PROfinity — Payments (mobile) · layout
+   Plan card, saved cards and recent payments, lifted from the old inline
+   profile "Payments" menu (profile-mobile.css) into a standalone drill-in.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden;
+  font-family: var(--font-sans); color: var(--text-primary); }
+
+.py-screen { position: relative; height: 100%; display: flex; flex-direction: column; background: var(--surface-card); overflow: hidden; }
+
+.py-top { flex: none; display: flex; align-items: center; gap: 12px; position: relative;
+  padding: 60px 20px 16px; border-bottom: 1px solid var(--border-default); }
+.py-back { flex: none; width: 40px; height: 40px; border: none; background: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; }
+.py-top h1 { flex: 1; text-align: center; margin: 0; padding-right: 40px;
+  font-family: var(--font-sans); font-weight: 600; font-size: 20px; color: var(--brand-navy); }
+
+.py-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px 20px 32px; }
+.py-scroll::-webkit-scrollbar { width: 0; }
+
+/* plan card — membership-card sized, metal per tier */
+.py-plan { position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; gap: 18px;
+  min-height: 196px; padding: 18px 18px 16px; border-radius: 20px; color: #fff;
+  background: linear-gradient(135deg, var(--brand-navy) 0%, #3d3a8c 100%); box-shadow: 0 14px 34px rgba(41,37,105,.28); }
+.py-plan.none { min-height: 168px; }
+/* soft highlight blob + sweeping sheen give the metal some life */
+.py-plan::before { content: ""; position: absolute; width: 260px; height: 260px; right: -90px; top: -120px; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(255,255,255,.28), rgba(255,255,255,0)); pointer-events: none; }
+.py-plan::after { content: ""; position: absolute; top: 0; left: 0; width: 45%; height: 100%; pointer-events: none;
+  background: linear-gradient(115deg, transparent, rgba(255,255,255,.42), transparent); transform: skewX(-20deg) translateX(-160%);
+  animation: py-sheen 5.2s ease-in-out infinite; }
+.py-plan > * { position: relative; z-index: 1; }
+.py-plan-top, .py-plan-bot { display: flex; align-items: center; gap: 10px; }
+.py-plan-logo { flex: none; height: 44px; width: auto; max-width: 62%; object-fit: contain; object-position: left center; margin-right: auto;
+  filter: brightness(0) invert(1) drop-shadow(0 1px 2px rgba(0,0,0,.18)); }
+/* navy/gold logo reads as-is on the light metals */
+.py-plan.tier-confidence .py-plan-logo, .py-plan.tier-mastery .py-plan-logo { filter: drop-shadow(0 1px 1px rgba(255,255,255,.45)); }
+.py-plan-status { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 100px;
+  background: rgba(255,255,255,.2); font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #fff; }
+.py-plan-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 3px rgba(22,163,74,.22); }
+.py-plan-status.cancelled::before { background: var(--error); box-shadow: 0 0 0 3px rgba(220,60,60,.22); }
+.py-plan-mid { display: flex; flex-direction: column; gap: 4px; }
+.py-plan-name { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 26px; line-height: 1.1; letter-spacing: -.01em; color: #fff; }
+.py-plan-member { font-family: var(--font-sans); font-weight: var(--fw-medium); font-size: 13px; color: rgba(255,255,255,.8); }
+.py-plan-sub { flex: 1; min-width: 0; font-family: var(--font-sans); font-size: 13px; color: rgba(255,255,255,.82); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.py-plan-sub b { font-weight: var(--fw-bold); font-size: 17px; color: #fff; }
+.py-plan-sub i { font-style: normal; margin: 0 6px; opacity: .6; }
+.py-plan-btn { flex: none; min-height: 38px; padding: 0 18px; border-radius: 100px; border: none; cursor: pointer; background: #fff;
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 14px; color: var(--brand-navy);
+  box-shadow: 0 4px 12px rgba(0,0,0,.14); -webkit-tap-highlight-color: transparent; }
+.py-plan-btn:active { opacity: .85; }
+@keyframes py-sheen { 0%, 62% { transform: skewX(-20deg) translateX(-160%); } 100% { transform: skewX(-20deg) translateX(360%); } }
+@media (prefers-reduced-motion: reduce) { .py-plan::after { animation: none; } }
+
+/* tier metals — same gradients as the drawer's .sm-upgrade metal CTA.
+   Confidence = silver, Mastery = gold (dark text on light metal);
+   Freedom / Inner Circle keep their app accents. */
+.py-plan.tier-confidence { background: linear-gradient(120deg, #7C848E 0%, #C9CED4 38%, #E6E9ED 52%, #B4BAC2 70%, #8A929C 100%); box-shadow: 0 14px 34px rgba(124,132,142,.32); }
+.py-plan.tier-mastery    { background: linear-gradient(120deg, #A26301 0%, #E2BC6A 40%, #F5DDA0 52%, #D5A960 70%, #A26301 100%); box-shadow: 0 14px 34px rgba(162,99,1,.30); }
+.py-plan.tier-freedom    { background: linear-gradient(135deg, #4f47d6 0%, var(--ai-purple) 60%, #8b84ff 100%); box-shadow: 0 14px 34px rgba(108,99,255,.30); }
+.py-plan.tier-inner      { background: linear-gradient(135deg, #6e4d00 0%, var(--premium-gold-deep) 60%, #b98a1a 100%); box-shadow: 0 14px 34px rgba(151,106,0,.30); }
+.py-plan.tier-confidence .py-plan-status, .py-plan.tier-mastery .py-plan-status { background: rgba(255,255,255,.55); }
+.py-plan.tier-confidence .py-plan-name, .py-plan.tier-confidence .py-plan-sub b, .py-plan.tier-confidence .py-plan-status { color: #2E343D; }
+.py-plan.tier-confidence .py-plan-member, .py-plan.tier-confidence .py-plan-sub { color: rgba(46,52,61,.78); }
+.py-plan.tier-confidence .py-plan-btn { color: #3F4650; background: #fff; }
+.py-plan.tier-mastery .py-plan-name, .py-plan.tier-mastery .py-plan-sub b, .py-plan.tier-mastery .py-plan-status { color: #4A2F00; }
+.py-plan.tier-mastery .py-plan-member, .py-plan.tier-mastery .py-plan-sub { color: rgba(74,47,0,.78); }
+.py-plan.tier-mastery .py-plan-btn { color: #5A3A00; }
+.py-plan.cancelled { filter: saturate(.6); }
+.py-cardic { flex: none; width: 28px; height: 28px; border-radius: 8px; background: var(--surface-card);
+  display: flex; align-items: center; justify-content: center; }
+
+.py-h { margin: 22px 0 10px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--text-heading); }
+
+/* saved cards */
+.py-cards { display: flex; flex-direction: column; gap: 8px; }
+.py-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px;
+  border: 1px solid var(--border-default); background: var(--surface-card); }
+.py-card.primary { border-color: var(--brand-navy); background: var(--surface-sunken); }
+.py-card .py-cardic { width: 36px; height: 36px; border-radius: 10px; background: rgba(41,37,105,.08); }
+.py-card-info, .py-row-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.py-card-info .ti, .py-row-info .ti { font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; color: var(--text-heading);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.py-card-info .su, .py-row-info .su { font-family: var(--font-sans); font-size: 13px; color: var(--gray-500); }
+.py-pill { flex: none; padding: 3px 9px; border-radius: 100px; background: var(--brand-navy); color: #fff;
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 10.5px; letter-spacing: .04em; }
+.py-more { flex: none; border: none; background: none; padding: 4px; cursor: pointer; display: flex; -webkit-tap-highlight-color: transparent; }
+.py-add { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 12px; border-radius: 12px; cursor: pointer;
+  border: 1px dashed var(--brand-navy); background: transparent; font-family: var(--font-sans); font-weight: var(--fw-semibold);
+  font-size: 14px; color: var(--brand-navy); -webkit-tap-highlight-color: transparent; }
+.py-add:active { background: rgba(41,37,105,.06); }
+
+/* recent payments */
+.py-list { display: flex; flex-direction: column; }
+.py-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 0; border: none; border-top: 1px solid var(--border-default);
+  background: none; text-align: left; cursor: pointer; font-family: var(--font-sans); -webkit-tap-highlight-color: transparent; }
+.py-row:active { background: var(--surface-sunken); }
+.py-row:first-child { border-top: none; padding-top: 4px; }
+.py-date { flex: none; width: 42px; height: 44px; border-radius: 10px; background: var(--surface-sunken);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+.py-date b { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 16px; color: var(--text-heading); }
+.py-date small { margin-top: 2px; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 10px; letter-spacing: .05em; color: var(--gray-500); }
+.py-amt { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.py-amt .n { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--text-heading); }
+.py-amt .n.refund { color: var(--gray-500); }
+.py-amt .st { font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 11.5px; color: var(--success); }
+.py-amt .st.refund { color: var(--gray-450); }
+
+.py-showall { width: 100%; margin: 14px 0 4px; padding: 13px; border-radius: var(--r-sm); border: 1px solid var(--border-default);
+  background: var(--surface-card); cursor: pointer; font-family: var(--font-sans); font-weight: var(--fw-semibold);
+  font-size: 15px; color: var(--brand-navy); -webkit-tap-highlight-color: transparent; }
+.py-showall:active { background: var(--gray-100); }
+
+@media (max-width: 768px) {
+  body { background: var(--surface-card); }
+  .app.device-stage { padding: 0; }
+  .py-screen { min-height: 100vh; }
+}
+
+/* ===== subscription state, sheets, add-card form, toast ===== */
+.py-h.first { margin-top: 0; }
+.py-substate { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding: 11px 12px; border-radius: 12px;
+  background: var(--surface-sunken); }
+.py-substate.cancelled { background: var(--error-bg, #FDECEC); }
+.py-substate-tx { flex: 1; min-width: 0; font-family: var(--font-sans); font-size: 13px; line-height: 1.4; color: var(--text-primary); }
+.py-substate-tx b { font-weight: var(--fw-semibold); color: var(--text-heading); }
+.py-substate-btn { flex: none; padding: 7px 14px; border-radius: 100px; border: none; cursor: pointer; background: var(--brand-navy); color: #fff;
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13px; -webkit-tap-highlight-color: transparent; }
+.py-substate-btn:active { opacity: .85; }
+
+.py-sheet-wrap { position: absolute; inset: 0; z-index: 40; display: flex; flex-direction: column; justify-content: flex-end; }
+.py-scrim { position: absolute; inset: 0; border: none; background: rgba(16,24,40,.48); cursor: pointer; animation: py-fade .2s ease; }
+.py-sheet { position: relative; z-index: 1; padding: 10px 20px calc(22px + env(safe-area-inset-bottom, 0px)); border-radius: 24px 24px 0 0;
+  background: var(--surface-card); color: var(--text-primary); box-shadow: 0 -12px 40px rgba(16,24,40,.24);
+  animation: py-rise .28s cubic-bezier(.22,1,.36,1); max-height: 88%; overflow-y: auto; }
+.py-sheet-handle { display: block; width: 40px; height: 5px; margin: 0 auto 14px; border-radius: 3px; background: var(--gray-300); }
+.py-sheet-ttl { margin: 0 0 8px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 20px; color: var(--brand-navy); }
+.py-sheet-p { margin: 0 0 14px; font-family: var(--font-sans); font-size: 14.5px; line-height: 1.5; color: var(--gray-600); }
+.py-sheet-p b { color: var(--text-heading); font-weight: var(--fw-semibold); }
+.py-opts { display: flex; flex-direction: column; gap: 8px; }
+.py-opt { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 50px; padding: 0 14px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--border-default); background: var(--surface-card); text-align: left;
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; color: var(--text-heading); -webkit-tap-highlight-color: transparent; }
+.py-opt:active { background: var(--surface-sunken); }
+.py-opt.danger { color: var(--error); }
+.py-opt.dim { color: var(--gray-450); cursor: default; }
+.py-lose { list-style: none; margin: 0 0 6px; padding: 12px 14px; border-radius: 12px; background: var(--surface-sunken); display: flex; flex-direction: column; gap: 8px; }
+.py-lose li { display: flex; align-items: center; gap: 8px; font-family: var(--font-sans); font-size: 14px; color: var(--text-primary); }
+.py-sheet-foot { display: flex; gap: 10px; margin-top: 18px; }
+.py-sheet-foot.col { flex-direction: column; }
+.py-btn-ghost, .py-btn-fill, .py-btn-danger { flex: 1; min-height: 50px; border-radius: 14px; cursor: pointer; font-family: var(--font-sans);
+  font-weight: var(--fw-semibold); font-size: 15px; -webkit-tap-highlight-color: transparent; }
+.py-btn-ghost { border: 1.5px solid var(--border-default); background: none; color: var(--text-heading); }
+.py-btn-fill { border: none; background: var(--brand-navy); color: #fff; }
+.py-btn-fill.dim { opacity: .55; }
+.py-btn-danger { border: 1.5px solid var(--error); background: none; color: var(--error); }
+.py-btn-fill:active, .py-btn-ghost:active, .py-btn-danger:active { opacity: .85; }
+
+.py-form { display: flex; flex-direction: column; gap: 14px; margin-top: 6px; }
+.py-field { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+.py-field-row { display: flex; gap: 12px; }
+.py-label { font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13px; color: var(--text-heading); }
+.py-input-wrap { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 14px; border-radius: 12px;
+  border: 1.5px solid var(--border-default); background: var(--surface-card); }
+.py-input-wrap:focus-within { border-color: var(--brand-navy); }
+.py-input { flex: 1; min-width: 0; border: none; background: transparent; outline: none; font-family: var(--font-sans); font-size: 16px;
+  color: var(--text-heading); }
+.py-input::placeholder { color: var(--gray-400); }
+.py-brand { flex: none; padding: 3px 8px; border-radius: 100px; background: var(--surface-sunken); font-family: var(--font-sans);
+  font-weight: var(--fw-semibold); font-size: 11.5px; color: var(--text-heading); }
+.py-err { font-family: var(--font-sans); font-size: 12.5px; color: var(--error); }
+.py-check { display: flex; align-items: center; gap: 10px; border: none; background: none; padding: 2px 0; cursor: pointer; text-align: left;
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 14px; color: var(--text-heading); -webkit-tap-highlight-color: transparent; }
+.py-check-box { flex: none; width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid var(--gray-400); display: flex; align-items: center; justify-content: center; }
+.py-check.on .py-check-box { background: var(--brand-navy); border-color: var(--brand-navy); }
+.py-secure { display: flex; align-items: center; gap: 6px; margin: -4px 0 0; font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); }
+
+.py-toast { position: absolute; left: 16px; right: 16px; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); z-index: 60;
+  display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-radius: 14px; background: #1A1736; color: #fff;
+  box-shadow: 0 12px 30px rgba(16,24,40,.28); font-family: var(--font-sans); font-size: 14px; font-weight: var(--fw-medium);
+  animation: py-rise .26s cubic-bezier(.22,.61,.36,1); }
+
+@keyframes py-rise { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes py-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .py-scrim, .py-sheet, .py-toast { animation: none; } }

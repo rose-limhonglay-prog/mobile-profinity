@@ -77,6 +77,9 @@ img{max-width:100%}
 .pm-ig-bio{margin-top:8px}
 .pm-ig-bio p{margin:0 0 3px;font-family:var(--font-sans);font-size:15px;line-height:1.5;color:var(--text-primary)}
 .pm-ig-bio .bi{display:inline-block;width:20px}
+.pm-ig-bio p.pm-ig-live{display:flex;align-items:center;font-size:13px;line-height:1.4;color:var(--text-primary);margin-top:1px}
+.pm-ig-bio .pm-ig-live .bi{display:inline-flex;align-items:center;width:20px;line-height:0}
+.pm-ig-bio .pm-ig-live b{font-weight:var(--fw-semibold);color:var(--text-primary);margin-left:4px}
 .pm-ig-link{display:inline-flex;align-items:center;gap:7px;margin-top:6px;
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px;color:var(--ai-purple);text-decoration:none}
 
@@ -1218,48 +1221,3 @@ img{max-width:100%}
 /* the "+N" would float up into the Dynamic Island here, so it rises beside the pill instead */
 .m-pts-tally .m-pts-delta{right:auto;left:calc(100% + 6px);top:14px;text-shadow:none}
 @media (prefers-reduced-motion:reduce){.m-pts-tally,.m-pts-tally.on{transition:none;animation:none}.m-pts-tally .m-pts.earn{animation:none}}
-
-/* ===== Payments menu — plan card, saved cards, recent payments ===== */
-.pm-pay-preview{align-items:center}
-.pm-pay-cardic{flex:none;width:28px;height:28px;border-radius:8px;background:var(--surface-card);
-  display:flex;align-items:center;justify-content:center}
-.pm-pay-plan{display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;
-  background:linear-gradient(135deg,var(--brand-navy) 0%,#3d3a8c 100%);color:#fff}
-.pm-pay-plan-ic{flex:none;width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.16);
-  display:flex;align-items:center;justify-content:center}
-.pm-pay-plan-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.pm-pay-plan-name{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;color:#fff}
-.pm-pay-plan-sub{font-family:var(--font-sans);font-size:13px;color:rgba(255,255,255,.78)}
-.pm-pay-plan-btn{flex:none;padding:8px 14px;border-radius:100px;border:none;cursor:pointer;background:#fff;
-  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;color:var(--brand-navy);
-  -webkit-tap-highlight-color:transparent}
-.pm-pay-plan-btn:active{opacity:.85}
-.pm-pay-h{margin:20px 0 10px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15px;color:var(--text-heading)}
-.pm-pay-cards{display:flex;flex-direction:column;gap:8px}
-.pm-pay-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;
-  border:1px solid var(--border-default);background:var(--surface-card)}
-.pm-pay-card.primary{border-color:var(--brand-navy);background:var(--surface-sunken)}
-.pm-pay-card .pm-pay-cardic{width:36px;height:36px;border-radius:10px;background:rgba(41,37,105,.08)}
-.pm-pay-card-info,.pm-pay-row-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.pm-pay-card-info .ti,.pm-pay-row-info .ti{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px;color:var(--text-heading);
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.pm-pay-card-info .su,.pm-pay-row-info .su{font-family:var(--font-sans);font-size:13px;color:var(--gray-500)}
-.pm-pay-pill{flex:none;padding:3px 9px;border-radius:100px;background:var(--brand-navy);color:#fff;
-  font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:10.5px;letter-spacing:.04em}
-.pm-pay-more{flex:none;border:none;background:none;padding:4px;cursor:pointer;display:flex;-webkit-tap-highlight-color:transparent}
-.pm-pay-add{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:12px;border-radius:12px;cursor:pointer;
-  border:1px dashed var(--brand-navy);background:transparent;font-family:var(--font-sans);font-weight:var(--fw-semibold);
-  font-size:14px;color:var(--brand-navy);-webkit-tap-highlight-color:transparent}
-.pm-pay-add:active{background:rgba(41,37,105,.06)}
-.pm-pay-list{display:flex;flex-direction:column}
-.pm-pay-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border-default)}
-.pm-pay-row:first-child{border-top:none;padding-top:4px}
-.pm-pay-date{flex:none;width:42px;height:44px;border-radius:10px;background:var(--surface-sunken);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
-.pm-pay-date b{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;color:var(--text-heading)}
-.pm-pay-date small{margin-top:2px;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:10px;letter-spacing:.05em;color:var(--gray-500)}
-.pm-pay-amt{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
-.pm-pay-amt .n{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15px;color:var(--text-heading)}
-.pm-pay-amt .n.refund{color:var(--gray-500)}
-.pm-pay-amt .st{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:11.5px;color:var(--success)}
-.pm-pay-amt .st.refund{color:var(--gray-450)}

@@ -762,103 +762,6 @@ const PM_ACTIVITY = [
   likes: "1.5K", comments: "120", shares: "200"
 }];
 
-/* "Payments" menu — see pmPaymentsFor / PM_PAYMENT_METHODS above. Deep-linkable via
-   ProfileMobile.html#payments (auto-expands + scrolls, like #prosperity-spiral). */
-function PMPaymentsMenu() {
-  const [expanded, setExpanded] = useStatePM(() => window.location.hash === "#payments");
-  const { collapsedRef, expandedRef, height: viewportH } = usePMSlidePaneHeight(expanded, []);
-  const tier = PM_ME.tier;
-  const price = tier ? PM_TIER_PRICE[tier] : null;
-  const primary = PM_PAYMENT_METHODS.find((c) => c.primary) || PM_PAYMENT_METHODS[0];
-  const payments = pmPaymentsFor(tier);
-  const latest = payments[0];
-  const fmt = (n) => "£" + n.toLocaleString();
-
-  useEffectPM(() => {
-    if (window.location.hash !== "#payments") return;
-    const t = setTimeout(() => {
-      const el = document.getElementById("payments");
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 420);
-    return () => clearTimeout(t);
-  }, []);
-
-  return (
-    <div id="payments" className="pm-menu-viewport" style={viewportH != null ? { height: viewportH + "px" } : undefined}>
-      <div className={"pm-menu-slider" + (expanded ? " expanded" : "")}>
-        <button type="button" ref={collapsedRef} className="pm-menu-pane pm-menu-collapsed" aria-label="Payments — tap to view" onClick={() => setExpanded(true)}>
-          <div className="pm-menu-collapsed-top">
-            <h3 className="pm-steps-h">Payments</h3>
-            <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
-          </div>
-          <p className="pm-steps-sub">
-            {tier ? tier + " Path · " + fmt(price) + "/month" : "No active plan"}
-          </p>
-          <div className="pm-menu-preview pm-pay-preview">
-            <span className="pm-pay-cardic"><DSPM.IconifyIcon name="lucide:credit-card" size={16} color="var(--brand-navy)" /></span>
-            <span className="pm-menu-preview-tx"><b>{primary.brand} •• {primary.last4}</b> · Next charge 01 Oct</span>
-            <span className="pm-menu-preview-time">{latest ? fmt(latest.amount) : ""}</span>
-          </div>
-        </button>
-
-        <div ref={expandedRef} className="pm-menu-pane pm-menu-expanded">
-          <button type="button" className="pm-menu-back" onClick={() => setExpanded(false)}>
-            <DSPM.IconifyIcon name="lucide:chevron-left" size={20} color="var(--text-heading)" />Payments
-          </button>
-          <div className="pm-menu-content">
-
-            <div className="pm-pay-plan">
-              <span className="pm-pay-plan-ic"><DSPM.IconifyIcon name="lucide:gem" size={20} color="#fff" /></span>
-              <div className="pm-pay-plan-main">
-                <span className="pm-pay-plan-name">{tier ? tier + " Path" : "No active plan"}</span>
-                <span className="pm-pay-plan-sub">{tier ? fmt(price) + " / month · renews 01 Oct 2026" : "Subscribe to unlock a channel"}</span>
-              </div>
-              <button type="button" className="pm-pay-plan-btn" onClick={() => goPM("MembershipTier.html")}>{tier ? "Manage" : "Subscribe"}</button>
-            </div>
-
-            <h4 className="pm-pay-h">Payment methods</h4>
-            <div className="pm-pay-cards">
-              {PM_PAYMENT_METHODS.map((c) =>
-              <div className={"pm-pay-card" + (c.primary ? " primary" : "")} key={c.last4}>
-                  <span className="pm-pay-cardic"><DSPM.IconifyIcon name="lucide:credit-card" size={18} color="var(--brand-navy)" /></span>
-                  <div className="pm-pay-card-info">
-                    <span className="ti">{c.brand} ending {c.last4}</span>
-                    <span className="su">Expires {c.exp}</span>
-                  </div>
-                  {c.primary ?
-                  <span className="pm-pay-pill">DEFAULT</span> :
-                  <button type="button" className="pm-pay-more" aria-label="Card options"><DSPM.IconifyIcon name="lucide:more-horizontal" size={20} color="var(--gray-450)" /></button>}
-                </div>
-              )}
-              <button type="button" className="pm-pay-add">
-                <DSPM.IconifyIcon name="lucide:plus" size={16} color="var(--brand-navy)" />Add payment method
-              </button>
-            </div>
-
-            <h4 className="pm-pay-h">Recent payments</h4>
-            <div className="pm-pay-list">
-              {payments.map((r, i) =>
-              <div className="pm-pay-row" key={i}>
-                  <span className="pm-pay-date"><b>{r.d}</b><small>{r.m}</small></span>
-                  <div className="pm-pay-row-info">
-                    <span className="ti">{r.label}</span>
-                    <span className="su">{r.sub}</span>
-                  </div>
-                  <div className="pm-pay-amt">
-                    <span className={"n" + (r.status === "Refunded" ? " refund" : "")}>{r.status === "Refunded" ? "−" : ""}{fmt(r.amount)}</span>
-                    <span className={"st" + (r.status === "Refunded" ? " refund" : "")}>{r.status}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-            <button className="pm-showall" onClick={() => goPM("AccountSettings.html")}>View all invoices</button>
-          </div>
-        </div>
-      </div>
-    </div>);
-
-}
-
 /* ===========================================================================
    Viewing someone else's profile (ProfileMobile.html?id=<key>) — a lighter,
    read-only take on the same page: shared context + a summarised activity
@@ -973,32 +876,10 @@ const SM_EVENTS_PM = [
 { d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM" },
 { d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM" }];
 
-/* "Payments" — current plan, saved payment method and recent invoices,
-   enclosed behind the same collapse/expand shell as Activity and
-   Professional Information. Prices mirror subscribe-checkout / membership-tier. */
-const PM_TIER_PRICE = { Confidence: 97, Mastery: 397, Freedom: 747, "Inner Circle": 1497 };
-
-const PM_PAYMENT_METHODS = [
-{ brand: "Visa", last4: "4242", exp: "08/28", primary: true },
-{ brand: "Mastercard", last4: "8810", exp: "11/27", primary: false }];
-
-/* Subscription rows follow the member's tier (label + price); one-off course /
-   event purchases are fixed. */
-function pmPaymentsFor(tier) {
-  const plan = (tier || "Confidence") + " Path — monthly";
-  const amt = PM_TIER_PRICE[tier || "Confidence"];
-  return [
-  { d: "01", m: "SEP", label: plan, sub: "Visa •• 4242", amount: amt, status: "Paid" },
-  { d: "18", m: "AUG", label: "Lip Filler Techniques", sub: "Course · Visa •• 4242", amount: 249, status: "Paid" },
-  { d: "01", m: "AUG", label: plan, sub: "Visa •• 4242", amount: amt, status: "Paid" },
-  { d: "22", m: "JUL", label: "Confidence Masterclass ticket", sub: "Event · Mastercard •• 8810", amount: 49, status: "Refunded" },
-  { d: "01", m: "JUL", label: plan, sub: "Visa •• 4242", amount: amt, status: "Paid" }];
-}
-
 const SM_PROFILE_BEFORE_PM = [
 { label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
 { label: "Account Settings",   icon: "lucide:graduation-cap",  href: "AccountSettings.html" },
-{ label: "Payments",           icon: "lucide:credit-card",     href: "ProfileMobile.html#payments" },
+{ label: "Payments",           icon: "lucide:credit-card",     href: "PaymentsMobile.html" },
 { label: "My Saved",           icon: "lucide:bookmark",        href: "MySaved.html" },
 { label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" },
 { label: "Privacy & Security", icon: "lucide:book-open",       href: null }];
@@ -3243,6 +3124,10 @@ function PMScreen() {
               <div className="pm-ig-bio">
                 <p><span className="bi">🇬🇧</span> Aesthetic Nurse Practitioner</p>
                 <p><span className="bi">💉</span> Botox · Fillers · Lip Enhancement</p>
+                <p className="pm-ig-live">
+                  <span className="bi"><DSPM.IconifyIcon name="lucide:calendar" size={14} color="var(--text-primary)" /></span>
+                  Upcoming Live: <b>September 17, 2026</b>
+                </p>
                 {m.bio && <p>{m.bio}</p>}
               </div>
               <a className="pm-ig-link" href="#" onClick={(e) => e.preventDefault()}>
@@ -3269,7 +3154,6 @@ function PMScreen() {
             <PMMentor />
             <PMActivityMenu />
             <PMProfessionalInfoMenu />
-            <PMPaymentsMenu />
 
             <button className="pm-logout" onClick={() => goPM("NewsfeedMobile.html")}>
               <DSPM.IconifyIcon name="lucide:log-out" size={20} color="var(--error)" />Logout

@@ -203,6 +203,10 @@ const SM_PROFILE_BEFORE_CM = [{
   icon: "lucide:graduation-cap",
   href: null
 }, {
+  label: "Payments",
+  icon: "lucide:credit-card",
+  href: "PaymentsMobile.html"
+}, {
   label: "My Saved",
   icon: "lucide:bookmark",
   href: "MySaved.html"

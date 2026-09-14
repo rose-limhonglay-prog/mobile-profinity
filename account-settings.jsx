@@ -47,6 +47,7 @@ function useDarkModeAS() {
 const AS_PROFILE_ITEMS_BEFORE = [
   { label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
   { label: "Account Settings",   icon: "lucide:graduation-cap",  href: null },
+  { label: "Payments",           icon: "lucide:credit-card",     href: "PaymentsMobile.html" },
   { label: "My Saved",           icon: "lucide:bookmark",        href: "MySaved.html" },
   { label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" },
 ];

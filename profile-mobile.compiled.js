@@ -1225,162 +1225,6 @@ const PM_ACTIVITY = [{
   shares: "200"
 }];
 
-/* "Payments" menu — see pmPaymentsFor / PM_PAYMENT_METHODS above. Deep-linkable via
-   ProfileMobile.html#payments (auto-expands + scrolls, like #prosperity-spiral). */
-function PMPaymentsMenu() {
-  const [expanded, setExpanded] = useStatePM(() => window.location.hash === "#payments");
-  const {
-    collapsedRef,
-    expandedRef,
-    height: viewportH
-  } = usePMSlidePaneHeight(expanded, []);
-  const tier = PM_ME.tier;
-  const price = tier ? PM_TIER_PRICE[tier] : null;
-  const primary = PM_PAYMENT_METHODS.find(c => c.primary) || PM_PAYMENT_METHODS[0];
-  const payments = pmPaymentsFor(tier);
-  const latest = payments[0];
-  const fmt = n => "£" + n.toLocaleString();
-  useEffectPM(() => {
-    if (window.location.hash !== "#payments") return;
-    const t = setTimeout(() => {
-      const el = document.getElementById("payments");
-      if (el) el.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-    }, 420);
-    return () => clearTimeout(t);
-  }, []);
-  return /*#__PURE__*/React.createElement("div", {
-    id: "payments",
-    className: "pm-menu-viewport",
-    style: viewportH != null ? {
-      height: viewportH + "px"
-    } : undefined
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-menu-slider" + (expanded ? " expanded" : "")
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    ref: collapsedRef,
-    className: "pm-menu-pane pm-menu-collapsed",
-    "aria-label": "Payments — tap to view",
-    onClick: () => setExpanded(true)
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-menu-collapsed-top"
-  }, /*#__PURE__*/React.createElement("h3", {
-    className: "pm-steps-h"
-  }, "Payments"), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 20,
-    color: "var(--gray-400)"
-  })), /*#__PURE__*/React.createElement("p", {
-    className: "pm-steps-sub"
-  }, tier ? tier + " Path · " + fmt(price) + "/month" : "No active plan"), /*#__PURE__*/React.createElement("div", {
-    className: "pm-menu-preview pm-pay-preview"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-pay-cardic"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:credit-card",
-    size: 16,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "pm-menu-preview-tx"
-  }, /*#__PURE__*/React.createElement("b", null, primary.brand, " •• ", primary.last4), " · Next charge 01 Oct"), /*#__PURE__*/React.createElement("span", {
-    className: "pm-menu-preview-time"
-  }, latest ? fmt(latest.amount) : ""))), /*#__PURE__*/React.createElement("div", {
-    ref: expandedRef,
-    className: "pm-menu-pane pm-menu-expanded"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pm-menu-back",
-    onClick: () => setExpanded(false)
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:chevron-left",
-    size: 20,
-    color: "var(--text-heading)"
-  }), "Payments"), /*#__PURE__*/React.createElement("div", {
-    className: "pm-menu-content"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-pay-plan"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-pay-plan-ic"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:gem",
-    size: 20,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "pm-pay-plan-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-pay-plan-name"
-  }, tier ? tier + " Path" : "No active plan"), /*#__PURE__*/React.createElement("span", {
-    className: "pm-pay-plan-sub"
-  }, tier ? fmt(price) + " / month · renews 01 Oct 2026" : "Subscribe to unlock a channel")), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pm-pay-plan-btn",
-    onClick: () => goPM("MembershipTier.html")
-  }, tier ? "Manage" : "Subscribe")), /*#__PURE__*/React.createElement("h4", {
-    className: "pm-pay-h"
-  }, "Payment methods"), /*#__PURE__*/React.createElement("div", {
-    className: "pm-pay-cards"
-  }, PM_PAYMENT_METHODS.map(c => /*#__PURE__*/React.createElement("div", {
-    className: "pm-pay-card" + (c.primary ? " primary" : ""),
-    key: c.last4
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-pay-cardic"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:credit-card",
-    size: 18,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "pm-pay-card-info"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ti"
-  }, c.brand, " ending ", c.last4), /*#__PURE__*/React.createElement("span", {
-    className: "su"
-  }, "Expires ", c.exp)), c.primary ? /*#__PURE__*/React.createElement("span", {
-    className: "pm-pay-pill"
-  }, "DEFAULT") : /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pm-pay-more",
-    "aria-label": "Card options"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:more-horizontal",
-    size: 20,
-    color: "var(--gray-450)"
-  })))), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pm-pay-add"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:plus",
-    size: 16,
-    color: "var(--brand-navy)"
-  }), "Add payment method")), /*#__PURE__*/React.createElement("h4", {
-    className: "pm-pay-h"
-  }, "Recent payments"), /*#__PURE__*/React.createElement("div", {
-    className: "pm-pay-list"
-  }, payments.map((r, i) => /*#__PURE__*/React.createElement("div", {
-    className: "pm-pay-row",
-    key: i
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-pay-date"
-  }, /*#__PURE__*/React.createElement("b", null, r.d), /*#__PURE__*/React.createElement("small", null, r.m)), /*#__PURE__*/React.createElement("div", {
-    className: "pm-pay-row-info"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ti"
-  }, r.label), /*#__PURE__*/React.createElement("span", {
-    className: "su"
-  }, r.sub)), /*#__PURE__*/React.createElement("div", {
-    className: "pm-pay-amt"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "n" + (r.status === "Refunded" ? " refund" : "")
-  }, r.status === "Refunded" ? "−" : "", fmt(r.amount)), /*#__PURE__*/React.createElement("span", {
-    className: "st" + (r.status === "Refunded" ? " refund" : "")
-  }, r.status))))), /*#__PURE__*/React.createElement("button", {
-    className: "pm-showall",
-    onClick: () => goPM("AccountSettings.html")
-  }, "View all invoices")))));
-}
-
 /* ===========================================================================
    Viewing someone else's profile (ProfileMobile.html?id=<key>) — a lighter,
    read-only take on the same page: shared context + a summarised activity
@@ -1698,70 +1542,6 @@ const SM_EVENTS_PM = [{
   label: "Business Growth Workshop",
   t: "7:00 PM"
 }];
-
-/* "Payments" — current plan, saved payment method and recent invoices,
-   enclosed behind the same collapse/expand shell as Activity and
-   Professional Information. Prices mirror subscribe-checkout / membership-tier. */
-const PM_TIER_PRICE = {
-  Confidence: 97,
-  Mastery: 397,
-  Freedom: 747,
-  "Inner Circle": 1497
-};
-const PM_PAYMENT_METHODS = [{
-  brand: "Visa",
-  last4: "4242",
-  exp: "08/28",
-  primary: true
-}, {
-  brand: "Mastercard",
-  last4: "8810",
-  exp: "11/27",
-  primary: false
-}];
-
-/* Subscription rows follow the member's tier (label + price); one-off course /
-   event purchases are fixed. */
-function pmPaymentsFor(tier) {
-  const plan = (tier || "Confidence") + " Path — monthly";
-  const amt = PM_TIER_PRICE[tier || "Confidence"];
-  return [{
-    d: "01",
-    m: "SEP",
-    label: plan,
-    sub: "Visa •• 4242",
-    amount: amt,
-    status: "Paid"
-  }, {
-    d: "18",
-    m: "AUG",
-    label: "Lip Filler Techniques",
-    sub: "Course · Visa •• 4242",
-    amount: 249,
-    status: "Paid"
-  }, {
-    d: "01",
-    m: "AUG",
-    label: plan,
-    sub: "Visa •• 4242",
-    amount: amt,
-    status: "Paid"
-  }, {
-    d: "22",
-    m: "JUL",
-    label: "Confidence Masterclass ticket",
-    sub: "Event · Mastercard •• 8810",
-    amount: 49,
-    status: "Refunded"
-  }, {
-    d: "01",
-    m: "JUL",
-    label: plan,
-    sub: "Visa •• 4242",
-    amount: amt,
-    status: "Paid"
-  }];
-}
 const SM_PROFILE_BEFORE_PM = [{
   label: "Edit Profile",
   icon: "lucide:book-open",
@@ -1773,7 +1553,7 @@ const SM_PROFILE_BEFORE_PM = [{
 }, {
   label: "Payments",
   icon: "lucide:credit-card",
-  href: "ProfileMobile.html#payments"
+  href: "PaymentsMobile.html"
 }, {
   label: "My Saved",
   icon: "lucide:bookmark",
@@ -5224,7 +5004,15 @@ function PMScreen() {
     className: "bi"
   }, "🇬🇧"), " Aesthetic Nurse Practitioner"), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
     className: "bi"
-  }, "💉"), " Botox · Fillers · Lip Enhancement"), m.bio && /*#__PURE__*/React.createElement("p", null, m.bio)), /*#__PURE__*/React.createElement("a", {
+  }, "💉"), " Botox · Fillers · Lip Enhancement"), /*#__PURE__*/React.createElement("p", {
+    className: "pm-ig-live"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "bi"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:calendar",
+    size: 14,
+    color: "var(--text-primary)"
+  })), "Upcoming Live: ", /*#__PURE__*/React.createElement("b", null, "September 17, 2026")), m.bio && /*#__PURE__*/React.createElement("p", null, m.bio)), /*#__PURE__*/React.createElement("a", {
     className: "pm-ig-link",
     href: "#",
     onClick: e => e.preventDefault()
@@ -5272,7 +5060,7 @@ function PMScreen() {
     onAssessPatch: patchAssessState
   }), /*#__PURE__*/React.createElement(PMGoalsMenu, {
     assessState: assessState
-  }), /*#__PURE__*/React.createElement(PMMentor, null), /*#__PURE__*/React.createElement(PMActivityMenu, null), /*#__PURE__*/React.createElement(PMProfessionalInfoMenu, null), /*#__PURE__*/React.createElement(PMPaymentsMenu, null), /*#__PURE__*/React.createElement("button", {
+  }), /*#__PURE__*/React.createElement(PMMentor, null), /*#__PURE__*/React.createElement(PMActivityMenu, null), /*#__PURE__*/React.createElement(PMProfessionalInfoMenu, null), /*#__PURE__*/React.createElement("button", {
     className: "pm-logout",
     onClick: () => goPM("NewsfeedMobile.html")
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {

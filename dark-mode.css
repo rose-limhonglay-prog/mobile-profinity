@@ -196,6 +196,12 @@
 [data-theme="dark"] .as-logout      { border-color: var(--border-strong); color: var(--text-secondary); }
 [data-theme="dark"] .as-footer-link { color: var(--text-secondary); }
 [data-theme="dark"] .as-verify      { background: #1e1736; }
+[data-theme="dark"] .py-top h1      { color: var(--text-heading); }
+[data-theme="dark"] .py-showall    { color: var(--text-secondary); }
+[data-theme="dark"] .py-sheet-ttl, [data-theme="dark"] .iv-top h1, [data-theme="dark"] .iv-sheet-ttl { color: var(--text-heading); }
+[data-theme="dark"] .py-substate.cancelled { background: rgba(220,60,60,.16); }
+[data-theme="dark"] .py-toast, [data-theme="dark"] .iv-toast { background: var(--brand-navy); }
+[data-theme="dark"] .iv-chip.on { background: var(--brand-gold); color: #1A1736; border-color: var(--brand-gold); }
 
 /* ============================================================
    Display Settings page
