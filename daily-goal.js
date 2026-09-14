@@ -12,6 +12,9 @@
   "use strict";
   var KEY = "pf-daily-goal";
   var GOAL = window.PF_DAILY_GOAL || 50;
+  /* the automatic first-open-of-the-day check-in (daily-checkin.js) is a
+     welcome-back bonus, not activity — it must not tick the goal on its own */
+  var SKIP = { evt_mobile_checkin: true };
 
   function dayKey(d) { var dt = d ? new Date(d) : new Date(); return dt.getFullYear() + "-" + (dt.getMonth() + 1) + "-" + dt.getDate(); }
   function read() {
@@ -29,7 +32,7 @@
     try {
       var st = window.PFLoyalty && window.PFLoyalty.getState();
       var today = dayKey(), sum = 0;
-      ((st && st.ledger) || []).forEach(function (t) { if (t.pointsDelta > 0 && dayKey(t.ts) === today) sum += t.pointsDelta; });
+      ((st && st.ledger) || []).forEach(function (t) { if (t.pointsDelta > 0 && dayKey(t.ts) === today && !SKIP[t.actionId]) sum += t.pointsDelta; });
       return sum;
     } catch (e) { return 0; }
   }
@@ -55,6 +58,7 @@
   function onEarn(e) {
     var amount = e && e.detail && Number(e.detail.amount) || 0;
     if (amount <= 0) return;
+    if (e.detail && SKIP[e.detail.actionId]) return;
     var s = read();
     s.earned += amount;
     var total = Math.max(ledgerToday(), s.earned);

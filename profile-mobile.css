@@ -972,7 +972,8 @@ img{max-width:100%}
 .pm-league-card{--pm-league-bg:#FCF4E4;--pm-league-line:#F2D08A;--pm-league-gold:#8A5303;
   position:relative;padding:18px;background:var(--pm-league-bg);border-color:transparent}
 .pm-league-card.is-collapsed{padding-bottom:14px}
-.pm-league-hd{display:flex;align-items:center;gap:14px;padding-right:52px;min-height:40px}
+.pm-league-hd{display:flex;align-items:center;gap:12px;padding-right:52px;min-height:40px}
+.pm-league-gem{flex:none;width:46px;height:46px;margin:-4px 0;filter:drop-shadow(0 4px 8px color-mix(in srgb,var(--pm-lg-accent,#F4AD3D) 40%,transparent))}
 .pm-league-hd h2{margin:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--text-heading);line-height:1.25}
 .pm-league-rank{cursor:default;min-height:26px;padding:0 11px;font-size:13px}
 .pm-league-toggle{position:absolute;top:12px;right:12px;width:44px;height:44px;border:none;border-radius:50%;

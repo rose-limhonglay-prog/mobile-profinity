@@ -57,15 +57,31 @@
     { key: "master_reviewer", name: "Master Reviewer", icon: "lucide:star", description: "Write 10 product reviews.", criteria: { type: "actionCount", actionId: "evt_prod_review_submit", count: 10 }, reward: "5,000 bonus credits + 2x multiplier" }
   ];
 
+  /* Every reward is a discount on a specific course. `image` is the same
+     thumbnail the course cards use (allcourses-confidence / lesson-confidence)
+     and `course.slug` matches CourseCheckout.html?course=<slug>. */
   var DEFAULT_STORE_ITEMS = [
-    { id: "dinner_drtim", name: "Dinner with Dr Tim Pearce", description: "An exclusive dining experience with the platform founder. Subject to strict quarterly availability.", cost: 25000, category: "Signature", image: "assets/avatar-drtim.png", inventory: 2, delivery: "Concierge booking" },
-    { id: "mentorship_1on1", name: "1-on-1 Personal Mentorship", description: "A 45-minute clinical or business consulting session with leadership.", cost: 5500, category: "Signature", inventory: 6, delivery: "Calendar booking link" },
-    { id: "event_seats", name: "Exclusive Special Event Seats", description: "Priority VIP seating at live aesthetic workshops or annual conferences.", cost: 10000, category: "Experiences", inventory: 10, delivery: "E-ticket via email" },
-    { id: "clinical_tools", name: "Aesthetic Clinical Tools", description: "Access to premium procedural video sets and clinical intake templates.", cost: 3000, category: "Clinical", inventory: null, delivery: "Instant digital unlock" },
-    { id: "amazon_voucher_25", name: "Amazon Voucher — £25", description: "Digital gift voucher, delivered by email.", cost: 800, category: "Vouchers", inventory: null, delivery: "Email code" },
-    { id: "spotify_premium_3mo", name: "Spotify Premium — 3 Months", description: "3 months of Spotify Premium.", cost: 600, category: "Vouchers", inventory: null, delivery: "Email code" },
-    { id: "pf_hoodie", name: "PROfinity Branded Hoodie", description: "Exclusive branded clinic wear.", cost: 1200, category: "Merch", inventory: 40, delivery: "Ships to clinic address" }
+    { id: "disc_temple_filler", name: "Temple Filler", description: "Restore temple volume safely with cannula and needle approaches.", cost: 1200, category: "Filler", image: "assets/course-temple-filler.webp", inventory: null, delivery: "Applied automatically at checkout",
+      course: { slug: "temple-filler", title: "Temple Filler", price: 342, discountPct: 20 } },
+    { id: "disc_advanced_lip", name: "Advanced Lip Techniques", description: "Layered volume, borders and perioral balance built on 8D.", cost: 1800, category: "Lips", image: "assets/course-advanced-lip-techniques.jpg", inventory: 20, delivery: "Applied automatically at checkout",
+      course: { slug: "advanced-lip-techniques", title: "Advanced Lip Techniques", price: 342, discountPct: 25 } },
+    { id: "disc_complications", name: "Complications Management", description: "Recognise, prevent and manage vascular and other complications.", cost: 3800, category: "Safety", image: "assets/course-complications.jpg", inventory: null, delivery: "Applied automatically at checkout",
+      course: { slug: "complications-management", title: "Complications Management", price: 450, discountPct: 30 } },
+    { id: "disc_cheek_contouring", name: "Cheek Contouring", description: "Midface support, projection and natural-looking lift.", cost: 1000, category: "Filler", image: "assets/course-cheek-contouring.jpg", inventory: null, delivery: "Applied automatically at checkout",
+      course: { slug: "cheek-contouring", title: "Cheek Contouring", price: 246, discountPct: 20 } },
+    { id: "disc_jawline", name: "Jawline Sculpting", description: "Define the mandibular border and chin with structural filler.", cost: 1200, category: "Filler", image: "assets/course-jawline-sculpting.jpg", inventory: null, delivery: "Applied automatically at checkout",
+      course: { slug: "jawline-sculpting", title: "Jawline Sculpting", price: 294, discountPct: 20 } },
+    { id: "disc_tear_trough", name: "Tear Trough Treatment", description: "Assess, select and treat the infraorbital hollow safely.", cost: 900, category: "Filler", image: "assets/course-tear-trough.jpg", inventory: null, delivery: "Applied automatically at checkout",
+      course: { slug: "tear-trough-treatment", title: "Tear Trough Treatment", price: 342, discountPct: 15 } },
+    { id: "disc_full_face", name: "Full Face Rejuvenation", description: "The complete assessment-to-treatment masterclass across every region.", cost: 5500, category: "Masterclass", image: "assets/course-full-face-rejuvenation.jpg", inventory: 5, delivery: "Applied automatically at checkout",
+      course: { slug: "full-face-rejuvenation", title: "Full Face Rejuvenation", price: 480, discountPct: 40 } },
+    { id: "disc_membership", name: "PROfinity Membership", description: "A year of Mastery access, live mentoring and every course included.", cost: 4000, category: "Membership", image: "assets/course-membership-banner.jpg", inventory: null, delivery: "Applied automatically at checkout",
+      course: { slug: "profinity-membership", title: "PROfinity Membership", price: 199, discountPct: 10 } }
   ];
+  /* bump when DEFAULT_STORE_ITEMS changes shape so a member's cached config
+     picks up the new catalog (admin edits made after that still stick) */
+  var STORE_CATALOG_VERSION = 2;
+  var COURSE_DISCOUNTS_KEY = "pf-course-discounts";
 
   var DEFAULT_LEADERBOARD_PRIZES = [
     { rank: "1", prize: "1:1 Mentorship with Dr Tim Pearce" },
@@ -84,6 +100,7 @@
     levelBadges: DEFAULT_LEVEL_BADGES,
     achievementBadges: DEFAULT_ACHIEVEMENT_BADGES,
     storeItems: DEFAULT_STORE_ITEMS,
+    storeCatalogVersion: STORE_CATALOG_VERSION,
     leaderboardPrizes: DEFAULT_LEADERBOARD_PRIZES
   };
 
@@ -116,6 +133,12 @@
   function getConfig() {
     var cfg = readJSON(CONFIG_KEY, null);
     if (!cfg) { cfg = JSON.parse(JSON.stringify(DEFAULT_CONFIG)); writeJSON(CONFIG_KEY, cfg); }
+    // a cached config from before the store became course discounts still
+    // holds the old catalog — swap it for the current defaults once
+    if (cfg.storeCatalogVersion !== STORE_CATALOG_VERSION) {
+      cfg = Object.assign({}, cfg, { storeItems: JSON.parse(JSON.stringify(DEFAULT_STORE_ITEMS)), storeCatalogVersion: STORE_CATALOG_VERSION });
+      writeJSON(CONFIG_KEY, cfg);
+    }
     // backfill any keys added after a user's config was first seeded
     var merged = Object.assign({}, DEFAULT_CONFIG, cfg);
     return merged;
@@ -338,7 +361,12 @@
 
     var code = "PF-" + item.id.slice(0, 3).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
     var txn = { id: uid("txn"), ts: nowIso(), actionId: "redeem:" + itemId, label: "Redeemed: " + item.name, pointsDelta: 0, creditsDelta: -item.cost, guardrailFlags: null, adminId: null, adjustmentReason: null };
-    var voucher = { code: code, itemId: itemId, itemName: item.name, redeemedAt: nowIso() };
+    var voucher = { code: code, itemId: itemId, itemName: item.name, redeemedAt: nowIso(), course: item.course || null };
+    if (item.course && item.course.slug) {
+      var discounts = readJSON(COURSE_DISCOUNTS_KEY, {});
+      discounts[item.course.slug] = { pct: item.course.discountPct, code: code, itemName: item.name, redeemedAt: voucher.redeemedAt };
+      writeJSON(COURSE_DISCOUNTS_KEY, discounts);
+    }
 
     var newState = setState({
       spendableCredits: state.spendableCredits - item.cost,
@@ -459,7 +487,9 @@
     });
   }
 
+  function getCourseDiscount(slug) { var d = readJSON(COURSE_DISCOUNTS_KEY, {}); return d[slug] || null; }
   window.PFLoyalty = {
+    getCourseDiscount: getCourseDiscount,
     TIER_KEYS: TIER_KEYS,
     MOCK_DIRECTORY: MOCK_DIRECTORY,
     getConfig: getConfig, setConfig: setConfig,

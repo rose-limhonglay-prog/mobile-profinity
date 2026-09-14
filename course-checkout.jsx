@@ -33,6 +33,11 @@ function useIsMobileCC() {
 
 const VAT_RATE_CC = 0.2;
 const PF_PURCHASED_KEY_CC = "pf-purchased-courses";
+/* a course discount redeemed in the Rewards Store (loyalty-engine writes it) */
+const PF_COURSE_DISCOUNTS_KEY_CC = "pf-course-discounts";
+function getRewardDiscountCC(slug) {
+  try { const d = JSON.parse(localStorage.getItem(PF_COURSE_DISCOUNTS_KEY_CC)) || {}; return d[slug] || null; } catch (e) { return null; }
+}
 
 function slugifyCC(title) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -80,8 +85,11 @@ function CourseCheckout() {
   const [promo, setPromo] = useStateCC("");
   const [paying, setPaying] = useStateCC(false);
 
-  const vat = Math.round(course.price * VAT_RATE_CC);
-  const total = course.price + vat;
+  const reward = getRewardDiscountCC(course.slug);
+  const rewardOff = reward ? Math.round(course.price * reward.pct / 100) : 0;
+  const subtotal = Math.max(0, course.price - rewardOff);
+  const vat = Math.round(subtotal * VAT_RATE_CC);
+  const total = subtotal + vat;
   const detailUrl = buildCourseDetailUrlCC(course);
 
   function handlePay() {
@@ -122,6 +130,12 @@ function CourseCheckout() {
               <span>Course price</span>
               <span>£{course.price.toLocaleString()}</span>
             </div>
+            {reward && (
+              <div className="cc-summary-row cc-summary-reward">
+                <span>Reward discount · {reward.pct}% off <small>{reward.code}</small></span>
+                <span>−£{rewardOff.toLocaleString()}</span>
+              </div>
+            )}
             <div className="cc-summary-row">
               <span>VAT (20%)</span>
               <span>£{vat.toLocaleString()}</span>

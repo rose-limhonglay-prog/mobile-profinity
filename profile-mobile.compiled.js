@@ -840,25 +840,10 @@ function PMGoalsGateCard({
    goes position:absolute (.is-offstage) and rides off-screen. No measured
    heights — these screens grow after first layout (icon web components
    upgrade, chips wrap, Poppins loads), so any single measurement is stale. */
-/* League standing shown beside the "Track your goals" header — the same
-   rank the Leaderboard's "Your league" card computes: Katy's live rolling
-   30-day points (window.PFLoyalty) merged into the mock clinician field.
-   Mirror of LB_FIELD in leaderboard.jsx — keep the points in sync. */
-const PM_LEAGUE_FIELD = [{
-  name: "Dr Tim Pearce",
-  avatar: "assets/avatar-drtim.png",
-  points: 9840
-}, {
-  name: "Miranda Pearce",
-  avatar: "assets/avatar-miranda.jpg",
-  points: 8120
-}, {
-  name: "Sofia Alarcón",
-  points: 6790
-}, {
-  name: "Jonas Adeyemi",
-  points: 5310
-}, {
+/* League standing: the member's board in her current gem league
+   (window.PFLeague — same data as the Leaderboard page). Falls back to a
+   flat field if the engine isn't on the page. */
+const PM_LEAGUE_FALLBACK = [{
   name: "Grace Lindqvist",
   points: 4980
 }, {
@@ -867,42 +852,24 @@ const PM_LEAGUE_FIELD = [{
 }, {
   name: "Ravi Chandran",
   points: 3920
-}, {
-  name: "Olivia Marsh",
-  points: 3510
-}, {
-  name: "Deniz Aydın",
-  points: 3105
-}, {
-  name: "Priya Nandwani",
-  points: 2640
-}, {
-  name: "Liam O'Connor",
-  points: 2210
-}, {
-  name: "Amara Okafor",
-  points: 1890
-}, {
-  name: "Ben Fischer",
-  points: 1655
-}, {
-  name: "Noor Haddad",
-  points: 1420
 }];
-/* Full ranking with Katy merged in, plus her row and its neighbours. */
 function pmLeagueStandings() {
   const engine = window.PFLoyalty;
   let mine = 2100;
   try {
     if (engine && engine.getState) mine = engine.getState().rollingPoints30 || 0;
   } catch (e) {}
-  const rows = PM_LEAGUE_FIELD.map(r => ({
+  const me = {
+    name: PM_ME.name + " (You)",
+    avatar: PM_ME.avatar,
+    points: mine
+  };
+  if (window.PFLeague && window.PFLeague.getStandings) return window.PFLeague.getStandings(me);
+  const rows = PM_LEAGUE_FALLBACK.map(r => ({
     ...r,
     isMe: false
   })).concat([{
-    name: PM_ME.name + " (You)",
-    avatar: PM_ME.avatar,
-    points: mine,
+    ...me,
     isMe: true
   }]).sort((a, b) => b.points - a.points).map((r, i) => ({
     ...r,
@@ -910,11 +877,54 @@ function pmLeagueStandings() {
   }));
   const meIdx = rows.findIndex(r => r.isMe);
   return {
+    league: null,
     rows,
     me: rows[meIdx],
     above: rows[meIdx - 1] || null,
     below: rows[meIdx + 1] || null
   };
+}
+/* small gem Lottie for the league card header */
+function PMLeagueGem({
+  src,
+  size
+}) {
+  const host = React.useRef(null);
+  useEffectPM(() => {
+    let anim, t;
+    const start = () => {
+      if (!window.lottie || !host.current) return;
+      anim = window.lottie.loadAnimation({
+        container: host.current,
+        renderer: "svg",
+        loop: true,
+        autoplay: true,
+        path: src
+      });
+    };
+    if (window.lottie) start();else {
+      t = setInterval(() => {
+        if (window.lottie) {
+          clearInterval(t);
+          start();
+        }
+      }, 120);
+      setTimeout(() => clearInterval(t), 8000);
+    }
+    return () => {
+      clearInterval(t);
+      if (anim) anim.destroy();
+    };
+  }, [src]);
+  return /*#__PURE__*/React.createElement("span", {
+    ref: host,
+    style: {
+      display: "block",
+      width: size,
+      height: size
+    },
+    "aria-hidden": "true"
+  });
 }
 /* "Your league" — the member's standing in the rolling 30-day league with the
    clinician one place above and one below, so the gap to close is concrete.
@@ -934,7 +944,8 @@ function PMLeagueCard() {
   const {
     me,
     above,
-    below
+    below,
+    league
   } = standings;
   const fmt = n => n.toLocaleString("en-GB");
   const bodyId = React.useId ? React.useId() : undefined;
@@ -945,8 +956,17 @@ function PMLeagueCard() {
     className: "pm-sec pm-card pm-league-card" + (open ? "" : " is-collapsed"),
     "data-screen-label": "Your league"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-league-hd"
-  }, /*#__PURE__*/React.createElement("h2", null, "Your league"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-league-hd",
+    style: league ? {
+      "--pm-lg-accent": league.accent,
+      "--pm-lg-deep": league.deep
+    } : null
+  }, league && /*#__PURE__*/React.createElement("span", {
+    className: "pm-league-gem"
+  }, /*#__PURE__*/React.createElement(PMLeagueGem, {
+    src: league.lottie,
+    size: 46
+  })), /*#__PURE__*/React.createElement("h2", null, league ? league.name + " League" : "Your league"), /*#__PURE__*/React.createElement("span", {
     className: "pm-goals-rank pm-league-rank",
     "aria-label": "Ranked number " + me.rank
   }, "#", me.rank), /*#__PURE__*/React.createElement("button", {
@@ -965,7 +985,7 @@ function PMLeagueCard() {
     id: bodyId
   }, /*#__PURE__*/React.createElement("p", {
     className: "pm-league-sub"
-  }, above ? /*#__PURE__*/React.createElement(React.Fragment, null, "Last 30 days · ", /*#__PURE__*/React.createElement("b", null, fmt(gap), " pts"), " behind ", firstName, " — finish today's targets to close it.") : /*#__PURE__*/React.createElement(React.Fragment, null, "Last 30 days · you're leading the league — finish today's targets to stay there.")), /*#__PURE__*/React.createElement("div", {
+  }, above ? /*#__PURE__*/React.createElement(React.Fragment, null, league ? "Your league · last 30 days" : "Last 30 days", " · ", /*#__PURE__*/React.createElement("b", null, fmt(gap), " pts"), " behind ", firstName, " — finish today's targets to close it.") : /*#__PURE__*/React.createElement(React.Fragment, null, league ? "Your league · last 30 days" : "Last 30 days", " · you're leading ", league ? league.name + " League" : "the league", " — finish today's targets to stay there.")), /*#__PURE__*/React.createElement("div", {
     className: "pm-league-rows"
   }, rows.map(r => /*#__PURE__*/React.createElement("div", {
     key: r.rank,

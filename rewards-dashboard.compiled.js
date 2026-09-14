@@ -325,40 +325,75 @@ function RdbHeader({
   tier,
   onOpenWallet
 }) {
-  const progress = PF_RDB.getBadgeProgress(state);
   const hour = new Date().getHours();
   const greet = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const LG = window.PFLeague;
+  const p = LG ? LG.getProgress() : null;
+  const cur = p ? p.current : null,
+    next = p ? p.next : null;
+  const pct = p ? p.pct : 0;
   return /*#__PURE__*/React.createElement("div", {
     className: "rdb-head"
   }, /*#__PURE__*/React.createElement("div", {
     className: "rdb-head-row"
   }, /*#__PURE__*/React.createElement("div", {
     className: "rdb-head-greet"
-  }, greet, ", ", state.user.name, "!")), /*#__PURE__*/React.createElement("div", {
-    className: "rdb-progress-card"
-  }, /*#__PURE__*/React.createElement(RdbBeaker, null), /*#__PURE__*/React.createElement("div", {
+  }, greet, ", ", state.user.name, "!")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rdb-progress-card rdb-progress-league",
+    onClick: () => goRDB("Leaderboard.html"),
+    "aria-label": cur ? cur.name + " League, " + (next ? p.need + " more milestones to " + next.name : "highest badge") + ". Open the leaderboard" : "Open the leaderboard",
+    style: cur ? {
+      "--lg-accent": cur.accent,
+      "--lg-deep": cur.deep,
+      "--nx-accent": (next || cur).accent,
+      "--nx-deep": (next || cur).deep
+    } : null
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rdb-progress-gem cur"
+  }, cur && /*#__PURE__*/React.createElement(RdbLeagueLottie, {
+    src: cur.lottie,
+    size: 60
+  })), /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-body"
   }, /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-top"
-  }, /*#__PURE__*/React.createElement("span", null, progress.current ? progress.current.name : "Unranked"), /*#__PURE__*/React.createElement("span", null, progress.next ? progress.next.name : "Top tier")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--lg-deep)"
+    }
+  }, cur ? cur.name : "League"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--nx-deep)"
+    }
+  }, next ? next.name : "Top badge")), /*#__PURE__*/React.createElement("div", {
     className: "ml-progress-track rdb-progress-track"
   }, /*#__PURE__*/React.createElement("div", {
     className: "ml-progress-fill",
     style: {
-      width: progress.pct + "%"
+      width: pct + "%",
+      background: "linear-gradient(90deg, var(--lg-accent), var(--nx-accent))"
     }
-  }), progress.next ? /*#__PURE__*/React.createElement("span", {
-    className: "rdb-progress-marker",
-    title: PF_RDB.formatNumber(progress.next.threshold || 0) + " pts"
-  }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
-    name: "lucide:star",
-    size: 11,
-    color: "#3D2A00"
-  })) : null), progress.next ? /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-scale"
-  }, /*#__PURE__*/React.createElement("span", null, PF_RDB.formatNumber(state.lifetimePoints), " pts"), /*#__PURE__*/React.createElement("span", null, PF_RDB.formatNumber((state.lifetimePoints || 0) + (progress.remaining || 0)), " pts")) : null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, p ? p.done + " of " + p.total + " milestones" : ""), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--nx-deep)"
+    }
+  }, next ? next.requires + " milestones" : "Complete")), /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-note"
-  }, progress.next ? PF_RDB.formatNumber(progress.remaining) + " pts away from " + progress.next.name : "You've reached the top badge tier!"))));
+  }, next ? p.need + " more milestone" + (p.need === 1 ? "" : "s") + " to " + next.name + " League" : "You've earned the highest badge!")), /*#__PURE__*/React.createElement("span", {
+    className: "rdb-progress-gem next" + (next ? " locked" : "")
+  }, (next || cur) && /*#__PURE__*/React.createElement(RdbLeagueLottie, {
+    src: (next || cur).lottie,
+    size: 60
+  }), next && /*#__PURE__*/React.createElement("span", {
+    className: "rdb-progress-lock"
+  }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
+    name: "lucide:lock",
+    size: 12,
+    color: "#fff"
+  })))));
 }
 function RdbEngagementCards({
   state
@@ -431,25 +466,104 @@ function RdbEngagementCards({
     color: "var(--gray-400)"
   }))));
 }
+
+/* The member's league badge (window.PFLeague) — tapping opens the leaderboard.
+   Renders the gem as a Lottie via lottie-web (raw JSON, same as the leaderboard). */
+function RdbLeagueLottie({
+  src,
+  size
+}) {
+  const host = useRefRDB(null);
+  useEffectRDB(() => {
+    let anim, t;
+    const start = () => {
+      if (!window.lottie || !host.current) return;
+      anim = window.lottie.loadAnimation({
+        container: host.current,
+        renderer: "svg",
+        loop: true,
+        autoplay: true,
+        path: src
+      });
+    };
+    if (window.lottie) start();else {
+      t = setInterval(() => {
+        if (window.lottie) {
+          clearInterval(t);
+          start();
+        }
+      }, 120);
+      setTimeout(() => clearInterval(t), 8000);
+    }
+    return () => {
+      clearInterval(t);
+      if (anim) anim.destroy();
+    };
+  }, [src]);
+  return /*#__PURE__*/React.createElement("span", {
+    ref: host,
+    style: {
+      display: "block",
+      width: size,
+      height: size
+    },
+    "aria-hidden": "true"
+  });
+}
+function RdbLeagueCard() {
+  const LG = window.PFLeague;
+  if (!LG) return null;
+  const p = LG.getProgress();
+  const cur = p.current,
+    next = p.next;
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rdb-league",
+    style: {
+      "--lg-accent": cur.accent,
+      "--lg-deep": cur.deep,
+      "--lg-soft": cur.soft
+    },
+    onClick: () => goRDB("Leaderboard.html"),
+    "aria-label": cur.name + " League. Open the leaderboard",
+    "data-screen-label": "Your league"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rdb-league-gem"
+  }, /*#__PURE__*/React.createElement(RdbLeagueLottie, {
+    src: cur.lottie,
+    size: 64
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "rdb-league-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rdb-league-eyebrow"
+  }, "Your league"), /*#__PURE__*/React.createElement("b", null, cur.name, " League"), /*#__PURE__*/React.createElement("i", null, next ? p.need + " more milestone" + (p.need === 1 ? "" : "s") + " to " + next.name : "Highest badge earned")), /*#__PURE__*/React.createElement("span", {
+    className: "rdb-league-cta"
+  }, "Leaderboard", /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 16,
+    color: "var(--lg-deep)"
+  })));
+}
 function RdbQuickNav() {
+  let redeemed = 0;
+  try {
+    redeemed = (PF_RDB.getState().redeemedVouchers || []).length;
+  } catch (e) {}
   const items = [{
-    label: "Badge Progress",
-    icon: "lucide:target",
-    href: "BadgeProgress.html"
-  }, {
     label: "Rewards Store",
     icon: "lucide:shopping-bag",
     href: "RewardsStore.html",
     dot: true
   }, {
+    label: "My Rewards",
+    icon: "lucide:ticket",
+    href: "MyRewards.html",
+    note: redeemed > 0 ? String(redeemed) : null
+  }, {
     label: "Leaderboard",
     icon: "lucide:bar-chart-3",
     href: "Leaderboard.html",
-    note: "#12"
-  }, {
-    label: "Badge Gallery",
-    icon: "lucide:award",
-    href: "BadgeGallery.html"
+    note: window.PFLeague ? window.PFLeague.getCurrent().name : null
   }, {
     label: "Ways to Earn",
     icon: "lucide:sparkles",
@@ -557,7 +671,7 @@ function RewardsDashboardHome() {
     }
   }, /*#__PURE__*/React.createElement(RdbEngagementCards, {
     state: state
-  }), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement(RdbLeagueCard, null), /*#__PURE__*/React.createElement("div", {
     className: "ml-sec-h"
   }, /*#__PURE__*/React.createElement("h2", null, "Jump back in")), /*#__PURE__*/React.createElement(RdbQuickNav, null), /*#__PURE__*/React.createElement(RdbNextReward, {
     state: state,

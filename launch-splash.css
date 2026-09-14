@@ -1,0 +1,20 @@
+/* PROfinity — launch splash overlay (see launch-splash.js) */
+.pf-launch{
+  position:fixed; inset:0; z-index:2147483000;
+  background:#2a2569;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+  opacity:1; transition:opacity .42s ease;
+  pointer-events:auto;
+}
+/* inside the iPhone frame: cover the screen only, keep the bezel radius */
+.pf-launch--framed{
+  position:absolute; border-radius:inherit;
+  z-index:2147483000; /* above status bar, island, home indicator and in-frame toasts/banners (z up to ~9999) */
+}
+.pf-launch__stage{ position:absolute; inset:0; }
+.pf-launch__stage svg{ width:100% !important; height:100% !important; display:block; }
+.pf-launch--out{ opacity:0; }
+/* the page underneath should not run its own enter transition while covered */
+html.pf-launch-active{ opacity:1 !important; transform:none !important; }
+@media (prefers-reduced-motion: reduce){ .pf-launch{ transition:none } }

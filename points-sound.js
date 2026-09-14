@@ -66,22 +66,49 @@
     }
   }
 
-  /* ---- optional real clip ---- */
-  var clip = null;
-  function playClip(src) {
-    try {
-      if (!clip) { clip = new Audio(src); clip.preload = "auto"; }
-      clip.currentTime = 0;
-      var p = clip.play();
-      if (p && p.catch) p.catch(function () { synth(false); });
-    } catch (e) { synth(false); }
+  /* ---- the welcome chime: daily check-in (first open of the day) ----
+     A warmer, longer rising arpeggio (C5 → E5 → G5 → C6) with a soft bell
+     shimmer on the top note, so the "welcome back" bonus is unmistakably
+     different from the quick two-note coin chime. To use a real clip set
+     `window.PF_CHECKIN_SOUND_SRC` before this script loads. */
+  function synthCheckin() {
+    var c = getCtx();
+    if (!c) return;
+    var t = c.currentTime + 0.01;
+    var steps = [523.25, 659.25, 783.99, 1046.5];
+    for (var i = 0; i < steps.length; i++) {
+      var at = t + i * 0.11, last = i === steps.length - 1;
+      note(c, steps[i], at, last ? 0.75 : 0.28, last ? 0.28 : 0.2, "sine");
+      note(c, steps[i] * 2, at, last ? 0.45 : 0.16, 0.045, "triangle");
+    }
+    /* bell shimmer: a fifth above the top note, fading slowly */
+    note(c, 1567.98, t + 0.36, 0.9, 0.07, "sine");
+    note(c, 2093.0, t + 0.42, 0.7, 0.035, "triangle");
   }
 
-  function play(amount) {
+  /* ---- optional real clip ---- */
+  var clips = {};
+  function playClip(src, fallback) {
+    fallback = fallback || function () { synth(false); };
+    try {
+      var clip = clips[src] || (clips[src] = new Audio(src));
+      clip.preload = "auto";
+      clip.currentTime = 0;
+      var p = clip.play();
+      if (p && p.catch) p.catch(fallback);
+    } catch (e) { fallback(); }
+  }
+
+  function play(amount, kind) {
     if (!enabled()) return;
     var now = Date.now();
     if (now - lastPlay < DEBOUNCE_MS) return;
     lastPlay = now;
+    if (kind === "checkin") {
+      var csrc = window.PF_CHECKIN_SOUND_SRC;
+      if (csrc) playClip(csrc, synthCheckin); else synthCheckin();
+      return;
+    }
     var src = window.PF_POINTS_SOUND_SRC;
     if (src) playClip(src); else synth(Number(amount) >= 100);
   }
@@ -89,12 +116,16 @@
   function onEarn(e) {
     var amount = e && e.detail && Number(e.detail.amount) || 0;
     if (amount <= 0) return;
-    play(amount);
+    var d = e.detail || {};
+    /* the automatic first-open-of-the-day bonus gets its own welcome chime */
+    var kind = d.sound || (d.actionId === "evt_mobile_checkin" ? "checkin" : null);
+    play(amount, kind);
   }
   window.addEventListener("pf:points-earned", onEarn);
 
   window.PFPointsSound = {
     play: function (amount) { lastPlay = 0; play(amount == null ? 10 : amount); },
+    playCheckin: function () { lastPlay = 0; play(50, "checkin"); },
     mute: function () { setEnabled(false); },
     unmute: function () { setEnabled(true); },
     toggle: function () { setEnabled(!enabled()); return enabled(); },

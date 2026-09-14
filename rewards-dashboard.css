@@ -73,6 +73,19 @@ img { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) { .rdb-beaker-anim { transition: none; } }
 /* beaker mascot reuses the header pill's icon markup (.m-pts-ic, 30px) — scale the slot up to the card's 88px */
 .rdb-progress-body { flex: 1; min-width: 0; }
+/* league badge ends */
+.rdb-progress-league { width: 100%; text-align: left; cursor: pointer; font-family: inherit; gap: 10px; padding: 14px 12px;
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease; }
+.rdb-progress-league:hover { box-shadow: 0 8px 22px rgba(41,37,105,.10); transform: translateY(-1px); }
+.rdb-progress-league:active { transform: scale(.99); }
+.rdb-progress-gem { position: relative; flex: none; width: 60px; height: 60px; filter: drop-shadow(0 6px 10px rgba(16,24,40,.16)); }
+.rdb-progress-gem.locked > span:first-child { filter: grayscale(1) brightness(.8); opacity: .6; }
+.rdb-progress-lock { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(30,32,40,.78); border: 2px solid rgba(255,255,255,.75); display: flex; align-items: center; justify-content: center; }
+.rdb-progress-league .rdb-progress-top { margin-bottom: 6px; }
+.rdb-progress-league .rdb-progress-scale { margin-top: 6px; }
+.rdb-progress-league .rdb-progress-note { margin-top: 6px; }
+.rdb-progress-league .ml-progress-track { background: var(--gray-100); }
 .rdb-progress-top { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: var(--gray-600); margin-bottom: 8px; }
 .rdb-progress-track { position: relative; overflow: visible; }
 .rdb-progress-card .ml-progress-track { height: 12px; border-radius: 999px; background: #FFF3DC; box-shadow: inset 0 1px 3px rgba(41,37,105,.1); }
@@ -112,6 +125,18 @@ img { max-width: 100%; }
 .rdb-eng-link:active { transform: scale(.98); }
 
 /* ------------------------------------------------------------ quicknav */
+/* league badge card → leaderboard */
+.rdb-league { display: flex; align-items: center; gap: 14px; width: 100%; margin: 14px 0 4px; padding: 12px 14px 12px 12px; border-radius: 18px; text-align: left; cursor: pointer;
+  border: 1.5px solid color-mix(in srgb, var(--lg-accent) 45%, transparent); background: linear-gradient(135deg, var(--surface-card), var(--lg-soft));
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--lg-accent) 16%, transparent); font-family: inherit; transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease; }
+.rdb-league:hover { transform: translateY(-2px); box-shadow: 0 12px 28px color-mix(in srgb, var(--lg-accent) 24%, transparent); }
+.rdb-league:active { transform: scale(.985); }
+.rdb-league-gem { flex: none; width: 64px; height: 64px; filter: drop-shadow(0 6px 12px color-mix(in srgb, var(--lg-accent) 40%, transparent)); }
+.rdb-league-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.rdb-league-eyebrow { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--gray-500); }
+.rdb-league-tx b { font-size: 16px; font-weight: 800; color: var(--lg-deep); letter-spacing: -.01em; }
+.rdb-league-tx i { font-style: normal; font-size: 12px; color: var(--gray-600); }
+.rdb-league-cta { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: 12.5px; font-weight: 800; color: var(--lg-deep); }
 .rdb-quicknav { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
 .rdb-quicknav-item { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
   text-align: left; padding: 14px; min-height: 96px; border-radius: 16px; border: 1px solid var(--border-default); background: var(--surface-card);
@@ -163,7 +188,7 @@ img { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   .rdb-wallet-chip, .rdb-wallet-chip::after, .rdb-wallet-chip iconify-icon { animation: none; transition: none; }
   .rdb-progress-card .ml-progress-fill::after, .rdb-progress-marker { animation: none; }
-  .rdb-quicknav-item, .rdb-next-reward { transition: none; }
+  .rdb-quicknav-item, .rdb-next-reward, .rdb-league, .rdb-progress-league { transition: none; }
 }
 
 /* Lip-filler coral accent (matches the progress-card Lottie #FCC25D) */

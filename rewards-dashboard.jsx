@@ -187,34 +187,40 @@ function RdbBeaker() {
 }
 
 function RdbHeader({ state, tier, onOpenWallet }) {
-  const progress = PF_RDB.getBadgeProgress(state);
   const hour = new Date().getHours();
   const greet = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const LG = window.PFLeague;
+  const p = LG ? LG.getProgress() : null;
+  const cur = p ? p.current : null, next = p ? p.next : null;
+  const pct = p ? p.pct : 0;
   return (
     <div className="rdb-head">
       <div className="rdb-head-row">
         <div className="rdb-head-greet">{greet}, {state.user.name}!</div>
       </div>
-      <div className="rdb-progress-card">
-        <RdbBeaker />
+      {/* league badge progress: current gem on the left, the next gem and its
+          milestone requirement on the right; tapping opens the leaderboard */}
+      <button type="button" className="rdb-progress-card rdb-progress-league" onClick={() => goRDB("Leaderboard.html")}
+        aria-label={cur ? cur.name + " League, " + (next ? p.need + " more milestones to " + next.name : "highest badge") + ". Open the leaderboard" : "Open the leaderboard"}
+        style={cur ? { "--lg-accent": cur.accent, "--lg-deep": cur.deep, "--nx-accent": (next || cur).accent, "--nx-deep": (next || cur).deep } : null}>
+        <span className="rdb-progress-gem cur">{cur && <RdbLeagueLottie src={cur.lottie} size={60} />}</span>
         <div className="rdb-progress-body">
           <div className="rdb-progress-top">
-            <span>{progress.current ? progress.current.name : "Unranked"}</span>
-            <span>{progress.next ? progress.next.name : "Top tier"}</span>
+            <span style={{ color: "var(--lg-deep)" }}>{cur ? cur.name : "League"}</span>
+            <span style={{ color: "var(--nx-deep)" }}>{next ? next.name : "Top badge"}</span>
           </div>
           <div className="ml-progress-track rdb-progress-track">
-            <div className="ml-progress-fill" style={{ width: progress.pct + "%" }} />
-            {progress.next ? <span className="rdb-progress-marker" title={PF_RDB.formatNumber(progress.next.threshold || 0) + " pts"}><DSRDB.IconifyIcon name="lucide:star" size={11} color="#3D2A00" /></span> : null}
+            <div className="ml-progress-fill" style={{ width: pct + "%", background: "linear-gradient(90deg, var(--lg-accent), var(--nx-accent))" }} />
           </div>
-          {progress.next ? (
-            <div className="rdb-progress-scale">
-              <span>{PF_RDB.formatNumber(state.lifetimePoints)} pts</span>
-              <span>{PF_RDB.formatNumber((state.lifetimePoints || 0) + (progress.remaining || 0))} pts</span>
-            </div>
-          ) : null}
-          <div className="rdb-progress-note">{progress.next ? PF_RDB.formatNumber(progress.remaining) + " pts away from " + progress.next.name : "You've reached the top badge tier!"}</div>
+          <div className="rdb-progress-scale">
+            <span>{p ? p.done + " of " + p.total + " milestones" : ""}</span>
+            <span style={{ color: "var(--nx-deep)" }}>{next ? next.requires + " milestones" : "Complete"}</span>
+          </div>
+          <div className="rdb-progress-note">{next ? p.need + " more milestone" + (p.need === 1 ? "" : "s") + " to " + next.name + " League" : "You've earned the highest badge!"}</div>
         </div>
-      </div>
+        <span className={"rdb-progress-gem next" + (next ? " locked" : "")}>{(next || cur) && <RdbLeagueLottie src={(next || cur).lottie} size={60} />}
+          {next && <span className="rdb-progress-lock"><DSRDB.IconifyIcon name="lucide:lock" size={12} color="#fff" /></span>}</span>
+      </button>
     </div>
   );
 }
@@ -241,12 +247,48 @@ function RdbEngagementCards({ state }) {
   );
 }
 
+/* The member's league badge (window.PFLeague) — tapping opens the leaderboard.
+   Renders the gem as a Lottie via lottie-web (raw JSON, same as the leaderboard). */
+function RdbLeagueLottie({ src, size }) {
+  const host = useRefRDB(null);
+  useEffectRDB(() => {
+    let anim, t;
+    const start = () => {
+      if (!window.lottie || !host.current) return;
+      anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: true, autoplay: true, path: src });
+    };
+    if (window.lottie) start();
+    else { t = setInterval(() => { if (window.lottie) { clearInterval(t); start(); } }, 120); setTimeout(() => clearInterval(t), 8000); }
+    return () => { clearInterval(t); if (anim) anim.destroy(); };
+  }, [src]);
+  return <span ref={host} style={{ display: "block", width: size, height: size }} aria-hidden="true" />;
+}
+function RdbLeagueCard() {
+  const LG = window.PFLeague;
+  if (!LG) return null;
+  const p = LG.getProgress();
+  const cur = p.current, next = p.next;
+  return (
+    <button type="button" className="rdb-league" style={{ "--lg-accent": cur.accent, "--lg-deep": cur.deep, "--lg-soft": cur.soft }}
+      onClick={() => goRDB("Leaderboard.html")} aria-label={cur.name + " League. Open the leaderboard"} data-screen-label="Your league">
+      <span className="rdb-league-gem"><RdbLeagueLottie src={cur.lottie} size={64} /></span>
+      <span className="rdb-league-tx">
+        <span className="rdb-league-eyebrow">Your league</span>
+        <b>{cur.name} League</b>
+        <i>{next ? p.need + " more milestone" + (p.need === 1 ? "" : "s") + " to " + next.name : "Highest badge earned"}</i>
+      </span>
+      <span className="rdb-league-cta">Leaderboard<DSRDB.IconifyIcon name="lucide:chevron-right" size={16} color="var(--lg-deep)" /></span>
+    </button>
+  );
+}
+
 function RdbQuickNav() {
+  let redeemed = 0;
+  try { redeemed = (PF_RDB.getState().redeemedVouchers || []).length; } catch (e) {}
   const items = [
-    { label: "Badge Progress", icon: "lucide:target", href: "BadgeProgress.html" },
     { label: "Rewards Store", icon: "lucide:shopping-bag", href: "RewardsStore.html", dot: true },
-    { label: "Leaderboard", icon: "lucide:bar-chart-3", href: "Leaderboard.html", note: "#12" },
-    { label: "Badge Gallery", icon: "lucide:award", href: "BadgeGallery.html" },
+    { label: "My Rewards", icon: "lucide:ticket", href: "MyRewards.html", note: redeemed > 0 ? String(redeemed) : null },
+    { label: "Leaderboard", icon: "lucide:bar-chart-3", href: "Leaderboard.html", note: (window.PFLeague ? window.PFLeague.getCurrent().name : null) },
     { label: "Ways to Earn", icon: "lucide:sparkles", href: "WaysToEarn.html" }
   ];
   return (
@@ -312,6 +354,7 @@ function RewardsDashboardHome() {
         <StreakRiskBanner state={state} />
         <div style={{ padding: "0 20px" }}>
           <RdbEngagementCards state={state} />
+          <RdbLeagueCard />
           <div className="ml-sec-h"><h2>Jump back in</h2></div>
           <RdbQuickNav />
           <RdbNextReward state={state} config={config} />

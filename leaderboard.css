@@ -11,15 +11,18 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 img { max-width: 100%; }
 
 .lb-screen, .lb-scroll { background: var(--surface-page); }
+/* the board scrolls, but the track itself stays hidden like a native list */
+.lb-scroll { scrollbar-width: none; }
+.lb-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
 /* the desktop device-stage preview draws its own status bar/dynamic island as an
    absolute overlay (ios-frame.jsx), so only there does the header need extra
    clearance — the real mobile viewport already gets safe-area space from the OS */
 .device-stage .lb-screen .ml-top { padding-top: 60px; }
-.lb-sub { margin: 0 0 18px; text-align: center; font-family: var(--font-sans); font-size: 14px; color: var(--gray-500); }
+.lb-sub { margin: 0 0 8px; text-align: center; font-family: var(--font-sans); font-size: 14px; color: var(--gray-500); }
 
 /* podium */
-.lb-podium { display: grid; grid-template-columns: 1fr 1.28fr 1fr; align-items: end; gap: 10px; padding-top: 20px; }
-.lb-pod { position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 18px 10px 14px;
+.lb-podium { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.28fr) minmax(0,1fr); align-items: end; gap: 10px; padding-top: 20px; }
+.lb-pod { position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 18px 10px 14px;
   border-radius: 14px; background: var(--surface-card); border: 1px solid var(--border-default); box-shadow: 0 1px 3px rgba(12,12,13,.05); }
 .lb-pod.first, .lb-pod.second, .lb-pod.third { padding-top: 38px; overflow: visible; }
 .lb-pod.first { border: 2px solid var(--brand-gold) !important; background: linear-gradient(170deg,#FFFDF8,#FCF4E4) !important;
@@ -40,8 +43,6 @@ img { max-width: 100%; }
   display: flex; align-items: center; justify-content: center; pointer-events: none; }
 .lb-pod.first .lb-pod-crown { top: -34px; width: 70px; height: 70px; }
 .lb-pod-crown svg { display: block; }
-/* the #3 medal art carries a baked-in numeral; lottie-web sets it inline, so !important is required */
-.lb-pod.third .lb-pod-crown svg text, .lb-row-medal.r3 svg text { display: none !important; }
 .lb-pod-rank { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 13px; color: var(--gray-500); }
 .lb-pod-name { font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13px; color: var(--brand-navy);
   text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
@@ -92,3 +93,59 @@ img { max-width: 100%; }
 .lb-row .tr { flex: none; display: flex; align-items: center; }
 
 .lb-foot { margin-top: 20px; font-family: var(--font-sans); font-size: 13px; line-height: 1.5; color: var(--gray-500); text-wrap: pretty; }
+
+/* league head + rail (Duolingo-style): the selected gem is large and animated,
+   the rest park on a still frame; badges above the member's own are greyed
+   and locked. Accent colours arrive as --lg-* vars from the engine. */
+.lb-league-head { text-align: center; padding-top: 2px; }
+.lb-league-title { margin: 0 0 2px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 24px; letter-spacing: -.01em; }
+.lb-rail { display: flex; align-items: center; gap: 4px; margin: 4px -20px 0; padding: 14px 148px 6px; overflow-x: auto; scroll-snap-type: x proximity;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.lb-rail::-webkit-scrollbar { display: none; }
+.lb-rail-item { position: relative; flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 6px 6px;
+  min-width: 44px; min-height: 44px; border: none; background: none; cursor: pointer; scroll-snap-align: center; border-radius: 16px;
+  transition: transform .28s cubic-bezier(.2,.8,.2,1), opacity .28s ease; }
+.lb-rail-item:focus-visible { outline: 2px solid var(--lg-accent); outline-offset: 2px; }
+.lb-rail-gem { position: relative; display: block; filter: drop-shadow(0 6px 10px rgba(12,12,13,.14)); transition: filter .28s ease; }
+.lb-rail-item.sel .lb-rail-gem { filter: drop-shadow(0 12px 22px color-mix(in srgb, var(--lg-accent) 42%, transparent)); }
+.lb-rail-item.locked .lb-rail-gem > span:first-child { filter: grayscale(1) brightness(.72) contrast(.85); opacity: .55; }
+.lb-rail-item.locked.sel .lb-rail-gem > span:first-child { opacity: .7; }
+.lb-rail-lock { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(30,32,40,.78); border: 2px solid rgba(255,255,255,.7); display: flex; align-items: center; justify-content: center; }
+.lb-rail-item.sel .lb-rail-lock { width: 36px; height: 36px; }
+.lb-rail-you { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
+  color: #fff; background: var(--lg-accent); border-radius: 999px; padding: 2px 8px; margin-top: -2px; }
+.lb-rail-item.mine:not(.sel) .lb-rail-you { background: var(--gray-450); }
+@media (prefers-reduced-motion: reduce) { .lb-rail-item, .lb-rail-gem { transition: none; } }
+
+/* selected league tints the podium's first-place card and the standing card */
+.lb-pod.first { border-color: var(--lg-accent) !important; background: linear-gradient(170deg, #fff, var(--lg-soft)) !important;
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--lg-accent) 32%, transparent), 0 0 0 5px color-mix(in srgb, var(--lg-accent) 14%, transparent) !important; }
+.lb-pod.first::before { box-shadow: 0 0 0 2px color-mix(in srgb, var(--lg-accent) 55%, transparent); }
+.lb-pod.first .lb-pod-rank { color: var(--lg-deep); }
+.lb-pod.first .lb-pod-prize { color: var(--lg-deep); }
+.lb-you-locked, .lb-you-earned { background: var(--lg-soft); border-color: color-mix(in srgb, var(--lg-accent) 40%, transparent); }
+.lb-you-locked .tx i, .lb-you-earned .tx i { color: var(--lg-deep); }
+
+/* badge milestones */
+.lb-ms-wrap { margin-top: 34px; }
+.lb-ms-wrap .ml-sec-h { margin: 0 0 16px; }
+.lb-ms { border-radius: 14px; background: var(--surface-card); border: 1px solid var(--border-default); box-shadow: 0 1px 3px rgba(12,12,13,.04); padding: 14px 15px 6px; }
+.lb-ms-head { display: flex; align-items: center; gap: 12px; }
+.lb-ms-gem { flex: none; width: 54px; height: 54px; }
+.lb-ms-head .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.lb-ms-head .tx b { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--brand-navy); }
+.lb-ms-head .tx i { font-style: normal; font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); text-wrap: pretty; }
+.lb-ms-pct { flex: none; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 17px; font-variant-numeric: tabular-nums; }
+.lb-ms-bar { margin: 12px 0 6px; height: 8px; border-radius: 999px; background: var(--gray-100); overflow: hidden; }
+.lb-ms-bar span { display: block; height: 100%; border-radius: 999px; transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.lb-ms-list { list-style: none; margin: 0; padding: 0; }
+.lb-ms-list li { display: flex; align-items: center; gap: 12px; padding: 11px 0; }
+.lb-ms-list li + li { border-top: 1px solid var(--border-default); }
+.lb-ms-list .ic { flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--gray-50); display: flex; align-items: center; justify-content: center; }
+.lb-ms-list .lb { flex: 1; min-width: 0; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 14px; color: var(--brand-navy); }
+.lb-ms-list li.done .lb { color: var(--gray-500); text-decoration: line-through; text-decoration-color: var(--gray-300); }
+.lb-ms-list .ct { flex: none; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 13px; color: var(--gray-500); font-variant-numeric: tabular-nums; }
+
+/* promotion toast stays fixed-dark like the other loyalty toasts */
+.lb-toast { background: var(--gray-900); color: #fff; }

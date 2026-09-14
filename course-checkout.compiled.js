@@ -36,6 +36,16 @@ function useIsMobileCC() {
 }
 const VAT_RATE_CC = 0.2;
 const PF_PURCHASED_KEY_CC = "pf-purchased-courses";
+/* a course discount redeemed in the Rewards Store (loyalty-engine writes it) */
+const PF_COURSE_DISCOUNTS_KEY_CC = "pf-course-discounts";
+function getRewardDiscountCC(slug) {
+  try {
+    const d = JSON.parse(localStorage.getItem(PF_COURSE_DISCOUNTS_KEY_CC)) || {};
+    return d[slug] || null;
+  } catch (e) {
+    return null;
+  }
+}
 function slugifyCC(title) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
@@ -84,8 +94,11 @@ function CourseCheckout() {
   const [course] = useStateCC(getCourseFromQueryCC);
   const [promo, setPromo] = useStateCC("");
   const [paying, setPaying] = useStateCC(false);
-  const vat = Math.round(course.price * VAT_RATE_CC);
-  const total = course.price + vat;
+  const reward = getRewardDiscountCC(course.slug);
+  const rewardOff = reward ? Math.round(course.price * reward.pct / 100) : 0;
+  const subtotal = Math.max(0, course.price - rewardOff);
+  const vat = Math.round(subtotal * VAT_RATE_CC);
+  const total = subtotal + vat;
   const detailUrl = buildCourseDetailUrlCC(course);
   function handlePay() {
     setPaying(true);
@@ -128,7 +141,9 @@ function CourseCheckout() {
     className: "cc-summary-card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "cc-summary-row"
-  }, /*#__PURE__*/React.createElement("span", null, "Course price"), /*#__PURE__*/React.createElement("span", null, "£", course.price.toLocaleString())), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, "Course price"), /*#__PURE__*/React.createElement("span", null, "£", course.price.toLocaleString())), reward && /*#__PURE__*/React.createElement("div", {
+    className: "cc-summary-row cc-summary-reward"
+  }, /*#__PURE__*/React.createElement("span", null, "Reward discount · ", reward.pct, "% off ", /*#__PURE__*/React.createElement("small", null, reward.code)), /*#__PURE__*/React.createElement("span", null, "−£", rewardOff.toLocaleString())), /*#__PURE__*/React.createElement("div", {
     className: "cc-summary-row"
   }, /*#__PURE__*/React.createElement("span", null, "VAT (20%)"), /*#__PURE__*/React.createElement("span", null, "£", vat.toLocaleString())), /*#__PURE__*/React.createElement("div", {
     className: "cc-summary-row cc-summary-total"

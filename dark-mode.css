@@ -350,11 +350,14 @@
    Loyalty — Rewards Store (rewards-store.css) + shared ml- chrome
    ============================================================ */
 [data-theme="dark"] .ml-back, [data-theme="dark"] .ml-top-action, [data-theme="dark"] .ml-card { background: var(--surface-card); }
-[data-theme="dark"] .str-card-media, [data-theme="dark"] .str-confirm-icon { background: color-mix(in srgb, var(--brand-gold) 14%, var(--surface-card)); }
-[data-theme="dark"] .str-card-media .str-card-ic { background: var(--surface-sunken); box-shadow: none; }
-[data-theme="dark"] .str-balance-chip { background: var(--brand-navy); color: #1a1736; }
+[data-theme="dark"] .str-card-media { background: linear-gradient(135deg, color-mix(in srgb, var(--str-a, var(--brand-gold)) 34%, var(--surface-card)), color-mix(in srgb, var(--str-b, var(--brand-gold)) 46%, var(--surface-card))); }
+[data-theme="dark"] .str-card-media .str-card-ic { background: var(--surface-sunken); box-shadow: 0 8px 18px rgba(0,0,0,.35); }
+[data-theme="dark"] .str-card-cost, [data-theme="dark"] .str-sheet-math { background: color-mix(in srgb, #F4AD3D 18%, var(--surface-card)); }
+[data-theme="dark"] .str-card-cost, [data-theme="dark"] .str-sheet-math .after { color: #FFD97A; }
+[data-theme="dark"] .str-sheet-math .now, [data-theme="dark"] .str-sheet-math .unit { color: #E1A400; }
 [data-theme="dark"] .str-tab.is-active { color: #1a1736; }
 [data-theme="dark"] .str-scrim { background: rgba(0,0,0,.6); }
+[data-theme="dark"] .str-card-cta:disabled { background: var(--surface-sunken); color: var(--gray-500); }
 
 /* ============================================================
    Loyalty drill-in screens (Badge Gallery / Badge Detail / Badge Progress…)
@@ -386,3 +389,20 @@
 [data-theme="dark"] .rw-notif-icon { background: rgba(255,255,255,.08); }
 [data-theme="dark"] .rw-btn-white { background: var(--surface-card); color: #FDD98F; }
 [data-theme="dark"] .rw-toast { background: var(--surface-sunken); border: 1px solid var(--border-default); }
+
+/* Redemption Success: blush hero + fixed-tint chips */
+[data-theme="dark"] .rsc-hero { background: linear-gradient(180deg, color-mix(in srgb, #F5A48E 22%, var(--surface-page)) 0%, color-mix(in srgb, #F5A48E 10%, var(--surface-page)) 55%, var(--surface-page) 100%); }
+[data-theme="dark"] .rsc-glow { background: radial-gradient(circle, rgba(245,164,142,.28) 0%, rgba(245,164,142,0) 70%); }
+[data-theme="dark"] .rsc-eyebrow { background: rgba(255,255,255,.08); color: #FFBEAA; }
+[data-theme="dark"] .rsc-close { background: var(--surface-card); }
+[data-theme="dark"] .rsc-check { border-color: var(--surface-page); }
+[data-theme="dark"] .rsc-course-price i { background: color-mix(in srgb, #12B587 22%, var(--surface-card)); color: #5ED3B1; }
+
+/* My Rewards */
+[data-theme="dark"] .mr-status.ready, [data-theme="dark"] .mr-sheet-price em { background: color-mix(in srgb, #12B587 22%, var(--surface-card)); color: #5ED3B1; }
+[data-theme="dark"] .mr-thumb, [data-theme="dark"] .mr-empty-ic { background: color-mix(in srgb, var(--brand-gold) 14%, var(--surface-card)); }
+[data-theme="dark"] .mr-scrim { background: rgba(0,0,0,.6); }
+
+/* Rewards Dashboard league card: keep the soft tint subtle on dark surfaces */
+[data-theme="dark"] .rdb-league { background: linear-gradient(135deg, var(--surface-card), color-mix(in srgb, var(--lg-accent) 18%, var(--surface-card))); }
+[data-theme="dark"] .rdb-league-tx b, [data-theme="dark"] .rdb-league-cta { color: var(--lg-accent); }

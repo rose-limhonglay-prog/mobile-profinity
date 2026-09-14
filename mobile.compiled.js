@@ -345,7 +345,9 @@ function PointsPillM() {
       const eng = window.PFLoyalty;
       if (eng) {
         try {
-          if (eng.awardPoints) eng.awardPoints(amt, e.detail.label, e.detail.actionId);else eng.setState({
+          /* detail.booked: the sender already wrote the ledger entry itself
+             (daily-checkin.js, Ways to Earn) — just re-read, don't award twice. */
+          if (e.detail.booked) {/* already in the engine */} else if (eng.awardPoints) eng.awardPoints(amt, e.detail.label, e.detail.actionId);else eng.setState({
             lifetimePoints: (eng.getState().lifetimePoints || 0) + amt
           });
           refresh();

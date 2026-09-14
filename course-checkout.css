@@ -94,3 +94,7 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
   .app.device-stage { padding: 0; }
   .cc-screen { min-height: 100vh; }
 }
+
+/* discount redeemed with Spendable Credits in the Rewards Store */
+.cc-summary-reward { color: #137A5B; }
+.cc-summary-reward small { display: block; font-size: 11px; font-weight: 600; color: var(--gray-500); letter-spacing: .02em; }
