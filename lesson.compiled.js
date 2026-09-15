@@ -709,150 +709,33 @@ function LSCommentRow({
     }
   })));
 }
-const LS_SHARE_PREF_KEY = "pf_ls_comment_share_pref";
-function readSharePrefLS() {
-  try {
-    const raw = window.localStorage.getItem(LS_SHARE_PREF_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    return null;
-  }
-}
-function writeSharePrefLS(share) {
-  try {
-    window.localStorage.setItem(LS_SHARE_PREF_KEY, JSON.stringify({
-      share
-    }));
-  } catch (e) {}
-}
-function LSShareCommentModal({
-  onCancel,
-  onConfirm
-}) {
-  const [share, setShare] = useStateLS(true);
-  const [remember, setRemember] = useStateLS(false);
-  return /*#__PURE__*/React.createElement("div", {
-    className: "ls-share-overlay",
-    onClick: onCancel
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ls-share-sheet",
-    onClick: e => e.stopPropagation(),
-    role: "dialog",
-    "aria-modal": "true",
-    "aria-label": "Share this comment?"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ls-share-icon-wrap"
-  }, /*#__PURE__*/React.createElement(DSLS.IconifyIcon, {
-    name: "lucide:megaphone",
-    size: 26,
-    color: "var(--brand-gold)"
-  })), /*#__PURE__*/React.createElement("h3", {
-    className: "ls-share-title"
-  }, "Share this comment?"), /*#__PURE__*/React.createElement("p", {
-    className: "ls-share-desc"
-  }, "Comments on lessons can also appear in the community newsfeed so others can learn from the discussion."), /*#__PURE__*/React.createElement("label", {
-    className: "ls-share-toggle-row"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ls-share-toggle-text"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ls-share-toggle-label"
-  }, "Also share to newsfeed"), /*#__PURE__*/React.createElement("span", {
-    className: "ls-share-toggle-sub"
-  }, "Visible to the community")), /*#__PURE__*/React.createElement("span", {
-    className: "pf-pt-switch" + (share ? " on" : "")
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "checkbox",
-    checked: share,
-    onChange: e => setShare(e.target.checked)
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "pf-pt-knob"
-  }))), /*#__PURE__*/React.createElement("label", {
-    className: "ls-share-remember"
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "checkbox",
-    checked: remember,
-    onChange: e => setRemember(e.target.checked)
-  }), "Remember my decision"), /*#__PURE__*/React.createElement("div", {
-    className: "ls-share-actions"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "ls-share-btn cancel",
-    onClick: onCancel
-  }, "Cancel"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "ls-share-btn primary",
-    onClick: () => onConfirm(share, remember)
-  }, "Post comment"))));
-}
 
-/* Mirrors CreatePostMobile's addPost (same "pf-newsfeed-user-posts" key so
-   the Newsfeed's Feed() picks it up), but tagged bucket: "coursecomment" so
-   it renders through app.jsx's CourseCommentCard — the "X commented in
-   course Y" treatment already built for other members' course comments. */
-function shareCommentToNewsfeedLS(courseSlug, text) {
-  const post = {
-    id: "u" + Date.now(),
-    author: {
-      name: PFALS.ME.name,
-      avatar: PFALS.ME.avatar,
-      seals: ["gb", "verified"]
-    },
-    time: "Just now",
-    body: text,
-    bucket: "coursecomment",
-    course: courseSlug,
-    likes: "0",
-    comments: "0",
-    shares: "0",
-    commentList: []
-  };
-  try {
-    const existing = JSON.parse(window.localStorage.getItem("pf-newsfeed-user-posts")) || [];
-    window.localStorage.setItem("pf-newsfeed-user-posts", JSON.stringify([post, ...existing]));
-  } catch (e) {}
-}
+/* First-time "Share this comment?" prompt + newsfeed hand-off live in the
+   shared comment-share-prompt.jsx (window.PFCommentShare) so the remembered
+   decision carries across every My Learning comment box, mobile and web. */
+const PFCS_LS = window.PFCommentShare;
 function LSComments({
   comments,
   onAddComment,
   onAddReply
 }) {
-  const [pendingText, setPendingText] = useStateLS(null);
-  function handleSubmit(text) {
-    const pref = readSharePrefLS();
-    if (pref) {
-      onAddComment(text, pref.share);
-      return;
-    }
-    setPendingText(text);
-  }
-  function confirmShare(share, remember) {
-    if (remember) writeSharePrefLS(share);
-    onAddComment(pendingText, share);
-    setPendingText(null);
-  }
+  const prompt = PFCS_LS.useSharePrompt(onAddComment);
   return /*#__PURE__*/React.createElement("section", {
     className: "ls-comments"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "ls-ov-steps-title"
   }, comments.length, " Comment", comments.length === 1 ? "" : "s"), /*#__PURE__*/React.createElement(PFALS.CommentComposer, {
     placeholder: "Leave a comment…",
-    onSubmit: handleSubmit
-  }), /*#__PURE__*/React.createElement("div", {
+    onSubmit: prompt.submit
+  }), /*#__PURE__*/React.createElement(PFCS_LS.Note, {
     className: "ls-composer-note"
-  }, /*#__PURE__*/React.createElement(DSLS.IconifyIcon, {
-    name: "lucide:info",
-    size: 15,
-    color: "var(--gray-400)"
-  }), "Your comment will also be shared to the newsfeed."), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     className: "ls-cmt-list"
   }, comments.map(c => /*#__PURE__*/React.createElement(LSCommentRow, {
     c: c,
     onAddReply: onAddReply,
     key: c._id
-  }))), pendingText !== null && /*#__PURE__*/React.createElement(LSShareCommentModal, {
-    onCancel: () => setPendingText(null),
-    onConfirm: confirmShare
-  }));
+  }))), prompt.modal);
 }
 function LSOverview({
   ctx,
@@ -1000,7 +883,11 @@ function Lesson() {
       _id: "lsc" + _lscseq++,
       replies: []
     }]);
-    if (sharedToNewsfeed) shareCommentToNewsfeedLS(ctx.course.slug, text);
+    if (sharedToNewsfeed) PFCS_LS.shareToNewsfeed({
+      author: PFALS.ME,
+      courseSlug: ctx.course.slug,
+      text
+    });
   }
   function addReply(commentId, text) {
     setComments(all => all.map(c => c._id === commentId ? {

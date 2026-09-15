@@ -760,10 +760,16 @@ function CWDiscussion({
   onReply
 }) {
   const [draft, setDraft] = useStateCW("");
+  /* First comment opens the shared "Share this comment?" dialog
+     (window.PFCommentShare); a remembered decision skips it. */
+  const prompt = window.PFCommentShare.useSharePrompt(onAdd, {
+    variant: "dialog"
+  });
   function submit() {
     if (!draft.trim()) return;
-    onAdd(draft.trim());
+    const text = draft.trim();
     setDraft("");
+    prompt.submit(text);
   }
   return /*#__PURE__*/React.createElement("section", {
     className: "cw-card cw-discussion"
@@ -782,13 +788,9 @@ function CWDiscussion({
     type: "button",
     className: "cw-composer-post",
     onClick: submit
-  }, "Post")), /*#__PURE__*/React.createElement("div", {
+  }, "Post")), /*#__PURE__*/React.createElement(window.PFCommentShare.Note, {
     className: "cw-composer-note"
-  }, /*#__PURE__*/React.createElement(IconCW, {
-    name: "lucide:info",
-    size: 15,
-    color: "var(--gray-400)"
-  }), "Your comment will also be shared to the newsfeed."), /*#__PURE__*/React.createElement("div", {
+  }), prompt.modal, /*#__PURE__*/React.createElement("div", {
     className: "cw-cmt-list"
   }, comments.map((c, i) => /*#__PURE__*/React.createElement(CWComment, {
     c: c,
@@ -905,15 +907,21 @@ function CourseWebApp() {
   function expandAll() {
     setOpenSet(prev => prev.size === course.sections.length ? new Set() : new Set(course.sections.map((_, i) => i)));
   }
-  function handleAddComment(text) {
+  function handleAddComment(text, sharedToNewsfeed) {
     setComments(all => [{
       name: ME_CW.name,
       time: "Just now",
       likes: 0,
       liked: false,
       text,
-      replies: []
+      replies: [],
+      sharedToNewsfeed
     }, ...all]);
+    if (sharedToNewsfeed) window.PFCommentShare.shareToNewsfeed({
+      author: ME_CW,
+      courseSlug: course.slug,
+      text
+    });
   }
   function handleToggleLike(i) {
     setComments(all => all.map((c, idx) => idx === i ? {

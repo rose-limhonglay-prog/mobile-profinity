@@ -506,107 +506,22 @@ function LSCommentRow({ c, onAddReply }) {
 
 }
 
-const LS_SHARE_PREF_KEY = "pf_ls_comment_share_pref";
-
-function readSharePrefLS() {
-  try {
-    const raw = window.localStorage.getItem(LS_SHARE_PREF_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    return null;
-  }
-}
-
-function writeSharePrefLS(share) {
-  try {
-    window.localStorage.setItem(LS_SHARE_PREF_KEY, JSON.stringify({ share }));
-  } catch (e) {}
-}
-
-function LSShareCommentModal({ onCancel, onConfirm }) {
-  const [share, setShare] = useStateLS(true);
-  const [remember, setRemember] = useStateLS(false);
-  return (
-    <div className="ls-share-overlay" onClick={onCancel}>
-      <div className="ls-share-sheet" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Share this comment?">
-        <div className="ls-share-icon-wrap">
-          <DSLS.IconifyIcon name="lucide:megaphone" size={26} color="var(--brand-gold)" />
-        </div>
-        <h3 className="ls-share-title">Share this comment?</h3>
-        <p className="ls-share-desc">Comments on lessons can also appear in the community newsfeed so others can learn from the discussion.</p>
-
-        <label className="ls-share-toggle-row">
-          <span className="ls-share-toggle-text">
-            <span className="ls-share-toggle-label">Also share to newsfeed</span>
-            <span className="ls-share-toggle-sub">Visible to the community</span>
-          </span>
-          <span className={"pf-pt-switch" + (share ? " on" : "")}>
-            <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
-            <span className="pf-pt-knob" />
-          </span>
-        </label>
-
-        <label className="ls-share-remember">
-          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-          Remember my decision
-        </label>
-
-        <div className="ls-share-actions">
-          <button type="button" className="ls-share-btn cancel" onClick={onCancel}>Cancel</button>
-          <button type="button" className="ls-share-btn primary" onClick={() => onConfirm(share, remember)}>Post comment</button>
-        </div>
-      </div>
-    </div>);
-
-}
-
-/* Mirrors CreatePostMobile's addPost (same "pf-newsfeed-user-posts" key so
-   the Newsfeed's Feed() picks it up), but tagged bucket: "coursecomment" so
-   it renders through app.jsx's CourseCommentCard — the "X commented in
-   course Y" treatment already built for other members' course comments. */
-function shareCommentToNewsfeedLS(courseSlug, text) {
-  const post = {
-    id: "u" + Date.now(),
-    author: { name: PFALS.ME.name, avatar: PFALS.ME.avatar, seals: ["gb", "verified"] },
-    time: "Just now", body: text, bucket: "coursecomment", course: courseSlug,
-    likes: "0", comments: "0", shares: "0", commentList: []
-  };
-  try {
-    const existing = JSON.parse(window.localStorage.getItem("pf-newsfeed-user-posts")) || [];
-    window.localStorage.setItem("pf-newsfeed-user-posts", JSON.stringify([post, ...existing]));
-  } catch (e) {}
-}
+/* First-time "Share this comment?" prompt + newsfeed hand-off live in the
+   shared comment-share-prompt.jsx (window.PFCommentShare) so the remembered
+   decision carries across every My Learning comment box, mobile and web. */
+const PFCS_LS = window.PFCommentShare;
 
 function LSComments({ comments, onAddComment, onAddReply }) {
-  const [pendingText, setPendingText] = useStateLS(null);
-
-  function handleSubmit(text) {
-    const pref = readSharePrefLS();
-    if (pref) {
-      onAddComment(text, pref.share);
-      return;
-    }
-    setPendingText(text);
-  }
-
-  function confirmShare(share, remember) {
-    if (remember) writeSharePrefLS(share);
-    onAddComment(pendingText, share);
-    setPendingText(null);
-  }
-
+  const prompt = PFCS_LS.useSharePrompt(onAddComment);
   return (
     <section className="ls-comments">
       <h3 className="ls-ov-steps-title">{comments.length} Comment{comments.length === 1 ? "" : "s"}</h3>
-      <PFALS.CommentComposer placeholder="Leave a comment…" onSubmit={handleSubmit} />
-      <div className="ls-composer-note">
-        <DSLS.IconifyIcon name="lucide:info" size={15} color="var(--gray-400)" />Your comment will also be shared to the newsfeed.
-      </div>
+      <PFALS.CommentComposer placeholder="Leave a comment…" onSubmit={prompt.submit} />
+      <PFCS_LS.Note className="ls-composer-note" />
       <div className="ls-cmt-list">
         {comments.map((c) => <LSCommentRow c={c} onAddReply={onAddReply} key={c._id} />)}
       </div>
-      {pendingText !== null &&
-      <LSShareCommentModal onCancel={() => setPendingText(null)} onConfirm={confirmShare} />}
+      {prompt.modal}
     </section>);
 
 }
@@ -713,7 +628,7 @@ function Lesson() {
 
   function addComment(text, sharedToNewsfeed) {
     setComments((all) => [...all, { author: { name: PFALS.ME.name, avatar: PFALS.ME.avatar }, time: "now", text, sharedToNewsfeed, _id: "lsc" + _lscseq++, replies: [] }]);
-    if (sharedToNewsfeed) shareCommentToNewsfeedLS(ctx.course.slug, text);
+    if (sharedToNewsfeed) PFCS_LS.shareToNewsfeed({ author: PFALS.ME, courseSlug: ctx.course.slug, text });
   }
   function addReply(commentId, text) {
     setComments((all) => all.map((c) => c._id === commentId ?

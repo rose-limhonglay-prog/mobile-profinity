@@ -273,10 +273,14 @@ function LWCommentRow({ c, onToggleLike }) {
 
 function LWOverview({ current, comments, onAddComment, onToggleLike }) {
   const [draft, setDraft] = useStateLW("");
+  /* First comment opens the shared "Share this comment?" dialog
+     (window.PFCommentShare); a remembered decision skips it. */
+  const prompt = window.PFCommentShare.useSharePrompt(onAddComment, { variant: "dialog" });
   function submit() {
     if (!draft.trim()) return;
-    onAddComment(draft.trim());
+    const text = draft.trim();
     setDraft("");
+    prompt.submit(text);
   }
   return (
     <div>
@@ -294,9 +298,8 @@ function LWOverview({ current, comments, onAddComment, onToggleLike }) {
           onKeyDown={(e) => e.key === "Enter" && submit()} />
         <button type="button" onClick={submit}>Post</button>
       </div>
-      <div className="lw-composer-note">
-        <IconLW name="lucide:info" size={15} color="var(--gray-400)" />Your comment will also be shared to the newsfeed.
-      </div>
+      <window.PFCommentShare.Note className="lw-composer-note" />
+      {prompt.modal}
 
       <div className="lw-comments">
         {comments.map((c, i) => <LWCommentRow c={c} key={i} onToggleLike={() => onToggleLike(i)} />)}
@@ -472,8 +475,9 @@ function LessonWebApp() {
     selectLesson(idx + 1);
     showToast(movingModule ? "Module complete — opening " + nextLesson.sectionTitle : "Next lesson");
   }
-  function handleAddComment(text) {
-    setComments((all) => [{ name: ME_LW.name, initials: initialsOfLW(ME_LW.name), time: "Just now", text, liked: false, likes: 0 }, ...all]);
+  function handleAddComment(text, sharedToNewsfeed) {
+    setComments((all) => [{ name: ME_LW.name, initials: initialsOfLW(ME_LW.name), time: "Just now", text, liked: false, likes: 0, sharedToNewsfeed }, ...all]);
+    if (sharedToNewsfeed) window.PFCommentShare.shareToNewsfeed({ author: ME_LW, courseSlug: course.slug, text });
   }
   function handleToggleLike(i) {
     setComments((all) => all.map((c, ci) => ci === i ? { ...c, liked: !c.liked, likes: c.likes + (c.liked ? -1 : 1) } : c));

@@ -447,10 +447,16 @@ function LWOverview({
   onToggleLike
 }) {
   const [draft, setDraft] = useStateLW("");
+  /* First comment opens the shared "Share this comment?" dialog
+     (window.PFCommentShare); a remembered decision skips it. */
+  const prompt = window.PFCommentShare.useSharePrompt(onAddComment, {
+    variant: "dialog"
+  });
   function submit() {
     if (!draft.trim()) return;
-    onAddComment(draft.trim());
+    const text = draft.trim();
     setDraft("");
+    prompt.submit(text);
   }
   return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", {
     className: "lw-h1"
@@ -476,13 +482,9 @@ function LWOverview({
   }), /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: submit
-  }, "Post")), /*#__PURE__*/React.createElement("div", {
+  }, "Post")), /*#__PURE__*/React.createElement(window.PFCommentShare.Note, {
     className: "lw-composer-note"
-  }, /*#__PURE__*/React.createElement(IconLW, {
-    name: "lucide:info",
-    size: 15,
-    color: "var(--gray-400)"
-  }), "Your comment will also be shared to the newsfeed."), /*#__PURE__*/React.createElement("div", {
+  }), prompt.modal, /*#__PURE__*/React.createElement("div", {
     className: "lw-comments"
   }, comments.map((c, i) => /*#__PURE__*/React.createElement(LWCommentRow, {
     c: c,
@@ -754,15 +756,21 @@ function LessonWebApp() {
     selectLesson(idx + 1);
     showToast(movingModule ? "Module complete — opening " + nextLesson.sectionTitle : "Next lesson");
   }
-  function handleAddComment(text) {
+  function handleAddComment(text, sharedToNewsfeed) {
     setComments(all => [{
       name: ME_LW.name,
       initials: initialsOfLW(ME_LW.name),
       time: "Just now",
       text,
       liked: false,
-      likes: 0
+      likes: 0,
+      sharedToNewsfeed
     }, ...all]);
+    if (sharedToNewsfeed) window.PFCommentShare.shareToNewsfeed({
+      author: ME_LW,
+      courseSlug: course.slug,
+      text
+    });
   }
   function handleToggleLike(i) {
     setComments(all => all.map((c, ci) => ci === i ? {

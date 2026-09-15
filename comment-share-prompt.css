@@ -1,0 +1,57 @@
+/* comment-share-prompt.css — shared "Share this comment?" prompt (see comment-share-prompt.jsx).
+   Tokens follow the design system so dark-mode.css restyles it for free;
+   lesson-confidence.css remaps them to the --lc-* reader palette. */
+.pf-cs-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(16,24,40,.45);
+  display: flex; justify-content: center; animation: pf-cs-fade .2s ease; }
+.pf-cs-overlay.sheet { align-items: flex-end; }
+.pf-cs-overlay.dialog { align-items: center; padding: 24px; background: rgba(6,10,26,.6); backdrop-filter: blur(2px); }
+@keyframes pf-cs-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pf-cs-rise { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes pf-cs-pop { from { opacity: 0; transform: translateY(12px) scale(.98); } to { opacity: 1; transform: none; } }
+
+.pf-cs-card { width: 100%; max-width: 500px; box-sizing: border-box; background: var(--surface-card); color: var(--text-primary);
+  display: flex; flex-direction: column; font-family: var(--font-sans); }
+.sheet .pf-cs-card { border-radius: 24px 24px 0 0; padding: 28px 24px calc(env(safe-area-inset-bottom, 0px) + 24px);
+  animation: pf-cs-rise .36s cubic-bezier(.22,1.06,.36,1) both; }
+.dialog .pf-cs-card { max-width: 560px; border-radius: 20px; padding: 32px 30px 28px; border: 1px solid var(--border-default);
+  box-shadow: 0 24px 64px rgba(0,0,0,.35); animation: pf-cs-pop .28s cubic-bezier(.22,1,.36,1) both; }
+
+.pf-cs-icon { width: 52px; height: 52px; border-radius: 14px; flex: none; margin-bottom: 18px;
+  display: flex; align-items: center; justify-content: center; color: var(--brand-gold);
+  background: color-mix(in srgb, var(--brand-gold) 16%, var(--surface-card)); }
+.pf-cs-title { font-family: var(--font-sans); font-weight: var(--fw-bold, 700); font-size: 20px; line-height: 1.25; color: var(--text-heading, var(--brand-navy)); margin: 0 0 8px; }
+.pf-cs-desc { font-size: 14px; line-height: 1.55; color: var(--gray-600); margin: 0 0 20px; }
+
+.pf-cs-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer;
+  background: var(--surface-sunken); border: 1px solid var(--border-default); border-radius: var(--r-md, 14px); padding: 14px 16px; margin-bottom: 16px; }
+.pf-cs-toggle-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pf-cs-toggle-label { font-weight: var(--fw-bold, 700); font-size: 14px; color: var(--text-heading, var(--brand-navy)); }
+.pf-cs-toggle-sub { font-size: 12px; color: var(--gray-450); }
+
+.pf-cs-switch { position: relative; width: 42px; height: 24px; flex: none; }
+.pf-cs-switch input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.pf-cs-knob { position: absolute; inset: 0; border-radius: 12px; background: var(--gray-300, #c9cdd8); transition: background .18s; }
+.pf-cs-knob::before { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .18s; }
+.pf-cs-switch.on .pf-cs-knob { background: var(--brand-navy); }
+.pf-cs-switch.on .pf-cs-knob::before { transform: translateX(18px); }
+.pf-cs-switch input:focus-visible + .pf-cs-knob { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+
+.pf-cs-remember { display: flex; align-items: center; gap: 10px; align-self: flex-start; cursor: pointer;
+  font-size: 14px; color: var(--text-primary); margin: 0 0 22px 2px; }
+.pf-cs-remember input { width: 18px; height: 18px; margin: 0; accent-color: var(--brand-navy); cursor: pointer; }
+
+.pf-cs-actions { display: flex; gap: 10px; }
+.pf-cs-btn { flex: 1; padding: 15px 16px; border-radius: var(--r-md, 14px); cursor: pointer; text-align: center;
+  font-family: var(--font-sans); font-weight: var(--fw-bold, 700); font-size: 15px; border: 1px solid var(--border-default);
+  background: var(--surface-card); color: var(--text-heading, var(--brand-navy)); transition: opacity .15s, filter .15s; }
+.pf-cs-btn.primary { border-color: transparent; background: var(--brand-navy); color: #fff; }
+.pf-cs-btn:hover { filter: brightness(.96); }
+.pf-cs-btn.primary:hover { opacity: .9; filter: none; }
+.pf-cs-btn:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+
+/* footnote under the composer */
+.pf-cs-note { display: flex; align-items: center; gap: 8px; font-family: var(--font-sans); font-size: 13px; line-height: 1.4; color: var(--gray-500); }
+.pf-cs-note svg { flex: none; color: var(--gray-400); }
+
+@media (prefers-reduced-motion: reduce) { .pf-cs-overlay, .pf-cs-card { animation: none; } }

@@ -1399,7 +1399,8 @@ function LXComment({
 }
 let _lxseq = 0;
 function LXComments({
-  lessonName
+  lessonName,
+  courseSlug
 }) {
   const [comments, setComments] = useStateLX(() => LX_DEFAULT_COMMENTS.map(c => ({
     ...c,
@@ -1407,6 +1408,26 @@ function LXComments({
   })));
   const [draft, setDraft] = useStateLX("");
   const inputRef = useRefLX(null);
+  /* First comment asks "Share this comment?" (shared prompt, window.PFCommentShare);
+     after "Remember my decision" the saved choice is applied silently. */
+  const prompt = window.PFCommentShare.useSharePrompt((text, share) => {
+    setComments(all => [{
+      author: LX_ME,
+      time: "Just now",
+      text,
+      likes: 0,
+      liked: false,
+      sharedToNewsfeed: share,
+      _id: "lx" + _lxseq++
+    }, ...all]);
+    if (share) window.PFCommentShare.shareToNewsfeed({
+      author: LX_ME,
+      courseSlug,
+      text
+    });
+  }, {
+    className: "lc-tone"
+  });
   const like = id => setComments(all => all.map(c => c._id === id ? {
     ...c,
     liked: !c.liked,
@@ -1425,15 +1446,8 @@ function LXComments({
   const post = () => {
     const text = draft.trim();
     if (!text) return;
-    setComments(all => [{
-      author: LX_ME,
-      time: "Just now",
-      text,
-      likes: 0,
-      liked: false,
-      _id: "lx" + _lxseq++
-    }, ...all]);
     setDraft("");
+    prompt.submit(text);
   };
   return /*#__PURE__*/React.createElement("section", {
     "data-screen-label": "Comments"
@@ -1464,20 +1478,16 @@ function LXComments({
     name: "lucide:send",
     size: 17,
     color: LX_INK.onNavy
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement(window.PFCommentShare.Note, {
     className: "lc-composer-note"
-  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
-    name: "lucide:info",
-    size: 15,
-    color: "var(--lc-text-3)"
-  }), "Your comment will also be shared to the newsfeed."), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     className: "lc-cmts"
   }, comments.map(c => /*#__PURE__*/React.createElement(LXComment, {
     key: c._id,
     c: c,
     onLike: () => like(c._id),
     onReply: () => reply(c)
-  }))));
+  }))), prompt.modal);
 }
 function LXAvaCard({
   lessonName,
@@ -2461,7 +2471,8 @@ function LXPlayer({
   }, nextModCount, " ", nextModCount === 1 ? "lesson" : "lessons"), /*#__PURE__*/React.createElement("span", {
     className: "lc-uptile-name"
   }, nextModName)))), /*#__PURE__*/React.createElement(LXComments, {
-    lessonName: item.name
+    lessonName: item.name,
+    courseSlug: course.slug
   }), /*#__PURE__*/React.createElement(LXAvaCard, {
     lessonName: item.name,
     courseTitle: course.title
@@ -2724,7 +2735,8 @@ function CourseDetailConfidence() {
     locked: locked,
     onLocked: nudgeBuy
   }), /*#__PURE__*/React.createElement(LXRelated, null), /*#__PURE__*/React.createElement(LXComments, {
-    lessonName: cur.name
+    lessonName: cur.name,
+    courseSlug: course.slug
   }), /*#__PURE__*/React.createElement(LXAvaCard, {
     lessonName: cur.name,
     courseTitle: course.title

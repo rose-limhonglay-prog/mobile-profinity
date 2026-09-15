@@ -883,10 +883,16 @@ function LXComment({ c, onLike, onReply }) {
 }
 
 let _lxseq = 0;
-function LXComments({ lessonName }) {
+function LXComments({ lessonName, courseSlug }) {
   const [comments, setComments] = useStateLX(() => LX_DEFAULT_COMMENTS.map((c) => ({ ...c, _id: "lx" + _lxseq++ })));
   const [draft, setDraft] = useStateLX("");
   const inputRef = useRefLX(null);
+  /* First comment asks "Share this comment?" (shared prompt, window.PFCommentShare);
+     after "Remember my decision" the saved choice is applied silently. */
+  const prompt = window.PFCommentShare.useSharePrompt((text, share) => {
+    setComments((all) => [{ author: LX_ME, time: "Just now", text, likes: 0, liked: false, sharedToNewsfeed: share, _id: "lx" + _lxseq++ }, ...all]);
+    if (share) window.PFCommentShare.shareToNewsfeed({ author: LX_ME, courseSlug, text });
+  }, { className: "lc-tone" });
 
   const like = (id) => setComments((all) => all.map((c) => c._id === id ? { ...c, liked: !c.liked, likes: (c.likes || 0) + (c.liked ? -1 : 1) } : c));
   const reply = (c) => {
@@ -896,8 +902,8 @@ function LXComments({ lessonName }) {
   const post = () => {
     const text = draft.trim();
     if (!text) return;
-    setComments((all) => [{ author: LX_ME, time: "Just now", text, likes: 0, liked: false, _id: "lx" + _lxseq++ }, ...all]);
     setDraft("");
+    prompt.submit(text);
   };
 
   return (
@@ -910,12 +916,11 @@ function LXComments({ lessonName }) {
           <DSLX.IconifyIcon name="lucide:send" size={17} color={LX_INK.onNavy} />
         </button>
       </form>
-      <div className="lc-composer-note">
-        <DSLX.IconifyIcon name="lucide:info" size={15} color="var(--lc-text-3)" />Your comment will also be shared to the newsfeed.
-      </div>
+      <window.PFCommentShare.Note className="lc-composer-note" />
       <div className="lc-cmts">
         {comments.map((c) => <LXComment key={c._id} c={c} onLike={() => like(c._id)} onReply={() => reply(c)} />)}
       </div>
+      {prompt.modal}
     </section>);
 }
 
@@ -1388,7 +1393,7 @@ function LXPlayer({ course, flat, idx, done, onClose, onSelect, onMarkDone, onTo
             </div>
           </section>}
 
-        <LXComments lessonName={item.name} />
+        <LXComments lessonName={item.name} courseSlug={course.slug} />
 
         <LXAvaCard lessonName={item.name} courseTitle={course.title} />
         </div>}
@@ -1584,7 +1589,7 @@ function CourseDetailConfidence() {
 
         <LXRelated />
 
-        <LXComments lessonName={cur.name} />
+        <LXComments lessonName={cur.name} courseSlug={course.slug} />
 
         <LXAvaCard lessonName={cur.name} courseTitle={course.title} />
 

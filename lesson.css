@@ -146,30 +146,7 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .ls-cmt-text { font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--gray-700); margin-top: 6px; }
 .ls-cmt-reply { display: flex; gap: 8px; align-items: flex-start; margin-top: 12px; }
 
-/* ---------- share-to-newsfeed modal (shown on a lesson comment until the user opts to remember their choice) ---------- */
-.ls-share-overlay { position: fixed; inset: 0; z-index: 9999; background: rgba(16,24,40,.45);
-  display: flex; align-items: flex-end; justify-content: center; animation: saved-fade .2s ease; }
-.ls-share-sheet { width: 100%; max-width: 500px; background: var(--surface-card); border-radius: 24px 24px 0 0;
-  padding: 28px 24px calc(env(safe-area-inset-bottom, 0px) + 24px); display: flex; flex-direction: column;
-  animation: saved-rise .36s cubic-bezier(.22,1.06,.36,1) both; }
-.ls-share-icon-wrap { width: 52px; height: 52px; border-radius: 14px; background: var(--brand-gold-100);
-  display: flex; align-items: center; justify-content: center; margin-bottom: 18px; flex: none; }
-.ls-share-title { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 20px; color: var(--brand-navy); margin: 0 0 8px; }
-.ls-share-desc { font-family: var(--font-sans); font-size: 14px; line-height: 1.5; color: var(--gray-600); margin: 0 0 20px; }
-.ls-share-toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  background: var(--surface-sunken); border-radius: var(--r-md); padding: 14px 16px; cursor: pointer; margin-bottom: 16px; }
-.ls-share-toggle-text { display: flex; flex-direction: column; gap: 2px; }
-.ls-share-toggle-label { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 14px; color: var(--brand-navy); }
-.ls-share-toggle-sub { font-family: var(--font-sans); font-size: 12px; color: var(--gray-450); }
-.ls-share-remember { display: flex; align-items: center; gap: 8px; align-self: flex-start; cursor: pointer;
-  font-family: var(--font-sans); font-size: 13px; color: var(--text-primary); margin-bottom: 22px; }
-.ls-share-remember input { width: 15px; height: 15px; accent-color: var(--brand-navy); cursor: pointer; }
-.ls-share-actions { display: flex; gap: 10px; }
-.ls-share-btn { flex: 1; padding: 15px 16px; border-radius: var(--r-md); cursor: pointer; text-align: center;
-  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; border: 1px solid var(--border-default);
-  background: var(--surface-card); color: var(--brand-navy); }
-.ls-share-btn.primary { border: none; background: var(--brand-navy); color: #fff; }
-.ls-share-btn.primary:hover { opacity: .9; }
+/* share-to-newsfeed prompt: see shared comment-share-prompt.css (.pf-cs-*) */
 
 /* ---------- resources ---------- */
 .ls-res-list { display: flex; flex-direction: column; gap: 10px; }

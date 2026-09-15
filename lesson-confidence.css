@@ -553,3 +553,18 @@ body.lc-navy-status .ios-statusbar svg [stroke]:not([stroke="none"]) { stroke: #
 .lc-share-tile-ic { display: inline-flex; align-items: center; justify-content: center; width: 54px; height: 54px; border-radius: 50%; background: var(--lc-chip-bg); border: 1px solid var(--lc-line); }
 .lc-share-tile:active .lc-share-tile-ic { filter: brightness(.9); }
 @media (prefers-reduced-motion: reduce) { .lc-share-scrim, .lc-share-card { animation: none; } }
+
+/* ---- shared "Share this comment?" prompt (comment-share-prompt.css) on the reader palette ---- */
+.lc-screen .pf-cs-card { background: var(--lc-card); color: var(--lc-text); }
+.lc-screen .pf-cs-icon { color: var(--lc-gold); background: color-mix(in srgb, var(--lc-gold) 18%, var(--lc-card)); }
+.lc-screen .pf-cs-title, .lc-screen .pf-cs-toggle-label { color: var(--lc-text); }
+.lc-screen .pf-cs-desc, .lc-screen .pf-cs-toggle-sub, .lc-screen .pf-cs-note { color: var(--lc-text-3); }
+.lc-screen .pf-cs-note svg { color: var(--lc-text-3); }
+.lc-screen .pf-cs-toggle-row { background: var(--lc-card-2); border-color: var(--lc-line); }
+.lc-screen .pf-cs-knob { background: var(--lc-line-2, rgba(255,255,255,.22)); }
+.lc-screen .pf-cs-switch.on .pf-cs-knob { background: var(--lc-gold); }
+.lc-screen .pf-cs-remember { color: var(--lc-text); }
+.lc-screen .pf-cs-remember input { accent-color: var(--lc-gold); }
+.lc-screen .pf-cs-btn { background: transparent; color: var(--lc-outline-text, var(--lc-text)); border-color: var(--lc-outline-border, var(--lc-line)); }
+.lc-screen .pf-cs-btn.primary { background: var(--lc-cta-bg); color: var(--lc-cta-text); border-color: var(--lc-cta-border, transparent); }
+.lc-screen .pf-cs-btn:focus-visible, .lc-screen .pf-cs-switch input:focus-visible + .pf-cs-knob { outline-color: var(--lc-focus); }

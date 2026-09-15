@@ -508,10 +508,14 @@ function CWComment({ c, onToggleLike, onReply }) {
 
 function CWDiscussion({ comments, onAdd, onToggleLike, onReply }) {
   const [draft, setDraft] = useStateCW("");
+  /* First comment opens the shared "Share this comment?" dialog
+     (window.PFCommentShare); a remembered decision skips it. */
+  const prompt = window.PFCommentShare.useSharePrompt(onAdd, { variant: "dialog" });
   function submit() {
     if (!draft.trim()) return;
-    onAdd(draft.trim());
+    const text = draft.trim();
     setDraft("");
+    prompt.submit(text);
   }
   return (
     <section className="cw-card cw-discussion">
@@ -522,9 +526,8 @@ function CWDiscussion({ comments, onAdd, onToggleLike, onReply }) {
           onKeyDown={(e) => e.key === "Enter" && submit()} />
         <button type="button" className="cw-composer-post" onClick={submit}>Post</button>
       </div>
-      <div className="cw-composer-note">
-        <IconCW name="lucide:info" size={15} color="var(--gray-400)" />Your comment will also be shared to the newsfeed.
-      </div>
+      <window.PFCommentShare.Note className="cw-composer-note" />
+      {prompt.modal}
       <div className="cw-cmt-list">
         {comments.map((c, i) => (
           <CWComment c={c} key={i}
@@ -612,8 +615,9 @@ function CourseWebApp() {
     setOpenSet((prev) => prev.size === course.sections.length ? new Set() : new Set(course.sections.map((_, i) => i)));
   }
 
-  function handleAddComment(text) {
-    setComments((all) => [{ name: ME_CW.name, time: "Just now", likes: 0, liked: false, text, replies: [] }, ...all]);
+  function handleAddComment(text, sharedToNewsfeed) {
+    setComments((all) => [{ name: ME_CW.name, time: "Just now", likes: 0, liked: false, text, replies: [], sharedToNewsfeed }, ...all]);
+    if (sharedToNewsfeed) window.PFCommentShare.shareToNewsfeed({ author: ME_CW, courseSlug: course.slug, text });
   }
   function handleToggleLike(i) {
     setComments((all) => all.map((c, idx) => idx === i ? { ...c, liked: !c.liked, likes: c.likes + (c.liked ? -1 : 1) } : c));
