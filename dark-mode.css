@@ -412,3 +412,24 @@
 /* Rewards Dashboard league card: keep the soft tint subtle on dark surfaces */
 [data-theme="dark"] .rdb-league { background: linear-gradient(135deg, var(--surface-card), color-mix(in srgb, var(--lg-accent) 18%, var(--surface-card))); }
 [data-theme="dark"] .rdb-league-tx b, [data-theme="dark"] .rdb-league-cta { color: var(--lg-accent); }
+
+/* ============================================================
+   My Learning — mobile (learning-mobile.css)
+   The screen root pins its own navy tokens (#0C1928 for --brand-navy,
+   --text-heading, --action-brand…) which beat the root swap at the top of
+   this file, so greeting / course titles / active tab / section labels
+   stayed navy-on-navy in dark. Re-point them to the dark palette here and
+   lift the handful of hardcoded navy labels, links and ghost buttons.
+   ============================================================ */
+[data-theme="dark"] .lm-screen {
+  --brand-navy: #CE9957; --brand-navy-700: #b8874a; --brand-navy-900: #a07640;
+  --text-heading: #ffffff; --surface-brand: #1a1736;
+  --action-brand: #CE9957; --action-brand-hover: #b8874a; --action-brand-active: #a07640;
+  background: var(--surface-page);
+}
+[data-theme="dark"] .lm2-sec-h h2, [data-theme="dark"] .lm2-related-h { color: var(--text-heading); }
+[data-theme="dark"] .lm2-sec-h a, [data-theme="dark"] .lm2-courseband .lm2-sec-h a { color: var(--brand-navy); }
+[data-theme="dark"] .lm2-relcard-go { background: var(--brand-navy); }
+[data-theme="dark"] .lm2-courseband .lm-ghost { border-color: var(--brand-navy); color: var(--brand-navy); }
+[data-theme="dark"] .lm2-courseband .lm-ghost.lm-fill { background: var(--brand-navy); color: #1a1736; border-color: var(--brand-navy); }
+[data-theme="dark"] .lm2-courseband .lm-ghost.lm-fill:active { background: var(--brand-navy-700); }

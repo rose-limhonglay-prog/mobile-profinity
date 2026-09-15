@@ -21,20 +21,36 @@ function goMT(url) {
    tier keys (confidence/mastery/freedom/inner) so "current plan" and
    "upgrade to X" logic lines up with what newsfeed/community actually gate. */
 const PF_TIER_KEY_MT = "pf-subscription-tier";
-function getUserTierMT() {
-  try {
-    return localStorage.getItem(PF_TIER_KEY_MT) || "free";
-  } catch (e) {
-    return "free";
-  }
-}
 const PRICING_TO_GATING_MT = {
   confidence: "confidence",
   mastery: "mastery",
   builder: "freedom",
   sovereign: "inner"
 };
+const GATING_TO_PRICING_MT = {
+  confidence: "confidence",
+  mastery: "mastery",
+  freedom: "builder",
+  inner: "sovereign"
+};
 const GATING_LADDER_MT = ["confidence", "mastery", "freedom", "inner"];
+/* Resolution order mirrors mobilechrome/learning-mobile: a shell that pins
+   window.PF_TIER wins, then a "?as=<tier>" preview param (so the page can be
+   checked as any member without touching localStorage), then the stored
+   subscription. Accepts either pricing keys (builder/sovereign) or gating
+   keys (freedom/inner) and always returns a gating key. */
+function getUserTierMT() {
+  let t = "";
+  try {
+    if (window.PF_TIER) t = String(window.PF_TIER);else {
+      const q = new URLSearchParams(window.location.search).get("as");
+      t = q || localStorage.getItem(PF_TIER_KEY_MT) || "";
+    }
+  } catch (e) {}
+  t = String(t || "").toLowerCase();
+  if (PRICING_TO_GATING_MT[t]) t = PRICING_TO_GATING_MT[t];
+  return GATING_LADDER_MT.includes(t) ? t : "free";
+}
 
 /* Current plan -> "current", already-included lower tier -> "included",
    a higher tier while already paying -> "upgrade" (changes the CTA to
@@ -301,7 +317,7 @@ function TierCard({
     name: "lucide:arrow-right",
     size: 16,
     color: tier.dark ? "var(--brand-navy-900)" : "#fff"
-  })), tier.trialNote && /*#__PURE__*/React.createElement("p", {
+  })), tier.trialNote && !ctaDisabled && /*#__PURE__*/React.createElement("p", {
     className: "mt-tier-trial-note"
   }, /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
     name: "lucide:gift",
@@ -330,6 +346,12 @@ function MembershipTier() {
       goMT("SubscribeCheckout.html?tier=" + tier.key);
     }
   };
+  /* A paying member never sees "Subscribe Now" anywhere on this page: the
+     trial banner becomes an "active plan" strip and the footer offers
+     Manage subscription (Payments) plus a jump to the next rung up. */
+  const currentPlan = TIERS_MT.find(t => PRICING_TO_GATING_MT[t.key] === currentTier) || null;
+  const nextGating = GATING_LADDER_MT[GATING_LADDER_MT.indexOf(currentTier) + 1];
+  const nextPlan = currentPlan && nextGating ? TIERS_MT.find(t => t.key === GATING_TO_PRICING_MT[nextGating]) || null : null;
   return /*#__PURE__*/React.createElement("div", {
     className: "mt-screen",
     "data-screen-label": "Membership Tier (mobile)"
@@ -367,7 +389,13 @@ function MembershipTier() {
     icon: "lucide:infinity",
     value: "∞",
     label: "Price freeze"
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), currentPlan ? /*#__PURE__*/React.createElement("div", {
+    className: "mt-trial-banner current"
+  }, /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
+    name: "lucide:badge-check",
+    size: 16,
+    color: "#fff"
+  }), "You're on the ", currentPlan.name, " plan · Active") : /*#__PURE__*/React.createElement("div", {
     className: "mt-trial-banner"
   }, /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
     name: "lucide:sparkles",
@@ -438,7 +466,21 @@ function MembershipTier() {
     className: "mt-owners-price"
   }, o.price))))), /*#__PURE__*/React.createElement("section", {
     className: "mt-footer"
-  }, /*#__PURE__*/React.createElement("h2", null, "Your dream clinic starts here."), /*#__PURE__*/React.createElement("p", null, "Choose your tier, lock in your price, and begin."), /*#__PURE__*/React.createElement("div", {
+  }, currentPlan ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", null, "You're on the ", currentPlan.name, " plan."), /*#__PURE__*/React.createElement("p", null, nextPlan ? "Your membership is active. Manage billing, or step up to " + nextPlan.name + " whenever you're ready." : "Your membership is active — you're on the top tier."), /*#__PURE__*/React.createElement("div", {
+    className: "mt-hero-ctas"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mt-btn-fill",
+    onClick: () => goMT("PaymentsMobile.html")
+  }, "Manage subscription"), nextPlan && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mt-btn-outline",
+    onClick: () => onSelect(nextPlan)
+  }, "Upgrade to ", nextPlan.name, " ", /*#__PURE__*/React.createElement(DSMT.IconifyIcon, {
+    name: "lucide:arrow-right",
+    size: 14,
+    color: "var(--brand-navy)"
+  })))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", null, "Your dream clinic starts here."), /*#__PURE__*/React.createElement("p", null, "Choose your tier, lock in your price, and begin."), /*#__PURE__*/React.createElement("div", {
     className: "mt-hero-ctas"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -452,7 +494,7 @@ function MembershipTier() {
     name: "lucide:arrow-right",
     size: 14,
     color: "var(--brand-navy)"
-  }))), /*#__PURE__*/React.createElement("p", {
+  })))), /*#__PURE__*/React.createElement("p", {
     className: "mt-footer-note"
   }, "Subscriptions are managed through our web app."), /*#__PURE__*/React.createElement("div", {
     className: "mt-footer-brand"

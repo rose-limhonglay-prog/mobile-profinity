@@ -3,7 +3,10 @@
    Layout ported from the design system's app UI kit (ui_kits/app/CommunityScreen.jsx
    inside _ds_bundle.js) — channel sidebar + composer + post feed + events rail —
    using the DS's own PostCard/ChannelHeader/ChannelItem/Composer/EventCard/Input/Icon
-   primitives and its window.APP_DATA sample content. Not mounted via
+   primitives and its window.APP_DATA sample content. The post column is the
+   shared newsfeed Feed (window.PFApp.Feed from app.jsx, loaded with
+   PF_NO_MOUNT) in channel mode, so the four tier channels, their gated
+   posts and the per-channel admin-pinned accordion match the mobile page. Not mounted via
    window.CommunityScreen directly: that function's own module destructures
    window.ProfinityDesignSystem_c2b5cc before the bundle finishes populating it
    (its ui_kits section runs before the bundle's final component-export block),
@@ -17,17 +20,16 @@ const {
 const DS_CW = window.ProfinityDesignSystem_c2b5cc;
 const {
   TopNav: TopNavCW,
-  ChannelHeader,
-  Composer,
-  PostCard,
-  EventCard,
-  ChannelItem,
+  ChannelHeader: ChannelHeaderCW,
+  Composer: ComposerCW,
+  PostCard: PostCardCW,
+  EventCard: EventCardCW,
+  ChannelItem: ChannelItemCW,
   Input: InputCW,
   Icon: IconCW
 } = DS_CW;
 const {
-  Panel: PanelCW,
-  Rail: RailCW
+  Panel: PanelCW
 } = window.Kit;
 const ME_CW = {
   name: "Katy Wilson",
@@ -84,8 +86,42 @@ function navigateCW(label) {
     window.location.href = x;
   })(u);
 }
+
+/* The four paid Community channels — same keys/buckets as the mobile
+   Community page (community-mobile.jsx CM_CHANNEL_BUCKET), so the shared
+   Feed (window.PFApp.Feed, channel mode) renders the same channel posts and
+   the same per-channel admin-pinned accordion here. */
+const CW_CHANNELS = [{
+  key: "confidence",
+  name: "Confidence",
+  about: "Your safe space to post first cases, ask the questions you're nervous about and get feedback from mentors who remember their first syringe.",
+  followers: "1,203"
+}, {
+  key: "mastery",
+  name: "Mastery",
+  about: "Advanced technique, complication management and live case reviews for injectors ready to go deeper than the basics.",
+  followers: "864"
+}, {
+  key: "freedom",
+  name: "Freedom",
+  about: "Business, scaling and mentorship — pricing, hiring and the systems that turn a busy chair into a clinic that runs without you.",
+  followers: "412"
+}, {
+  key: "inner",
+  name: "Inner Circle",
+  about: "Dr Tim Pearce's private roundtable: deal structures, acquisitions and the conversations that don't happen anywhere else.",
+  followers: "96"
+}];
+const CW_CHANNEL_MAP = CW_CHANNELS.reduce((m, c) => {
+  m[c.key] = c;
+  return m;
+}, {});
+const {
+  useState: useStateCW
+} = React;
 function ChannelsSidebar({
-  channels
+  active,
+  onPick
 }) {
   const Label = ({
     children
@@ -97,6 +133,20 @@ function ChannelsSidebar({
       margin: "16px 6px 6px"
     }
   }, children);
+  /* Channels the viewer's tier unlocks list first; the rest sit under
+     "Other Channels" with the premium crown (they still open — the Feed
+     shows its locked teasers + upgrade card, exactly like mobile). */
+  const PFA = window.PFApp;
+  const unlocked = PFA ? PFA.smIncludedTiers(PFA.getUserTier()) : [];
+  const mine = CW_CHANNELS.filter(c => unlocked.includes(c.key));
+  const other = CW_CHANNELS.filter(c => !unlocked.includes(c.key));
+  const item = c => /*#__PURE__*/React.createElement(ChannelItemCW, {
+    key: c.key,
+    name: c.name,
+    active: c.key === active,
+    premium: !unlocked.includes(c.key),
+    onClick: () => onPick(c.key)
+  });
   return /*#__PURE__*/React.createElement(PanelCW, {
     title: "Channels",
     padding: 20
@@ -107,28 +157,25 @@ function ChannelsSidebar({
       name: "search",
       size: 18
     })
-  }), /*#__PURE__*/React.createElement(Label, null, "Following"), /*#__PURE__*/React.createElement("div", {
+  }), mine.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Label, null, "My Channels"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexDirection: "column",
       gap: 4
     }
-  }, channels.following.map((c, i) => /*#__PURE__*/React.createElement(ChannelItem, {
-    key: i,
-    ...c
-  }))), /*#__PURE__*/React.createElement(Label, null, "Other Channels"), /*#__PURE__*/React.createElement("div", {
+  }, mine.map(item))), other.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Label, null, mine.length ? "Other Channels" : "Channels"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexDirection: "column",
       gap: 4
     }
-  }, channels.other.map((c, i) => /*#__PURE__*/React.createElement(ChannelItem, {
-    key: i,
-    ...c
-  }))));
+  }, other.map(item))));
 }
 function CommunityMain() {
   const D = window.APP_DATA;
+  const [channel, setChannel] = useStateCW("confidence");
+  const meta = CW_CHANNEL_MAP[channel];
+  const Feed = window.PFApp && window.PFApp.Feed;
   return /*#__PURE__*/React.createElement("div", {
     style: {
       display: "grid",
@@ -139,9 +186,13 @@ function CommunityMain() {
       padding: 24,
       alignItems: "start"
     }
-  }, /*#__PURE__*/React.createElement(RailCW, null, /*#__PURE__*/React.createElement(ChannelsSidebar, {
-    channels: D.channels
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rail cw-rail"
+  }, /*#__PURE__*/React.createElement(ChannelsSidebar, {
+    active: channel,
+    onPick: setChannel
   })), /*#__PURE__*/React.createElement("div", {
+    className: "cw-main",
     style: {
       display: "flex",
       flexDirection: "column",
@@ -150,17 +201,26 @@ function CommunityMain() {
     }
   }, /*#__PURE__*/React.createElement(PanelCW, {
     padding: 24
-  }, /*#__PURE__*/React.createElement(ChannelHeader, {
-    ...D.channelHeader,
+  }, /*#__PURE__*/React.createElement(ChannelHeaderCW, {
+    banner: D.channelHeader.banner,
+    name: "#" + meta.name,
+    followers: meta.followers,
+    visibility: "Members channel",
+    about: meta.about,
     following: false
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 20
     }
-  }, /*#__PURE__*/React.createElement(Composer, null))), D.posts.map((post, i) => /*#__PURE__*/React.createElement(PostCard, {
+  }, /*#__PURE__*/React.createElement(ComposerCW, null))), Feed ? /*#__PURE__*/React.createElement(Feed, {
+    key: channel,
+    channel: channel
+  }) : D.posts.map((post, i) => /*#__PURE__*/React.createElement(PostCardCW, {
     key: i,
     ...post
-  }))), /*#__PURE__*/React.createElement(RailCW, null, /*#__PURE__*/React.createElement("h2", {
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "rail cw-rail cw-rail-events"
+  }, /*#__PURE__*/React.createElement("h2", {
     style: {
       margin: "0 0 2px",
       fontFamily: "var(--font-sans)",
@@ -168,7 +228,7 @@ function CommunityMain() {
       fontSize: "var(--fs-h2)",
       color: "var(--text-primary)"
     }
-  }, "Upcoming Events"), D.events.map((e, i) => /*#__PURE__*/React.createElement(EventCard, {
+  }, "Upcoming Events"), D.events.map((e, i) => /*#__PURE__*/React.createElement(EventCardCW, {
     key: i,
     ...e
   }))));

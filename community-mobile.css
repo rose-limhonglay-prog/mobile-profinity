@@ -557,3 +557,48 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 /* the "+N" would float up into the Dynamic Island here, so it rises beside the pill instead */
 .m-pts-tally .m-pts-delta{right:auto;left:calc(100% + 6px);top:14px;text-shadow:none}
 @media (prefers-reduced-motion:reduce){.m-pts-tally,.m-pts-tally.on{transition:none;animation:none}.m-pts-tally .m-pts.earn{animation:none}}
+
+
+/* ===== pinned posts accordion (app.jsx PinnedBox, .pf-pinned-box--m) =====
+   Mirror of mobile.css's .m-scroll rules for the Community page's own
+   scroll container: inset card at the top of the channel that sticks under
+   the header (the .cm-scroll padding-top already offsets sticky children
+   below the absolutely-positioned header, and shrinks with it when the top
+   bar hides), and once the feed has scrolled (.chrome-float on .cm-screen)
+   the closed box collapses to just the gold Pinned pill. */
+.cm-scroll .pf-pinned-box--m{position:sticky;top:0;z-index:20;margin:10px 12px;padding:10px;
+  border-radius:18px;box-shadow:0 6px 18px rgba(31,26,77,.10)}
+.cm-scroll .pf-pinned-box--m .pf-pinned-box-head{gap:10px}
+.cm-scroll .pf-pinned-box--m .pf-pinned-card-tag-tx{padding:6px 12px;font-size:13px}
+.cm-scroll .pf-pinned-box--m .pf-pinned-box-avs{display:none}
+.cm-scroll .pf-pinned-box--m .pf-pinned-box-count{font-size:14px}
+.cm-scroll .pf-pinned-box--m .pf-pinned-box-hint{display:none}
+.cm-scroll .pf-pinned-box--m .pf-pinned-box-count,
+.cm-scroll .pf-pinned-box--m .pf-pinned-box-chev{transition:opacity .2s ease}
+.cm-scroll .pf-pinned-box--m,
+.cm-scroll .pf-pinned-box--m .pf-pinned-card-tag-tx{transition:background-color .2s ease,border-color .2s ease,box-shadow .2s ease}
+.chrome-float .cm-scroll .pf-pinned-box--m:not(.open){width:max-content;max-width:calc(100% - 24px);
+  background:transparent;border-color:transparent;box-shadow:none;pointer-events:none}
+.chrome-float .cm-scroll .pf-pinned-box--m:not(.open) .pf-pinned-box-head{gap:0;pointer-events:auto}
+.chrome-float .cm-scroll .pf-pinned-box--m:not(.open) .pf-pinned-box-count,
+.chrome-float .cm-scroll .pf-pinned-box--m:not(.open) .pf-pinned-box-chev{opacity:0;width:0;flex:none;overflow:hidden;pointer-events:none}
+.chrome-float .cm-scroll .pf-pinned-box--m:not(.open) .pf-pinned-card-tag-tx{box-shadow:0 4px 12px rgba(31,26,77,.22)}
+@media (prefers-reduced-motion:reduce){.cm-scroll .pf-pinned-box--m,.cm-scroll .pf-pinned-box--m .pf-pinned-card-tag-tx,
+  .cm-scroll .pf-pinned-box--m .pf-pinned-box-count,.cm-scroll .pf-pinned-box--m .pf-pinned-box-chev{transition:none}}
+.cm-scroll .pf-pinned-box--m .pf-pinned-box-list{gap:8px;margin-top:10px}
+.cm-scroll .pf-pinned-box--m.open .pf-pinned-box-list{max-height:min(560px, calc(100vh - 260px));overflow-y:auto;
+  scrollbar-width:none;overscroll-behavior:contain}
+.cm-scroll .pf-pinned-box--m .pf-pinned-box-list::-webkit-scrollbar{display:none}
+.cm-scroll .pf-pinned-box--m .pf-pinned-box-list > *{flex:none}
+.cm-scroll .pf-pinned-box--m .pf-pinned-mini{padding:10px 12px;gap:10px}
+.cm-scroll .pf-pinned-box--m .pf-pinned-mini-name{font-size:14px}
+.cm-scroll .pf-pinned-box--m .pf-pinned-mini-snip{font-size:13px}
+.cm-scroll .pf-pinned-box--m .pf-pinned-mini-thumb,.cm-scroll .pf-pinned-box--m .pf-pinned-mini-kind{width:40px;height:40px}
+.cm-scroll .pf-pinned-box--m .pf-pinned-mini-expand{display:none}
+.cm-scroll .pf-pinned-box--m .pf-pinned-box-item{border-radius:14px}
+.cm-scroll .pf-pinned-box--m .pf-pinned-box-item-bar{padding:6px 6px 6px 14px}
+/* the expanded channel card inside the box keeps its own padding; the
+   community feed's flat full-width post treatment doesn't apply here */
+.cm-scroll .pf-pinned-box--m .pf-chcard{border-radius:0 !important}
+.cm-scroll .pf-pinned-box--m .post-wrap{padding:16px 14px !important}
+.cm-scroll .pf-pinned-box--m .pf-media-bleed{margin:0 -14px !important}

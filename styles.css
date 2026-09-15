@@ -1537,6 +1537,25 @@ img{max-width:100%}
    feed scrolls; the open list scrolls on its own so it can't outgrow the
    viewport */
 .pf-pinned-box.sticky{position:sticky;top:84px;z-index:40;box-shadow:0 8px 22px rgba(31,26,77,.10)}
+/* Web accordion mirrors the mobile embed's header (gold tag + count + chevron
+   only — no avatar stack / Show-Hide hint) and, once it has stuck under the
+   top nav (.stuck, set by PinnedBox's sentinel), the closed box shrinks to
+   just the gold Pinned pill so it stops covering the post underneath. The
+   padding is kept so the sticky slot's height doesn't change (no feed jump);
+   clicking the pill still opens the list, which gets the full card back. */
+.pf-pinned-sentinel{height:1px;margin-top:-1px;pointer-events:none}
+.pf-pinned-box.sticky .pf-pinned-box-avs,.pf-pinned-box.sticky .pf-pinned-box-hint{display:none}
+.pf-pinned-box.sticky .pf-pinned-box-head{gap:10px}
+.pf-pinned-box.sticky .pf-pinned-box-count{font-size:14px}
+.pf-pinned-box.sticky .pf-pinned-box-count,.pf-pinned-box.sticky .pf-pinned-box-chev{transition:opacity .2s ease}
+.pf-pinned-box.sticky,.pf-pinned-box.sticky .pf-pinned-card-tag-tx{transition:background-color .2s ease,border-color .2s ease,box-shadow .2s ease}
+.pf-pinned-box.sticky.stuck:not(.open){width:max-content;max-width:100%;background:transparent;border-color:transparent;box-shadow:none;pointer-events:none}
+.pf-pinned-box.sticky.stuck:not(.open) .pf-pinned-box-head{gap:0;pointer-events:auto}
+.pf-pinned-box.sticky.stuck:not(.open) .pf-pinned-box-count,
+.pf-pinned-box.sticky.stuck:not(.open) .pf-pinned-box-chev{opacity:0;width:0;flex:none;overflow:hidden;pointer-events:none}
+.pf-pinned-box.sticky.stuck:not(.open) .pf-pinned-card-tag-tx{box-shadow:0 4px 12px rgba(31,26,77,.22)}
+@media (prefers-reduced-motion:reduce){.pf-pinned-box.sticky,.pf-pinned-box.sticky .pf-pinned-card-tag-tx,
+  .pf-pinned-box.sticky .pf-pinned-box-count,.pf-pinned-box.sticky .pf-pinned-box-chev{transition:none}}
 .pf-pinned-box.sticky .pf-pinned-box-list{max-height:calc(100vh - 84px - 24px - 64px);overflow-y:auto;
   scrollbar-width:thin;scrollbar-color:var(--border-default) transparent;overscroll-behavior:contain;padding-right:2px}
 .pf-pinned-box.sticky .pf-pinned-box-list::-webkit-scrollbar{width:6px}
@@ -1788,3 +1807,7 @@ img{max-width:100%}
 [data-theme="dark"] .pf-upl-dim{background:rgba(0,0,0,.5)}
 [data-theme="dark"] .pf-upl-bar{background:var(--brand-gold,#ce9957)}
 [data-theme="dark"] .pf-upl-pct{color:var(--brand-gold,#ce9957)}
+
+/* Community.html side rails (community-web.jsx .cw-rail on top of .rail):
+   keep the Kit rail's 20px rhythm; the events rail scrolls on its own. */
+.cw-rail{gap:20px}

@@ -25,6 +25,180 @@ function cpUploadDuration(images, video) {
   if (video) ms += 6500;
   return Math.max(3500, Math.min(16000, Math.round(ms)));
 }
+
+/* Long-video "preparing" state shown inside the composer itself (before
+   Post is even pressed). No real upload/transcode pipeline exists in this
+   prototype, so attaching Video stands in a long clip's metadata and fakes a
+   wall-clock upload → processing → cover-frame run; a real client would read
+   file.size / duration and drive `prep` from the upload XHR + server events.
+   ?longvideo=1 attaches one on load for demos/screenshots. */
+const CP_SIM_VIDEO = {
+  seconds: 272,
+  mb: 186
+};
+const CP_LONG_VIDEO_SECS = 60;
+const CP_VIDEO_READY_HOLD = 1800;
+function cpVideoPrepDuration(meta) {
+  const secs = meta && meta.seconds || 0;
+  return Math.max(4000, Math.min(14000, 3000 + secs * 30));
+}
+function cpFmtClock(secs) {
+  const m = Math.floor(secs / 60),
+    s = Math.round(secs % 60);
+  return m + ":" + String(s).padStart(2, "0");
+}
+function cpPrepStage(p) {
+  if (p >= 1) return {
+    key: "done",
+    title: "Video ready",
+    sub: "Choose a cover or post as is",
+    icon: "lucide:check"
+  };
+  if (p < 0.5) return {
+    key: "upload",
+    title: "Uploading video…",
+    sub: "Keep writing — this runs in the background",
+    icon: "lucide:upload-cloud"
+  };
+  if (p < 0.88) return {
+    key: "process",
+    title: "Processing video…",
+    sub: "Optimising for smooth playback",
+    icon: "lucide:cpu"
+  };
+  return {
+    key: "frames",
+    title: "Almost done…",
+    sub: "Generating cover frames",
+    icon: "lucide:film"
+  };
+}
+
+/* Wall-clock progress (ease-out) for a prep marker, ticking while it runs. */
+function useCPPrepProgress(prep) {
+  const [now, setNow] = React.useState(() => Date.now());
+  React.useEffect(() => {
+    if (!prep) return undefined;
+    const id = setInterval(() => setNow(Date.now()), 80);
+    return () => clearInterval(id);
+  }, [prep]);
+  if (!prep) return {
+    p: 1,
+    leftMs: 0
+  };
+  const t = Math.max(0, Math.min(1, (now - prep.started) / prep.duration));
+  return {
+    p: 1 - Math.pow(1 - t, 2.2),
+    leftMs: Math.max(0, prep.duration - (now - prep.started))
+  };
+}
+
+/* Card that stands in for the video preview while a long clip is being
+   uploaded + processed: blurred first frame behind, progress ring with a
+   percentage, stage title/sub-line, metadata, ETA and a slim bar. Cancel (X)
+   drops the clip. Once done the parent swaps the real preview back in and
+   briefly shows a "Video ready" chip over it. */
+function CPVideoProcessing({
+  video,
+  onCancel
+}) {
+  const {
+    p,
+    leftMs
+  } = useCPPrepProgress(video.prep);
+  const stage = cpPrepStage(p);
+  const pct = Math.round(p * 100);
+  const meta = video.prep.meta || CP_SIM_VIDEO;
+  const isLong = meta.seconds >= CP_LONG_VIDEO_SECS;
+  const R = 27,
+    C = 2 * Math.PI * R;
+  const secsLeft = Math.ceil(leftMs / 1000);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cp-video-wrap cp-vproc is-" + stage.key,
+    style: video.ratio ? {
+      aspectRatio: video.ratio
+    } : undefined,
+    role: "status",
+    "aria-live": "polite",
+    "aria-label": stage.title + " " + pct + "%"
+  }, /*#__PURE__*/React.createElement("video", {
+    src: video.src,
+    className: "cp-video-cover cp-vproc-bg",
+    muted: true,
+    playsInline: true,
+    preload: "metadata",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cp-vproc-shade"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "cp-video-rm",
+    "aria-label": "Cancel video",
+    onClick: onCancel
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:x",
+    size: 14,
+    color: "var(--white)"
+  })), isLong && /*#__PURE__*/React.createElement("span", {
+    className: "cp-vproc-tag"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:clock",
+    size: 12,
+    color: "#fff"
+  }), "Long video · ", cpFmtClock(meta.seconds)), /*#__PURE__*/React.createElement("div", {
+    className: "cp-vproc-center"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-vproc-ring",
+    style: {
+      "--cp-ring-c": C
+    }
+  }, /*#__PURE__*/React.createElement("svg", {
+    viewBox: "0 0 64 64",
+    width: "64",
+    height: "64",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("circle", {
+    className: "cp-vproc-track",
+    cx: "32",
+    cy: "32",
+    r: R
+  }), /*#__PURE__*/React.createElement("circle", {
+    className: "cp-vproc-fill",
+    cx: "32",
+    cy: "32",
+    r: R,
+    style: {
+      strokeDasharray: C,
+      strokeDashoffset: C * (1 - p)
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "cp-vproc-pct"
+  }, pct, /*#__PURE__*/React.createElement("small", null, "%"))), /*#__PURE__*/React.createElement("div", {
+    className: "cp-vproc-title"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: stage.icon,
+    size: 15,
+    color: "#fff"
+  }), stage.title), /*#__PURE__*/React.createElement("div", {
+    className: "cp-vproc-sub"
+  }, stage.sub)), /*#__PURE__*/React.createElement("div", {
+    className: "cp-vproc-foot"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-vproc-meta"
+  }, /*#__PURE__*/React.createElement("span", null, meta.mb, " MB"), /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  }), /*#__PURE__*/React.createElement("span", null, cpFmtClock(meta.seconds)), /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "cp-vproc-eta"
+  }, secsLeft > 0 ? "About " + secsLeft + "s left" : "Finishing…")), /*#__PURE__*/React.createElement("div", {
+    className: "cp-vproc-bar"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-vproc-bar-fill",
+    style: {
+      width: pct + "%"
+    }
+  }))));
+}
 function useDeviceScaleCP() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
   const [scale, setScaleCP] = React.useState(calc);
@@ -1724,7 +1898,45 @@ function CPScreen() {
   React.useEffect(() => {
     if (textareaRef.current) textareaRef.current.focus();
   }, []);
-  const canPost = text.trim().length > 0 || !!video;
+
+  /* Finish the video prep on its wall-clock deadline: drop the marker, hold a
+     "Video ready" chip over the preview, then open the cover picker so the
+     member can pick a frame straight away. */
+  const prep = video && video.prep;
+  React.useEffect(() => {
+    if (!prep) return undefined;
+    const left = Math.max(0, prep.started + prep.duration - Date.now());
+    const t1 = setTimeout(() => {
+      setVideo(v => v && v.prep === prep ? {
+        ...v,
+        prep: null,
+        readyAt: Date.now()
+      } : v);
+    }, left);
+    return () => clearTimeout(t1);
+  }, [prep]);
+  const readyAt = video && video.readyAt;
+  React.useEffect(() => {
+    if (!readyAt) return undefined;
+    const t2 = setTimeout(() => {
+      setVideo(v => v && v.readyAt === readyAt ? {
+        ...v,
+        readyAt: null
+      } : v);
+      setCoverPickerOpen(true);
+    }, CP_VIDEO_READY_HOLD);
+    return () => clearTimeout(t2);
+  }, [readyAt]);
+
+  /* ?longvideo=1 — attach the long sample clip on load (demo / screenshots). */
+  React.useEffect(() => {
+    try {
+      if (new URLSearchParams(window.location.search).get("longvideo") === "1") handleVideoPick();
+    } catch (e) {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const videoBusy = !!(video && video.prep);
+  const canPost = !videoBusy && (text.trim().length > 0 || !!video);
   const handlePost = () => {
     const body = mode === "live" ? liveDescription.trim() : text.trim();
     if (mode !== "live" && !body) return;
@@ -1816,13 +2028,22 @@ function CPScreen() {
     setImages([]);
     setBgId("none");
     const src = "assets/sample-reel.mp4";
+    /* Stand-in metadata for a long clip; drives the in-composer preparing
+       card (CPVideoProcessing). The cover picker opens once it's ready. */
+    const meta = {
+      ...CP_SIM_VIDEO
+    };
     setVideo({
       src,
       cover: null,
       coverIsCustom: false,
-      ratio: null
+      ratio: null,
+      prep: {
+        started: Date.now(),
+        duration: cpVideoPrepDuration(meta),
+        meta
+      }
     });
-    setCoverPickerOpen(true);
 
     /* Reads the clip's real dimensions so the preview box can take on its
        actual shape — vertical stays tall, horizontal stays wide, square
@@ -2001,7 +2222,16 @@ function CPScreen() {
     name: "lucide:x",
     size: 14,
     color: "var(--white)"
-  }))))), video && /*#__PURE__*/React.createElement("div", {
+  }))))), video && video.prep && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CPVideoProcessing, {
+    video: video,
+    onCancel: () => setVideo(null)
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "cp-vproc-note"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:info",
+    size: 13,
+    color: "var(--gray-500)"
+  }), "You can keep writing — ", /*#__PURE__*/React.createElement("b", null, "Post"), " unlocks when your video is ready.")), video && !video.prep && /*#__PURE__*/React.createElement("div", {
     className: "cp-video-wrap",
     style: video.ratio ? {
       aspectRatio: video.ratio
@@ -2027,7 +2257,16 @@ function CPScreen() {
   })), /*#__PURE__*/React.createElement("button", {
     className: "cp-video-edit-cover",
     onClick: () => setCoverPickerOpen(true)
-  }, "Edit cover")), /*#__PURE__*/React.createElement(CPTagPicker, {
+  }, "Edit cover"), video.readyAt && /*#__PURE__*/React.createElement("div", {
+    className: "cp-vready",
+    role: "status"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-vready-ic"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:check",
+    size: 14,
+    color: "#fff"
+  })), "Video ready")), /*#__PURE__*/React.createElement(CPTagPicker, {
     tags: allTags,
     selected: selectedTags,
     onToggle: toggleTag

@@ -1276,6 +1276,25 @@ function CMScreen({
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+  /* The channel's pinned-posts accordion (app.jsx PinnedBox) sits at the
+     very top of the feed, exactly where the "N new posts" pill floats — so
+     push the pill below the accordion's closed header whenever one is
+     rendered for this channel. */
+  const [pinnedH, setPinnedH] = React.useState(0);
+  React.useLayoutEffect(() => {
+    const s = scrollRef.current;
+    const box = s && s.querySelector(".pf-pinned-box");
+    if (!box) {
+      setPinnedH(0);
+      return;
+    }
+    const head = box.querySelector(".pf-pinned-box-head") || box;
+    const measure = () => setPinnedH(head.offsetHeight + 30);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(head);
+    return () => ro.disconnect();
+  }, [bucket]);
   React.useLayoutEffect(() => {
     const el = tabsRef.current;
     if (!el) return;
@@ -1299,7 +1318,7 @@ function CMScreen({
     setChannel: setChannel
   })), /*#__PURE__*/React.createElement(NewPostsPillCM, {
     count: newPosts,
-    top: headerH + 12,
+    top: headerH + 12 + pinnedH,
     onTap: seeNewPosts
   }), /*#__PURE__*/React.createElement("div", {
     className: "cm-scroll",

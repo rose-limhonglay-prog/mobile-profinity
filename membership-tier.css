@@ -179,3 +179,7 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
   .app.device-stage { padding: 0; }
   .mt-screen { min-height: 100vh; }
 }
+
+/* Subscribed-member state: the free-trial strip becomes an "active plan"
+   confirmation, matching the success treatment on the current tier card. */
+.mt-trial-banner.current { background: var(--success); }

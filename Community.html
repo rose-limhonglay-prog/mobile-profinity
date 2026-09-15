@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/spacing.css" />
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fig-tokens.css" />
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/styles.css" />
+  <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="notifications.css" />
   <link rel="stylesheet" href="account-menu.css" />
   <link rel="stylesheet" href="web-rewards-chrome.css" />
@@ -29,6 +30,7 @@
 
   <script src="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/_ds_bundle.js"></script>
 
+  <script src="hashtags.js"></script>
   <script src="pagetrans.js"></script>
   <script src="notifications.js"></script>
   <script src="account-menu.js"></script>
@@ -36,6 +38,10 @@
   <script src="web-rewards-chrome.js"></script>
   <script src="points-sound.js"></script>
 
+  <!-- shared newsfeed Feed (channel mode) incl. the admin-pinned posts accordion;
+       PF_NO_MOUNT keeps app.jsx's own App off this page's root -->
+  <script>window.PF_NO_MOUNT = true;</script>
+  <script src="app.compiled.js"></script>
   <script src="community-web.compiled.js"></script>
   <script src="coach.js"></script>
   <script src="tour.js"></script>

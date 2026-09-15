@@ -246,6 +246,62 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;color:#fff}
 .cp-video-edit-cover:active{background:rgba(16,20,48,.8)}
 
+/* ===== long-video preparing card (in place of the preview) ===== */
+.cp-vproc{background:#101430;display:flex;flex-direction:column;justify-content:flex-end;min-height:220px}
+.cp-vproc-bg{position:absolute;inset:0;filter:blur(14px) saturate(1.1) brightness(.55);transform:scale(1.12);pointer-events:none}
+.cp-vproc-shade{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(16,20,48,.25) 0%,rgba(16,20,48,.55) 55%,rgba(16,20,48,.9) 100%)}
+.cp-vproc-shade::after{content:"";position:absolute;inset:-40% -60%;
+  background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.08) 50%,transparent 60%);
+  animation:cp-vproc-sweep 2.6s ease-in-out infinite}
+.cp-vproc-tag{position:absolute;top:8px;left:8px;display:inline-flex;align-items:center;gap:5px;padding:5px 10px 5px 8px;
+  border-radius:var(--r-pill);background:rgba(0,0,0,.5);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+  font-family:var(--font-sans);font-size:11.5px;font-weight:var(--fw-semibold);color:#fff;letter-spacing:.01em}
+.cp-vproc-center{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;padding:28px 16px 12px;text-align:center}
+.cp-vproc-ring{position:relative;width:64px;height:64px;margin-bottom:6px}
+.cp-vproc-ring svg{transform:rotate(-90deg);filter:drop-shadow(0 2px 8px rgba(0,0,0,.35))}
+.cp-vproc-track{fill:none;stroke:rgba(255,255,255,.18);stroke-width:5}
+.cp-vproc-fill{fill:none;stroke:var(--brand-gold,#ce9957);stroke-width:5;stroke-linecap:round;transition:stroke-dashoffset .12s linear}
+.cp-vproc.is-done .cp-vproc-fill{stroke:var(--success,#2e9a5b)}
+.cp-vproc-pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;color:#fff;font-variant-numeric:tabular-nums}
+.cp-vproc-pct small{font-size:10px;font-weight:var(--fw-semibold);margin-left:1px;opacity:.8}
+.cp-vproc-title{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-sans);font-weight:var(--fw-bold);
+  font-size:15px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.cp-vproc-sub{font-family:var(--font-sans);font-size:12.5px;color:rgba(255,255,255,.78)}
+.cp-vproc-foot{position:relative;padding:0 14px 12px;display:flex;flex-direction:column;gap:8px}
+.cp-vproc-meta{display:flex;align-items:center;justify-content:center;gap:8px;
+  font-family:var(--font-sans);font-size:11.5px;font-weight:var(--fw-semibold);color:rgba(255,255,255,.85);font-variant-numeric:tabular-nums}
+.cp-vproc-meta .dot{width:3px;height:3px;border-radius:50%;background:rgba(255,255,255,.5)}
+.cp-vproc-eta{color:var(--brand-gold,#ce9957)}
+.cp-vproc-bar{position:relative;height:5px;border-radius:999px;background:rgba(255,255,255,.18);overflow:hidden}
+.cp-vproc-bar-fill{position:absolute;left:0;top:0;bottom:0;border-radius:999px;background:var(--brand-gold,#ce9957);transition:width .14s linear}
+.cp-vproc-bar-fill::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.5) 50%,transparent 100%);background-size:200% 100%;
+  animation:cp-vproc-shine 1.4s linear infinite}
+.cp-vproc-note{display:flex;align-items:flex-start;gap:6px;margin:-4px 16px 14px;
+  font-family:var(--font-sans);font-size:12.5px;line-height:1.4;color:var(--gray-500)}
+.cp-vproc-note b{font-weight:var(--fw-semibold);color:var(--text-heading)}
+.cp-vproc-note iconify-icon{flex:none;margin-top:2px}
+
+/* "Video ready" chip that sits over the restored preview for a moment */
+.cp-vready{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:inline-flex;align-items:center;gap:8px;
+  padding:8px 14px 8px 8px;border-radius:var(--r-pill);background:rgba(16,20,48,.78);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13.5px;color:#fff;
+  animation:cp-vready-in .32s cubic-bezier(.2,.9,.3,1.2) both}
+.cp-vready-ic{width:22px;height:22px;border-radius:50%;background:var(--success,#2e9a5b);display:inline-flex;align-items:center;justify-content:center;
+  animation:cp-vready-pop .4s .12s cubic-bezier(.2,.9,.3,1.3) both}
+
+@keyframes cp-vproc-sweep{0%{transform:translateX(-30%)}100%{transform:translateX(30%)}}
+@keyframes cp-vproc-shine{from{background-position:200% 0}to{background-position:-200% 0}}
+@keyframes cp-vready-in{from{opacity:0;transform:translate(-50%,-50%) scale(.85)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+@keyframes cp-vready-pop{from{transform:scale(.3)}to{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){
+  .cp-vproc-shade::after,.cp-vproc-bar-fill::after{animation:none}
+  .cp-vready,.cp-vready-ic{animation:none}
+}
+
 /* ===== cover picker (full-screen, over the composer) ===== */
 /* padding-top reserves the same status-bar/notch space as .cp-top (54px) so
    the header sits clear of the simulated time/battery row in device-stage

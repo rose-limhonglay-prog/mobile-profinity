@@ -747,6 +747,22 @@ function CMScreen({ scrollRef }) {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+  /* The channel's pinned-posts accordion (app.jsx PinnedBox) sits at the
+     very top of the feed, exactly where the "N new posts" pill floats — so
+     push the pill below the accordion's closed header whenever one is
+     rendered for this channel. */
+  const [pinnedH, setPinnedH] = React.useState(0);
+  React.useLayoutEffect(() => {
+    const s = scrollRef.current;
+    const box = s && s.querySelector(".pf-pinned-box");
+    if (!box) { setPinnedH(0); return; }
+    const head = box.querySelector(".pf-pinned-box-head") || box;
+    const measure = () => setPinnedH(head.offsetHeight + 30);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(head);
+    return () => ro.disconnect();
+  }, [bucket]);
   React.useLayoutEffect(() => {
     const el = tabsRef.current;
     if (!el) return;
@@ -762,7 +778,7 @@ function CMScreen({ scrollRef }) {
         <CMTopBar onMenu={() => setMenuOpen(true)} onMessages={() => setMsgOpen(true)} />
         <CMHeader channel={channel} setChannel={setChannel} />
       </div>
-      <NewPostsPillCM count={newPosts} top={headerH + 12} onTap={seeNewPosts} />
+      <NewPostsPillCM count={newPosts} top={headerH + 12 + pinnedH} onTap={seeNewPosts} />
       <div className="cm-scroll" ref={scrollRef} style={{ paddingTop: headerH, paddingBottom: tabsH + 34 }}>
         <PFACM.Feed channel={bucket} />
         <div className="cm-end">End of newsfeed</div>

@@ -2610,9 +2610,264 @@ const FOLLOWSAVE_AMIR_POST = {
   commentList: []
 };
 
+/* Admin-pinned channel announcements — two per paid channel (Confidence /
+   Mastery / Freedom / Inner Circle), pinned by default at the top of that
+   channel on the Community page (web + mobile) via CHANNEL_PINNED_DEFAULTS.
+   Same gated bucket routing as every other channel post, so a viewer who
+   hasn't unlocked the channel sees them as teasers like the rest. Unpinning
+   drops them back into the channel as ordinary posts (they lead each
+   bucket's group in BUCKET_POSTS). */
+const PROFINITY_BY = {
+  by: "Profinity",
+  byAvatar: "assets/profinity-icon.jpg",
+  avatar: "assets/profinity-icon.jpg"
+};
+const TIM_BY = {
+  by: "Dr Tim Pearce",
+  byAvatar: "assets/avatar-drtim.png",
+  avatar: "assets/profinity-icon.jpg"
+};
+const TIM_LOCAL = {
+  ...TIM,
+  avatar: "assets/avatar-drtim.png"
+};
+const CONFIDENCE_PINNED_1 = {
+  id: "chpin_confidence_1",
+  access: "gated",
+  bucket: "confidence",
+  author: PROFINITY,
+  keepAuthor: true,
+  channel: {
+    name: "#Confidence · Community",
+    ...PROFINITY_BY,
+    time: "1w"
+  },
+  time: "1 Week Ago",
+  hashtags: ["confidence", "community"],
+  media: [IMG.communityPoster],
+  body: "Welcome to the Confidence channel! 👋 This is your safe space to post your first cases, ask the “silly” questions and get feedback from mentors who remember their first syringe. Introduce yourself below and tell us where you’re injecting from.",
+  likes: "1.4K",
+  comments: "236",
+  shares: "58",
+  actioned: false,
+  commentList: [{
+    author: {
+      name: "Nurse Beth",
+      avatar: "assets/avatar-nurse-beth.jpg"
+    },
+    text: "Hello from Leeds! Six months in and this channel has already saved me twice 🙌",
+    likes: "84",
+    comments: "3",
+    time: "6d",
+    pills: [{
+      k: "like",
+      n: "60"
+    }, {
+      k: "love",
+      n: "24"
+    }],
+    reactions: ["like", "love"],
+    reactionCount: "84"
+  }]
+};
+const CONFIDENCE_PINNED_2 = {
+  id: "chpin_confidence_2",
+  access: "gated",
+  bucket: "confidence",
+  author: TIM_LOCAL,
+  keepAuthor: true,
+  channel: {
+    name: "#Confidence · Community",
+    ...TIM_BY,
+    time: "2w"
+  },
+  time: "2 Weeks Ago",
+  hashtags: ["confidence", "guidelines"],
+  body: "Channel guidelines, pinned so nobody has to scroll for them: 1) Blur or crop patient identifiers before you post. 2) Ask before you advise — context first, opinion second. 3) Celebrate every first. Nobody here is judging your early work; we all had one.",
+  likes: "982",
+  comments: "71",
+  shares: "112",
+  actioned: false,
+  commentList: []
+};
+const MASTERY_PINNED_1 = {
+  id: "chpin_mastery_1",
+  access: "gated",
+  bucket: "mastery",
+  author: TIM_LOCAL,
+  keepAuthor: true,
+  channel: {
+    name: "#Mastery · Community",
+    ...TIM_BY,
+    time: "3d"
+  },
+  time: "3 Days Ago",
+  hashtags: ["mastery", "casereview"],
+  media: [IMG.communityPoster],
+  body: "Mastery members — this month’s live case review is Thursday 7PM UK. Bring your trickiest tear-trough or jawline case and we’ll plan it together on screen. Drop a one-line summary below so I can pick the first three.",
+  likes: "640",
+  comments: "58",
+  shares: "31",
+  actioned: false,
+  commentList: [{
+    author: {
+      name: "Priya Shah",
+      avatar: "assets/avatar-priya-shah.jpg"
+    },
+    text: "Tear trough on a 52yo with prior HA — cannula entry point debate. In!",
+    likes: "22",
+    comments: "1",
+    time: "2d",
+    pills: [{
+      k: "like",
+      n: "22"
+    }],
+    reactions: ["like"],
+    reactionCount: "22"
+  }]
+};
+const MASTERY_PINNED_2 = {
+  id: "chpin_mastery_2",
+  access: "gated",
+  bucket: "mastery",
+  author: PROFINITY,
+  keepAuthor: true,
+  channel: {
+    name: "#Mastery · Community",
+    ...PROFINITY_BY,
+    time: "1w"
+  },
+  time: "1 Week Ago",
+  hashtags: ["mastery", "howto"],
+  body: "How to get the most out of Mastery: post your assessment first, your plan second and your result third — the feedback gets sharper at every step, and the thread becomes a case study the whole channel learns from.",
+  likes: "455",
+  comments: "24",
+  shares: "40",
+  actioned: false,
+  commentList: []
+};
+const FREEDOM_PINNED_1 = {
+  id: "chpin_freedom_1",
+  access: "gated",
+  bucket: "freedom",
+  author: TIM_LOCAL,
+  keepAuthor: true,
+  channel: {
+    name: "#Freedom · Community",
+    ...TIM_BY,
+    time: "2d"
+  },
+  time: "2 Days Ago",
+  hashtags: ["freedom", "growthsprint"],
+  media: [IMG.communityPoster],
+  body: "Freedom Path: the 90-day clinic growth sprint starts Monday. Weekly targets, accountability pairs and a Friday numbers check-in. Reply “in” below and I’ll pair you up over the weekend.",
+  likes: "318",
+  comments: "49",
+  shares: "17",
+  actioned: false,
+  commentList: [{
+    author: {
+      name: "Dr Amir Khan",
+      avatar: "assets/avatar-amir-khan.jpg"
+    },
+    text: "In. Clinic three opens in March so the timing is perfect.",
+    likes: "15",
+    comments: "0",
+    time: "1d",
+    pills: [{
+      k: "like",
+      n: "15"
+    }],
+    reactions: ["like"],
+    reactionCount: "15"
+  }]
+};
+const FREEDOM_PINNED_2 = {
+  id: "chpin_freedom_2",
+  access: "gated",
+  bucket: "freedom",
+  author: PROFINITY,
+  keepAuthor: true,
+  channel: {
+    name: "#Freedom · Community",
+    ...PROFINITY_BY,
+    time: "1w"
+  },
+  time: "1 Week Ago",
+  hashtags: ["freedom", "resources"],
+  body: "Business resources hub: the pricing templates, consult scripts and the hiring-order playbook all live in My Learning → Freedom. Pinned here for quick access — bookmark the ones you use most.",
+  likes: "276",
+  comments: "12",
+  shares: "63",
+  actioned: false,
+  commentList: []
+};
+const INNER_PINNED_1 = {
+  id: "chpin_inner_1",
+  access: "gated",
+  bucket: "inner",
+  author: TIM_LOCAL,
+  keepAuthor: true,
+  channel: {
+    name: "#Inner Circle · Community",
+    ...TIM_BY,
+    time: "4d"
+  },
+  time: "4 Days Ago",
+  hashtags: ["inner-circle", "retreat"],
+  media: [IMG.communityPoster],
+  body: "Inner Circle Q4 retreat: dates are confirmed for 14–16 November. Agenda, venue and travel notes are in the thread below — please confirm your place by Friday so we can lock the private dining.",
+  likes: "188",
+  comments: "27",
+  shares: "6",
+  actioned: false,
+  commentList: [{
+    author: {
+      name: "Dr Rachel Voss"
+    },
+    text: "Confirmed. Flying in Thursday night — anyone else on the early flight?",
+    likes: "9",
+    comments: "2",
+    time: "3d",
+    pills: [{
+      k: "like",
+      n: "9"
+    }],
+    reactions: ["like"],
+    reactionCount: "9"
+  }]
+};
+const INNER_PINNED_2 = {
+  id: "chpin_inner_2",
+  access: "gated",
+  bucket: "inner",
+  author: PROFINITY,
+  keepAuthor: true,
+  channel: {
+    name: "#Inner Circle · Community",
+    ...PROFINITY_BY,
+    time: "2w"
+  },
+  time: "2 Weeks Ago",
+  hashtags: ["inner-circle", "houserules"],
+  body: "House rules: what’s shared in the Inner Circle stays in the Inner Circle. Deal structures, numbers and partner names are confidential by default — ask before you reference anyone’s figures outside this room.",
+  likes: "142",
+  comments: "8",
+  shares: "3",
+  actioned: false,
+  commentList: []
+};
+/* Default pin order per channel (newest pin first), keyed by bucket. */
+const CHANNEL_PINNED_DEFAULTS = {
+  confidence: [CONFIDENCE_PINNED_1.id, CONFIDENCE_PINNED_2.id],
+  mastery: [MASTERY_PINNED_1.id, MASTERY_PINNED_2.id],
+  freedom: [FREEDOM_PINNED_1.id, FREEDOM_PINNED_2.id],
+  inner: [INNER_PINNED_1.id, INNER_PINNED_2.id]
+};
+
 /* The full pool of gated bucket content the preview panel routes between —
    order here is the order it appears once resolved into the feed. */
-const BUCKET_POSTS = [CHANNEL_POST, CONFIDENCE_POST_2, CONFIDENCE_POST_3, CONFIDENCE_POST_4, CONFIDENCE_POST_5, CONFIDENCE_POST_6, CONFIDENCE_POST_7, CONFIDENCE_POST_8, CONFIDENCE_POST_9, CONFIDENCE_POST_10, CONFIDENCE_POST_11, CONFIDENCE_POST_12, CONFIDENCE_POST_13, CONFIDENCE_POST_14, CONFIDENCE_POST_15, CONFIDENCE_POST_16, CONFIDENCE_POST_17, CONFIDENCE_POST_18, CONFIDENCE_POST_19, CONFIDENCE_POST_20, MASTERY_POST, MASTERY_POST_2, MASTERY_POST_3, MASTERY_POST_4, MASTERY_POST_5, MASTERY_POST_6, MASTERY_POST_7, MASTERY_POST_8, MASTERY_POST_9, MASTERY_POST_10, MASTERY_POST_11, MASTERY_POST_12, MASTERY_POST_13, MASTERY_POST_14, MASTERY_POST_15, MASTERY_POST_16, MASTERY_POST_17, MASTERY_POST_18, MASTERY_POST_19, MASTERY_POST_20, MASTERY_POST_21, MASTERY_POST_22, MASTERY_POST_23, MASTERY_POST_24, MASTERY_POST_25, FREEDOM_POST, FREEDOM_POST_2, FREEDOM_POST_3, FREEDOM_POST_4, FREEDOM_POST_5, FREEDOM_POST_6, FREEDOM_POST_7, FREEDOM_POST_8, FREEDOM_POST_9, FREEDOM_POST_10, FREEDOM_POST_11, FREEDOM_POST_12, FREEDOM_POST_13, FREEDOM_POST_14, FREEDOM_POST_15, FREEDOM_POST_16, FREEDOM_POST_17, FREEDOM_POST_18, FREEDOM_POST_19, FREEDOM_POST_20, INNER_POST, INNER_POST_2, INNER_POST_3, INNER_POST_4, INNER_POST_5, INNER_POST_6, INNER_POST_7, INNER_POST_8, INNER_POST_9, INNER_POST_10, INNER_POST_11, INNER_POST_12, INNER_POST_13, INNER_POST_14, INNER_POST_15, INNER_POST_16, INNER_POST_17, INNER_POST_18, INNER_POST_19, INNER_POST_20, COURSE_POST, COURSE_COMMENT, COURSE_COMMENT_2, GENERAL_MARK_POST, FOLLOWSAVE_AMIR_POST, MYLEARNING_POST];
+const BUCKET_POSTS = [CONFIDENCE_PINNED_1, CONFIDENCE_PINNED_2, CHANNEL_POST, CONFIDENCE_POST_2, CONFIDENCE_POST_3, CONFIDENCE_POST_4, CONFIDENCE_POST_5, CONFIDENCE_POST_6, CONFIDENCE_POST_7, CONFIDENCE_POST_8, CONFIDENCE_POST_9, CONFIDENCE_POST_10, CONFIDENCE_POST_11, CONFIDENCE_POST_12, CONFIDENCE_POST_13, CONFIDENCE_POST_14, CONFIDENCE_POST_15, CONFIDENCE_POST_16, CONFIDENCE_POST_17, CONFIDENCE_POST_18, CONFIDENCE_POST_19, CONFIDENCE_POST_20, MASTERY_PINNED_1, MASTERY_PINNED_2, MASTERY_POST, MASTERY_POST_2, MASTERY_POST_3, MASTERY_POST_4, MASTERY_POST_5, MASTERY_POST_6, MASTERY_POST_7, MASTERY_POST_8, MASTERY_POST_9, MASTERY_POST_10, MASTERY_POST_11, MASTERY_POST_12, MASTERY_POST_13, MASTERY_POST_14, MASTERY_POST_15, MASTERY_POST_16, MASTERY_POST_17, MASTERY_POST_18, MASTERY_POST_19, MASTERY_POST_20, MASTERY_POST_21, MASTERY_POST_22, MASTERY_POST_23, MASTERY_POST_24, MASTERY_POST_25, FREEDOM_PINNED_1, FREEDOM_PINNED_2, FREEDOM_POST, FREEDOM_POST_2, FREEDOM_POST_3, FREEDOM_POST_4, FREEDOM_POST_5, FREEDOM_POST_6, FREEDOM_POST_7, FREEDOM_POST_8, FREEDOM_POST_9, FREEDOM_POST_10, FREEDOM_POST_11, FREEDOM_POST_12, FREEDOM_POST_13, FREEDOM_POST_14, FREEDOM_POST_15, FREEDOM_POST_16, FREEDOM_POST_17, FREEDOM_POST_18, FREEDOM_POST_19, FREEDOM_POST_20, INNER_PINNED_1, INNER_PINNED_2, INNER_POST, INNER_POST_2, INNER_POST_3, INNER_POST_4, INNER_POST_5, INNER_POST_6, INNER_POST_7, INNER_POST_8, INNER_POST_9, INNER_POST_10, INNER_POST_11, INNER_POST_12, INNER_POST_13, INNER_POST_14, INNER_POST_15, INNER_POST_16, INNER_POST_17, INNER_POST_18, INNER_POST_19, INNER_POST_20, COURSE_POST, COURSE_COMMENT, COURSE_COMMENT_2, GENERAL_MARK_POST, FOLLOWSAVE_AMIR_POST, MYLEARNING_POST];
 
 /* Bucket types a free viewer is shown as a locked teaser (see
    resolveBucketFeed) — every paid channel plus course discussion
@@ -10354,11 +10609,11 @@ function PostMoreMenu({
 /* Admin-only "Pin to top" / "Unpin" entry appended to every post card's
    "..." menu (DS PostCard + PostMoreMenu both take the same menuItems shape).
    Non-admin viewers get an empty list, so the menu is unchanged for them. */
-function pinMenuItemsFor(pinned, canPin, onPin) {
+function pinMenuItemsFor(pinned, canPin, onPin, pinScope) {
   if (!canPin) return [];
   return [{
     key: "pin",
-    label: pinned ? "Unpin from top" : "Pin to top of feed",
+    label: pinned ? "Unpin from top" : "Pin to top of " + (pinScope === "channel" ? "channel" : "feed"),
     icon: pinned ? "lucide:pin-off" : "lucide:pin",
     color: "var(--brand-navy)",
     onClick: onPin
@@ -11383,6 +11638,7 @@ function FeedPost({
   pinned,
   canPin,
   onPin,
+  pinScope,
   onToggleLike,
   onReact,
   onDoubleTapLove,
@@ -11600,7 +11856,7 @@ function FeedPost({
     onComment: handleComment,
     onShare: handleShare,
     onReport: () => setReportedOpen(true),
-    menuItems: pinMenuItemsFor(pinned, canPin, onPin),
+    menuItems: pinMenuItemsFor(pinned, canPin, onPin, pinScope),
     onReactionsClick: () => setLikesOpen(true),
     onHashtagClick: goToHashtag,
     style: {
@@ -11958,6 +12214,7 @@ function ChannelFeedCard({
   pinned,
   canPin,
   onPin,
+  pinScope,
   onToggleLike,
   onReact,
   onDoubleTapLove,
@@ -12023,7 +12280,7 @@ function ChannelFeedCard({
     saved: st.saved,
     onSave: onSave,
     onReport: () => setReportedOpen(true),
-    menuItems: pinMenuItemsFor(pinned, canPin, onPin)
+    menuItems: pinMenuItemsFor(pinned, canPin, onPin, pinScope)
   })), /*#__PURE__*/React.createElement("p", {
     className: "pf-chcard-body"
   }, post.body), (post.sample || post.media && post.media.length > 0) && /*#__PURE__*/React.createElement("div", {
@@ -12130,6 +12387,7 @@ function CourseCommentCard({
   pinned,
   canPin,
   onPin,
+  pinScope,
   onToggleLike,
   onReact,
   onSave,
@@ -12191,7 +12449,7 @@ function CourseCommentCard({
     saved: st.saved,
     onSave: onSave,
     onReport: () => setReportedOpen(true),
-    menuItems: pinMenuItemsFor(pinned, canPin, onPin)
+    menuItems: pinMenuItemsFor(pinned, canPin, onPin, pinScope)
   })), /*#__PURE__*/React.createElement("div", {
     className: "pf-ccard-body"
   }, /*#__PURE__*/React.createElement(ClampText, {
@@ -12706,19 +12964,29 @@ const PF_PINNED_KEY = "pf-pinned-posts";
 /* Ships with the sample announcement pinned until an admin first pins or
    unpins anything (an explicit empty list is respected, not re-seeded). */
 const PF_PINNED_DEFAULTS = SAMPLE_PINNED_POSTS.map(p => p.id);
-function readPinnedIds() {
+/* Each Community channel keeps its own pin list ("pf-pinned-posts:<bucket>")
+   seeded from CHANNEL_PINNED_DEFAULTS, so pinning inside Mastery pins to the
+   top of Mastery only; the newsfeed's list is untouched. */
+function pinnedKeyFor(channel) {
+  return channel ? PF_PINNED_KEY + ":" + channel : PF_PINNED_KEY;
+}
+function pinnedDefaultsFor(channel) {
+  return channel ? CHANNEL_PINNED_DEFAULTS[channel] || [] : PF_PINNED_DEFAULTS;
+}
+function readPinnedIds(channel) {
+  const defaults = pinnedDefaultsFor(channel);
   try {
-    const raw = localStorage.getItem(PF_PINNED_KEY);
-    if (raw === null) return PF_PINNED_DEFAULTS;
+    const raw = localStorage.getItem(pinnedKeyFor(channel));
+    if (raw === null) return defaults;
     const list = JSON.parse(raw) || [];
     return list.filter(id => typeof id === "string");
   } catch (e) {
-    return PF_PINNED_DEFAULTS;
+    return defaults;
   }
 }
-function writePinnedIds(ids) {
+function writePinnedIds(ids, channel) {
   try {
-    localStorage.setItem(PF_PINNED_KEY, JSON.stringify(ids));
+    localStorage.setItem(pinnedKeyFor(channel), JSON.stringify(ids));
   } catch (e) {}
 }
 
@@ -12849,8 +13117,32 @@ function PinnedBox({
      viewport). The mobile embed keeps it in normal flow — its header is an
      overlay inside a separate scroll container. */
   const embed = typeof window !== "undefined" && !!window.PF_EMBED;
-  return /*#__PURE__*/React.createElement("section", {
-    className: "pf-pinned-box" + (open ? " open" : "") + (embed ? " pf-pinned-box--m" : " sticky"),
+  /* Web: once the box has actually stuck under the top nav (the feed has
+     scrolled past its natural slot) the closed accordion shrinks to just the
+     gold Pinned pill — the same treatment the mobile embed gets from
+     .chrome-float — so it stops covering the post underneath. A 1px sentinel
+     placed just above the box tells us when that happens. */
+  const [stuck, setStuck] = useState(false);
+  const sentinelRef = useRef(null);
+  useEffect(() => {
+    if (embed || typeof IntersectionObserver === "undefined") return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    // stuck = the sentinel has scrolled up past the 84px sticky offset (not
+    // merely offscreen below the fold on a short viewport)
+    const io = new IntersectionObserver(([e]) => setStuck(!e.isIntersecting && e.boundingClientRect.top < 84), {
+      rootMargin: "-84px 0px 0px 0px",
+      threshold: 0
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [embed]);
+  return /*#__PURE__*/React.createElement(React.Fragment, null, !embed && /*#__PURE__*/React.createElement("div", {
+    className: "pf-pinned-sentinel",
+    ref: sentinelRef,
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("section", {
+    className: "pf-pinned-box" + (open ? " open" : "") + (embed ? " pf-pinned-box--m" : " sticky") + (stuck ? " stuck" : ""),
     ref: innerRef,
     "aria-label": "Pinned posts"
   }, /*#__PURE__*/React.createElement("button", {
@@ -12921,7 +13213,7 @@ function PinnedBox({
       size: 15,
       color: "currentColor"
     }))), renderItem(x));
-  })));
+  }))));
 }
 
 /* Event-registration social proof — one seed post (Rose Lim, a fixture
@@ -13127,7 +13419,11 @@ function Feed({
   const [upgradeFor, setUpgradeFor] = useState(null);
   const saveFlow = useSaveFlow();
   /* Admin pin state — see PF_PINNED_KEY. */
-  const [pinnedIds, setPinnedIds] = useState(readPinnedIds);
+  const [pinnedIds, setPinnedIds] = useState(() => readPinnedIds(channel));
+  // the Community page swaps channels in place — reload that channel's own pin list
+  useEffect(() => {
+    setPinnedIds(readPinnedIds(channel));
+  }, [channel]);
   const [pinsOpen, setPinsOpen] = useState(readPinsOpen);
   const togglePinsOpen = () => setPinsOpen(o => {
     writePinsOpen(!o);
@@ -13149,13 +13445,14 @@ function Feed({
     const willPin = !pinnedIds.includes(id);
     const next = willPin ? [id, ...pinnedIds.filter(x => x !== id)] : pinnedIds.filter(x => x !== id);
     setPinnedIds(next);
-    writePinnedIds(next);
+    writePinnedIds(next, channel);
     if (willPin) {
       setPinsOpen(true);
       writePinsOpen(true);
     }
     if (pinToastTimer.current) clearTimeout(pinToastTimer.current);
-    setPinToast(willPin ? "Pinned to the top of the feed" : "Unpinned from the top of the feed");
+    const where = channel ? "channel" : "feed";
+    setPinToast(willPin ? "Pinned to the top of the " + where : "Unpinned from the top of the " + where);
     pinToastTimer.current = setTimeout(() => setPinToast(null), 2400);
     if (willPin) setTimeout(() => {
       if (pinnedRef.current && pinnedRef.current.scrollIntoView) pinnedRef.current.scrollIntoView({
@@ -13348,7 +13645,8 @@ function Feed({
     const pinProps = {
       pinned: !!pinned,
       canPin,
-      onPin: () => togglePin(p.id)
+      onPin: () => togglePin(p.id),
+      pinScope: channel ? "channel" : "feed"
     };
     if (mode === "teaser") {
       return /*#__PURE__*/React.createElement(TeaserPost, {
@@ -13714,6 +14012,9 @@ window.PFApp = {
   setUserTier,
   readEventRegPosts
 };
-if (!window.PF_EMBED) {
+
+/* Standalone web pages that only borrow window.PFApp.Feed (Community.html)
+   set PF_NO_MOUNT so the newsfeed App doesn't also mount into their root. */
+if (!window.PF_EMBED && !window.PF_NO_MOUNT) {
   ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(App, null));
 }

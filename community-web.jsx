@@ -3,7 +3,10 @@
    Layout ported from the design system's app UI kit (ui_kits/app/CommunityScreen.jsx
    inside _ds_bundle.js) — channel sidebar + composer + post feed + events rail —
    using the DS's own PostCard/ChannelHeader/ChannelItem/Composer/EventCard/Input/Icon
-   primitives and its window.APP_DATA sample content. Not mounted via
+   primitives and its window.APP_DATA sample content. The post column is the
+   shared newsfeed Feed (window.PFApp.Feed from app.jsx, loaded with
+   PF_NO_MOUNT) in channel mode, so the four tier channels, their gated
+   posts and the per-channel admin-pinned accordion match the mobile page. Not mounted via
    window.CommunityScreen directly: that function's own module destructures
    window.ProfinityDesignSystem_c2b5cc before the bundle finishes populating it
    (its ui_kits section runs before the bundle's final component-export block),
@@ -13,8 +16,8 @@
    =========================================================================== */
 const { useEffect: useEffectCW } = React;
 const DS_CW = window.ProfinityDesignSystem_c2b5cc;
-const { TopNav: TopNavCW, ChannelHeader, Composer, PostCard, EventCard, ChannelItem, Input: InputCW, Icon: IconCW } = DS_CW;
-const { Panel: PanelCW, Rail: RailCW } = window.Kit;
+const { TopNav: TopNavCW, ChannelHeader: ChannelHeaderCW, Composer: ComposerCW, PostCard: PostCardCW, EventCard: EventCardCW, ChannelItem: ChannelItemCW, Input: InputCW, Icon: IconCW } = DS_CW;
+const { Panel: PanelCW } = window.Kit;
 
 const ME_CW = { name: "Katy Wilson", role: "Nurse Practitioner", avatar: "assets/avatar-katy.jpg" };
 
@@ -64,49 +67,78 @@ function navigateCW(label) {
   if (u) (window.pfGo || function (x) { window.location.href = x; })(u);
 }
 
-function ChannelsSidebar({ channels }) {
+/* The four paid Community channels — same keys/buckets as the mobile
+   Community page (community-mobile.jsx CM_CHANNEL_BUCKET), so the shared
+   Feed (window.PFApp.Feed, channel mode) renders the same channel posts and
+   the same per-channel admin-pinned accordion here. */
+const CW_CHANNELS = [
+  { key: "confidence", name: "Confidence", about: "Your safe space to post first cases, ask the questions you're nervous about and get feedback from mentors who remember their first syringe.", followers: "1,203" },
+  { key: "mastery", name: "Mastery", about: "Advanced technique, complication management and live case reviews for injectors ready to go deeper than the basics.", followers: "864" },
+  { key: "freedom", name: "Freedom", about: "Business, scaling and mentorship — pricing, hiring and the systems that turn a busy chair into a clinic that runs without you.", followers: "412" },
+  { key: "inner", name: "Inner Circle", about: "Dr Tim Pearce's private roundtable: deal structures, acquisitions and the conversations that don't happen anywhere else.", followers: "96" }];
+const CW_CHANNEL_MAP = CW_CHANNELS.reduce((m, c) => { m[c.key] = c; return m; }, {});
+const { useState: useStateCW } = React;
+
+function ChannelsSidebar({ active, onPick }) {
   const Label = ({ children }) => (
     <div style={{ fontFamily: "var(--font-sans)", fontSize: "var(--fs-body)", color: "var(--gray-500)", margin: "16px 6px 6px" }}>
       {children}
     </div>
   );
+  /* Channels the viewer's tier unlocks list first; the rest sit under
+     "Other Channels" with the premium crown (they still open — the Feed
+     shows its locked teasers + upgrade card, exactly like mobile). */
+  const PFA = window.PFApp;
+  const unlocked = PFA ? PFA.smIncludedTiers(PFA.getUserTier()) : [];
+  const mine = CW_CHANNELS.filter((c) => unlocked.includes(c.key));
+  const other = CW_CHANNELS.filter((c) => !unlocked.includes(c.key));
+  const item = (c) => <ChannelItemCW key={c.key} name={c.name} active={c.key === active} premium={!unlocked.includes(c.key)} onClick={() => onPick(c.key)} />;
   return (
     <PanelCW title="Channels" padding={20}>
       <InputCW pill placeholder="Search channel" icon={<IconCW name="search" size={18} />} />
-      <Label>Following</Label>
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        {channels.following.map((c, i) => <ChannelItem key={i} {...c} />)}
-      </div>
-      <Label>Other Channels</Label>
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        {channels.other.map((c, i) => <ChannelItem key={i} {...c} />)}
-      </div>
+      {mine.length > 0 && <>
+        <Label>My Channels</Label>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>{mine.map(item)}</div>
+      </>}
+      {other.length > 0 && <>
+        <Label>{mine.length ? "Other Channels" : "Channels"}</Label>
+        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>{other.map(item)}</div>
+      </>}
     </PanelCW>
   );
 }
 
 function CommunityMain() {
   const D = window.APP_DATA;
+  const [channel, setChannel] = useStateCW("confidence");
+  const meta = CW_CHANNEL_MAP[channel];
+  const Feed = window.PFApp && window.PFApp.Feed;
   return (
     <div style={{ display: "grid", gridTemplateColumns: "320px minmax(0,1fr) 320px", gap: 24, maxWidth: 1440, margin: "0 auto", padding: 24, alignItems: "start" }}>
-      <RailCW>
-        <ChannelsSidebar channels={D.channels} />
-      </RailCW>
-      <div style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
+      {/* Both side rails use styles.css's .rail: pinned under the top nav
+          while the feed column scrolls with the page, each with its own
+          scroll only if it outgrows the viewport (the events list does). */}
+      <div className="rail cw-rail">
+        <ChannelsSidebar active={channel} onPick={setChannel} />
+      </div>
+      <div className="cw-main" style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
         <PanelCW padding={24}>
-          <ChannelHeader {...D.channelHeader} following={false} />
+          <ChannelHeaderCW banner={D.channelHeader.banner} name={"#" + meta.name} followers={meta.followers}
+            visibility="Members channel" about={meta.about} following={false} />
           <div style={{ marginTop: 20 }}>
-            <Composer />
+            <ComposerCW />
           </div>
         </PanelCW>
-        {D.posts.map((post, i) => <PostCard key={i} {...post} />)}
+        {/* shared newsfeed Feed in channel mode: this channel's posts (or
+            locked teasers), with the admin Pinned Posts accordion on top */}
+        {Feed ? <Feed key={channel} channel={channel} /> : D.posts.map((post, i) => <PostCardCW key={i} {...post} />)}
       </div>
-      <RailCW>
+      <div className="rail cw-rail cw-rail-events">
         <h2 style={{ margin: "0 0 2px", fontFamily: "var(--font-sans)", fontWeight: "var(--fw-semibold)", fontSize: "var(--fs-h2)", color: "var(--text-primary)" }}>
           Upcoming Events
         </h2>
-        {D.events.map((e, i) => <EventCard key={i} {...e} />)}
-      </RailCW>
+        {D.events.map((e, i) => <EventCardCW key={i} {...e} />)}
+      </div>
     </div>
   );
 }
