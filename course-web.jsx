@@ -522,6 +522,9 @@ function CWDiscussion({ comments, onAdd, onToggleLike, onReply }) {
           onKeyDown={(e) => e.key === "Enter" && submit()} />
         <button type="button" className="cw-composer-post" onClick={submit}>Post</button>
       </div>
+      <div className="cw-composer-note">
+        <IconCW name="lucide:info" size={15} color="var(--gray-400)" />Your comment will also be shared to the newsfeed.
+      </div>
       <div className="cw-cmt-list">
         {comments.map((c, i) => (
           <CWComment c={c} key={i}

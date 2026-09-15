@@ -599,6 +599,9 @@ function LSComments({ comments, onAddComment, onAddReply }) {
     <section className="ls-comments">
       <h3 className="ls-ov-steps-title">{comments.length} Comment{comments.length === 1 ? "" : "s"}</h3>
       <PFALS.CommentComposer placeholder="Leave a comment…" onSubmit={handleSubmit} />
+      <div className="ls-composer-note">
+        <DSLS.IconifyIcon name="lucide:info" size={15} color="var(--gray-400)" />Your comment will also be shared to the newsfeed.
+      </div>
       <div className="ls-cmt-list">
         {comments.map((c) => <LSCommentRow c={c} onAddReply={onAddReply} key={c._id} />)}
       </div>

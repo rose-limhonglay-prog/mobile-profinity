@@ -1465,6 +1465,12 @@ function LXComments({
     size: 17,
     color: LX_INK.onNavy
   }))), /*#__PURE__*/React.createElement("div", {
+    className: "lc-composer-note"
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:info",
+    size: 15,
+    color: "var(--lc-text-3)"
+  }), "Your comment will also be shared to the newsfeed."), /*#__PURE__*/React.createElement("div", {
     className: "lc-cmts"
   }, comments.map(c => /*#__PURE__*/React.createElement(LXComment, {
     key: c._id,
@@ -2454,7 +2460,9 @@ function LXPlayer({
     className: "lc-uptile-dur"
   }, nextModCount, " ", nextModCount === 1 ? "lesson" : "lessons"), /*#__PURE__*/React.createElement("span", {
     className: "lc-uptile-name"
-  }, nextModName)))), /*#__PURE__*/React.createElement(LXAvaCard, {
+  }, nextModName)))), /*#__PURE__*/React.createElement(LXComments, {
+    lessonName: item.name
+  }), /*#__PURE__*/React.createElement(LXAvaCard, {
     lessonName: item.name,
     courseTitle: course.title
   })), /*#__PURE__*/React.createElement("div", {

@@ -783,6 +783,12 @@ function CWDiscussion({
     className: "cw-composer-post",
     onClick: submit
   }, "Post")), /*#__PURE__*/React.createElement("div", {
+    className: "cw-composer-note"
+  }, /*#__PURE__*/React.createElement(IconCW, {
+    name: "lucide:info",
+    size: 15,
+    color: "var(--gray-400)"
+  }), "Your comment will also be shared to the newsfeed."), /*#__PURE__*/React.createElement("div", {
     className: "cw-cmt-list"
   }, comments.map((c, i) => /*#__PURE__*/React.createElement(CWComment, {
     c: c,

@@ -910,6 +910,9 @@ function LXComments({ lessonName }) {
           <DSLX.IconifyIcon name="lucide:send" size={17} color={LX_INK.onNavy} />
         </button>
       </form>
+      <div className="lc-composer-note">
+        <DSLX.IconifyIcon name="lucide:info" size={15} color="var(--lc-text-3)" />Your comment will also be shared to the newsfeed.
+      </div>
       <div className="lc-cmts">
         {comments.map((c) => <LXComment key={c._id} c={c} onLike={() => like(c._id)} onReply={() => reply(c)} />)}
       </div>
@@ -1384,6 +1387,8 @@ function LXPlayer({ course, flat, idx, done, onClose, onSelect, onMarkDone, onTo
               </button>
             </div>
           </section>}
+
+        <LXComments lessonName={item.name} />
 
         <LXAvaCard lessonName={item.name} courseTitle={course.title} />
         </div>}

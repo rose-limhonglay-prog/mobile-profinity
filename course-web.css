@@ -140,6 +140,7 @@ img{max-width:100%}
 .cw-composer-post{flex:none;border:none;border-radius:var(--r-pill);background:var(--brand-navy);color:#fff;cursor:pointer;
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;padding:9px 20px}
 .cw-composer-post:hover{background:var(--brand-navy-700)}
+.cw-composer-note{display:flex;align-items:center;gap:8px;margin:-12px 0 22px;font-family:var(--font-sans);font-size:13px;color:var(--gray-500)}
 
 .cw-cmt-list{display:flex;flex-direction:column;gap:20px}
 .cw-cmt{display:flex;gap:12px}

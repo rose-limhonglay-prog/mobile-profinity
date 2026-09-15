@@ -237,6 +237,7 @@ body.lc-navy-status .ios-statusbar svg [stroke]:not([stroke="none"]) { stroke: #
 .lc-send { flex: none; width: 40px; height: 40px; border-radius: 50%; border: none; cursor: pointer; background: var(--lc-cta-bg); border: 1px solid var(--lc-cta-border);
   display: flex; align-items: center; justify-content: center; }
 .lc-send:disabled { opacity: .45; cursor: default; }
+.lc-composer-note { display: flex; align-items: center; gap: 8px; margin: 10px 20px 0; font-family: var(--font-sans); font-size: 13px; color: var(--lc-text-3); }
 
 .lc-cmts { display: flex; flex-direction: column; gap: 18px; margin: 20px 20px 0; }
 .lc-cmt { display: flex; gap: 12px; align-items: flex-start; }

@@ -838,6 +838,12 @@ function LSComments({
     placeholder: "Leave a comment…",
     onSubmit: handleSubmit
   }), /*#__PURE__*/React.createElement("div", {
+    className: "ls-composer-note"
+  }, /*#__PURE__*/React.createElement(DSLS.IconifyIcon, {
+    name: "lucide:info",
+    size: 15,
+    color: "var(--gray-400)"
+  }), "Your comment will also be shared to the newsfeed."), /*#__PURE__*/React.createElement("div", {
     className: "ls-cmt-list"
   }, comments.map(c => /*#__PURE__*/React.createElement(LSCommentRow, {
     c: c,

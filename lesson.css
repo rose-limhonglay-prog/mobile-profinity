@@ -137,6 +137,7 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .ls-divider { height: 1px; background: var(--border-default); margin: 22px 0; }
 
 /* ---------- comments ---------- */
+.ls-composer-note { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-family: var(--font-sans); font-size: 13px; color: var(--gray-500); }
 .ls-cmt-list { display: flex; flex-direction: column; gap: 20px; margin-top: 14px; }
 .ls-cmt-row { display: flex; gap: 10px; align-items: flex-start; }
 .ls-cmt-main { flex: 1; min-width: 0; }
