@@ -26,6 +26,9 @@
     return s;
   }
   function write(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+  /* Gamification preference (Notification Settings → Gamification). Read
+     straight from localStorage so this script doesn't depend on load order. */
+  function gamiOn(k) { try { var s = JSON.parse(localStorage.getItem("pf-gamification")) || {}; return s[k] !== false; } catch (e) { return true; } }
 
   /* today's booked points straight from the loyalty ledger */
   function ledgerToday() {
@@ -39,7 +42,23 @@
   function today() { return Math.max(ledgerToday(), read().earned); }
 
   function currentPage() { return (location.pathname.split("/").pop() || "NewsfeedMobile.html") + location.search; }
+  /* Remember how far the screen was scrolled so "Keep earning" / close on
+     the Daily Goal page drops Katy back exactly where she was (the newsfeed
+     restores via pfRestoreScroll in pagetrans.js on its next load). */
+  function saveScroll() {
+    if (!window.pfSaveScroll) return;
+    var el = document.querySelector(".m-scroll");
+    if (!el || !(el.scrollTop > 0)) {
+      var all = document.querySelectorAll("*");
+      for (var i = 0; i < all.length; i++) {
+        var n = all[i];
+        if (n.scrollTop > 0 && n.scrollHeight > n.clientHeight + 1) { el = n; break; }
+      }
+    }
+    if (el) window.pfSaveScroll(el);
+  }
   function show() {
+    saveScroll();
     var url = "DailyGoal.html?ret=" + encodeURIComponent(currentPage());
     (window.pfGo || function (u) { window.location.href = u; })(url);
   }
@@ -64,7 +83,7 @@
     var total = Math.max(ledgerToday(), s.earned);
     /* highest 50-point mark reached so far today; celebrate if it's a new one */
     var mark = Math.floor(total / GOAL) * GOAL;
-    if (mark >= GOAL && mark > s.milestone) { s.milestone = mark; write(s); celebrate(); }
+    if (mark >= GOAL && mark > s.milestone) { s.milestone = mark; write(s); if (gamiOn("dailyGoalPopup")) celebrate(); }
     else write(s);
   }
   window.addEventListener("pf:points-earned", onEarn);

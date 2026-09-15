@@ -22,6 +22,9 @@
   function read() { try { return JSON.parse(localStorage.getItem(KEY)) || { count: 0, total: 0, lastTs: 0 }; } catch (e) { return { count: 0, total: 0, lastTs: 0 }; } }
   function write(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
   function reset() { write({ count: 0, total: 0, lastTs: 0 }); }
+  /* Gamification preference (Notification Settings → Gamification). Read
+     straight from localStorage so this script doesn't depend on load order. */
+  function gamiOn(k) { try { var s = JSON.parse(localStorage.getItem("pf-gamification")) || {}; return s[k] !== false; } catch (e) { return true; } }
 
   /* ---- Lottie: load the library on demand, then the raw JSON ---- */
   var libPromise = null;
@@ -126,6 +129,7 @@
     if (s.count >= TARGET) {
       var total = s.total;
       reset();
+      if (!gamiOn("streakPopup")) return;   /* streak celebrations turned off in settings */
       /* let the +pts pop / toast land first, then celebrate */
       setTimeout(function () { show(total); }, 900);
     } else {

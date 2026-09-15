@@ -94,6 +94,24 @@ function urlsACC(light) {
     membership: "MembershipTier.html"
   };
 }
+
+/* All Courses is members-only (user, 2026-09-15). The Confidence shells pin
+   window.PF_TIER; the standard shell (AllCoursesMobile.html) reads the same
+   "pf-subscription-tier" key the rest of the app uses. A free user who lands
+   here (deep link, back button) is sent to the subscription page instead of
+   seeing the catalogue. */
+function readTierACC() {
+  if (window.PF_TIER) return window.PF_TIER;
+  try {
+    return localStorage.getItem("pf-subscription-tier") || "free";
+  } catch (e) {
+    return "free";
+  }
+}
+const ACC_FREE = readTierACC() === "free";
+if (ACC_FREE) {
+  window.location.replace("MembershipTier.html");
+}
 let ACC_LIGHT = resolveLightACC();
 let ACC_INK = inkACC(ACC_LIGHT);
 let ACC_LOCKUP = lockupACC(ACC_LIGHT);
@@ -1368,4 +1386,6 @@ function AllCoursesConfidenceApp() {
     dark: !ACC_LIGHT
   }, /*#__PURE__*/React.createElement(AllCoursesConfidence, null))));
 }
-ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(AllCoursesConfidenceApp, null));
+if (!ACC_FREE) {
+  ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(AllCoursesConfidenceApp, null));
+}

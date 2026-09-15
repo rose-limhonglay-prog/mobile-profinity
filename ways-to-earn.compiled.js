@@ -229,13 +229,7 @@ function WaysToEarnScreen() {
       }
     }, /*#__PURE__*/React.createElement("div", {
       className: "wte-group-h"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "wte-group-ic"
-    }, /*#__PURE__*/React.createElement(DSWTE.IconifyIcon, {
-      name: c.icon,
-      size: 16,
-      color: c.ink
-    })), /*#__PURE__*/React.createElement("h2", null, g.name), c.blurb && /*#__PURE__*/React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("h2", null, g.name), c.blurb && /*#__PURE__*/React.createElement("span", {
       className: "wte-group-blurb"
     }, c.blurb)), /*#__PURE__*/React.createElement("div", {
       className: "wte-list"

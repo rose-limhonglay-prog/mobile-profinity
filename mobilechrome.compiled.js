@@ -331,6 +331,15 @@
      counting up with the "+N" delta, and slides away PTS_TALLY_HOLDC after the
      last payout. Mounted on first use and then kept (hidden) so the Lottie
      isn't reloaded for every payout. */
+  /* Gamification preference (Notification Settings → Gamification) */
+  function ptsPopupOnC() {
+    try {
+      const s = JSON.parse(localStorage.getItem("pf-gamification")) || {};
+      return s.pointsPopup !== false;
+    } catch (e) {
+      return true;
+    }
+  }
   function PointsTallyC({
     host,
     on,
@@ -389,6 +398,9 @@
         } else {
           setTotal(t => t + amt);
         }
+        /* points pop-ups off (Notification Settings → Gamification): the total
+           still updates, but no "+N" delta, ring flash or floating tally */
+        if (!ptsPopupOnC()) return;
         setBump(b => b + 1);
         setDelta({
           amt,

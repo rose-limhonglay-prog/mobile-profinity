@@ -1,10 +1,12 @@
 /* ===========================================================================
    PROfinity — Rewards Dashboard (web)
    Desktop counterpart to RewardsDashboard.html (rewards-dashboard.jsx): the
-   Loyalty & Gamification hub — greeting + wallet, badge-tier progress card with
-   the beaker mascot, streak-at-risk banner, Lifetime Points / Spendable Credits /
-   Active Streak stat tiles, "Jump back in" quick nav, Next Available Reward and
-   Recent Activity — on the web page shell (TopNav + centered two-column layout)
+   Loyalty & Gamification hub — greeting, league badge progress card (PFLeague
+   gems, milestone-based), streak-at-risk banner, Lifetime Points / Spendable
+   Credits / Active Streak stat tiles (streak → CheckInStreak), "Your league"
+   card, "Jump back in" quick nav (Store / My Rewards / Leaderboard / Ways to
+   Earn), Next Available Reward (course discount) and Recent Activity — on the
+   web page shell (TopNav + centered two-column layout)
    instead of the phone frame. Reads/writes the same localStorage-backed
    window.PFLoyalty engine, so the numbers match the mobile screens. Reached from
    the account menu (account-menu.js). Suffixed -RW to avoid global-scope clashes.
@@ -62,66 +64,6 @@ function fmtFullDateRW(iso) {
     hour: "2-digit",
     minute: "2-digit"
   });
-}
-
-/* ------------------------------------------------------------- wallet */
-/* Anchored popover under the header chip (the mobile page uses a scrim + centred sheet). */
-function WalletPopoverRW({
-  state,
-  onClose
-}) {
-  const ref = useRefRW(null);
-  useEffectRW(() => {
-    const onKey = e => {
-      if (e.key === "Escape") onClose();
-    };
-    const onDown = e => {
-      if (ref.current && !ref.current.contains(e.target)) onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onDown);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.removeEventListener("mousedown", onDown);
-    };
-  }, [onClose]);
-  const recent = state.ledger.slice().sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 5);
-  return /*#__PURE__*/React.createElement("div", {
-    className: "rw-wallet-pop",
-    ref: ref,
-    role: "dialog",
-    "aria-label": "Wallet"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "rw-wallet-pop-head"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "rw-wallet-pop-label"
-  }, "Spendable Credits"), /*#__PURE__*/React.createElement("div", {
-    className: "rw-wallet-pop-value"
-  }, PF_RW.formatNumber(state.spendableCredits))), /*#__PURE__*/React.createElement("div", {
-    className: "rw-wallet-pop-divider"
-  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "rw-wallet-pop-label"
-  }, "Lifetime Earned"), /*#__PURE__*/React.createElement("div", {
-    className: "rw-wallet-pop-value rw-wallet-pop-value-sm"
-  }, PF_RW.formatNumber(state.lifetimePoints)))), /*#__PURE__*/React.createElement("div", {
-    className: "rw-wallet-pop-list"
-  }, recent.map(t => /*#__PURE__*/React.createElement("div", {
-    key: t.id,
-    className: "rw-wallet-pop-row"
-  }, /*#__PURE__*/React.createElement("span", null, t.label), /*#__PURE__*/React.createElement("span", {
-    className: "rw-wallet-pop-amt",
-    style: {
-      color: t.creditsDelta >= 0 ? "var(--success)" : "var(--error)"
-    }
-  }, t.creditsDelta >= 0 ? "+" : "", t.creditsDelta, " cr")))), /*#__PURE__*/React.createElement("button", {
-    className: "rw-btn rw-btn-coral",
-    type: "button",
-    onClick: () => goRW("RewardsStore.html")
-  }, "Go to Rewards Store", /*#__PURE__*/React.createElement(IconifyRW, {
-    name: "lucide:arrow-right",
-    size: 16,
-    color: "#3D2A00"
-  })));
 }
 
 /* --------------------------------------------------------- risk banner */
@@ -202,21 +144,11 @@ function StreakRiskBannerRW({
   })));
 }
 
-/* -------------------------------------------------------- beaker mascot */
-/* Same looping smiling-face Lottie as the mobile progress card (lottie.host ArWGbXL6R3),
-   fetched as raw JSON and played through lottie-web. */
-const RW_MASCOT_SRC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
+/* ------------------------------------------------------------ league */
+/* The member's league gem (window.PFLeague, league-engine.js) rendered via
+   lottie-web from the engine's hosted JSON — same as the mobile dashboard and
+   the leaderboard. Milestone-based, not points-based. */
 const RW_LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
-let rwMascotPromise = null;
-function rwMascotData() {
-  if (!rwMascotPromise) {
-    rwMascotPromise = fetch(RW_MASCOT_SRC).then(r => r.ok ? r.json() : null).catch(() => {
-      rwMascotPromise = null;
-      return null;
-    });
-  }
-  return rwMascotPromise;
-}
 function rwEnsureLottieLib() {
   if (window.lottie || document.querySelector("script[data-pf-lottie]")) return;
   const sc = document.createElement("script");
@@ -228,122 +160,173 @@ function rwEnsureLottieLib() {
 function rwReduceMotion() {
   return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 }
-function rwBeakerFull() {
-  try {
-    return Math.max(1, +PF_RW.getConfig().beakerFullPoints || 20000);
-  } catch (e) {
-    return 20000;
-  }
-}
-function BeakerRW({
-  lifetimePoints
+function LeagueLottieRW({
+  src,
+  size
 }) {
   const host = useRefRW(null);
-  const [ready, setReady] = useStateRW(false);
   useEffectRW(() => {
-    let anim,
-      iv,
-      cancelled = false;
+    let anim, t;
     const still = rwReduceMotion();
-    function start() {
-      if (cancelled || !window.lottie || !host.current) return;
-      rwMascotData().then(data => {
-        if (!data || cancelled || !host.current) return;
-        anim = window.lottie.loadAnimation({
-          container: host.current,
-          renderer: "svg",
-          loop: !still,
-          autoplay: !still,
-          animationData: data,
-          rendererSettings: {
-            preserveAspectRatio: "xMidYMid meet",
-            progressiveLoad: false
-          }
-        });
-        anim.addEventListener("DOMLoaded", () => {
-          if (cancelled) return;
-          if (still) anim.goToAndStop(0, true);
-          setReady(true);
-        });
+    const start = () => {
+      if (!window.lottie || !host.current) return;
+      anim = window.lottie.loadAnimation({
+        container: host.current,
+        renderer: "svg",
+        loop: !still,
+        autoplay: !still,
+        path: src
       });
-    }
+      if (still) anim.addEventListener("DOMLoaded", () => anim.goToAndStop(0, true));
+    };
     rwEnsureLottieLib();
     if (window.lottie) start();else {
-      iv = setInterval(() => {
+      t = setInterval(() => {
         if (window.lottie) {
-          clearInterval(iv);
-          iv = null;
+          clearInterval(t);
           start();
         }
       }, 120);
-      setTimeout(() => {
-        if (iv) clearInterval(iv);
-      }, 8000);
+      setTimeout(() => clearInterval(t), 8000);
     }
     return () => {
-      cancelled = true;
+      clearInterval(t);
       if (anim) anim.destroy();
-      if (iv) clearInterval(iv);
     };
-  }, []);
+  }, [src]);
   return /*#__PURE__*/React.createElement("span", {
-    className: "rw-beaker",
-    "aria-hidden": "true",
-    title: PF_RW.formatNumber(lifetimePoints) + " / " + PF_RW.formatNumber(rwBeakerFull()) + " pts"
-  }, !ready && /*#__PURE__*/React.createElement("span", {
-    className: "rw-beaker-fb"
-  }, /*#__PURE__*/React.createElement(IconifyRW, {
-    name: "lucide:smile",
-    size: 72,
-    color: "#FCC25D"
-  })), /*#__PURE__*/React.createElement("span", {
     ref: host,
-    className: "rw-beaker-anim" + (ready ? " on" : "")
-  }));
+    className: "rw-gem-anim",
+    style: {
+      width: size,
+      height: size
+    },
+    "aria-hidden": "true"
+  });
+}
+function rwLeagueProgress() {
+  const LG = window.PFLeague;
+  if (!LG) return null;
+  try {
+    return LG.getProgress();
+  } catch (e) {
+    return null;
+  }
+}
+function rwPlural(n, word) {
+  return n + " " + word + (n === 1 ? "" : "s");
 }
 
-/* --------------------------------------------------------- progress card */
-function ProgressCardRW({
-  state
+/* League badge progress: current gem left, next gem (locked) right, milestone
+   progress between them; the whole card opens the leaderboard. */
+function LeagueProgressCardRW({
+  league
 }) {
-  const progress = PF_RW.getBadgeProgress(state);
-  return /*#__PURE__*/React.createElement("section", {
-    className: "rw-card rw-progress-card",
-    "aria-label": "Badge tier progress"
-  }, /*#__PURE__*/React.createElement(BeakerRW, {
-    lifetimePoints: state.lifetimePoints
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "rw-progress-body"
-  }, /*#__PURE__*/React.createElement("div", {
+  const p = league;
+  const cur = p ? p.current : null,
+    next = p ? p.next : null;
+  const pct = p ? p.pct : 0;
+  const vars = cur ? {
+    "--lg-accent": cur.accent,
+    "--lg-deep": cur.deep,
+    "--lg-soft": cur.soft,
+    "--nx-accent": (next || cur).accent,
+    "--nx-deep": (next || cur).deep
+  } : null;
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rw-card rw-league-progress",
+    onClick: () => goRW("Leaderboard.html"),
+    style: vars,
+    "aria-label": cur ? cur.name + " League, " + (next ? rwPlural(p.need, "more milestone") + " to " + next.name : "highest badge") + ". Open the leaderboard" : "Open the leaderboard"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rw-gem cur"
+  }, cur && /*#__PURE__*/React.createElement(LeagueLottieRW, {
+    src: cur.lottie,
+    size: 96
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "rw-league-progress-body"
+  }, /*#__PURE__*/React.createElement("span", {
     className: "rw-progress-kicker"
-  }, "Badge tier progress"), /*#__PURE__*/React.createElement("div", {
+  }, "League badge progress"), /*#__PURE__*/React.createElement("span", {
     className: "rw-progress-top"
-  }, /*#__PURE__*/React.createElement("span", null, progress.current ? progress.current.name : "Unranked"), /*#__PURE__*/React.createElement("span", null, progress.next ? progress.next.name : "Top tier")), /*#__PURE__*/React.createElement("div", {
-    className: "rw-progress-track"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--lg-deep)"
+    }
+  }, cur ? cur.name + " League" : "League"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--nx-deep)"
+    }
+  }, next ? next.name + " League" : "Top badge")), /*#__PURE__*/React.createElement("span", {
+    className: "rw-progress-track rw-league-track"
+  }, /*#__PURE__*/React.createElement("span", {
     className: "rw-progress-fill",
     style: {
-      width: progress.pct + "%"
+      width: pct + "%",
+      background: "linear-gradient(90deg, var(--lg-accent), var(--nx-accent))"
     }
-  }), progress.next ? /*#__PURE__*/React.createElement("span", {
-    className: "rw-progress-marker",
-    title: PF_RW.formatNumber(progress.next.threshold || 0) + " pts"
-  }, /*#__PURE__*/React.createElement(IconifyRW, {
-    name: "lucide:star",
-    size: 12,
-    color: "#3D2A00"
-  })) : null), progress.next ? /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("span", {
     className: "rw-progress-scale"
-  }, /*#__PURE__*/React.createElement("span", null, PF_RW.formatNumber(state.lifetimePoints), " pts"), /*#__PURE__*/React.createElement("span", null, PF_RW.formatNumber((state.lifetimePoints || 0) + (progress.remaining || 0)), " pts")) : null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, p ? p.done + " of " + p.total + " milestones" : ""), /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: "var(--nx-deep)"
+    }
+  }, next ? next.requires + " milestones" : "Complete")), /*#__PURE__*/React.createElement("span", {
     className: "rw-progress-note"
-  }, progress.next ? PF_RW.formatNumber(progress.remaining) + " pts away from " + progress.next.name : "You've reached the top badge tier!")), /*#__PURE__*/React.createElement("button", {
-    className: "rw-progress-link",
-    type: "button",
-    onClick: () => goRW("BadgeProgress.html")
-  }, "View badge progress", /*#__PURE__*/React.createElement(IconifyRW, {
+  }, next ? rwPlural(p.need, "more milestone") + " to " + next.name + " League" : "You've earned the highest badge!"), /*#__PURE__*/React.createElement("span", {
+    className: "rw-progress-link"
+  }, "Open the leaderboard", /*#__PURE__*/React.createElement(IconifyRW, {
     name: "lucide:chevron-right",
     size: 16,
     color: "var(--brand-navy)"
+  }))), /*#__PURE__*/React.createElement("span", {
+    className: "rw-gem next" + (next ? " locked" : "")
+  }, (next || cur) && /*#__PURE__*/React.createElement(LeagueLottieRW, {
+    src: (next || cur).lottie,
+    size: 96
+  }), next && /*#__PURE__*/React.createElement("span", {
+    className: "rw-gem-lock"
+  }, /*#__PURE__*/React.createElement(IconifyRW, {
+    name: "lucide:lock",
+    size: 13,
+    color: "#fff"
+  }))));
+}
+
+/* "Your league" card (aside) → leaderboard. */
+function LeagueCardRW({
+  league
+}) {
+  const p = league;
+  if (!p) return null;
+  const cur = p.current,
+    next = p.next;
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rw-card rw-league",
+    style: {
+      "--lg-accent": cur.accent,
+      "--lg-deep": cur.deep,
+      "--lg-soft": cur.soft
+    },
+    onClick: () => goRW("Leaderboard.html"),
+    "aria-label": cur.name + " League. Open the leaderboard"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rw-league-gem"
+  }, /*#__PURE__*/React.createElement(LeagueLottieRW, {
+    src: cur.lottie,
+    size: 64
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "rw-league-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rw-league-eyebrow"
+  }, "Your league"), /*#__PURE__*/React.createElement("b", null, cur.name, " League"), /*#__PURE__*/React.createElement("i", null, next ? rwPlural(p.need, "more milestone") + " to " + next.name : "Highest badge earned")), /*#__PURE__*/React.createElement("span", {
+    className: "rw-league-cta"
+  }, "Leaderboard", /*#__PURE__*/React.createElement(IconifyRW, {
+    name: "lucide:chevron-right",
+    size: 16,
+    color: "var(--lg-deep)"
   })));
 }
 
@@ -369,59 +352,74 @@ function EngagementCardsRW({
     label: "Active Streak",
     sub: "Longest " + state.streak.longest + " days",
     lottie: "https://lottie.host/embed/d7ce0087-b4ad-4b7a-b657-558f841da6e5/pSvC2r0DRZ.json",
-    size: 60
+    size: 60,
+    href: "CheckInStreak.html",
+    aria: "Active streak: " + state.streak.current + " days. Open check-in streak"
   }];
   return /*#__PURE__*/React.createElement("div", {
     className: "rw-eng-grid"
-  }, tiles.map(t => /*#__PURE__*/React.createElement("div", {
-    key: t.label,
-    className: "rw-card rw-eng-card"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "rw-eng-lottie",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("iframe", {
-    src: t.lottie,
-    title: "",
-    scrolling: "no",
-    style: {
-      width: t.size + "px",
-      height: t.size + "px",
-      border: "none",
-      background: "transparent"
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "rw-eng-value"
-  }, t.value), /*#__PURE__*/React.createElement("div", {
-    className: "rw-eng-label"
-  }, t.label), /*#__PURE__*/React.createElement("div", {
-    className: "rw-eng-sub"
-  }, t.sub))));
+  }, tiles.map(t => {
+    const inner = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+      className: "rw-eng-lottie",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("iframe", {
+      src: t.lottie,
+      title: "",
+      scrolling: "no",
+      style: {
+        width: t.size + "px",
+        height: t.size + "px",
+        border: "none",
+        background: "transparent"
+      }
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "rw-eng-value"
+    }, t.value), /*#__PURE__*/React.createElement("div", {
+      className: "rw-eng-label"
+    }, t.label, t.href ? /*#__PURE__*/React.createElement(IconifyRW, {
+      name: "lucide:chevron-right",
+      size: 14,
+      color: "var(--gray-400)"
+    }) : null), /*#__PURE__*/React.createElement("div", {
+      className: "rw-eng-sub"
+    }, t.sub));
+    return t.href ? /*#__PURE__*/React.createElement("button", {
+      key: t.label,
+      className: "rw-card rw-eng-card rw-eng-link",
+      type: "button",
+      onClick: () => goRW(t.href),
+      "aria-label": t.aria
+    }, inner) : /*#__PURE__*/React.createElement("div", {
+      key: t.label,
+      className: "rw-card rw-eng-card"
+    }, inner);
+  }));
 }
 
 /* -------------------------------------------------------------- quicknav */
-function QuickNavRW() {
+function QuickNavRW({
+  state,
+  league
+}) {
+  const redeemed = (state.redeemedVouchers || []).length;
   const items = [{
-    label: "Badge Progress",
-    desc: "Track your next tier",
-    icon: "lucide:target",
-    href: "BadgeProgress.html"
-  }, {
     label: "Rewards Store",
-    desc: "Spend your credits",
+    desc: "Spend credits on course discounts",
     icon: "lucide:shopping-bag",
     href: "RewardsStore.html",
     dot: true
+  }, {
+    label: "My Rewards",
+    desc: redeemed > 0 ? "Your redeemed discount codes" : "Nothing redeemed yet",
+    icon: "lucide:ticket",
+    href: "MyRewards.html",
+    note: redeemed > 0 ? String(redeemed) : null
   }, {
     label: "Leaderboard",
     desc: "See where you rank",
     icon: "lucide:bar-chart-3",
     href: "Leaderboard.html",
-    note: "#12"
-  }, {
-    label: "Badge Gallery",
-    desc: "All badges & achievements",
-    icon: "lucide:award",
-    href: "BadgeGallery.html"
+    note: league ? league.current.name : null
   }, {
     label: "Ways to Earn",
     desc: "Boost your points",
@@ -499,10 +497,12 @@ function NextRewardRW({
   state,
   config
 }) {
-  const affordable = config.storeItems.filter(i => i.cost <= state.spendableCredits + 500).sort((a, b) => a.cost - b.cost)[0] || config.storeItems[0];
+  const items = (config.storeItems || []).filter(i => i && i.inventory !== 0);
+  const affordable = items.filter(i => i.cost <= state.spendableCredits + 500).sort((a, b) => a.cost - b.cost)[0] || items[0];
   if (!affordable) return null;
   const canAfford = affordable.cost <= state.spendableCredits;
   const pct = Math.max(0, Math.min(100, Math.round(state.spendableCredits / Math.max(1, affordable.cost) * 100)));
+  const course = affordable.course || null;
   return /*#__PURE__*/React.createElement("button", {
     className: "rw-card rw-next-reward",
     type: "button",
@@ -510,18 +510,23 @@ function NextRewardRW({
   }, /*#__PURE__*/React.createElement("span", {
     className: "rw-next-reward-tag"
   }, "NEXT UP"), /*#__PURE__*/React.createElement("span", {
-    className: "rw-next-reward-icon"
-  }, /*#__PURE__*/React.createElement(IconifyRW, {
+    className: "rw-next-reward-icon" + (affordable.image ? " has-img" : "")
+  }, affordable.image ? /*#__PURE__*/React.createElement("img", {
+    src: affordable.image,
+    alt: ""
+  }) : /*#__PURE__*/React.createElement(IconifyRW, {
     name: "lucide:gift",
     size: 26,
-    color: "#561F22"
-  })), /*#__PURE__*/React.createElement("span", {
+    color: "#3D2A00"
+  }), course && course.discountPct ? /*#__PURE__*/React.createElement("span", {
+    className: "rw-next-reward-off"
+  }, course.discountPct, "% off") : null), /*#__PURE__*/React.createElement("span", {
     className: "rw-next-reward-main"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ti"
   }, "Next Available Reward"), /*#__PURE__*/React.createElement("span", {
     className: "nm"
-  }, affordable.name), /*#__PURE__*/React.createElement("span", {
+  }, course && course.discountPct ? course.discountPct + "% off " + affordable.name : affordable.name), /*#__PURE__*/React.createElement("span", {
     className: "su"
   }, PF_RW.formatNumber(affordable.cost), " credits", canAfford ? " · ready to redeem" : " · " + PF_RW.formatNumber(affordable.cost - state.spendableCredits) + " more to go"), /*#__PURE__*/React.createElement("span", {
     className: "rw-next-reward-track",
@@ -560,6 +565,8 @@ function WalletCardRW({
 function DemoCardRW({
   onRisk,
   onMilestone,
+  onFive,
+  onGoal,
   onReset
 }) {
   return /*#__PURE__*/React.createElement("section", {
@@ -578,6 +585,14 @@ function DemoCardRW({
   }, "Simulate 50k milestone"), /*#__PURE__*/React.createElement("button", {
     className: "rw-demo-btn",
     type: "button",
+    onClick: onFive
+  }, "5 in a row"), /*#__PURE__*/React.createElement("button", {
+    className: "rw-demo-btn",
+    type: "button",
+    onClick: onGoal
+  }, "Daily goal reached"), /*#__PURE__*/React.createElement("button", {
+    className: "rw-demo-btn",
+    type: "button",
     onClick: onReset
   }, "Reset demo data")));
 }
@@ -586,11 +601,12 @@ function DemoCardRW({
 function RewardsWebApp() {
   const [state, setState] = useStateRW(() => PF_RW.getState());
   const [config, setConfig] = useStateRW(() => PF_RW.getConfig());
-  const [walletOpen, setWalletOpen] = useStateRW(false);
+  const [league, setLeague] = useStateRW(rwLeagueProgress);
   const [toast, setToast] = useStateRW(null);
   const refresh = () => {
     setState(PF_RW.getState());
     setConfig(PF_RW.getConfig());
+    setLeague(rwLeagueProgress());
   };
   const flash = m => {
     setToast(m);
@@ -601,9 +617,11 @@ function RewardsWebApp() {
   useEffectRW(() => {
     window.addEventListener("pf:points-earned", refresh);
     window.addEventListener("storage", refresh);
+    document.addEventListener("pf:league-changed", refresh);
     return () => {
       window.removeEventListener("pf:points-earned", refresh);
       window.removeEventListener("storage", refresh);
+      document.removeEventListener("pf:league-changed", refresh);
     };
   }, []);
   const hour = new Date().getHours();
@@ -638,29 +656,12 @@ function RewardsWebApp() {
     className: "rw-head"
   }, /*#__PURE__*/React.createElement("div", {
     className: "rw-head-copy"
-  }, /*#__PURE__*/React.createElement("h1", null, greet, ", ", firstName, "!"), /*#__PURE__*/React.createElement("p", null, "Your points, credits, streak and badge progress — all in one place.")), /*#__PURE__*/React.createElement("div", {
-    className: "rw-wallet-wrap"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "rw-wallet-chip",
-    type: "button",
-    "aria-haspopup": "dialog",
-    "aria-expanded": walletOpen,
-    onClick: () => setWalletOpen(v => !v)
-  }, /*#__PURE__*/React.createElement(IconifyRW, {
-    name: "lucide:wallet",
-    size: 16,
-    color: "#3D2A00"
-  }), PF_RW.formatNumber(state.spendableCredits), /*#__PURE__*/React.createElement("span", {
-    className: "rw-wallet-chip-unit"
-  }, "credits")), walletOpen && /*#__PURE__*/React.createElement(WalletPopoverRW, {
-    state: state,
-    onClose: () => setWalletOpen(false)
-  }))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("h1", null, greet, ", ", firstName, "!"), /*#__PURE__*/React.createElement("p", null, "Your points, credits, streak and league progress — all in one place."))), /*#__PURE__*/React.createElement("div", {
     className: "rw-grid"
   }, /*#__PURE__*/React.createElement("main", {
     className: "rw-main"
-  }, /*#__PURE__*/React.createElement(ProgressCardRW, {
-    state: state
+  }, /*#__PURE__*/React.createElement(LeagueProgressCardRW, {
+    league: league
   }), /*#__PURE__*/React.createElement(StreakRiskBannerRW, {
     state: state,
     onCheckIn: checkIn
@@ -670,7 +671,10 @@ function RewardsWebApp() {
     className: "rw-sec"
   }, /*#__PURE__*/React.createElement("div", {
     className: "rw-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Jump back in")), /*#__PURE__*/React.createElement(QuickNavRW, null)), /*#__PURE__*/React.createElement("section", {
+  }, /*#__PURE__*/React.createElement("h2", null, "Jump back in")), /*#__PURE__*/React.createElement(QuickNavRW, {
+    state: state,
+    league: league
+  })), /*#__PURE__*/React.createElement("section", {
     className: "rw-sec"
   }, /*#__PURE__*/React.createElement("div", {
     className: "rw-sec-h"
@@ -686,7 +690,9 @@ function RewardsWebApp() {
     state: state
   }))), /*#__PURE__*/React.createElement("aside", {
     className: "rw-side"
-  }, /*#__PURE__*/React.createElement(NextRewardRW, {
+  }, /*#__PURE__*/React.createElement(LeagueCardRW, {
+    league: league
+  }), /*#__PURE__*/React.createElement(NextRewardRW, {
     state: state,
     config: config
   }), /*#__PURE__*/React.createElement(WalletCardRW, {
@@ -701,6 +707,13 @@ function RewardsWebApp() {
         lifetimePoints: 49700
       });
       goRW("MilestoneSplash.html");
+    },
+    onFive: () => {
+      if (window.PFEarnStreak) window.PFEarnStreak.show(375);else flash("Earn-streak script not loaded.");
+    },
+    onGoal: () => {
+      if (window.PFDailyGoal) window.PFDailyGoal.reset();
+      goRW("DailyGoal.html?ret=RewardsWeb.html");
     },
     onReset: () => {
       PF_RW.resetDemo();

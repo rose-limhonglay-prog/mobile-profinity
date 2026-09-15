@@ -537,7 +537,7 @@ function courseCtaL(c) {
     go: () => goL(resumeUrlL(c))
   };
   return {
-    label: "Start Now",
+    label: "Start learning",
     fill: false,
     go: () => goL("CourseDetail.html?" + new URLSearchParams({
       title: c.title,
@@ -1032,10 +1032,10 @@ function LearningHome() {
     "aria-hidden": "true"
   })) : /*#__PURE__*/React.createElement("p", {
     className: "lm2-empty"
-  }, tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate.")), /*#__PURE__*/React.createElement(LM2RelatedContent, null), /*#__PURE__*/React.createElement(LM2FreeResources, {
+  }, tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate.")), !LM_FREE && /*#__PURE__*/React.createElement(LM2RelatedContent, null), /*#__PURE__*/React.createElement(LM2FreeResources, {
     unlocked: resourcesUnlocked,
     onStartSurvey: () => setSurveyOpen(true)
-  }), /*#__PURE__*/React.createElement(LM2LearningPathCard, null), nextTier && /*#__PURE__*/React.createElement(LM2SubscribeCard, {
+  }), !LM_FREE && /*#__PURE__*/React.createElement(LM2LearningPathCard, null), nextTier && /*#__PURE__*/React.createElement(LM2SubscribeCard, {
     isFree: LM_FREE,
     nextTier: nextTier,
     onSubscribe: () => goL("MembershipTier.html")

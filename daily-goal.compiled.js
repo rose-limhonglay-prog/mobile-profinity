@@ -26,12 +26,21 @@ function goDG(url) {
   })(url);
 }
 
-/* ?ret= is where "Keep earning" goes back to. Only relative page names are
-   honoured so the param can't be used to bounce somewhere else. */
+/* ?ret= is where "Keep earning" and the close button go back to — the page
+   Katy was browsing when the goal tipped over. Only relative page names are
+   honoured so the param can't be used to bounce somewhere else. Without it
+   (opened directly) fall back to the same-origin page that linked here, and
+   failing that the newsfeed. */
 function returnUrlDG() {
   const raw = new URLSearchParams(location.search).get("ret") || "";
   const ok = /^[A-Za-z0-9_\-]+\.html(\?[^#]*)?$/.test(raw);
-  return ok ? raw : "WaysToEarn.html";
+  if (ok) return raw;
+  try {
+    const r = new URL(document.referrer);
+    const page = r.pathname.split("/").pop();
+    if (r.origin === location.origin && /^[A-Za-z0-9_\-]+\.html$/.test(page) && page !== "DailyGoal.html") return page + r.search;
+  } catch (e) {/* no referrer */}
+  return "NewsfeedMobile.html";
 }
 function dayKeyDG(d) {
   const dt = d ? new Date(d) : new Date();
@@ -642,6 +651,18 @@ function DailyGoalScreen() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [ret, sharing]);
+
+  /* announce the celebration once on mount — points-sound.js plays the streak fanfare */
+  useEffectDG(() => {
+    try {
+      window.dispatchEvent(new CustomEvent("pf:daily-goal", {
+        detail: {
+          points,
+          mark
+        }
+      }));
+    } catch (e) {/* older WebView */}
+  }, []);
   return /*#__PURE__*/React.createElement("div", {
     className: "dg-screen",
     "data-screen-label": "Daily Goal Reached"

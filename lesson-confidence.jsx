@@ -416,7 +416,30 @@ const LX_PRICES = {
   "jawline-sculpting": 294,
   "tear-trough-treatment": 342 };
 
+/* Courses that come with the member's tier are already paid for by the
+   membership (user, 2026-09-15): they open unlocked with a Start / Continue
+   learning CTA, never the Buy paywall, whatever LX_PRICES or ?price= says.
+   Lists mirror My Learning's LM2_MY_COURSES_CONFIDENCE / LM2_MY_COURSES in
+   learning-mobile.jsx. Tier comes from window.PF_TIER (pinned Confidence
+   shells) or the app-wide "pf-subscription-tier" key. */
+function readTierLX() {
+  if (window.PF_TIER) return window.PF_TIER;
+  try { return localStorage.getItem("pf-subscription-tier") || "free"; } catch (e) { return "free"; }
+}
+const LX_TIER = readTierLX();
+const LX_INCLUDED_CONFIDENCE = ["profinity-membership", "8d-lip-design", "temple-filler"];
+const LX_INCLUDED_MASTERY = LX_INCLUDED_CONFIDENCE.concat([
+  "protox-course", "brow-lift-training", "full-face-rejuvenation-protocol", "cheek-midface-contouring",
+  "non-surgical-rhinoplasty", "jawline-sculpting-masterclass", "tear-trough-correction",
+  "skin-boosters-hydration-therapy", "complications-management", "consultation-patient-assessment"]);
+function includedLX(slug) {
+  if (!LX_TIER || LX_TIER === "free") return false;
+  const list = LX_TIER === "confidence" ? LX_INCLUDED_CONFIDENCE : LX_INCLUDED_MASTERY;
+  return list.indexOf(slug) !== -1;
+}
+
 function priceLX(slug) {
+  if (includedLX(slug)) return 0;
   const q = Number(LX_PARAMS.get("price"));
   if (q > 0) return q;
   return LX_PRICES[slug] || 0;
@@ -803,25 +826,28 @@ function LXRelated() {
     <section data-screen-label="Related courses">
       <div className="lc-sec"><h2>Related courses</h2></div>
       <div className="lc-related">
-        {related.map((c) =>
-        <button type="button" className="lc-course" key={c.title} onClick={() => goLX(courseUrlLX(c))}>
+        {related.map((c) => {
+        const included = includedLX(slugLX(c.title));
+        const price = included ? 0 : c.price;
+        return (
+        <button type="button" className="lc-course" key={c.title} onClick={() => goLX(courseUrlLX({ ...c, price }))}>
             <span className="lc-course-thumb">
               <img src={c.image} alt="" />
               <span className="lc-course-chip">{c.lessons} lessons</span>
             </span>
             <span className="lc-course-tx">
-              <span className="lc-course-eyebrow">{c.price ? "Paid course" : "Course"}</span>
+              <span className="lc-course-eyebrow">{included ? "Included in your membership" : price ? "Paid course" : "Course"}</span>
               <span className="lc-course-title" style={{ display: "block" }}>{c.title}</span>
-              {c.price > 0 &&
+              {price > 0 &&
               <span className="lc-course-price">
-                <DSLX.IconifyIcon name="lucide:lock" size={11} color={LX_INK.gold} />£{c.price}
+                <DSLX.IconifyIcon name="lucide:lock" size={11} color={LX_INK.gold} />£{price}
               </span>}
             </span>
             <span className="lc-course-arrow" aria-hidden="true">
               <DSLX.IconifyIcon name="lucide:arrow-right" size={18} color={LX_INK.onGold} />
             </span>
-          </button>
-        )}
+          </button>);
+        })}
       </div>
     </section>);
 }
@@ -1492,7 +1518,10 @@ function CourseDetailConfidence() {
   const shareUrl = window.location.href.split("#")[0].replace(/[?&]share=1/, "") + "#" + slugLX(cur.name);
   const shareDone = (msg) => { setShareOpen(false); if (msg) showToast(msg); };
 
-  const continueLabel = !next ? (curDone ? "Course complete" : "Finish course") : "Continue lesson";
+  /* Start learning until the first lesson of this course is done, then
+     Continue learning (user, 2026-09-15). */
+  const started = curIdx > 0 || flat.some((l) => done.indexOf(l.name) !== -1);
+  const continueLabel = !next ? (curDone ? "Course complete" : "Finish course") : started ? "Continue learning" : "Start learning";
 
   return (
     <div className={"lc-screen" + (LX_LIGHT ? " lc-light" : "")} data-screen-label={"Course Detail · Confidence (" + (LX_LIGHT ? "light" : "dark") + ")"}>

@@ -1,10 +1,12 @@
 /* ===========================================================================
    PROfinity — Rewards Dashboard (web)
    Desktop counterpart to RewardsDashboard.html (rewards-dashboard.jsx): the
-   Loyalty & Gamification hub — greeting + wallet, badge-tier progress card with
-   the beaker mascot, streak-at-risk banner, Lifetime Points / Spendable Credits /
-   Active Streak stat tiles, "Jump back in" quick nav, Next Available Reward and
-   Recent Activity — on the web page shell (TopNav + centered two-column layout)
+   Loyalty & Gamification hub — greeting, league badge progress card (PFLeague
+   gems, milestone-based), streak-at-risk banner, Lifetime Points / Spendable
+   Credits / Active Streak stat tiles (streak → CheckInStreak), "Your league"
+   card, "Jump back in" quick nav (Store / My Rewards / Leaderboard / Ways to
+   Earn), Next Available Reward (course discount) and Recent Activity — on the
+   web page shell (TopNav + centered two-column layout)
    instead of the phone frame. Reads/writes the same localStorage-backed
    window.PFLoyalty engine, so the numbers match the mobile screens. Reached from
    the account menu (account-menu.js). Suffixed -RW to avoid global-scope clashes.
@@ -36,38 +38,6 @@ function fmtRelDateRW(iso) {
 function fmtFullDateRW(iso) {
   const d = new Date(iso);
   return d.toLocaleDateString(undefined, { day: "numeric", month: "short" }) + " · " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
-}
-
-/* ------------------------------------------------------------- wallet */
-/* Anchored popover under the header chip (the mobile page uses a scrim + centred sheet). */
-function WalletPopoverRW({ state, onClose }) {
-  const ref = useRefRW(null);
-  useEffectRW(() => {
-    const onKey = (e) => { if (e.key === "Escape") onClose(); };
-    const onDown = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
-    window.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onDown);
-    return () => { window.removeEventListener("keydown", onKey); document.removeEventListener("mousedown", onDown); };
-  }, [onClose]);
-  const recent = state.ledger.slice().sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 5);
-  return (
-    <div className="rw-wallet-pop" ref={ref} role="dialog" aria-label="Wallet">
-      <div className="rw-wallet-pop-head">
-        <div><div className="rw-wallet-pop-label">Spendable Credits</div><div className="rw-wallet-pop-value">{PF_RW.formatNumber(state.spendableCredits)}</div></div>
-        <div className="rw-wallet-pop-divider" />
-        <div><div className="rw-wallet-pop-label">Lifetime Earned</div><div className="rw-wallet-pop-value rw-wallet-pop-value-sm">{PF_RW.formatNumber(state.lifetimePoints)}</div></div>
-      </div>
-      <div className="rw-wallet-pop-list">
-        {recent.map((t) => (
-          <div key={t.id} className="rw-wallet-pop-row">
-            <span>{t.label}</span>
-            <span className="rw-wallet-pop-amt" style={{ color: t.creditsDelta >= 0 ? "var(--success)" : "var(--error)" }}>{t.creditsDelta >= 0 ? "+" : ""}{t.creditsDelta} cr</span>
-          </div>
-        ))}
-      </div>
-      <button className="rw-btn rw-btn-coral" type="button" onClick={() => goRW("RewardsStore.html")}>Go to Rewards Store<IconifyRW name="lucide:arrow-right" size={16} color="#3D2A00" /></button>
-    </div>
-  );
 }
 
 /* --------------------------------------------------------- risk banner */
@@ -112,18 +82,11 @@ function StreakRiskBannerRW({ state, onCheckIn }) {
   );
 }
 
-/* -------------------------------------------------------- beaker mascot */
-/* Same looping smiling-face Lottie as the mobile progress card (lottie.host ArWGbXL6R3),
-   fetched as raw JSON and played through lottie-web. */
-const RW_MASCOT_SRC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
+/* ------------------------------------------------------------ league */
+/* The member's league gem (window.PFLeague, league-engine.js) rendered via
+   lottie-web from the engine's hosted JSON — same as the mobile dashboard and
+   the leaderboard. Milestone-based, not points-based. */
 const RW_LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
-let rwMascotPromise = null;
-function rwMascotData() {
-  if (!rwMascotPromise) {
-    rwMascotPromise = fetch(RW_MASCOT_SRC).then((r) => r.ok ? r.json() : null).catch(() => { rwMascotPromise = null; return null; });
-  }
-  return rwMascotPromise;
-}
 function rwEnsureLottieLib() {
   if (window.lottie || document.querySelector("script[data-pf-lottie]")) return;
   const sc = document.createElement("script");
@@ -135,69 +98,81 @@ function rwEnsureLottieLib() {
 function rwReduceMotion() {
   return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
 }
-function rwBeakerFull() {
-  try { return Math.max(1, +PF_RW.getConfig().beakerFullPoints || 20000); } catch (e) { return 20000; }
-}
-function BeakerRW({ lifetimePoints }) {
+function LeagueLottieRW({ src, size }) {
   const host = useRefRW(null);
-  const [ready, setReady] = useStateRW(false);
   useEffectRW(() => {
-    let anim, iv, cancelled = false;
+    let anim, t;
     const still = rwReduceMotion();
-    function start() {
-      if (cancelled || !window.lottie || !host.current) return;
-      rwMascotData().then((data) => {
-        if (!data || cancelled || !host.current) return;
-        anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: !still, autoplay: !still, animationData: data,
-          rendererSettings: { preserveAspectRatio: "xMidYMid meet", progressiveLoad: false } });
-        anim.addEventListener("DOMLoaded", () => {
-          if (cancelled) return;
-          if (still) anim.goToAndStop(0, true);
-          setReady(true);
-        });
-      });
-    }
+    const start = () => {
+      if (!window.lottie || !host.current) return;
+      anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: !still, autoplay: !still, path: src });
+      if (still) anim.addEventListener("DOMLoaded", () => anim.goToAndStop(0, true));
+    };
     rwEnsureLottieLib();
     if (window.lottie) start();
-    else { iv = setInterval(() => { if (window.lottie) { clearInterval(iv); iv = null; start(); } }, 120); setTimeout(() => { if (iv) clearInterval(iv); }, 8000); }
-    return () => { cancelled = true; if (anim) anim.destroy(); if (iv) clearInterval(iv); };
-  }, []);
+    else { t = setInterval(() => { if (window.lottie) { clearInterval(t); start(); } }, 120); setTimeout(() => clearInterval(t), 8000); }
+    return () => { clearInterval(t); if (anim) anim.destroy(); };
+  }, [src]);
+  return <span ref={host} className="rw-gem-anim" style={{ width: size, height: size }} aria-hidden="true" />;
+}
+function rwLeagueProgress() {
+  const LG = window.PFLeague;
+  if (!LG) return null;
+  try { return LG.getProgress(); } catch (e) { return null; }
+}
+function rwPlural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
+
+/* League badge progress: current gem left, next gem (locked) right, milestone
+   progress between them; the whole card opens the leaderboard. */
+function LeagueProgressCardRW({ league }) {
+  const p = league;
+  const cur = p ? p.current : null, next = p ? p.next : null;
+  const pct = p ? p.pct : 0;
+  const vars = cur ? { "--lg-accent": cur.accent, "--lg-deep": cur.deep, "--lg-soft": cur.soft, "--nx-accent": (next || cur).accent, "--nx-deep": (next || cur).deep } : null;
   return (
-    <span className="rw-beaker" aria-hidden="true" title={PF_RW.formatNumber(lifetimePoints) + " / " + PF_RW.formatNumber(rwBeakerFull()) + " pts"}>
-      {!ready && <span className="rw-beaker-fb"><IconifyRW name="lucide:smile" size={72} color="#FCC25D" /></span>}
-      <span ref={host} className={"rw-beaker-anim" + (ready ? " on" : "")} />
-    </span>
+    <button type="button" className="rw-card rw-league-progress" onClick={() => goRW("Leaderboard.html")} style={vars}
+      aria-label={cur ? cur.name + " League, " + (next ? rwPlural(p.need, "more milestone") + " to " + next.name : "highest badge") + ". Open the leaderboard" : "Open the leaderboard"}>
+      <span className="rw-gem cur">{cur && <LeagueLottieRW src={cur.lottie} size={96} />}</span>
+      <span className="rw-league-progress-body">
+        <span className="rw-progress-kicker">League badge progress</span>
+        <span className="rw-progress-top">
+          <span style={{ color: "var(--lg-deep)" }}>{cur ? cur.name + " League" : "League"}</span>
+          <span style={{ color: "var(--nx-deep)" }}>{next ? next.name + " League" : "Top badge"}</span>
+        </span>
+        <span className="rw-progress-track rw-league-track">
+          <span className="rw-progress-fill" style={{ width: pct + "%", background: "linear-gradient(90deg, var(--lg-accent), var(--nx-accent))" }} />
+        </span>
+        <span className="rw-progress-scale">
+          <span>{p ? p.done + " of " + p.total + " milestones" : ""}</span>
+          <span style={{ color: "var(--nx-deep)" }}>{next ? next.requires + " milestones" : "Complete"}</span>
+        </span>
+        <span className="rw-progress-note">{next ? rwPlural(p.need, "more milestone") + " to " + next.name + " League" : "You've earned the highest badge!"}</span>
+        <span className="rw-progress-link">Open the leaderboard<IconifyRW name="lucide:chevron-right" size={16} color="var(--brand-navy)" /></span>
+      </span>
+      <span className={"rw-gem next" + (next ? " locked" : "")}>
+        {(next || cur) && <LeagueLottieRW src={(next || cur).lottie} size={96} />}
+        {next && <span className="rw-gem-lock"><IconifyRW name="lucide:lock" size={13} color="#fff" /></span>}
+      </span>
+    </button>
   );
 }
 
-/* --------------------------------------------------------- progress card */
-function ProgressCardRW({ state }) {
-  const progress = PF_RW.getBadgeProgress(state);
+/* "Your league" card (aside) → leaderboard. */
+function LeagueCardRW({ league }) {
+  const p = league;
+  if (!p) return null;
+  const cur = p.current, next = p.next;
   return (
-    <section className="rw-card rw-progress-card" aria-label="Badge tier progress">
-      <BeakerRW lifetimePoints={state.lifetimePoints} />
-      <div className="rw-progress-body">
-        <div className="rw-progress-kicker">Badge tier progress</div>
-        <div className="rw-progress-top">
-          <span>{progress.current ? progress.current.name : "Unranked"}</span>
-          <span>{progress.next ? progress.next.name : "Top tier"}</span>
-        </div>
-        <div className="rw-progress-track">
-          <div className="rw-progress-fill" style={{ width: progress.pct + "%" }} />
-          {progress.next ? <span className="rw-progress-marker" title={PF_RW.formatNumber(progress.next.threshold || 0) + " pts"}><IconifyRW name="lucide:star" size={12} color="#3D2A00" /></span> : null}
-        </div>
-        {progress.next ? (
-          <div className="rw-progress-scale">
-            <span>{PF_RW.formatNumber(state.lifetimePoints)} pts</span>
-            <span>{PF_RW.formatNumber((state.lifetimePoints || 0) + (progress.remaining || 0))} pts</span>
-          </div>
-        ) : null}
-        <div className="rw-progress-note">{progress.next ? PF_RW.formatNumber(progress.remaining) + " pts away from " + progress.next.name : "You've reached the top badge tier!"}</div>
-      </div>
-      <button className="rw-progress-link" type="button" onClick={() => goRW("BadgeProgress.html")}>
-        View badge progress<IconifyRW name="lucide:chevron-right" size={16} color="var(--brand-navy)" />
-      </button>
-    </section>
+    <button type="button" className="rw-card rw-league" style={{ "--lg-accent": cur.accent, "--lg-deep": cur.deep, "--lg-soft": cur.soft }}
+      onClick={() => goRW("Leaderboard.html")} aria-label={cur.name + " League. Open the leaderboard"}>
+      <span className="rw-league-gem"><LeagueLottieRW src={cur.lottie} size={64} /></span>
+      <span className="rw-league-tx">
+        <span className="rw-league-eyebrow">Your league</span>
+        <b>{cur.name} League</b>
+        <i>{next ? rwPlural(p.need, "more milestone") + " to " + next.name : "Highest badge earned"}</i>
+      </span>
+      <span className="rw-league-cta">Leaderboard<IconifyRW name="lucide:chevron-right" size={16} color="var(--lg-deep)" /></span>
+    </button>
   );
 }
 
@@ -207,29 +182,35 @@ function EngagementCardsRW({ state }) {
   const tiles = [
     { value: PF_RW.formatNumber(state.lifetimePoints), label: "Lifetime Points", sub: "+" + PF_RW.formatNumber(week) + " this week", lottie: "https://lottie.host/embed/c7c98875-fe8d-4de8-95c1-3e12acf7ad0a/fpeaeGfS64.json", size: 40 },
     { value: PF_RW.formatNumber(state.spendableCredits), label: "Spendable Credits", sub: state.expiringCredits ? PF_RW.formatNumber(state.expiringCredits) + " expiring soon" : "Ready to redeem", lottie: "https://lottie.host/embed/1470432e-8f5e-4eb4-a73c-75e6b6972d46/qk3KaEmMpz.json", size: 60 },
-    { value: state.streak.current + " Days", label: "Active Streak", sub: "Longest " + state.streak.longest + " days", lottie: "https://lottie.host/embed/d7ce0087-b4ad-4b7a-b657-558f841da6e5/pSvC2r0DRZ.json", size: 60 }
+    { value: state.streak.current + " Days", label: "Active Streak", sub: "Longest " + state.streak.longest + " days", lottie: "https://lottie.host/embed/d7ce0087-b4ad-4b7a-b657-558f841da6e5/pSvC2r0DRZ.json", size: 60,
+      href: "CheckInStreak.html", aria: "Active streak: " + state.streak.current + " days. Open check-in streak" }
   ];
   return (
     <div className="rw-eng-grid">
-      {tiles.map((t) => (
-        <div key={t.label} className="rw-card rw-eng-card">
-          <span className="rw-eng-lottie" aria-hidden="true"><iframe src={t.lottie} title="" scrolling="no" style={{ width: t.size + "px", height: t.size + "px", border: "none", background: "transparent" }} /></span>
-          <div className="rw-eng-value">{t.value}</div>
-          <div className="rw-eng-label">{t.label}</div>
-          <div className="rw-eng-sub">{t.sub}</div>
-        </div>
-      ))}
+      {tiles.map((t) => {
+        const inner = (
+          <React.Fragment>
+            <span className="rw-eng-lottie" aria-hidden="true"><iframe src={t.lottie} title="" scrolling="no" style={{ width: t.size + "px", height: t.size + "px", border: "none", background: "transparent" }} /></span>
+            <div className="rw-eng-value">{t.value}</div>
+            <div className="rw-eng-label">{t.label}{t.href ? <IconifyRW name="lucide:chevron-right" size={14} color="var(--gray-400)" /> : null}</div>
+            <div className="rw-eng-sub">{t.sub}</div>
+          </React.Fragment>
+        );
+        return t.href
+          ? <button key={t.label} className="rw-card rw-eng-card rw-eng-link" type="button" onClick={() => goRW(t.href)} aria-label={t.aria}>{inner}</button>
+          : <div key={t.label} className="rw-card rw-eng-card">{inner}</div>;
+      })}
     </div>
   );
 }
 
 /* -------------------------------------------------------------- quicknav */
-function QuickNavRW() {
+function QuickNavRW({ state, league }) {
+  const redeemed = (state.redeemedVouchers || []).length;
   const items = [
-    { label: "Badge Progress", desc: "Track your next tier", icon: "lucide:target", href: "BadgeProgress.html" },
-    { label: "Rewards Store", desc: "Spend your credits", icon: "lucide:shopping-bag", href: "RewardsStore.html", dot: true },
-    { label: "Leaderboard", desc: "See where you rank", icon: "lucide:bar-chart-3", href: "Leaderboard.html", note: "#12" },
-    { label: "Badge Gallery", desc: "All badges & achievements", icon: "lucide:award", href: "BadgeGallery.html" },
+    { label: "Rewards Store", desc: "Spend credits on course discounts", icon: "lucide:shopping-bag", href: "RewardsStore.html", dot: true },
+    { label: "My Rewards", desc: redeemed > 0 ? "Your redeemed discount codes" : "Nothing redeemed yet", icon: "lucide:ticket", href: "MyRewards.html", note: redeemed > 0 ? String(redeemed) : null },
+    { label: "Leaderboard", desc: "See where you rank", icon: "lucide:bar-chart-3", href: "Leaderboard.html", note: league ? league.current.name : null },
     { label: "Ways to Earn", desc: "Boost your points", icon: "lucide:sparkles", href: "WaysToEarn.html" }
   ];
   return (
@@ -280,17 +261,22 @@ function RecentActivityRW({ state }) {
 
 /* ----------------------------------------------------------- next reward */
 function NextRewardRW({ state, config }) {
-  const affordable = config.storeItems.filter((i) => i.cost <= state.spendableCredits + 500).sort((a, b) => a.cost - b.cost)[0] || config.storeItems[0];
+  const items = (config.storeItems || []).filter((i) => i && i.inventory !== 0);
+  const affordable = items.filter((i) => i.cost <= state.spendableCredits + 500).sort((a, b) => a.cost - b.cost)[0] || items[0];
   if (!affordable) return null;
   const canAfford = affordable.cost <= state.spendableCredits;
   const pct = Math.max(0, Math.min(100, Math.round((state.spendableCredits / Math.max(1, affordable.cost)) * 100)));
+  const course = affordable.course || null;
   return (
     <button className="rw-card rw-next-reward" type="button" onClick={() => goRW("RewardsStore.html")}>
       <span className="rw-next-reward-tag">NEXT UP</span>
-      <span className="rw-next-reward-icon"><IconifyRW name="lucide:gift" size={26} color="#561F22" /></span>
+      <span className={"rw-next-reward-icon" + (affordable.image ? " has-img" : "")}>
+        {affordable.image ? <img src={affordable.image} alt="" /> : <IconifyRW name="lucide:gift" size={26} color="#3D2A00" />}
+        {course && course.discountPct ? <span className="rw-next-reward-off">{course.discountPct}% off</span> : null}
+      </span>
       <span className="rw-next-reward-main">
         <span className="ti">Next Available Reward</span>
-        <span className="nm">{affordable.name}</span>
+        <span className="nm">{course && course.discountPct ? course.discountPct + "% off " + affordable.name : affordable.name}</span>
         <span className="su">{PF_RW.formatNumber(affordable.cost)} credits{canAfford ? " · ready to redeem" : " · " + PF_RW.formatNumber(affordable.cost - state.spendableCredits) + " more to go"}</span>
         <span className="rw-next-reward-track" aria-hidden="true"><span style={{ width: pct + "%" }} /></span>
       </span>
@@ -318,13 +304,15 @@ function WalletCardRW({ state }) {
   );
 }
 
-function DemoCardRW({ onRisk, onMilestone, onReset }) {
+function DemoCardRW({ onRisk, onMilestone, onFive, onGoal, onReset }) {
   return (
     <section className="rw-card rw-side-card rw-demo" aria-label="Demo controls">
       <h3>Demo controls</h3>
       <div className="rw-demo-bar">
         <button className="rw-demo-btn" type="button" onClick={onRisk}>Simulate streak at risk</button>
         <button className="rw-demo-btn" type="button" onClick={onMilestone}>Simulate 50k milestone</button>
+        <button className="rw-demo-btn" type="button" onClick={onFive}>5 in a row</button>
+        <button className="rw-demo-btn" type="button" onClick={onGoal}>Daily goal reached</button>
         <button className="rw-demo-btn" type="button" onClick={onReset}>Reset demo data</button>
       </div>
     </section>
@@ -335,16 +323,17 @@ function DemoCardRW({ onRisk, onMilestone, onReset }) {
 function RewardsWebApp() {
   const [state, setState] = useStateRW(() => PF_RW.getState());
   const [config, setConfig] = useStateRW(() => PF_RW.getConfig());
-  const [walletOpen, setWalletOpen] = useStateRW(false);
+  const [league, setLeague] = useStateRW(rwLeagueProgress);
   const [toast, setToast] = useStateRW(null);
-  const refresh = () => { setState(PF_RW.getState()); setConfig(PF_RW.getConfig()); };
+  const refresh = () => { setState(PF_RW.getState()); setConfig(PF_RW.getConfig()); setLeague(rwLeagueProgress()); };
   const flash = (m) => { setToast(m); setTimeout(() => setToast(null), 2400); };
 
   /* Stay in sync when another tab (or the mobile preview) earns points. */
   useEffectRW(() => {
     window.addEventListener("pf:points-earned", refresh);
     window.addEventListener("storage", refresh);
-    return () => { window.removeEventListener("pf:points-earned", refresh); window.removeEventListener("storage", refresh); };
+    document.addEventListener("pf:league-changed", refresh);
+    return () => { window.removeEventListener("pf:points-earned", refresh); window.removeEventListener("storage", refresh); document.removeEventListener("pf:league-changed", refresh); };
   }, []);
 
   const hour = new Date().getHours();
@@ -367,25 +356,19 @@ function RewardsWebApp() {
         <div className="rw-head">
           <div className="rw-head-copy">
             <h1>{greet}, {firstName}!</h1>
-            <p>Your points, credits, streak and badge progress &mdash; all in one place.</p>
-          </div>
-          <div className="rw-wallet-wrap">
-            <button className="rw-wallet-chip" type="button" aria-haspopup="dialog" aria-expanded={walletOpen} onClick={() => setWalletOpen((v) => !v)}>
-              <IconifyRW name="lucide:wallet" size={16} color="#3D2A00" />{PF_RW.formatNumber(state.spendableCredits)}<span className="rw-wallet-chip-unit">credits</span>
-            </button>
-            {walletOpen && <WalletPopoverRW state={state} onClose={() => setWalletOpen(false)} />}
+            <p>Your points, credits, streak and league progress &mdash; all in one place.</p>
           </div>
         </div>
 
         <div className="rw-grid">
           <main className="rw-main">
-            <ProgressCardRW state={state} />
+            <LeagueProgressCardRW league={league} />
             <StreakRiskBannerRW state={state} onCheckIn={checkIn} />
             <EngagementCardsRW state={state} />
 
             <section className="rw-sec">
               <div className="rw-sec-h"><h2>Jump back in</h2></div>
-              <QuickNavRW />
+              <QuickNavRW state={state} league={league} />
             </section>
 
             <section className="rw-sec">
@@ -398,11 +381,14 @@ function RewardsWebApp() {
           </main>
 
           <aside className="rw-side">
+            <LeagueCardRW league={league} />
             <NextRewardRW state={state} config={config} />
             <WalletCardRW state={state} />
             <DemoCardRW
               onRisk={() => { PF_RW.setStreakAtRisk(6); refresh(); }}
               onMilestone={() => { PF_RW.setState({ lifetimePoints: 49700 }); goRW("MilestoneSplash.html"); }}
+              onFive={() => { if (window.PFEarnStreak) window.PFEarnStreak.show(375); else flash("Earn-streak script not loaded."); }}
+              onGoal={() => { if (window.PFDailyGoal) window.PFDailyGoal.reset(); goRW("DailyGoal.html?ret=RewardsWeb.html"); }}
               onReset={() => { PF_RW.resetDemo(); refresh(); flash("Demo data reset."); }} />
           </aside>
         </div>

@@ -275,7 +275,7 @@ function LM2LockedCard({ title, body, onUpgrade }) {
 function courseCtaL(c) {
   if (c.completed) return { label: "View Certificate", fill: false, go: () => goL("CourseDetail.html?" + new URLSearchParams({ title: c.title, instr: "Dr. Tim Pearce", pct: 100 }).toString()) };
   if (typeof c.progress === "number") return { label: "Continue · " + c.progress + "%", fill: true, go: () => goL(resumeUrlL(c)) };
-  return { label: "Start Now", fill: false, go: () => goL("CourseDetail.html?" + new URLSearchParams({ title: c.title, instr: "Dr. Tim Pearce", pct: 0 }).toString()) };
+  return { label: "Start learning", fill: false, go: () => goL("CourseDetail.html?" + new URLSearchParams({ title: c.title, instr: "Dr. Tim Pearce", pct: 0 }).toString()) };
 }
 
 function LM2CourseCard({ c }) {
@@ -598,11 +598,14 @@ function LearningHome() {
           }
         </section>
 
-        <LM2RelatedContent />
+        {/* Paid related courses and the All Courses browse card are members-only
+            (user, 2026-09-15): a free user only sees the locked My Courses card,
+            Free Resources and the Subscribe card. */}
+        {!LM_FREE && <LM2RelatedContent />}
 
         <LM2FreeResources unlocked={resourcesUnlocked} onStartSurvey={() => setSurveyOpen(true)} />
 
-        <LM2LearningPathCard />
+        {!LM_FREE && <LM2LearningPathCard />}
 
         {nextTier && <LM2SubscribeCard isFree={LM_FREE} nextTier={nextTier} onSubscribe={() => goL("MembershipTier.html")} />}
 

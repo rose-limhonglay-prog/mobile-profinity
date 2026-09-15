@@ -2624,6 +2624,10 @@ function burstReaction(wrap, key, reward) {
    evt_comment_post in loyalty-engine.js, shown at the 1.5x tier multiplier). */
 const REACT_POINTS = 15;
 const COMMENT_POINTS = 15;
+const POLL_POINTS = 75;    // any poll vote counts as a correct answer
+const QUIZ_POINTS = 100;   // quiz: only a correct answer pays out
+const POST_POINTS = 75;    // sharing a post (booked when the feed reloads with the new post)
+const POST_REWARD_KEY = "pf-post-reward";
 
 
 
@@ -2645,9 +2649,17 @@ function frameScaleOf(el) {
    header points pill (PointsPillM / PointsPillC), which listens for this event,
    books the points, counts up, flashes a gold ring and floats a "+N" delta.
    `anchor` is kept in the signature so existing call sites stay unchanged. */
-function popPoints(anchor, amount) {
+function popPoints(anchor, amount, extra) {
   if (typeof window === "undefined") return;
-  try { window.dispatchEvent(new CustomEvent("pf:points-earned", { detail: { amount } })); } catch (e) { /* older WebView */ }
+  /* `extra` may carry label / actionId (ledger line in Rewards) and `sound`
+     (which voice points-sound.js plays: coin chime by default, "correct",
+     "post", …). The header points pill books the points on this event. */
+  try { window.dispatchEvent(new CustomEvent("pf:points-earned", { detail: Object.assign({ amount }, extra || {}) })); } catch (e) { /* older WebView */ }
+}
+/* A wrong quiz answer earns nothing but still gets its own sound. */
+function popWrong() {
+  if (typeof window === "undefined") return;
+  try { window.dispatchEvent(new CustomEvent("pf:answer-wrong")); } catch (e) { /* older WebView */ }
 }
 
 /* Instagram-style "double tap to love": tracks tap timing per media element
@@ -5265,7 +5277,7 @@ function Poll({ poll }) {
         <button type="button" key={o.label}
         className={"pf-poll-opt" + (answered ? " answered" : "") + (voted === i ? " selected" : "")}
         disabled={answered}
-        onClick={() => setVoted(i)}>
+        onClick={(e) => { setVoted(i); popPoints(e.currentTarget, POLL_POINTS, { label: "Voted in a poll", actionId: "evt_poll_vote", sound: "correct" }); }}>
             {answered && <span className="pf-poll-fill" style={{ width: (poll.votes ? o.pct : voted === i ? 100 : 0) + "%" }} />}
             <span className="pf-poll-opt-row">
               {answered ?
@@ -5369,7 +5381,11 @@ function Questionnaire({ questionnaire: q }) {
             <button type="button" key={o.label}
             className={"pf-quiz-opt" + (answered ? " answered" : "") + (state ? " " + state : "")}
             disabled={answered}
-            onClick={() => setPicked(i)}>
+            onClick={(e) => {
+              setPicked(i);
+              if (o.correct) popPoints(e.currentTarget, QUIZ_POINTS, { label: "Quiz answered correctly", actionId: "evt_quiz_correct", sound: "correct" });
+              else popWrong();
+            }}>
               <span className="pf-quiz-opt-row">
                 {state ?
                 <span className={"pf-quiz-mark " + state}>
@@ -6844,8 +6860,74 @@ const PF_USER_POSTS_KEY = "pf-newsfeed-user-posts";
 function readUserPosts() {
   try {
     const list = JSON.parse(localStorage.getItem(PF_USER_POSTS_KEY)) || [];
-    return list.filter((p) => p && p.author && p.author.name && p.body);
+    return list.filter((p) => p && p.author && p.author.name && p.body).map((p) =>
+      /* CreatePostMobile stores its clip as `video: { src, cover, ratio }`;
+         the feed renders video through `sample`, so map one to the other. */
+      p.video && !p.sample ? { ...p, sample: { type: "video", poster: p.video.cover || undefined, src: p.video.src, ratio: p.video.ratio } } : p);
   } catch (e) { return []; }
+}
+function writeUserPosts(list) {
+  try { localStorage.setItem(PF_USER_POSTS_KEY, JSON.stringify(list)); } catch (e) {}
+}
+
+/* Background uploads. CreatePostMobile hands a media post over immediately
+   with `uploading: { started, duration, reward }` instead of holding the
+   composer open with a progress bar; the feed shows FeedUploadCard in the
+   post's slot and lets the member keep using the app. Progress is derived
+   from the wall clock (not a timer that dies with the page), so navigating
+   away and back — or opening the Community feed instead — resumes at the
+   right percentage, and it finishes even if nobody was watching. */
+const UPLOAD_DONE_HOLD = 1500; // ms the "Posted" state lingers before the real post takes over
+function uploadProgressOf(post) {
+  const u = post && post.uploading;
+  if (!u || !u.started) return 1;
+  const t = Math.min(1, Math.max(0, (Date.now() - u.started) / Math.max(1, u.duration || 6000)));
+  if (t >= 1) return 1;
+  /* eases out the way a real upload does — quick first half, slower tail */
+  return Math.max(0.02, 1 - Math.pow(1 - t, 1.7));
+}
+function uploadMediaLabel(post) {
+  const n = (post.media || []).length;
+  if (post.video && n) return "video + " + n + (n === 1 ? " photo" : " photos");
+  if (post.video) return "video";
+  if (n > 1) return n + " photos";
+  if (n === 1) return "photo";
+  return "post";
+}
+
+function FeedUploadCard({ post, onCancel }) {
+  const done = !!(post.uploading && post.uploading.doneAt);
+  const pct = done ? 100 : Math.round(uploadProgressOf(post) * 100);
+  const cover = post.video ? post.video.cover : (post.media || [])[0];
+  const extra = (post.media || []).length - 1;
+  return (
+    <div className={"pf-upl" + (done ? " is-done" : "")} role="status" aria-live="polite"
+      style={{ background: "var(--surface-card)", borderRadius: "var(--r-md)" }}>
+      <div className="pf-upl-row">
+        <div className="pf-upl-thumb" aria-hidden="true">
+          {cover
+            ? <img src={cover} alt="" />
+            : <span className="pf-upl-thumb-ph"><IconifyIcon name="lucide:video" size={18} color="var(--brand-navy)" /></span>}
+          {post.video && cover && <span className="pf-upl-play"><IconifyIcon name="lucide:play" size={11} color="#fff" /></span>}
+          {!post.video && extra > 0 && <span className="pf-upl-count">+{extra}</span>}
+          {!done && <span className="pf-upl-dim" style={{ height: (100 - pct) + "%" }} />}
+        </div>
+        <div className="pf-upl-main">
+          <div className="pf-upl-title">{done ? "Posted" : "Uploading your post\u2026"}</div>
+          <div className="pf-upl-sub">
+            {done
+              ? "Your " + uploadMediaLabel(post) + " is live on the feed"
+              : <>{post.body ? <span className="pf-upl-snippet">{post.body}</span> : null}<span className="pf-upl-pct">{pct}%</span></>}
+          </div>
+          <div className="pf-upl-track"><span className="pf-upl-bar" style={{ width: pct + "%" }} /></div>
+        </div>
+        {done
+          ? <span className="pf-upl-check" aria-hidden="true"><IconifyIcon name="lucide:check" size={16} color="#fff" /></span>
+          : <button type="button" className="pf-upl-cancel" aria-label="Cancel upload" onClick={onCancel}>
+              <IconifyIcon name="lucide:x" size={16} color="var(--text-secondary)" />
+            </button>}
+      </div>
+    </div>);
 }
 
 /* Admin-pinned posts: an ordered list of post ids (most recently pinned
@@ -7046,6 +7128,61 @@ function spreadEventPosts(items, minGap = 10, maxGap = 20) {
 
 function Feed({ channel } = {}) {
   const [userPosts, setUserPosts] = useState(() => readUserPosts());
+  /* Background uploads (see uploadProgressOf): while any composed post is
+     still "uploading", tick the progress cards, flip a finished one into its
+     "Posted" hold (booking its reward), then drop the marker so the real
+     post renders in its place. Storage is written without the marker as
+     soon as an upload completes, so a return visit doesn't replay it. */
+  const userPostsRef = useRef(userPosts);
+  userPostsRef.current = userPosts;
+  const [, setUploadTick] = useState(0);
+  const anyUploading = userPosts.some((p) => p.uploading);
+  useEffect(() => {
+    if (!anyUploading) return;
+    const id = setInterval(() => {
+      const now = Date.now();
+      const rewards = [];
+      let changed = false;
+      const next = userPostsRef.current.map((p) => {
+        const u = p.uploading;
+        if (!u) return p;
+        if (u.doneAt) {
+          if (now - u.doneAt < UPLOAD_DONE_HOLD) return p;
+          changed = true;
+          return { ...p, uploading: null };
+        }
+        if (uploadProgressOf(p) < 1) return p;
+        changed = true;
+        if (u.reward) rewards.push(u.reward);
+        return { ...p, uploading: { ...u, doneAt: now } };
+      });
+      if (changed) {
+        writeUserPosts(next.map((p) => p.uploading ? { ...p, uploading: null } : p));
+        setUserPosts(next);
+        rewards.forEach((r) => setTimeout(() => popPoints(null, r.amount || POST_POINTS, { label: r.label || "Shared a post", actionId: r.actionId || "evt_create_post", sound: "post" }), 350));
+      } else {
+        setUploadTick((t) => t + 1);
+      }
+    }, 100);
+    return () => clearInterval(id);
+  }, [anyUploading]);
+  const cancelUpload = (id) => {
+    const next = userPostsRef.current.filter((p) => p.id !== id);
+    writeUserPosts(next);
+    setUserPosts(next);
+    clearTimeout(pinToastTimer.current);
+    setPinToast("Upload cancelled");
+    pinToastTimer.current = setTimeout(() => setPinToast(null), 2400);
+  };
+  /* Create Post hands over here right after publishing; pay out the "shared
+     a post" points once the shell (and its points pill) is on screen. */
+  useEffect(() => {
+    let reward = null;
+    try { reward = JSON.parse(sessionStorage.getItem(POST_REWARD_KEY)); sessionStorage.removeItem(POST_REWARD_KEY); } catch (e) {}
+    if (!reward || !reward.amount) return;
+    const t = setTimeout(() => popPoints(null, reward.amount, { label: reward.label || "Shared a post", actionId: reward.actionId || "evt_create_post", sound: "post" }), 700);
+    return () => clearTimeout(t);
+  }, []);
   /* Capped at 2 (newest first): the seed plus up to 3 of your own
      registrations could otherwise pin 4 eventReg cards in a row before
      spreadEventPosts even runs — 2 is enough "you're going" social proof
@@ -7146,7 +7283,7 @@ function Feed({ channel } = {}) {
      spreadEventPosts below, rather than left to stack at the top and repeat
      every cycle — see its comment for why. */
   const feedItems = spreadEventPosts([
-  ...userPosts.map((p) => ({ item: p, mode: "full" })),
+  ...userPosts.filter((p) => !p.uploading).map((p) => ({ item: p, mode: "full" })),
   { item: LIVE_NOW_POST, mode: "full" },
   { item: SAMPLE_LONG_TEXT_POST, mode: "full" },
   // web-only sample: the single-slide image carousel (see SAMPLE_CAROUSEL_POST)
@@ -7288,6 +7425,7 @@ function Feed({ channel } = {}) {
       <FeedPreviewPanel persona={viewerPersona} onPersona={setViewerPersona}
       toggles={bucketToggles} onToggle={(k, v) => setBucketToggles((t) => ({ ...t, [k]: v }))} />
       }
+      {userPosts.filter((p) => p.uploading).map((p) => <FeedUploadCard key={p.id} post={p} onCancel={() => cancelUpload(p.id)} />)}
       {pinnedItems.length > 0 &&
       <PinnedBox items={pinnedItems} open={pinsOpen} onToggle={togglePinsOpen}
         expandedIds={expandedPins} onToggleItem={toggleMinimizePin} renderItem={renderFeedItem} innerRef={pinnedRef} />

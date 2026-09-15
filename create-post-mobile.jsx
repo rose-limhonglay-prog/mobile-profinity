@@ -9,6 +9,20 @@ const PFACP = window.PFApp;
 
 function goCP(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
 
+/* Simulated upload length for a media post (no real upload pipeline in this
+   prototype): a base plus a share per photo scaled by its data-URL size, and
+   a flat chunk for the sample reel — long enough to see the newsfeed's
+   progress card, short enough not to feel stuck. */
+function cpUploadDuration(images, video) {
+  let ms = 3200;
+  (images || []).forEach((src) => {
+    const mb = (typeof src === "string" ? src.length : 0) / (1024 * 1024);
+    ms += 900 + Math.min(3500, mb * 1400);
+  });
+  if (video) ms += 6500;
+  return Math.max(3500, Math.min(16000, Math.round(ms)));
+}
+
 function useDeviceScaleCP() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
   const [scale, setScaleCP] = React.useState(calc);
@@ -1097,6 +1111,8 @@ function CPScreen() {
   const handlePost = () => {
     const body = mode === "live" ? liveDescription.trim() : text.trim();
     if (mode !== "live" && !body) return;
+    const hasMedia = images.length > 0 || !!video;
+    const reward = { amount: 75, label: mode === "live" ? "Went live" : "Shared a post", actionId: "evt_create_post" };
     if (dest === "feed") {
       const post = {
         id: "u" + Date.now(),
@@ -1107,12 +1123,25 @@ function CPScreen() {
         live: mode === "live",
         likes: "0", comments: "0", shares: "0", commentList: []
       };
+      /* Posts with media don't block this screen while they upload: the
+         post is handed to the feed straight away carrying an `uploading`
+         marker (wall-clock start + estimated duration, so progress keeps
+         running while the member browses other pages) and the newsfeed
+         renders a progress card in its place until it's done — see
+         uploadProgressOf / FeedUploadCard in app.jsx. The +75 "shared a
+         post" reward rides along and is booked by the feed on completion. */
+      if (hasMedia) post.uploading = { started: Date.now(), duration: cpUploadDuration(images, video), reward };
       try {
         const existing = JSON.parse(localStorage.getItem("pf-newsfeed-user-posts")) || [];
         localStorage.setItem("pf-newsfeed-user-posts", JSON.stringify([post, ...existing]));
       } catch (e) {}
     }
     try { sessionStorage.removeItem("pf_post_channels"); } catch (e) {}
+    /* +75 pts for sharing — the feed books it (with its sound) once it has
+       loaded; media posts book it when their background upload finishes. */
+    if (!(hasMedia && dest === "feed")) {
+      try { sessionStorage.setItem("pf-post-reward", JSON.stringify({ ...reward, ts: Date.now() })); } catch (e) {}
+    }
     goCP(backTo);
   };
 

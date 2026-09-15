@@ -27,7 +27,6 @@ img { max-width: 100%; }
 .wte-group { margin-top: 18px; }
 .wte-group:first-child { margin-top: 4px; animation: wte-pop .5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(120ms + var(--wte-i, 0) * 60ms); }
 .wte-group-h { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; flex-wrap: wrap; }
-.wte-group-ic { width: 30px; height: 30px; border-radius: 10px; background: linear-gradient(135deg, var(--wte-a), var(--wte-b)); display: flex; align-items: center; justify-content: center; }
 .wte-group-h h2 { margin: 0; font-size: 16px; font-weight: 800; color: var(--gray-900); }
 .wte-group-blurb { font-size: 12px; color: var(--gray-500); }
 .wte-list { display: flex; flex-direction: column; gap: 8px; }
@@ -39,11 +38,11 @@ img { max-width: 100%; }
 .wte-row-main { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .wte-row-main .ti { font-size: 14px; font-weight: 700; color: var(--gray-900); }
 .wte-row-main .su { font-size: 11px; color: var(--gray-500); line-height: 1.35; }
-.wte-earn { flex: none; min-height: 38px; padding: 0 13px; border: none; border-radius: 12px; background: var(--brand-navy); color: #fff; font-family: inherit; font-size: 13px; font-weight: 800;
-  font-variant-numeric: tabular-nums; cursor: pointer; transition: transform .18s cubic-bezier(.34,1.56,.64,1), background .15s ease; }
-.wte-earn:hover { background: var(--brand-navy-700); }
+.wte-earn { flex: none; padding: 0 2px; border: none; border-radius: 0; background: none; color: var(--brand-navy); font-family: inherit; font-size: 14px; font-weight: 800;
+  font-variant-numeric: tabular-nums; cursor: pointer; transition: transform .18s cubic-bezier(.34,1.56,.64,1), opacity .15s ease; }
+.wte-earn:hover { opacity: .8; }
 .wte-earn:active { transform: scale(.94); }
-.wte-pts-label { font-weight: 600; opacity: .85; }
+.wte-pts-label { font-size: 12px; font-weight: 600; opacity: .75; }
 
 /* one-time / lifetime-capped action already banked */
 .wte-row.is-done { background: color-mix(in srgb, var(--success, #2a9568) 6%, var(--surface-card)); }
@@ -57,9 +56,8 @@ img { max-width: 100%; }
 /* dark: the navy→gold swap leaves white-on-gold; use the ink the store chip uses */
 [data-theme="dark"] .wte-done { background: rgba(52, 199, 123, .16); color: #6fdc9f; }
 [data-theme="dark"] .wte-row.is-done .wte-row-ic { background: rgba(52, 199, 123, .16); }
-[data-theme="dark"] .wte-earn { color: #1a1736; }
+[data-theme="dark"] .wte-earn { color: #FCC25D; }
 [data-theme="dark"] .wte-row-ic { background: color-mix(in srgb, var(--wte-b) 26%, var(--surface-card)); }
-[data-theme="dark"] .wte-group-ic { background: linear-gradient(135deg, color-mix(in srgb, var(--wte-a) 45%, var(--surface-card)), color-mix(in srgb, var(--wte-b) 60%, var(--surface-card))); }
 
 @media (prefers-reduced-motion: reduce) {
   .wte-group, .wte-toast.win { animation: none; }

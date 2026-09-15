@@ -193,6 +193,8 @@ function ptsTallyHostM(el) {
    counting up with the "+N" delta, and slides away PTS_TALLY_HOLDM after the
    last payout. Mounted on first use and then kept (hidden) so the Lottie
    isn't reloaded for every payout. */
+/* Gamification preference (Notification Settings → Gamification) */
+function ptsPopupOnM() { try { const s = JSON.parse(localStorage.getItem("pf-gamification")) || {}; return s.pointsPopup !== false; } catch (e) { return true; } }
 function PointsTallyM({ host, on, shown, bump, delta }) {
   return ReactDOM.createPortal(
     <div className={"m-pts-tally" + (on ? " on" : "")} aria-hidden="true">
@@ -233,6 +235,9 @@ function PointsPillM() {
       } else {
         setTotal((t) => t + amt);
       }
+      /* points pop-ups off (Notification Settings → Gamification): the total
+         still updates, but no "+N" delta, ring flash or floating tally */
+      if (!ptsPopupOnM()) return;
       setBump((b) => b + 1);
       setDelta({ amt, key: Date.now() });
       if (!ptsPillVisibleM(pillRef.current)) {

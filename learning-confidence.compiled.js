@@ -160,12 +160,13 @@ function lessonDoneLC(l, done) {
 
 /* Related courses are paid — the course page (lesson-confidence.jsx) lists
    their lessons but gates starting behind CourseCheckout.html. Prices match
-   LX_PRICES there. */
+   LX_PRICES there. Temple Filler carries no price: it is part of the
+   Confidence membership (My Courses on LearningMobile.html), so it opens
+   unlocked (user, 2026-09-15). */
 const LC_RELATED = [{
   title: "Temple Filler",
   level: "Advanced",
   lessons: 14,
-  price: 342,
   image: "assets/course-temple-filler.webp",
   blurb: "Master safe injection techniques with anatomical precision."
 }, {

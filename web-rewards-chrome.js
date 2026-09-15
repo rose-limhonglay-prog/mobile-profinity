@@ -142,7 +142,10 @@
     } else {
       total += amt;
     }
-    showTotal(total); updateLabel(); pop(amt);
+    showTotal(total); updateLabel();
+    /* points pop-ups off (Notification Settings → Gamification) */
+    var popOn = true; try { var gs = JSON.parse(localStorage.getItem("pf-gamification")) || {}; popOn = gs.pointsPopup !== false; } catch (e2) {}
+    if (popOn) pop(amt);
   }
   function onStorage(e) { if (!e.key || e.key === "pf-loyalty-state-v1" || e.key === "pf-loyalty-config-v1") refresh(); }
 

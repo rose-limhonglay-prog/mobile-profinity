@@ -40,9 +40,11 @@ img { max-width: 100%; }
    leaves the flow. */
 @media (prefers-reduced-motion: reduce) { .lm-tabs, .lm-tab { transition: none; } }
 
-/* this page has no header search — the shared MobileChromeC top bar is used
-   as-is elsewhere, so hide just this button rather than forking the component */
-.lm-screen .m-top .m-iconbtn[aria-label="Search"] { display: none; }
+/* at rest this page has its own search bar, so the shared MobileChromeC header
+   search is hidden rather than forking the component. Once scrolled
+   (.chrome-float) the in-page bar is off-screen, so the header Search floats
+   with the other frosted chip icons (user, 2026-09-15). */
+.lm-screen:not(.chrome-float) .m-top .m-iconbtn[aria-label="Search"] { display: none; }
 
 /* scroll */
 .lm-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 96px; }

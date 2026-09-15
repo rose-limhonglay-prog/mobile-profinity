@@ -389,6 +389,12 @@
 [data-theme="dark"] .rw-notif-icon { background: rgba(255,255,255,.08); }
 [data-theme="dark"] .rw-btn-white { background: var(--surface-card); color: #FDD98F; }
 [data-theme="dark"] .rw-toast { background: var(--surface-sunken); border: 1px solid var(--border-default); }
+[data-theme="dark"] .rw-league-progress,
+[data-theme="dark"] .rw-league { background: linear-gradient(135deg, var(--surface-card), color-mix(in srgb, var(--lg-accent) 18%, var(--surface-card))); }
+[data-theme="dark"] .rw-league-tx b, [data-theme="dark"] .rw-league-cta { color: var(--lg-accent); }
+[data-theme="dark"] .rw-league-progress .rw-progress-top span,
+[data-theme="dark"] .rw-league-progress .rw-progress-scale span:last-child { color: var(--lg-accent) !important; }
+[data-theme="dark"] .rw-progress-track { background: var(--surface-sunken); }
 
 /* Redemption Success: blush hero + fixed-tint chips */
 [data-theme="dark"] .rsc-hero { background: linear-gradient(180deg, color-mix(in srgb, #F5A48E 22%, var(--surface-page)) 0%, color-mix(in srgb, #F5A48E 10%, var(--surface-page)) 55%, var(--surface-page) 100%); }

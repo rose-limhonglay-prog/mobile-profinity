@@ -115,7 +115,6 @@ function WaysToEarnScreen() {
           return (
             <div key={g.name} className="wte-group" style={{ "--wte-a": c.a, "--wte-b": c.b, "--wte-ink": c.ink, "--wte-i": gi }}>
               <div className="wte-group-h">
-                <span className="wte-group-ic"><DSWTE.IconifyIcon name={c.icon} size={16} color={c.ink} /></span>
                 <h2>{g.name}</h2>
                 {c.blurb && <span className="wte-group-blurb">{c.blurb}</span>}
               </div>

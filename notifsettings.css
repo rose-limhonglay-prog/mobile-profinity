@@ -46,9 +46,50 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .ns-switch.on { background: var(--brand-navy); }
 .ns-switch.on .ns-knob { transform: translateX(22px); }
 
+/* ---- Gamification: sound style + previews ---- */
+.ns-sub-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ns-sub-row .ns-sub-h { margin-bottom: 0; }
+.ns-saved-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: var(--r-pill);
+  background: rgba(22,163,74,.12); color: #15803d; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 12px; }
+.ns-hint { font-family: var(--font-sans); font-size: 13px; line-height: 1.4; color: var(--gray-500); margin: 6px 0 12px; }
+.ns-style-current { font-style: normal; font-weight: var(--fw-semibold); font-size: 11px; letter-spacing: .03em; text-transform: uppercase;
+  color: #15803d; margin-left: 8px; vertical-align: 1px; }
+/* saved confirmation */
+.ns-toast { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); z-index: 20; display: inline-flex; align-items: center; gap: 8px;
+  max-width: calc(100% - 40px); padding: 11px 16px; border-radius: var(--r-pill); background: #1a1736; color: #fff;
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13.5px; white-space: nowrap; box-shadow: 0 8px 24px rgba(12,12,13,.28);
+  animation: nsToastIn .22s cubic-bezier(.22,.61,.36,1); pointer-events: none; }
+.ns-toast .iconify, .ns-toast iconify-icon { color: #6ee7a0; }
+@keyframes nsToastIn { from { opacity: 0; transform: translate(-50%, 12px); } to { opacity: 1; transform: translate(-50%, 0); } }
+.ns-sub-h { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 13px; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--gray-500); margin: 4px 0 10px; }
+.ns-styles { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.ns-style { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 11px 12px; cursor: pointer;
+  border: 1.5px solid var(--gray-150); border-radius: 14px; background: var(--surface-page); color: var(--text-primary);
+  transition: border-color .15s ease, background .15s ease; }
+.ns-style.on { border-color: var(--brand-navy); background: var(--surface-card); }
+.ns-style:active { transform: scale(.99); }
+.ns-radio { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--gray-300); position: relative; }
+.ns-radio.on { border-color: var(--brand-navy); }
+.ns-radio.on::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--brand-navy); }
+.ns-style-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.ns-style-label { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 15px; color: var(--brand-navy); }
+.ns-style-desc { font-family: var(--font-sans); font-size: 13px; color: var(--gray-500); }
+.ns-style-play { flex: none; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--gray-100); color: var(--gray-500); }
+.ns-style.on .ns-style-play { background: var(--brand-navy); color: #fff; }
+.ns-previews { display: flex; gap: 8px; }
+.ns-preview { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 8px; cursor: pointer;
+  border: none; border-radius: var(--r-pill); background: var(--brand-navy); color: #fff;
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13px; transition: transform .12s ease, background .15s ease; }
+.ns-preview:active, .ns-preview.is-playing { transform: scale(.96); background: var(--brand-navy-700); }
+.ns-preview:disabled { background: var(--gray-300); }
+
 /* real-mobile fullscreen */
 @media (max-width: 768px) {
   body { background: var(--surface-page); }
   .app.device-stage { padding: 0; }
   .ns-screen { min-height: 100vh; }
+  /* the screen grows with its content here, so pin the saved toast to the viewport */
+  .ns-toast { position: fixed; bottom: 28px; }
 }

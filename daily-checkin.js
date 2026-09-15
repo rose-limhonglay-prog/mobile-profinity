@@ -4,9 +4,10 @@
    "Mobile Check-In" action (evt_mobile_checkin: 50 pts × tier multiplier,
    daily cap 1, also advances the check-in streak), announce it with the same
    `pf:points-earned` event the header points pill and "5 in a row" splash
-   listen to (points-sound.js plays its distinct welcome chime for this
-   actionId), and celebrate with a centred modal card inside the phone frame:
-   lemon Lottie, "+N pts", "Day N in a row", 7-day streak dots, confetti.
+   listen to (detail.sound "none" — the welcome chime from points-sound.js is
+   played by show() the moment the card appears), and celebrate with a centred
+   modal card inside the phone frame:
+   welcome Lottie, "+N pts", "Day N in a row", 7-day streak dots, confetti.
    Waits for the launch splash (launch-splash.js) to lift when it is up.
    Idempotent: the engine's own per-day action count is the source of truth,
    so reloads / other pages on the same day never award twice.
@@ -17,7 +18,7 @@
   "use strict";
   var ACTION_ID = "evt_mobile_checkin";
   var HOST_SELECTOR = "[data-ios-device], [data-screen-label], .ml-screen, .lm-screen, .m-screen, .pm-screen, .cm-screen";
-  var LEMON_SRC = "https://lottie.host/82113f83-6260-46ed-b045-3fdc9092198f/lGsCEPPU0v.json";     // same lemon as CheckInStreak
+  var LEMON_SRC = "assets/lottie/welcome-back.json";   // user-supplied welcome animation (lottie.host uq8mJaYwjv), saved locally
   var CONFETTI_SRC = "https://lottie.host/ea37076b-d19a-4bc1-b9a5-cbb0ee2ee18e/lIBo4xoANl.json";  // same confetti as 5-in-a-row
   var LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
   var WEEK = 7;
@@ -28,6 +29,9 @@
   function eng() { return window.PFLoyalty || null; }
   function dayKey(d) { var dt = d ? new Date(d) : new Date(); return dt.toISOString().slice(0, 10); }
   function go(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
+  /* Gamification preference (Notification Settings → Gamification). Read
+     straight from localStorage so this script doesn't depend on load order. */
+  function gamiOn(k) { try { var s = JSON.parse(localStorage.getItem("pf-gamification")) || {}; return s[k] !== false; } catch (e) { return true; } }
 
   /* has today's check-in already been booked? (engine counts, same day key the engine uses) */
   function doneToday() {
@@ -121,8 +125,12 @@
 
     el.querySelectorAll(".pf-dci-dot, .pf-dci-lottie").forEach(function (n) { n.style.animation = "none"; void n.offsetWidth; n.style.animation = ""; });
     lastFocus = document.activeElement;
-    // two frames so the enter transition plays after mount
-    requestAnimationFrame(function () { requestAnimationFrame(function () { el.classList.add("is-open"); }); });
+    // two frames so the enter transition plays after mount; the welcome chime
+    // (points-sound.js) starts the moment the card appears
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      el.classList.add("is-open");
+      if (window.PFPointsSound && window.PFPointsSound.playCheckin) window.PFPointsSound.playCheckin();
+    }); });
 
     var mount = el.querySelector(".pf-dci-lottie");
     var confMount = el.querySelector(".pf-dci-confetti");
@@ -159,15 +167,18 @@
     if (!res || !res.ok) return res || null;
     var streak = 0, mult = 1;
     try { var st = e.getState(); streak = st.streak.current || 0; mult = e.tierMultiplierFor(action, st.user.membershipTier) || 1; } catch (err) {}
+    /* streak celebrations off (Notification Settings → Gamification): book the
+       bonus quietly — the header pill still counts up and points-sound.js
+       plays the welcome chime from the event instead of the modal */
+    var modal = force || gamiOn("streakPopup");
     if (!res.capped && res.pointsAwarded > 0) {
       try {
         window.dispatchEvent(new CustomEvent("pf:points-earned", {
-          detail: { amount: res.pointsAwarded, label: action.label, actionId: action.id, booked: true, sound: "checkin" }
+          detail: { amount: res.pointsAwarded, label: action.label, actionId: action.id, booked: true, sound: modal ? "none" : "checkin" }
         }));
       } catch (err) { /* older WebView */ }
-    } else if (force && window.PFPointsSound && window.PFPointsSound.playCheckin) {
-      window.PFPointsSound.playCheckin(); // demo replay: still hear the welcome chime
     }
+    if (!modal) return res;
     show(res.capped ? 0 : res.pointsAwarded, streak, mult);
     if (res.leveledUp) setTimeout(function () { hide(); go("MilestoneSplash.html"); }, 2400);
     return res;

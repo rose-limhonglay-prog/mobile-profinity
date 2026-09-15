@@ -117,6 +117,200 @@ function ToneRowNSW({
     className: "nsw-radio-dot" + (current === tone ? " on" : "")
   }), tone))));
 }
+
+/* ---- Gamification (points pop-ups, streak celebrations, sounds) ----
+   Backed by the shared stores the popups already read — "pf-gamification"
+   (PFGamification in points-sound.js), "pf-sound" (mute) and "pf-sound-theme"
+   (sound style) — but edited here as a draft and written on Save Changes, so
+   the whole page keeps one Save/Cancel model. */
+const GAMI_KEY_NSW = "pf-gamification";
+const THEMES_FALLBACK_NSW = [{
+  id: "coin",
+  label: "Coin",
+  desc: "Bright two-note chime"
+}, {
+  id: "bell",
+  label: "Bell",
+  desc: "Glassy, long ring"
+}, {
+  id: "arcade",
+  label: "Arcade",
+  desc: "Retro 8-bit blips"
+}, {
+  id: "soft",
+  label: "Soft",
+  desc: "Warm, low and gentle"
+}, {
+  id: "bubble",
+  label: "Bubble",
+  desc: "Playful rising pops"
+}];
+function themesNSW() {
+  return window.PFPointsSound && window.PFPointsSound.themes ? window.PFPointsSound.themes() : THEMES_FALLBACK_NSW;
+}
+function readGamiNSW() {
+  var g = {
+    pointsPopup: true,
+    streakPopup: true,
+    dailyGoalPopup: true
+  };
+  if (window.PFGamification) g = window.PFGamification.get();else {
+    try {
+      var s = JSON.parse(localStorage.getItem(GAMI_KEY_NSW)) || {};
+      g = {
+        pointsPopup: s.pointsPopup !== false,
+        streakPopup: s.streakPopup !== false,
+        dailyGoalPopup: s.dailyGoalPopup !== false
+      };
+    } catch (e) {}
+  }
+  var ps = window.PFPointsSound;
+  var sound = ps ? ps.enabled() : function () {
+    try {
+      return localStorage.getItem("pf-sound") !== "off";
+    } catch (e) {
+      return true;
+    }
+  }();
+  var theme = ps && ps.getTheme ? ps.getTheme() : "coin";
+  return {
+    pointsPopup: g.pointsPopup,
+    streakPopup: g.streakPopup,
+    dailyGoalPopup: g.dailyGoalPopup,
+    sound: sound,
+    theme: theme
+  };
+}
+function writeGamiNSW(d) {
+  var g = {
+    pointsPopup: d.pointsPopup,
+    streakPopup: d.streakPopup,
+    dailyGoalPopup: d.dailyGoalPopup
+  };
+  if (window.PFGamification) window.PFGamification.set(g);else {
+    try {
+      localStorage.setItem(GAMI_KEY_NSW, JSON.stringify(g));
+    } catch (e) {}
+  }
+  var ps = window.PFPointsSound;
+  if (ps) {
+    d.sound ? ps.unmute() : ps.mute();
+    if (ps.setTheme) ps.setTheme(d.theme);
+  } else {
+    try {
+      d.sound ? localStorage.removeItem("pf-sound") : localStorage.setItem("pf-sound", "off");
+      localStorage.setItem("pf-sound-theme", d.theme);
+    } catch (e) {}
+  }
+}
+function previewNSW(kind, theme) {
+  if (window.PFPointsSound && window.PFPointsSound.preview) window.PFPointsSound.preview(kind, theme);
+}
+function GamiToggleNSW({
+  on,
+  onChange,
+  label,
+  desc
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "nsw-row"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nsw-row-copy"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nsw-row-label"
+  }, label), desc && /*#__PURE__*/React.createElement("span", {
+    className: "nsw-row-desc"
+  }, desc)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-toggle" + (on ? " on" : ""),
+    role: "switch",
+    "aria-checked": on,
+    "aria-label": label,
+    onClick: () => onChange(!on)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-toggle-knob"
+  })));
+}
+const PREVIEWS_NSW = [{
+  kind: "points",
+  label: "Points",
+  icon: "lucide:coins"
+}, {
+  kind: "checkin",
+  label: "Check-in",
+  icon: "lucide:sun"
+}, {
+  kind: "streak",
+  label: "Streak",
+  icon: "lucide:flame"
+}];
+function SoundStyleRowNSW({
+  gami,
+  onChange
+}) {
+  const [open, setOpen] = useStateNSW(false);
+  const themes = themesNSW();
+  const current = themes.filter(t => t.id === gami.theme)[0] || themes[0];
+  const off = !gami.sound;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "nsw-row nsw-row-tone"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nsw-row-copy"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nsw-row-label"
+  }, "Sound style"), /*#__PURE__*/React.createElement("span", {
+    className: "nsw-row-desc"
+  }, "Pick how the coin chime, welcome chime and streak fanfare sound, then Save Changes.", off ? " Sound effects are off — picking a style turns them back on." : "")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "nsw-tone-current",
+    onClick: () => setOpen(v => !v),
+    "aria-expanded": open
+  }, current.label, /*#__PURE__*/React.createElement(IconNSW, {
+    name: open ? "lucide:chevron-up" : "lucide:chevron-down",
+    size: 16,
+    color: "var(--gray-500)"
+  })), open && /*#__PURE__*/React.createElement("div", {
+    className: "nsw-tone-list",
+    role: "radiogroup",
+    "aria-label": "Sound style"
+  }, themes.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.id,
+    type: "button",
+    className: "nsw-tone-option nsw-style-option",
+    role: "radio",
+    "aria-checked": gami.theme === t.id,
+    onClick: () => {
+      onChange({
+        ...gami,
+        theme: t.id,
+        sound: true
+      });
+      previewNSW("points", t.id);
+      setOpen(false);
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nsw-radio-dot" + (gami.theme === t.id ? " on" : "")
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "nsw-style-copy"
+  }, /*#__PURE__*/React.createElement("b", null, t.label), /*#__PURE__*/React.createElement("span", null, t.desc)), /*#__PURE__*/React.createElement(IconNSW, {
+    name: "lucide:volume-2",
+    size: 15,
+    color: "var(--gray-450)"
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "nsw-previews"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nsw-previews-label"
+  }, "Try it"), PREVIEWS_NSW.map(p => /*#__PURE__*/React.createElement("button", {
+    key: p.kind,
+    type: "button",
+    className: "nsw-preview",
+    onClick: () => previewNSW(p.kind, gami.theme)
+  }, /*#__PURE__*/React.createElement(IconNSW, {
+    name: p.icon,
+    size: 14,
+    color: "currentColor"
+  }), p.label))));
+}
 function SectionNSW({
   title,
   desc,
@@ -132,6 +326,7 @@ function SectionNSW({
 }
 function NotificationSettingsWeb() {
   const [settings, setSettings] = useStateNSW(() => window.PFNotify ? window.PFNotify.getSettings() : null);
+  const [gami, setGami] = useStateNSW(readGamiNSW);
   const [saved, setSaved] = useStateNSW(true);
   useEffectNSW(() => {
     if (settings === null && window.PFNotify) setSettings(window.PFNotify.getSettings());
@@ -140,14 +335,20 @@ function NotificationSettingsWeb() {
     setSettings(next);
     setSaved(false);
   }
+  function updateGami(next) {
+    setGami(next);
+    setSaved(false);
+  }
   function handleSave() {
     if (!settings || !window.PFNotify) return;
     window.PFNotify.setSettings(settings);
+    writeGamiNSW(gami);
     setSaved(true);
     window.PFNotify.showConfirm("Notification settings saved");
   }
   function handleCancel() {
     if (window.PFNotify) setSettings(window.PFNotify.getSettings());
+    setGami(readGamiNSW());
     setSaved(true);
   }
   function handlePreview() {
@@ -188,13 +389,17 @@ function NotificationSettingsWeb() {
     className: "nsw-head-titles"
   }, /*#__PURE__*/React.createElement("h1", null, "Notification Settings"), /*#__PURE__*/React.createElement("p", null, "Manage how and when you receive updates from the platform.")), /*#__PURE__*/React.createElement("div", {
     className: "nsw-head-actions"
-  }, /*#__PURE__*/React.createElement("button", {
+  }, !saved && /*#__PURE__*/React.createElement("span", {
+    className: "nsw-unsaved"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nsw-unsaved-dot"
+  }), "Unsaved changes"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "nsw-btn-secondary",
     onClick: handlePreview
   }, "Preview push"), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "nsw-btn-primary",
+    className: "nsw-btn-primary" + (saved ? "" : " is-dirty"),
     onClick: handleSave
   }, "Save Changes"))), /*#__PURE__*/React.createElement("div", {
     className: "nsw-crumb"
@@ -269,6 +474,55 @@ function NotificationSettingsWeb() {
     label: "Do Not Disturb",
     desc: "Silence toasts and sound. Notifications still land in your notification centre."
   })), /*#__PURE__*/React.createElement(SectionNSW, {
+    title: "Gamification",
+    desc: "Points, streaks and celebrations — turn the fanfare up or down."
+  }, /*#__PURE__*/React.createElement(GamiToggleNSW, {
+    on: gami.pointsPopup,
+    onChange: v => updateGami({
+      ...gami,
+      pointsPopup: v
+    }),
+    label: "Points pop-ups",
+    desc: "Flash the “+pts” on the header points pill when you earn points."
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "nsw-divider"
+  }), /*#__PURE__*/React.createElement(GamiToggleNSW, {
+    on: gami.streakPopup,
+    onChange: v => updateGami({
+      ...gami,
+      streakPopup: v
+    }),
+    label: "Streak celebrations",
+    desc: "The “5 in a row” splash and the daily check-in welcome card. Points are still earned."
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "nsw-divider"
+  }), /*#__PURE__*/React.createElement(GamiToggleNSW, {
+    on: gami.dailyGoalPopup,
+    onChange: v => updateGami({
+      ...gami,
+      dailyGoalPopup: v
+    }),
+    label: "Daily goal celebration",
+    desc: "Full-screen celebration each time you pass another 50 points in a day."
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "nsw-divider"
+  }), /*#__PURE__*/React.createElement(GamiToggleNSW, {
+    on: gami.sound,
+    onChange: v => {
+      updateGami({
+        ...gami,
+        sound: v
+      });
+      if (v) previewNSW("points", gami.theme);
+    },
+    label: "Sound effects",
+    desc: "The coin chime, welcome chime and streak fanfare."
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "nsw-divider"
+  }), /*#__PURE__*/React.createElement(SoundStyleRowNSW, {
+    gami: gami,
+    onChange: updateGami
+  })), /*#__PURE__*/React.createElement(SectionNSW, {
     title: "Social & Activity",
     desc: "Comments and reactions on your posts."
   }, /*#__PURE__*/React.createElement(ToggleNSW, {
@@ -322,13 +576,17 @@ function NotificationSettingsWeb() {
     label: "New course available"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "nsw-footer-row"
-  }, /*#__PURE__*/React.createElement("button", {
+  }, !saved && /*#__PURE__*/React.createElement("span", {
+    className: "nsw-unsaved"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nsw-unsaved-dot"
+  }), "Unsaved changes"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "nsw-btn-secondary",
     onClick: handleCancel
   }, "Cancel"), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "nsw-btn-primary",
+    className: "nsw-btn-primary" + (saved ? "" : " is-dirty"),
     onClick: handleSave
   }, "Save Changes")), /*#__PURE__*/React.createElement("div", {
     className: "nsw-help"
