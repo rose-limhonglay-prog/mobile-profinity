@@ -271,6 +271,67 @@ function SubModuleHome() {
     i: i,
     done: doneSet.indexOf(l[0]) !== -1
   }))), /*#__PURE__*/React.createElement("div", {
+    className: "sm-sec-h"
+  }, /*#__PURE__*/React.createElement("h2", null, "What's next")), /*#__PURE__*/React.createElement("div", {
+    className: "sm-next"
+  }, nextSub ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sm-nexttile",
+    onClick: () => goSM(subModuleUrlSM(nextSub))
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-nexttile-go",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IcoSM, {
+    name: "lucide:folder",
+    size: 18,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sm-nexttile-eyebrow"
+  }, "Next sub-module · ", nextSub.lessons.length, " lessons · ", nextSub.mins), /*#__PURE__*/React.createElement("span", {
+    className: "sm-nexttile-name"
+  }, nextSub.name), /*#__PURE__*/React.createElement("span", {
+    className: "sm-nexttile-meta"
+  }, nextSub.desc)) : /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sm-nexttile",
+    onClick: () => goSM(moduleUrlSM(d))
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-nexttile-go",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IcoSM, {
+    name: "lucide:layers",
+    size: 18,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sm-nexttile-eyebrow"
+  }, "Last sub-module"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-nexttile-name"
+  }, "Back to ", d.module), /*#__PURE__*/React.createElement("span", {
+    className: "sm-nexttile-meta"
+  }, "Finish the module overview, then continue to the next module."))), /*#__PURE__*/React.createElement("section", {
+    className: "sm-ava",
+    "data-screen-label": "Ask Ava"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "orb"
+  }, /*#__PURE__*/React.createElement(IcoSM, {
+    name: "lucide:sparkles",
+    size: 22,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, "Ask Ava about this sub-module"), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, "Want a quick primer before you start? Ava can summarise ", d.name, " in 30 seconds."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-coach-link",
+    "data-coach": `I'm on the sub-module "${d.name}" in ${d.module}. Summarise what it covers and what I should practise.`
+  }, /*#__PURE__*/React.createElement(IcoSM, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "#0C1928"
+  }), "Ask Ava"))), /*#__PURE__*/React.createElement("div", {
     className: "sm-tomod-wrap"
   }, /*#__PURE__*/React.createElement(ButtonSM, {
     variant: "secondary",

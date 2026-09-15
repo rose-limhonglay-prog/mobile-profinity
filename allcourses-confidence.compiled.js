@@ -109,7 +109,12 @@ function readTierACC() {
   }
 }
 const ACC_FREE = readTierACC() === "free";
-if (ACC_FREE) {
+/* ?free=1 — the Free Resources view (user, 2026-09-16): the survey-unlocked
+   downloads listed with this page's card design. Open to every tier, so the
+   members-only redirect steps aside for it. */
+const ACC_FREE_VIEW = ACC_PARAMS.get("free") === "1";
+const ACC_FREE_KEY = "Free Resources";
+if (ACC_FREE && !ACC_FREE_VIEW) {
   window.location.replace("MembershipTier.html");
 }
 let ACC_LIGHT = resolveLightACC();
@@ -184,310 +189,29 @@ try {
 } catch (e) {}
 
 /* ---------------------------------------------------------------- catalogue -- */
-const ACC_CATS = ["Lips & Perioral", "Anatomy", "Safety", "Patient Journey"];
-
-/* Popular topics act as search shortcuts: tapping one fills the search field. */
-const ACC_TOPICS = ["Lip anatomy", "Complication management", "Cannula technique", "Consent & consultation", "Vascular occlusion", "Facial assessment", "Marionette lines", "Aftercare", "Photography", "Toxin"];
-const ACC_INSTRUCTORS = [{
-  name: "Dr Tim Pearce",
-  role: "Founder · Lips & toxin",
-  avatar: "assets/avatar-drtim.png"
-}, {
-  name: "Dr Priya Shah",
-  role: "Facial anatomy",
-  avatar: "assets/avatar-priya-shah.jpg"
-}, {
-  name: "Dr Amir Khan",
-  role: "Complications & safety",
-  avatar: "assets/avatar-amir-khan.jpg"
-}, {
-  name: "Sarah Collins",
-  role: "Consultation & consent",
-  avatar: "assets/avatar-sarah-collins.jpg"
-}, {
-  name: "Miranda Pearce",
-  role: "Patient journey & growth",
-  avatar: "assets/avatar-miranda.jpg"
-}];
-const ACC_IMG = {
-  eightD: "assets/course-8d-lip-design.jpg",
-  fullFace: "assets/course-full-face-rejuvenation.jpg",
-  lip: "assets/course-lip.png",
-  advLip: "assets/course-advanced-lip-techniques.jpg",
-  protox: "assets/course-protox.png",
-  clinicLip: "assets/clinic-lip-design.png",
-  complications: "assets/course-complications.jpg",
-  cheek: "assets/course-cheek-contouring.jpg",
-  tearTrough: "assets/course-tear-trough.jpg",
-  temple: "assets/course-temple.png",
-  templeFiller: "assets/course-temple-filler.webp",
-  jawline: "assets/course-jawline-sculpting.jpg",
-  brow: "assets/course-brow-lift.jpg",
-  skin: "assets/course-skin-boosters.jpg",
-  rhino: "assets/course-rhinoplasty.jpg",
-  consult: "assets/course-consultation.jpg",
-  membership: "assets/course-membership-banner.jpg",
-  marketing: "assets/course-marketing.webp"
-};
-
-/* Every category carries six unowned courses so each rail scrolls and its
-   "See all" has something to expand into. `owned` courses (progress `pct`)
-   are the two the member is enrolled on — hidden from the rails, found by
-   search. `slug` set → the course page knows it; otherwise the generic
-   ?title= route builds it. */
-const ACC_COURSES = [/* Lips & Perioral */
-{
-  title: "8D Lip Design",
-  cat: "Lips & Perioral",
-  blurb: "The complete lip anatomy, assessment and technique pathway.",
-  lessons: 39,
-  mins: 250,
-  image: ACC_IMG.eightD,
-  by: "Dr Tim Pearce",
-  topics: ["Lip anatomy"],
-  owned: true,
-  pct: 72,
-  slug: "8d-lip-design"
-}, {
-  title: "Perioral Rejuvenation",
-  cat: "Lips & Perioral",
-  blurb: "Marionette lines, chin support and smoker's lines.",
-  lessons: 12,
-  mins: 96,
-  image: ACC_IMG.fullFace,
-  by: "Dr Tim Pearce",
-  topics: ["Marionette lines"]
-}, {
-  title: "Corner Lip Lift",
-  cat: "Lips & Perioral",
-  blurb: "Lift a downturned mouth corner without over-filling.",
-  lessons: 8,
-  mins: 64,
-  image: ACC_IMG.lip,
-  by: "Dr Tim Pearce",
-  topics: ["Marionette lines"]
-}, {
-  title: "Advanced Lip Techniques",
-  cat: "Lips & Perioral",
-  blurb: "Layered volume, borders and perioral balance built on 8D.",
-  lessons: 18,
-  mins: 150,
-  image: ACC_IMG.advLip,
-  by: "Dr Tim Pearce",
-  topics: ["Lip anatomy", "Cannula technique"]
-}, {
-  title: "Lip Flip with Toxin",
-  cat: "Lips & Perioral",
-  blurb: "Subtle eversion of the upper lip with micro-doses.",
-  lessons: 6,
-  mins: 45,
-  image: ACC_IMG.protox,
-  by: "Dr Tim Pearce",
-  topics: ["Toxin"]
-}, {
-  title: "Russian Lip Technique",
-  cat: "Lips & Perioral",
-  blurb: "Vertical tenting for height with a flat side profile.",
-  lessons: 10,
-  mins: 80,
-  image: ACC_IMG.clinicLip,
-  by: "Dr Tim Pearce",
-  topics: ["Lip anatomy"]
-}, {
-  title: "Lip Correction & Dissolving",
-  cat: "Lips & Perioral",
-  blurb: "Hyaluronidase protocols and re-treatment planning.",
-  lessons: 9,
-  mins: 72,
-  image: ACC_IMG.complications,
-  by: "Dr Tim Pearce",
-  topics: ["Complication management"]
-}, /* Anatomy */
-{
-  title: "Functional Facial Anatomy",
-  cat: "Anatomy",
-  blurb: "Layers, planes and danger zones every injector needs.",
-  lessons: 14,
-  mins: 120,
-  image: ACC_IMG.cheek,
-  by: "Dr Priya Shah",
-  topics: ["Facial assessment"]
-}, {
-  title: "Vascular Anatomy of the Face",
-  cat: "Anatomy",
-  blurb: "Facial, angular and labial arteries mapped for filler.",
-  lessons: 10,
-  mins: 85,
-  image: ACC_IMG.tearTrough,
-  by: "Dr Priya Shah",
-  topics: ["Vascular occlusion"]
-}, {
-  title: "Lip Anatomy Deep Dive",
-  cat: "Anatomy",
-  blurb: "Vermilion, philtrum, orbicularis oris and the labial arteries.",
-  lessons: 8,
-  mins: 64,
-  image: ACC_IMG.eightD,
-  by: "Dr Priya Shah",
-  topics: ["Lip anatomy"]
-}, {
-  title: "Midface & Cheek Anatomy",
-  cat: "Anatomy",
-  blurb: "Fat pads, ligaments and support for volumising.",
-  lessons: 11,
-  mins: 90,
-  image: ACC_IMG.temple,
-  by: "Dr Priya Shah",
-  topics: ["Facial assessment"]
-}, {
-  title: "Lower Face & Jawline Anatomy",
-  cat: "Anatomy",
-  blurb: "Masseter, mandible and the marionette region.",
-  lessons: 9,
-  mins: 75,
-  image: ACC_IMG.jawline,
-  by: "Dr Priya Shah",
-  topics: ["Marionette lines"]
-}, {
-  title: "Periorbital Anatomy",
-  cat: "Anatomy",
-  blurb: "Tear trough, orbital rim and the infraorbital bundle.",
-  lessons: 7,
-  mins: 56,
-  image: ACC_IMG.brow,
-  by: "Dr Priya Shah",
-  topics: ["Vascular occlusion"]
-}, /* Safety */
-{
-  title: "Complications Management",
-  cat: "Safety",
-  blurb: "Recognise, prevent and manage vascular and other complications.",
-  lessons: 12,
-  mins: 100,
-  image: ACC_IMG.complications,
-  by: "Dr Tim Pearce",
-  topics: ["Complication management", "Vascular occlusion"]
-}, {
-  title: "Vascular Occlusion Protocol",
-  cat: "Safety",
-  blurb: "Spot the signs early and act on a rehearsed hyaluronidase plan.",
-  lessons: 6,
-  mins: 48,
-  image: ACC_IMG.skin,
-  by: "Dr Amir Khan",
-  topics: ["Vascular occlusion", "Complication management"]
-}, {
-  title: "Safety & Injection Essentials",
-  cat: "Safety",
-  blurb: "Aseptic technique, aspiration and needle versus cannula.",
-  lessons: 10,
-  mins: 80,
-  image: ACC_IMG.templeFiller,
-  by: "Dr Amir Khan",
-  topics: ["Cannula technique"]
-}, {
-  title: "Cannula Technique Masterclass",
-  cat: "Safety",
-  blurb: "Entry points, planes and depth control for safer filler.",
-  lessons: 8,
-  mins: 64,
-  image: ACC_IMG.temple,
-  by: "Dr Amir Khan",
-  topics: ["Cannula technique"]
-}, {
-  title: "Emergency Kit & Protocols",
-  cat: "Safety",
-  blurb: "Build, check and drill your clinic's emergency response.",
-  lessons: 5,
-  mins: 40,
-  image: ACC_IMG.rhino,
-  by: "Dr Amir Khan",
-  topics: ["Complication management"]
-}, {
-  title: "Infection Control & Aftercare",
-  cat: "Safety",
-  blurb: "Prevent, recognise and treat infection and biofilm.",
-  lessons: 7,
-  mins: 56,
-  image: ACC_IMG.skin,
-  by: "Dr Amir Khan",
-  topics: ["Aftercare"]
-}, /* Patient Journey */
-{
-  title: "Consultation & Patient Assessment",
-  cat: "Patient Journey",
-  blurb: "Build trust and plan safe, effective treatments from the first visit.",
-  lessons: 9,
-  mins: 72,
-  image: ACC_IMG.consult,
-  by: "Sarah Collins",
-  topics: ["Consent & consultation", "Facial assessment"],
-  owned: true,
-  pct: 20
-}, {
-  title: "Consent & Documentation",
-  cat: "Patient Journey",
-  blurb: "Consent forms, cooling-off periods and record keeping.",
-  lessons: 6,
-  mins: 45,
-  image: ACC_IMG.membership,
-  by: "Sarah Collins",
-  topics: ["Consent & consultation"]
-}, {
-  title: "Facial Assessment & Treatment Planning",
-  cat: "Patient Journey",
-  blurb: "Proportions, photography and a phased treatment plan.",
-  lessons: 10,
-  mins: 85,
-  image: ACC_IMG.fullFace,
-  by: "Sarah Collins",
-  topics: ["Facial assessment", "Photography"]
-}, {
-  title: "Clinical Photography",
-  cat: "Patient Journey",
-  blurb: "Standardised before-and-afters that protect you and the patient.",
-  lessons: 5,
-  mins: 40,
-  image: ACC_IMG.brow,
-  by: "Miranda Pearce",
-  topics: ["Photography"]
-}, {
-  title: "Managing Expectations",
-  cat: "Patient Journey",
-  blurb: "Difficult conversations, unhappy patients and the follow-up.",
-  lessons: 7,
-  mins: 56,
-  image: ACC_IMG.marketing,
-  by: "Miranda Pearce",
-  topics: ["Consent & consultation"]
-}, {
-  title: "Aftercare & Review Visits",
-  cat: "Patient Journey",
-  blurb: "Aftercare scripts, review timing and patient retention.",
-  lessons: 6,
-  mins: 48,
-  image: ACC_IMG.skin,
-  by: "Sarah Collins",
-  topics: ["Aftercare"]
-}, {
-  title: "Pricing & Treatment Packages",
-  cat: "Patient Journey",
-  blurb: "Package, price and present your treatments with confidence.",
-  lessons: 6,
-  mins: 50,
-  image: ACC_IMG.marketing,
-  by: "Miranda Pearce",
-  topics: []
-}];
+/* Categories, popular topics, popular instructors and the courses come from
+   learning-shared.js (window.PFLearnShared) so the web All Courses page lists
+   exactly the same catalogue. `owned` courses are hidden from the rails; the
+   8D course's progress is read from the shared pf-lessons-done store. */
+const PFLS_ACC = window.PFLearnShared;
+const ACC_CATS = PFLS_ACC.CATS;
+const ACC_TOPICS = PFLS_ACC.TOPICS;
+const ACC_INSTRUCTORS = PFLS_ACC.INSTRUCTORS;
+const ACC_COURSES = PFLS_ACC.CATALOG.map(c => Object.assign({}, c, {
+  pct: c.owned ? PFLS_ACC.catalogPct(c) : 0
+}));
 const ACC_OWNED_COUNT = ACC_COURSES.filter(c => c.owned).length;
+const ACC_FREE_RES = (PFLS_ACC.FREE_RESOURCES || []).map(c => Object.assign({}, c, {
+  pct: 0
+}));
 function haystackACC(c) {
-  return [c.title, c.cat, c.blurb, c.by].concat(c.topics || []).join(" ").toLowerCase();
+  return PFLS_ACC.haystack(c);
 }
 
 /* Owned → the course page in this variant; locked → Mastery upgrade. */
 function courseUrlACC(c) {
   if (!c.owned) return ACC_URLS.membership;
-  const p = c.slug ? {
+  const p = PFLS_ACC.CURRICULA[c.slug] ? {
     course: c.slug
   } : {
     title: c.title,
@@ -603,8 +327,9 @@ function ACCCourseCard({
   wide,
   large
 }) {
-  const locked = !c.owned;
-  const label = c.title + " — " + c.lessons + " lessons, " + c.mins + " minutes" + (locked ? ", included in Mastery" : ", " + c.pct + "% complete");
+  const free = !!c.free;
+  const locked = !free && !c.owned;
+  const label = c.title + " — " + (free ? "free " + c.meta.toLowerCase() : c.lessons + " lessons, " + c.mins + " minutes" + (locked ? ", included in Mastery" : ", " + c.pct + "% complete"));
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "acc-card" + (wide ? " acc-card-wide" : "") + (large ? " acc-card-lg" : ""),
@@ -612,11 +337,18 @@ function ACCCourseCard({
     "aria-label": label
   }, /*#__PURE__*/React.createElement("span", {
     className: "acc-card-cover"
-  }, /*#__PURE__*/React.createElement("img", {
+  }, c.image ? /*#__PURE__*/React.createElement("img", {
     src: c.image,
     alt: "",
     loading: "lazy"
-  }), locked && /*#__PURE__*/React.createElement("span", {
+  }) : /*#__PURE__*/React.createElement("span", {
+    className: "acc-card-ph",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSACC.IconifyIcon, {
+    name: c.kind === "Video" || c.kind === "Case study" ? "lucide:play-circle" : c.kind === "Lesson" ? "lucide:graduation-cap" : "lucide:file-text",
+    size: 34,
+    color: ACC_INK.muted
+  })), locked && /*#__PURE__*/React.createElement("span", {
     className: "acc-card-lock",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSACC.IconifyIcon, {
@@ -627,15 +359,21 @@ function ACCCourseCard({
     className: "acc-card-body"
   }, /*#__PURE__*/React.createElement("span", {
     className: "acc-eyebrow acc-eyebrow-gold"
-  }, c.cat), /*#__PURE__*/React.createElement("span", {
+  }, free ? c.meta : c.cat), /*#__PURE__*/React.createElement("span", {
     className: "acc-card-title"
   }, c.title), (large || wide) && /*#__PURE__*/React.createElement("span", {
     className: "acc-card-by"
   }, c.by), /*#__PURE__*/React.createElement("span", {
     className: "acc-card-blurb"
-  }, c.blurb), /*#__PURE__*/React.createElement("span", {
+  }, c.blurb), !free && /*#__PURE__*/React.createElement("span", {
     className: "acc-card-meta"
-  }, c.lessons, " lessons · ", c.mins, " min"), locked ? /*#__PURE__*/React.createElement("span", {
+  }, c.lessons, " lessons · ", c.mins, " min"), free ? /*#__PURE__*/React.createElement("span", {
+    className: "acc-chip-mastery acc-chip-free"
+  }, /*#__PURE__*/React.createElement(DSACC.IconifyIcon, {
+    name: "lucide:gift",
+    size: 13,
+    color: ACC_INK.gold
+  }), "Free") : locked ? /*#__PURE__*/React.createElement("span", {
     className: "acc-chip-mastery"
   }, /*#__PURE__*/React.createElement(DSACC.IconifyIcon, {
     name: "lucide:crown",
@@ -764,6 +502,7 @@ const ACC_SHOWS = [{
   label: "In progress"
 }];
 function catFromUrlACC() {
+  if (ACC_FREE_VIEW) return ACC_FREE_KEY;
   const c = new URLSearchParams(window.location.search).get("cat");
   return ACC_CATS.indexOf(c) !== -1 ? c : null;
 }
@@ -869,10 +608,11 @@ function ACCFilterSheet({
 }
 function ACCCategoryPage({
   cat,
-  onBack
+  onBack,
+  free
 }) {
-  const courses = useMemoACC(() => ACC_COURSES.filter(c => c.cat === cat), [cat]);
-  const starters = courses.filter(c => !c.owned).slice(0, 4);
+  const courses = useMemoACC(() => free ? ACC_FREE_RES : ACC_COURSES.filter(c => c.cat === cat), [cat, free]);
+  const starters = free ? [] : courses.filter(c => !c.owned).slice(0, 4);
   const topics = ACC_TOPICS.filter(t => courses.some(c => (c.topics || []).indexOf(t) !== -1));
   const people = ACC_INSTRUCTORS.filter(p => courses.some(c => c.by === p.name));
   const [topic, setTopic] = useStateACC(null);
@@ -935,7 +675,7 @@ function ACCCategoryPage({
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "acc-round",
-    "aria-label": "Back to all courses",
+    "aria-label": free ? "Back to My Learning" : "Back to all courses",
     onClick: onBack
   }, /*#__PURE__*/React.createElement(DSACC.IconifyIcon, {
     name: "lucide:chevron-left",
@@ -957,9 +697,13 @@ function ACCCategoryPage({
   }))), /*#__PURE__*/React.createElement("div", {
     className: "acc-scroll acc-cat-scroll",
     ref: scrollRef
-  }, /*#__PURE__*/React.createElement("h1", {
+  }, free && /*#__PURE__*/React.createElement("span", {
+    className: "acc-eyebrow acc-eyebrow-gold acc-cat-eyebrow"
+  }, "Unlocked for you"), /*#__PURE__*/React.createElement("h1", {
     className: "acc-cat-h1"
-  }, cat), /*#__PURE__*/React.createElement("section", {
+  }, cat), free && /*#__PURE__*/React.createElement("p", {
+    className: "acc-lede acc-cat-lede"
+  }, "Dr Tim's free library — guides, checklists, protocols, lessons and videos. Free to open and keep."), !free && /*#__PURE__*/React.createElement("section", {
     className: "acc-sec acc-sec-tight",
     "data-screen-label": "Courses to get you started"
   }, /*#__PURE__*/React.createElement("h2", {
@@ -989,7 +733,7 @@ function ACCCategoryPage({
     className: "acc-topic" + (topic === t ? " on" : ""),
     "aria-pressed": topic === t,
     onClick: () => pickTopic(t)
-  }, t)))), people.length > 0 && /*#__PURE__*/React.createElement("section", {
+  }, t)))), !free && people.length > 0 && /*#__PURE__*/React.createElement("section", {
     className: "acc-sec",
     "data-screen-label": "Popular instructors"
   }, /*#__PURE__*/React.createElement("h2", {
@@ -1024,9 +768,9 @@ function ACCCategoryPage({
     className: "acc-sec-h acc-sec-h-lg"
   }, /*#__PURE__*/React.createElement("h2", {
     className: "acc-h2"
-  }, "All Courses"), /*#__PURE__*/React.createElement("span", {
+  }, free ? "All free resources" : "All Courses"), /*#__PURE__*/React.createElement("span", {
     className: "acc-sub"
-  }, list.length, " ", list.length === 1 ? "course" : "courses")), filtered && /*#__PURE__*/React.createElement("div", {
+  }, list.length, " ", free ? list.length === 1 ? "resource" : "resources" : list.length === 1 ? "course" : "courses")), filtered && /*#__PURE__*/React.createElement("div", {
     className: "acc-active",
     "aria-live": "polite"
   }, topic && /*#__PURE__*/React.createElement("button", {
@@ -1067,7 +811,7 @@ function ACCCategoryPage({
     onClick: reset
   }, "Clear all")), list.length === 0 ? /*#__PURE__*/React.createElement("div", {
     className: "acc-empty"
-  }, /*#__PURE__*/React.createElement("p", null, "No ", cat, " courses match these filters."), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("p", null, "No ", free ? "free resources" : cat + " courses", " match these filters."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "acc-seeall",
     onClick: reset
@@ -1315,7 +1059,8 @@ function AllCoursesConfidence() {
   }))), view && /*#__PURE__*/React.createElement(ACCCategoryPage, {
     key: view,
     cat: view,
-    onBack: closeCat
+    free: view === ACC_FREE_KEY,
+    onBack: view === ACC_FREE_KEY ? () => goACC(ACC_URLS.learning) : closeCat
   }), /*#__PURE__*/React.createElement(ACCTabBar, {
     compact: hidden && !view
   }), /*#__PURE__*/React.createElement(SideMenuACC, {
@@ -1359,7 +1104,7 @@ function AllCoursesConfidenceApp() {
     "--action-primary": "var(--brand-navy)",
     "--action-primary-hover": "var(--brand-navy-700)"
   };
-  const pageBg = ACC_LIGHT ? "#F9F7F4" : "#0B1024";
+  const pageBg = ACC_LIGHT ? "#F6F3EF" : "#0B1024";
   if (mobile) {
     return /*#__PURE__*/React.createElement("div", {
       className: "app",
@@ -1386,6 +1131,6 @@ function AllCoursesConfidenceApp() {
     dark: !ACC_LIGHT
   }, /*#__PURE__*/React.createElement(AllCoursesConfidence, null))));
 }
-if (!ACC_FREE) {
+if (!ACC_FREE || ACC_FREE_VIEW) {
   ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(AllCoursesConfidenceApp, null));
 }

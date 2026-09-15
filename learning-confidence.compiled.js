@@ -31,6 +31,7 @@ const SideMenuLC = window.PFSideMenuC;
 const NotificationsLC = window.PFNotificationsPanelC;
 const MessagesLC = window.PFMessagesPanelC;
 const useHeaderHideLC = window.PFUseHeaderHideC;
+const PFLS_LC = window.PFLearnShared;
 const LC_TIER = window.PF_TIER || "confidence";
 const LC_LIGHT = !!window.PF_LC_LIGHT;
 
@@ -232,6 +233,7 @@ function courseUrlLC(c) {
     instr: "Dr. Tim Pearce",
     pct: 0
   };
+  if (c.dur) p.dur = c.dur;
   if (c.price) p.price = c.price;
   return "CourseDetail.html?" + new URLSearchParams(p).toString();
 }
@@ -496,6 +498,17 @@ function LCModules({
 
 /* ---------------------------------------------------------------- related -- */
 function LCRelated() {
+  /* shared pool + PRICES: a bought course drops out and the next back-fills;
+     Temple Filler stays as "included" for Confidence */
+  const purchased = PFLS_LC.usePurchased();
+  const related = PFLS_LC.pickRelated({
+    purchased,
+    tier: LC_TIER,
+    n: 3,
+    includeOwned: true,
+    exclude: [LC_COURSE.slug]
+  });
+  if (!related.length) return null;
   return /*#__PURE__*/React.createElement("section", {
     className: "lcm-sec",
     "data-screen-label": "Related courses"
@@ -503,7 +516,7 @@ function LCRelated() {
     className: "lcm-sec-h"
   }, /*#__PURE__*/React.createElement("h2", null, "Related")), /*#__PURE__*/React.createElement("div", {
     className: "lcm-list"
-  }, LC_RELATED.map(c => /*#__PURE__*/React.createElement("button", {
+  }, related.map(c => /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lcm-card lcm-course",
     key: c.title,
@@ -550,7 +563,7 @@ function LCFreeResources() {
   }, /*#__PURE__*/React.createElement("h2", null, "Free resources")), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lcm-card lcm-res",
-    onClick: () => goLC("MySaved.html")
+    onClick: () => goLC(LC_URLS.allCourses + "?free=1")
   }, /*#__PURE__*/React.createElement("span", {
     className: "lcm-res-ic",
     "aria-hidden": "true"
@@ -698,7 +711,7 @@ function LearningConfidence() {
     done: done,
     currentIdx: currentIdx,
     nextIdx: currentIdx
-  }), /*#__PURE__*/React.createElement(LCRelated, null), /*#__PURE__*/React.createElement(LCFreeResources, null), /*#__PURE__*/React.createElement(LCRampCard, {
+  }), /*#__PURE__*/React.createElement(LCFreeResources, null), /*#__PURE__*/React.createElement(LCRampCard, {
     label: "Discover your journey",
     title: "Discover your journey",
     body: "We sequence your next-best courses from Recommended, New & Popular — one clear step at a time toward your goal.",
@@ -751,7 +764,7 @@ function LearningConfidenceApp() {
     "--action-primary": "#0C1928",
     "--action-primary-hover": "#081120"
   };
-  const pageBg = LC_LIGHT ? "#F9F7F4" : "#0B1024";
+  const pageBg = LC_LIGHT ? "#F6F3EF" : "#0B1024";
   if (mobile) {
     return /*#__PURE__*/React.createElement("div", {
       className: "app",

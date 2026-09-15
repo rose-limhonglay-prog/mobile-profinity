@@ -1,654 +1,1030 @@
 /* ===========================================================================
    PROfinity — Lesson (web)
-   Full video-player lesson view reached from a curriculum row or "Continue
-   Learning" on CourseWeb.html via ?course=<slug>&lesson=<flatIdx> (or generic
-   ?title=&lesson=). Video with theater mode, Overview (numbered steps +
-   comments) / Resources tabs, sticky Previous/Mark-complete/Next footer
-   (Next is gated until the lesson is marked complete), and a collapsible
-   Course outline + Ask Ava sidebar. Shares its localStorage progress key with
-   course-web.jsx so completion stays in sync between the two pages. This is
-   the desktop counterpart of the mobile lesson.jsx/lesson.css (iPhone-framed)
-   pair — kept as a separate file/route since that page is reached from a
-   completely different mobile flow (CourseDetail.html → Module.html →
-   SubModule.html → Lesson.html) with its own data model. Suffixed -LW to
-   avoid clashing with other page globals (including the mobile lesson.jsx's
-   own -LS suffix).
+   Desktop port of the mobile lesson player (LXPlayer in lesson-confidence.jsx):
+   real <video> playback with our own chrome + theatre mode, the paged PDF
+   reader, the inline success-path quiz (80% pass gate), the collapsible
+   course-progress strip, Details / Resources tabs, lesson meta chips, "In this
+   lesson", "Up next", Share lesson modal, comments, Ava card, and the sticky
+   state-aware CTA (Mark complete & continue / Next lesson / Finish course /
+   Course complete) — plus the web-only outline sidebar and module-boundary
+   toast. Reached from CourseWeb.html (course-web.jsx).
+
+   URL contract (PFLearn.lessonUrl builds these):
+     ?course=<slug>&level=&module=&lesson=[&sub=]   mobile shape (CourseDetail / Module / SubModule / LearningMobile)
+     ?course=<slug>&lesson=<flatIdx>               legacy web shape (no level/module on the URL)
+     ?course=<slug>&title=&price=&dur=             generic course (same tail CourseWeb takes)
+     &share=1                                      open the Share lesson modal
+   Selecting another lesson pushes a history entry with the mobile shape, so
+   back/forward walk the lessons; 8d-lips is an alias for 8d-lip-design.
+
+   Completion writes BOTH the shared name-keyed pf-lessons-done store
+   (PFLearn.markDone — the phone reads the same key) and the web resume pointer
+   pf-lesson-progress-<slug> ({completed:[flatIdx], activeIdx}). Data + helpers
+   from course-data-web.js (window.PFCourseData). Suffixed -LW.
    =========================================================================== */
 const {
   useState: useStateLW,
   useEffect: useEffectLW,
-  useRef: useRefLW
+  useRef: useRefLW,
+  useMemo: useMemoLW
 } = React;
 const DSLW = window.ProfinityDesignSystem_c2b5cc;
 const {
   TopNav: TopNavLW,
   IconifyIcon: IconLW,
-  Spark: SparkLW
+  Avatar: AvatarLW
 } = DSLW;
+const CDL = window.PFCourseData;
+const PFLW = window.PFLearn;
 const ME_LW = {
-  name: "Katy Wilson",
-  role: "Nurse Practitioner",
-  avatar: "assets/avatar-katy.jpg"
+  name: CDL.ME.fullName,
+  role: CDL.ME.role,
+  avatar: CDL.ME.avatar
+};
+const LW_PARAMS = new URLSearchParams(window.location.search);
+const INK_LW = {
+  gold: "var(--cd-gold)",
+  text: "var(--cd-text)",
+  muted: "var(--cd-text-3)",
+  success: "var(--cd-success)",
+  onNavy: "#FFFFFF",
+  onGold: "var(--cd-on-gold)",
+  heading: "var(--cd-heading)"
 };
 function goLW(url) {
-  (window.pfGo || function (u) {
-    window.location.href = u;
-  })(url);
+  CDL.go(url);
 }
 function navigateLW(label) {
-  var u = {
+  const u = {
     Home: "NewsfeedWeb.html",
     Profile: "Profile.html",
-    "My Learning": "MyLearning.html",
+    "My Learning": PFLW.myLearningUrl,
     Community: "Community.html",
     Agent: "Agent.html"
   }[label];
   if (u) goLW(u);
 }
-
-/* ---------------------------------------------------------------- shared progress (same key as course-web.jsx) -- */
-function progressKeyLW(slug) {
-  return "pf-lesson-progress-" + slug;
-}
-function loadProgressLW(slug) {
-  try {
-    const saved = JSON.parse(localStorage.getItem(progressKeyLW(slug)));
-    if (saved && Array.isArray(saved.completed)) return saved;
-  } catch (e) {}
-  return {
-    completed: [],
-    activeIdx: 0
-  };
-}
-function saveProgressLW(slug, data) {
-  try {
-    localStorage.setItem(progressKeyLW(slug), JSON.stringify(data));
-  } catch (e) {}
-}
-
-/* ---------------------------------------------------------------- shared bullets (mirrors course-web.jsx) -- */
-const SCREENING_BULLETS_LW = ["Take a comprehensive medical history (bleeding disorders, neuromuscular diseases, medications).", "Screen for contraindications (pregnancy, active infections, known hypersensitivities).", "Assess psychological readiness and set realistic expectations."];
-const UPPER_LID_BULLETS_LW = ["Evaluate eyelid skin laxity and excess fat.", "Discuss surgical options (traditional vs. minimally invasive techniques).", "Ensure patient understands post-operative care and recovery."];
-const DEFAULT_RESOURCES_LW = [{
-  name: "Course Handbook.pdf",
-  size: "2.3 MB",
-  ext: "pdf"
-}, {
-  name: "Contraindications Screening Form.pdf",
-  size: "268 KB",
-  ext: "pdf"
-}, {
-  name: "Patient Consent Template.docx",
-  size: "88 KB",
-  ext: "doc"
-}, {
-  name: "Post-Treatment Care Sheet.pdf",
-  size: "245 KB",
-  ext: "pdf"
-}];
-
-/* ---------------------------------------------------------------- course data (mirrors course-web.jsx) -- */
-const COURSES_LW = {
-  "8d-lips": {
-    slug: "8d-lips",
-    title: "8D Lips",
-    bannerImage: "assets/clinic-treatment-collage.png",
-    points: 1000,
-    resources: DEFAULT_RESOURCES_LW,
-    sections: [{
-      title: "Module 1",
-      lessons: [{
-        name: "Diagnosis",
-        kind: "video",
-        desc: "How to diagnose, treat and most of all understand how to avoid Eyelid Ptosis from Botox treatment.",
-        bullets: SCREENING_BULLETS_LW
-      }, {
-        name: "Brow Ptosis",
-        kind: "video",
-        desc: "How to Select Patients & Conduct Medical Screening",
-        bullets: SCREENING_BULLETS_LW
-      }]
-    }, {
-      title: "Module 2",
-      lessons: [{
-        name: "Welcome & how to use this module",
-        kind: "video",
-        dur: "2:10",
-        desc: "A short orientation before you start injecting. This module is built to be worked through in order — the two lessons here set up the safety framework, then each folder takes one part of the technique in depth.",
-        bullets: ["Watch these two orientation lessons first — they set the safety baseline everything else assumes.", "Work the Injection Techniques folder in order; each technique builds on the needle control before it.", "Use the Case Studies to see the decisions in context, then keep the Downloads to hand in clinic."]
-      }, {
-        name: "Safety essentials (watch first)",
-        kind: "video",
-        dur: "6:48",
-        desc: "The non-negotiables before any lip treatment: anatomy you must know, the signs that mean stop, and the protocol you follow if something changes mid-treatment.",
-        bullets: ["Know the vascular anatomy of the lip and the danger zones by heart.", "Aspirate, inject slowly, and stop at the first sign of blanching or disproportionate pain.", "Keep hyaluronidase and the occlusion protocol within reach for every appointment."]
-      }],
-      subs: [{
-        title: "Injection Techniques",
-        lessons: [{
-          name: "Linear threading technique",
-          kind: "video",
-          dur: "4:32"
-        }, {
-          name: "Tenting technique",
-          kind: "video",
-          dur: "3:58"
-        }, {
-          name: "Cannula approach",
-          kind: "video",
-          dur: "6:11"
-        }]
-      }, {
-        title: "Case Studies",
-        lessons: [{
-          name: "Case 1: thin lips, first treatment",
-          kind: "video",
-          dur: "7:20"
-        }, {
-          name: "Case 2: correction of migrated filler",
-          kind: "video",
-          dur: "9:05"
-        }]
-      }, {
-        title: "Downloads & Resources",
-        lessons: [{
-          name: "Technique recipe cards",
-          kind: "pdf"
-        }, {
-          name: "Consent form templates",
-          kind: "pdf"
-        }]
-      }]
-    }, {
-      title: "Module 3",
-      lessons: [{
-        name: "Upper Eyelid Lift",
-        kind: "video",
-        desc: "Indications and Surgical Techniques for Upper Eyelid Lift",
-        bullets: UPPER_LID_BULLETS_LW
-      }, {
-        name: "Lower Eyelid Surgery",
-        kind: "video",
-        desc: "Approaches and Considerations for Lower Eyelid Surgery",
-        bullets: ["Assess lower eyelid for signs of aging and fat herniation.", "Discuss risks and benefits of surgical versus non-surgical treatments.", "Prepare patient for realistic outcomes and duration of results."]
-      }]
-    }, {
-      title: "Module 4",
-      lessons: [{
-        name: "Blepharospasm Treatment",
-        kind: "video",
-        desc: "Understanding Blepharospasm and Its Management",
-        bullets: ["Conduct neurological assessments to confirm diagnosis.", "Explore treatment options including botulinum toxin injections.", "Educate patients on the potential for recurrent symptoms."]
-      }]
-    }, {
-      title: "Bonus Module",
-      lessons: [{
-        name: "Bonus Module – Key Concepts",
-        kind: "video"
-      }]
-    }, {
-      title: "End of Success Path Quiz",
-      lessons: [{
-        name: "Botulinum Toxin Complications – End Of Course Quiz",
-        kind: "quiz"
-      }]
-    }]
-  }
-};
-function slugifyLW(title) {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
-function buildGenericCourseLW(params) {
-  const title = params.get("title") || "Course";
-  return {
-    slug: slugifyLW(title),
-    title: title,
-    bannerImage: "assets/clinic-lip-design.png",
-    points: 1000,
-    resources: DEFAULT_RESOURCES_LW,
-    sections: [{
-      title: "Module 1",
-      lessons: [{
-        name: "Getting Started",
-        kind: "video",
-        desc: "Foundations you need before your first patient session.",
-        bullets: SCREENING_BULLETS_LW
-      }]
-    }, {
-      title: "End of Success Path Quiz",
-      lessons: [{
-        name: title + " – End Of Course Quiz",
-        kind: "quiz"
-      }]
-    }]
-  };
-}
-function getCourseLW() {
-  const params = new URLSearchParams(window.location.search);
-  const slug = params.get("course");
-  if (slug && COURSES_LW[slug]) return COURSES_LW[slug];
-  if (params.get("title")) return buildGenericCourseLW(params);
-  return COURSES_LW["8d-lips"];
-}
-function courseUrlLW(course) {
-  return COURSES_LW[course.slug] ? "CourseWeb.html?course=" + course.slug : "CourseWeb.html?title=" + encodeURIComponent(course.title);
-}
-
-/* ---------------------------------------------------------------- flatten -- */
-function flattenSectionsLW(course) {
-  const flat = [];
-  course.sections.forEach((sec, si) => {
-    sec.lessons.forEach(l => {
-      Object.assign(l, {
-        sectionIndex: si,
-        sectionTitle: sec.title,
-        flatIdx: flat.length
-      });
-      flat.push(l);
-    });
-    (sec.subs || []).forEach(sub => {
-      sub.lessons.forEach(l => {
-        Object.assign(l, {
-          sectionIndex: si,
-          sectionTitle: sec.title,
-          subTitle: sub.title,
-          flatIdx: flat.length
-        });
-        flat.push(l);
-      });
-    });
-  });
-  return flat;
-}
-const DEFAULT_COMMENTS_LW = [{
-  name: "Dr. Maya Chen",
-  initials: "MC",
-  time: "2h ago",
-  text: "Great breakdown of the anatomy. I've found that a quick review of the patient's history before the procedure makes all the difference."
-}, {
-  name: "Dr. Jordan Lee",
-  initials: "JL",
-  time: "5h ago",
-  text: "The contraindication checklist is super helpful. Does anyone have a favourite way to document consent for first-time patients?"
-}, {
-  name: "Sarah Patel",
-  initials: "SP",
-  time: "1d ago",
-  text: "The case-study visuals are excellent. Would love to see more before/after examples in future modules."
-}];
-function initialsOfLW(name) {
-  return name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("");
-}
+const LW_COURSE = CDL.resolveCourse(LW_PARAMS);
 
 /* ---------------------------------------------------------------- crumb -- */
 function LWCrumb({
   course,
-  current,
+  item,
   outlineVisible,
-  onToggleOutline
+  onToggleOutline,
+  onShare,
+  locked
 }) {
+  const back = CDL.courseUrlAt(course, item);
   return /*#__PURE__*/React.createElement("div", {
     className: "lw-crumb-row"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lw-back-btn",
     "aria-label": "Back to course",
-    onClick: () => goLW(courseUrlLW(course))
+    onClick: () => goLW(back)
   }, /*#__PURE__*/React.createElement(IconLW, {
     name: "lucide:arrow-left",
     size: 19,
-    color: "var(--brand-navy)"
+    color: INK_LW.heading
   })), /*#__PURE__*/React.createElement("span", {
     className: "lw-crumb"
   }, /*#__PURE__*/React.createElement("a", {
-    onClick: () => goLW("MyLearning.html")
+    onClick: () => goLW(PFLW.myLearningUrl)
   }, "My Learning"), " \xA0/\xA0", " ", /*#__PURE__*/React.createElement("a", {
-    onClick: () => goLW(courseUrlLW(course))
+    onClick: () => goLW(back)
   }, course.title), " \xA0/\xA0", " ", /*#__PURE__*/React.createElement("span", {
     className: "current"
-  }, current.sectionTitle, ": ", current.name)), /*#__PURE__*/React.createElement("div", {
+  }, item.name)), /*#__PURE__*/React.createElement("div", {
     className: "lw-spacer"
-  }), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lw-outline-toggle",
-    onClick: onToggleOutline
-  }, /*#__PURE__*/React.createElement(IconLW, {
-    name: "lucide:list",
-    size: 17
-  }), outlineVisible ? "Hide outline" : "Course outline"));
-}
-
-/* ---------------------------------------------------------------- video media -- */
-function LWMedia({
-  course,
-  current,
-  playing,
-  onTogglePlay,
-  theater,
-  onToggleTheater,
-  onNext
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "lw-media"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: course.bannerImage,
-    alt: "Lesson video",
-    style: {
-      height: theater ? "min(76vh, 780px)" : "440px"
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "lw-media-label"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lw-media-context"
-  }, current.subTitle || current.sectionTitle), /*#__PURE__*/React.createElement("span", {
-    className: "lw-media-name"
-  }, current.name)), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lw-media-play",
-    "aria-label": playing ? "Pause" : "Play",
-    onClick: onTogglePlay
-  }, /*#__PURE__*/React.createElement(IconLW, {
-    name: playing ? "lucide:pause" : "lucide:play",
-    size: 36,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "lw-media-bar"
+  }), !locked && /*#__PURE__*/React.createElement("div", {
+    className: "lw-tools"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lw-media-btn",
-    "aria-label": playing ? "Pause" : "Play",
-    onClick: onTogglePlay
+    className: "lw-tool",
+    onClick: onShare
   }, /*#__PURE__*/React.createElement(IconLW, {
-    name: playing ? "lucide:pause" : "lucide:play",
-    size: 24,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "lw-media-time"
-  }, "10:32"), /*#__PURE__*/React.createElement("span", {
-    className: "lw-media-scrub"
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: "56%"
-    }
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "lw-media-time dim"
-  }, "8:04"), /*#__PURE__*/React.createElement("button", {
+    name: "lucide:share-2",
+    size: 16,
+    color: INK_LW.heading
+  }), "Share lesson"), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lw-media-btn",
-    "aria-label": "Next lesson",
-    onClick: onNext
+    className: "lw-tool",
+    onClick: onToggleOutline,
+    "aria-pressed": outlineVisible
   }, /*#__PURE__*/React.createElement(IconLW, {
-    name: "lucide:skip-forward",
+    name: "lucide:list",
+    size: 17,
+    color: INK_LW.heading
+  }), outlineVisible ? "Hide outline" : "Course outline")));
+}
+
+/* ---------------------------------------------------------------- video -- */
+function LWVideo({
+  item,
+  course,
+  onComplete,
+  onPrev,
+  onNext,
+  theatre,
+  onTheatre
+}) {
+  const ref = useRefLW(null);
+  const [v, setV] = useStateLW({
+    playing: false,
+    started: false,
+    ended: false,
+    muted: false,
+    cur: 0,
+    dur: 0
+  });
+  const [chrome, setChrome] = useStateLW(true);
+  const hideTimer = useRefLW(null);
+  const doneRef = useRefLW(false);
+  useEffectLW(() => {
+    doneRef.current = false;
+    setV({
+      playing: false,
+      started: false,
+      ended: false,
+      muted: false,
+      cur: 0,
+      dur: 0
+    });
+    setChrome(true);
+    const el = ref.current;
+    if (el) {
+      el.pause();
+      el.currentTime = 0;
+      el.muted = false;
+      el.load();
+    }
+    return () => clearTimeout(hideTimer.current);
+  }, [item.name]);
+  useEffectLW(() => {
+    if (!theatre) return;
+    const onKey = e => {
+      if (e.key === "Escape") onTheatre(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [theatre]);
+  const poke = () => {
+    setChrome(true);
+    clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setChrome(false), 2800);
+  };
+  const el = () => ref.current;
+  const toggle = () => {
+    const e = el();
+    if (!e) return;
+    if (e.paused) e.play().catch(() => {});else e.pause();
+    poke();
+  };
+  const skip = d => {
+    const e = el();
+    if (!e) return;
+    e.currentTime = Math.max(0, Math.min(e.duration || 0, e.currentTime + d));
+    poke();
+  };
+  const seek = ev => {
+    const e = el();
+    if (!e || !e.duration) return;
+    e.currentTime = Number(ev.target.value) / 1000 * e.duration;
+    poke();
+  };
+  const mute = () => {
+    const e = el();
+    if (!e) return;
+    e.muted = !e.muted;
+    setV(s => ({
+      ...s,
+      muted: e.muted
+    }));
+    poke();
+  };
+  const stop = e => e.stopPropagation();
+  const onTime = () => {
+    const e = el();
+    if (!e) return;
+    setV(s => ({
+      ...s,
+      cur: e.currentTime,
+      dur: e.duration || 0
+    }));
+    if (!doneRef.current && e.duration && e.currentTime / e.duration >= 0.9) {
+      doneRef.current = true;
+      onComplete();
+    }
+  };
+  const onEnded = () => {
+    setV(s => ({
+      ...s,
+      playing: false,
+      ended: true
+    }));
+    setChrome(true);
+    if (!doneRef.current) {
+      doneRef.current = true;
+      onComplete();
+    }
+  };
+  const pct = v.dur ? v.cur / v.dur * 100 : 0;
+  const showChrome = chrome || !v.playing;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cd-media cd-video" + (showChrome ? " chrome" : "") + (theatre ? " theatre" : ""),
+    "data-screen-label": theatre ? "Video · theatre" : "Video",
+    onClick: toggle,
+    onMouseMove: poke,
+    onMouseLeave: () => {
+      if (v.playing) setChrome(false);
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cd-vstage"
+  }, /*#__PURE__*/React.createElement("video", {
+    ref: ref,
+    src: CDL.VIDEO_SRC,
+    poster: course.still,
+    playsInline: true,
+    preload: "metadata",
+    onPlay: () => setV(s => ({
+      ...s,
+      playing: true,
+      started: true,
+      ended: false
+    })),
+    onPause: () => setV(s => ({
+      ...s,
+      playing: false
+    })),
+    onTimeUpdate: onTime,
+    onLoadedMetadata: onTime,
+    onEnded: onEnded
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cd-vshade",
+    "aria-hidden": "true"
+  }), !v.started && /*#__PURE__*/React.createElement("span", {
+    className: "cd-vdur",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:clock",
+    size: 12,
+    color: "#fff"
+  }), item.dur), /*#__PURE__*/React.createElement("div", {
+    className: "cd-vtop",
+    onClick: stop
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-vtop-title"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-vtop-eyebrow"
+  }, CDL.eyebrow(item, course)), /*#__PURE__*/React.createElement("br", null), item.name), theatre && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-vplain",
+    "aria-label": "Exit theatre mode",
+    onClick: () => onTheatre(false)
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:minimize",
+    size: 20,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "cd-vcenter",
+    onClick: stop
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-vplain",
+    "aria-label": "Previous lesson",
+    disabled: !onPrev,
+    onClick: () => onPrev && onPrev()
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:skip-back",
     size: 22,
     color: "#fff"
   })), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lw-media-btn",
-    "aria-label": theater ? "Exit large view" : "Enlarge video",
-    onClick: onToggleTheater
+    className: "cd-vskip",
+    "aria-label": "Back 10 seconds",
+    onClick: () => skip(-10)
   }, /*#__PURE__*/React.createElement(IconLW, {
-    name: theater ? "lucide:minimize" : "lucide:maximize",
+    name: "lucide:rotate-ccw",
     size: 22,
     color: "#fff"
+  }), /*#__PURE__*/React.createElement("span", null, "10")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-vbig" + (v.playing ? " paused" : ""),
+    "aria-label": v.ended ? "Replay" : v.playing ? "Pause" : "Play",
+    onClick: toggle
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: v.ended ? "lucide:rotate-ccw" : v.playing ? "lucide:pause" : "fluent:play-16-filled",
+    size: 28,
+    color: "#0B1024"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-vskip",
+    "aria-label": "Forward 10 seconds",
+    onClick: () => skip(10)
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:rotate-cw",
+    size: 22,
+    color: "#fff"
+  }), /*#__PURE__*/React.createElement("span", null, "10")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-vplain",
+    "aria-label": "Next lesson",
+    disabled: !onNext,
+    onClick: () => onNext && onNext()
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:skip-forward",
+    size: 22,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "cd-vbar",
+    onClick: stop
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-vtime"
+  }, CDL.fmtTime(v.cur)), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    className: "cd-vrange",
+    min: 0,
+    max: 1000,
+    value: Math.round(pct * 10),
+    onChange: seek,
+    "aria-label": "Seek",
+    style: {
+      "--fill": pct + "%"
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "cd-vtime end"
+  }, v.dur ? CDL.fmtTime(v.dur) : item.dur), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-vic",
+    "aria-label": v.muted ? "Unmute" : "Mute",
+    onClick: mute
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: v.muted ? "lucide:volume-x" : "lucide:volume-2",
+    size: 18,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-vic",
+    "aria-label": theatre ? "Exit theatre mode" : "Theatre mode",
+    onClick: () => onTheatre(!theatre)
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: theatre ? "lucide:minimize" : "lucide:maximize",
+    size: 17,
+    color: "#fff"
+  })))));
+}
+
+/* ---------------------------------------------------------------- PDF reader -- */
+function LWDoc({
+  item,
+  course,
+  onComplete,
+  onToast
+}) {
+  const pages = useMemoLW(() => CDL.pdfPages(item, course), [item.name]);
+  const [p, setP] = useStateLW(0);
+  useEffectLW(() => {
+    setP(0);
+  }, [item.name]);
+  useEffectLW(() => {
+    if (p === pages.length - 1) onComplete();
+  }, [p, pages.length]);
+  const pg = pages[p];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cd-media cd-doc",
+    "data-screen-label": "PDF"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cd-doc-bar"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-doc-name"
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:file-text",
+    size: 15,
+    color: "#fff"
+  }), item.name), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-vic",
+    "aria-label": "Download PDF",
+    onClick: () => onToast("Downloading " + item.name)
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:download",
+    size: 18,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "cd-page",
+    key: p
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cd-page-hd"
+  }, /*#__PURE__*/React.createElement("span", null, "PROfinity Academy"), /*#__PURE__*/React.createElement("span", null, course.title)), /*#__PURE__*/React.createElement("h3", null, pg.heading), pg.sub && /*#__PURE__*/React.createElement("p", {
+    className: "cd-page-sub"
+  }, pg.sub), pg.body && /*#__PURE__*/React.createElement("p", {
+    className: "cd-page-body"
+  }, pg.body), pg.rows && /*#__PURE__*/React.createElement("dl", {
+    className: "cd-page-rows"
+  }, pg.rows.map(([k, val]) => /*#__PURE__*/React.createElement("div", {
+    key: k
+  }, /*#__PURE__*/React.createElement("dt", null, k), /*#__PURE__*/React.createElement("dd", null, val)))), pg.checks && /*#__PURE__*/React.createElement("ul", {
+    className: "cd-page-checks"
+  }, pg.checks.map(c => /*#__PURE__*/React.createElement("li", {
+    key: c
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "bx",
+    "aria-hidden": "true"
+  }), c))), pg.fields && /*#__PURE__*/React.createElement("div", {
+    className: "cd-page-fields"
+  }, pg.fields.map((f, i) => /*#__PURE__*/React.createElement("div", {
+    key: f + i
+  }, /*#__PURE__*/React.createElement("span", null, f), /*#__PURE__*/React.createElement("i", null)))), /*#__PURE__*/React.createElement("div", {
+    className: "cd-page-ft"
+  }, "Page ", p + 1, " of ", pages.length)), /*#__PURE__*/React.createElement("div", {
+    className: "cd-doc-nav"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-doc-btn",
+    disabled: p === 0,
+    onClick: () => setP(p - 1),
+    "aria-label": "Previous page"
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:chevron-left",
+    size: 20,
+    color: INK_LW.text
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "cd-doc-pg"
+  }, p + 1, " / ", pages.length), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-doc-btn",
+    disabled: p === pages.length - 1,
+    onClick: () => setP(p + 1),
+    "aria-label": "Next page"
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: INK_LW.text
   }))));
 }
 
-/* ---------------------------------------------------------------- overview tab -- */
-function LWSteps({
-  current
+/* ---------------------------------------------------------------- quiz -- */
+function LWQuiz({
+  item,
+  onComplete
 }) {
-  const bullets = current.bullets || [];
-  if (bullets.length === 0) return null;
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h3", {
-    className: "lw-h3"
-  }, current.sectionTitle, " success steps"), /*#__PURE__*/React.createElement("div", {
-    className: "lw-steps"
-  }, bullets.map((text, i) => /*#__PURE__*/React.createElement("div", {
-    className: "lw-step",
-    key: i
+  const QUIZ = CDL.QUIZ;
+  const [i, setI] = useStateLW(0);
+  const [pick, setPick] = useStateLW(null);
+  const [checked, setChecked] = useStateLW(false);
+  const [score, setScore] = useStateLW(0);
+  const [finished, setFinished] = useStateLW(false);
+  const reset = () => {
+    setI(0);
+    setPick(null);
+    setChecked(false);
+    setScore(0);
+    setFinished(false);
+  };
+  useEffectLW(() => {
+    reset();
+  }, [item.name]);
+  const total = QUIZ.length;
+  const passed = score / total >= 0.8;
+  useEffectLW(() => {
+    if (finished && passed) onComplete();
+  }, [finished]);
+  const q = QUIZ[i];
+  const check = () => {
+    if (pick == null) return;
+    setChecked(true);
+    if (pick === q.a) setScore(s => s + 1);
+  };
+  const nextQ = () => {
+    if (i + 1 < total) {
+      setI(i + 1);
+      setPick(null);
+      setChecked(false);
+    } else setFinished(true);
+  };
+  if (finished) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "cd-media cd-quiz",
+      "data-screen-label": "Quiz result"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "cd-qresult"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "cd-qring" + (passed ? " pass" : "")
+    }, Math.round(score / total * 100), "%"), /*#__PURE__*/React.createElement("h3", null, passed ? "You passed" : "Not quite yet"), /*#__PURE__*/React.createElement("p", null, passed ? score + " of " + total + " correct — your " + item.section.name.toLowerCase() + " is complete." : score + " of " + total + " correct. You need 80% to pass — review the lessons and try again."), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "cd-btn cd-btn-outline",
+      onClick: reset
+    }, /*#__PURE__*/React.createElement(IconLW, {
+      name: "lucide:rotate-ccw",
+      size: 16,
+      color: INK_LW.heading
+    }), "Retake quiz")));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cd-media cd-quiz",
+    "data-screen-label": "Quiz"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cd-qhead"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "lw-step-num"
-  }, String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
-    className: "lw-step-text"
-  }, text)))));
+    className: "cd-qn"
+  }, "Question ", i + 1, " of ", total), /*#__PURE__*/React.createElement("span", {
+    className: "cd-qscore"
+  }, score, " correct")), /*#__PURE__*/React.createElement("div", {
+    className: "cd-track",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: i / total * 100 + "%"
+    }
+  })), /*#__PURE__*/React.createElement("h3", {
+    className: "cd-qq"
+  }, q.q), /*#__PURE__*/React.createElement("div", {
+    className: "cd-qopts",
+    role: "radiogroup",
+    "aria-label": "Answers"
+  }, q.opts.map((o, k) => {
+    const st = !checked ? pick === k ? " picked" : "" : k === q.a ? " right" : pick === k ? " wrong" : "";
+    return /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      role: "radio",
+      "aria-checked": pick === k,
+      key: o,
+      className: "cd-qopt" + st,
+      disabled: checked,
+      onClick: () => setPick(k)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "cd-qkey"
+    }, String.fromCharCode(65 + k)), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, o), checked && k === q.a && /*#__PURE__*/React.createElement(IconLW, {
+      name: "lucide:check",
+      size: 18,
+      color: INK_LW.success,
+      strokeWidth: 2.5
+    }), checked && pick === k && k !== q.a && /*#__PURE__*/React.createElement(IconLW, {
+      name: "lucide:x",
+      size: 18,
+      color: "#E5484D",
+      strokeWidth: 2.5
+    }));
+  })), checked && /*#__PURE__*/React.createElement("p", {
+    className: "cd-qwhy" + (pick === q.a ? " ok" : "")
+  }, pick === q.a ? "Correct. " : "Not quite. ", q.why), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-btn cd-btn-fill cd-qcta",
+    disabled: !checked && pick == null,
+    onClick: checked ? nextQ : check
+  }, checked ? i + 1 < total ? "Next question" : "See result" : "Check answer"));
 }
-function LWCommentRow({
+
+/* ---------------------------------------------------------------- resources -- */
+function LWResources({
+  onToast
+}) {
+  return /*#__PURE__*/React.createElement("section", {
+    "data-screen-label": "Resources"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "cd-body cd-res-intro"
+  }, "Downloads for this lesson — click to save a copy."), /*#__PURE__*/React.createElement("div", {
+    className: "cd-res-list"
+  }, CDL.RESOURCES.map(r => /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-res",
+    key: r.name,
+    onClick: () => onToast("Downloading " + r.name)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-res-ic"
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:file-text",
+    size: 20,
+    color: INK_LW.gold
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "cd-res-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-res-name"
+  }, r.name), /*#__PURE__*/React.createElement("span", {
+    className: "cd-res-meta"
+  }, "PDF · ", r.size)), /*#__PURE__*/React.createElement("span", {
+    className: "cd-res-dl"
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:download",
+    size: 16,
+    color: INK_LW.text
+  }))))));
+}
+
+/* ---------------------------------------------------------------- comments -- */
+function LWCommentText({
+  text
+}) {
+  const parts = text.split(/(@[A-Za-z.]+(?: [A-Z][A-Za-z.]+)?)/g);
+  return /*#__PURE__*/React.createElement("p", {
+    className: "cd-cmt-text"
+  }, parts.map((p, i) => p.charAt(0) === "@" ? /*#__PURE__*/React.createElement("span", {
+    key: i,
+    className: "cd-cmt-mention"
+  }, p) : p));
+}
+function LWComment({
   c,
-  onToggleLike
+  onLike,
+  onReply
 }) {
   return /*#__PURE__*/React.createElement("div", {
-    className: "lw-comment"
+    className: "cd-cmt"
+  }, /*#__PURE__*/React.createElement(AvatarLW, {
+    name: c.author.name,
+    src: c.author.avatar,
+    size: 38
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cd-cmt-main"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "lw-comment-head"
+    className: "cd-cmt-meta"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "lw-comment-avatar"
-  }, c.initials), /*#__PURE__*/React.createElement("span", {
-    className: "lw-comment-meta"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lw-comment-name"
-  }, c.name), /*#__PURE__*/React.createElement("span", {
-    className: "lw-comment-time"
-  }, c.time))), /*#__PURE__*/React.createElement("p", {
-    className: "lw-comment-text"
-  }, c.text), /*#__PURE__*/React.createElement("div", {
-    className: "lw-comment-actions"
+    className: "cd-cmt-name"
+  }, c.author.name), /*#__PURE__*/React.createElement("span", {
+    className: "cd-cmt-time"
+  }, c.time)), /*#__PURE__*/React.createElement(LWCommentText, {
+    text: c.text
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cd-cmt-actions"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: c.liked ? "liked" : "",
-    onClick: onToggleLike
-  }, c.liked ? "Liked" : "Like", c.likes ? " · " + c.likes : ""), /*#__PURE__*/React.createElement("button", {
-    type: "button"
-  }, "Reply")));
+    className: "cd-cmt-act" + (c.liked ? " on" : ""),
+    "aria-pressed": !!c.liked,
+    onClick: onLike
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:heart",
+    size: 15,
+    color: c.liked ? INK_LW.gold : INK_LW.muted
+  }), "Like", c.likes ? ` · ${c.likes}` : ""), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-cmt-act",
+    onClick: onReply
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:message-circle",
+    size: 15,
+    color: INK_LW.muted
+  }), "Reply"))));
 }
-function LWOverview({
-  current,
-  comments,
-  onAddComment,
-  onToggleLike
+let _lwseq = 0;
+function LWComments({
+  lessonName,
+  courseSlug
 }) {
+  const [comments, setComments] = useStateLW(() => CDL.DEFAULT_COMMENTS.map(c => ({
+    ...c,
+    _id: "lw" + _lwseq++
+  })));
   const [draft, setDraft] = useStateLW("");
-  /* First comment opens the shared "Share this comment?" dialog
-     (window.PFCommentShare); a remembered decision skips it. */
-  const prompt = window.PFCommentShare.useSharePrompt(onAddComment, {
+  const inputRef = useRefLW(null);
+  const me = {
+    name: CDL.ME.name,
+    avatar: CDL.ME.avatar
+  };
+  /* First comment asks "Share this comment?" (shared prompt, window.PFCommentShare);
+     after "Remember my decision" the saved choice is applied silently. */
+  const prompt = window.PFCommentShare.useSharePrompt((text, share) => {
+    setComments(all => [{
+      author: me,
+      time: "Just now",
+      text,
+      likes: 0,
+      liked: false,
+      sharedToNewsfeed: share,
+      _id: "lw" + _lwseq++
+    }, ...all]);
+    if (share) window.PFCommentShare.shareToNewsfeed({
+      author: me,
+      courseSlug,
+      text
+    });
+  }, {
     variant: "dialog"
   });
-  function submit() {
-    if (!draft.trim()) return;
+  const like = id => setComments(all => all.map(c => c._id === id ? {
+    ...c,
+    liked: !c.liked,
+    likes: (c.likes || 0) + (c.liked ? -1 : 1)
+  } : c));
+  const reply = c => {
+    setDraft("@" + c.author.name + " ");
+    if (inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.scrollIntoView({
+        block: "center",
+        behavior: "smooth"
+      });
+    }
+  };
+  const post = () => {
     const text = draft.trim();
+    if (!text) return;
     setDraft("");
     prompt.submit(text);
-  }
-  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", {
-    className: "lw-h1"
-  }, current.name), /*#__PURE__*/React.createElement("p", {
-    className: "lw-desc"
-  }, current.desc || "How to work through this part of the course."), /*#__PURE__*/React.createElement(LWSteps, {
-    current: current
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "lw-divider"
-  }), /*#__PURE__*/React.createElement("h3", {
-    className: "lw-h3"
-  }, comments.length, " Comment", comments.length === 1 ? "" : "s"), /*#__PURE__*/React.createElement("div", {
-    className: "lw-composer"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: ME_LW.avatar,
-    alt: ""
+  };
+  return /*#__PURE__*/React.createElement("section", {
+    "data-screen-label": "Comments"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cd-sec"
+  }, /*#__PURE__*/React.createElement("h2", null, comments.length, " Comment", comments.length === 1 ? "" : "s")), /*#__PURE__*/React.createElement("form", {
+    className: "cd-composer",
+    onSubmit: e => {
+      e.preventDefault();
+      post();
+    }
+  }, /*#__PURE__*/React.createElement(AvatarLW, {
+    name: CDL.ME.name,
+    src: CDL.ME.avatar,
+    size: 34
   }), /*#__PURE__*/React.createElement("input", {
-    placeholder: "Leave a comment…",
-    "aria-label": "Leave a comment",
+    ref: inputRef,
     value: draft,
     onChange: e => setDraft(e.target.value),
-    onKeyDown: e => e.key === "Enter" && submit()
+    placeholder: "Comment on " + lessonName + "…",
+    "aria-label": "Write a comment"
   }), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    onClick: submit
-  }, "Post")), /*#__PURE__*/React.createElement(window.PFCommentShare.Note, {
-    className: "lw-composer-note"
-  }), prompt.modal, /*#__PURE__*/React.createElement("div", {
-    className: "lw-comments"
-  }, comments.map((c, i) => /*#__PURE__*/React.createElement(LWCommentRow, {
+    type: "submit",
+    className: "cd-send",
+    "aria-label": "Post comment",
+    disabled: !draft.trim()
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:send",
+    size: 17,
+    color: INK_LW.onNavy
+  }))), /*#__PURE__*/React.createElement(window.PFCommentShare.Note, {
+    className: "cd-composer-note"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cd-cmts"
+  }, comments.map(c => /*#__PURE__*/React.createElement(LWComment, {
+    key: c._id,
     c: c,
-    key: i,
-    onToggleLike: () => onToggleLike(i)
-  }))));
+    onLike: () => like(c._id),
+    onReply: () => reply(c)
+  }))), prompt.modal);
+}
+function LWAvaCard({
+  lessonName,
+  courseTitle
+}) {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "cd-ava",
+    "data-screen-label": "Talk this through with Ava"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "orb"
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:sparkles",
+    size: 22,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, "Talk this through with Ava"), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, "Stuck on a landmark or unsure how this applies to your patients? Ava knows where you are in the course."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-coach-link",
+    "data-coach": `I'm on the lesson "${lessonName}" in ${courseTitle}. Quiz me on the key points and tell me what to practise next.`
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "#fff"
+  }), "Ask Ava")));
 }
 
-/* ---------------------------------------------------------------- resources tab -- */
-function LWDocIcon({
-  ext
+/* ---------------------------------------------------------------- share modal -- */
+function LWShareModal({
+  item,
+  course,
+  url,
+  onClose,
+  onDone
 }) {
-  const map = {
-    pdf: "lucide:file-text",
-    doc: "lucide:file-type-2",
-    ppt: "lucide:presentation"
-  };
-  return /*#__PURE__*/React.createElement(IconLW, {
-    name: map[ext] || "lucide:file",
-    size: 21,
-    color: "var(--brand-gold)"
-  });
-}
-function LWResources({
-  resources
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "lw-docs"
-  }, resources.map((r, i) => /*#__PURE__*/React.createElement("div", {
-    className: "lw-doc",
-    key: i
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lw-doc-icon"
-  }, /*#__PURE__*/React.createElement(LWDocIcon, {
-    ext: r.ext
-  })), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1,
-      minWidth: 0,
-      display: "flex",
-      flexDirection: "column",
-      gap: 3
+  useEffectLW(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const title = item.name + " · " + course.title;
+  const shareNative = () => {
+    if (navigator.share) {
+      navigator.share({
+        title,
+        text: "Take a look at this lesson on PROfinity",
+        url
+      }).catch(() => {});
+      onDone("");
+      return;
     }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lw-doc-title"
-  }, r.name), /*#__PURE__*/React.createElement("span", {
-    className: "lw-doc-meta"
-  }, r.size)), /*#__PURE__*/React.createElement(IconLW, {
-    name: "lucide:download",
-    size: 20,
-    color: "var(--brand-navy)"
-  }))));
-}
-
-/* ---------------------------------------------------------------- footer -- */
-function LWFooter({
-  idx,
-  isDone,
-  hasNext,
-  onPrev,
-  onComplete,
-  onNext
-}) {
+    CDL.copyText(url);
+    onDone("Lesson link copied");
+  };
+  const tiles = [{
+    k: "copy",
+    label: "Copy link",
+    icon: "lucide:link",
+    run: () => {
+      CDL.copyText(url);
+      onDone("Lesson link copied");
+    }
+  }, {
+    k: "feed",
+    label: "Newsfeed",
+    icon: "lucide:newspaper",
+    run: () => onDone("Shared to your newsfeed")
+  }, {
+    k: "dm",
+    label: "Messages",
+    icon: "lucide:message-circle",
+    run: () => goLW("Messages.html")
+  }, {
+    k: "more",
+    label: "More",
+    icon: "lucide:more-horizontal",
+    run: shareNative
+  }];
   return /*#__PURE__*/React.createElement("div", {
-    className: "lw-footer"
+    className: "cd-share",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Share lesson",
+    "data-screen-label": "Share lesson"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lw-btn-prev",
-    disabled: idx === 0,
-    onClick: onPrev
-  }, "Previous"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      flex: 1
-    }
-  }), /*#__PURE__*/React.createElement("button", {
+    className: "cd-share-scrim",
+    "aria-label": "Close",
+    onClick: onClose
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cd-share-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cd-share-hd"
+  }, /*#__PURE__*/React.createElement("h3", null, "Share lesson"), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lw-btn-complete" + (isDone ? " done" : ""),
-    onClick: onComplete
+    className: "cd-share-x",
+    "aria-label": "Close",
+    onClick: onClose
   }, /*#__PURE__*/React.createElement(IconLW, {
-    name: isDone ? "lucide:circle-check-big" : "lucide:check",
-    size: 18
-  }), isDone ? "Completed" : "Mark as complete"), /*#__PURE__*/React.createElement("button", {
+    name: "lucide:x",
+    size: 18,
+    color: INK_LW.text
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "cd-share-prev"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: course.still,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cd-share-prev-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-share-prev-eyebrow"
+  }, CDL.eyebrow(item, course)), /*#__PURE__*/React.createElement("span", {
+    className: "cd-share-prev-name"
+  }, item.name), /*#__PURE__*/React.createElement("span", {
+    className: "cd-share-prev-course"
+  }, course.title))), /*#__PURE__*/React.createElement("div", {
+    className: "cd-share-sec"
+  }, "Send in Messages"), /*#__PURE__*/React.createElement("div", {
+    className: "cd-share-rail"
+  }, CDL.SHARE_CONTACTS.map(c => /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lw-btn-next" + (isDone ? " ready" : ""),
-    title: isDone ? "" : "Mark this lesson complete to continue",
-    onClick: onNext
-  }, !hasNext ? "Finish course" : "Next lesson", /*#__PURE__*/React.createElement(IconLW, {
-    name: "lucide:arrow-right",
-    size: 18
-  })));
+    className: "cd-share-person",
+    key: c.id,
+    onClick: () => onDone("Lesson sent to " + c.name)
+  }, /*#__PURE__*/React.createElement(AvatarLW, {
+    name: c.name,
+    src: c.avatar,
+    size: 52
+  }), /*#__PURE__*/React.createElement("span", null, c.name)))), /*#__PURE__*/React.createElement("div", {
+    className: "cd-share-sec"
+  }, "Share to"), /*#__PURE__*/React.createElement("div", {
+    className: "cd-share-tiles"
+  }, tiles.map(t => /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-share-tile",
+    key: t.k,
+    onClick: t.run
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-share-tile-ic"
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: t.icon,
+    size: 22,
+    color: INK_LW.text
+  })), /*#__PURE__*/React.createElement("span", null, t.label)))), /*#__PURE__*/React.createElement("div", {
+    className: "cd-share-link"
+  }, /*#__PURE__*/React.createElement("code", null, url), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-btn cd-btn-fill",
+    onClick: () => {
+      CDL.copyText(url);
+      onDone("Lesson link copied");
+    }
+  }, "Copy"))));
 }
 
 /* ---------------------------------------------------------------- outline sidebar -- */
 function LWOutlineRow({
   lesson,
-  isCurrent,
-  isDone,
+  current,
+  done,
   sub,
   onSelect
 }) {
-  const icon = isDone ? "lucide:circle-check-big" : lesson.kind === "pdf" ? "lucide:file-text" : isCurrent ? "lucide:circle-play" : "lucide:play";
-  const color = isDone ? "var(--success)" : isCurrent ? "var(--brand-navy)" : "var(--gray-450)";
+  const icon = done ? "lucide:check" : lesson.kind === "pdf" ? "lucide:file-text" : lesson.kind === "quiz" ? "lucide:list-checks" : "fluent:play-16-filled";
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lw-outline-row" + (sub ? " sub" : "") + (isCurrent ? " current" : ""),
+    className: "lw-orow" + (sub ? " sub" : "") + (current ? " current" : "") + (done ? " done" : ""),
+    "aria-current": current ? "true" : undefined,
     onClick: onSelect
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lw-omark" + (done ? " done" : "")
   }, /*#__PURE__*/React.createElement(IconLW, {
     name: icon,
-    size: 16,
-    color: color
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "lw-outline-row-name"
+    size: 12,
+    color: done ? INK_LW.success : INK_LW.gold,
+    strokeWidth: done ? 2.5 : undefined
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lw-orow-name"
   }, lesson.name), /*#__PURE__*/React.createElement("span", {
-    className: "lw-outline-row-dur"
-  }, lesson.dur || (lesson.kind === "pdf" ? "PDF" : lesson.kind === "quiz" ? "Quiz" : "")));
+    className: "lw-orow-dur"
+  }, lesson.dur));
 }
-function LWOutlineList({
-  course,
-  currentFlatIdx,
-  completed,
-  onSelect
+function LWOutlineLevel({
+  level,
+  done,
+  currentName,
+  onSelect,
+  openInit
 }) {
+  const [open, setOpen] = useStateLW(openInit);
+  const pct = CDL.pct(CDL.levelLessonNames(level), done);
+  const empty = !level.sections || level.sections.length === 0;
   return /*#__PURE__*/React.createElement("div", {
-    className: "lw-outline-list"
-  }, course.sections.map((sec, si) => /*#__PURE__*/React.createElement("div", {
-    key: si
+    className: "lw-olevel"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lw-olevel-hd",
+    "aria-expanded": open,
+    onClick: () => setOpen(o => !o)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lw-olevel-name"
+  }, level.quiz || !level.name ? level.title : level.title + " · " + level.name), !empty && /*#__PURE__*/React.createElement("span", {
+    className: "lw-olevel-pct"
+  }, pct, "%"), empty && /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:lock",
+    size: 13,
+    color: INK_LW.muted
+  }), /*#__PURE__*/React.createElement(IconLW, {
+    name: open ? "lucide:chevron-up" : "lucide:chevron-down",
+    size: 16,
+    color: INK_LW.muted
+  })), open && (empty ? /*#__PURE__*/React.createElement("div", {
+    className: "lw-ounlock"
+  }, level.unlock || "Unlocks when you complete the previous level.") : level.sections.map(sec => /*#__PURE__*/React.createElement("div", {
+    className: "lw-osection",
+    key: sec.name
   }, /*#__PURE__*/React.createElement("div", {
-    className: "lw-outline-module"
-  }, sec.title), sec.lessons.map(l => /*#__PURE__*/React.createElement(LWOutlineRow, {
-    key: l.flatIdx,
+    className: "lw-osection-name"
+  }, sec.name), sec.lessons.map(l => /*#__PURE__*/React.createElement(LWOutlineRow, {
+    key: l.name,
     lesson: l,
-    isCurrent: l.flatIdx === currentFlatIdx,
-    isDone: completed.has(l.flatIdx),
-    onSelect: () => onSelect(l.flatIdx)
-  })), (sec.subs || []).map((sub, subi) => /*#__PURE__*/React.createElement("div", {
-    key: subi
+    current: currentName === l.name,
+    done: done.indexOf(l.name) !== -1,
+    onSelect: () => onSelect(l.name)
+  })), (sec.subs || []).map(sub => /*#__PURE__*/React.createElement("div", {
+    key: sub.name
   }, /*#__PURE__*/React.createElement("div", {
-    className: "lw-outline-folder"
+    className: "lw-ofolder"
   }, /*#__PURE__*/React.createElement(IconLW, {
     name: "lucide:folder",
-    size: 17,
-    color: "var(--brand-gold)"
-  }), sub.title), sub.lessons.map(l => /*#__PURE__*/React.createElement(LWOutlineRow, {
-    key: l.flatIdx,
+    size: 15,
+    color: INK_LW.gold
+  }), sub.name, /*#__PURE__*/React.createElement("span", {
+    className: "lw-ofolder-n"
+  }, sub.lessons.length)), sub.lessons.map(l => /*#__PURE__*/React.createElement(LWOutlineRow, {
+    key: l.name,
     lesson: l,
     sub: true,
-    isCurrent: l.flatIdx === currentFlatIdx,
-    isDone: completed.has(l.flatIdx),
-    onSelect: () => onSelect(l.flatIdx)
-  })))))));
+    current: currentName === l.name,
+    done: done.indexOf(l.name) !== -1,
+    onSelect: () => onSelect(l.name)
+  }))))))));
 }
-function LWOutlineAside({
+function LWOutline({
   course,
   flat,
-  currentFlatIdx,
-  completed,
-  onSelect
+  item,
+  done,
+  onSelect,
+  onOpenCourse
 }) {
-  const current = flat[currentFlatIdx];
-  const inModule = flat.filter(l => l.sectionTitle === current.sectionTitle);
-  const posInModule = inModule.indexOf(current) + 1;
-  const pct = flat.length ? Math.round(completed.size / flat.length * 100) : 0;
+  const doneCount = flat.filter(l => done.indexOf(l.name) !== -1).length;
+  const pct = Math.round(doneCount / flat.length * 100);
   return /*#__PURE__*/React.createElement("aside", {
-    className: "lw-outline"
+    className: "lw-outline",
+    "data-screen-label": "Course outline"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lw-outline-card"
   }, /*#__PURE__*/React.createElement("div", {
@@ -659,136 +1035,288 @@ function LWOutlineAside({
     className: "lw-outline-title"
   }, "Course outline"), /*#__PURE__*/React.createElement("span", {
     className: "lw-outline-pos"
-  }, posInModule, " of ", inModule.length, " in module")), /*#__PURE__*/React.createElement("span", {
-    className: "lw-outline-bar"
+  }, doneCount, " of ", flat.length, " completed")), /*#__PURE__*/React.createElement("div", {
+    className: "cd-track",
+    style: {
+      marginTop: 12
+    }
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: pct + "%"
     }
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "lw-outline-pct"
-  }, pct, "% complete")), /*#__PURE__*/React.createElement(LWOutlineList, {
-    course: course,
-    currentFlatIdx: currentFlatIdx,
-    completed: completed,
-    onSelect: onSelect
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "lw-ava-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lw-ava-head"
-  }, /*#__PURE__*/React.createElement(SparkLW, {
-    size: 20,
-    color: "var(--brand-gold)"
-  }), /*#__PURE__*/React.createElement("span", null, "Stuck on this lesson?")), /*#__PURE__*/React.createElement("p", {
-    className: "lw-ava-desc"
-  }, "Ask Ava to explain the technique in her own words, or quiz you on it."), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lw-ava-btn",
-    onClick: () => goLW("Agent.html")
-  }, "Ask Ava", /*#__PURE__*/React.createElement(IconLW, {
+    className: "lw-outline-open",
+    onClick: onOpenCourse
+  }, "Open course page", /*#__PURE__*/React.createElement(IconLW, {
     name: "lucide:arrow-up-right",
-    size: 16
-  }))));
+    size: 14,
+    color: INK_LW.heading
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "lw-outline-list"
+  }, course.levels.map((lvl, i) => /*#__PURE__*/React.createElement(LWOutlineLevel, {
+    key: lvl.title,
+    level: lvl,
+    done: done,
+    currentName: item.name,
+    onSelect: onSelect,
+    openInit: i === item.li || !!lvl.open
+  })))));
+}
+
+/* ---------------------------------------------------------------- locked course -- */
+function LWLocked({
+  course,
+  total
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lw-page",
+    "data-screen-label": "Lesson (web) · locked"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lw-crumb-row"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lw-back-btn",
+    "aria-label": "Back to course",
+    onClick: () => goLW(CDL.courseUrl(course))
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:arrow-left",
+    size: 19,
+    color: INK_LW.heading
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lw-crumb"
+  }, /*#__PURE__*/React.createElement("a", {
+    onClick: () => goLW(PFLW.myLearningUrl)
+  }, "My Learning"), " \xA0/\xA0 ", /*#__PURE__*/React.createElement("a", {
+    onClick: () => goLW(CDL.courseUrl(course))
+  }, course.title))), /*#__PURE__*/React.createElement("section", {
+    className: "lw-card lw-locked"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cd-paywall"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-paywall-ic"
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:lock",
+    size: 20,
+    color: INK_LW.gold
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "cd-paywall-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-eyebrow"
+  }, "Paid course"), /*#__PURE__*/React.createElement("h3", {
+    className: "cd-paywall-title"
+  }, "Buy this course to start its lessons"), /*#__PURE__*/React.createElement("p", {
+    className: "cd-paywall-body"
+  }, course.title, " is a paid course. Buy it once for lifetime access to every level, module and lesson, the resources and the success path quiz."), /*#__PURE__*/React.createElement("ul", {
+    className: "cd-paywall-list"
+  }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:check",
+    size: 14,
+    color: INK_LW.gold,
+    strokeWidth: 2.5
+  }), total, " lessons across ", course.levels.filter(l => !l.quiz).length, " levels"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:check",
+    size: 14,
+    color: INK_LW.gold,
+    strokeWidth: 2.5
+  }), "One-time payment · lifetime access"), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:check",
+    size: 14,
+    color: INK_LW.gold,
+    strokeWidth: 2.5
+  }), "Certificate on completion")), /*#__PURE__*/React.createElement("div", {
+    className: "cd-paywall-row"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-paywall-price"
+  }, /*#__PURE__*/React.createElement("small", null, "One-time"), "£", course.price), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 10
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-btn cd-btn-outline",
+    onClick: () => goLW(CDL.courseUrl(course))
+  }, "Browse the course"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-btn cd-btn-gold",
+    onClick: () => goLW(CDL.checkoutUrl(course))
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:shopping-bag",
+    size: 16,
+    color: INK_LW.onGold
+  }), "Buy course")))))));
 }
 
 /* ---------------------------------------------------------------- app -- */
 function LessonWebApp() {
-  const course = getCourseLW();
-  const flat = flattenSectionsLW(course);
-  const totalItems = flat.length;
-  const params = new URLSearchParams(window.location.search);
-  const requestedIdx = parseInt(params.get("lesson"), 10);
-  const initialProgress = loadProgressLW(course.slug);
-  const startIdx = !isNaN(requestedIdx) ? Math.min(Math.max(requestedIdx, 0), totalItems - 1) : Math.min(initialProgress.activeIdx || 0, totalItems - 1);
-  const [idx, setIdx] = useStateLW(startIdx);
-  const [tab, setTab] = useStateLW("overview");
-  const [playing, setPlaying] = useStateLW(true);
-  const [theater, setTheater] = useStateLW(false);
-  const [outlineVisible, setOutlineVisible] = useStateLW(false);
-  const [completed, setCompleted] = useStateLW(new Set(initialProgress.completed || []));
-  const [comments, setComments] = useStateLW(() => DEFAULT_COMMENTS_LW.map(c => ({
-    ...c,
-    liked: false,
-    likes: 0
-  })));
+  const course = LW_COURSE;
+  const flat = useMemoLW(() => CDL.flatten(course), []);
+  const [done, markDone] = PFLW.useLessonsDone();
+  const purchased = PFLW.usePurchased();
+  const locked = course.price > 0 && purchased.indexOf(course.slug) === -1;
+
+  /* lesson = URL position (mobile or legacy flat shape) → web resume pointer → first not done */
+  const [idx, setIdx] = useStateLW(() => {
+    const fromUrl = CDL.lessonIdxFromParams(flat, LW_PARAMS);
+    if (fromUrl != null) return fromUrl;
+    const saved = PFLW.readProgress(course.slug);
+    if (typeof saved.activeIdx === "number" && flat[saved.activeIdx]) return saved.activeIdx;
+    const doneNow = PFLW.readDone();
+    const i = flat.findIndex(l => doneNow.indexOf(l.name) === -1);
+    return i === -1 ? 0 : i;
+  });
+  const item = flat[idx];
+  const next = flat[idx + 1] || null;
+  const isDone = done.indexOf(item.name) !== -1;
+  const kind = item.kind || "video";
+  const content = CDL.genericContent(item);
+  const [tab, setTab] = useStateLW("details");
+  const [theatre, setTheatre] = useStateLW(false);
+  const [outline, setOutline] = useStateLW(() => {
+    try {
+      return localStorage.getItem("pf-lesson-outline") !== "0";
+    } catch (e) {
+      return true;
+    }
+  });
+  const [shareOpen, setShareOpen] = useStateLW(() => LW_PARAMS.get("share") === "1");
+  const [celebrate, setCelebrate] = useStateLW(false);
   const [toast, setToast] = useStateLW(null);
   const toastTimer = useRefLW(null);
-  const current = flat[idx];
-  useEffectLW(() => {
-    document.title = "PROfinity — " + current.name;
-  }, [idx]);
-  useEffectLW(() => {
-    saveProgressLW(course.slug, {
-      completed: Array.from(completed),
-      activeIdx: idx
-    });
-  }, [completed, idx]);
-  useEffectLW(() => () => clearTimeout(toastTimer.current), []);
-  function showToast(text) {
+  const showToast = msg => {
+    setToast(msg);
     clearTimeout(toastTimer.current);
-    setToast(text);
-    toastTimer.current = setTimeout(() => setToast(null), 2600);
-  }
-  function selectLesson(nextIdx) {
-    setIdx(nextIdx);
-    setTab("overview");
-    setPlaying(true);
-  }
-  function handlePrev() {
-    if (idx > 0) selectLesson(idx - 1);
-  }
-  function handleComplete() {
-    if (completed.has(idx)) return;
-    setCompleted(prev => new Set(prev).add(idx));
-    showToast("Lesson marked complete");
-  }
-  function handleNext() {
-    if (!completed.has(idx)) {
-      showToast("Mark this lesson complete first");
-      return;
+    toastTimer.current = setTimeout(() => setToast(null), 2400);
+  };
+  const toggleOutline = () => setOutline(o => {
+    try {
+      localStorage.setItem("pf-lesson-outline", o ? "0" : "1");
+    } catch (e) {}
+    return !o;
+  });
+  useEffectLW(() => {
+    document.title = "PROfinity — My Learning · " + item.name;
+  }, [idx]);
+  useEffectLW(() => () => clearTimeout(toastTimer.current), []);
+
+  /* URL ↔ lesson: selecting pushes the mobile-shape URL; back/forward follow it */
+  const urlFor = i => {
+    try {
+      const u = new URL(window.location.href);
+      const it = flat[i];
+      /* rebuilt so the query reads course → title/price/dur → position */
+      const rest = new URLSearchParams(u.search);
+      ["course", "level", "module", "lesson", "sub", "share", "play"].forEach(k => rest.delete(k));
+      const q = new URLSearchParams({
+        course: course.slug
+      });
+      rest.forEach((v, k) => q.set(k, v));
+      q.set("level", it.li);
+      q.set("module", it.si);
+      q.set("lesson", it.ni);
+      if (it.subIdx != null) q.set("sub", it.subIdx);
+      u.search = q.toString();
+      return u;
+    } catch (e) {
+      return null;
     }
-    const nextLesson = flat[idx + 1];
-    if (!nextLesson) {
-      goLW(courseUrlLW(course));
-      return;
-    }
-    const movingModule = nextLesson.sectionTitle !== current.sectionTitle;
-    selectLesson(idx + 1);
-    showToast(movingModule ? "Module complete — opening " + nextLesson.sectionTitle : "Next lesson");
-  }
-  function handleAddComment(text, sharedToNewsfeed) {
-    setComments(all => [{
-      name: ME_LW.name,
-      initials: initialsOfLW(ME_LW.name),
-      time: "Just now",
-      text,
-      liked: false,
-      likes: 0,
-      sharedToNewsfeed
-    }, ...all]);
-    if (sharedToNewsfeed) window.PFCommentShare.shareToNewsfeed({
-      author: ME_LW,
-      courseSlug: course.slug,
-      text
+  };
+  useEffectLW(() => {
+    const u = urlFor(idx);
+    if (u) history.replaceState({
+      lwIdx: idx
+    }, "", u);
+    const onPop = () => {
+      const i = CDL.lessonIdxFromParams(flat, new URLSearchParams(window.location.search));
+      if (i != null) {
+        setIdx(i);
+        setTab("details");
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  /* web resume pointer: completed = flat indices of the shared name-keyed store */
+  const writeProgress = (doneNames, active) => {
+    PFLW.writeProgress(course.slug, {
+      completed: flat.map((l, i) => doneNames.indexOf(l.name) !== -1 ? i : -1).filter(i => i !== -1),
+      activeIdx: active
     });
-  }
-  function handleToggleLike(i) {
-    setComments(all => all.map((c, ci) => ci === i ? {
-      ...c,
-      liked: !c.liked,
-      likes: c.likes + (c.liked ? -1 : 1)
-    } : c));
-  }
-  const isDone = completed.has(idx);
-  const hasNext = idx < totalItems - 1;
-  const gridCols = outlineVisible ? "minmax(0,1fr) 380px" : "minmax(0,1fr)";
-  return /*#__PURE__*/React.createElement("div", {
-    className: "app",
-    style: {
-      "--action-primary": "var(--brand-navy)",
-      "--action-primary-hover": "var(--brand-navy-700)"
+  };
+  useEffectLW(() => {
+    writeProgress(done, idx);
+  }, [idx, done]);
+  const select = i => {
+    if (i === idx || !flat[i]) return;
+    setIdx(i);
+    setTab("details");
+    setTheatre(false);
+    const u = urlFor(i);
+    if (u) history.pushState({
+      lwIdx: i
+    }, "", u);
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    });
+  };
+  const selectByName = name => {
+    const i = flat.findIndex(l => l.name === name);
+    if (i !== -1) select(i);
+  };
+  const onMarkDone = name => {
+    markDone(name);
+    writeProgress(PFLW.readDone(), idx);
+  };
+  const complete = () => {
+    if (isDone) return;
+    onMarkDone(item.name);
+    /* the last lesson (the success path quiz) completing IS finishing the course */
+    if (!next) {
+      showToast("Course complete — certificate on its way 🎓");
+      setCelebrate(true);
+      return;
     }
-  }, /*#__PURE__*/React.createElement(TopNavLW, {
+    showToast(kind === "quiz" ? "Quiz passed — lesson complete" : kind === "pdf" ? "Document reviewed ✓" : "Lesson complete ✓");
+  };
+  const advance = () => {
+    onMarkDone(item.name);
+    if (next) {
+      const groupKey = l => l.li + ":" + l.si + ":" + (l.subIdx == null ? "" : l.subIdx);
+      const moving = groupKey(next) !== groupKey(item);
+      select(idx + 1);
+      if (moving) showToast("Module complete — opening " + (next.sub ? next.sub.name : next.section.name));
+    } else {
+      showToast("Course complete — certificate on its way 🎓");
+      setCelebrate(true);
+    }
+  };
+  const quizLocked = kind === "quiz" && !isDone;
+  const cta = quizLocked ? "Pass the quiz to finish" : next ? isDone ? "Next lesson" : "Mark complete & continue" : isDone ? "Course complete" : "Finish course";
+  const kindIcon = kind === "pdf" ? "lucide:file-text" : kind === "quiz" ? "lucide:list-checks" : "fluent:play-16-filled";
+
+  /* Up next: the next module (first group after this lesson's group) */
+  const groupKeyLW = l => l.li + ":" + l.si + ":" + (l.subIdx == null ? "" : l.subIdx);
+  const nextModIdx = flat.findIndex((l, i) => i > idx && groupKeyLW(l) !== groupKeyLW(item));
+  const nextMod = nextModIdx === -1 ? null : flat[nextModIdx];
+  const nextModCount = nextMod ? flat.filter(l => groupKeyLW(l) === groupKeyLW(nextMod)).length : 0;
+  const nextModName = nextMod ? nextMod.sub ? nextMod.sub.name : nextMod.section.name : "";
+  const shareUrl = (() => {
+    const u = urlFor(idx);
+    return u ? u.href : window.location.href;
+  })();
+  const shareDone = msg => {
+    setShareOpen(false);
+    if (msg) showToast(msg);
+  };
+  const courseHref = CDL.courseUrlAt(course, item);
+  const rootStyle = {
+    "--action-primary": "var(--brand-navy)",
+    "--action-primary-hover": "var(--brand-navy-700)"
+  };
+  const topNav = /*#__PURE__*/React.createElement(TopNavLW, {
     active: "My Learning",
     user: ME_LW,
     logoSrc: "assets/profinity-icon-purple-gold.png",
@@ -799,77 +1327,232 @@ function LessonWebApp() {
       zIndex: 50,
       borderBottom: "1px solid var(--border-default)"
     }
-  }), toast && /*#__PURE__*/React.createElement("div", {
-    role: "status",
-    className: "lw-toast"
-  }, /*#__PURE__*/React.createElement(IconLW, {
-    name: "lucide:circle-check-big",
-    size: 20,
-    color: "var(--success)"
-  }), toast), /*#__PURE__*/React.createElement("div", {
+  });
+  if (locked) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "app wa-screen cd-root",
+      style: rootStyle
+    }, topNav, /*#__PURE__*/React.createElement(LWLocked, {
+      course: course,
+      total: flat.length
+    }));
+  }
+  const showOutline = outline && !theatre;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "app wa-screen cd-root" + (theatre ? " lw-theatre" : ""),
+    style: rootStyle
+  }, topNav, /*#__PURE__*/React.createElement("div", {
     className: "lw-page",
-    "data-screen-label": "Lesson (web)"
+    "data-screen-label": "Lesson (web) · " + kind
   }, /*#__PURE__*/React.createElement(LWCrumb, {
     course: course,
-    current: current,
-    outlineVisible: outlineVisible,
-    onToggleOutline: () => setOutlineVisible(v => !v)
+    item: item,
+    outlineVisible: outline,
+    onToggleOutline: toggleOutline,
+    onShare: () => setShareOpen(true),
+    locked: locked
   }), /*#__PURE__*/React.createElement("div", {
-    className: "lw-grid",
-    style: {
-      gridTemplateColumns: gridCols
-    }
+    className: "lw-grid" + (showOutline ? " with-outline" : "")
   }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      minWidth: 0
-    }
+    className: "lw-main"
   }, /*#__PURE__*/React.createElement("section", {
     className: "lw-card"
-  }, /*#__PURE__*/React.createElement(LWMedia, {
+  }, kind === "pdf" ? /*#__PURE__*/React.createElement(LWDoc, {
+    item: item,
     course: course,
-    current: current,
-    playing: playing,
-    onTogglePlay: () => setPlaying(p => !p),
-    theater: theater,
-    onToggleTheater: () => setTheater(t => !t),
-    onNext: handleNext
+    onComplete: complete,
+    onToast: showToast
+  }) : kind === "quiz" ? /*#__PURE__*/React.createElement(LWQuiz, {
+    item: item,
+    onComplete: complete
+  }) : /*#__PURE__*/React.createElement(LWVideo, {
+    item: item,
+    course: course,
+    onComplete: complete,
+    theatre: theatre,
+    onTheatre: setTheatre,
+    onPrev: idx > 0 ? () => select(idx - 1) : null,
+    onNext: next ? () => select(idx + 1) : null
   }), /*#__PURE__*/React.createElement("div", {
+    className: "lw-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lw-head-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-eyebrow"
+  }, CDL.eyebrow(item, course)), /*#__PURE__*/React.createElement("h1", {
+    className: "lw-h1"
+  }, item.name), /*#__PURE__*/React.createElement("div", {
+    className: "lw-meta"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-chip"
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: kindIcon,
+    size: 13,
+    color: INK_LW.gold
+  }), kind === "pdf" ? "PDF" : item.dur), /*#__PURE__*/React.createElement("span", {
+    className: "cd-chip"
+  }, "Lesson ", item.groupPos, " of ", item.groupTotal), isDone && /*#__PURE__*/React.createElement("span", {
+    className: "cd-chip done"
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:check",
+    size: 13,
+    color: INK_LW.success,
+    strokeWidth: 2.5
+  }), "Completed"))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-btn cd-btn-outline lw-share-btn",
+    onClick: () => setShareOpen(true)
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:share-2",
+    size: 16,
+    color: INK_LW.heading
+  }), "Share lesson")), /*#__PURE__*/React.createElement("div", {
     className: "lw-tabs",
-    role: "tablist"
+    role: "tablist",
+    "aria-label": "Lesson sections"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     role: "tab",
-    "aria-selected": tab === "overview",
-    className: "lw-tab" + (tab === "overview" ? " on" : ""),
-    onClick: () => setTab("overview")
-  }, "Overview"), /*#__PURE__*/React.createElement("button", {
+    className: "lw-tab" + (tab === "details" ? " on" : ""),
+    "aria-selected": tab === "details",
+    onClick: () => setTab("details")
+  }, "Details"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     role: "tab",
-    "aria-selected": tab === "resources",
     className: "lw-tab" + (tab === "resources" ? " on" : ""),
+    "aria-selected": tab === "resources",
     onClick: () => setTab("resources")
-  }, "Resources (", course.resources.length, ")")), /*#__PURE__*/React.createElement("div", {
-    className: "lw-body"
-  }, tab === "overview" ? /*#__PURE__*/React.createElement(LWOverview, {
-    current: current,
-    comments: comments,
-    onAddComment: handleAddComment,
-    onToggleLike: handleToggleLike
-  }) : /*#__PURE__*/React.createElement(LWResources, {
-    resources: course.resources
-  }))), /*#__PURE__*/React.createElement(LWFooter, {
-    idx: idx,
-    isDone: isDone,
-    hasNext: hasNext,
-    onPrev: handlePrev,
-    onComplete: handleComplete,
-    onNext: handleNext
-  })), outlineVisible && /*#__PURE__*/React.createElement(LWOutlineAside, {
+  }, "Resources ", /*#__PURE__*/React.createElement("span", {
+    className: "lw-tab-n"
+  }, "(", CDL.RESOURCES.length, ")"))), tab === "resources" && /*#__PURE__*/React.createElement("div", {
+    role: "tabpanel",
+    className: "lw-panel"
+  }, /*#__PURE__*/React.createElement(LWResources, {
+    onToast: showToast
+  })), tab === "details" && /*#__PURE__*/React.createElement("div", {
+    role: "tabpanel",
+    className: "lw-panel"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "cd-body lw-intro"
+  }, content.intro), /*#__PURE__*/React.createElement("section", {
+    className: "lw-block",
+    "data-screen-label": "In this lesson"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cd-sec"
+  }, /*#__PURE__*/React.createElement("h2", null, "In this lesson")), /*#__PURE__*/React.createElement("p", {
+    className: "cd-body"
+  }, content.body), /*#__PURE__*/React.createElement("ul", {
+    className: "cd-points"
+  }, content.points.map((p, i) => /*#__PURE__*/React.createElement("li", {
+    className: "cd-point",
+    key: i
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "tick"
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:check",
+    size: 14,
+    color: INK_LW.gold,
+    strokeWidth: 2.5
+  })), /*#__PURE__*/React.createElement("span", null, p))))), nextMod && /*#__PURE__*/React.createElement("section", {
+    className: "lw-block",
+    "data-screen-label": "Up next"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cd-sec"
+  }, /*#__PURE__*/React.createElement("h2", null, "Up next")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-uptile",
+    onClick: () => select(nextModIdx),
+    "aria-label": "Open " + nextModName + ", " + nextModCount + (nextModCount === 1 ? " lesson" : " lessons")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cd-uptile-go",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:arrow-up-right",
+    size: 18,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "cd-uptile-dur"
+  }, nextModCount, " ", nextModCount === 1 ? "lesson" : "lessons"), /*#__PURE__*/React.createElement("span", {
+    className: "cd-uptile-name"
+  }, nextModName))), /*#__PURE__*/React.createElement("div", {
+    className: "lw-block"
+  }, /*#__PURE__*/React.createElement(LWComments, {
+    lessonName: item.name,
+    courseSlug: course.slug
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "lw-block"
+  }, /*#__PURE__*/React.createElement(LWAvaCard, {
+    lessonName: item.name,
+    courseTitle: course.title
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "lw-footer",
+    "data-screen-label": "Lesson CTA"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-btn cd-btn-outline",
+    disabled: idx === 0,
+    onClick: () => select(idx - 1)
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:chevron-left",
+    size: 16,
+    color: INK_LW.heading
+  }), "Previous"), /*#__PURE__*/React.createElement("div", {
+    className: "lw-spacer"
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-btn cd-btn-fill lw-cta",
+    disabled: quizLocked || !next && isDone,
+    onClick: advance
+  }, /*#__PURE__*/React.createElement(IconLW, {
+    name: isDone && next ? "fluent:play-16-filled" : "lucide:check",
+    size: 16,
+    color: INK_LW.onNavy
+  }), cta))), showOutline && /*#__PURE__*/React.createElement(LWOutline, {
     course: course,
     flat: flat,
-    currentFlatIdx: idx,
-    completed: completed,
-    onSelect: selectLesson
-  }))));
+    item: item,
+    done: done,
+    onSelect: selectByName,
+    onOpenCourse: () => goLW(courseHref)
+  }))), shareOpen && /*#__PURE__*/React.createElement(LWShareModal, {
+    item: item,
+    course: course,
+    url: shareUrl,
+    onClose: () => setShareOpen(false),
+    onDone: shareDone
+  }), celebrate && /*#__PURE__*/React.createElement("div", {
+    className: "cd-celebrate",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Course complete",
+    "data-screen-label": "Course complete"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-share-scrim",
+    "aria-label": "Close",
+    onClick: () => setCelebrate(false)
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cd-celebrate-card"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cd-celebrate-emoji",
+    "aria-hidden": "true"
+  }, "🎓"), /*#__PURE__*/React.createElement("h3", null, "Course complete"), /*#__PURE__*/React.createElement("p", null, "You've finished every lesson in ", course.title, ". Your certificate is on its way — check your email and your profile's Achievements."), /*#__PURE__*/React.createElement("div", {
+    className: "cd-celebrate-row"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-btn cd-btn-outline",
+    onClick: () => setCelebrate(false)
+  }, "Stay here"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cd-btn cd-btn-fill",
+    onClick: () => goLW(courseHref)
+  }, "Back to course", /*#__PURE__*/React.createElement(IconLW, {
+    name: "lucide:arrow-right",
+    size: 16,
+    color: INK_LW.onNavy
+  }))))), toast && /*#__PURE__*/React.createElement("div", {
+    className: "cd-toast",
+    role: "status"
+  }, toast));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(LessonWebApp, null));

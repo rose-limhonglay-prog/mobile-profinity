@@ -9,6 +9,9 @@ const DSL = window.ProfinityDesignSystem_c2b5cc;
 const { LevelBadge: LevelBadgeL, IconifyIcon: IconifyL } = DSL;
 const MobileChromeC = window.MobileChromeC;
 const SurveyMobile = window.SurveyMobile;
+/* shared My Learning data (learning-shared.js): greeting, 8D curriculum +
+   pf-lessons-done store, prices, purchased courses, related pool */
+const PFLS_L = window.PFLearnShared;
 
 function goL(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
 
@@ -57,6 +60,9 @@ const CERT_THUMB_L = "assets/certificate-thumb.svg";
 
 /* All Courses / In Progress / Completed / Saved — same
    category strip as the web My Learning page (learning.jsx). */
+/* "View all" on the My Courses rail → the mobile My Courses page (this same
+   bundle, mounted with window.PF_LM_PAGE = "mycourses"). */
+const LM2_MY_COURSES_URL = "MyCoursesMobile.html";
 const LM2_TABS = ["All Courses", "In Progress", "Completed", "Saved"];
 const LM2_COURSE_TAB_FILTERS = {
   "In Progress": (c) => typeof c.progress === "number" && !c.completed,
@@ -69,21 +75,43 @@ const LM2_GOAL = {
   clarifier: "Where you're heading — not where you are today."
 };
 
-const LM2_CONTINUE = {
-  image: IMG_L.lip,
-  level: "Intermediate",
-  title: "8D Lip Design",
-  progress: 20,
-  note: "Only 6 more modules until you get your certificate",
-  cta: "Resume Lesson 4",
-  /* Resume lands on the course detail page with lesson 4 selected (index 3);
-     the reader's Continue button then opens the player. */
-  href: "CourseDetail.html?course=8d-lip-design&level=0&module=0&lesson=3"
-};
+/* Continue Learning resumes 8D Lip Design at the first lesson not yet
+   completed — read live from the shared pf-lessons-done store, so the card
+   always opens the course and lesson the member is actually on (the reader's
+   player opens straight away via ?play=1). */
+const LM2_CONTINUE_SLUG = "8d-lip-design";
+function continueDataL(done) {
+  const r = PFLS_L.resume(LM2_CONTINUE_SLUG, done);
+  const inModule = r.flat.filter((l) => PFLS_L.groupName(l) === r.groupName);
+  const leftInModule = inModule.filter((l) => done.indexOf(l.name) === -1).length;
+  return {
+    image: IMG_L.lip, level: "Intermediate", title: r.course.title, progress: r.pct, resume: r,
+    note: r.allDone ? "Course complete — your certificate is ready." :
+      leftInModule <= 1 ? "Last lesson in this module — then " + (r.nextModule ? r.nextModule.name : "the final quiz") + "." :
+      "Only " + leftInModule + " more lessons in " + r.groupName + " · " + r.left + " to your certificate",
+    cta: r.allDone ? "Review course" : r.started ? "Resume Lesson " + r.lessonNumber : "Start Lesson 1",
+    href: r.allDone ? "CourseDetail.html?course=" + LM2_CONTINUE_SLUG : PFLS_L.mobileLessonUrl("CourseDetail.html", r.course, r.item, { play: 1 })
+  };
+}
 
-/* Resume link for a My Courses card — course detail page, current lesson selected. */
+/* Resume link for a My Courses card — the 8D course resumes at its real
+   current lesson; other courses land on the course page. */
 function resumeUrlL(c) {
-  return "CourseDetail.html?" + new URLSearchParams({ course: "8d-lip-design", level: 0, module: 0, lesson: Math.max(0, (c.lesson || 1) - 1) }).toString();
+  if (c.slug === LM2_CONTINUE_SLUG) {
+    const r = PFLS_L.resume(LM2_CONTINUE_SLUG);
+    return PFLS_L.mobileLessonUrl("CourseDetail.html", r.course, r.item, { play: 1 });
+  }
+  return "CourseDetail.html?" + new URLSearchParams({ title: c.title, instr: "Dr. Tim Pearce", pct: c.progress || 0 }).toString();
+}
+
+/* The 8D card reads its progress from the shared store like Continue Learning does. */
+function withLiveProgressL(list, done) {
+  const r = PFLS_L.resume(LM2_CONTINUE_SLUG, done);
+  return list.map((c) => {
+    if (c.title !== "8D Lip Design") return c;
+    if (r.allDone) return { ...c, slug: LM2_CONTINUE_SLUG, progress: undefined, completed: true, certificate: { issuedDate: "Today", id: "PF-8DL-0039", image: CERT_THUMB_L } };
+    return { ...c, slug: LM2_CONTINUE_SLUG, progress: r.pct, lesson: r.lessonNumber, modulesLeft: Math.max(1, r.course.levels.filter((l) => (l.sections || []).length).length - r.item.li) };
+  });
 }
 
 const LM2_MY_COURSES = [
@@ -126,21 +154,18 @@ const LM_TABS = [
 { key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" }];
 
 
-/* Time-of-day greeting: sun before noon, sun-and-clouds until 6pm, moon after. */
-function greetL(d = new Date()) {
-  const h = d.getHours();
-  if (h < 12) return { text: "Good morning", icon: "lucide:sun" };
-  if (h < 18) return { text: "Good afternoon", icon: "lucide:cloud-sun" };
-  return { text: "Good evening", icon: "lucide:moon" };
-}
-
+/* Time-of-day greeting in the member's own time zone: sun before noon,
+   sun-and-clouds until 6pm, moon after. PFLearnShared.useGreeting re-checks
+   every minute and when the app comes back to the foreground, so a page left
+   open through noon flips from morning to afternoon by itself. */
 function LM2Header({ freeTier, tier }) {
+  const greet = PFLS_L.useGreeting();
   return (
     <div className={"lm2-head" + (freeTier ? " has-sub" : "")} data-screen-label="Header">
       <div className="lm2-head-row">
-        <div className="lm2-head-greet">
-          <IconifyL name={greetL().icon} size={22} color="#CE9957" />
-          {greetL().text}, Katy!
+        <div className="lm2-head-greet" aria-live="polite">
+          <IconifyL name={greet.icon} size={22} color="#CE9957" />
+          {greet.text}, Katy!
         </div>
         {freeTier ?
         <img className="lm2-head-avatar" src="assets/avatar-katy.jpg" alt="Katy" /> :
@@ -172,23 +197,63 @@ function LM2GoalBanner({ data, onHelp }) {
 
 }
 
+/* Before / after compare — ported from learning.jsx BeforeAfterCompare. */
+function LM2BeforeAfter({ before, after }) {
+  const [pos, setPos] = useStateL(50);
+  return (
+    <div className="lm2-ba" style={{ "--ba": pos + "%" }} data-screen-label="Before / after">
+      <div className="lm2-ba-pane before"><img src={before} alt="Before treatment" draggable="false" /><span className="lm2-ba-tag">Before</span></div>
+      <div className="lm2-ba-pane after"><img src={after} alt="After treatment" draggable="false" /><span className="lm2-ba-tag">After</span></div>
+      <span className="lm2-ba-line" aria-hidden="true" />
+      <span className="lm2-ba-handle" aria-hidden="true"><IconifyL name="lucide:chevrons-left-right" size={18} color="#0C1928" /></span>
+      <input type="range" className="lm2-ba-range" min="8" max="92" step="0.5" value={pos} onChange={(e) => setPos(Number(e.target.value))}
+      aria-label="Compare before and after" aria-valuetext={Math.round(pos) + "% before"} />
+    </div>);
+}
+
+/* Continue Learning — mirrors the desktop hero (learning.jsx ConfidenceDashboard,
+   user 2026-09-16): "Continue Learning" eyebrow, the current lesson's name as
+   the serif title, its intro, the module strip with the next two lessons, then
+   Continue Lesson + Share Lesson (strip above the buttons — user, 2026-09-16). */
 function LM2ContinueCard({ data }) {
+  const r = data.resume;
+  const heroTitle = r && r.item ? r.item.name : data.title;
+  const heroDesc = (r && r.item && (r.item.intro || r.item.body)) || "";
+  /* label (user, 2026-09-16): "Continue Lesson" from the first lesson on; "Review course" once done */
+  const label = r && r.allDone ? "Review course" : "Continue Lesson";
+  const shareHref = r && r.item ? PFLS_L.mobileLessonUrl("CourseDetail.html", r.course, r.item, { share: 1 }) : "CourseDetail.html?share=1";
+  const rowAt = (l) => ({ key: l.name, name: l.name, dur: l.dur || (l.mins ? l.mins + " min" : ""), href: PFLS_L.mobileLessonUrl("CourseDetail.html", r.course, l) });
+  const rows = !r || r.allDone ? [] : [rowAt(r.item)].concat(r.flat[r.idx + 1] ? [rowAt(r.flat[r.idx + 1])] : []);
   return (
     <section className="lm2-hero" data-screen-label="Continue Learning">
-      <div className="lm2-sec-h"><h2>Continue Learning</h2></div>
-      <article className="lm2-herocard">
-        <div className="thumb" style={{ backgroundImage: "url(" + data.image + ")" }}>
-          <LevelBadgeL level={data.level} className="lvl" />
-        </div>
-        <div className="body">
-          <div className="ti">{data.title}</div>
-          <div className="lm2-progrow">
-            <span className="bar"><span style={{ width: data.progress + "%" }} /></span>
-            <span className="pct">{data.progress}%</span>
-          </div>
-          <p className="note">{data.note}</p>
-          <button type="button" className="lm2-cta" onClick={() => goL(data.href)}>
-            {data.cta}<IconifyL name="lucide:arrow-up-right" size={17} color="#fff" />
+      <article className="lm2-hero2">
+        <LM2BeforeAfter before="assets/ba-cheek-before.jpg" after="assets/ba-cheek-after.jpg" />
+        <span className="lm2-hero2-eyebrow">Continue Learning<i aria-hidden="true" /></span>
+        <h2 className="lm2-hero2-title">{heroTitle}</h2>
+        {heroDesc && <p className="lm2-hero2-desc">{heroDesc}</p>}
+        <nav className="lm2-modstrip" aria-label="Current module and next lessons">
+          {rows.length === 0 ?
+          <p className="lm2-modstrip-empty">Course complete — <button type="button" className="lm2-modstrip-link" onClick={() => goL(data.href)}>review course</button></p> :
+          <React.Fragment>
+              <span className="lm2-modstrip-mod"><IconifyL name="lucide:layers" size={15} color="#8A5303" />{r.moduleLabel}</span>
+              <IconifyL name="lucide:chevron-right" size={16} color="var(--gray-500)" />
+              <span className="lm2-modstrip-count">{rows.length === 1 ? "1 lesson next" : rows.length + " lessons next"}</span>
+              <ol className="lm2-modstrip-list">
+                {rows.map((row, i) =>
+              <li key={row.key}>
+                    <button type="button" className={"lm2-modstrip-lesson" + (i === 0 ? " on" : "")} onClick={() => goL(row.href)} aria-current={i === 0 ? "step" : undefined}>
+                      <span className="n">{i + 1}</span><span className="t">{row.name}</span>{row.dur && <span className="d">{row.dur}</span>}
+                    </button>
+                  </li>)}
+              </ol>
+            </React.Fragment>}
+        </nav>
+        <div className="lm2-hero2-actions">
+          <button type="button" className="lm2-cta" onClick={() => goL(data.href)} aria-label={label + " — open course page"}>
+            <IconifyL name="lucide:play" size={16} color="#fff" />{label}
+          </button>
+          <button type="button" className="lm2-hero2-share" onClick={() => goL(shareHref)} aria-label="Share the current lesson">
+            <IconifyL name="lucide:share-2" size={18} color="currentColor" />Share Lesson
           </button>
         </div>
       </article>
@@ -196,11 +261,11 @@ function LM2ContinueCard({ data }) {
 
 }
 
-function SecHead({ title, viewAll = true, linkLabel = "See All" }) {
+function SecHead({ title, viewAll = true, linkLabel = "See All", onLink }) {
   return (
     <div className="lm2-sec-h">
       <h2>{title}</h2>
-      {viewAll && <a href="#" onClick={(e) => { e.preventDefault(); goL("MyLearning.html"); }}>{linkLabel}</a>}
+      {viewAll && <a href="#" onClick={(e) => { e.preventDefault(); onLink ? onLink() : goL("MyLearning.html"); }}>{linkLabel}</a>}
     </div>);
 
 }
@@ -219,25 +284,6 @@ function LM2SearchBar() {
       <IconifyL name="lucide:search" size={18} color="var(--gray-450)" />
       <input placeholder="Search course…" aria-label="Search course" />
     </label>);
-
-}
-
-function LM2CertificateCard({ c }) {
-  return (
-    <article className="lm2-coursecard lm2-certcard">
-      <div className="thumb" style={{ backgroundImage: "url(" + c.certificate.image + ")" }}>
-        <LevelBadgeL level={c.level} className="lvl" />
-        <span className="cert-ribbon"><IconifyL name="fluent:ribbon-star-16-filled" size={16} color="#fff" /></span>
-      </div>
-      <div className="body">
-        <div className="ti">{c.title}</div>
-        <div className="by">{TUTOR_L}</div>
-        <div className="cert-meta">Issued {c.certificate.issuedDate} · {c.certificate.id}</div>
-        <div className="foot">
-          <button type="button" className="lm-ghost" onClick={() => goL("CourseDetail.html")}>View Certificate</button>
-        </div>
-      </div>
-    </article>);
 
 }
 
@@ -278,57 +324,90 @@ function courseCtaL(c) {
   return { label: "Start learning", fill: false, go: () => goL("CourseDetail.html?" + new URLSearchParams({ title: c.title, instr: "Dr. Tim Pearce", pct: 0 }).toString()) };
 }
 
-function LM2CourseCard({ c }) {
-  const cta = courseCtaL(c);
+/* ---------------------------------------------------------------- My Courses cards -- */
+/* Ported from the desktop My Learning redesign (learning.jsx MyCourseCard,
+   user 2026-09-16): 16:9 cover with level badge, status pill and play /
+   award mark, uppercase eyebrow, serif title, two-line blurb, thin gold
+   progress bar and a tutor / CTA footer. One card covers not-started,
+   in-progress and completed courses; the first in-progress card is featured. */
+const TUTOR_AVATAR_L = "assets/avatar-drtim.png";
+function inProgressL(c) { return typeof c.progress === "number" && !c.completed; }
+
+/* Saved (bookmarked) courses — same "pf-saved-courses" [title] key as the
+   desktop My Courses page (learning-store-web.js), so a bookmark set on the
+   phone shows on the web and vice versa. */
+const LM2_SAVED_KEY = "pf-saved-courses";
+function readSavedL() {
+  try { const a = JSON.parse(window.localStorage.getItem(LM2_SAVED_KEY)); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+}
+function toggleSavedL(title) {
+  const list = readSavedL(); const i = list.indexOf(title);
+  if (i === -1) list.push(title); else list.splice(i, 1);
+  try { window.localStorage.setItem(LM2_SAVED_KEY, JSON.stringify(list)); } catch (e) {}
+  try { window.dispatchEvent(new CustomEvent(LM2_SAVED_KEY)); } catch (e) {}
+}
+function useSavedL() {
+  const [list, setList] = useStateL(readSavedL);
+  React.useEffect(() => {
+    const sync = () => setList(readSavedL());
+    const onStorage = (e) => { if (!e.key || e.key === LM2_SAVED_KEY) sync(); };
+    window.addEventListener(LM2_SAVED_KEY, sync); window.addEventListener("storage", onStorage);
+    return () => { window.removeEventListener(LM2_SAVED_KEY, sync); window.removeEventListener("storage", onStorage); };
+  }, []);
+  return list;
+}
+function LM2SaveButton({ title, saved }) {
+  const on = saved.indexOf(title) !== -1;
   return (
-    <article className="lm2-coursecard">
-      <div className="thumb" style={{ backgroundImage: "url(" + c.image + ")" }}>
-        <LevelBadgeL level={c.level} className="lvl" />
-      </div>
-      <div className="body">
-        <div className="ti">{c.title}</div>
-        <div className="ds">{c.description}</div>
-        <div className="by">{TUTOR_L}</div>
-        <div className="foot">
-          <button type="button" className={"lm-ghost" + (cta.fill ? " lm-fill" : "")} onClick={cta.go}>{cta.label}</button>
+    <button type="button" className={"lm2-mc-save" + (on ? " on" : "")} aria-label={on ? "Remove from saved" : "Save course"} aria-pressed={on}
+    onClick={(e) => { e.stopPropagation(); toggleSavedL(title); }}>
+      <IconifyL name={on ? "lucide:bookmark-check" : "lucide:bookmark"} size={17} color="currentColor" />
+    </button>);
+}
+function courseStatusL(c, featured) {
+  if (c.completed) return { key: "done", eyebrow: "Completed", pill: c.certificate ? "Certificate earned" : "Completed" };
+  if (inProgressL(c)) return { key: "live", eyebrow: featured ? "Continue where you left off" : "In progress \u00b7 Lesson " + (c.lesson || 1), pill: c.progress + "% complete" };
+  return { key: "new", eyebrow: c.level ? c.level + " level" : "Not started", pill: "Not started" };
+}
+/* `saved` (optional, My Courses page only) adds the bookmark toggle on the cover. */
+function LM2MyCourseCard({ c, featured, saved }) {
+  const live = inProgressL(c);
+  const st = courseStatusL(c, featured);
+  const cta = courseCtaL(c);
+  const label = c.completed ? "View certificate" : live ? "Resume lesson " + (c.lesson || 1) : "Start learning";
+  return (
+    <article className={"lm2-mc lm2-mc-" + st.key + (featured ? " lm2-mc-featured" : "") + (saved ? " lm2-mc-savable" : "")} role="listitem">
+      <button type="button" className="lm2-mc-cover" onClick={cta.go} aria-label={"Open " + c.title}>
+        <img src={c.image} alt="" loading="lazy" />
+        <LevelBadgeL level={c.level} className="lm2-mc-lvl" />
+        {c.completed ?
+        <span className="lm2-mc-ribbon" aria-hidden="true"><IconifyL name="lucide:award" size={20} color="#fff" /></span> :
+        <span className="lm2-mc-play" aria-hidden="true"><IconifyL name="fluent:play-16-filled" size={16} color="#0C1928" /></span>}
+        <span className={"lm2-mc-pill" + (c.completed ? " done" : "")}>{st.pill}</span>
+      </button>
+      {saved && <LM2SaveButton title={c.title} saved={saved} />}
+      <div className="lm2-mc-body">
+        <span className={"lm2-mc-eyebrow " + st.key}>{st.eyebrow}</span>
+        <button type="button" className="lm2-mc-title" onClick={cta.go}>{c.title}</button>
+        {c.completed && c.certificate ?
+        <p className="lm2-mc-blurb">Issued {c.certificate.issuedDate} · {c.certificate.id}</p> :
+        <p className="lm2-mc-blurb">{c.description}</p>}
+        {live &&
+        <React.Fragment>
+            <div className="lm2-mc-prog" role="progressbar" aria-valuenow={c.progress} aria-valuemin={0} aria-valuemax={100} aria-label={c.title + " progress"}>
+              <span className="lm2-mc-bar"><span style={{ width: c.progress + "%" }} /></span>
+              <span className="lm2-mc-pct">{c.progress}%</span>
+            </div>
+            {c.modulesLeft != null && <p className="lm2-mc-note">Only {c.modulesLeft} more {c.modulesLeft === 1 ? "module" : "modules"} until your certificate</p>}
+          </React.Fragment>}
+        <div className="lm2-mc-foot">
+          <span className="lm2-mc-tutor"><img src={TUTOR_AVATAR_L} alt="" />{TUTOR_L}</span>
+          <button type="button" className={"lm2-mc-cta " + (c.completed ? "gold" : live ? "filled" : "ghost")} onClick={cta.go}>
+            {label}<IconifyL name="lucide:arrow-up-right" size={14} color="currentColor" />
+          </button>
         </div>
       </div>
     </article>);
-
-}
-
-function LM2CourseCardWide({ c }) {
-  const inProgress = typeof c.progress === "number";
-  return (
-    <article className="lm2-coursecard-wide">
-      <div className="thumb" style={{ backgroundImage: "url(" + c.image + ")" }}>
-        <LevelBadgeL level={c.level} className="lvl" />
-      </div>
-      <div className="body">
-        <div className="ti">{c.title}</div>
-        {inProgress ?
-        <React.Fragment>
-            <div className="prog">
-              <span className="bar"><span style={{ width: c.progress + "%" }} /></span>
-              <span className="pct">{c.progress}%</span>
-            </div>
-            <div className="ds">Only {c.modulesLeft} more modules until you get your certificate</div>
-            <button type="button" className="lm2-resume-btn" onClick={() => goL(resumeUrlL(c))}>
-              Resume Lesson {c.lesson}<IconifyL name="lucide:arrow-up-right" size={16} color="#fff" />
-            </button>
-          </React.Fragment> :
-
-        <React.Fragment>
-            <div className="ds">{c.description}</div>
-            <div className="by">{TUTOR_L}</div>
-            <div className="foot">
-              <button type="button" className="lm-ghost" onClick={courseCtaL(c).go}>{courseCtaL(c).label}</button>
-            </div>
-          </React.Fragment>
-        }
-      </div>
-    </article>);
-
 }
 
 function LM2ActionCard({ icon, title, sub, onClick }) {
@@ -396,25 +475,37 @@ function usePurchasedL() {
 
 function LM2RelatedContent() {
   const purchased = usePurchasedL();
-  const related = LM2_RELATED_POOL.filter((r) => purchased.indexOf(slugL(r.title)) === -1).slice(0, LM2_RELATED_VISIBLE);
+  /* shared pool + PRICES: bought courses drop out, the next one back-fills */
+  const related = PFLS_L.pickRelated({ purchased, tier: LM_TIER, n: LM2_RELATED_VISIBLE });
   if (!related.length) return null;
+  const open = (r) => goL("CourseDetail.html?" + new URLSearchParams({ title: r.title, instr: "Dr. Tim Pearce", pct: 0, price: r.price, dur: r.dur }).toString());
   return (
     <section className="lm2-related" data-screen-label="Explore related content">
-      <h2 className="lm2-related-h">Explore related content</h2>
-      <div className="lm2-related-list">
-        {related.map((r) =>
-        <button type="button" className="lm2-relcard" key={r.title}
-          onClick={() => goL("CourseDetail.html?" + new URLSearchParams({ title: r.title, instr: "Dr. Tim Pearce", pct: 0, price: r.price }).toString())}>
-            <span className="lm2-relcard-thumb"><img src={r.image} alt="" /></span>
+      <div className="lm2-related-head">
+        <span className="lm2-related-eyebrow">Recommended for you</span>
+        <h2 className="lm2-related-h">Explore related content</h2>
+        <p className="lm2-related-sub">Paid courses hand-picked to build on 8D Lip Design.</p>
+      </div>
+      <div className="lm2-related-rail" role="list">
+        {related.map((r, i) =>
+        <button type="button" className={"lm2-relcard" + (i === 0 ? " lm2-relcard-first" : "")} key={r.slug} role="listitem" onClick={() => open(r)}
+          aria-label={r.title + (r.price ? ", £" + r.price : ", included") + ", " + r.lessons + " lessons"}>
+            <span className="lm2-relcard-cover">
+              <img src={r.image} alt="" loading="lazy" />
+              <LevelBadgeL level={r.level} className="lm2-relcard-lvl" />
+              {r.price > 0 && <span className="lm2-relcard-lock" aria-hidden="true"><IconifyL name="lucide:lock" size={12} color="#fff" /></span>}
+              <span className="lm2-relcard-chip">{r.lessons} lessons · {r.dur}</span>
+            </span>
             <span className="lm2-relcard-tx">
+              <span className="lm2-relcard-eyebrow">{r.level} · Paid course</span>
               <span className="lm2-relcard-title">{r.title}</span>
               <span className="lm2-relcard-blurb">{r.blurb}</span>
-              <span className="lm2-relcard-price">
-                <IconifyL name="lucide:lock" size={11} color="#8A5303" />£{r.price}
+              <span className="lm2-relcard-foot">
+                {r.price > 0 ?
+                <span className="lm2-relcard-price"><b>£{r.price}</b><small>one-time</small></span> :
+                <span className="lm2-relcard-incl"><IconifyL name="lucide:crown" size={12} color="#8A5303" />Included in {LM_TIER_DISPLAY_NAME[LM_TIER] || "your membership"}</span>}
+                <span className="lm2-relcard-go" aria-hidden="true"><IconifyL name="lucide:arrow-right" size={18} color="#0C1928" /></span>
               </span>
-            </span>
-            <span className="lm2-relcard-go" aria-hidden="true">
-              <IconifyL name="lucide:arrow-right" size={18} color="#fff" />
             </span>
           </button>
         )}
@@ -425,11 +516,12 @@ function LM2RelatedContent() {
 function LM2FreeResources({ unlocked, onStartSurvey }) {
   return (
     <section className="lm2-freeres" data-screen-label="Free Resources">
-      <SecHead title="Free Resources" linkLabel="View All" />
+      {/* the resources page reuses the All Courses card design (?free=1) */}
+      <SecHead title="Free Resources" linkLabel="View All" viewAll={unlocked} onLink={() => goL("AllCoursesMobile.html?free=1")} />
       {unlocked ?
       <div className="lm2-freeres-open">
           <p>Your free resources are unlocked — guides, checklists and vein maps tailored to your clinic goals.</p>
-          <button type="button" className="lm2-outline-btn" onClick={() => goL("MySaved.html")}>
+          <button type="button" className="lm2-outline-btn" onClick={() => goL("AllCoursesMobile.html?free=1")}>
             View free resources<IconifyL name="lucide:arrow-up-right" size={16} color="var(--brand-navy)" />
           </button>
         </div> :
@@ -555,9 +647,27 @@ function LearningHome() {
   const scrollRef = React.useRef(null);
   const { hidden: chromeHidden, floating: chromeFloat } = useScrollChromeL(scrollRef);
   const nextTier = lmNextTierL(LM_TIER);
-  const myCourses = LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES;
+  const done = PFLS_L.useLessonsDone();
+  const myCourses = withLiveProgressL(LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES, done);
+  const continueData = continueDataL(done);
   const visibleCourses = myCourses.filter(LM2_COURSE_TAB_FILTERS[tab] || (() => true));
   const showContinue = !LM_FREE && (tab === "All Courses" || tab === "In Progress");
+  /* My Courses rail (user, 2026-09-16, ported from desktop): the first
+     in-progress course leads and is the featured card; All Courses shows
+     six and the rest sit behind "View all", which opens the mobile My Courses
+     page (MyCoursesMobile.html) — not the desktop MyLearning.html. */
+  const leadTabL = tab !== "Completed";
+  const leadIdxL = leadTabL ? visibleCourses.findIndex(inProgressL) : -1;
+  const orderedCoursesL = leadIdxL > 0 ? [visibleCourses[leadIdxL]].concat(visibleCourses.filter((_, j) => j !== leadIdxL)) : visibleCourses;
+  const shownCoursesL = tab === "All Courses" ? orderedCoursesL.slice(0, 6) : orderedCoursesL;
+  const hiddenCountL = orderedCoursesL.length - shownCoursesL.length;
+  const inProgressNL = myCourses.filter(inProgressL).length;
+  const certNL = myCourses.filter((c) => c.completed).length;
+  const mcSummaryL = [
+  myCourses.length + (myCourses.length === 1 ? " course" : " courses"),
+  inProgressNL ? inProgressNL + " in progress" : null,
+  certNL ? certNL + (certNL === 1 ? " certificate" : " certificates") : null].
+  filter(Boolean).join(" \u00b7 ");
 
   const unlockResources = () => {
     setResourcesUnlocked(true);
@@ -575,27 +685,42 @@ function LearningHome() {
 
         <LM2SearchBar />
 
-        {showContinue && <LM2ContinueCard data={LM2_CONTINUE} />}
+        {showContinue && <LM2ContinueCard data={continueData} />}
 
-        <section className="lm2-courseband" data-screen-label="My Courses">
-          <SecHead title="My Courses" />
+        <section className={"lm2-courseband" + (LM_FREE ? "" : " lm2-mc-band")} data-screen-label="My Courses">
           {LM_FREE ?
-          <LM2LockedCard title="Unlock My Courses" body="Upgrade to purchase courses and they'll live here for easy access." onUpgrade={() => goL("MembershipTier.html")} /> :
-          visibleCourses.length ?
-          <div className="lm2-coursegrid">
-              <span className="lm2-coursegrid-pad" aria-hidden="true" />
-              {visibleCourses.map((c, i) =>
-              tab === "Completed" ?
-              <LM2CertificateCard key={i} c={c} /> :
-              i === 0 && typeof c.progress === "number" && !c.completed ?
-              <LM2CourseCardWide key={i} c={c} /> :
-              <LM2CourseCard key={i} c={c} />
-              )}
-              <span className="lm2-coursegrid-pad" aria-hidden="true" />
-            </div> :
-
-          <p className="lm2-empty">{tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate."}</p>
-          }
+          <React.Fragment>
+              <SecHead title="My Courses" />
+              <LM2LockedCard title="Unlock My Courses" body="Upgrade to purchase courses and they'll live here for easy access." onUpgrade={() => goL("MembershipTier.html")} />
+            </React.Fragment> :
+          <React.Fragment>
+              <div className="lm2-mc-head">
+                <div className="lm2-mc-head-tx">
+                  <span className="lm2-mc-kicker">Your library</span>
+                  <h2 className="lm2-mc-h">My Courses</h2>
+                  <p className="lm2-mc-sub">{mcSummaryL}</p>
+                </div>
+                <a href="#" className="lm2-mc-viewall" onClick={(e) => { e.preventDefault(); goL(LM2_MY_COURSES_URL); }}>
+                  View all<IconifyL name="lucide:arrow-right" size={14} color="currentColor" />
+                </a>
+              </div>
+              {shownCoursesL.length ?
+            <div className="lm2-mc-rail" role="list">
+                  <span className="lm2-coursegrid-pad" aria-hidden="true" />
+                  {shownCoursesL.map((c, i) => <LM2MyCourseCard key={c.slug || c.title} c={c} featured={leadTabL && i === 0 && inProgressL(c)} />)}
+                  {hiddenCountL > 0 &&
+              <button type="button" className="lm2-mc-more" role="listitem" onClick={() => goL(LM2_MY_COURSES_URL)}>
+                      <span className="ic"><IconifyL name="lucide:library" size={22} color="#8A5303" /></span>
+                      <b>View all {orderedCoursesL.length} courses</b>
+                      <span>{hiddenCountL} more in your library</span>
+                    </button>}
+                  <span className="lm2-coursegrid-pad" aria-hidden="true" />
+                </div> :
+            <div className="lm2-mc-empty">
+                  <span className="ic"><IconifyL name={tab === "Completed" ? "lucide:award" : "lucide:play-circle"} size={22} color="#8A5303" /></span>
+                  <p>{tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate."}</p>
+                </div>}
+            </React.Fragment>}
         </section>
 
         {/* Paid related courses and the All Courses browse card are members-only
@@ -616,6 +741,115 @@ function LearningHome() {
       <LM2HelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
     </div>);
 
+}
+
+
+/* ================================================================ My Courses (mobile) -- */
+/* MyCoursesMobile.html — reached from "View all" on the My Courses rail
+   (user, 2026-09-16: the link used to open the desktop MyLearning.html).
+   Same bundle as the home page, mounted when window.PF_LM_PAGE === "mycourses":
+   search + All / In Progress / Completed / Saved chips over a full-width
+   stack of the same LM2MyCourseCard cards, tier-scoped like the rail. */
+const LM2_MCP_EMPTY = {
+  "In Progress": "No courses in progress yet.",
+  "Completed": "Complete a course to earn your first certificate.",
+  "Saved": "Tap the bookmark on a course to keep it here."
+};
+const LM2_MCP_EMPTY_ICON = { "In Progress": "lucide:play-circle", "Completed": "lucide:award", "Saved": "lucide:bookmark" };
+function lmReturnUrlL() {
+  try {
+    const ret = new URLSearchParams(window.location.search).get("ret");
+    if (ret && /^[A-Za-z0-9_-]+\.html(\?.*)?$/.test(ret)) return ret;
+  } catch (e) {}
+  return "LearningMobile.html";
+}
+
+function MyCoursesHome() {
+  const [query, setQuery] = useStateL("");
+  const [tab, setTab] = useStateL("All Courses");
+  const scrollRef = React.useRef(null);
+  const { hidden: chromeHidden, floating: chromeFloat } = useScrollChromeL(scrollRef);
+  const done = PFLS_L.useLessonsDone();
+  const saved = useSavedL();
+  const myCourses = withLiveProgressL(LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES, done);
+
+  const q = query.trim().toLowerCase();
+  const filters = {
+    "In Progress": inProgressL,
+    "Completed": (c) => !!c.completed,
+    "Saved": (c) => saved.indexOf(c.title) !== -1
+  };
+  const courses = myCourses.filter(filters[tab] || (() => true)).
+  filter((c) => !q || c.title.toLowerCase().indexOf(q) !== -1 || (c.description || "").toLowerCase().indexOf(q) !== -1);
+  /* the first in-progress course leads and is featured (All / In Progress, no search) — same as the rail */
+  const leadTab = !q && (tab === "All Courses" || tab === "In Progress");
+  const leadIdx = leadTab ? courses.findIndex(inProgressL) : -1;
+  const ordered = leadIdx > 0 ? [courses[leadIdx]].concat(courses.filter((_, j) => j !== leadIdx)) : courses;
+  const inProgressN = myCourses.filter(inProgressL).length;
+  const certN = myCourses.filter((c) => c.completed).length;
+  const savedN = saved.filter((t) => myCourses.some((c) => c.title === t)).length;
+  const summary = [
+  myCourses.length + (myCourses.length === 1 ? " course" : " courses"),
+  inProgressN ? inProgressN + " in progress" : null,
+  certN ? certN + (certN === 1 ? " certificate" : " certificates") : null].
+  filter(Boolean).join(" · ");
+  const backUrl = lmReturnUrlL();
+
+  return (
+    <div className={"lm-screen lm2-mcp-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="My Courses (mobile)">
+      <MobileChromeC />
+      <div className="lm-scroll" ref={scrollRef}>
+        <button type="button" className="lm2-mcp-back" onClick={() => goL(backUrl)}>
+          <IconifyL name="lucide:chevron-left" size={20} color="currentColor" />My Learning
+        </button>
+
+        <header className="lm2-mcp-head">
+          <span className="lm2-mc-kicker">Your library</span>
+          <h1 className="lm2-mcp-h">My Courses</h1>
+          <p className="lm2-mc-sub">{LM_FREE ? "Every course you start, save or complete — all in one place." : summary}</p>
+        </header>
+
+        {LM_FREE ?
+        <section className="lm2-courseband lm2-mc-band" data-screen-label="My Courses locked">
+            <LM2LockedCard title="Unlock My Courses" body="Upgrade to purchase courses and they'll live here for easy access." onUpgrade={() => goL("MembershipTier.html")} />
+          </section> :
+        <React.Fragment>
+            <label className="lm2-search lm2-mcp-search">
+              <IconifyL name="lucide:search" size={18} color="var(--gray-450)" />
+              <input placeholder="Search your courses…" aria-label="Search your courses" value={query} onChange={(e) => setQuery(e.target.value)} />
+              {query &&
+            <button type="button" className="lm2-mcp-clear" aria-label="Clear search" onClick={() => setQuery("")}>
+                  <IconifyL name="lucide:x" size={16} color="currentColor" />
+                </button>}
+            </label>
+
+            <div className="lm2-mcp-tabs" role="tablist" aria-label="Filter my courses">
+              {LM2_TABS.map((t) =>
+            <button key={t} type="button" role="tab" aria-selected={tab === t} className={"lm2-mcp-tab" + (tab === t ? " on" : "")} onClick={() => setTab(t)}>
+                  {t}{t === "Saved" && savedN > 0 && <span className="lm2-mcp-tab-n">{savedN}</span>}
+                </button>)}
+            </div>
+
+            <section className="lm2-mcp-list-wrap" data-screen-label={"My Courses · " + tab}>
+              <p className="lm2-mcp-count" aria-live="polite">
+                {ordered.length === 0 ? "" : ordered.length === 1 ? "1 course" : ordered.length + " courses"}{q ? " matching “" + query.trim() + "”" : ""}
+              </p>
+              {ordered.length ?
+            <div className="lm2-mcp-list" role="list">
+                  {ordered.map((c, i) => <LM2MyCourseCard key={c.slug || c.title} c={c} saved={saved} featured={leadTab && i === 0 && inProgressL(c)} />)}
+                </div> :
+            <div className="lm2-mc-empty">
+                  <span className="ic"><IconifyL name={q ? "lucide:search" : LM2_MCP_EMPTY_ICON[tab] || "lucide:book-open"} size={22} color="#8A5303" /></span>
+                  <p>{q ? "No courses match your search." : LM2_MCP_EMPTY[tab] || "No courses here yet."}</p>
+                  {q && <button type="button" className="lm2-mcp-reset" onClick={() => setQuery("")}>Clear search</button>}
+                </div>}
+            </section>
+          </React.Fragment>}
+
+        <div style={{ height: 20 }} />
+      </div>
+      <LMTabBar compact={chromeHidden} />
+    </div>);
 }
 
 function useDeviceScaleL() {
@@ -640,17 +874,22 @@ function useIsMobileL() {
   return mobile;
 }
 
+/* window.PF_LM_PAGE (set by the shell before this bundle) picks the screen:
+   "mycourses" → MyCoursesMobile.html's My Courses list, otherwise the home. */
+const LM_PAGE = window.PF_LM_PAGE === "mycourses" ? MyCoursesHome : LearningHome;
+
 function LearningMobileApp() {
   const mobile = useIsMobileL();
   const scale = useDeviceScaleL();
   const vars = { "--action-primary": "#0C1928", "--action-primary-hover": "#081120" }; /* My Learning navy */
+  const Page = LM_PAGE;
   if (mobile) {
-    return <div className="app" style={{ ...vars, background: "#F9F7F4" }}><LearningHome /></div>;
+    return <div className="app" style={{ ...vars, background: "#F6F3EF" }}><Page /></div>;
   }
   return (
     <div className="app device-stage" style={{ ...vars, backgroundColor: "rgb(217, 218, 225)" }}>
       <div style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
-        <IOSDevice width={440} height={956}><LearningHome /></IOSDevice>
+        <IOSDevice width={440} height={956}><Page /></IOSDevice>
       </div>
     </div>);
 }

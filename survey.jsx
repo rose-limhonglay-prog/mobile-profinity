@@ -2,6 +2,11 @@
    PROfinity — Free Course onboarding questionnaire (mobile)
    A 10-step "Let's Personalize Your Experience" wizard + summary. Self-contained
    IIFE; exposes window.SurveyMobile({ open, onClose, onComplete }). Suffixed -S.
+   Styling lives in learning-mobile.css (sv-*) for the phone and is re-skinned by
+   learning.css (.lrn2-survey .sv-*) on the web My Learning page.
+   Redesign (user, 2026-09-16): editorial look — gold eyebrow + serif title,
+   segmented progress bar, lettered option chips, Back/Continue footer, per-step
+   slide animation, "all set" summary hero.
    =========================================================================== */
 (function () {
   const { useState: useStateS } = React;
@@ -30,6 +35,7 @@
       opts: ["Short tutorials", "Full masterclasses", "Live Q&As", "Case breakdowns", "Business training"] },
   ];
   const TOTAL = QUESTIONS.length;
+  const pad2 = (n) => (n < 10 ? "0" + n : String(n));
 
   function SurveyMobile({ open, onClose, onComplete }) {
     const [step, setStep] = useStateS(0);
@@ -41,61 +47,96 @@
     const cur = QUESTIONS[step];
     const pick = (i) => setAnswers((a) => { const n = a.slice(); n[step] = i; return n; });
     const next = () => setStep((s) => s + 1);
-    const finish = () => { onComplete && onComplete(); onClose && onClose(); };
+    const back = () => setStep((s) => Math.max(0, s - 1));
+    /* hand the option labels to the caller and keep them (pf-survey-answers) so the
+       Free Resources page can put the best-fitting downloads first */
+    const finish = () => {
+      const labels = answers.map((a, i) => (a == null ? null : QUESTIONS[i].opts[a]));
+      try { localStorage.setItem("pf-survey-answers", JSON.stringify(labels)); } catch (e) {}
+      onComplete && onComplete(labels); onClose && onClose();
+    };
+    const answered = answers.filter((a) => a != null).length;
 
     return (
       <div className="sv-overlay" role="dialog" aria-modal="true" aria-label="Personalize your experience">
-        <div className="sv-card">
+        <div className={"sv-card" + (done ? " sv-card-done" : "")}>
           <header className="sv-head">
             <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
-            <button className="sv-x" aria-label="Close" onClick={onClose}>
-              <DSS.IconifyIcon name="lucide:x" size={24} color="var(--gray-700)" />
-            </button>
+            <div className="sv-head-r">
+              {!done && <span className="sv-step" aria-label={"Question " + (step + 1) + " of " + TOTAL}>{step + 1}<i>/</i>{TOTAL}</span>}
+              <button className="sv-x" aria-label="Close" onClick={onClose}>
+                <DSS.IconifyIcon name="lucide:x" size={20} color="currentColor" />
+              </button>
+            </div>
           </header>
 
           {done ? (
             <div className="sv-body">
-              <h2 className="sv-title">All Set 🎉</h2>
-              <p className="sv-sub">Thanks for sharing! We've personalized your experience based on your preferences.</p>
+              <div className="sv-done-hero">
+                <span className="sv-done-ic" aria-hidden="true"><DSS.IconifyIcon name="lucide:check" size={30} color="#fff" /></span>
+                <span className="sv-eyebrow"><i /> Personalised</span>
+                <h2 className="sv-title">You're all set</h2>
+                <p className="sv-sub">Thanks for sharing. Your free resources are now tailored to where you are and where you're heading.</p>
+              </div>
               <div className="sv-summary">
+                <div className="sv-summary-h">Your answers <span>{answered} of {TOTAL}</span></div>
                 {QUESTIONS.map((Q, i) => answers[i] != null && (
                   <div className="sv-sum-item" key={i}>
-                    <div className="sv-sum-q">{i + 1}. {Q.q}</div>
+                    <div className="sv-sum-q"><span className="sv-sum-n">{pad2(i + 1)}</span>{Q.q}</div>
                     <div className="sv-sum-a">
-                      <span className="sv-check"><DSS.IconifyIcon name="lucide:check" size={14} color="#fff" /></span>
+                      <span className="sv-check"><DSS.IconifyIcon name="lucide:check" size={13} color="#fff" /></span>
                       {Q.opts[answers[i]]}
                     </div>
                   </div>
                 ))}
               </div>
-              <button className="sv-continue" onClick={finish}>Continue to My Learning</button>
+              <div className="sv-actions">
+                <button className="sv-continue" onClick={finish}>
+                  Continue to My Learning <DSS.IconifyIcon name="lucide:arrow-right" size={18} color="currentColor" />
+                </button>
+              </div>
             </div>
           ) : (
             <div className="sv-body">
-              <h2 className="sv-title">Let's Personalize Your Experience</h2>
+              <span className="sv-eyebrow"><i /> Personalise</span>
+              <h2 className="sv-title">Let's personalise your experience</h2>
               <p className="sv-sub">Help us tailor content and connections that matter most to you.</p>
 
-              <div className="sv-progress">
-                <div className="sv-dots">
+              <div className="sv-progress" role="progressbar" aria-valuemin={0} aria-valuemax={TOTAL} aria-valuenow={step + 1} aria-label={"Question " + (step + 1) + " of " + TOTAL}>
+                <div className="sv-bar" aria-hidden="true">
                   {QUESTIONS.map((_, i) => (
-                    <span key={i} className={"sv-dot" + (i <= step ? " on" : "")}>{i + 1}</span>
+                    <span key={i} className={"sv-seg" + (i < step ? " done" : i === step ? " cur" : "")} />
                   ))}
                 </div>
                 <span className="sv-pct">{pct}%</span>
               </div>
 
-              <div className="sv-q">{step + 1}. {cur.q}</div>
-              <div className="sv-opts" role="radiogroup" aria-label={cur.q}>
-                {cur.opts.map((o, i) => (
-                  <button key={i} className={"sv-opt" + (answers[step] === i ? " on" : "")}
-                    role="radio" aria-checked={answers[step] === i} onClick={() => pick(i)}>
-                    <span className="sv-radio" aria-hidden="true" />
-                    <span className="sv-opt-tx">{o}</span>
-                  </button>
-                ))}
+              <div className="sv-stepwrap" key={step}>
+                <div className="sv-q">
+                  <span className="sv-qn" aria-hidden="true">{pad2(step + 1)}</span>
+                  <span className="sv-qt">{cur.q}</span>
+                </div>
+                <div className="sv-opts" role="radiogroup" aria-label={cur.q}>
+                  {cur.opts.map((o, i) => (
+                    <button key={i} className={"sv-opt" + (answers[step] === i ? " on" : "")}
+                      role="radio" aria-checked={answers[step] === i} onClick={() => pick(i)}>
+                      <span className="sv-radio" aria-hidden="true" />
+                      <span className="sv-opt-tx">{o}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <button className="sv-continue" disabled={answers[step] == null} onClick={next}>Continue</button>
+              <div className="sv-actions">
+                {step > 0 && (
+                  <button className="sv-back" aria-label="Previous question" onClick={back}>
+                    <DSS.IconifyIcon name="lucide:chevron-left" size={22} color="currentColor" />
+                  </button>
+                )}
+                <button className="sv-continue" disabled={answers[step] == null} onClick={next}>
+                  {step === TOTAL - 1 ? "See my summary" : "Continue"} <DSS.IconifyIcon name="lucide:arrow-right" size={18} color="currentColor" />
+                </button>
+              </div>
             </div>
           )}
         </div>

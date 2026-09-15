@@ -55,7 +55,7 @@
   background: var(--lcm-bg); color: var(--lcm-text); font-family: var(--font-sans);
 }
 .lcm-screen.lc-light {
-  --lcm-bg: #F9F7F4; /* warm off-white My Learning surface */
+  --lcm-bg: #F6F3EF; /* warm off-white My Learning surface */
   --lcm-header-bg: rgba(255,255,255,.9);
   --lcm-card: #FFFFFF;
   --lcm-card-2: var(--gray-50);

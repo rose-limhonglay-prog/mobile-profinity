@@ -1811,3 +1811,12 @@ img{max-width:100%}
 /* Community.html side rails (community-web.jsx .cw-rail on top of .rail):
    keep the Kit rail's 20px rhythm; the events rail scrolls on its own. */
 .cw-rail{gap:20px}
+
+/* MediaCarousel video slide — a composed post's clip leading its photos.
+   Sits in the same square slot as the images (contain, on black, so a
+   vertical clip isn't cropped to a square); a lone clip keeps its own ratio. */
+.mc-vid{position:relative;background:#000;overflow:hidden;flex:0 0 auto}
+.mc-vid video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;display:block}
+.mc-fs-track .mc-fs-vid{flex:0 0 100%;width:100%;height:100%;scroll-snap-align:center;
+  display:flex;align-items:center;justify-content:center;background:#000}
+.mc-fs-vid video{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain}

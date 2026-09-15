@@ -26,6 +26,7 @@ const SideMenuLC = window.PFSideMenuC;
 const NotificationsLC = window.PFNotificationsPanelC;
 const MessagesLC = window.PFMessagesPanelC;
 const useHeaderHideLC = window.PFUseHeaderHideC;
+const PFLS_LC = window.PFLearnShared;
 
 const LC_TIER = window.PF_TIER || "confidence";
 const LC_LIGHT = !!window.PF_LC_LIGHT;
@@ -153,6 +154,7 @@ function lessonUrlLC(idx) {
 
 function courseUrlLC(c) {
   const p = { title: c.title, instr: "Dr. Tim Pearce", pct: 0 };
+  if (c.dur) p.dur = c.dur;
   if (c.price) p.price = c.price;
   return "CourseDetail.html?" + new URLSearchParams(p).toString();
 }
@@ -280,11 +282,16 @@ function LCModules({ done, currentIdx, nextIdx }) {
 
 /* ---------------------------------------------------------------- related -- */
 function LCRelated() {
+  /* shared pool + PRICES: a bought course drops out and the next back-fills;
+     Temple Filler stays as "included" for Confidence */
+  const purchased = PFLS_LC.usePurchased();
+  const related = PFLS_LC.pickRelated({ purchased, tier: LC_TIER, n: 3, includeOwned: true, exclude: [LC_COURSE.slug] });
+  if (!related.length) return null;
   return (
     <section className="lcm-sec" data-screen-label="Related courses">
       <div className="lcm-sec-h"><h2>Related</h2></div>
       <div className="lcm-list">
-        {LC_RELATED.map((c) =>
+        {related.map((c) =>
         <button type="button" className="lcm-card lcm-course" key={c.title} onClick={() => goLC(courseUrlLC(c))}>
             <span className="lcm-course-thumb">
               <img src={c.image} alt="" />
@@ -310,7 +317,7 @@ function LCFreeResources() {
   return (
     <section className="lcm-sec" data-screen-label="Free resources">
       <div className="lcm-sec-h"><h2>Free resources</h2></div>
-      <button type="button" className="lcm-card lcm-res" onClick={() => goLC("MySaved.html")}>
+      <button type="button" className="lcm-card lcm-res" onClick={() => goLC(LC_URLS.allCourses + "?free=1")}>
         <span className="lcm-res-ic" aria-hidden="true">
           <DSLC.IconifyIcon name="lucide:folder-open" size={22} color={LC_INK.gold} />
         </span>
@@ -406,7 +413,7 @@ function LearningConfidence() {
         <LCProgressCard doneCount={courseDone} total={LC_COURSE.totalLessons} />
         <LCCurrentLesson lesson={lessons[currentIdx]} idx={currentIdx} saved={saved} onSave={toggleSave} />
         <LCModules done={done} currentIdx={currentIdx} nextIdx={currentIdx} />
-        <LCRelated />
+        {/* Related block removed from the Confidence dashboard (user, 2026-09-15) — LCRelated kept for reuse */}
         <LCFreeResources />
         <LCRampCard label="Discover your journey" title="Discover your journey"
           body="We sequence your next-best courses from Recommended, New & Popular — one clear step at a time toward your goal."
@@ -449,7 +456,7 @@ function LearningConfidenceApp() {
   const mobile = useIsMobileLC();
   const scale = useDeviceScaleLC();
   const vars = { "--action-primary": "#0C1928", "--action-primary-hover": "#081120" };
-  const pageBg = LC_LIGHT ? "#F9F7F4" : "#0B1024";
+  const pageBg = LC_LIGHT ? "#F6F3EF" : "#0B1024";
   if (mobile) {
     return <div className="app" style={{ ...vars, background: pageBg }}><LearningConfidence /></div>;
   }

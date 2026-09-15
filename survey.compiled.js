@@ -2,6 +2,11 @@
    PROfinity — Free Course onboarding questionnaire (mobile)
    A 10-step "Let's Personalize Your Experience" wizard + summary. Self-contained
    IIFE; exposes window.SurveyMobile({ open, onClose, onComplete }). Suffixed -S.
+   Styling lives in learning-mobile.css (sv-*) for the phone and is re-skinned by
+   learning.css (.lrn2-survey .sv-*) on the web My Learning page.
+   Redesign (user, 2026-09-16): editorial look — gold eyebrow + serif title,
+   segmented progress bar, lettered option chips, Back/Continue footer, per-step
+   slide animation, "all set" summary hero.
    =========================================================================== */
 (function () {
   const {
@@ -40,6 +45,7 @@
     opts: ["Short tutorials", "Full masterclasses", "Live Q&As", "Case breakdowns", "Business training"]
   }];
   const TOTAL = QUESTIONS.length;
+  const pad2 = n => n < 10 ? "0" + n : String(n);
   function SurveyMobile({
     open,
     onClose,
@@ -57,72 +63,122 @@
       return n;
     });
     const next = () => setStep(s => s + 1);
+    const back = () => setStep(s => Math.max(0, s - 1));
+    /* hand the option labels to the caller and keep them (pf-survey-answers) so the
+       Free Resources page can put the best-fitting downloads first */
     const finish = () => {
-      onComplete && onComplete();
+      const labels = answers.map((a, i) => a == null ? null : QUESTIONS[i].opts[a]);
+      try {
+        localStorage.setItem("pf-survey-answers", JSON.stringify(labels));
+      } catch (e) {}
+      onComplete && onComplete(labels);
       onClose && onClose();
     };
+    const answered = answers.filter(a => a != null).length;
     return /*#__PURE__*/React.createElement("div", {
       className: "sv-overlay",
       role: "dialog",
       "aria-modal": "true",
       "aria-label": "Personalize your experience"
     }, /*#__PURE__*/React.createElement("div", {
-      className: "sv-card"
+      className: "sv-card" + (done ? " sv-card-done" : "")
     }, /*#__PURE__*/React.createElement("header", {
       className: "sv-head"
     }, /*#__PURE__*/React.createElement("img", {
       src: "assets/profinity-icon-purple-gold.png",
       alt: "PROfinity Academy"
-    }), /*#__PURE__*/React.createElement("button", {
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "sv-head-r"
+    }, !done && /*#__PURE__*/React.createElement("span", {
+      className: "sv-step",
+      "aria-label": "Question " + (step + 1) + " of " + TOTAL
+    }, step + 1, /*#__PURE__*/React.createElement("i", null, "/"), TOTAL), /*#__PURE__*/React.createElement("button", {
       className: "sv-x",
       "aria-label": "Close",
       onClick: onClose
     }, /*#__PURE__*/React.createElement(DSS.IconifyIcon, {
       name: "lucide:x",
-      size: 24,
-      color: "var(--gray-700)"
-    }))), done ? /*#__PURE__*/React.createElement("div", {
+      size: 20,
+      color: "currentColor"
+    })))), done ? /*#__PURE__*/React.createElement("div", {
       className: "sv-body"
-    }, /*#__PURE__*/React.createElement("h2", {
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "sv-done-hero"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sv-done-ic",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(DSS.IconifyIcon, {
+      name: "lucide:check",
+      size: 30,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "sv-eyebrow"
+    }, /*#__PURE__*/React.createElement("i", null), " Personalised"), /*#__PURE__*/React.createElement("h2", {
       className: "sv-title"
-    }, "All Set 🎉"), /*#__PURE__*/React.createElement("p", {
+    }, "You're all set"), /*#__PURE__*/React.createElement("p", {
       className: "sv-sub"
-    }, "Thanks for sharing! We've personalized your experience based on your preferences."), /*#__PURE__*/React.createElement("div", {
+    }, "Thanks for sharing. Your free resources are now tailored to where you are and where you're heading.")), /*#__PURE__*/React.createElement("div", {
       className: "sv-summary"
-    }, QUESTIONS.map((Q, i) => answers[i] != null && /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "sv-summary-h"
+    }, "Your answers ", /*#__PURE__*/React.createElement("span", null, answered, " of ", TOTAL)), QUESTIONS.map((Q, i) => answers[i] != null && /*#__PURE__*/React.createElement("div", {
       className: "sv-sum-item",
       key: i
     }, /*#__PURE__*/React.createElement("div", {
       className: "sv-sum-q"
-    }, i + 1, ". ", Q.q), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sv-sum-n"
+    }, pad2(i + 1)), Q.q), /*#__PURE__*/React.createElement("div", {
       className: "sv-sum-a"
     }, /*#__PURE__*/React.createElement("span", {
       className: "sv-check"
     }, /*#__PURE__*/React.createElement(DSS.IconifyIcon, {
       name: "lucide:check",
-      size: 14,
+      size: 13,
       color: "#fff"
-    })), Q.opts[answers[i]])))), /*#__PURE__*/React.createElement("button", {
+    })), Q.opts[answers[i]])))), /*#__PURE__*/React.createElement("div", {
+      className: "sv-actions"
+    }, /*#__PURE__*/React.createElement("button", {
       className: "sv-continue",
       onClick: finish
-    }, "Continue to My Learning")) : /*#__PURE__*/React.createElement("div", {
+    }, "Continue to My Learning ", /*#__PURE__*/React.createElement(DSS.IconifyIcon, {
+      name: "lucide:arrow-right",
+      size: 18,
+      color: "currentColor"
+    })))) : /*#__PURE__*/React.createElement("div", {
       className: "sv-body"
-    }, /*#__PURE__*/React.createElement("h2", {
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sv-eyebrow"
+    }, /*#__PURE__*/React.createElement("i", null), " Personalise"), /*#__PURE__*/React.createElement("h2", {
       className: "sv-title"
-    }, "Let's Personalize Your Experience"), /*#__PURE__*/React.createElement("p", {
+    }, "Let's personalise your experience"), /*#__PURE__*/React.createElement("p", {
       className: "sv-sub"
     }, "Help us tailor content and connections that matter most to you."), /*#__PURE__*/React.createElement("div", {
-      className: "sv-progress"
+      className: "sv-progress",
+      role: "progressbar",
+      "aria-valuemin": 0,
+      "aria-valuemax": TOTAL,
+      "aria-valuenow": step + 1,
+      "aria-label": "Question " + (step + 1) + " of " + TOTAL
     }, /*#__PURE__*/React.createElement("div", {
-      className: "sv-dots"
+      className: "sv-bar",
+      "aria-hidden": "true"
     }, QUESTIONS.map((_, i) => /*#__PURE__*/React.createElement("span", {
       key: i,
-      className: "sv-dot" + (i <= step ? " on" : "")
-    }, i + 1))), /*#__PURE__*/React.createElement("span", {
+      className: "sv-seg" + (i < step ? " done" : i === step ? " cur" : "")
+    }))), /*#__PURE__*/React.createElement("span", {
       className: "sv-pct"
     }, pct, "%")), /*#__PURE__*/React.createElement("div", {
+      className: "sv-stepwrap",
+      key: step
+    }, /*#__PURE__*/React.createElement("div", {
       className: "sv-q"
-    }, step + 1, ". ", cur.q), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sv-qn",
+      "aria-hidden": "true"
+    }, pad2(step + 1)), /*#__PURE__*/React.createElement("span", {
+      className: "sv-qt"
+    }, cur.q)), /*#__PURE__*/React.createElement("div", {
       className: "sv-opts",
       role: "radiogroup",
       "aria-label": cur.q
@@ -137,11 +193,25 @@
       "aria-hidden": "true"
     }), /*#__PURE__*/React.createElement("span", {
       className: "sv-opt-tx"
-    }, o)))), /*#__PURE__*/React.createElement("button", {
+    }, o))))), /*#__PURE__*/React.createElement("div", {
+      className: "sv-actions"
+    }, step > 0 && /*#__PURE__*/React.createElement("button", {
+      className: "sv-back",
+      "aria-label": "Previous question",
+      onClick: back
+    }, /*#__PURE__*/React.createElement(DSS.IconifyIcon, {
+      name: "lucide:chevron-left",
+      size: 22,
+      color: "currentColor"
+    })), /*#__PURE__*/React.createElement("button", {
       className: "sv-continue",
       disabled: answers[step] == null,
       onClick: next
-    }, "Continue"))));
+    }, step === TOTAL - 1 ? "See my summary" : "Continue", " ", /*#__PURE__*/React.createElement(DSS.IconifyIcon, {
+      name: "lucide:arrow-right",
+      size: 18,
+      color: "currentColor"
+    }))))));
   }
   window.SurveyMobile = SurveyMobile;
 })();

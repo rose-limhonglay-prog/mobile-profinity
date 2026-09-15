@@ -149,141 +149,11 @@ function useLessonsDoneLX() {
 }
 
 /* ---------------------------------------------------------------- course data -- */
-const LX_8D = {
-  slug: "8d-lip-design",
-  title: "8D Lip Design",
-  still: "assets/course-8d-lip-design.jpg",
-  levels: [{
-    title: "Level 1",
-    name: "Lip Anatomy",
-    eyebrow: "Module 3 · Lip Anatomy",
-    open: true,
-    sections: [{
-      name: "Assessment",
-      free: true,
-      desc: "Read the lips before you ever pick up a needle — the anatomy, the vascular danger zones and a repeatable assessment routine you can run in every consultation.",
-      bullets: ["Map the superior and inferior labial arteries and where they run superficially.", "Assess proportions, projection and lip-to-face balance before planning volume.", "Document every case with the same standardised photo set."],
-      lessons: [{
-        name: "Lip anatomy essentials",
-        dur: "4:12",
-        intro: "Before we talk product or technique, we need a shared map of the lip. This lesson walks the layers from skin to mucosa, names the landmarks you'll use in every plan, and shows why the vermilion border behaves differently to the body of the lip.",
-        body: "Dr Tim Pearce breaks the lip into five zones and explains what each one does when you add volume — and what goes wrong when you treat them as one structure.",
-        points: ["The five zones of the lip and how each responds to filler.", "Where the orbicularis oris sits and why depth matters.", "Reading the vermilion border, Cupid's bow and philtral columns."]
-      }, {
-        name: "Vascular landmarks of the lip",
-        dur: "5:36",
-        intro: "The labial arteries are the reason lips are a high-stakes area. Here we trace their typical course, the variations you must assume are present, and the injection planes that keep you away from them.",
-        body: "Using cadaveric and ultrasound references, this lesson turns the anatomy into practical rules for needle depth, cannula entry points and aspiration.",
-        points: ["Typical course and depth of the superior and inferior labial arteries.", "The three anatomical variants you must plan for.", "Safe planes for needle and cannula in each zone."]
-      }, {
-        name: "Assessing lip proportions",
-        dur: "3:48",
-        intro: "Beautiful lips are balanced lips. This lesson gives you the ratios and angles to assess the upper-to-lower lip relationship, projection and how the lips sit within the lower face.",
-        body: "You'll learn the 1:1.6 golden ratio guide, how to judge projection from the profile and the tell-tale signs of an over-filled lip so your plans stay natural.",
-        points: ["Upper-to-lower lip ratios and when to deviate from them.", "Judging projection and the nasolabial angle in profile.", "Spotting existing over-fill and migration before you plan."]
-      }, {
-        name: "Photographing the lips for assessment",
-        dur: "2:57",
-        intro: "Your photographs are your clinical record, your consent evidence and your best marketing. This short lesson sets up a repeatable five-shot lip set you can capture in under two minutes.",
-        body: "Lighting, angles and expressions that reveal asymmetry — and the mistakes that hide it.",
-        points: ["The five-shot standard set: frontal, both obliques, both profiles.", "Repose vs. smile: why you need both.", "Consistent lighting and distance for honest before-and-afters."]
-      }, {
-        name: "Assessment checklist walkthrough",
-        dur: "4:05",
-        intro: "Everything from this module comes together in one checklist. Dr Tim runs a live consultation using it so you can see how the anatomy, ratios and photos drive the treatment plan.",
-        body: "Download the checklist from Resources and follow along — by the end you should be able to complete it on a real patient without prompting.",
-        points: ["Running the checklist in a real consultation.", "Turning assessment findings into a written treatment plan.", "Setting expectations with the patient before booking."]
-      }]
-    }]
-  }, {
-    title: "Level 2",
-    name: "Lip Filler Technique",
-    eyebrow: "Module 4 · Lip Filler Technique",
-    open: true,
-    sections: [{
-      name: "Lip Filler Technique",
-      desc: "Start with the two orientation lessons, then work through the technique, case study and resource folders in order.",
-      bullets: [],
-      lessons: [{
-        name: "Welcome & how to use this module",
-        dur: "2:10"
-      }, {
-        name: "Safety essentials (watch first)",
-        dur: "6:48"
-      }],
-      subs: [{
-        name: "Injection Techniques",
-        open: true,
-        lessons: [{
-          name: "Linear threading technique",
-          dur: "4:32"
-        }, {
-          name: "Tenting technique",
-          dur: "3:58"
-        }, {
-          name: "Cannula approach",
-          dur: "6:11"
-        }]
-      }, {
-        name: "Case Studies",
-        lessons: [{
-          name: "Case 1: thin lips, first treatment",
-          dur: "7:20"
-        }, {
-          name: "Case 2: correction of migrated filler",
-          dur: "9:05"
-        }]
-      }, {
-        name: "Downloads & Resources",
-        lessons: [{
-          name: "Technique recipe cards (PDF)",
-          dur: "PDF",
-          kind: "pdf"
-        }, {
-          name: "Consent form templates (PDF)",
-          dur: "PDF",
-          kind: "pdf"
-        }]
-      }]
-    }]
-  }, {
-    title: "Level 3",
-    name: "Perioral Rejuvenation",
-    eyebrow: "Module 5 · Perioral Rejuvenation",
-    sections: [],
-    unlock: "Unlocks when you complete Level 2 — Lip Filler Technique."
-  }, {
-    title: "Level 4",
-    name: "Complications & Recovery",
-    eyebrow: "Module 6 · Complications & Recovery",
-    sections: [],
-    unlock: "Unlocks when you complete Level 3 — Perioral Rejuvenation."
-  }, {
-    title: "Level 5",
-    name: "Advanced Cases",
-    eyebrow: "Module 7 · Advanced Cases",
-    sections: [],
-    unlock: "Unlocks when you complete Level 4 — Complications & Recovery."
-  }, {
-    title: "End of Success Path Quiz",
-    name: "Final Assessment",
-    eyebrow: "Final · Success Path Quiz",
-    quiz: true,
-    sections: [{
-      name: "Final Assessment",
-      desc: "Twenty-five questions across anatomy, technique and complications. Pass at 80% to earn your 8D Lip Design certificate.",
-      bullets: [],
-      lessons: [{
-        name: "8D Lip Design success path quiz",
-        dur: "25 Qs",
-        kind: "quiz",
-        intro: "You've reached the end of the success path. The quiz draws on every level — take it when you can run the assessment checklist and describe the safe planes for each technique without notes.",
-        body: "Twenty-five multiple-choice questions, untimed. You can retake it after 24 hours if you need to.",
-        points: ["Anatomy and vascular landmarks.", "Technique selection and safe planes.", "Recognising and managing complications."]
-      }]
-    }]
-  }]
-};
+/* 8D Lip Design lives in learning-shared.js (window.PFLearnShared.CURRICULA)
+   so My Learning's Continue card, the web pages and this reader count the
+   same lessons. */
+const PFLS_LX = window.PFLearnShared;
+const LX_8D = PFLS_LX.CURRICULA["8d-lip-design"];
 
 /* Toxin Battle — same levels/modules/lesson names as course-detail.jsx and
    lesson.jsx so Lesson.html?course=toxin-battle&level=&module=&lesson= deep
@@ -639,20 +509,10 @@ const LX_RESOURCES = [{
   size: "120 KB"
 }];
 
-/* These are courses — route to the course page, never to a lesson index. */
-const LX_RELATED = [{
-  title: "Temple Filler",
-  lessons: 12,
-  dur: "1h 40m",
-  image: "assets/course-temple-filler.webp",
-  price: LX_PRICES["temple-filler"]
-}, {
-  title: "Profinity Membership",
-  lessons: 6,
-  dur: "45m",
-  image: "assets/course-membership-banner.jpg",
-  price: LX_PRICES["profinity-membership"]
-}];
+/* Related courses come from the shared pool (PFLearnShared.RELATED_POOL +
+   PRICES): paid, priced, and a bought course drops out so the next in the
+   pool takes its place. These are courses — route to the course page. */
+
 const LX_DEFAULT_COMMENTS = [{
   author: {
     name: "Dr. Maya Chen"
@@ -1291,7 +1151,14 @@ function LXShareSheet({
   })), /*#__PURE__*/React.createElement("span", null, t.label))))));
 }
 function LXRelated() {
-  const related = LX_RELATED.filter(c => slugLX(c.title) !== LX_COURSE.slug);
+  const purchased = usePurchasedLX();
+  const related = PFLS_LX.pickRelated({
+    purchased,
+    tier: LX_TIER,
+    n: 3,
+    includeOwned: true,
+    exclude: [LX_COURSE.slug]
+  });
   if (!related.length) return null;
   return /*#__PURE__*/React.createElement("section", {
     "data-screen-label": "Related courses"
@@ -1321,12 +1188,14 @@ function LXRelated() {
       className: "lc-course-tx"
     }, /*#__PURE__*/React.createElement("span", {
       className: "lc-course-eyebrow"
-    }, included ? "Included in your membership" : price ? "Paid course" : "Course"), /*#__PURE__*/React.createElement("span", {
+    }, included ? "Included in your membership" : price ? c.level + " · Paid course" : "Course"), /*#__PURE__*/React.createElement("span", {
       className: "lc-course-title",
       style: {
         display: "block"
       }
-    }, c.title), price > 0 && /*#__PURE__*/React.createElement("span", {
+    }, c.title), /*#__PURE__*/React.createElement("span", {
+      className: "lc-course-meta"
+    }, c.lessons, " lessons · ", c.dur), price > 0 && /*#__PURE__*/React.createElement("span", {
       className: "lc-course-price"
     }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
       name: "lucide:lock",
@@ -1340,6 +1209,53 @@ function LXRelated() {
       size: 18,
       color: LX_INK.onGold
     })));
+  })));
+}
+
+/* Upgrade recommendations (course page): the next tier up and three
+   catalogue courses it unlocks — same category as this course first. */
+function LXUpgrade({
+  course
+}) {
+  const next = PFLS_LX.nextTier(LX_TIER);
+  if (!next) return null;
+  const name = PFLS_LX.TIER_NAME[next];
+  const cat = (PFLS_LX.CATALOG.filter(c => c.slug === course.slug)[0] || {}).cat;
+  const picks = PFLS_LX.CATALOG.filter(c => !c.owned && c.slug !== course.slug && !PFLS_LX.includedIn(c.slug, LX_TIER)).sort((a, b) => (b.cat === cat) - (a.cat === cat)).slice(0, 3);
+  return /*#__PURE__*/React.createElement("section", {
+    className: "lc-upgrade",
+    "data-screen-label": "Unlock more with " + name
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lc-upgrade-eyebrow"
+  }, "Recommended upgrade"), /*#__PURE__*/React.createElement("h3", {
+    className: "lc-upgrade-title"
+  }, "Unlock more with ", name), /*#__PURE__*/React.createElement("p", {
+    className: "lc-upgrade-body"
+  }, next === "mastery" ? "Every course in the catalogue, live case reviews and the Mastery community channels." : "More courses, live events and community perks."), picks.length > 0 && /*#__PURE__*/React.createElement("ul", {
+    className: "lc-upgrade-list"
+  }, picks.map(c => /*#__PURE__*/React.createElement("li", {
+    key: c.slug
+  }, /*#__PURE__*/React.createElement("img", {
+    src: c.image,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "lc-upgrade-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lc-upgrade-name"
+  }, c.title), /*#__PURE__*/React.createElement("span", {
+    className: "lc-upgrade-meta"
+  }, c.lessons, " lessons · ", c.by)), /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:lock",
+    size: 14,
+    color: "rgba(255,255,255,.8)"
+  })))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-upgrade-btn",
+    onClick: () => goLX("MembershipTier.html")
+  }, "See what's included", /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:arrow-right",
+    size: 16,
+    color: "#7A4A03"
   })));
 }
 
@@ -2685,6 +2601,14 @@ function CourseDetailConfidence() {
     course: course,
     total: flat.length,
     onBuy: buyCourse
+  }), !locked && /*#__PURE__*/React.createElement(LXCourseProgress, {
+    course: course,
+    flat: flat,
+    done: done,
+    onOpen: () => scrollRef.current && scrollRef.current.scrollTo({
+      top: 0,
+      behavior: "smooth"
+    })
   }), !locked && /*#__PURE__*/React.createElement("div", {
     className: "lc-ctas",
     "data-screen-label": "CTAs"
@@ -2734,6 +2658,8 @@ function CourseDetailConfidence() {
     onToast: showToast,
     locked: locked,
     onLocked: nudgeBuy
+  }), /*#__PURE__*/React.createElement(LXUpgrade, {
+    course: course
   }), /*#__PURE__*/React.createElement(LXRelated, null), /*#__PURE__*/React.createElement(LXComments, {
     lessonName: cur.name,
     courseSlug: course.slug
@@ -2795,7 +2721,7 @@ function CourseDetailConfidenceApp() {
     "--action-primary": "#0C1928",
     "--action-primary-hover": "#081120"
   };
-  const pageBg = LX_LIGHT ? "#F9F7F4" : "#0B1024";
+  const pageBg = LX_LIGHT ? "#F6F3EF" : "#0B1024";
   if (mobile) {
     return /*#__PURE__*/React.createElement("div", {
       className: "app",

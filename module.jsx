@@ -192,6 +192,30 @@ function ModuleHome() {
             </div>
           </React.Fragment>}
 
+        {/* what's next + Ava (user, 2026-09-15) */}
+        {nextModule &&
+          <React.Fragment>
+            <div className="mo-sec-h"><h2>What's next</h2></div>
+            <div className="mo-next">
+              <button type="button" className="mo-nexttile" onClick={() => goMO(`Module.html?course=${nextModule.courseSlug}&level=${nextModule.level}&module=${nextModule.module}`)}>
+                <span className="mo-nexttile-go" aria-hidden="true"><IcoMO name="lucide:layers" size={18} color="#fff" /></span>
+                <span className="mo-nexttile-eyebrow">Next module · {nextModule.lessons.length + nextModule.subs.reduce((a, s) => a + s.lessons.length, 0)} lessons · {nextModule.mins}</span>
+                <span className="mo-nexttile-name">{nextModule.name}</span>
+                <span className="mo-nexttile-meta">{nextModule.desc}</span>
+              </button>
+            </div>
+          </React.Fragment>}
+        <section className="mo-ava" data-screen-label="Ask Ava">
+          <span className="orb"><IcoMO name="lucide:sparkles" size={22} color="#fff" /></span>
+          <div className="tx">
+            <div className="ti">Ask Ava about this module</div>
+            <div className="su">Want a 30-second primer before you start, or a quiz when you're done? Ava knows where you are in the course.</div>
+            <button type="button" className="pf-coach-link" data-coach={`I'm on "${d.name}" in ${d.course}. Give me a quick primer on what this module covers and what to watch for in clinic.`}>
+              <IcoMO name="lucide:sparkles" size={14} color="#0C1928" />Ask Ava
+            </button>
+          </div>
+        </section>
+
         <div className="mo-foot">
           <ButtonMO variant="secondary" fullWidth
             iconLeading={<IcoMO name="lucide:list" size={18} color="var(--gray-600)" />}

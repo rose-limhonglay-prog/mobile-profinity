@@ -526,7 +526,55 @@ function LSComments({ comments, onAddComment, onAddReply }) {
 
 }
 
-function LSOverview({ ctx, comments, onAddComment, onAddReply }) {
+/* What's next: the next lesson and the next module after this one, then Ava
+   (user, 2026-09-15). Next lesson is gated like the footer button — mark this
+   lesson complete first. */
+function LSWhatsNext({ ctx, flat, flatIdx, completed, onNext }) {
+  const cur = flat[flatIdx];
+  const next = flat[flatIdx + 1] || null;
+  const sameModule = (a, b) => a.levelIdx === b.levelIdx && a.moduleIdx === b.moduleIdx;
+  let nextModIdx = -1;
+  for (let i = flatIdx + 1; i < flat.length; i++) { if (!sameModule(flat[i], cur)) { nextModIdx = i; break; } }
+  const nextMod = nextModIdx === -1 ? null : flat[nextModIdx];
+  const nextModCount = nextMod ? flat.filter((l) => sameModule(l, nextMod)).length : 0;
+  if (!next && !nextMod) return null;
+  return (
+    <React.Fragment>
+      <h3 className="ls-next-h">What's next</h3>
+      <div className="ls-next">
+        {next &&
+        <button type="button" className="ls-nexttile" onClick={onNext} aria-label={"Next lesson: " + next.name + (completed ? "" : ". Mark this lesson complete first")}>
+          <span className="ls-nexttile-go" aria-hidden="true"><DSLS.IconifyIcon name="lucide:arrow-up-right" size={18} color="#fff" /></span>
+          <span className="ls-nexttile-eyebrow">Next lesson{next.dur ? " · " + next.dur : ""}</span>
+          <span className="ls-nexttile-name">{next.name}</span>
+          <span className="ls-nexttile-meta">{next.subTitle || next.moduleTitle}{completed ? "" : " · complete this lesson to unlock"}</span>
+        </button>}
+        {nextMod &&
+        <button type="button" className="ls-nexttile" onClick={() => goLS(moduleUrlLS(ctx.course, nextMod.levelIdx, nextMod.moduleIdx))}>
+          <span className="ls-nexttile-go" aria-hidden="true"><DSLS.IconifyIcon name="lucide:layers" size={18} color="#fff" /></span>
+          <span className="ls-nexttile-eyebrow">Next module · {nextModCount} {nextModCount === 1 ? "lesson" : "lessons"}</span>
+          <span className="ls-nexttile-name">Module {globalModuleIndexLS(ctx.course, nextMod.levelIdx, nextMod.moduleIdx)}: {nextMod.moduleTitle}</span>
+          <span className="ls-nexttile-meta">Starts with {nextMod.name}</span>
+        </button>}
+      </div>
+    </React.Fragment>);
+}
+
+function LSAva({ ctx }) {
+  return (
+    <section className="ls-ava" data-screen-label="Ask Ava">
+      <span className="orb"><DSLS.IconifyIcon name="lucide:sparkles" size={22} color="#fff" /></span>
+      <div className="tx">
+        <div className="ti">Talk this through with Ava</div>
+        <div className="su">Stuck on a step or unsure how this applies to your patients? Ava knows where you are in the course.</div>
+        <button type="button" className="pf-coach-link" data-coach={`I'm on the lesson "${ctx.lesson.name}" in ${ctx.module.title} (${ctx.course.title}). Quiz me on the key points and tell me what to practise next.`}>
+          <DSLS.IconifyIcon name="lucide:sparkles" size={14} color="#0C1928" />Ask Ava
+        </button>
+      </div>
+    </section>);
+}
+
+function LSOverview({ ctx, comments, onAddComment, onAddReply, next }) {
   return (
     <div className="ls-panel">
       <h2 className="ls-ov-heading">{ctx.module.title}</h2>
@@ -540,6 +588,8 @@ function LSOverview({ ctx, comments, onAddComment, onAddReply }) {
           </div>
         )}
       </div>
+      {next && <LSWhatsNext {...next} />}
+      {next && <LSAva ctx={ctx} />}
       <div className="ls-divider" />
       <LSComments comments={comments} onAddComment={onAddComment} onAddReply={onAddReply} />
     </div>);
@@ -659,7 +709,8 @@ function Lesson() {
         </div>
 
         {tab === "Overview" ?
-        <LSOverview ctx={ctx} comments={comments} onAddComment={addComment} onAddReply={addReply} /> :
+        <LSOverview ctx={ctx} comments={comments} onAddComment={addComment} onAddReply={addReply}
+          next={{ ctx, flat, flatIdx, completed, onNext: () => completed ? goNext() : null }} /> :
         <LSResources ctx={ctx} />}
       </div>
 

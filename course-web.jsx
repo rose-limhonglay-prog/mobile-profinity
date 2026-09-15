@@ -1,659 +1,633 @@
 /* ===========================================================================
    PROfinity — Course (web)
-   Curriculum/overview page reached from "Continue learning" / "Start learning"
-   on a My Learning course tile (MyLearning.html) via ?course=<slug>, or generic
-   ?title=&instr=&pct=&price= for tiles that don't have bespoke content. Media
-   hero + About/What you'll learn/Curriculum/Instructor/Discussion. Clicking a
-   lesson or "Continue Learning" opens the dedicated LessonWeb.html video-player
-   page, which shares this page's localStorage progress key. Mirrors the
-   sibling course-landing-web.jsx (PROfinity Membership) layout. Suffixed -CW
-   to avoid clashing with other page globals.
+   Desktop port of the mobile course reader (lesson-confidence.jsx →
+   CourseDetail.html): the same course trees, monetisation, progress,
+   resources, related courses, comments, Ava card and share sheet in a
+   two-column desktop layout, plus the web-only strengths (breadcrumb,
+   curriculum search, expand/collapse all, instructor, What's included).
+
+   URL contract (every My Learning web page links here via PFLearn.courseUrl):
+     ?course=<slug>                          bespoke tree (8d-lip-design, toxin-battle; 8d-lips is an alias)
+     ?course=<slug>&title=&price=&dur=&instr= generic course built from its title
+     ?title=&instr=&pct=                     legacy generic shape (no slug)
+     &level=&module=&lesson=[&sub=]          pre-select a lesson (mobile shape)
+     &play=1                                 open the lesson player (LessonWeb.html) straight away
+     &share=1                                open the Share lesson modal
+
+   Data + helpers come from course-data-web.js (window.PFCourseData); tier,
+   purchases, completion (pf-lessons-done, shared with the phone) and URLs from
+   learning-store-web.js (window.PFLearn). The lesson player is LessonWeb.html
+   (lesson-web.jsx). Suffixed -CW because every page script shares one scope.
    =========================================================================== */
-const { useState: useStateCW, useEffect: useEffectCW } = React;
+const { useState: useStateCW, useEffect: useEffectCW, useRef: useRefCW, useMemo: useMemoCW } = React;
 const DSCW = window.ProfinityDesignSystem_c2b5cc;
-const { TopNav: TopNavCW, IconifyIcon: IconCW, LevelBadge: LevelBadgeCW, Spark: SparkCW } = DSCW;
+const { TopNav: TopNavCW, IconifyIcon: IconCW, Avatar: AvatarCW } = DSCW;
+const CD = window.PFCourseData;
+const PFL = window.PFLearn;
 
-const ME_CW = { name: "Katy Wilson", role: "Nurse Practitioner", avatar: "assets/avatar-katy.jpg" };
+const ME_CW = { name: CD.ME.fullName, role: CD.ME.role, avatar: CD.ME.avatar };
+const CW_PARAMS = new URLSearchParams(window.location.search);
 
-function goCW(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
+function goCW(url) { CD.go(url); }
 function navigateCW(label) {
-  var u = { Home: "NewsfeedWeb.html", Profile: "Profile.html", "My Learning": "MyLearning.html", Community: "Community.html", Agent: "Agent.html" }[label];
+  const u = { Home: "NewsfeedWeb.html", Profile: "Profile.html", "My Learning": PFL.myLearningUrl, Community: "Community.html", Agent: "Agent.html" }[label];
   if (u) goCW(u);
 }
 
-/* ---------------------------------------------------------------- module completion progress -- */
-function progressKeyCW(slug) { return "pf-lesson-progress-" + slug; }
+/* gold ink for DS icons — AA-safe on the light page, raw gold in dark mode */
+const INK_CW = { gold: "var(--cd-gold)", text: "var(--cd-text)", muted: "var(--cd-text-3)", success: "var(--cd-success)", onNavy: "#FFFFFF", onGold: "var(--cd-on-gold)", heading: "var(--cd-heading)" };
 
-function loadProgressCW(slug) {
-  try {
-    const saved = JSON.parse(localStorage.getItem(progressKeyCW(slug)));
-    if (saved && Array.isArray(saved.completed)) return saved;
-  } catch (e) {}
-  return { completed: [], activeIdx: 0 };
+const CW_COURSE = CD.resolveCourse(CW_PARAMS);
+
+/* "2:10" + "6:48" … → "1h 40m" for the meta row when the URL carries no ?dur= */
+function totalDurationCW(flat) {
+  let secs = 0;
+  flat.forEach((l) => { const m = /^(\d+):(\d\d)$/.exec(l.dur || ""); if (m) secs += Number(m[1]) * 60 + Number(m[2]); });
+  if (!secs) return null;
+  const mins = Math.round(secs / 60);
+  return mins >= 60 ? Math.floor(mins / 60) + "h " + (mins % 60 ? (mins % 60) + "m" : "") : mins + "m";
 }
 
-function saveProgressCW(slug, data) {
-  try { localStorage.setItem(progressKeyCW(slug), JSON.stringify(data)); } catch (e) {}
-}
-
-/* ---------------------------------------------------------------- shared bullets -- */
-const SCREENING_BULLETS_CW = [
-  "Take a comprehensive medical history (bleeding disorders, neuromuscular diseases, medications).",
-  "Screen for contraindications (pregnancy, active infections, known hypersensitivities).",
-  "Assess psychological readiness and set realistic expectations."
-];
-const UPPER_LID_BULLETS_CW = [
-  "Evaluate eyelid skin laxity and excess fat.",
-  "Discuss surgical options (traditional vs. minimally invasive techniques).",
-  "Ensure patient understands post-operative care and recovery."
-];
-
-const DEFAULT_RESOURCES_CW = [
-  { name: "Course Handbook.pdf", size: "2.3 MB", ext: "pdf" },
-  { name: "Contraindications Screening Form.pdf", size: "268 KB", ext: "pdf" },
-  { name: "Patient Consent Template.docx", size: "88 KB", ext: "doc" },
-  { name: "Post-Treatment Care Sheet.pdf", size: "245 KB", ext: "pdf" }
-];
-
-const DEFAULT_COMMENTS_CW = [
-  { name: "Sarah Jenkins", time: "2 hours ago", likes: 12,
-    text: "I found the section on eye complications really informative. Does anyone have any tips for managing patient anxiety during the procedure?" },
-  { name: "Dr. Michael Chen", time: "Yesterday", likes: 8,
-    text: "Great module! I've been using the cognitive training tools with my patients and have seen a significant improvement in their focus during sessions." },
-  { name: "Emily R.", time: "3 days ago", likes: 5,
-    text: "Where can I find the downloadable course handbook mentioned in the overview? I couldn't locate it in the Resources tab." }
-];
-
-const DEFAULT_INCLUDED_CW = [
-  { icon: "lucide:book-open", text: "Full course access" },
-  { icon: "lucide:award", text: "Certificate on completion" },
-  { icon: "lucide:clipboard-check", text: "End-of-course assessment" },
-  { icon: "lucide:refresh-cw", text: "Lifetime access & future updates" }
-];
-
-const INSTRUCTOR_CW = {
-  name: "Dr Tim Pearce",
-  role: "Clinical Director · PROfinity Academy",
-  avatar: "assets/avatar-drtim.png",
-  bio: "Medical Doctor · Leading Aesthetic Clinician & Educator · Clinical Director · Longevity Advocate"
-};
-
-/* ---------------------------------------------------------------- course data -- */
-const COURSES_WEB = {
-  "8d-lips": {
-    slug: "8d-lips",
-    title: "8D Lips",
-    level: "Beginner",
-    category: "Toxin & filler · Upper & lower face",
-    bannerImage: "assets/clinic-treatment-collage.png",
-    description: "Julie Bass Kaplan reveals her secrets for advanced upper-face, lower-face and neck technique — so you inject with confidence and protect your practice.",
-    instructor: INSTRUCTOR_CW,
-    aboutParas: [
-      "We don't like to say this upgrade is mandatory, but we HIGHLY RECOMMEND it!",
-      "If you're going to invest in mastering advanced toxin technique, you really need to learn how to manage potential eye complications so you can deliver the best results and protect your practice."
-    ],
-    introParas: [
-      "You will see a complete list of course modules below. Simply click to start your course.",
-      "You can follow the course in any order, but will need to complete all modules in order to access your certificate. Please mark each module complete as you progress. Note, video modules need to be watched in full before they can be marked complete.",
-      "You can access your downloadable course handbook and a variety of extra resources in the 'Course Downloads' tab."
-    ],
-    learn: [
-      "Identify, prevent and manage the most serious eye-related toxin complications with confidence.",
-      "Take a comprehensive medical history and screen for contraindications before every treatment.",
-      "Master linear threading, tenting and cannula techniques for lip filler injections.",
-      "Evaluate eyelid skin laxity and choose between surgical and minimally invasive options.",
-      "Conduct neurological assessment and manage blepharospasm with botulinum toxin.",
-      "Use proven consultation scripts and consent templates to protect your practice."
-    ],
-    duration: "2h 36m",
-    points: 1000,
-    resources: DEFAULT_RESOURCES_CW,
-    comments: DEFAULT_COMMENTS_CW,
-    included: DEFAULT_INCLUDED_CW,
-    sections: [
-      { title: "Module 1", lessons: [
-        { name: "Diagnosis", kind: "video", desc: "How to diagnose, treat and most of all understand how to avoid Eyelid Ptosis from Botox treatment.", bullets: SCREENING_BULLETS_CW },
-        { name: "Brow Ptosis", kind: "video", desc: "How to Select Patients & Conduct Medical Screening", bullets: SCREENING_BULLETS_CW }
-      ] },
-      { title: "Module 2", lessons: [
-        { name: "Welcome & how to use this module", kind: "video", dur: "2:10" },
-        { name: "Safety essentials (watch first)", kind: "video", dur: "6:48" }
-      ], subs: [
-        { title: "Injection Techniques", lessons: [
-          { name: "Linear threading technique", kind: "video", dur: "4:32" },
-          { name: "Tenting technique", kind: "video", dur: "3:58" },
-          { name: "Cannula approach", kind: "video", dur: "6:11" }
-        ] },
-        { title: "Case Studies", lessons: [
-          { name: "Case 1: thin lips, first treatment", kind: "video", dur: "7:20" },
-          { name: "Case 2: correction of migrated filler", kind: "video", dur: "9:05" }
-        ] },
-        { title: "Downloads & Resources", lessons: [
-          { name: "Technique recipe cards", kind: "pdf" },
-          { name: "Consent form templates", kind: "pdf" }
-        ] }
-      ], groupDesc: "Start with the two orientation lessons, then work through the sub-module folders in order." },
-      { title: "Module 3", lessons: [
-        { name: "Upper Eyelid Lift", kind: "video", desc: "Indications and Surgical Techniques for Upper Eyelid Lift", bullets: UPPER_LID_BULLETS_CW },
-        { name: "Lower Eyelid Surgery", kind: "video", desc: "Approaches and Considerations for Lower Eyelid Surgery", bullets: [
-          "Assess lower eyelid for signs of aging and fat herniation.",
-          "Discuss risks and benefits of surgical versus non-surgical treatments.",
-          "Prepare patient for realistic outcomes and duration of results."
-        ] }
-      ] },
-      { title: "Module 4", lessons: [
-        { name: "Blepharospasm Treatment", kind: "video", desc: "Understanding Blepharospasm and Its Management", bullets: [
-          "Conduct neurological assessments to confirm diagnosis.",
-          "Explore treatment options including botulinum toxin injections.",
-          "Educate patients on the potential for recurrent symptoms."
-        ] }
-      ] },
-      { title: "Bonus Module", lessons: [
-        { name: "Bonus Module – Key Concepts", kind: "video" }
-      ] },
-      { title: "End of Success Path Quiz", lessons: [
-        { name: "Botulinum Toxin Complications – End Of Course Quiz", kind: "quiz" }
-      ] }
-    ]
-  }
-};
-
-function slugifyCW(title) {
-  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
-
-function buildGenericCourseWeb(params) {
-  const title = params.get("title") || "Course";
-  return {
-    slug: slugifyCW(title),
-    title: title,
-    level: "All Levels",
-    category: title + " · Course",
-    bannerImage: "assets/clinic-lip-design.png",
-    description: "Mastering this technique will help you deliver safer, more predictable results and protect your practice's reputation.",
-    instructor: INSTRUCTOR_CW,
-    aboutParas: [
-      "We don't like to say this course is essential, but we HIGHLY RECOMMEND it!",
-      "Mastering this technique will help you deliver safer, more predictable results and protect your practice's reputation."
-    ],
-    introParas: [
-      "You will see a complete list of course modules below. Simply click to start your course.",
-      "You can follow the course in any order, but will need to complete all modules in order to access your certificate. Please mark each module complete as you progress."
-    ],
-    learn: [
-      "Build a step-by-step protocol you can use with confidence from your very next patient.",
-      "Avoid the most common mistakes practitioners make when starting out with this technique."
-    ],
-    duration: "45m",
-    points: 1000,
-    resources: DEFAULT_RESOURCES_CW,
-    comments: DEFAULT_COMMENTS_CW,
-    included: DEFAULT_INCLUDED_CW,
-    sections: [
-      { title: "Module 1", lessons: [
-        { name: "Getting Started", kind: "video", desc: "Foundations you need before your first patient session.", bullets: SCREENING_BULLETS_CW }
-      ] },
-      { title: "End of Success Path Quiz", lessons: [
-        { name: title + " – End Of Course Quiz", kind: "quiz" }
-      ] }
-    ]
-  };
-}
-
-function getCourseWeb() {
-  const params = new URLSearchParams(window.location.search);
-  const slug = params.get("course");
-  if (slug && COURSES_WEB[slug]) return COURSES_WEB[slug];
-  if (params.get("title")) return buildGenericCourseWeb(params);
-  return COURSES_WEB["8d-lips"];
-}
-
-function lessonUrlCW(course, idx) {
-  const params = new URLSearchParams();
-  params.set(COURSES_WEB[course.slug] ? "course" : "title", COURSES_WEB[course.slug] ? course.slug : course.title);
-  params.set("lesson", idx);
-  return "LessonWeb.html?" + params.toString();
-}
-
-/* ---------------------------------------------------------------- flatten for progress tracking -- */
-function flattenSectionsCW(course) {
-  const flat = [];
-  course.sections.forEach((sec, si) => {
-    sec.lessons.forEach((l) => {
-      Object.assign(l, { sectionIndex: si, sectionTitle: sec.title, flatIdx: flat.length });
-      flat.push(l);
-    });
-    (sec.subs || []).forEach((sub) => {
-      sub.lessons.forEach((l) => {
-        Object.assign(l, { sectionIndex: si, sectionTitle: sec.title, subTitle: sub.title, flatIdx: flat.length });
-        flat.push(l);
-      });
-    });
-  });
-  return flat;
-}
-
-function sectionLessonCount(s) {
-  const subCount = (s.subs || []).reduce((total, sub) => total + sub.lessons.length, 0);
-  return s.lessons.length + subCount;
-}
-
-/* ---------------------------------------------------------------- crumb / hero -- */
+/* ---------------------------------------------------------------- crumb -- */
 function CWCrumb({ course }) {
   return (
     <div className="cw-crumb-row">
-      <button type="button" className="cw-back-btn" aria-label="Back to My Learning" onClick={() => goCW("MyLearning.html")}>
-        <IconCW name="lucide:arrow-left" size={19} color="var(--brand-navy)" />
+      <button type="button" className="cw-back-btn" aria-label="Back to My Learning" onClick={() => goCW(PFL.myLearningUrl)}>
+        <IconCW name="lucide:arrow-left" size={19} color={INK_CW.heading} />
       </button>
       <span className="cw-crumb">
-        <a onClick={() => goCW("MyLearning.html")}>My Learning</a> &nbsp;/&nbsp; <span>{course.title}</span>
+        <a onClick={() => goCW(PFL.myLearningUrl)}>My Learning</a> &nbsp;/&nbsp; <span>{course.title}</span>
       </span>
-    </div>
-  );
+    </div>);
 }
 
-function CWMetaItem({ m }) {
+/* ---------------------------------------------------------------- hero -- */
+function CWHero({ course, item, content, locked, started, curDone, next, onOpen, onContinue, onShare, onBuy, total }) {
+  const fill = Math.round(item.groupPos / item.groupTotal * 100);
+  const kindIcon = item.kind === "pdf" ? "lucide:file-text" : item.kind === "quiz" ? "lucide:list-checks" : "fluent:play-16-filled";
+  const continueLabel = !next ? (curDone ? "Course complete" : "Finish course") : started ? "Continue learning" : "Start learning";
   return (
-    <div className="cw-meta-item">
-      <span className="cw-meta-key"><IconCW name={m.icon} size={16} color="var(--brand-navy)" />{m.key}</span>
-      <span className="cw-meta-val">{m.value}</span>
-    </div>
-  );
-}
-
-function CWHero({ course, totalLessons, onPlay }) {
-  const meta = [
-    { icon: "lucide:clock", key: "Duration", value: course.duration },
-    { icon: "lucide:layers", key: "Modules", value: course.sections.length + " modules" },
-    { icon: "lucide:play-circle", key: "Lessons", value: totalLessons + " lessons" },
-    { icon: "lucide:award", key: "Certificate", value: "Included" }
-  ];
-  return (
-    <section className="cw-card cw-hero-card">
-      <div className="cw-hero-media">
-        <img src={course.bannerImage} alt={course.title} />
-        <button type="button" className="cw-play-btn" aria-label="Play course intro" onClick={onPlay}>
-          <IconCW name="fluent:play-16-filled" size={26} color="var(--ai-purple)" />
-        </button>
-      </div>
+    <section className="cw-card cw-hero-card" data-screen-label="Hero">
+      <button type="button" className={"cw-still" + (locked ? " locked" : "")} onClick={onOpen}
+        aria-label={locked ? "Buy this course to play " + item.name : (item.kind === "pdf" ? "Open " : item.kind === "quiz" ? "Start " : "Play ") + item.name}>
+        <img src={course.still} alt="" />
+        {/* no play button on a locked course — the image is browse-only */}
+        {!locked && <span className={"cw-still-play" + (item.kind ? " doc" : "")} aria-hidden="true"><IconCW name={kindIcon} size={26} color="#0B1024" /></span>}
+        <span className="cw-still-dur" aria-hidden="true"><IconCW name={item.kind === "pdf" ? "lucide:file-text" : "lucide:clock"} size={12} color="#fff" />{item.dur}</span>
+        {locked && <span className="cw-still-lock" aria-hidden="true"><IconCW name="lucide:lock" size={14} color="#fff" />Paid course · £{course.price}</span>}
+      </button>
       <div className="cw-hero-body">
-        <div className="cw-badge-row">
-          <LevelBadgeCW level={course.level} />
-          <span className="cw-category">{course.category}</span>
-        </div>
-        <h1 className="cw-title">{course.title}</h1>
-        <p className="cw-sub">{course.description}</p>
-        <div className="cw-instr-row">
-          <img className="cw-instr-avatar" src={course.instructor.avatar} alt="" />
-          <span className="cw-instr-text">
-            <span className="cw-instr-name">{course.instructor.name}</span>
-            <span className="cw-instr-role">{course.instructor.role}</span>
-          </span>
-        </div>
-        <div className="cw-meta-row">
-          {meta.map((m, i) => <CWMetaItem m={m} key={i} />)}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function CWAbout({ course }) {
-  return (
-    <section className="cw-card cw-about">
-      <h2>About this course</h2>
-      {course.aboutParas.map((p, i) => <p key={i}>{p}</p>)}
-    </section>
-  );
-}
-
-function CWLearn({ course }) {
-  return (
-    <section className="cw-card cw-learn">
-      <h2>What you'll learn</h2>
-      <div className="cw-learn-grid">
-        {course.learn.map((l, i) => (
-          <div className="cw-learn-item" key={i}>
-            <span className="cw-learn-tick"><IconCW name="lucide:check" size={13} color="#fff" /></span>
-            {l}
+        <span className="cd-eyebrow">{CD.eyebrow(item, course)}</span>
+        <h1 className="cw-title">{item.name}</h1>
+        {/* no lesson progress on a paid course that hasn't been bought yet */}
+        {!locked && <>
+          <div className="cw-prog-row">
+            <span className="cw-prog-label">Lesson progress</span>
+            <span className="cw-prog-count">{item.groupPos} of {item.groupTotal}</span>
           </div>
-        ))}
+          <div className="cd-track" role="progressbar" aria-valuemin={0} aria-valuemax={item.groupTotal} aria-valuenow={item.groupPos} aria-label="Lesson progress"><span style={{ width: fill + "%" }} /></div>
+        </>}
+        <p className="cw-intro">{content.intro}</p>
+        {locked ?
+          <CWPaywall course={course} total={total} onBuy={onBuy} /> :
+          <div className="cw-ctas" data-screen-label="CTAs">
+            <button type="button" className="cd-btn cd-btn-fill" onClick={onContinue} disabled={!next && curDone}>
+              {continueLabel}<IconCW name="lucide:arrow-right" size={17} color={INK_CW.onNavy} />
+            </button>
+            <button type="button" className="cd-btn cd-btn-outline" onClick={onShare}>
+              <IconCW name="lucide:share-2" size={17} color={INK_CW.heading} />Share lesson
+            </button>
+          </div>}
       </div>
-    </section>
-  );
+    </section>);
 }
 
-/* ---------------------------------------------------------------- curriculum -- */
-function lessonIconCW(kind) {
-  return kind === "pdf" ? "lucide:file-text" : kind === "quiz" ? "lucide:file-question" : "lucide:play-circle";
-}
-function lessonBadgeCW(l) {
-  if (l.dur) return l.dur;
-  return l.kind === "pdf" ? "PDF" : l.kind === "quiz" ? "Quiz" : "Video";
-}
-
-function CWLessonRow({ lesson, isActive, isDone, onSelect }) {
+/* Shown on a paid course that hasn't been bought: what's inside, the price, and the one way in. */
+function CWPaywall({ course, total, onBuy }) {
   return (
-    <button type="button" className={"cw-lesson" + (isActive ? " active" : "")} onClick={onSelect}>
-      <IconCW name={lessonIconCW(lesson.kind)} size={17} color="var(--brand-navy)" />
-      <span className="cw-lesson-name">{lesson.name}</span>
-      {isDone && <span className="cw-lesson-done"><IconCW name="lucide:check" size={11} color="#fff" /></span>}
-      <span className="cw-lesson-badge">{lessonBadgeCW(lesson)}</span>
-    </button>
-  );
-}
-
-function CWSubLessonRow({ lesson, isActive, isDone, onSelect }) {
-  const pdf = lesson.kind === "pdf";
-  return (
-    <button type="button" className={"cw-sub-lesson" + (isActive ? " active" : "")} onClick={onSelect}>
-      <IconCW name={pdf ? "lucide:file-text" : "lucide:play-circle"} size={15} color="var(--brand-navy)" />
-      <span className="cw-sub-lesson-name">{lesson.name}</span>
-      {isDone && <span className="cw-sub-lesson-done"><IconCW name="lucide:check" size={10} color="#fff" /></span>}
-      <span className="cw-sub-lesson-badge">{lessonBadgeCW(lesson)}</span>
-    </button>
-  );
-}
-
-function CWSubModule({ sub, activeFlatIdx, completed, onSelect }) {
-  const [open, setOpen] = useStateCW(false);
-  return (
-    <div className={"cw-sub" + (open ? " open" : "")}>
-      <button type="button" className="cw-sub-hd" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
-        <IconCW name={open ? "lucide:folder-open" : "lucide:folder"} size={17} color="var(--brand-gold)" />
-        <span className="cw-sub-title">{sub.title}</span>
-        <span className="cw-sub-n">{sub.lessons.length}</span>
-        <IconCW name={open ? "lucide:chevron-up" : "lucide:chevron-down"} size={18} color="var(--gray-450)" />
-      </button>
-      {open && (
-        <div className="cw-sub-body">
-          {sub.lessons.map((l) => (
-            <CWSubLessonRow lesson={l} key={l.flatIdx} isActive={l.flatIdx === activeFlatIdx}
-              isDone={completed.has(l.flatIdx)} onSelect={() => onSelect(l.flatIdx)} />
-          ))}
+    <section className="cd-paywall" data-screen-label="Paid course">
+      <span className="cd-paywall-ic"><IconCW name="lucide:lock" size={20} color={INK_CW.gold} /></span>
+      <div className="cd-paywall-tx">
+        <span className="cd-eyebrow">Paid course</span>
+        <h3 className="cd-paywall-title">Buy to start this course</h3>
+        <p className="cd-paywall-body">Browse every level, module and lesson below. Buy the course to start the lessons, download the resources and take the success path quiz.</p>
+        <ul className="cd-paywall-list">
+          <li><IconCW name="lucide:check" size={14} color={INK_CW.gold} strokeWidth={2.5} />{total} lessons across {course.levels.filter((l) => !l.quiz).length} levels</li>
+          <li><IconCW name="lucide:check" size={14} color={INK_CW.gold} strokeWidth={2.5} />One-time payment · lifetime access</li>
+          <li><IconCW name="lucide:check" size={14} color={INK_CW.gold} strokeWidth={2.5} />Certificate on completion</li>
+        </ul>
+        <div className="cd-paywall-row">
+          <span className="cd-paywall-price"><small>One-time</small>£{course.price}</span>
+          <button type="button" className="cd-btn cd-btn-gold" onClick={onBuy}>
+            <IconCW name="lucide:shopping-bag" size={16} color={INK_CW.onGold} />Buy course
+          </button>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    </section>);
 }
 
-function CWSection({ section, index, open, activeFlatIdx, completed, onToggle, onSelect }) {
-  const count = sectionLessonCount(section);
-  const hasBody = section.lessons.length > 0 || (section.subs && section.subs.length > 0);
+/* ---------------------------------------------------------------- In this lesson -- */
+function CWInThisLesson({ content }) {
   return (
-    <div className={"cw-acc" + (open ? " open" : "")}>
-      <button type="button" className="cw-acc-hd" onClick={onToggle} aria-expanded={open}>
-        <span className="cw-acc-chip">{index + 1}</span>
-        <span className="cw-acc-text">
-          <span className="cw-acc-title">{section.title}</span>
-          <span className="cw-acc-sub">{count} lesson{count === 1 ? "" : "s"}</span>
+    <section className="cw-card cw-pad" data-screen-label="In this lesson">
+      <div className="cd-sec"><h2>In this lesson</h2></div>
+      <p className="cd-body">{content.body}</p>
+      <ul className="cd-points">
+        {content.points.map((p, i) =>
+          <li className="cd-point" key={i}>
+            <span className="tick"><IconCW name="lucide:check" size={14} color={INK_CW.gold} strokeWidth={2.5} /></span>
+            <span>{p}</span>
+          </li>)}
+      </ul>
+    </section>);
+}
+
+/* ---------------------------------------------------------------- course content -- */
+function CWMarker({ done, kind, locked }) {
+  if (done) return <span className="cd-marker done"><IconCW name="lucide:check" size={15} color={INK_CW.success} strokeWidth={2.5} /></span>;
+  if (locked) return <span className="cd-marker lock"><IconCW name="lucide:lock" size={13} color={INK_CW.muted} /></span>;
+  const icon = kind === "pdf" ? "lucide:file-text" : kind === "quiz" ? "lucide:list-checks" : "fluent:play-16-filled";
+  return <span className="cd-marker"><IconCW name={icon} size={13} color={INK_CW.gold} /></span>;
+}
+
+function CWLessonRow({ lesson, done, current, locked, onSelect, onOpen }) {
+  return (
+    <button type="button" className={"cd-lesson" + (done ? " done" : "") + (current ? " on" : "") + (locked ? " locked" : "")}
+      aria-current={current ? "true" : undefined} onClick={onSelect} title={locked ? "Buy this course to start its lessons" : "Select lesson"}>
+      <CWMarker done={done} kind={lesson.kind} locked={locked && !done} />
+      <span className="cd-lesson-name">{lesson.name}</span>
+      <span className="cd-lesson-dur">{lesson.dur}</span>
+      {!locked &&
+        <span className="cd-lesson-open" role="button" aria-label={"Open " + lesson.name} title="Open lesson"
+          onClick={(e) => { e.stopPropagation(); onOpen(); }}>
+          <IconCW name="lucide:arrow-up-right" size={16} color={INK_CW.gold} />
+        </span>}
+    </button>);
+}
+
+function CWSubModule({ sub, done, currentName, locked, forceOpen, onSelect, onOpen }) {
+  const [open, setOpen] = useStateCW(!!sub.open);
+  const isOpen = forceOpen || open;
+  return (
+    <div className="cd-sub">
+      <button type="button" className="cd-sub-hd" aria-expanded={isOpen} onClick={() => setOpen((o) => !o)}>
+        <IconCW name={isOpen ? "lucide:folder-open" : "lucide:folder"} size={19} color={INK_CW.gold} />
+        <span className="cd-sub-name">{sub.name}</span>
+        <span className="cd-sub-n">{sub.lessons.length}</span>
+        <IconCW name={isOpen ? "lucide:chevron-up" : "lucide:chevron-down"} size={18} color={INK_CW.muted} />
+      </button>
+      {isOpen &&
+        <div className="cd-sub-body">
+          {sub.lessons.map((l) =>
+            <CWLessonRow key={l.name} lesson={l} done={done.indexOf(l.name) !== -1} current={currentName === l.name} locked={locked}
+              onSelect={() => onSelect(l.name)} onOpen={() => onOpen(l.name)} />)}
+        </div>}
+    </div>);
+}
+
+function CWSection({ section, done, currentName, locked, forceOpen, onSelect, onOpen }) {
+  return (
+    <div className="cd-section">
+      <div className="cd-section-head">
+        <span className="cd-section-name">{section.name}</span>
+        {section.free && !locked && <span className="cd-tag">Free</span>}
+        {locked && <span className="cd-tag paid">Paid</span>}
+      </div>
+      <p className="cd-section-desc">{section.desc}</p>
+      {section.bullets && section.bullets.length > 0 && <ul className="cd-bullets">{section.bullets.map((b, i) => <li key={i}>{b}</li>)}</ul>}
+      {section.lessons && section.lessons.length > 0 &&
+        <div className="cd-lessons">
+          {section.lessons.map((l) =>
+            <CWLessonRow key={l.name} lesson={l} done={done.indexOf(l.name) !== -1} current={currentName === l.name} locked={locked}
+              onSelect={() => onSelect(l.name)} onOpen={() => onOpen(l.name)} />)}
+        </div>}
+      {(section.subs || []).map((s) => <CWSubModule key={s.name} sub={s} done={done} currentName={currentName} locked={locked} forceOpen={forceOpen} onSelect={onSelect} onOpen={onOpen} />)}
+    </div>);
+}
+
+function CWLevel({ level, fullLevel, open, onToggle, done, currentName, locked, forceOpen, onSelect, onOpen }) {
+  const pct = CD.pct(CD.levelLessonNames(fullLevel), done);
+  const empty = !level.sections || level.sections.length === 0;
+  const isOpen = forceOpen || open;
+  return (
+    <div className="cd-level">
+      <button type="button" className="cd-level-hd" aria-expanded={isOpen} onClick={onToggle}>
+        <span className="cd-level-name">
+          {!level.quiz && level.name && <small>{level.title}</small>}
+          {level.quiz || !level.name ? level.title : level.name}
         </span>
-        <IconCW name={open ? "lucide:chevron-up" : "lucide:chevron-down"} size={20} color="var(--gray-500)" />
+        <span className="cd-level-pct">{pct}%</span>
+        <IconCW name={isOpen ? "lucide:chevron-up" : "lucide:chevron-down"} size={20} color="#FFFFFF" />
       </button>
-      {open && hasBody && (
-        <div className="cw-acc-body">
-          {section.groupDesc && <p className="cw-card-desc" style={{ margin: "0 0 4px", fontSize: 13.5, color: "var(--gray-500)" }}>{section.groupDesc}</p>}
-          {section.lessons.map((l) => (
-            <CWLessonRow lesson={l} key={l.flatIdx} isActive={l.flatIdx === activeFlatIdx}
-              isDone={completed.has(l.flatIdx)} onSelect={() => onSelect(l.flatIdx)} />
-          ))}
-          {(section.subs || []).map((s, i) => (
-            <CWSubModule sub={s} key={i} activeFlatIdx={activeFlatIdx} completed={completed} onSelect={onSelect} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+      {isOpen && (empty ?
+        <div className="cd-unlock">
+          <span className="ic"><IconCW name="lucide:lock" size={16} color={INK_CW.muted} /></span>
+          <span>{level.unlock || "Unlocks when you complete the previous level."}</span>
+        </div> :
+        <div className="cd-level-body">
+          {level.sections.map((s) => <CWSection key={s.name} section={s} done={done} currentName={currentName} locked={locked} forceOpen={forceOpen} onSelect={onSelect} onOpen={onOpen} />)}
+        </div>)}
+    </div>);
 }
 
-function CWCurriculum({ course, sectionsWithIdx, totalLessons, openSet, activeFlatIdx, completed, onToggle, onExpandAll, onSelect, query, onQuery }) {
+/* Search filter: keep levels / sections / sub-modules that hold a matching
+   lesson (or match by name themselves); locked "Unlocks when…" levels drop out. */
+function filterCourseCW(course, q) {
+  const hit = (s) => (s || "").toLowerCase().includes(q);
+  const levels = course.levels.map((lvl) => {
+    const sections = (lvl.sections || []).map((sec) => {
+      const secHit = hit(sec.name);
+      const lessons = sec.lessons.filter((l) => secHit || hit(l.name));
+      const subs = (sec.subs || []).map((sub) => {
+        const subHit = secHit || hit(sub.name);
+        return { ...sub, lessons: sub.lessons.filter((l) => subHit || hit(l.name)) };
+      }).filter((sub) => sub.lessons.length);
+      return lessons.length || subs.length ? { ...sec, lessons, subs } : null;
+    }).filter(Boolean);
+    return sections.length || (hit(lvl.name) || hit(lvl.title)) && (lvl.sections || []).length ? { ...lvl, sections: sections.length ? sections : lvl.sections } : null;
+  }).filter(Boolean);
+  return { ...course, levels };
+}
+
+function CWCourseContent({ course, flat, done, currentName, locked, onSelect, onOpen }) {
+  const [query, setQuery] = useStateCW("");
+  const [openSet, setOpenSet] = useStateCW(() => new Set(course.levels.map((l, i) => l.open ? i : -1).filter((i) => i !== -1)));
   const q = query.trim().toLowerCase();
-  const matches = (s) => !q || s.title.toLowerCase().includes(q) || s.lessons.some((l) => l.name.toLowerCase().includes(q)) ||
-    (s.subs || []).some((sub) => sub.title.toLowerCase().includes(q) || sub.lessons.some((l) => l.name.toLowerCase().includes(q)));
-  const visible = sectionsWithIdx.filter(({ s }) => matches(s));
+  const view = q ? filterCourseCW(course, q) : course;
+  const doneCount = done.filter((n) => flat.some((l) => l.name === n)).length;
+  const total = flat.length;
+  const allOpen = openSet.size === course.levels.length;
+  const toggle = (i) => setOpenSet((prev) => { const n = new Set(prev); if (n.has(i)) n.delete(i); else n.add(i); return n; });
+  const expandAll = () => setOpenSet(allOpen ? new Set() : new Set(course.levels.map((_, i) => i)));
   return (
-    <section className="cw-card cw-curriculum">
+    <section className="cw-card cw-pad" data-screen-label="Course content">
       <div className="cw-curr-head">
-        <div>
-          <h2>Curriculum</h2>
-          <div className="cw-curr-sub">{course.sections.length} modules &middot; {totalLessons} lessons</div>
+        <div className="cd-sec" style={{ margin: 0, flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+          <h2>Course content</h2>
+          <span className="sub">{locked ? total + " lessons · buy to start" : doneCount + " of " + total + " completed"}</span>
         </div>
         <div className="cw-curr-tools">
           <label className="cw-search">
-            <IconCW name="lucide:search" size={17} color="var(--gray-450)" />
-            <input placeholder="Search lesson…" aria-label="Search lesson" value={query} onChange={(e) => onQuery(e.target.value)} />
+            <IconCW name="lucide:search" size={17} color={INK_CW.muted} />
+            <input placeholder="Search lessons…" aria-label="Search lessons" value={query} onChange={(e) => setQuery(e.target.value)} />
           </label>
-          <button type="button" className="cw-expand-all" onClick={onExpandAll}>
-            {openSet.size === course.sections.length ? "Collapse all" : "Expand all"}
-          </button>
+          <button type="button" className="cw-expand-all" onClick={expandAll}>{allOpen ? "Collapse all" : "Expand all"}</button>
         </div>
       </div>
-      <div className="cw-sections">
-        {visible.length === 0 && <div className="cw-no-results">No lessons match "{query}".</div>}
-        {visible.map(({ s, i }) => (
-          <CWSection section={s} index={i} key={i} open={openSet.has(i) || (!!q && s.title.toLowerCase().includes(q))}
-            activeFlatIdx={activeFlatIdx} completed={completed} onToggle={() => onToggle(i)} onSelect={onSelect} />
-        ))}
+      <div className="cd-levels">
+        {view.levels.length === 0 && <div className="cw-no-results">No lessons match "{query}".</div>}
+        {view.levels.map((lvl) => {
+          const i = course.levels.indexOf(course.levels.find((x) => x.title === lvl.title));
+          return <CWLevel key={lvl.title} level={lvl} fullLevel={course.levels[i]} open={openSet.has(i)} onToggle={() => toggle(i)} forceOpen={!!q}
+            done={done} currentName={currentName} locked={locked} onSelect={onSelect} onOpen={onOpen} />;
+        })}
       </div>
-    </section>
-  );
+    </section>);
 }
 
-function CWInstructor({ course }) {
+/* ---------------------------------------------------------------- resources / related / instructor -- */
+function CWResources({ onToast, locked, onLocked }) {
   return (
-    <section className="cw-card cw-instructor">
-      <h2>Your instructor</h2>
+    <section className="cw-card cw-pad" data-screen-label="Resources">
+      <div className="cd-sec"><h2>Resources</h2><span className="sub">{CD.RESOURCES.length} downloads</span></div>
+      <div className="cd-res-list">
+        {CD.RESOURCES.map((r) =>
+          <button type="button" className="cd-res" key={r.name} onClick={() => locked ? onLocked() : onToast("Downloading " + r.name)}>
+            <span className="cd-res-ic"><IconCW name="lucide:file-text" size={20} color={INK_CW.gold} /></span>
+            <span className="cd-res-tx">
+              <span className="cd-res-name">{r.name}</span>
+              <span className="cd-res-meta">PDF · {r.size}</span>
+            </span>
+            <span className="cd-res-dl"><IconCW name={locked ? "lucide:lock" : "lucide:download"} size={16} color={locked ? INK_CW.muted : INK_CW.text} /></span>
+          </button>)}
+      </div>
+    </section>);
+}
+
+function CWRelated({ course }) {
+  const related = CD.RELATED.filter((c) => PFL.slugify(c.title) !== course.slug);
+  if (!related.length) return null;
+  return (
+    <section className="cw-card cw-pad" data-screen-label="Related courses">
+      <div className="cd-sec"><h2>Related courses</h2></div>
+      <div className="cd-related">
+        {related.map((c) => {
+          const included = PFL.included(PFL.slugify(c.title));
+          const price = included ? 0 : c.price;
+          return (
+            <button type="button" className="cd-course" key={c.title} onClick={() => goCW(CD.relatedUrl(c, price))}>
+              <span className="cd-course-thumb"><img src={c.image} alt="" /><span className="cd-course-chip">{c.lessons} lessons</span></span>
+              <span className="cd-course-tx">
+                <span className="cd-course-eyebrow">{included ? "Included in your membership" : price ? "Paid course" : "Course"}</span>
+                <span className="cd-course-title">{c.title}</span>
+                {price > 0 && <span className="cd-course-price"><IconCW name="lucide:lock" size={11} color={INK_CW.gold} />£{price}</span>}
+              </span>
+              <span className="cd-course-arrow" aria-hidden="true"><IconCW name="lucide:arrow-right" size={18} color={INK_CW.onGold} /></span>
+            </button>);
+        })}
+      </div>
+    </section>);
+}
+
+function CWInstructor() {
+  const t = CD.INSTRUCTOR;
+  return (
+    <section className="cw-card cw-pad cw-instructor" data-screen-label="Instructor">
+      <div className="cd-sec"><h2>Your instructor</h2></div>
       <div className="cw-instructor-row">
-        <img src={course.instructor.avatar} alt={course.instructor.name} />
+        <img src={t.avatar} alt={t.name} />
         <div>
-          <div className="cw-instructor-name">{course.instructor.name}</div>
-          <div className="cw-instructor-bio">{course.instructor.bio}</div>
+          <div className="cw-instructor-name">{t.name}</div>
+          <div className="cw-instructor-role">{t.role}</div>
+          <div className="cw-instructor-bio">{t.bio}</div>
         </div>
       </div>
-    </section>
-  );
+    </section>);
 }
 
-/* ---------------------------------------------------------------- discussion -- */
-function CWCommentReply({ r }) {
-  return (
-    <div className="cw-reply">
-      <div className="cw-cmt-avatar small">{r.name.slice(0, 1)}</div>
-      <div className="cw-cmt-body">
-        <div className="cw-cmt-head"><span className="cw-cmt-name">{r.name}</span><span className="cw-cmt-time">{r.time}</span></div>
-        <div className="cw-cmt-text">{r.text}</div>
-      </div>
-    </div>
-  );
+/* ---------------------------------------------------------------- comments -- */
+/* Render "@Name" mentions in comment text in gold. */
+function CWCommentText({ text }) {
+  const parts = text.split(/(@[A-Za-z.]+(?: [A-Z][A-Za-z.]+)?)/g);
+  return <p className="cd-cmt-text">{parts.map((p, i) => p.charAt(0) === "@" ? <span key={i} className="cd-cmt-mention">{p}</span> : p)}</p>;
 }
 
-function CWComment({ c, onToggleLike, onReply }) {
-  const [replying, setReplying] = useStateCW(false);
-  const [draft, setDraft] = useStateCW("");
-  function submitReply() {
-    if (!draft.trim()) return;
-    onReply(draft.trim());
-    setDraft("");
-    setReplying(false);
-  }
+function CWComment({ c, onLike, onReply }) {
   return (
-    <div className="cw-cmt">
-      <div className="cw-cmt-avatar">{c.name.slice(0, 1)}</div>
-      <div className="cw-cmt-body">
-        <div className="cw-cmt-head"><span className="cw-cmt-name">{c.name}</span><span className="cw-cmt-time">{c.time}</span></div>
-        <div className="cw-cmt-text">{c.text}</div>
-        <div className="cw-cmt-actions">
-          <button type="button" className={"cw-cmt-like" + (c.liked ? " liked" : "")} onClick={onToggleLike}>
-            <IconCW name={c.liked ? "fluent:thumb-like-16-filled" : "lucide:thumbs-up"} size={14} color={c.liked ? "var(--brand-navy)" : "var(--gray-450)"} />
-            {c.likes}
+    <div className="cd-cmt">
+      <AvatarCW name={c.author.name} src={c.author.avatar} size={38} />
+      <div className="cd-cmt-main">
+        <div className="cd-cmt-meta"><span className="cd-cmt-name">{c.author.name}</span><span className="cd-cmt-time">{c.time}</span></div>
+        <CWCommentText text={c.text} />
+        <div className="cd-cmt-actions">
+          <button type="button" className={"cd-cmt-act" + (c.liked ? " on" : "")} aria-pressed={!!c.liked} onClick={onLike}>
+            <IconCW name="lucide:heart" size={15} color={c.liked ? INK_CW.gold : INK_CW.muted} />Like{c.likes ? ` · ${c.likes}` : ""}
           </button>
-          <button type="button" className="cw-cmt-reply-btn" onClick={() => setReplying((r) => !r)}>Reply</button>
+          <button type="button" className="cd-cmt-act" onClick={onReply}><IconCW name="lucide:message-circle" size={15} color={INK_CW.muted} />Reply</button>
         </div>
-        {c.replies && c.replies.length > 0 && (
-          <div className="cw-cmt-replies">
-            {c.replies.map((r, i) => <CWCommentReply r={r} key={i} />)}
-          </div>
-        )}
-        {replying && (
-          <div className="cw-reply-composer">
-            <input placeholder={`Reply to ${c.name}…`} value={draft} onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && submitReply()} autoFocus />
-            <button type="button" onClick={submitReply}>Post</button>
-          </div>
-        )}
       </div>
-    </div>
-  );
+    </div>);
 }
 
-function CWDiscussion({ comments, onAdd, onToggleLike, onReply }) {
+let _cwseq = 0;
+function CWComments({ lessonName, courseSlug }) {
+  const [comments, setComments] = useStateCW(() => CD.DEFAULT_COMMENTS.map((c) => ({ ...c, _id: "cw" + _cwseq++ })));
   const [draft, setDraft] = useStateCW("");
-  /* First comment opens the shared "Share this comment?" dialog
-     (window.PFCommentShare); a remembered decision skips it. */
-  const prompt = window.PFCommentShare.useSharePrompt(onAdd, { variant: "dialog" });
-  function submit() {
-    if (!draft.trim()) return;
-    const text = draft.trim();
-    setDraft("");
-    prompt.submit(text);
-  }
+  const inputRef = useRefCW(null);
+  const me = { name: CD.ME.name, avatar: CD.ME.avatar };
+  /* First comment asks "Share this comment?" (shared prompt, window.PFCommentShare);
+     after "Remember my decision" the saved choice is applied silently. */
+  const prompt = window.PFCommentShare.useSharePrompt((text, share) => {
+    setComments((all) => [{ author: me, time: "Just now", text, likes: 0, liked: false, sharedToNewsfeed: share, _id: "cw" + _cwseq++ }, ...all]);
+    if (share) window.PFCommentShare.shareToNewsfeed({ author: me, courseSlug, text });
+  }, { variant: "dialog" });
+  const like = (id) => setComments((all) => all.map((c) => c._id === id ? { ...c, liked: !c.liked, likes: (c.likes || 0) + (c.liked ? -1 : 1) } : c));
+  const reply = (c) => {
+    setDraft("@" + c.author.name + " ");
+    if (inputRef.current) { inputRef.current.focus(); inputRef.current.scrollIntoView({ block: "center", behavior: "smooth" }); }
+  };
+  const post = () => { const text = draft.trim(); if (!text) return; setDraft(""); prompt.submit(text); };
   return (
-    <section className="cw-card cw-discussion">
-      <h2>Discussion</h2>
-      <div className="cw-composer">
-        <IconCW name="lucide:message-circle" size={18} color="var(--gray-450)" />
-        <input placeholder="Ask a question or leave a comment…" value={draft} onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && submit()} />
-        <button type="button" className="cw-composer-post" onClick={submit}>Post</button>
-      </div>
-      <window.PFCommentShare.Note className="cw-composer-note" />
+    <section className="cw-card cw-pad" data-screen-label="Comments">
+      <div className="cd-sec"><h2>{comments.length} Comment{comments.length === 1 ? "" : "s"}</h2></div>
+      <form className="cd-composer" onSubmit={(e) => { e.preventDefault(); post(); }}>
+        <AvatarCW name={CD.ME.name} src={CD.ME.avatar} size={34} />
+        <input ref={inputRef} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={"Comment on " + lessonName + "…"} aria-label="Write a comment" />
+        <button type="submit" className="cd-send" aria-label="Post comment" disabled={!draft.trim()}><IconCW name="lucide:send" size={17} color={INK_CW.onNavy} /></button>
+      </form>
+      <window.PFCommentShare.Note className="cd-composer-note" />
+      <div className="cd-cmts">{comments.map((c) => <CWComment key={c._id} c={c} onLike={() => like(c._id)} onReply={() => reply(c)} />)}</div>
       {prompt.modal}
-      <div className="cw-cmt-list">
-        {comments.map((c, i) => (
-          <CWComment c={c} key={i}
-            onToggleLike={() => onToggleLike(i)}
-            onReply={(text) => onReply(i, text)} />
-        ))}
+    </section>);
+}
+
+/* ---------------------------------------------------------------- Ava -- */
+function CWAvaCard({ lessonName, courseTitle }) {
+  return (
+    <section className="cd-ava stack" data-screen-label="Talk this through with Ava">
+      <span className="orb"><IconCW name="lucide:sparkles" size={22} color="#fff" /></span>
+      <div className="tx">
+        <div className="ti">Talk this through with Ava</div>
+        <div className="su">Stuck on a landmark or unsure how this applies to your patients? Ava knows where you are in the course.</div>
+        <button type="button" className="pf-coach-link" data-coach={`I'm on the lesson "${lessonName}" in ${courseTitle}. Quiz me on the key points and tell me what to practise next.`}>
+          <IconCW name="lucide:sparkles" size={14} color="#fff" />Ask Ava
+        </button>
       </div>
-    </section>
-  );
+    </section>);
+}
+
+/* ---------------------------------------------------------------- share modal -- */
+function CWShareModal({ item, course, url, onClose, onDone }) {
+  useEffectCW(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+  const title = item.name + " · " + course.title;
+  const shareNative = () => {
+    if (navigator.share) { navigator.share({ title, text: "Take a look at this lesson on PROfinity", url }).catch(() => {}); onDone(""); return; }
+    CD.copyText(url); onDone("Lesson link copied");
+  };
+  const tiles = [
+    { k: "copy", label: "Copy link", icon: "lucide:link", run: () => { CD.copyText(url); onDone("Lesson link copied"); } },
+    { k: "feed", label: "Newsfeed", icon: "lucide:newspaper", run: () => onDone("Shared to your newsfeed") },
+    { k: "dm", label: "Messages", icon: "lucide:message-circle", run: () => goCW("Messages.html") },
+    { k: "more", label: "More", icon: "lucide:more-horizontal", run: shareNative }];
+  return (
+    <div className="cd-share" role="dialog" aria-modal="true" aria-label="Share lesson" data-screen-label="Share lesson">
+      <button type="button" className="cd-share-scrim" aria-label="Close" onClick={onClose} />
+      <div className="cd-share-card">
+        <div className="cd-share-hd">
+          <h3>Share lesson</h3>
+          <button type="button" className="cd-share-x" aria-label="Close" onClick={onClose}><IconCW name="lucide:x" size={18} color={INK_CW.text} /></button>
+        </div>
+        <div className="cd-share-prev">
+          <img src={course.still} alt="" />
+          <div className="cd-share-prev-tx">
+            <span className="cd-share-prev-eyebrow">{CD.eyebrow(item, course)}</span>
+            <span className="cd-share-prev-name">{item.name}</span>
+            <span className="cd-share-prev-course">{course.title}</span>
+          </div>
+        </div>
+        <div className="cd-share-sec">Send in Messages</div>
+        <div className="cd-share-rail">
+          {CD.SHARE_CONTACTS.map((c) =>
+            <button type="button" className="cd-share-person" key={c.id} onClick={() => onDone("Lesson sent to " + c.name)}>
+              <AvatarCW name={c.name} src={c.avatar} size={52} /><span>{c.name}</span>
+            </button>)}
+        </div>
+        <div className="cd-share-sec">Share to</div>
+        <div className="cd-share-tiles">
+          {tiles.map((t) =>
+            <button type="button" className="cd-share-tile" key={t.k} onClick={t.run}>
+              <span className="cd-share-tile-ic"><IconCW name={t.icon} size={22} color={INK_CW.text} /></span><span>{t.label}</span>
+            </button>)}
+        </div>
+        <div className="cd-share-link">
+          <code>{url}</code>
+          <button type="button" className="cd-btn cd-btn-fill" onClick={() => { CD.copyText(url); onDone("Lesson link copied"); }}>Copy</button>
+        </div>
+      </div>
+    </div>);
 }
 
 /* ---------------------------------------------------------------- sidebar -- */
-function CWSide({ course, pct, onContinue }) {
+function CWSide({ course, flat, done, locked, purchased, started, curDone, next, onContinue, onBuy, item }) {
+  const total = flat.length;
+  const doneCount = flat.filter((l) => done.indexOf(l.name) !== -1).length;
+  const pct = total ? Math.round(doneCount / total * 100) : 0;
+  const included = PFL.included(course.slug);
+  const levels = course.levels.filter((l) => !l.quiz).length;
+  const continueLabel = !next ? (curDone ? "Course complete" : "Finish course") : started ? "Continue learning" : "Start learning";
+  const access = locked ? { icon: "lucide:lock", text: "Paid course · £" + course.price, cls: " paid" } :
+    included ? { icon: "fluent:shield-checkmark-16-filled", text: "Included in your membership", cls: "" } :
+    purchased ? { icon: "lucide:badge-check", text: "Purchased · lifetime access", cls: "" } :
+    { icon: "fluent:shield-checkmark-16-filled", text: "Free access", cls: "" };
+  const meta = [
+    { icon: "lucide:clock", key: "Duration", value: course.dur || totalDurationCW(flat) || "—" },
+    { icon: "lucide:layers", key: "Levels", value: levels + " levels" },
+    { icon: "lucide:play-circle", key: "Lessons", value: total + " lessons" },
+    { icon: "lucide:award", key: "Certificate", value: "Included" }];
   return (
     <aside className="cw-side">
-      <div className="cw-side-card">
-        <div className="cw-side-thumb"><img src={course.bannerImage} alt="" /></div>
+      <div className="cw-side-card" data-screen-label="Course card">
+        <div className="cw-side-thumb"><img src={course.still} alt="" /></div>
         <div className="cw-side-body">
-          <div className="cw-free">
-            <IconCW name="fluent:shield-checkmark-16-filled" size={20} color="var(--brand-navy)" />
-            Free access
+          <div className={"cw-access" + access.cls}><IconCW name={access.icon} size={20} color={locked ? INK_CW.gold : INK_CW.heading} />{access.text}</div>
+          {!locked && <>
+            <div className="cw-progress">
+              <div className="cw-prog-row"><span className="cw-prog-label">Course progress</span><span className="cw-prog-count">{doneCount} of {total}</span></div>
+              <div className="cd-track" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Course progress"><span style={{ width: pct + "%" }} /></div>
+              <span className="cw-progress-label">{pct}% complete</span>
+            </div>
+            <button type="button" className="cd-btn cd-btn-fill cw-continue" onClick={onContinue} disabled={!next && curDone}>
+              <IconCW name="fluent:play-16-filled" size={16} color={INK_CW.onNavy} />{continueLabel}
+            </button>
+          </>}
+          {locked &&
+            <button type="button" className="cd-btn cd-btn-gold cw-continue" onClick={onBuy}>
+              <IconCW name="lucide:shopping-bag" size={16} color={INK_CW.onGold} />Buy course · £{course.price}
+            </button>}
+          <div className="cw-meta-grid">
+            {meta.map((m) =>
+              <div className="cw-meta-item" key={m.key}>
+                <span className="cw-meta-key"><IconCW name={m.icon} size={15} color={INK_CW.heading} />{m.key}</span>
+                <span className="cw-meta-val">{m.value}</span>
+              </div>)}
           </div>
-          <div className="cw-progress">
-            <span className="cw-progress-bar"><span style={{ width: pct + "%" }} /></span>
-            <span className="cw-progress-label">{pct}% complete</span>
-          </div>
-          <button type="button" className="cw-continue" onClick={onContinue}>
-            <IconCW name="fluent:play-16-filled" size={18} color="#fff" />
-            Continue Learning
-          </button>
           <div className="cw-included">
-            <div className="cw-included-h">What's included:</div>
-            {course.included.map((it, i) => (
-              <div className="cw-included-row" key={i}>
-                <IconCW name={it.icon} size={19} color="var(--brand-navy)" />
-                {it.text}
-              </div>
-            ))}
+            <div className="cw-included-h">What's included</div>
+            {CD.INCLUDED.map((it) => <div className="cw-included-row" key={it.text}><IconCW name={it.icon} size={19} color={INK_CW.heading} />{it.text}</div>)}
           </div>
         </div>
       </div>
-
-      <div className="cw-ava-card">
-        <div className="cw-ava-head">
-          <SparkCW size={20} color="var(--brand-gold)" />
-          <span>Ask Ava about this course</span>
-        </div>
-        <p className="cw-ava-desc">Not sure if this is your next best step? Ava can tell you how it maps to your goal.</p>
-        <button type="button" className="cw-ava-btn" onClick={() => goCW("Agent.html")}>
-          Ask Ava
-          <IconCW name="lucide:arrow-up-right" size={16} color="var(--brand-navy)" />
-        </button>
-      </div>
-    </aside>
-  );
+      <CWAvaCard lessonName={item.name} courseTitle={course.title} />
+    </aside>);
 }
 
 /* ---------------------------------------------------------------- app -- */
 function CourseWebApp() {
-  const course = getCourseWeb();
-  const flat = flattenSectionsCW(course);
-  const totalItems = flat.length;
-  const initialProgress = loadProgressCW(course.slug);
-  const activeIdx = Math.min(initialProgress.activeIdx || 0, totalItems - 1);
-  const [completed] = useStateCW(new Set(initialProgress.completed || []));
-  const [openSet, setOpenSet] = useStateCW(() => new Set([0]));
-  const [query, setQuery] = useStateCW("");
-  const [comments, setComments] = useStateCW(() => course.comments.map((c) => ({ ...c, liked: false, replies: [] })));
+  const course = CW_COURSE;
+  const flat = useMemoCW(() => CD.flatten(course), []);
+  const [done, markDone] = PFL.useLessonsDone();
+  const purchased = PFL.usePurchased();
+  const isPurchased = purchased.indexOf(course.slug) !== -1;
+  /* paid course, not bought yet: browse only — nothing plays until checkout */
+  const locked = course.price > 0 && !isPurchased;
 
-  useEffectCW(() => { document.title = "PROfinity — " + course.title; }, []);
+  /* current lesson = URL position → web resume pointer → first not-yet-completed → first */
+  const [curIdx, setCurIdx] = useStateCW(() => {
+    const fromUrl = CD.lessonIdxFromParams(flat, CW_PARAMS);
+    if (fromUrl != null) return fromUrl;
+    const saved = PFL.readProgress(course.slug);
+    const doneNow = PFL.readDone();
+    if (typeof saved.activeIdx === "number" && flat[saved.activeIdx] && doneNow.indexOf(flat[saved.activeIdx].name) === -1) return saved.activeIdx;
+    const i = flat.findIndex((l) => doneNow.indexOf(l.name) === -1);
+    return i === -1 ? 0 : i;
+  });
+  const cur = flat[curIdx];
+  const content = CD.genericContent(cur);
+  const curDone = done.indexOf(cur.name) !== -1;
+  const next = flat[curIdx + 1] || null;
+  const started = curIdx > 0 || flat.some((l) => done.indexOf(l.name) !== -1);
 
-  function handleSelectLesson(idx) { goCW(lessonUrlCW(course, idx)); }
-  function handleContinue() {
-    const resumeIdx = flat.findIndex((_, i) => !completed.has(i));
-    handleSelectLesson(resumeIdx === -1 ? 0 : resumeIdx);
-  }
-  function toggleSection(i) {
-    setOpenSet((prev) => {
-      const next = new Set(prev);
-      if (next.has(i)) next.delete(i); else next.add(i);
-      return next;
-    });
-  }
-  function expandAll() {
-    setOpenSet((prev) => prev.size === course.sections.length ? new Set() : new Set(course.sections.map((_, i) => i)));
-  }
+  const [toast, setToast] = useStateCW(null);
+  const toastTimer = useRefCW(null);
+  const showToast = (msg) => { setToast(msg); clearTimeout(toastTimer.current); toastTimer.current = setTimeout(() => setToast(null), 2200); };
 
-  function handleAddComment(text, sharedToNewsfeed) {
-    setComments((all) => [{ name: ME_CW.name, time: "Just now", likes: 0, liked: false, text, replies: [], sharedToNewsfeed }, ...all]);
-    if (sharedToNewsfeed) window.PFCommentShare.shareToNewsfeed({ author: ME_CW, courseSlug: course.slug, text });
-  }
-  function handleToggleLike(i) {
-    setComments((all) => all.map((c, idx) => idx === i ? { ...c, liked: !c.liked, likes: c.likes + (c.liked ? -1 : 1) } : c));
-  }
-  function handleReply(i, text) {
-    setComments((all) => all.map((c, idx) => idx === i ? { ...c, replies: [...c.replies, { name: ME_CW.name, time: "Just now", text }] } : c));
-  }
+  useEffectCW(() => { document.title = "PROfinity — My Learning · " + course.title; }, []);
+  /* web resume pointer (completed = flat indices of the shared name-keyed store) */
+  useEffectCW(() => {
+    PFL.writeProgress(course.slug, { completed: flat.map((l, i) => done.indexOf(l.name) !== -1 ? i : -1).filter((i) => i !== -1), activeIdx: curIdx });
+  }, [curIdx, done]);
+  /* keep the URL on the selected lesson so refresh / share keep the place */
+  const syncUrl = (i) => {
+    try {
+      const u = new URL(window.location.href);
+      const it = flat[i];
+      /* rebuilt so the query reads course → title/price/dur → position */
+      const rest = new URLSearchParams(u.search);
+      ["course", "level", "module", "lesson", "sub", "share", "play"].forEach((k) => rest.delete(k));
+      const q = new URLSearchParams({ course: course.slug });
+      rest.forEach((v, k) => q.set(k, v));
+      q.set("level", it.li); q.set("module", it.si); q.set("lesson", it.ni);
+      if (it.subIdx != null) q.set("sub", it.subIdx);
+      u.search = q.toString();
+      history.replaceState(history.state, "", u);
+    } catch (e) {}
+  };
+  /* ?play=1 (LearningMobile / MyLearning deep links) — the player is its own page on the web */
+  useEffectCW(() => {
+    if (CW_PARAMS.get("play") === "1" && !PFL.locked(course.slug, CW_PARAMS.get("price"))) goCW(CD.lessonUrl(course, cur));
+    else syncUrl(curIdx);
+  }, []);
 
-  const pct = totalItems ? Math.round((completed.size / totalItems) * 100) : 0;
-  const sectionsWithIdx = course.sections.map((s, i) => ({ s, i }));
+  const buyCourse = () => goCW(CD.checkoutUrl(course));
+  const nudgeBuy = () => showToast("Buy this course to start its lessons");
+  const openLesson = (i) => { if (locked) { nudgeBuy(); return; } goCW(CD.lessonUrl(course, flat[i])); };
+  const selectLesson = (name) => {
+    const i = flat.findIndex((l) => l.name === name);
+    if (i === -1) return;
+    if (flat[i].kind === "pdf" && !locked) { openLesson(i); return; }
+    setCurIdx(i); syncUrl(i);
+    if (locked) nudgeBuy();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  const openByName = (name) => { const i = flat.findIndex((l) => l.name === name); if (i !== -1) openLesson(i); };
+  /* Continue — open the player on the current lesson (or the next one when the current is already ticked) */
+  const continueLesson = () => { if (!next && curDone) return; openLesson(curDone && next ? curIdx + 1 : curIdx); };
+
+  /* Share lesson — ?share=1 opens it on load for design review */
+  const [shareOpen, setShareOpen] = useStateCW(() => CW_PARAMS.get("share") === "1");
+  const shareUrl = (() => { try { const u = new URL(CD.lessonUrl(course, cur), window.location.href); return u.href; } catch (e) { return window.location.href; } })();
+  const shareDone = (msg) => { setShareOpen(false); if (msg) showToast(msg); };
 
   return (
-    <div className="app" style={{ "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" }}>
-      <TopNavCW active="My Learning" user={ME_CW} logoSrc="assets/profinity-icon-purple-gold.png"
-        onNavigate={navigateCW}
+    <div className="app wa-screen cd-root" style={{ "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" }}>
+      <TopNavCW active="My Learning" user={ME_CW} logoSrc="assets/profinity-icon-purple-gold.png" onNavigate={navigateCW}
         style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />
 
-      <div className="cw-page" data-screen-label="Course (web)">
+      <div className="cw-page" data-screen-label={"Course (web) · " + (locked ? "locked" : "unlocked")}>
         <CWCrumb course={course} />
         <div className="cw-grid">
           <div className="cw-main">
-            <CWHero course={course} totalLessons={totalItems} onPlay={handleContinue} />
-            <CWAbout course={course} />
-            <CWLearn course={course} />
-            <CWCurriculum course={course} sectionsWithIdx={sectionsWithIdx} totalLessons={totalItems}
-              openSet={openSet} activeFlatIdx={activeIdx} completed={completed}
-              onToggle={toggleSection} onExpandAll={expandAll} onSelect={handleSelectLesson}
-              query={query} onQuery={setQuery} />
-            <CWInstructor course={course} />
-            <CWDiscussion comments={comments} onAdd={handleAddComment} onToggleLike={handleToggleLike} onReply={handleReply} />
+            <CWHero course={course} item={cur} content={content} locked={locked} started={started} curDone={curDone} next={next} total={flat.length}
+              onOpen={() => openLesson(curIdx)} onContinue={continueLesson} onShare={() => setShareOpen(true)} onBuy={buyCourse} />
+            <CWInThisLesson content={content} />
+            <CWCourseContent course={course} flat={flat} done={done} currentName={cur.name} locked={locked} onSelect={selectLesson} onOpen={openByName} />
+            <CWResources onToast={showToast} locked={locked} onLocked={nudgeBuy} />
+            <CWRelated course={course} />
+            <CWInstructor />
+            <CWComments lessonName={cur.name} courseSlug={course.slug} />
           </div>
-          <CWSide course={course} pct={pct} onContinue={handleContinue} />
+          <CWSide course={course} flat={flat} done={done} locked={locked} purchased={isPurchased} started={started} curDone={curDone} next={next}
+            onContinue={continueLesson} onBuy={buyCourse} item={cur} />
         </div>
       </div>
-    </div>
-  );
+
+      {shareOpen && <CWShareModal item={cur} course={course} url={shareUrl} onClose={() => setShareOpen(false)} onDone={shareDone} />}
+      {toast && <div className="cd-toast" role="status">{toast}</div>}
+    </div>);
 }
 
 ReactDOM.createRoot(document.getElementById("pf-root")).render(<CourseWebApp />);

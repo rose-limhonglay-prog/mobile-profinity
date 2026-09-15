@@ -194,6 +194,34 @@ function SubModuleHome() {
           {d.lessons.map((l, i) => <SMLesson key={i} d={d} l={l} n={i + 1} i={i} done={doneSet.indexOf(l[0]) !== -1} />)}
         </CardSM>
 
+        {/* what's next + Ava (user, 2026-09-15) */}
+        <div className="sm-sec-h"><h2>What's next</h2></div>
+        <div className="sm-next">
+          {nextSub ?
+            <button type="button" className="sm-nexttile" onClick={() => goSM(subModuleUrlSM(nextSub))}>
+              <span className="sm-nexttile-go" aria-hidden="true"><IcoSM name="lucide:folder" size={18} color="#fff" /></span>
+              <span className="sm-nexttile-eyebrow">Next sub-module · {nextSub.lessons.length} lessons · {nextSub.mins}</span>
+              <span className="sm-nexttile-name">{nextSub.name}</span>
+              <span className="sm-nexttile-meta">{nextSub.desc}</span>
+            </button> :
+            <button type="button" className="sm-nexttile" onClick={() => goSM(moduleUrlSM(d))}>
+              <span className="sm-nexttile-go" aria-hidden="true"><IcoSM name="lucide:layers" size={18} color="#fff" /></span>
+              <span className="sm-nexttile-eyebrow">Last sub-module</span>
+              <span className="sm-nexttile-name">Back to {d.module}</span>
+              <span className="sm-nexttile-meta">Finish the module overview, then continue to the next module.</span>
+            </button>}
+        </div>
+        <section className="sm-ava" data-screen-label="Ask Ava">
+          <span className="orb"><IcoSM name="lucide:sparkles" size={22} color="#fff" /></span>
+          <div className="tx">
+            <div className="ti">Ask Ava about this sub-module</div>
+            <div className="su">Want a quick primer before you start? Ava can summarise {d.name} in 30 seconds.</div>
+            <button type="button" className="pf-coach-link" data-coach={`I'm on the sub-module "${d.name}" in ${d.module}. Summarise what it covers and what I should practise.`}>
+              <IcoSM name="lucide:sparkles" size={14} color="#0C1928" />Ask Ava
+            </button>
+          </div>
+        </section>
+
         <div className="sm-tomod-wrap">
           <ButtonSM variant="secondary" fullWidth
             iconLeading={<IcoSM name="lucide:list" size={18} color="var(--gray-600)" />}

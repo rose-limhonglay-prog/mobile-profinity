@@ -737,11 +737,105 @@ function LSComments({
     key: c._id
   }))), prompt.modal);
 }
+
+/* What's next: the next lesson and the next module after this one, then Ava
+   (user, 2026-09-15). Next lesson is gated like the footer button — mark this
+   lesson complete first. */
+function LSWhatsNext({
+  ctx,
+  flat,
+  flatIdx,
+  completed,
+  onNext
+}) {
+  const cur = flat[flatIdx];
+  const next = flat[flatIdx + 1] || null;
+  const sameModule = (a, b) => a.levelIdx === b.levelIdx && a.moduleIdx === b.moduleIdx;
+  let nextModIdx = -1;
+  for (let i = flatIdx + 1; i < flat.length; i++) {
+    if (!sameModule(flat[i], cur)) {
+      nextModIdx = i;
+      break;
+    }
+  }
+  const nextMod = nextModIdx === -1 ? null : flat[nextModIdx];
+  const nextModCount = nextMod ? flat.filter(l => sameModule(l, nextMod)).length : 0;
+  if (!next && !nextMod) return null;
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h3", {
+    className: "ls-next-h"
+  }, "What's next"), /*#__PURE__*/React.createElement("div", {
+    className: "ls-next"
+  }, next && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "ls-nexttile",
+    onClick: onNext,
+    "aria-label": "Next lesson: " + next.name + (completed ? "" : ". Mark this lesson complete first")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ls-nexttile-go",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSLS.IconifyIcon, {
+    name: "lucide:arrow-up-right",
+    size: 18,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "ls-nexttile-eyebrow"
+  }, "Next lesson", next.dur ? " · " + next.dur : ""), /*#__PURE__*/React.createElement("span", {
+    className: "ls-nexttile-name"
+  }, next.name), /*#__PURE__*/React.createElement("span", {
+    className: "ls-nexttile-meta"
+  }, next.subTitle || next.moduleTitle, completed ? "" : " · complete this lesson to unlock")), nextMod && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "ls-nexttile",
+    onClick: () => goLS(moduleUrlLS(ctx.course, nextMod.levelIdx, nextMod.moduleIdx))
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ls-nexttile-go",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSLS.IconifyIcon, {
+    name: "lucide:layers",
+    size: 18,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "ls-nexttile-eyebrow"
+  }, "Next module · ", nextModCount, " ", nextModCount === 1 ? "lesson" : "lessons"), /*#__PURE__*/React.createElement("span", {
+    className: "ls-nexttile-name"
+  }, "Module ", globalModuleIndexLS(ctx.course, nextMod.levelIdx, nextMod.moduleIdx), ": ", nextMod.moduleTitle), /*#__PURE__*/React.createElement("span", {
+    className: "ls-nexttile-meta"
+  }, "Starts with ", nextMod.name))));
+}
+function LSAva({
+  ctx
+}) {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "ls-ava",
+    "data-screen-label": "Ask Ava"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "orb"
+  }, /*#__PURE__*/React.createElement(DSLS.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 22,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, "Talk this through with Ava"), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, "Stuck on a step or unsure how this applies to your patients? Ava knows where you are in the course."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-coach-link",
+    "data-coach": `I'm on the lesson "${ctx.lesson.name}" in ${ctx.module.title} (${ctx.course.title}). Quiz me on the key points and tell me what to practise next.`
+  }, /*#__PURE__*/React.createElement(DSLS.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "#0C1928"
+  }), "Ask Ava")));
+}
 function LSOverview({
   ctx,
   comments,
   onAddComment,
-  onAddReply
+  onAddReply,
+  next
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "ls-panel"
@@ -760,7 +854,9 @@ function LSOverview({
     className: "ls-step-num"
   }, String(i + 1).padStart(2, "0")), /*#__PURE__*/React.createElement("span", {
     className: "ls-step-text"
-  }, b)))), /*#__PURE__*/React.createElement("div", {
+  }, b)))), next && /*#__PURE__*/React.createElement(LSWhatsNext, next), next && /*#__PURE__*/React.createElement(LSAva, {
+    ctx: ctx
+  }), /*#__PURE__*/React.createElement("div", {
     className: "ls-divider"
   }), /*#__PURE__*/React.createElement(LSComments, {
     comments: comments,
@@ -952,7 +1048,14 @@ function Lesson() {
     ctx: ctx,
     comments: comments,
     onAddComment: addComment,
-    onAddReply: addReply
+    onAddReply: addReply,
+    next: {
+      ctx,
+      flat,
+      flatIdx,
+      completed,
+      onNext: () => completed ? goNext() : null
+    }
   }) : /*#__PURE__*/React.createElement(LSResources, {
     ctx: ctx
   })), /*#__PURE__*/React.createElement("div", {

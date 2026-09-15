@@ -3502,9 +3502,7 @@ function PostComposer({ onPost, superUser, devRole, onDevRole, lockedAdmin }) {
     input.multiple = true;
     input.onchange = (e) => {
       Array.from(e.target.files || []).slice(0, Math.max(0, 5 - images.length)).forEach((f) => {
-        const reader = new FileReader();
-        reader.onload = () => setImages((prev) => [...prev, reader.result].slice(0, 5));
-        reader.readAsDataURL(f);
+        window.pfReadImageFile(f).then((src) => { if (src) setImages((prev) => [...prev, src].slice(0, 5)); });
       });
     };
     input.click();
@@ -3521,7 +3519,6 @@ function PostComposer({ onPost, superUser, devRole, onDevRole, lockedAdmin }) {
     input.onchange = (e) => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
-      setImages([]);
       const src = URL.createObjectURL(file);
       setVideo({ src, cover: null, coverIsCustom: false, ratio: null, duration: null });
       setCoverPickerOpen(true);
@@ -3565,8 +3562,8 @@ function PostComposer({ onPost, superUser, devRole, onDevRole, lockedAdmin }) {
           </span>
         </button>
         <div className="pfw-composer-quick">
-          <ComposerIconButton icon="fluent:video-24-filled" color="#E8455D" label="Add video" onClick={openModalAnd(pickVideo)} disabled={images.length > 0} />
-          <ComposerIconButton icon="fluent:image-multiple-24-filled" color="#3DBE5B" label="Add photo" onClick={openModalAnd(pickImages)} disabled={!!video} />
+          <ComposerIconButton icon="fluent:video-24-filled" color="#E8455D" label="Add video" onClick={openModalAnd(pickVideo)} disabled={!!video} />
+          <ComposerIconButton icon="fluent:image-multiple-24-filled" color="#3DBE5B" label="Add photo" onClick={openModalAnd(pickImages)} disabled={images.length >= 5} />
           <ComposerIconButton icon="fluent:movies-and-tv-24-filled" color="#E8455D" label="Add reel" onClick={openModal} />
           {superUser &&
           <button type="button" className="pfw-golive-pill" aria-label="Go live" onClick={() => setLiveStage("precam")}>
@@ -3634,9 +3631,9 @@ function CreatePostModal({ v, setV, images, setImages, video, categories, setCat
 
   const hasMedia = images.length > 0 || !!video;
   const options = [
-    { key: "photo", icon: "lucide:image", label: "Photo", color: "#2d9d5a", onClick: pickImages, disabled: !!video || !!poll || !!bg },
-    { key: "camera", icon: "lucide:camera", label: "Camera", color: "#292569", onClick: () => setCameraOpen(true), disabled: !!video || !!poll || !!bg || images.length >= 5 },
-    { key: "video", icon: "lucide:video", label: "Video", color: "#c8323a", onClick: pickVideo, disabled: images.length > 0 || !!poll || !!bg },
+    { key: "photo", icon: "lucide:image", label: "Photo", color: "#2d9d5a", onClick: pickImages, disabled: !!poll || !!bg || images.length >= 5 },
+    { key: "camera", icon: "lucide:camera", label: "Camera", color: "#292569", onClick: () => setCameraOpen(true), disabled: !!poll || !!bg || images.length >= 5 },
+    { key: "video", icon: "lucide:video", label: "Video", color: "#c8323a", onClick: pickVideo, disabled: !!video || !!poll || !!bg },
     { key: "doc", icon: "lucide:file-text", label: "Document", color: "#e56c1b", onClick: pickDocument, disabled: !!poll, active: !!doc },
     { key: "poll", icon: "lucide:bar-chart-2", label: "Poll", color: "#1d7fc4", onClick: togglePoll, disabled: hasMedia || !!bg || !!doc, active: !!poll }];
 
@@ -4697,7 +4694,9 @@ function SlidingDots({ count, idx }) {
    `aspect` ("square"|"portrait") only applies to single-image posts; multi-
    image carousels open a click-to-fullscreen viewer (own swipeable strip of
    the same images). */
-function MediaCarousel({ images, aspect, onLoveReact }) {
+/* `video` (optional { src, cover|poster, ratio }) leads the strip as its
+   first slide so one post can carry a clip plus up to five photos. */
+function MediaCarousel({ images, video, aspect, onLoveReact }) {
   const [idx, setIdx] = useState(0);
   const [fs, setFs] = useState(false);
   const [fsIdx, setFsIdx] = useState(0);
@@ -4714,8 +4713,11 @@ function MediaCarousel({ images, aspect, onLoveReact }) {
     if (fs && fsRef.current) fsRef.current.scrollLeft = fsIdx * fsRef.current.clientWidth;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fs]);
-  if (!images || images.length === 0) return null;
-  const single = images.length === 1;
+  const items = [
+    ...(video && video.src ? [{ type: "video", src: video.src, poster: video.cover || video.poster || null, ratio: video.ratio || null }] : []),
+    ...(images || []).map((src) => ({ type: "image", src }))];
+  if (items.length === 0) return null;
+  const single = items.length === 1;
   const onScroll = () => {
     const el = ref.current;
     if (!el) return;
@@ -4736,24 +4738,30 @@ function MediaCarousel({ images, aspect, onLoveReact }) {
   return (
     <div className="mc-wrap">
       <div className={"mc-scroll" + (single ? " mc-scroll-single" + (aspect ? " mc-aspect-" + aspect : "") : "")} ref={ref} onScroll={onScroll}>
-        {images.map((src, i) =>
-          <img key={i} src={src} alt={"Image " + (i + 1) + " of " + images.length} className="mc-img"
+        {items.map((it, i) => it.type === "video"
+          ? <div key={i} className="mc-img mc-vid" style={single && it.ratio ? { aspectRatio: it.ratio } : undefined}
+              aria-label={"Video, item " + (i + 1) + " of " + items.length}>
+              <PFMediaVideo src={it.src} poster={it.poster} />
+            </div>
+          : <img key={i} src={it.src} alt={"Image " + (i + 1) + " of " + items.length} className="mc-img"
           onClick={wrap(() => openFullscreen(i))} />
         )}
       </div>
-      {!single && <span className="mc-count">{idx + 1}/{images.length}</span>}
-      {!single && <SlidingDots count={images.length} idx={idx} />}
+      {!single && <span className="mc-count">{idx + 1}/{items.length}</span>}
+      {!single && <SlidingDots count={items.length} idx={idx} />}
       {heartNode}
       {fs &&
       <div className="sm-fs" onClick={(e) => {e.stopPropagation();}}>
           <div className="mc-fs-track" onScroll={onFsScroll} ref={fsRef}>
-            {images.map((src, i) => <img key={i} src={src} alt={"Image " + (i + 1) + " of " + images.length} />)}
+            {items.map((it, i) => it.type === "video"
+              ? <div key={i} className="mc-fs-vid"><PFMediaVideo src={it.src} poster={it.poster} /></div>
+              : <img key={i} src={it.src} alt={"Image " + (i + 1) + " of " + items.length} />)}
           </div>
           <button type="button" className="sm-fs-close" aria-label="Close fullscreen"
         onClick={() => setFs(false)}>
             <IconifyIcon name="lucide:x" size={24} color="var(--white)" />
           </button>
-          <span className="mc-fs-count">{fsIdx + 1}/{images.length}</span>
+          <span className="mc-fs-count">{fsIdx + 1}/{items.length}</span>
         </div>
       }
     </div>
@@ -5260,7 +5268,7 @@ function SampleMedia({ sample, postId, saved, onSave, onReport, onLoveReact, aut
     return (
       <>
         <div className="sm-video sm-video-real" style={{ aspectRatio: sample.ratio || 16 / 9 }}>
-          <video src={sample.src} poster={sample.poster || undefined} controls playsInline
+          <PFMediaVideo src={sample.src} poster={sample.poster}
             style={{ width: "100%", height: "100%", display: "block", objectFit: "contain", background: "#000" }} />
         </div>
         {heartNode}
@@ -6355,7 +6363,7 @@ function FeedPost({ post, st, hideTags, pinned, canPin, onPin, pinScope, onToggl
           saved={st.saved} onSave={onSave} onReport={() => setReportedOpen(true)} onLoveReact={handleDoubleTapLove}
           author={post.author} likes={st.likes} commentsCount={st.commentsCount} shares={st.shares} liked={st.liked}
           comments={comments} onLike={handleLike} onComment={handleComment} onShare={handleShare} caption={post.body} />
-        : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} aspect={post.aspect} onLoveReact={handleDoubleTapLove} /> : null}
+        : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} video={post.video} aspect={post.aspect} onLoveReact={handleDoubleTapLove} /> : null}
         {post.document && <div className="pf-doc-inset"><DocAttachment doc={post.document} /></div>}
         {isReel &&
         <ReelActionsRow likes={st.likes} comments={st.commentsCount} shares={st.shares}
@@ -6652,7 +6660,7 @@ function ChannelFeedCard({ post, st, pinned, canPin, onPin, pinScope, onToggleLi
           author={{ name: post.channel.by, avatar: post.channel.byAvatar }}
           likes={st.likes} commentsCount={st.commentsCount} shares={st.shares} liked={liked}
           comments={comments} onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={onShare} /> :
-        <MediaCarousel images={post.media} onLoveReact={handleDoubleTapLove} />}
+        <MediaCarousel images={post.media} video={post.video} onLoveReact={handleDoubleTapLove} />}
       </div>}
       <PostActions likes={st.likes} comments={st.commentsCount} shares={st.shares}
       liked={liked} saved={st.saved} actioned={false}
@@ -6946,6 +6954,114 @@ function FeedPreviewPanel({ persona, onPersona, toggles, onToggle }) {
 
 }
 
+/* Real photo-library / camera media picked in a composer. A genuinely
+   recorded clip can be tens of MB — far too big for the localStorage the
+   composed posts live in — and an object URL dies with the composer page,
+   so clips are parked in IndexedDB and the post carries a "pfmedia:<id>"
+   src the feed resolves back to an object URL when it renders. Defined
+   here (app.compiled.js loads before create-post-mobile.compiled.js) so
+   both composers and every feed surface share the one store. */
+window.PFMediaStore = window.PFMediaStore || (function () {
+  const DB = "pf-media", STORE = "blobs";
+  const urls = {}, pending = {};
+  function open() {
+    return new Promise((resolve, reject) => {
+      if (!window.indexedDB) return reject(new Error("IndexedDB unavailable"));
+      const req = indexedDB.open(DB, 1);
+      req.onupgradeneeded = () => { req.result.createObjectStore(STORE); };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+  function isRef(src) { return typeof src === "string" && src.indexOf("pfmedia:") === 0; }
+  function put(blob) {
+    const id = "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    return open().then((db) => new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, "readwrite");
+      tx.objectStore(STORE).put(blob, id);
+      tx.oncomplete = () => resolve("pfmedia:" + id);
+      tx.onerror = () => reject(tx.error);
+    }));
+  }
+  function get(src) {
+    const id = String(src).replace(/^pfmedia:/, "");
+    return open().then((db) => new Promise((resolve, reject) => {
+      const rq = db.transaction(STORE, "readonly").objectStore(STORE).get(id);
+      rq.onsuccess = () => resolve(rq.result || null);
+      rq.onerror = () => reject(rq.error);
+    }));
+  }
+  function cached(src) { return urls[src] || null; }
+  function url(src) {
+    if (!isRef(src)) return Promise.resolve(src);
+    if (urls[src]) return Promise.resolve(urls[src]);
+    if (!pending[src]) pending[src] = get(src).then((blob) => {
+      if (!blob) return null;
+      urls[src] = URL.createObjectURL(blob);
+      return urls[src];
+    }).catch(() => null);
+    return pending[src];
+  }
+  function clear() {
+    return open().then((db) => { db.transaction(STORE, "readwrite").objectStore(STORE).clear(); }).catch(() => {});
+  }
+  return { put, url, cached, isRef, clear };
+})();
+
+/* Reads a picked or camera-captured photo as a data URL, downscaling
+   anything over `max` px on its long side to a JPEG so a straight-off-the-
+   camera shot (typically 3–5 MB) doesn't blow the localStorage budget. */
+window.pfReadImageFile = window.pfReadImageFile || function (file, max) {
+  max = max || 1600;
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onerror = () => resolve(null);
+    reader.onload = () => {
+      const raw = reader.result;
+      if (file.size < 350 * 1024) return resolve(raw);
+      const img = new Image();
+      img.onerror = () => resolve(raw);
+      img.onload = () => {
+        const scale = Math.min(1, max / Math.max(img.naturalWidth || 1, img.naturalHeight || 1));
+        const c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round((img.naturalWidth || 1) * scale));
+        c.height = Math.max(1, Math.round((img.naturalHeight || 1) * scale));
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        try { resolve(c.toDataURL("image/jpeg", 0.85)); } catch (e) { resolve(raw); }
+      };
+      img.src = raw;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
+/* Resolves a "pfmedia:" ref to a playable object URL (null while loading);
+   any other src passes straight through. */
+function usePFMediaSrc(src) {
+  const store = window.PFMediaStore;
+  const isRef = !!(store && store.isRef(src));
+  const [resolved, setResolved] = useState(() => isRef ? store.cached(src) : src);
+  useEffect(() => {
+    if (!isRef) { setResolved(src); return undefined; }
+    let live = true;
+    const hit = store.cached(src);
+    if (hit) { setResolved(hit); return undefined; }
+    setResolved(null);
+    store.url(src).then((u) => { if (live) setResolved(u); });
+    return () => { live = false; };
+  }, [src]);
+  return resolved;
+}
+
+/* Playable <video> for a composed post's clip — a bundled sample, a same-
+   page object URL, or a "pfmedia:" ref parked in IndexedDB. */
+function PFMediaVideo({ src, poster, className, style }) {
+  const real = usePFMediaSrc(src);
+  return (
+    <video src={real || undefined} poster={poster || undefined} controls playsInline preload="metadata"
+      className={className} style={style} />);
+}
+
 const PF_USER_POSTS_KEY = "pf-newsfeed-user-posts";
 /* A composed post pins to the top of the feed for as long as you're
    navigating the app (creating a post and landing back on the newsfeed is a
@@ -6956,7 +7072,10 @@ const PF_USER_POSTS_KEY = "pf-newsfeed-user-posts";
 (function clearUserPostsOnReload() {
   try {
     const nav = performance.getEntriesByType("navigation")[0];
-    if (nav && nav.type === "reload") localStorage.removeItem(PF_USER_POSTS_KEY);
+    if (nav && nav.type === "reload") {
+      localStorage.removeItem(PF_USER_POSTS_KEY);
+      if (window.PFMediaStore) window.PFMediaStore.clear();
+    }
   } catch (e) {}
 })();
 function readUserPosts() {
@@ -6964,8 +7083,10 @@ function readUserPosts() {
     const list = JSON.parse(localStorage.getItem(PF_USER_POSTS_KEY)) || [];
     return list.filter((p) => p && p.author && p.author.name && p.body).map((p) =>
       /* CreatePostMobile stores its clip as `video: { src, cover, ratio }`;
-         the feed renders video through `sample`, so map one to the other. */
-      p.video && !p.sample ? { ...p, sample: { type: "video", poster: p.video.cover || undefined, src: p.video.src, ratio: p.video.ratio } } : p);
+         a video-only post renders through `sample`, so map one to the other.
+         A post carrying photos *and* a clip keeps both and renders them as
+         one mixed strip (MediaCarousel with `video`), video first. */
+      p.video && !p.sample && !(p.media && p.media.length) ? { ...p, sample: { type: "video", poster: p.video.cover || undefined, src: p.video.src, ratio: p.video.ratio } } : p);
   } catch (e) { return []; }
 }
 function writeUserPosts(list) {
@@ -7376,9 +7497,13 @@ function Feed({ channel } = {}) {
      key ("pf-newsfeed-user-posts") that CreatePostMobile writes, so posts
      made from either surface show up on both. */
   const addPost = ({ body, media, video, live, categories, poll, document: doc, location, bg }) => {
-    const sample = video ? { type: "video", poster: video.cover, src: video.src, ratio: video.ratio, duration: video.duration } : null;
+    /* A clip on its own renders through `sample`; a clip alongside photos
+       stays as `video` + `media` and renders as one mixed strip. */
+    const mixed = !!(video && media && media.length);
+    const sample = video && !mixed ? { type: "video", poster: video.cover, src: video.src, ratio: video.ratio, duration: video.duration } : null;
     const post = { id: "u" + Date.now(), author: { name: ME.name, avatar: ME.avatar, seals: ["gb", "verified"] },
       time: "Just now", body, media: media || [], sample, live: !!live, categories: categories || [],
+      ...(mixed ? { video: { src: video.src, cover: video.cover, ratio: video.ratio } } : {}),
       ...(poll ? { poll } : {}), ...(doc ? { document: doc } : {}), ...(location ? { location } : {}), ...(bg ? { bg } : {}),
       likes: "0", comments: "0", shares: "0", commentList: [] };
     try { localStorage.setItem(PF_USER_POSTS_KEY, JSON.stringify([post, ...readUserPosts()])); } catch (e) {}

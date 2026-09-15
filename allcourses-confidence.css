@@ -43,7 +43,7 @@
   background: var(--acc-bg); color: var(--acc-text); font-family: var(--font-sans);
 }
 .acc-screen.lc-light {
-  --acc-bg: #F9F7F4; /* warm off-white My Learning surface */
+  --acc-bg: #F6F3EF; /* warm off-white My Learning surface */
   --acc-header-bg: rgba(255,255,255,.9);
   --acc-card: #FFFFFF;
   --acc-card-2: var(--gray-50);
@@ -321,3 +321,10 @@
   .acc-cat-top, .acc-cat-top-title, .acc-round, .acc-opt { transition: none; }
   .acc-scrim, .acc-sheet { animation: none; }
 }
+
+/* Free Resources view (?free=1, 2026-09-16): eyebrow + lede above the category title */
+.acc-cat-eyebrow { display: block; margin: 8px 20px 0; }
+.acc-cat-lede { margin: 10px 20px 0; }
+.acc-chip-free { gap: 6px; }
+/* placeholder cover for free resources without an exported thumbnail */
+.acc-card-ph { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--acc-cover-bg), var(--acc-card-2)); }

@@ -550,6 +550,94 @@ function CPChannelSheet({
     color: "#fff"
   })))))));
 }
+
+/* "Where from?" sheet behind the Photo and Video toolbar buttons: pick from
+   the device's library or capture right now. Both routes use the native
+   file input — with `capture` set, iOS/Android open the camera (still or
+   video) directly; without it they open the photo/video library. */
+const CP_MEDIA_SOURCES = {
+  photo: {
+    title: "Add photos",
+    rows: [{
+      k: "library",
+      icon: "lucide:images",
+      label: "Photo library",
+      sub: "Choose up to 5 photos"
+    }, {
+      k: "camera",
+      icon: "lucide:camera",
+      label: "Take a photo",
+      sub: "Open the camera now"
+    }]
+  },
+  video: {
+    title: "Add a video",
+    rows: [{
+      k: "library",
+      icon: "lucide:film",
+      label: "Video library",
+      sub: "Choose a clip from your gallery"
+    }, {
+      k: "camera",
+      icon: "lucide:video",
+      label: "Record a video",
+      sub: "Capture one right now"
+    }]
+  }
+};
+function CPMediaSourceSheet({
+  kind,
+  onPick,
+  onClose
+}) {
+  const cfg = CP_MEDIA_SOURCES[kind] || CP_MEDIA_SOURCES.photo;
+  React.useEffect(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": cfg.title,
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-sheet-grip",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("h3", null, cfg.title), /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet-list",
+    role: "menu"
+  }, cfg.rows.map(r => /*#__PURE__*/React.createElement("button", {
+    key: r.k,
+    type: "button",
+    role: "menuitem",
+    className: "cp-opt",
+    onClick: () => {
+      onClose();
+      onPick(r.k);
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-ic"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: r.icon,
+    size: 20,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-tx"
+  }, /*#__PURE__*/React.createElement("b", null, r.label), /*#__PURE__*/React.createElement("i", null, r.sub)), /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-chev"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 18,
+    color: "var(--gray-400)"
+  })))))));
+}
 function CPTopBar({
   canPost,
   onPost,
@@ -1676,8 +1764,11 @@ function CPCoverPicker({
       const onSeeked = () => {
         v.removeEventListener("seeked", onSeeked);
         const ctx = canvas.getContext("2d");
-        canvas.width = v.videoWidth;
-        canvas.height = v.videoHeight;
+        /* cap the frame at 1280px on its long side — a real 4K clip's
+           full-size cover would otherwise dominate the post's storage */
+        const k = Math.min(1, 1280 / Math.max(v.videoWidth || 1, v.videoHeight || 1));
+        canvas.width = Math.max(1, Math.round((v.videoWidth || 1) * k));
+        canvas.height = Math.max(1, Math.round((v.videoHeight || 1) * k));
         ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
         resolve(canvas.toDataURL("image/jpeg", 0.72));
       };
@@ -1727,12 +1818,17 @@ function CPCoverPicker({
     input.onchange = e => {
       const file = e.target.files && e.target.files[0];
       if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => setSelected({
-        src: reader.result,
-        custom: true
+      const read = window.pfReadImageFile ? window.pfReadImageFile(file, 1280) : new Promise(res => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result);
+        reader.readAsDataURL(file);
       });
-      reader.readAsDataURL(file);
+      read.then(src => {
+        if (src) setSelected({
+          src,
+          custom: true
+        });
+      });
     };
     input.click();
   };
@@ -1868,6 +1964,7 @@ function CPScreen() {
   const [images, setImages] = React.useState([]);
   const [video, setVideo] = React.useState(null);
   const [coverPickerOpen, setCoverPickerOpen] = React.useState(false);
+  const [mediaSheet, setMediaSheet] = React.useState(null); // null | "photo" | "video"
   const [audience, setAudience] = React.useState("Everyone");
   const [allTags] = React.useState(() => window.PFHashtags ? window.PFHashtags.getAll() : []);
   const [selectedTags, setSelectedTags] = React.useState([]);
@@ -1931,15 +2028,15 @@ function CPScreen() {
   /* ?longvideo=1 — attach the long sample clip on load (demo / screenshots). */
   React.useEffect(() => {
     try {
-      if (new URLSearchParams(window.location.search).get("longvideo") === "1") handleVideoPick();
+      if (new URLSearchParams(window.location.search).get("longvideo") === "1") attachSampleVideo();
     } catch (e) {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const videoBusy = !!(video && video.prep);
-  const canPost = !videoBusy && (text.trim().length > 0 || !!video);
+  const videoBusy = !!(video && (video.prep || video.probing || !video.storeSrc));
+  const canPost = !videoBusy && (text.trim().length > 0 || !!video || images.length > 0);
   const handlePost = () => {
     const body = mode === "live" ? liveDescription.trim() : text.trim();
-    if (mode !== "live" && !body) return;
+    if (mode !== "live" && !body && images.length === 0 && !video) return;
     const hasMedia = images.length > 0 || !!video;
     const reward = {
       amount: 75,
@@ -1964,8 +2061,9 @@ function CPScreen() {
           fg: bg.fg
         } : null,
         video: video ? {
-          src: video.src,
-          cover: video.cover
+          src: video.storeSrc || video.src,
+          cover: video.cover,
+          ratio: video.ratio
         } : null,
         live: mode === "live",
         likes: "0",
@@ -2005,31 +2103,117 @@ function CPScreen() {
     }
     goCP(backTo);
   };
-  const handleImagePick = () => {
+
+  /* Photos — from the library (multi-select) or straight from the camera.
+     Each file is read via pfReadImageFile (app.compiled.js), which
+     downscales camera-size shots so five of them still fit the post store. */
+  const addImageFiles = files => {
+    const list = Array.from(files || []).filter(f => !f.type || /^image\//.test(f.type)).slice(0, 5);
+    if (!list.length) return;
+    const read = f => window.pfReadImageFile ? window.pfReadImageFile(f) : new Promise(res => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result);
+      reader.onerror = () => res(null);
+      reader.readAsDataURL(f);
+    });
+    Promise.all(list.map(read)).then(srcs => {
+      setImages(prev => [...prev, ...srcs.filter(Boolean)].slice(0, 5));
+    });
+  };
+  const pickImages = source => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
-    input.multiple = true;
-    input.onchange = e => {
-      const files = Array.from(e.target.files || []).slice(0, Math.max(0, 5 - images.length));
-      files.forEach(f => {
-        const reader = new FileReader();
-        reader.onload = () => setImages(prev => [...prev, reader.result].slice(0, 5));
-        reader.readAsDataURL(f);
-      });
-    };
+    if (source === "camera") input.setAttribute("capture", "environment");else input.multiple = true;
+    input.onchange = e => addImageFiles(e.target.files);
     input.click();
   };
 
-  /* No real capture pipeline in this prototype, so attaching "Video" loads a
-     bundled sample reel — matching the fake-camera pattern already used for
-     Go Live — and immediately opens the real frame-based cover picker. */
-  const handleVideoPick = () => {
-    setImages([]);
+  /* Video — one clip per post, alongside up to five photos. A clip picked
+     from the library or recorded on the spot is a real file: previewed via
+     an object URL, parked in PFMediaStore (IndexedDB) so the feed can play
+     it after this page is gone, and — if it's long — run through the
+     in-composer preparing card (CPVideoProcessing). Short clips go straight
+     to the cover picker. */
+  const probeVideo = (src, onMeta) => {
+    const probe = document.createElement("video");
+    probe.preload = "metadata";
+    probe.muted = true;
+    probe.src = src;
+    probe.addEventListener("loadedmetadata", () => {
+      const ratio = probe.videoWidth && probe.videoHeight ? probe.videoWidth / probe.videoHeight : null;
+      onMeta({
+        ratio,
+        seconds: isFinite(probe.duration) ? probe.duration : 0
+      });
+    }, {
+      once: true
+    });
+    probe.addEventListener("error", () => onMeta({
+      ratio: null,
+      seconds: 0
+    }), {
+      once: true
+    });
+  };
+  const attachVideoFile = file => {
+    if (!file) return;
+    setBgId("none");
+    const src = URL.createObjectURL(file);
+    const token = {};
+    setVideo({
+      src,
+      cover: null,
+      coverIsCustom: false,
+      ratio: null,
+      storeSrc: null,
+      probing: true,
+      token,
+      name: file.name
+    });
+    /* park the real bytes; the post references them as "pfmedia:<id>" */
+    const store = window.PFMediaStore;
+    (store ? store.put(file) : Promise.resolve(src)).catch(() => src).then(storeSrc => {
+      setVideo(v => v && v.token === token ? {
+        ...v,
+        storeSrc
+      } : v);
+    });
+    probeVideo(src, ({
+      ratio,
+      seconds
+    }) => {
+      const meta = {
+        seconds: Math.round(seconds),
+        mb: Math.max(1, Math.round(file.size / 1048576))
+      };
+      const long = seconds >= CP_LONG_VIDEO_SECS;
+      setVideo(v => v && v.token === token ? {
+        ...v,
+        ratio,
+        probing: false,
+        prep: long ? {
+          started: Date.now(),
+          duration: cpVideoPrepDuration(meta),
+          meta
+        } : null
+      } : v);
+      if (!long) setCoverPickerOpen(true);
+    });
+  };
+  const pickVideo = source => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "video/*";
+    if (source === "camera") input.setAttribute("capture", "environment");
+    input.onchange = e => attachVideoFile(e.target.files && e.target.files[0]);
+    input.click();
+  };
+  /* ?longvideo=1 demo path: the bundled sample reel standing in for a long
+     clip's upload → processing run (no file picker needed for screenshots). */
+  const attachSampleVideo = () => {
     setBgId("none");
     const src = "assets/sample-reel.mp4";
-    /* Stand-in metadata for a long clip; drives the in-composer preparing
-       card (CPVideoProcessing). The cover picker opens once it's ready. */
     const meta = {
       ...CP_SIM_VIDEO
     };
@@ -2038,29 +2222,32 @@ function CPScreen() {
       cover: null,
       coverIsCustom: false,
       ratio: null,
+      storeSrc: src,
       prep: {
         started: Date.now(),
         duration: cpVideoPrepDuration(meta),
         meta
       }
     });
-
-    /* Reads the clip's real dimensions so the preview box can take on its
-       actual shape — vertical stays tall, horizontal stays wide, square
-       stays square — instead of being force-cropped into one fixed box. */
-    const probe = document.createElement("video");
-    probe.preload = "metadata";
-    probe.muted = true;
-    probe.src = src;
-    probe.addEventListener("loadedmetadata", () => {
-      const ratio = probe.videoWidth && probe.videoHeight ? probe.videoWidth / probe.videoHeight : null;
-      setVideo(v => v && {
-        ...v,
-        ratio
-      });
-    }, {
-      once: true
+    probeVideo(src, ({
+      ratio
+    }) => setVideo(v => v && v.src === src ? {
+      ...v,
+      ratio
+    } : v));
+  };
+  const removeVideo = () => {
+    setVideo(v => {
+      if (v && v.src && /^blob:/.test(v.src)) {
+        try {
+          URL.revokeObjectURL(v.src);
+        } catch (e) {}
+      }
+      return null;
     });
+  };
+  const onMediaSource = k => {
+    if (mediaSheet === "video") pickVideo(k);else pickImages(k);
   };
   const handleCoverConfirm = selected => {
     setVideo(v => v && {
@@ -2205,26 +2392,9 @@ function CPScreen() {
     onClick: () => setStyleSheetOpen(true)
   }, /*#__PURE__*/React.createElement("span", {
     className: "cp-bg-aa"
-  }, "Aa"))), images.length > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "cp-images cp-images-" + images.length
-  }, images.map((src, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: "cp-img-wrap"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: src,
-    alt: "",
-    className: "cp-img"
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "cp-img-rm",
-    "aria-label": "Remove",
-    onClick: () => setImages(prev => prev.filter((_, j) => j !== i))
-  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
-    name: "lucide:x",
-    size: 14,
-    color: "var(--white)"
-  }))))), video && video.prep && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CPVideoProcessing, {
+  }, "Aa"))), video && video.prep && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CPVideoProcessing, {
     video: video,
-    onCancel: () => setVideo(null)
+    onCancel: removeVideo
   }), /*#__PURE__*/React.createElement("p", {
     className: "cp-vproc-note"
   }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
@@ -2249,7 +2419,7 @@ function CPScreen() {
   }), /*#__PURE__*/React.createElement("button", {
     className: "cp-video-rm",
     "aria-label": "Remove video",
-    onClick: () => setVideo(null)
+    onClick: removeVideo
   }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
     name: "lucide:x",
     size: 14,
@@ -2266,7 +2436,30 @@ function CPScreen() {
     name: "lucide:check",
     size: 14,
     color: "#fff"
-  })), "Video ready")), /*#__PURE__*/React.createElement(CPTagPicker, {
+  })), "Video ready")), images.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "cp-images cp-images-" + images.length + (video ? " cp-images-with-video" : "")
+  }, images.map((src, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "cp-img-wrap"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: src,
+    alt: "",
+    className: "cp-img"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "cp-img-rm",
+    "aria-label": "Remove",
+    onClick: () => setImages(prev => prev.filter((_, j) => j !== i))
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:x",
+    size: 14,
+    color: "var(--white)"
+  }))))), (images.length > 0 || video) && /*#__PURE__*/React.createElement("p", {
+    className: "cp-media-count"
+  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
+    name: "lucide:paperclip",
+    size: 12,
+    color: "var(--gray-500)"
+  }), [video ? "1 video" : null, images.length ? images.length + (images.length === 1 ? " photo" : " photos") : null].filter(Boolean).join(" · "), images.length < 5 ? " · add up to " + (5 - images.length) + " more photo" + (5 - images.length === 1 ? "" : "s") : " · photo limit reached"), /*#__PURE__*/React.createElement(CPTagPicker, {
     tags: allTags,
     selected: selectedTags,
     onToggle: toggleTag
@@ -2280,8 +2473,8 @@ function CPScreen() {
     key: a.label,
     className: "cp-attach-btn",
     "aria-label": a.label,
-    disabled: a.label === "Photo" && (!!bg.css || !!video) || a.label === "Video" && (!!bg.css || images.length > 0),
-    onClick: a.label === "Photo" ? handleImagePick : a.label === "Video" ? handleVideoPick : undefined
+    disabled: a.label === "Photo" && (!!bg.css || images.length >= 5) || a.label === "Video" && (!!bg.css || !!video),
+    onClick: a.label === "Photo" ? () => setMediaSheet("photo") : a.label === "Video" ? () => setMediaSheet("video") : undefined
   }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
     name: a.icon,
     size: 24,
@@ -2302,6 +2495,10 @@ function CPScreen() {
     value: dest,
     onPick: setDest,
     onClose: () => setChanSheet(false)
+  }), mediaSheet && /*#__PURE__*/React.createElement(CPMediaSourceSheet, {
+    kind: mediaSheet,
+    onPick: onMediaSource,
+    onClose: () => setMediaSheet(null)
   }), coverPickerOpen && video && /*#__PURE__*/React.createElement(CPCoverPicker, {
     video: video,
     onConfirm: handleCoverConfirm,

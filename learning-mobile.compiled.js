@@ -14,6 +14,9 @@ const {
 } = DSL;
 const MobileChromeC = window.MobileChromeC;
 const SurveyMobile = window.SurveyMobile;
+/* shared My Learning data (learning-shared.js): greeting, 8D curriculum +
+   pf-lessons-done store, prices, purchased courses, related pool */
+const PFLS_L = window.PFLearnShared;
 function goL(url) {
   (window.pfGo || function (u) {
     window.location.href = u;
@@ -72,6 +75,9 @@ const CERT_THUMB_L = "assets/certificate-thumb.svg";
 
 /* All Courses / In Progress / Completed / Saved — same
    category strip as the web My Learning page (learning.jsx). */
+/* "View all" on the My Courses rail → the mobile My Courses page (this same
+   bundle, mounted with window.PF_LM_PAGE = "mycourses"). */
+const LM2_MY_COURSES_URL = "MyCoursesMobile.html";
 const LM2_TABS = ["All Courses", "In Progress", "Completed", "Saved"];
 const LM2_COURSE_TAB_FILTERS = {
   "In Progress": c => typeof c.progress === "number" && !c.completed,
@@ -82,26 +88,70 @@ const LM2_GOAL = {
   vision: "Boutique clinic with lips + skin treatments, £80k/month revenue, team of 3 professionals",
   clarifier: "Where you're heading — not where you are today."
 };
-const LM2_CONTINUE = {
-  image: IMG_L.lip,
-  level: "Intermediate",
-  title: "8D Lip Design",
-  progress: 20,
-  note: "Only 6 more modules until you get your certificate",
-  cta: "Resume Lesson 4",
-  /* Resume lands on the course detail page with lesson 4 selected (index 3);
-     the reader's Continue button then opens the player. */
-  href: "CourseDetail.html?course=8d-lip-design&level=0&module=0&lesson=3"
-};
 
-/* Resume link for a My Courses card — course detail page, current lesson selected. */
+/* Continue Learning resumes 8D Lip Design at the first lesson not yet
+   completed — read live from the shared pf-lessons-done store, so the card
+   always opens the course and lesson the member is actually on (the reader's
+   player opens straight away via ?play=1). */
+const LM2_CONTINUE_SLUG = "8d-lip-design";
+function continueDataL(done) {
+  const r = PFLS_L.resume(LM2_CONTINUE_SLUG, done);
+  const inModule = r.flat.filter(l => PFLS_L.groupName(l) === r.groupName);
+  const leftInModule = inModule.filter(l => done.indexOf(l.name) === -1).length;
+  return {
+    image: IMG_L.lip,
+    level: "Intermediate",
+    title: r.course.title,
+    progress: r.pct,
+    resume: r,
+    note: r.allDone ? "Course complete — your certificate is ready." : leftInModule <= 1 ? "Last lesson in this module — then " + (r.nextModule ? r.nextModule.name : "the final quiz") + "." : "Only " + leftInModule + " more lessons in " + r.groupName + " · " + r.left + " to your certificate",
+    cta: r.allDone ? "Review course" : r.started ? "Resume Lesson " + r.lessonNumber : "Start Lesson 1",
+    href: r.allDone ? "CourseDetail.html?course=" + LM2_CONTINUE_SLUG : PFLS_L.mobileLessonUrl("CourseDetail.html", r.course, r.item, {
+      play: 1
+    })
+  };
+}
+
+/* Resume link for a My Courses card — the 8D course resumes at its real
+   current lesson; other courses land on the course page. */
 function resumeUrlL(c) {
+  if (c.slug === LM2_CONTINUE_SLUG) {
+    const r = PFLS_L.resume(LM2_CONTINUE_SLUG);
+    return PFLS_L.mobileLessonUrl("CourseDetail.html", r.course, r.item, {
+      play: 1
+    });
+  }
   return "CourseDetail.html?" + new URLSearchParams({
-    course: "8d-lip-design",
-    level: 0,
-    module: 0,
-    lesson: Math.max(0, (c.lesson || 1) - 1)
+    title: c.title,
+    instr: "Dr. Tim Pearce",
+    pct: c.progress || 0
   }).toString();
+}
+
+/* The 8D card reads its progress from the shared store like Continue Learning does. */
+function withLiveProgressL(list, done) {
+  const r = PFLS_L.resume(LM2_CONTINUE_SLUG, done);
+  return list.map(c => {
+    if (c.title !== "8D Lip Design") return c;
+    if (r.allDone) return {
+      ...c,
+      slug: LM2_CONTINUE_SLUG,
+      progress: undefined,
+      completed: true,
+      certificate: {
+        issuedDate: "Today",
+        id: "PF-8DL-0039",
+        image: CERT_THUMB_L
+      }
+    };
+    return {
+      ...c,
+      slug: LM2_CONTINUE_SLUG,
+      progress: r.pct,
+      lesson: r.lessonNumber,
+      modulesLeft: Math.max(1, r.course.levels.filter(l => (l.sections || []).length).length - r.item.li)
+    };
+  });
 }
 const LM2_MY_COURSES = [{
   image: IMG_L.eightDLip,
@@ -261,38 +311,28 @@ const LM_TABS = [{
   href: "RewardsDashboard.html"
 }];
 
-/* Time-of-day greeting: sun before noon, sun-and-clouds until 6pm, moon after. */
-function greetL(d = new Date()) {
-  const h = d.getHours();
-  if (h < 12) return {
-    text: "Good morning",
-    icon: "lucide:sun"
-  };
-  if (h < 18) return {
-    text: "Good afternoon",
-    icon: "lucide:cloud-sun"
-  };
-  return {
-    text: "Good evening",
-    icon: "lucide:moon"
-  };
-}
+/* Time-of-day greeting in the member's own time zone: sun before noon,
+   sun-and-clouds until 6pm, moon after. PFLearnShared.useGreeting re-checks
+   every minute and when the app comes back to the foreground, so a page left
+   open through noon flips from morning to afternoon by itself. */
 function LM2Header({
   freeTier,
   tier
 }) {
+  const greet = PFLS_L.useGreeting();
   return /*#__PURE__*/React.createElement("div", {
     className: "lm2-head" + (freeTier ? " has-sub" : ""),
     "data-screen-label": "Header"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm2-head-row"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "lm2-head-greet"
+    className: "lm2-head-greet",
+    "aria-live": "polite"
   }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: greetL().icon,
+    name: greet.icon,
     size: 22,
     color: "#CE9957"
-  }), greetL().text, ", Katy!"), freeTier ? /*#__PURE__*/React.createElement("img", {
+  }), greet.text, ", Katy!"), freeTier ? /*#__PURE__*/React.createElement("img", {
     className: "lm2-head-avatar",
     src: "assets/avatar-katy.jpg",
     alt: "Katy"
@@ -346,54 +386,159 @@ function LM2GoalBanner({
     color: "#fff"
   }), "Discuss with Ava"));
 }
+
+/* Before / after compare — ported from learning.jsx BeforeAfterCompare. */
+function LM2BeforeAfter({
+  before,
+  after
+}) {
+  const [pos, setPos] = useStateL(50);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lm2-ba",
+    style: {
+      "--ba": pos + "%"
+    },
+    "data-screen-label": "Before / after"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-ba-pane before"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: before,
+    alt: "Before treatment",
+    draggable: "false"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-ba-tag"
+  }, "Before")), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-ba-pane after"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: after,
+    alt: "After treatment",
+    draggable: "false"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-ba-tag"
+  }, "After")), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-ba-line",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-ba-handle",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:chevrons-left-right",
+    size: 18,
+    color: "#0C1928"
+  })), /*#__PURE__*/React.createElement("input", {
+    type: "range",
+    className: "lm2-ba-range",
+    min: "8",
+    max: "92",
+    step: "0.5",
+    value: pos,
+    onChange: e => setPos(Number(e.target.value)),
+    "aria-label": "Compare before and after",
+    "aria-valuetext": Math.round(pos) + "% before"
+  }));
+}
+
+/* Continue Learning — mirrors the desktop hero (learning.jsx ConfidenceDashboard,
+   user 2026-09-16): "Continue Learning" eyebrow, the current lesson's name as
+   the serif title, its intro, the module strip with the next two lessons, then
+   Continue Lesson + Share Lesson (strip above the buttons — user, 2026-09-16). */
 function LM2ContinueCard({
   data
 }) {
+  const r = data.resume;
+  const heroTitle = r && r.item ? r.item.name : data.title;
+  const heroDesc = r && r.item && (r.item.intro || r.item.body) || "";
+  /* label (user, 2026-09-16): "Continue Lesson" from the first lesson on; "Review course" once done */
+  const label = r && r.allDone ? "Review course" : "Continue Lesson";
+  const shareHref = r && r.item ? PFLS_L.mobileLessonUrl("CourseDetail.html", r.course, r.item, {
+    share: 1
+  }) : "CourseDetail.html?share=1";
+  const rowAt = l => ({
+    key: l.name,
+    name: l.name,
+    dur: l.dur || (l.mins ? l.mins + " min" : ""),
+    href: PFLS_L.mobileLessonUrl("CourseDetail.html", r.course, l)
+  });
+  const rows = !r || r.allDone ? [] : [rowAt(r.item)].concat(r.flat[r.idx + 1] ? [rowAt(r.flat[r.idx + 1])] : []);
   return /*#__PURE__*/React.createElement("section", {
     className: "lm2-hero",
     "data-screen-label": "Continue Learning"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "lm2-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Continue Learning")), /*#__PURE__*/React.createElement("article", {
-    className: "lm2-herocard"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "thumb",
-    style: {
-      backgroundImage: "url(" + data.image + ")"
-    }
-  }, /*#__PURE__*/React.createElement(LevelBadgeL, {
-    level: data.level,
-    className: "lvl"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "body"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ti"
-  }, data.title), /*#__PURE__*/React.createElement("div", {
-    className: "lm2-progrow"
+  }, /*#__PURE__*/React.createElement("article", {
+    className: "lm2-hero2"
+  }, /*#__PURE__*/React.createElement(LM2BeforeAfter, {
+    before: "assets/ba-cheek-before.jpg",
+    after: "assets/ba-cheek-after.jpg"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-hero2-eyebrow"
+  }, "Continue Learning", /*#__PURE__*/React.createElement("i", {
+    "aria-hidden": "true"
+  })), /*#__PURE__*/React.createElement("h2", {
+    className: "lm2-hero2-title"
+  }, heroTitle), heroDesc && /*#__PURE__*/React.createElement("p", {
+    className: "lm2-hero2-desc"
+  }, heroDesc), /*#__PURE__*/React.createElement("nav", {
+    className: "lm2-modstrip",
+    "aria-label": "Current module and next lessons"
+  }, rows.length === 0 ? /*#__PURE__*/React.createElement("p", {
+    className: "lm2-modstrip-empty"
+  }, "Course complete — ", /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-modstrip-link",
+    onClick: () => goL(data.href)
+  }, "review course")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-modstrip-mod"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:layers",
+    size: 15,
+    color: "#8A5303"
+  }), r.moduleLabel), /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:chevron-right",
+    size: 16,
+    color: "var(--gray-500)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-modstrip-count"
+  }, rows.length === 1 ? "1 lesson next" : rows.length + " lessons next"), /*#__PURE__*/React.createElement("ol", {
+    className: "lm2-modstrip-list"
+  }, rows.map((row, i) => /*#__PURE__*/React.createElement("li", {
+    key: row.key
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-modstrip-lesson" + (i === 0 ? " on" : ""),
+    onClick: () => goL(row.href),
+    "aria-current": i === 0 ? "step" : undefined
   }, /*#__PURE__*/React.createElement("span", {
-    className: "bar"
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: data.progress + "%"
-    }
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "pct"
-  }, data.progress, "%")), /*#__PURE__*/React.createElement("p", {
-    className: "note"
-  }, data.note), /*#__PURE__*/React.createElement("button", {
+    className: "n"
+  }, i + 1), /*#__PURE__*/React.createElement("span", {
+    className: "t"
+  }, row.name), row.dur && /*#__PURE__*/React.createElement("span", {
+    className: "d"
+  }, row.dur))))))), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-hero2-actions"
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lm2-cta",
-    onClick: () => goL(data.href)
-  }, data.cta, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:arrow-up-right",
-    size: 17,
+    onClick: () => goL(data.href),
+    "aria-label": label + " — open course page"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:play",
+    size: 16,
     color: "#fff"
-  })))));
+  }), label), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-hero2-share",
+    onClick: () => goL(shareHref),
+    "aria-label": "Share the current lesson"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:share-2",
+    size: 18,
+    color: "currentColor"
+  }), "Share Lesson"))));
 }
 function SecHead({
   title,
   viewAll = true,
-  linkLabel = "See All"
+  linkLabel = "See All",
+  onLink
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "lm2-sec-h"
@@ -401,7 +546,7 @@ function SecHead({
     href: "#",
     onClick: e => {
       e.preventDefault();
-      goL("MyLearning.html");
+      onLink ? onLink() : goL("MyLearning.html");
     }
   }, linkLabel));
 }
@@ -432,41 +577,6 @@ function LM2SearchBar() {
     placeholder: "Search course…",
     "aria-label": "Search course"
   }));
-}
-function LM2CertificateCard({
-  c
-}) {
-  return /*#__PURE__*/React.createElement("article", {
-    className: "lm2-coursecard lm2-certcard"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "thumb",
-    style: {
-      backgroundImage: "url(" + c.certificate.image + ")"
-    }
-  }, /*#__PURE__*/React.createElement(LevelBadgeL, {
-    level: c.level,
-    className: "lvl"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "cert-ribbon"
-  }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "fluent:ribbon-star-16-filled",
-    size: 16,
-    color: "#fff"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "body"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ti"
-  }, c.title), /*#__PURE__*/React.createElement("div", {
-    className: "by"
-  }, TUTOR_L), /*#__PURE__*/React.createElement("div", {
-    className: "cert-meta"
-  }, "Issued ", c.certificate.issuedDate, " · ", c.certificate.id), /*#__PURE__*/React.createElement("div", {
-    className: "foot"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lm-ghost",
-    onClick: () => goL("CourseDetail.html")
-  }, "View Certificate"))));
 }
 function LM2SubscribeCard({
   isFree,
@@ -546,85 +656,183 @@ function courseCtaL(c) {
     }).toString())
   };
 }
-function LM2CourseCard({
-  c
+
+/* ---------------------------------------------------------------- My Courses cards -- */
+/* Ported from the desktop My Learning redesign (learning.jsx MyCourseCard,
+   user 2026-09-16): 16:9 cover with level badge, status pill and play /
+   award mark, uppercase eyebrow, serif title, two-line blurb, thin gold
+   progress bar and a tutor / CTA footer. One card covers not-started,
+   in-progress and completed courses; the first in-progress card is featured. */
+const TUTOR_AVATAR_L = "assets/avatar-drtim.png";
+function inProgressL(c) {
+  return typeof c.progress === "number" && !c.completed;
+}
+
+/* Saved (bookmarked) courses — same "pf-saved-courses" [title] key as the
+   desktop My Courses page (learning-store-web.js), so a bookmark set on the
+   phone shows on the web and vice versa. */
+const LM2_SAVED_KEY = "pf-saved-courses";
+function readSavedL() {
+  try {
+    const a = JSON.parse(window.localStorage.getItem(LM2_SAVED_KEY));
+    return Array.isArray(a) ? a : [];
+  } catch (e) {
+    return [];
+  }
+}
+function toggleSavedL(title) {
+  const list = readSavedL();
+  const i = list.indexOf(title);
+  if (i === -1) list.push(title);else list.splice(i, 1);
+  try {
+    window.localStorage.setItem(LM2_SAVED_KEY, JSON.stringify(list));
+  } catch (e) {}
+  try {
+    window.dispatchEvent(new CustomEvent(LM2_SAVED_KEY));
+  } catch (e) {}
+}
+function useSavedL() {
+  const [list, setList] = useStateL(readSavedL);
+  React.useEffect(() => {
+    const sync = () => setList(readSavedL());
+    const onStorage = e => {
+      if (!e.key || e.key === LM2_SAVED_KEY) sync();
+    };
+    window.addEventListener(LM2_SAVED_KEY, sync);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(LM2_SAVED_KEY, sync);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+  return list;
+}
+function LM2SaveButton({
+  title,
+  saved
 }) {
-  const cta = courseCtaL(c);
-  return /*#__PURE__*/React.createElement("article", {
-    className: "lm2-coursecard"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "thumb",
-    style: {
-      backgroundImage: "url(" + c.image + ")"
+  const on = saved.indexOf(title) !== -1;
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-mc-save" + (on ? " on" : ""),
+    "aria-label": on ? "Remove from saved" : "Save course",
+    "aria-pressed": on,
+    onClick: e => {
+      e.stopPropagation();
+      toggleSavedL(title);
     }
-  }, /*#__PURE__*/React.createElement(LevelBadgeL, {
-    level: c.level,
-    className: "lvl"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "body"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ti"
-  }, c.title), /*#__PURE__*/React.createElement("div", {
-    className: "ds"
-  }, c.description), /*#__PURE__*/React.createElement("div", {
-    className: "by"
-  }, TUTOR_L), /*#__PURE__*/React.createElement("div", {
-    className: "foot"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: on ? "lucide:bookmark-check" : "lucide:bookmark",
+    size: 17,
+    color: "currentColor"
+  }));
+}
+function courseStatusL(c, featured) {
+  if (c.completed) return {
+    key: "done",
+    eyebrow: "Completed",
+    pill: c.certificate ? "Certificate earned" : "Completed"
+  };
+  if (inProgressL(c)) return {
+    key: "live",
+    eyebrow: featured ? "Continue where you left off" : "In progress \u00b7 Lesson " + (c.lesson || 1),
+    pill: c.progress + "% complete"
+  };
+  return {
+    key: "new",
+    eyebrow: c.level ? c.level + " level" : "Not started",
+    pill: "Not started"
+  };
+}
+/* `saved` (optional, My Courses page only) adds the bookmark toggle on the cover. */
+function LM2MyCourseCard({
+  c,
+  featured,
+  saved
+}) {
+  const live = inProgressL(c);
+  const st = courseStatusL(c, featured);
+  const cta = courseCtaL(c);
+  const label = c.completed ? "View certificate" : live ? "Resume lesson " + (c.lesson || 1) : "Start learning";
+  return /*#__PURE__*/React.createElement("article", {
+    className: "lm2-mc lm2-mc-" + st.key + (featured ? " lm2-mc-featured" : "") + (saved ? " lm2-mc-savable" : ""),
+    role: "listitem"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lm-ghost" + (cta.fill ? " lm-fill" : ""),
-    onClick: cta.go
-  }, cta.label))));
-}
-function LM2CourseCardWide({
-  c
-}) {
-  const inProgress = typeof c.progress === "number";
-  return /*#__PURE__*/React.createElement("article", {
-    className: "lm2-coursecard-wide"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "thumb",
-    style: {
-      backgroundImage: "url(" + c.image + ")"
-    }
-  }, /*#__PURE__*/React.createElement(LevelBadgeL, {
+    className: "lm2-mc-cover",
+    onClick: cta.go,
+    "aria-label": "Open " + c.title
+  }, /*#__PURE__*/React.createElement("img", {
+    src: c.image,
+    alt: "",
+    loading: "lazy"
+  }), /*#__PURE__*/React.createElement(LevelBadgeL, {
     level: c.level,
-    className: "lvl"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "body"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ti"
-  }, c.title), inProgress ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "prog"
+    className: "lm2-mc-lvl"
+  }), c.completed ? /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mc-ribbon",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:award",
+    size: 20,
+    color: "#fff"
+  })) : /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mc-play",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "fluent:play-16-filled",
+    size: 16,
+    color: "#0C1928"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mc-pill" + (c.completed ? " done" : "")
+  }, st.pill)), saved && /*#__PURE__*/React.createElement(LM2SaveButton, {
+    title: c.title,
+    saved: saved
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mc-body"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "bar"
+    className: "lm2-mc-eyebrow " + st.key
+  }, st.eyebrow), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-mc-title",
+    onClick: cta.go
+  }, c.title), c.completed && c.certificate ? /*#__PURE__*/React.createElement("p", {
+    className: "lm2-mc-blurb"
+  }, "Issued ", c.certificate.issuedDate, " · ", c.certificate.id) : /*#__PURE__*/React.createElement("p", {
+    className: "lm2-mc-blurb"
+  }, c.description), live && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mc-prog",
+    role: "progressbar",
+    "aria-valuenow": c.progress,
+    "aria-valuemin": 0,
+    "aria-valuemax": 100,
+    "aria-label": c.title + " progress"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mc-bar"
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: c.progress + "%"
     }
   })), /*#__PURE__*/React.createElement("span", {
-    className: "pct"
-  }, c.progress, "%")), /*#__PURE__*/React.createElement("div", {
-    className: "ds"
-  }, "Only ", c.modulesLeft, " more modules until you get your certificate"), /*#__PURE__*/React.createElement("button", {
+    className: "lm2-mc-pct"
+  }, c.progress, "%")), c.modulesLeft != null && /*#__PURE__*/React.createElement("p", {
+    className: "lm2-mc-note"
+  }, "Only ", c.modulesLeft, " more ", c.modulesLeft === 1 ? "module" : "modules", " until your certificate")), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mc-foot"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mc-tutor"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: TUTOR_AVATAR_L,
+    alt: ""
+  }), TUTOR_L), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lm2-resume-btn",
-    onClick: () => goL(resumeUrlL(c))
-  }, "Resume Lesson ", c.lesson, /*#__PURE__*/React.createElement(IconifyL, {
+    className: "lm2-mc-cta " + (c.completed ? "gold" : live ? "filled" : "ghost"),
+    onClick: cta.go
+  }, label, /*#__PURE__*/React.createElement(IconifyL, {
     name: "lucide:arrow-up-right",
-    size: 16,
-    color: "#fff"
-  }))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "ds"
-  }, c.description), /*#__PURE__*/React.createElement("div", {
-    className: "by"
-  }, TUTOR_L), /*#__PURE__*/React.createElement("div", {
-    className: "foot"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lm-ghost",
-    onClick: courseCtaL(c).go
-  }, courseCtaL(c).label)))));
+    size: 14,
+    color: "currentColor"
+  })))));
 }
 function LM2ActionCard({
   icon,
@@ -739,50 +947,85 @@ function usePurchasedL() {
 }
 function LM2RelatedContent() {
   const purchased = usePurchasedL();
-  const related = LM2_RELATED_POOL.filter(r => purchased.indexOf(slugL(r.title)) === -1).slice(0, LM2_RELATED_VISIBLE);
+  /* shared pool + PRICES: bought courses drop out, the next one back-fills */
+  const related = PFLS_L.pickRelated({
+    purchased,
+    tier: LM_TIER,
+    n: LM2_RELATED_VISIBLE
+  });
   if (!related.length) return null;
+  const open = r => goL("CourseDetail.html?" + new URLSearchParams({
+    title: r.title,
+    instr: "Dr. Tim Pearce",
+    pct: 0,
+    price: r.price,
+    dur: r.dur
+  }).toString());
   return /*#__PURE__*/React.createElement("section", {
     className: "lm2-related",
     "data-screen-label": "Explore related content"
-  }, /*#__PURE__*/React.createElement("h2", {
-    className: "lm2-related-h"
-  }, "Explore related content"), /*#__PURE__*/React.createElement("div", {
-    className: "lm2-related-list"
-  }, related.map(r => /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lm2-relcard",
-    key: r.title,
-    onClick: () => goL("CourseDetail.html?" + new URLSearchParams({
-      title: r.title,
-      instr: "Dr. Tim Pearce",
-      pct: 0,
-      price: r.price
-    }).toString())
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-related-head"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "lm2-relcard-thumb"
+    className: "lm2-related-eyebrow"
+  }, "Recommended for you"), /*#__PURE__*/React.createElement("h2", {
+    className: "lm2-related-h"
+  }, "Explore related content"), /*#__PURE__*/React.createElement("p", {
+    className: "lm2-related-sub"
+  }, "Paid courses hand-picked to build on 8D Lip Design.")), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-related-rail",
+    role: "list"
+  }, related.map((r, i) => /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-relcard" + (i === 0 ? " lm2-relcard-first" : ""),
+    key: r.slug,
+    role: "listitem",
+    onClick: () => open(r),
+    "aria-label": r.title + (r.price ? ", £" + r.price : ", included") + ", " + r.lessons + " lessons"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-relcard-cover"
   }, /*#__PURE__*/React.createElement("img", {
     src: r.image,
-    alt: ""
+    alt: "",
+    loading: "lazy"
+  }), /*#__PURE__*/React.createElement(LevelBadgeL, {
+    level: r.level,
+    className: "lm2-relcard-lvl"
+  }), r.price > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "lm2-relcard-lock",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:lock",
+    size: 12,
+    color: "#fff"
   })), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-relcard-chip"
+  }, r.lessons, " lessons · ", r.dur)), /*#__PURE__*/React.createElement("span", {
     className: "lm2-relcard-tx"
   }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-relcard-eyebrow"
+  }, r.level, " · Paid course"), /*#__PURE__*/React.createElement("span", {
     className: "lm2-relcard-title"
   }, r.title), /*#__PURE__*/React.createElement("span", {
     className: "lm2-relcard-blurb"
   }, r.blurb), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-relcard-foot"
+  }, r.price > 0 ? /*#__PURE__*/React.createElement("span", {
     className: "lm2-relcard-price"
+  }, /*#__PURE__*/React.createElement("b", null, "£", r.price), /*#__PURE__*/React.createElement("small", null, "one-time")) : /*#__PURE__*/React.createElement("span", {
+    className: "lm2-relcard-incl"
   }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:lock",
-    size: 11,
+    name: "lucide:crown",
+    size: 12,
     color: "#8A5303"
-  }), "£", r.price)), /*#__PURE__*/React.createElement("span", {
+  }), "Included in ", LM_TIER_DISPLAY_NAME[LM_TIER] || "your membership"), /*#__PURE__*/React.createElement("span", {
     className: "lm2-relcard-go",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(IconifyL, {
     name: "lucide:arrow-right",
     size: 18,
-    color: "#fff"
-  }))))));
+    color: "#0C1928"
+  }))))))));
 }
 function LM2FreeResources({
   unlocked,
@@ -793,13 +1036,15 @@ function LM2FreeResources({
     "data-screen-label": "Free Resources"
   }, /*#__PURE__*/React.createElement(SecHead, {
     title: "Free Resources",
-    linkLabel: "View All"
+    linkLabel: "View All",
+    viewAll: unlocked,
+    onLink: () => goL("AllCoursesMobile.html?free=1")
   }), unlocked ? /*#__PURE__*/React.createElement("div", {
     className: "lm2-freeres-open"
   }, /*#__PURE__*/React.createElement("p", null, "Your free resources are unlocked — guides, checklists and vein maps tailored to your clinic goals."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lm2-outline-btn",
-    onClick: () => goL("MySaved.html")
+    onClick: () => goL("AllCoursesMobile.html?free=1")
   }, "View free resources", /*#__PURE__*/React.createElement(IconifyL, {
     name: "lucide:arrow-up-right",
     size: 16,
@@ -981,9 +1226,23 @@ function LearningHome() {
     floating: chromeFloat
   } = useScrollChromeL(scrollRef);
   const nextTier = lmNextTierL(LM_TIER);
-  const myCourses = LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES;
+  const done = PFLS_L.useLessonsDone();
+  const myCourses = withLiveProgressL(LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES, done);
+  const continueData = continueDataL(done);
   const visibleCourses = myCourses.filter(LM2_COURSE_TAB_FILTERS[tab] || (() => true));
   const showContinue = !LM_FREE && (tab === "All Courses" || tab === "In Progress");
+  /* My Courses rail (user, 2026-09-16, ported from desktop): the first
+     in-progress course leads and is the featured card; All Courses shows
+     six and the rest sit behind "View all", which opens the mobile My Courses
+     page (MyCoursesMobile.html) — not the desktop MyLearning.html. */
+  const leadTabL = tab !== "Completed";
+  const leadIdxL = leadTabL ? visibleCourses.findIndex(inProgressL) : -1;
+  const orderedCoursesL = leadIdxL > 0 ? [visibleCourses[leadIdxL]].concat(visibleCourses.filter((_, j) => j !== leadIdxL)) : visibleCourses;
+  const shownCoursesL = tab === "All Courses" ? orderedCoursesL.slice(0, 6) : orderedCoursesL;
+  const hiddenCountL = orderedCoursesL.length - shownCoursesL.length;
+  const inProgressNL = myCourses.filter(inProgressL).length;
+  const certNL = myCourses.filter(c => c.completed).length;
+  const mcSummaryL = [myCourses.length + (myCourses.length === 1 ? " course" : " courses"), inProgressNL ? inProgressNL + " in progress" : null, certNL ? certNL + (certNL === 1 ? " certificate" : " certificates") : null].filter(Boolean).join(" \u00b7 ");
   const unlockResources = () => {
     setResourcesUnlocked(true);
     try {
@@ -1003,36 +1262,70 @@ function LearningHome() {
     data: LM2_GOAL,
     onHelp: () => setHelpOpen(true)
   }), /*#__PURE__*/React.createElement(LM2SearchBar, null), showContinue && /*#__PURE__*/React.createElement(LM2ContinueCard, {
-    data: LM2_CONTINUE
+    data: continueData
   }), /*#__PURE__*/React.createElement("section", {
-    className: "lm2-courseband",
+    className: "lm2-courseband" + (LM_FREE ? "" : " lm2-mc-band"),
     "data-screen-label": "My Courses"
-  }, /*#__PURE__*/React.createElement(SecHead, {
+  }, LM_FREE ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SecHead, {
     title: "My Courses"
-  }), LM_FREE ? /*#__PURE__*/React.createElement(LM2LockedCard, {
+  }), /*#__PURE__*/React.createElement(LM2LockedCard, {
     title: "Unlock My Courses",
     body: "Upgrade to purchase courses and they'll live here for easy access.",
     onUpgrade: () => goL("MembershipTier.html")
-  }) : visibleCourses.length ? /*#__PURE__*/React.createElement("div", {
-    className: "lm2-coursegrid"
+  })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mc-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mc-head-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mc-kicker"
+  }, "Your library"), /*#__PURE__*/React.createElement("h2", {
+    className: "lm2-mc-h"
+  }, "My Courses"), /*#__PURE__*/React.createElement("p", {
+    className: "lm2-mc-sub"
+  }, mcSummaryL)), /*#__PURE__*/React.createElement("a", {
+    href: "#",
+    className: "lm2-mc-viewall",
+    onClick: e => {
+      e.preventDefault();
+      goL(LM2_MY_COURSES_URL);
+    }
+  }, "View all", /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-right",
+    size: 14,
+    color: "currentColor"
+  }))), shownCoursesL.length ? /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mc-rail",
+    role: "list"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lm2-coursegrid-pad",
     "aria-hidden": "true"
-  }), visibleCourses.map((c, i) => tab === "Completed" ? /*#__PURE__*/React.createElement(LM2CertificateCard, {
-    key: i,
-    c: c
-  }) : i === 0 && typeof c.progress === "number" && !c.completed ? /*#__PURE__*/React.createElement(LM2CourseCardWide, {
-    key: i,
-    c: c
-  }) : /*#__PURE__*/React.createElement(LM2CourseCard, {
-    key: i,
-    c: c
-  })), /*#__PURE__*/React.createElement("span", {
+  }), shownCoursesL.map((c, i) => /*#__PURE__*/React.createElement(LM2MyCourseCard, {
+    key: c.slug || c.title,
+    c: c,
+    featured: leadTabL && i === 0 && inProgressL(c)
+  })), hiddenCountL > 0 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-mc-more",
+    role: "listitem",
+    onClick: () => goL(LM2_MY_COURSES_URL)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:library",
+    size: 22,
+    color: "#8A5303"
+  })), /*#__PURE__*/React.createElement("b", null, "View all ", orderedCoursesL.length, " courses"), /*#__PURE__*/React.createElement("span", null, hiddenCountL, " more in your library")), /*#__PURE__*/React.createElement("span", {
     className: "lm2-coursegrid-pad",
     "aria-hidden": "true"
-  })) : /*#__PURE__*/React.createElement("p", {
-    className: "lm2-empty"
-  }, tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate.")), !LM_FREE && /*#__PURE__*/React.createElement(LM2RelatedContent, null), /*#__PURE__*/React.createElement(LM2FreeResources, {
+  })) : /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mc-empty"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: tab === "Completed" ? "lucide:award" : "lucide:play-circle",
+    size: 22,
+    color: "#8A5303"
+  })), /*#__PURE__*/React.createElement("p", null, tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate.")))), !LM_FREE && /*#__PURE__*/React.createElement(LM2RelatedContent, null), /*#__PURE__*/React.createElement(LM2FreeResources, {
     unlocked: resourcesUnlocked,
     onStartSurvey: () => setSurveyOpen(true)
   }), !LM_FREE && /*#__PURE__*/React.createElement(LM2LearningPathCard, null), nextTier && /*#__PURE__*/React.createElement(LM2SubscribeCard, {
@@ -1052,6 +1345,153 @@ function LearningHome() {
   }), /*#__PURE__*/React.createElement(LM2HelpSheet, {
     open: helpOpen,
     onClose: () => setHelpOpen(false)
+  }));
+}
+
+/* ================================================================ My Courses (mobile) -- */
+/* MyCoursesMobile.html — reached from "View all" on the My Courses rail
+   (user, 2026-09-16: the link used to open the desktop MyLearning.html).
+   Same bundle as the home page, mounted when window.PF_LM_PAGE === "mycourses":
+   search + All / In Progress / Completed / Saved chips over a full-width
+   stack of the same LM2MyCourseCard cards, tier-scoped like the rail. */
+const LM2_MCP_EMPTY = {
+  "In Progress": "No courses in progress yet.",
+  "Completed": "Complete a course to earn your first certificate.",
+  "Saved": "Tap the bookmark on a course to keep it here."
+};
+const LM2_MCP_EMPTY_ICON = {
+  "In Progress": "lucide:play-circle",
+  "Completed": "lucide:award",
+  "Saved": "lucide:bookmark"
+};
+function lmReturnUrlL() {
+  try {
+    const ret = new URLSearchParams(window.location.search).get("ret");
+    if (ret && /^[A-Za-z0-9_-]+\.html(\?.*)?$/.test(ret)) return ret;
+  } catch (e) {}
+  return "LearningMobile.html";
+}
+function MyCoursesHome() {
+  const [query, setQuery] = useStateL("");
+  const [tab, setTab] = useStateL("All Courses");
+  const scrollRef = React.useRef(null);
+  const {
+    hidden: chromeHidden,
+    floating: chromeFloat
+  } = useScrollChromeL(scrollRef);
+  const done = PFLS_L.useLessonsDone();
+  const saved = useSavedL();
+  const myCourses = withLiveProgressL(LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES, done);
+  const q = query.trim().toLowerCase();
+  const filters = {
+    "In Progress": inProgressL,
+    "Completed": c => !!c.completed,
+    "Saved": c => saved.indexOf(c.title) !== -1
+  };
+  const courses = myCourses.filter(filters[tab] || (() => true)).filter(c => !q || c.title.toLowerCase().indexOf(q) !== -1 || (c.description || "").toLowerCase().indexOf(q) !== -1);
+  /* the first in-progress course leads and is featured (All / In Progress, no search) — same as the rail */
+  const leadTab = !q && (tab === "All Courses" || tab === "In Progress");
+  const leadIdx = leadTab ? courses.findIndex(inProgressL) : -1;
+  const ordered = leadIdx > 0 ? [courses[leadIdx]].concat(courses.filter((_, j) => j !== leadIdx)) : courses;
+  const inProgressN = myCourses.filter(inProgressL).length;
+  const certN = myCourses.filter(c => c.completed).length;
+  const savedN = saved.filter(t => myCourses.some(c => c.title === t)).length;
+  const summary = [myCourses.length + (myCourses.length === 1 ? " course" : " courses"), inProgressN ? inProgressN + " in progress" : null, certN ? certN + (certN === 1 ? " certificate" : " certificates") : null].filter(Boolean).join(" · ");
+  const backUrl = lmReturnUrlL();
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lm-screen lm2-mcp-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : ""),
+    "data-screen-label": "My Courses (mobile)"
+  }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement("div", {
+    className: "lm-scroll",
+    ref: scrollRef
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-mcp-back",
+    onClick: () => goL(backUrl)
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:chevron-left",
+    size: 20,
+    color: "currentColor"
+  }), "My Learning"), /*#__PURE__*/React.createElement("header", {
+    className: "lm2-mcp-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mc-kicker"
+  }, "Your library"), /*#__PURE__*/React.createElement("h1", {
+    className: "lm2-mcp-h"
+  }, "My Courses"), /*#__PURE__*/React.createElement("p", {
+    className: "lm2-mc-sub"
+  }, LM_FREE ? "Every course you start, save or complete — all in one place." : summary)), LM_FREE ? /*#__PURE__*/React.createElement("section", {
+    className: "lm2-courseband lm2-mc-band",
+    "data-screen-label": "My Courses locked"
+  }, /*#__PURE__*/React.createElement(LM2LockedCard, {
+    title: "Unlock My Courses",
+    body: "Upgrade to purchase courses and they'll live here for easy access.",
+    onUpgrade: () => goL("MembershipTier.html")
+  })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
+    className: "lm2-search lm2-mcp-search"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:search",
+    size: 18,
+    color: "var(--gray-450)"
+  }), /*#__PURE__*/React.createElement("input", {
+    placeholder: "Search your courses…",
+    "aria-label": "Search your courses",
+    value: query,
+    onChange: e => setQuery(e.target.value)
+  }), query && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-mcp-clear",
+    "aria-label": "Clear search",
+    onClick: () => setQuery("")
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:x",
+    size: 16,
+    color: "currentColor"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mcp-tabs",
+    role: "tablist",
+    "aria-label": "Filter my courses"
+  }, LM2_TABS.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t,
+    type: "button",
+    role: "tab",
+    "aria-selected": tab === t,
+    className: "lm2-mcp-tab" + (tab === t ? " on" : ""),
+    onClick: () => setTab(t)
+  }, t, t === "Saved" && savedN > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mcp-tab-n"
+  }, savedN)))), /*#__PURE__*/React.createElement("section", {
+    className: "lm2-mcp-list-wrap",
+    "data-screen-label": "My Courses · " + tab
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "lm2-mcp-count",
+    "aria-live": "polite"
+  }, ordered.length === 0 ? "" : ordered.length === 1 ? "1 course" : ordered.length + " courses", q ? " matching “" + query.trim() + "”" : ""), ordered.length ? /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mcp-list",
+    role: "list"
+  }, ordered.map((c, i) => /*#__PURE__*/React.createElement(LM2MyCourseCard, {
+    key: c.slug || c.title,
+    c: c,
+    saved: saved,
+    featured: leadTab && i === 0 && inProgressL(c)
+  }))) : /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mc-empty"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: q ? "lucide:search" : LM2_MCP_EMPTY_ICON[tab] || "lucide:book-open",
+    size: 22,
+    color: "#8A5303"
+  })), /*#__PURE__*/React.createElement("p", null, q ? "No courses match your search." : LM2_MCP_EMPTY[tab] || "No courses here yet."), q && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-mcp-reset",
+    onClick: () => setQuery("")
+  }, "Clear search")))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 20
+    }
+  })), /*#__PURE__*/React.createElement(LMTabBar, {
+    compact: chromeHidden
   }));
 }
 function useDeviceScaleL() {
@@ -1074,6 +1514,10 @@ function useIsMobileL() {
   }, []);
   return mobile;
 }
+
+/* window.PF_LM_PAGE (set by the shell before this bundle) picks the screen:
+   "mycourses" → MyCoursesMobile.html's My Courses list, otherwise the home. */
+const LM_PAGE = window.PF_LM_PAGE === "mycourses" ? MyCoursesHome : LearningHome;
 function LearningMobileApp() {
   const mobile = useIsMobileL();
   const scale = useDeviceScaleL();
@@ -1081,14 +1525,15 @@ function LearningMobileApp() {
     "--action-primary": "#0C1928",
     "--action-primary-hover": "#081120"
   }; /* My Learning navy */
+  const Page = LM_PAGE;
   if (mobile) {
     return /*#__PURE__*/React.createElement("div", {
       className: "app",
       style: {
         ...vars,
-        background: "#F9F7F4"
+        background: "#F6F3EF"
       }
-    }, /*#__PURE__*/React.createElement(LearningHome, null));
+    }, /*#__PURE__*/React.createElement(Page, null));
   }
   return /*#__PURE__*/React.createElement("div", {
     className: "app device-stage",
@@ -1104,6 +1549,6 @@ function LearningMobileApp() {
   }, /*#__PURE__*/React.createElement(IOSDevice, {
     width: 440,
     height: 956
-  }, /*#__PURE__*/React.createElement(LearningHome, null))));
+  }, /*#__PURE__*/React.createElement(Page, null))));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(LearningMobileApp, null));

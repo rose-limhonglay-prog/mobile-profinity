@@ -68,3 +68,25 @@ img { max-width: 100%; }
 
 .sm-tomod-wrap { margin: 22px 20px 0; }
 @media (prefers-reduced-motion:reduce) { .sm-lesson { transition: none; } }
+
+/* ===== My Learning palette (user, 2026-09-15): warm surface + #0C1928 navy, Times titles ===== */
+.sm-screen { --brand-navy: #0C1928; --brand-navy-700: #081120; --brand-navy-900: #050B15; --text-heading: #0C1928; --action-brand: #0C1928; --action-brand-hover: #081120;
+  --font-title: "Times New Roman", Times, serif; }
+html:not([data-theme="dark"]) .sm-screen { background: #F6F3EF; }
+.sm-sec-h h2 { font-family: var(--font-title); }
+/* what's next + Ava */
+.sm-next { margin: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+.sm-nexttile { position: relative; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; min-height: 120px; padding: 16px 18px; text-align: left;
+  border: none; border-radius: 16px; background: linear-gradient(135deg, #0C1928, #17304D); color: #fff; cursor: pointer; }
+.sm-nexttile:active { transform: scale(.985); }
+.sm-nexttile-go { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.16); display: flex; align-items: center; justify-content: center; }
+.sm-nexttile-eyebrow { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #CE9957; }
+.sm-nexttile-name { font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 18px; line-height: 1.25; text-wrap: balance; }
+.sm-nexttile-meta { font-family: var(--font-sans); font-size: 12.5px; color: rgba(255,255,255,.78); }
+.sm-ava { display: flex; align-items: center; gap: 14px; margin: 18px 20px 0; padding: 16px; border-radius: 16px; background: linear-gradient(135deg, #0C1928, #17304D); color: #fff; }
+.sm-ava .orb { flex: none; width: 46px; height: 46px; border-radius: 50%; background: rgba(255,255,255,.16); display: flex; align-items: center; justify-content: center; }
+.sm-ava .tx { flex: 1; min-width: 0; }
+.sm-ava .ti { font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 17px; }
+.sm-ava .su { margin-top: 3px; font-family: var(--font-sans); font-size: 13px; line-height: 1.4; color: rgba(255,255,255,.8); }
+.sm-ava .pf-coach-link { margin-top: 12px; background: #CE9957; border-color: #CE9957; color: #0C1928; }
+.sm-ava .pf-coach-link:hover { background: #d9a86a; }

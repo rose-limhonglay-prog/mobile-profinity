@@ -301,7 +301,51 @@ function ModuleHome() {
     d: d,
     s: s,
     si: si
-  })))), /*#__PURE__*/React.createElement("div", {
+  })))), nextModule && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "mo-sec-h"
+  }, /*#__PURE__*/React.createElement("h2", null, "What's next")), /*#__PURE__*/React.createElement("div", {
+    className: "mo-next"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mo-nexttile",
+    onClick: () => goMO(`Module.html?course=${nextModule.courseSlug}&level=${nextModule.level}&module=${nextModule.module}`)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mo-nexttile-go",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IcoMO, {
+    name: "lucide:layers",
+    size: 18,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "mo-nexttile-eyebrow"
+  }, "Next module · ", nextModule.lessons.length + nextModule.subs.reduce((a, s) => a + s.lessons.length, 0), " lessons · ", nextModule.mins), /*#__PURE__*/React.createElement("span", {
+    className: "mo-nexttile-name"
+  }, nextModule.name), /*#__PURE__*/React.createElement("span", {
+    className: "mo-nexttile-meta"
+  }, nextModule.desc)))), /*#__PURE__*/React.createElement("section", {
+    className: "mo-ava",
+    "data-screen-label": "Ask Ava"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "orb"
+  }, /*#__PURE__*/React.createElement(IcoMO, {
+    name: "lucide:sparkles",
+    size: 22,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, "Ask Ava about this module"), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, "Want a 30-second primer before you start, or a quiz when you're done? Ava knows where you are in the course."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-coach-link",
+    "data-coach": `I'm on "${d.name}" in ${d.course}. Give me a quick primer on what this module covers and what to watch for in clinic.`
+  }, /*#__PURE__*/React.createElement(IcoMO, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "#0C1928"
+  }), "Ask Ava"))), /*#__PURE__*/React.createElement("div", {
     className: "mo-foot"
   }, /*#__PURE__*/React.createElement(ButtonMO, {
     variant: "secondary",

@@ -74,7 +74,8 @@ function buildCourseDetailUrlCC(course) {
      Light variant), so paying lands back on the same shell. Same-folder
      CourseDetail*.html only. */
   const ret = new URLSearchParams(window.location.search).get("ret") || "";
-  if (/^CourseDetail[A-Za-z]*\.html(\?[^#]*)?$/.test(ret)) return ret;
+  /* CourseDetail*.html (mobile) or CourseWeb.html (desktop, 2026-09-15) */
+  if (/^(CourseDetail[A-Za-z]*|CourseWeb)\.html(\?[^#]*)?$/.test(ret)) return ret;
   if (course.courseParam) return "CourseDetail.html?course=" + course.courseParam;
   const p = new URLSearchParams({ title: course.title, instr: course.instr, grad: course.grad });
   return "CourseDetail.html?" + p.toString();

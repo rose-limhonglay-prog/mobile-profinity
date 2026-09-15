@@ -1,0 +1,169 @@
+/* ===========================================================================
+   PROfinity — Course Checkout (web) · layout
+   Desktop twin of course-checkout.css. Two-column page under the DS TopNav:
+   payment form (left) + sticky order summary (right); collapses to a single
+   column (summary first) under 960px. Everything is on DS tokens so
+   dark-mode.css ([data-theme="dark"]) recolours it for free.
+   =========================================================================== */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--surface-page);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+img{max-width:100%}
+
+:root{--ccw-green:#137A5B;--ccw-green-soft:#E6F4EE;--ccw-ring:rgba(48,42,117,.14)}
+[data-theme="dark"]{--ccw-green:#4FCB98;--ccw-green-soft:rgba(79,203,152,.14);--ccw-ring:rgba(206,153,87,.28)}
+
+.app{font-family:var(--font-sans);color:var(--text-primary);background:var(--surface-page);min-height:100vh}
+
+/* ---------- page + crumb ---------- */
+.ccw-page{max-width:1120px;margin:0 auto;padding:26px 24px 80px}
+
+.ccw-crumb-row{display:flex;align-items:center;gap:14px;margin-bottom:22px}
+.ccw-back-btn{width:38px;height:38px;flex-shrink:0;background:var(--surface-card);border:1px solid var(--border-default);
+  border-radius:var(--r-sm);display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.ccw-back-btn:hover{background:var(--surface-sunken)}
+.ccw-crumb{font-size:14px;color:var(--gray-500);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ccw-crumb a{color:var(--gray-500);text-decoration:none;cursor:pointer}
+.ccw-crumb a:hover{color:var(--ai-purple)}
+.ccw-crumb span{color:var(--text-primary);font-weight:var(--fw-semibold)}
+
+.ccw-head{margin-bottom:22px}
+.ccw-head h1{font-weight:var(--fw-bold);font-size:30px;line-height:1.2;color:var(--brand-navy);margin:0 0 6px}
+.ccw-head p{font-size:15px;color:var(--gray-500);margin:0}
+
+/* ---------- grid ---------- */
+.ccw-grid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:28px;align-items:start}
+.ccw-main{min-width:0}
+.ccw-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:104px}
+@media (max-width:960px){
+  .ccw-grid{grid-template-columns:1fr}
+  .ccw-side{position:static;order:-1}
+}
+
+.ccw-card{background:var(--surface-card);border:1px solid var(--border-default);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-card);overflow:hidden}
+
+/* ---------- payment form ---------- */
+.ccw-form{padding:30px 34px 32px}
+.ccw-form-head h2{font-weight:var(--fw-bold);font-size:20px;color:var(--text-primary);margin:0 0 6px}
+.ccw-form-head p{font-size:14px;line-height:1.55;color:var(--gray-500);margin:0}
+
+.ccw-section-label{font-size:12px;font-weight:var(--fw-bold);letter-spacing:.08em;text-transform:uppercase;color:var(--gray-450);
+  margin:26px 0 12px;padding-top:22px;border-top:1px solid var(--border-default)}
+.ccw-form-head + .ccw-section-label{margin-top:22px}
+
+.ccw-method{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.ccw-method-btn{display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border:1.5px solid var(--border-default);
+  border-radius:var(--r-md);background:var(--surface-card);font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14px;
+  color:var(--gray-600);cursor:pointer}
+.ccw-method-btn.selected{border-color:var(--brand-navy);background:var(--brand-gold-100);color:var(--brand-navy)}
+.ccw-method-btn:disabled{cursor:not-allowed;opacity:.6}
+[data-theme="dark"] .ccw-method-btn.selected{background:rgba(206,153,87,.12)}
+
+.ccw-field{display:flex;flex-direction:column;gap:7px;margin-bottom:16px;min-width:0}
+.ccw-field label{display:flex;align-items:center;justify-content:space-between;font-size:13.5px;font-weight:var(--fw-semibold);color:var(--text-primary)}
+.ccw-field-hint{font-size:12px;font-weight:var(--fw-semibold);color:var(--gray-450)}
+.ccw-row-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:520px){.ccw-row-2{grid-template-columns:1fr}}
+
+.ccw-input{width:100%;height:46px;padding:0 14px;border:1px solid var(--border-default);border-radius:var(--r-md);
+  background:var(--surface-card);font-family:var(--font-sans);font-size:15px;color:var(--text-primary);outline:none;
+  transition:border-color .15s,box-shadow .15s;appearance:none;-webkit-appearance:none}
+.ccw-input::placeholder{color:var(--gray-400)}
+.ccw-input:focus{border-color:var(--brand-navy);box-shadow:0 0 0 3px var(--ccw-ring)}
+select.ccw-input{background-image:linear-gradient(45deg,transparent 50%,var(--gray-500) 50%),linear-gradient(135deg,var(--gray-500) 50%,transparent 50%);
+  background-position:calc(100% - 20px) 20px,calc(100% - 15px) 20px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:38px}
+[data-theme="dark"] .ccw-input{background-color:var(--surface-sunken)}
+
+.ccw-input-wrap{display:flex;align-items:center;gap:10px;height:46px;padding:0 14px;border:1px solid var(--border-default);
+  border-radius:var(--r-md);background:var(--surface-card);transition:border-color .15s,box-shadow .15s}
+.ccw-input-wrap:focus-within{border-color:var(--brand-navy);box-shadow:0 0 0 3px var(--ccw-ring)}
+[data-theme="dark"] .ccw-input-wrap{background:var(--surface-sunken)}
+.ccw-input-bare,.ccw-input-bare:focus,[data-theme="dark"] .ccw-input-bare{height:auto;padding:0;border:none;box-shadow:none;background:transparent;flex:1;min-width:0}
+
+.ccw-check{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--gray-600);cursor:pointer;margin:4px 0 6px}
+.ccw-check input{width:18px;height:18px;accent-color:var(--brand-navy);margin:0}
+
+.ccw-pay{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;height:56px;margin-top:22px;border:none;
+  border-radius:var(--r-pill);background:var(--brand-navy);color:#fff;cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;
+  transition:background .15s,transform .1s}
+.ccw-pay:hover{background:var(--brand-navy-700)}
+.ccw-pay:active{transform:translateY(1px)}
+.ccw-pay:disabled{opacity:.75;cursor:default;transform:none}
+[data-theme="dark"] .ccw-pay{color:#141226}
+.ccw-spinner{width:18px;height:18px;border-radius:50%;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;animation:ccw-spin .7s linear infinite}
+[data-theme="dark"] .ccw-spinner{border-color:rgba(20,18,38,.3);border-top-color:#141226}
+@keyframes ccw-spin{to{transform:rotate(360deg)}}
+
+.ccw-terms{font-size:12.5px;line-height:1.55;color:var(--gray-450);margin:14px 0 0;text-align:center}
+.ccw-terms a{color:var(--brand-navy);text-decoration:underline;cursor:pointer}
+
+/* ---------- order summary ---------- */
+.ccw-summary-card{padding:22px}
+.ccw-course{display:flex;align-items:center;gap:14px;padding-bottom:18px;border-bottom:1px solid var(--border-default)}
+.ccw-course-art{flex:none;width:72px;height:72px;border-radius:var(--r-md);object-fit:cover;display:block}
+.ccw-course-art-fallback{display:flex;align-items:center;justify-content:center;background:linear-gradient(140deg,#6172f3 0%,#3b82f6 100%)}
+.ccw-course-info{flex:1;min-width:0}
+.ccw-course-kicker{font-size:11px;font-weight:var(--fw-bold);letter-spacing:.08em;text-transform:uppercase;color:var(--gray-450)}
+.ccw-course-title{font-weight:var(--fw-bold);font-size:16px;line-height:1.3;color:var(--brand-navy);margin:3px 0 0;overflow-wrap:anywhere}
+.ccw-course-instr{font-size:13px;color:var(--gray-500);margin:4px 0 0}
+.ccw-course-price{flex:none;font-weight:var(--fw-bold);font-size:16px;color:var(--text-primary);align-self:flex-start}
+
+.ccw-lines{padding:6px 0 8px}
+.ccw-line{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:10px 0;font-size:14px;color:var(--gray-600)}
+.ccw-line span:last-child{flex:none;font-variant-numeric:tabular-nums}
+.ccw-line-reward{color:var(--ccw-green)}
+.ccw-line-reward span:first-child{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+.ccw-line-reward small{display:inline-block;font-size:11px;font-weight:var(--fw-bold);letter-spacing:.04em;color:var(--ccw-green);
+  background:var(--ccw-green-soft);border-radius:6px;padding:2px 7px}
+.ccw-line-total{margin-top:6px;padding-top:16px;border-top:1px solid var(--border-default);font-weight:var(--fw-bold);font-size:16px;color:var(--brand-navy)}
+.ccw-line-total span:last-child{font-size:22px;color:var(--text-primary)}
+
+.ccw-perks{list-style:none;margin:8px 0 0;padding:16px 0 0;border-top:1px dashed var(--border-default);display:flex;flex-direction:column;gap:10px}
+.ccw-perks li{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--gray-600)}
+
+.ccw-secure{display:flex;align-items:flex-start;justify-content:center;gap:7px;margin:0;padding:0 12px;text-align:center;
+  font-size:12px;line-height:1.5;color:var(--gray-450)}
+.ccw-secure iconify-icon{flex:none;margin-top:2px}
+
+/* ---------- success ---------- */
+.ccw-success{position:relative;padding:48px 34px 40px;text-align:center}
+.ccw-success-badge{width:72px;height:72px;margin:0 auto 20px;border-radius:50%;background:var(--ccw-green);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 24px rgba(19,122,91,.28);animation:ccw-pop .5s cubic-bezier(.2,1.4,.4,1) both}
+.ccw-success h2{font-weight:var(--fw-bold);font-size:26px;color:var(--brand-navy);margin:0 0 10px}
+.ccw-success p{font-size:15px;line-height:1.6;color:var(--gray-600);margin:0 auto;max-width:460px}
+.ccw-success p strong{color:var(--text-primary)}
+.ccw-success-actions{display:flex;flex-direction:column;align-items:center;gap:14px;margin-top:28px}
+.ccw-start{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-width:240px;height:54px;padding:0 28px;border-radius:var(--r-pill);
+  background:var(--brand-navy);color:#fff;text-decoration:none;font-weight:var(--fw-bold);font-size:16px;transition:background .15s}
+.ccw-start:hover{background:var(--brand-navy-700)}
+[data-theme="dark"] .ccw-start{color:#141226}
+.ccw-back-link{font-size:14px;font-weight:var(--fw-semibold);color:var(--gray-500);text-decoration:none;cursor:pointer}
+.ccw-back-link:hover{color:var(--brand-navy)}
+@keyframes ccw-pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+
+.ccw-confetti{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.ccw-success>:not(.ccw-confetti){position:relative;z-index:1}
+.ccw-confetti-piece{position:absolute;top:-12px;width:9px;height:14px;border-radius:2px;opacity:0;
+  animation-name:ccw-fall;animation-timing-function:cubic-bezier(.2,.6,.4,1);animation-fill-mode:forwards}
+.ccw-confetti-piece.round{width:10px;height:10px;border-radius:50%}
+@keyframes ccw-fall{
+  0%{transform:translateY(0) rotate(var(--rot));opacity:1}
+  80%{opacity:1}
+  100%{transform:translateY(340px) rotate(calc(var(--rot) + 260deg));opacity:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .ccw-success-badge,.ccw-spinner{animation:none}
+}
+
+/* ---------- narrow ---------- */
+@media (max-width:640px){
+  .ccw-page{padding:18px 16px 60px}
+  .ccw-head h1{font-size:26px}
+  .ccw-form{padding:22px 18px 24px}
+  .ccw-summary-card{padding:18px}
+  .ccw-success{padding:36px 18px 30px}
+  .ccw-method{grid-template-columns:1fr}
+  .ccw-method-btn{justify-content:flex-start;padding-left:14px}
+  .ccw-start{width:100%;min-width:0}
+}

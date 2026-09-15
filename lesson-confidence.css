@@ -53,7 +53,7 @@
   background: var(--lc-bg); color: var(--lc-text); font-family: var(--font-sans);
 }
 .lc-screen.lc-light {
-  --lc-bg: #F9F7F4; /* warm off-white My Learning surface */
+  --lc-bg: #F6F3EF; /* warm off-white My Learning surface */
   --lc-header-bg: #FFFFFF;
   --lc-top-bg: var(--brand-navy); /* course page header is navy in light too (user, 2026-09-11) */
   --lc-card: #FFFFFF;
@@ -568,3 +568,21 @@ body.lc-navy-status .ios-statusbar svg [stroke]:not([stroke="none"]) { stroke: #
 .lc-screen .pf-cs-btn { background: transparent; color: var(--lc-outline-text, var(--lc-text)); border-color: var(--lc-outline-border, var(--lc-line)); }
 .lc-screen .pf-cs-btn.primary { background: var(--lc-cta-bg); color: var(--lc-cta-text); border-color: var(--lc-cta-border, transparent); }
 .lc-screen .pf-cs-btn:focus-visible, .lc-screen .pf-cs-switch input:focus-visible + .pf-cs-knob { outline-color: var(--lc-focus); }
+
+/* ===== 2026-09-15: upgrade recommendations card + related meta ===== */
+.lc-course-meta { display: block; margin-top: 3px; font-size: 12.5px; color: var(--lc-text-3, var(--lc-text-2)); font-variant-numeric: tabular-nums; }
+.lc-upgrade { margin: 28px 20px 0; padding: 18px; border-radius: 18px; background: linear-gradient(135deg, #A26301, #7A4A03); color: #fff; }
+.lc-upgrade-eyebrow { display: block; font-weight: var(--fw-bold); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.8); }
+.lc-upgrade-title { margin: 6px 0 6px; font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 21px; line-height: 1.2; }
+.lc-upgrade-body { margin: 0; font-size: 13.5px; line-height: 1.5; color: rgba(255,255,255,.9); }
+.lc-upgrade-list { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.lc-upgrade-list li { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 12px; background: rgba(255,255,255,.12); }
+.lc-upgrade-list img { flex: none; width: 52px; height: 40px; border-radius: 8px; object-fit: cover; }
+.lc-upgrade-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.lc-upgrade-name { font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 14.5px; line-height: 1.25; }
+.lc-upgrade-meta { font-size: 12px; color: rgba(255,255,255,.78); }
+.lc-upgrade-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 46px; margin-top: 14px; border: none; border-radius: 12px;
+  background: #fff; color: #7A4A03; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 14.5px; cursor: pointer; }
+.lc-upgrade-btn:active { filter: brightness(.94); }
+/* the progress strip sits on the course page too — give it the same side margins as the CTAs */
+.lc-scroll > .lc-cprog { margin-top: 6px; }

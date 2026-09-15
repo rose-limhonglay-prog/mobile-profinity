@@ -626,3 +626,9 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
     padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
 }
+
+/* ===== photo / video source sheet + mixed-media composer ===== */
+.cp-opt-chev{flex:none;display:flex;align-items:center;justify-content:center;width:22px;height:22px}
+.cp-images-with-video{padding-top:0}
+.cp-media-count{display:flex;align-items:center;gap:6px;margin:0;padding:0 16px 12px;
+  font-family:var(--font-sans);font-size:12px;color:var(--gray-500)}
