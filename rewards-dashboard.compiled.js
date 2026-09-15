@@ -376,11 +376,11 @@ function RdbHeader({
     }
   })), /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-scale"
-  }, /*#__PURE__*/React.createElement("span", null, p ? p.done + " of " + p.total + " milestones" : ""), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, p ? p.done + " of " + (next ? next.requires : p.total) + " milestones" : ""), /*#__PURE__*/React.createElement("span", {
     style: {
       color: "var(--nx-deep)"
     }
-  }, next ? next.requires + " milestones" : "Complete")), /*#__PURE__*/React.createElement("div", {
+  }, next ? "Unlocks at " + next.requires : "Complete")), /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-note"
   }, next ? p.need + " more milestone" + (p.need === 1 ? "" : "s") + " to " + next.name + " League" : "You've earned the highest badge!")), /*#__PURE__*/React.createElement("span", {
     className: "rdb-progress-gem next" + (next ? " locked" : "")

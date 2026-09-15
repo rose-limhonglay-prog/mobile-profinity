@@ -213,8 +213,8 @@ function RdbHeader({ state, tier, onOpenWallet }) {
             <div className="ml-progress-fill" style={{ width: pct + "%", background: "linear-gradient(90deg, var(--lg-accent), var(--nx-accent))" }} />
           </div>
           <div className="rdb-progress-scale">
-            <span>{p ? p.done + " of " + p.total + " milestones" : ""}</span>
-            <span style={{ color: "var(--nx-deep)" }}>{next ? next.requires + " milestones" : "Complete"}</span>
+            <span>{p ? p.done + " of " + (next ? next.requires : p.total) + " milestones" : ""}</span>
+            <span style={{ color: "var(--nx-deep)" }}>{next ? "Unlocks at " + next.requires : "Complete"}</span>
           </div>
           <div className="rdb-progress-note">{next ? p.need + " more milestone" + (p.need === 1 ? "" : "s") + " to " + next.name + " League" : "You've earned the highest badge!"}</div>
         </div>

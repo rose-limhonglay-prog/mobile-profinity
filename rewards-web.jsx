@@ -143,8 +143,8 @@ function LeagueProgressCardRW({ league }) {
           <span className="rw-progress-fill" style={{ width: pct + "%", background: "linear-gradient(90deg, var(--lg-accent), var(--nx-accent))" }} />
         </span>
         <span className="rw-progress-scale">
-          <span>{p ? p.done + " of " + p.total + " milestones" : ""}</span>
-          <span style={{ color: "var(--nx-deep)" }}>{next ? next.requires + " milestones" : "Complete"}</span>
+          <span>{p ? p.done + " of " + (next ? next.requires : p.total) + " milestones" : ""}</span>
+          <span style={{ color: "var(--nx-deep)" }}>{next ? "Unlocks at " + next.requires : "Complete"}</span>
         </span>
         <span className="rw-progress-note">{next ? rwPlural(p.need, "more milestone") + " to " + next.name + " League" : "You've earned the highest badge!"}</span>
         <span className="rw-progress-link">Open the leaderboard<IconifyRW name="lucide:chevron-right" size={16} color="var(--brand-navy)" /></span>
