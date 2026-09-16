@@ -25,7 +25,8 @@
     { label: "Edit Profile", icon: "lucide:user", href: "Profile.html" },
     { label: "Rewards", icon: "lucide:gift", href: "RewardsWeb.html" },
     { label: "Settings", icon: "lucide:settings", href: "AccountSettingsWeb.html" },
-    { label: "Notifications", icon: "lucide:bell", href: "NotificationSettingsWeb.html" }
+    { label: "Notifications", icon: "lucide:bell", href: "NotificationSettingsWeb.html" },
+    { label: "Chat Support", icon: "lucide:headset", href: "ChatSupportWeb.html" }
   ];
 
   function isDark() {

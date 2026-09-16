@@ -28,6 +28,15 @@ function goLX(url) {
     window.location.href = u;
   })(url);
 }
+/* Member → profile links (profile-link.js); inert pass-through if the script is absent. */
+const ProfileLinkLX = window.PFProfileLink && window.PFProfileLink.Link || function ({
+  children
+}) {
+  return children;
+};
+function openProfileLX(a) {
+  return !!(window.PFProfileLink && window.PFProfileLink.open(a));
+}
 const LX_PARAMS = new URLSearchParams(window.location.search);
 
 /* Variant resolution, in priority order:
@@ -1278,17 +1287,23 @@ function LXComment({
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "lc-cmt"
+  }, /*#__PURE__*/React.createElement(ProfileLinkLX, {
+    author: c.author,
+    className: "pf-prof-av"
   }, /*#__PURE__*/React.createElement(DSLX.Avatar, {
     name: c.author.name,
     src: c.author.avatar,
     size: 38
-  }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "lc-cmt-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lc-cmt-meta"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lc-cmt-name"
-  }, c.author.name), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement(ProfileLinkLX, {
+    author: c.author,
+    className: "pf-prof-nm"
+  }, c.author.name)), /*#__PURE__*/React.createElement("span", {
     className: "lc-cmt-time"
   }, c.time)), /*#__PURE__*/React.createElement(LXCommentText, {
     text: c.text

@@ -1440,7 +1440,13 @@ function DmPage() {
       thread: thread,
       onBack: () => setView("chat"),
       onAddPeople: () => setView("addPeople"),
-      onOpenProfile: () => goDM("ClinicianDirectory.html?from=" + encodeURIComponent("DirectMessage.html?id=" + thread.id + "&from=" + fromPage))
+      onOpenProfile: () => {
+        if (!thread.isGroup && window.PFProfileLink && window.PFProfileLink.open({
+          name: thread.name,
+          avatar: thread.avatar
+        })) return;
+        goDM("ClinicianDirectory.html?from=" + encodeURIComponent("DirectMessage.html?id=" + thread.id + "&from=" + fromPage));
+      }
     });
   }
   return /*#__PURE__*/React.createElement("div", {

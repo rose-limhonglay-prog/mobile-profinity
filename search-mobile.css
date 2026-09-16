@@ -140,3 +140,6 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
   font-size: 14px; cursor: pointer;
 }
 .sr-btn-remove:active { background: var(--gray-250); }
+
+/* Search people cards: the photo is a profile-link button wrapping the image */
+.sr-person-card button.sr-person-photo-link { display: block; width: 100%; }

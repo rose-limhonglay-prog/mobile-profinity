@@ -1,0 +1,53 @@
+/* ===========================================================================
+   PROfinity — Chat Support (desktop web) · overrides
+   ChatSupportWeb.html runs chat-support.jsx with window.PF_CS_WEB = true.
+   The mobile layout (chat-support.css) stays the source of truth for the
+   messenger itself; this file only swaps the phone stage for the DS TopNav
+   page, sizes the screen as an Intercom-style card and trims the status-bar /
+   home-indicator padding the phone frame needed.
+   =========================================================================== */
+body { background: var(--surface-page); }
+.app.cs-web { min-height: 100vh; display: flex; flex-direction: column; font-family: var(--font-sans); color: var(--text-primary); }
+
+.cs-web-page { flex: 1; width: 100%; max-width: 1040px; margin: 0 auto; padding: 40px 32px 56px; box-sizing: border-box;
+  display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 48px; align-items: start; }
+.cs-web-intro { position: sticky; top: 104px; padding-top: 12px; }
+.cs-web-back { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px 8px 10px; margin: 0 0 22px -10px; border: none; border-radius: var(--r-pill);
+  background: none; cursor: pointer; font-family: var(--font-sans); font-weight: var(--fw-medium); font-size: 14.5px; color: var(--text-primary); transition: background .15s ease; }
+.cs-web-back:hover { background: var(--surface-sunken); }
+.cs-web-intro h1 { margin: 0 0 12px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 34px; color: var(--text-primary); }
+.cs-web-intro p { margin: 0 0 26px; font-family: var(--font-sans); font-size: 15.5px; line-height: 1.55; color: var(--gray-500); max-width: 440px; }
+.cs-web-facts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.cs-web-facts li { display: flex; align-items: center; gap: 10px; font-family: var(--font-sans); font-size: 14.5px; color: var(--text-primary); }
+.cs-web-facts li iconify-icon { flex: none; }
+
+/* the messenger card */
+.cs-web-card { width: 420px; height: min(760px, calc(100vh - 150px)); min-height: 560px; border-radius: 22px; overflow: hidden;
+  background: var(--surface-page); border: 1px solid var(--border-default); box-shadow: 0 24px 64px rgba(16, 24, 40, .16); }
+.cs-web-card .cs-screen { height: 100%; }
+.cs-web-card .cs-bar { padding-top: 12px; }
+.cs-web-card .cs-hero { padding-top: 14px; }
+.cs-web-card .cs-hello { margin-top: 44px; font-size: 32px; }
+.cs-web-card .cs-tabs { padding-bottom: 12px; }
+.cs-web-card .cs-safe { height: 10px; }
+.cs-web-card .cs-fab-wrap { bottom: 14px; }
+.cs-web-card .cs-toast { bottom: 96px; }
+.cs-web-card .cs-sheet { padding-bottom: 22px; }
+.cs-web-card .cs-scroll::-webkit-scrollbar, .cs-web-card .cs-body::-webkit-scrollbar { width: 0; }
+
+/* hover states (the phone build only has :active) */
+.cs-web-card .cs-topic:hover, .cs-web-card .cs-conv:hover, .cs-web-card .cs-recent:hover, .cs-web-card .cs-opt:hover { background: var(--surface-sunken); }
+.cs-web-card .cs-chip:hover, .cs-web-card .cs-link:hover { background: var(--cs-teal-soft); }
+.cs-web-card .cs-bar-btn:hover, .cs-web-card .cs-x:hover { background: rgba(255,255,255,.14); }
+.cs-web-card .cs-start:hover { transform: translateY(-1px); }
+.cs-web-card .cs-fab:hover { filter: brightness(1.06); }
+
+@media (max-width: 900px) {
+  .cs-web-page { grid-template-columns: 1fr; gap: 28px; padding: 24px 16px 40px; justify-items: center; }
+  .cs-web-intro { position: static; width: 100%; max-width: 420px; }
+  .cs-web-card { width: 100%; max-width: 420px; height: min(760px, calc(100vh - 120px)); }
+}
+[data-theme="dark"] .cs-web-card { box-shadow: 0 24px 64px rgba(0, 0, 0, .5); }
+
+/* the mobile stylesheet pins .app to 100vh for the phone stage; the web page scrolls normally */
+.app.cs-web { height: auto; }

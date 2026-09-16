@@ -1253,11 +1253,397 @@ const PM_ACTIVITY = [{
    only — a real build would fetch this by id.
    =========================================================================== */
 const PM_OTHER_USERS = {
+  "miranda-pearce": {
+    name: "Miranda Pearce",
+    role: "Aesthetic Nurse Practitioner",
+    avatar: "assets/avatar-miranda.jpg",
+    seals: ["gb", "verified", "gold"],
+    flag: "🇬🇧",
+    headline: "Aesthetic Nurse Practitioner",
+    specialties: ["Lip Enhancement", "Skin Boosters", "Profhilo"],
+    upcomingLive: "September 24, 2026",
+    link: "mirandapearce.co.uk",
+    banners: {
+      instagram: "mirandapearce",
+      threads: "mirandapearce",
+      facebook: "Miranda Pearce"
+    },
+    bio: "Aesthetic nurse and PROfinity mentor. Helping practitioners build calm, confident consultations.",
+    location: "London, United Kingdom",
+    clinic: "PROfinity Academy",
+    posts: "148",
+    followers: "9.2K",
+    following: "412",
+    shared: {
+      mutualConnections: 19,
+      community: "Confidence Path",
+      courses: ["8D Lip Design", "Temple Filler"]
+    },
+    activity: {
+      lastActive: "20m ago",
+      highlights: [{
+        icon: "lucide:file-text",
+        text: "Posted a lip mapping walkthrough",
+        time: "Today"
+      }, {
+        icon: "lucide:message-circle",
+        text: "Replied to your comment",
+        time: "Yesterday"
+      }, {
+        icon: "lucide:calendar-check",
+        text: "Hosting Lip Design Live Q&A",
+        time: "24 Sep"
+      }]
+    },
+    services: [{
+      ti: "Lip Enhancement",
+      su: "Career Academy: Dr Tim Pearce"
+    }, {
+      ti: "Skin Boosters",
+      su: "Career Academy: Dr Tim Pearce"
+    }],
+    experience: [{
+      ti: "Aesthetic Nurse Practitioner",
+      yrs: "11 years",
+      org: "PROfinity Academy",
+      loc: "London, United Kingdom"
+    }],
+    education: [{
+      logo: "KCL",
+      school: "King's College London",
+      program: "BSc Nursing",
+      years: "2008 - 2011"
+    }],
+    licenses: ["8D Lips Course", "Anatomy360", "Botox Foundations"],
+    languages: [{
+      flag: "🇬🇧",
+      name: "English (UK)",
+      level: "Primary"
+    }]
+  },
+  "dr-amir-khan": {
+    name: "Dr Amir Khan",
+    role: "Aesthetic Doctor",
+    avatar: "assets/avatar-amir-khan.jpg",
+    seals: ["verified", "gold"],
+    flag: "🇬🇧",
+    headline: "Aesthetic Medicine Doctor",
+    specialties: ["Full-Face Filler", "Tear Trough", "Jawline"],
+    upcomingLive: "October 8, 2026",
+    link: "dramirkhan.co.uk",
+    banners: {
+      instagram: "dramirkhan",
+      youtube: "Dr Amir Khan"
+    },
+    bio: "Full-face harmonisation with a safety-first approach. Sharing cases, complications and lessons learned.",
+    location: "Manchester, United Kingdom",
+    clinic: "Khan Aesthetics",
+    posts: "96",
+    followers: "4.8K",
+    following: "233",
+    shared: {
+      mutualConnections: 12,
+      community: "Mastery Path",
+      courses: ["Temple Filler", "Protox Course"]
+    },
+    activity: {
+      lastActive: "2h ago",
+      highlights: [{
+        icon: "lucide:file-text",
+        text: "Posted a tear trough case review",
+        time: "Today"
+      }, {
+        icon: "lucide:thumbs-up",
+        text: "Liked your latest post",
+        time: "2d"
+      }]
+    },
+    services: [{
+      ti: "Dermal Fillers",
+      su: "Career Academy: Dr Tim Pearce"
+    }, {
+      ti: "Full-Face Rejuvenation",
+      su: "Career Academy: Dr Tim Pearce"
+    }],
+    experience: [{
+      ti: "Aesthetic Doctor",
+      yrs: "8 years",
+      org: "Khan Aesthetics",
+      loc: "Manchester, United Kingdom"
+    }],
+    education: [{
+      logo: "UoM",
+      school: "University of Manchester",
+      program: "MBChB Medicine",
+      years: "2009 - 2014"
+    }],
+    licenses: ["Anatomy360", "The Ultimate Toxin Eye Complications Masterclass"],
+    languages: [{
+      flag: "🇬🇧",
+      name: "English (UK)",
+      level: "Primary"
+    }, {
+      flag: "🇵🇰",
+      name: "Urdu",
+      level: "Secondary"
+    }]
+  },
+  "priya-shah": {
+    name: "Priya Shah",
+    role: "Aesthetic Nurse",
+    avatar: "assets/avatar-priya-shah.jpg",
+    seals: ["verified"],
+    flag: "🇬🇧",
+    headline: "Aesthetic Nurse Prescriber",
+    specialties: ["Anti-Wrinkle", "Skin Boosters", "Microneedling"],
+    link: "priyashahaesthetics.com",
+    banners: {
+      instagram: "priyashah.aesthetics",
+      facebook: "Priya Shah"
+    },
+    bio: "Nurse prescriber growing a home clinic one happy patient at a time.",
+    location: "Leicester, United Kingdom",
+    clinic: "Priya Shah Aesthetics",
+    posts: "61",
+    followers: "2.1K",
+    following: "318",
+    shared: {
+      mutualConnections: 9,
+      community: "Confidence Path",
+      courses: ["Botox Foundations"]
+    },
+    activity: {
+      lastActive: "45m ago",
+      highlights: [{
+        icon: "lucide:message-circle",
+        text: "Asked a question in Confidence Path",
+        time: "Today"
+      }, {
+        icon: "lucide:file-text",
+        text: "Shared her first before & after",
+        time: "3d"
+      }]
+    },
+    services: [{
+      ti: "Botox (Anti-Wrinkle Injections)",
+      su: "Career Academy: Dr Tim Pearce"
+    }],
+    experience: [{
+      ti: "Aesthetic Nurse",
+      yrs: "4 years",
+      org: "Priya Shah Aesthetics",
+      loc: "Leicester, United Kingdom"
+    }],
+    education: [{
+      logo: "DMU",
+      school: "De Montfort University",
+      program: "BSc Nursing",
+      years: "2015 - 2018"
+    }],
+    licenses: ["Botox Foundations"],
+    languages: [{
+      flag: "🇬🇧",
+      name: "English (UK)",
+      level: "Primary"
+    }, {
+      flag: "🇮🇳",
+      name: "Gujarati",
+      level: "Secondary"
+    }]
+  },
+  "nurse-beth": {
+    name: "Nurse Beth",
+    role: "Aesthetic Nurse",
+    avatar: "assets/avatar-nurse-beth.jpg",
+    seals: ["verified"],
+    flag: "🇬🇧",
+    headline: "Independent Aesthetic Nurse",
+    specialties: ["Anti-Wrinkle", "Lip Enhancement"],
+    upcomingLive: "October 15, 2026",
+    link: "nursebeth.co.uk",
+    banners: {
+      instagram: "nursebeth",
+      threads: "nursebeth"
+    },
+    bio: "Independent nurse, 2 years in. Documenting the messy middle of building a clinic.",
+    location: "Bristol, United Kingdom",
+    clinic: "Beth Aesthetics",
+    posts: "43",
+    followers: "1.4K",
+    following: "290",
+    shared: {
+      mutualConnections: 6,
+      community: "Confidence Path",
+      courses: ["8D Lip Design"]
+    },
+    activity: {
+      lastActive: "3h ago",
+      highlights: [{
+        icon: "lucide:file-text",
+        text: "Posted about consultation nerves",
+        time: "Yesterday"
+      }, {
+        icon: "lucide:thumbs-up",
+        text: "Liked 4 of your posts",
+        time: "1w"
+      }]
+    },
+    services: [{
+      ti: "Lip Enhancement",
+      su: "Career Academy: Dr Tim Pearce"
+    }],
+    experience: [{
+      ti: "Aesthetic Nurse",
+      yrs: "2 years",
+      org: "Beth Aesthetics",
+      loc: "Bristol, United Kingdom"
+    }],
+    education: [{
+      logo: "UWE",
+      school: "University of the West of England",
+      program: "BSc Nursing",
+      years: "2017 - 2020"
+    }],
+    licenses: ["8D Lips Course"],
+    languages: [{
+      flag: "🇬🇧",
+      name: "English (UK)",
+      level: "Primary"
+    }]
+  },
+  "mark-ellis": {
+    name: "Mark Ellis",
+    role: "Clinic Owner",
+    avatar: "assets/avatar-mark-ellis.jpg",
+    seals: ["verified", "crown"],
+    flag: "🇬🇧",
+    headline: "Clinic Owner & Business Mentor",
+    specialties: ["Clinic Growth", "Marketing", "Systems"],
+    link: "ellisclinics.com",
+    banners: {
+      linkedin: "Mark Ellis",
+      instagram: "markellis.clinics"
+    },
+    bio: "Three clinics, one team. Talking about the business side of aesthetics.",
+    location: "Birmingham, United Kingdom",
+    clinic: "Ellis Clinics",
+    posts: "77",
+    followers: "3.6K",
+    following: "150",
+    shared: {
+      mutualConnections: 14,
+      community: "Freedom Path",
+      courses: []
+    },
+    activity: {
+      lastActive: "1d ago",
+      highlights: [{
+        icon: "lucide:file-text",
+        text: "Posted a pricing breakdown",
+        time: "2d"
+      }, {
+        icon: "lucide:calendar-check",
+        text: "Attending Business Systems Workshop",
+        time: "12 Oct"
+      }]
+    },
+    services: [],
+    experience: [{
+      ti: "Founder & Director",
+      yrs: "10 years",
+      org: "Ellis Clinics",
+      loc: "Birmingham, United Kingdom"
+    }],
+    education: [{
+      logo: "AST",
+      school: "Aston University",
+      program: "BSc Business Management",
+      years: "2005 - 2008"
+    }],
+    licenses: ["Business Systems Masterclass"],
+    languages: [{
+      flag: "🇬🇧",
+      name: "English (UK)",
+      level: "Primary"
+    }]
+  },
+  "dr-sarah-collins": {
+    name: "Dr. Sarah Collins",
+    role: "Aesthetic Doctor",
+    avatar: "assets/avatar-sarah-collins.jpg",
+    seals: ["verified", "gold"],
+    flag: "🇮🇪",
+    headline: "Aesthetic Doctor & Educator",
+    specialties: ["Complications", "Toxin", "Facial Anatomy"],
+    upcomingLive: "September 29, 2026",
+    link: "drsarahcollins.ie",
+    banners: {
+      instagram: "drsarahcollins",
+      linkedin: "Dr Sarah Collins"
+    },
+    bio: "GP turned aesthetic doctor. Passionate about anatomy-led, complication-aware practice.",
+    location: "Dublin, Ireland",
+    clinic: "Collins Clinic",
+    posts: "112",
+    followers: "6.3K",
+    following: "201",
+    shared: {
+      mutualConnections: 17,
+      community: "Mastery Path",
+      courses: ["Protox Course", "Temple Filler"]
+    },
+    activity: {
+      lastActive: "Just now",
+      highlights: [{
+        icon: "lucide:file-text",
+        text: "Posted a vascular occlusion protocol",
+        time: "Today"
+      }, {
+        icon: "lucide:message-circle",
+        text: "Commented on your post",
+        time: "Today"
+      }]
+    },
+    services: [{
+      ti: "Botox (Anti-Wrinkle Injections)",
+      su: "Career Academy: Dr Tim Pearce"
+    }, {
+      ti: "Dermal Fillers",
+      su: "Career Academy: Dr Tim Pearce"
+    }],
+    experience: [{
+      ti: "Aesthetic Doctor",
+      yrs: "9 years",
+      org: "Collins Clinic",
+      loc: "Dublin, Ireland"
+    }],
+    education: [{
+      logo: "TCD",
+      school: "Trinity College Dublin",
+      program: "MB BCh BAO Medicine",
+      years: "2004 - 2010"
+    }],
+    licenses: ["Anatomy360", "Pro Tox Course", "The Ultimate Toxin Eye Complications Masterclass"],
+    languages: [{
+      flag: "🇮🇪",
+      name: "English (IE)",
+      level: "Primary"
+    }]
+  },
   "james-lee": {
     name: "James Lee",
     role: "Surgical Nurse Practitioner",
     avatar: null,
     seals: ["verified"],
+    flag: "🇦🇺",
+    headline: "Surgical Nurse Practitioner",
+    specialties: ["Suturing", "Wound Care", "Post-Op"],
+    upcomingLive: "October 2, 2026",
+    link: "sydneyaesthetic.com.au",
+    banners: {
+      instagram: "jameslee.np",
+      linkedin: "James Lee"
+    },
     bio: "Surgical nurse practitioner specialising in advanced suturing and post-operative care. Sharing what I learn, one case at a time.",
     location: "Sydney, Australia",
     clinic: "Sydney Aesthetic Group",
@@ -1316,6 +1702,14 @@ const PM_OTHER_USERS = {
     role: "Dental Practitioner",
     avatar: null,
     seals: ["verified"],
+    flag: "🇨🇦",
+    headline: "Dental Practitioner",
+    specialties: ["Digital Dentistry", "Treatment Planning"],
+    link: "garciadental.ca",
+    banners: {
+      instagram: "drlindagarcia",
+      facebook: "Linda Garcia"
+    },
     bio: "Dentist exploring emerging technologies in digital dentistry and paperless patient care.",
     location: "Toronto, Canada",
     clinic: "Garcia Dental Studio",
@@ -1371,6 +1765,16 @@ const PM_OTHER_USERS = {
     role: "Founder & Lead Trainer, PROfinity Academy",
     avatar: "assets/avatar-drtim.png",
     seals: ["verified", "crown", "gold"],
+    flag: "🇬🇧",
+    headline: "Aesthetic Medicine Doctor & Trainer",
+    specialties: ["Botox", "Fillers", "Full-Face Rejuvenation"],
+    upcomingLive: "September 30, 2026",
+    link: "drtimpearce.com",
+    banners: {
+      instagram: "drtimpearce",
+      youtube: "Dr Tim Pearce",
+      facebook: "Dr Tim Pearce"
+    },
     bio: "Founder of PROfinity Academy — training the next generation of aesthetic practitioners in safe, confident injectable technique.",
     location: "London, United Kingdom",
     clinic: "PROfinity Academy",
@@ -2382,8 +2786,14 @@ function MessagesPanelPM({
     v: v
   })))));
 }
+
+/* `active` defaults to Profile (the owner's page). Viewing someone else's
+   profile passes the tab of the page they came from — Home when tapped from
+   the newsfeed, Community from a channel… — so the footer doesn't jump to
+   Profile just because the URL is ProfileMobile.html. */
 const PMTabBar = React.forwardRef(function PMTabBar({
-  compact
+  compact,
+  active = "Profile"
 }, ref) {
   return /*#__PURE__*/React.createElement("nav", {
     ref: ref,
@@ -2391,15 +2801,17 @@ const PMTabBar = React.forwardRef(function PMTabBar({
     "aria-label": "Primary"
   }, PM_TABS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
-    className: "pm-tab" + (t.key === "Profile" ? " on" : ""),
-    "aria-current": t.key === "Profile" ? "page" : undefined,
-    onClick: () => t.href && goPM(t.href)
+    className: "pm-tab" + (t.key === active ? " on" : ""),
+    "aria-current": t.key === active ? "page" : undefined,
+    onClick: () => {
+      if (t.href) goPM(t.href);else if (t.key === "Profile" && active !== "Profile") goPM("ProfileMobile.html");
+    }
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: t.icon,
     size: 20,
-    color: t.key === "Profile" ? "#fff" : "var(--gray-450)"
+    color: t.key === active ? "#fff" : "var(--gray-450)"
   }), t.dot && /*#__PURE__*/React.createElement("span", {
     className: "dot"
   }, t.dot)), /*#__PURE__*/React.createElement("span", {
@@ -3313,7 +3725,10 @@ function pmLoadSocialConnections() {
 function pmLoadBanners() {
   const conn = pmLoadSocialConnections();
   const b = pmLoadJSON(PM_BANNERS_KEY, []);
-  return Array.isArray(b) ? b.filter(k => conn[k]) : [];
+  return Array.isArray(b) ? b.filter(k => {
+    const it = pmBannerItem(k);
+    return it && (!it.needsValue || conn[k]);
+  }) : [];
 }
 function pmSaveBanners(list) {
   pmSaveJSON(PM_BANNERS_KEY, list);
@@ -3337,6 +3752,12 @@ function pmSocialUrl(key, handle) {
       return "https://facebook.com/" + h;
     case "linkedin":
       return "https://linkedin.com/in/" + h;
+    case "threads":
+      return "https://threads.net/@" + h;
+    case "youtube":
+      return "https://youtube.com/@" + h;
+    case "whatsapp":
+      return "https://wa.me/" + h.replace(/[^0-9]/g, "");
     default:
       return "#";
   }
@@ -3364,45 +3785,470 @@ const PM_SOCIALS = [{
   color: "#1877F2",
   label: "Facebook"
 }];
+
+/* Everything the Banners screen can put under the bio. Socials reuse the
+   handle saved by "Connect your social profiles"; the rest keep their own
+   text in the same store. `needsValue` items ask for text before they are
+   added; `editable` ones get a pencil so the text can be changed later. */
+const PM_BANNER_ITEMS = [{
+  key: "threads",
+  icon: "simple-icons:threads",
+  color: "#000000",
+  label: "Threads",
+  needsValue: true,
+  prompt: "Threads username",
+  placeholder: "username",
+  value: h => String(h || "").replace(/^@/, "")
+}, {
+  key: "instagram",
+  icon: "mdi:instagram",
+  color: "#E1306C",
+  label: "Instagram",
+  needsValue: true,
+  prompt: "Instagram username",
+  placeholder: "username",
+  value: h => String(h || "").replace(/^@/, "")
+}, {
+  key: "youtube",
+  icon: "lucide:youtube",
+  color: "#FF0000",
+  label: "YouTube",
+  needsValue: true,
+  editable: true,
+  prompt: "YouTube channel",
+  placeholder: "Channel name"
+}, {
+  key: "facebook",
+  icon: "mdi:facebook",
+  color: "#1877F2",
+  label: "Facebook",
+  needsValue: true,
+  prompt: "Facebook profile",
+  placeholder: "Your name on Facebook"
+}, {
+  key: "linkedin",
+  icon: "mdi:linkedin",
+  color: "#0A66C2",
+  label: "LinkedIn",
+  needsValue: true,
+  prompt: "LinkedIn profile",
+  placeholder: "Your name on LinkedIn"
+}, {
+  key: "twitter",
+  icon: "simple-icons:x",
+  color: "#000000",
+  label: "X",
+  needsValue: true,
+  prompt: "X username",
+  placeholder: "username",
+  value: h => String(h || "").replace(/^@/, "")
+}, {
+  key: "whatsapp",
+  icon: "mdi:whatsapp",
+  color: "#25D366",
+  label: "WhatsApp",
+  needsValue: true,
+  editable: true,
+  prompt: "WhatsApp number",
+  placeholder: "+44 7700 900000",
+  inputMode: "tel"
+}, {
+  key: "custom",
+  icon: "lucide:user",
+  color: "var(--brand-navy)",
+  label: "Fill in the blank",
+  needsValue: true,
+  editable: true,
+  prompt: "Fill in the blank",
+  placeholder: "Say something about you",
+  maxLength: 40
+}, {
+  key: "insights",
+  icon: "lucide:bar-chart-3",
+  color: "var(--brand-navy)",
+  label: "Insights",
+  needsValue: false
+}];
+function pmBannerItem(key) {
+  return PM_BANNER_ITEMS.find(it => it.key === key);
+}
+/* What a banner row / chip shows for an item. Falls back to the item label
+   for value-less banners such as Insights. */
+function pmBannerText(key, conn) {
+  const it = pmBannerItem(key);
+  if (!it) return "";
+  const raw = conn[key];
+  if (!it.needsValue) return it.label;
+  return it.value ? it.value(raw) : String(raw || "");
+}
+
+/* ---- Connect an account (Accounts Center–style) ----
+   Adding a social banner hands off to the real network — a universal link
+   opens the installed app (Instagram, Facebook, WhatsApp…) or its website —
+   and when the user comes back the account is confirmed and saved to the
+   profile as a connection + banner. `app` is the handoff URL, `login` what
+   the second step says you did there, `def` the handle we pre-fill (a real
+   OAuth return would supply it). */
+const PM_CONNECT_NETWORKS = {
+  instagram: {
+    app: "https://www.instagram.com/",
+    brand: "Instagram",
+    login: "sign in to Instagram",
+    what: "username",
+    privacy: "Your Instagram messages and password stay private. Profinity only sees the username you choose to show.",
+    def: () => pmDefaultSocialHandle("instagram")
+  },
+  threads: {
+    app: "https://www.threads.net/",
+    brand: "Threads",
+    login: "sign in to Threads",
+    what: "username",
+    privacy: "Your Threads messages and password stay private. Profinity only sees the username you choose to show.",
+    def: () => pmDefaultSocialHandle("threads")
+  },
+  facebook: {
+    app: "https://www.facebook.com/",
+    brand: "Facebook",
+    login: "sign in to Facebook",
+    what: "profile name",
+    privacy: "Your Facebook messages, friends and password stay private. Profinity only sees your public profile name.",
+    def: () => pmDefaultSocialHandle("facebook")
+  },
+  whatsapp: {
+    app: "https://wa.me/",
+    brand: "WhatsApp",
+    login: "open WhatsApp",
+    what: "number",
+    privacy: "Your personal messages and calls on WhatsApp stay end-to-end encrypted. No one, not even Profinity, can read or listen to them.",
+    contact: "Your WhatsApp number is never public without your permission and your contacts aren't shared with Profinity.",
+    alert: "People who tap on your banner can message you. Your number won't show on Profinity until you confirm it in WhatsApp. Go to WhatsApp to add your banner.",
+    def: () => (PM_ME.clinicNumber || "").trim() || "+44 7700 900000"
+  },
+  linkedin: {
+    app: "https://www.linkedin.com/",
+    brand: "LinkedIn",
+    login: "sign in to LinkedIn",
+    what: "profile name",
+    privacy: "Your LinkedIn messages and connections stay private. Profinity only sees your public profile name.",
+    def: () => pmDefaultSocialHandle("linkedin")
+  },
+  twitter: {
+    app: "https://x.com/",
+    brand: "X",
+    login: "sign in to X",
+    what: "username",
+    privacy: "Your X messages and password stay private. Profinity only sees the username you choose to show.",
+    def: () => pmDefaultSocialHandle("twitter")
+  },
+  youtube: {
+    app: "https://www.youtube.com/",
+    brand: "YouTube",
+    login: "sign in to YouTube",
+    what: "channel",
+    privacy: "Your YouTube account and watch history stay private. Profinity only sees your public channel name.",
+    def: () => PM_ME.name || ""
+  }
+};
+function pmConnectNetwork(key) {
+  return PM_CONNECT_NETWORKS[key] || null;
+}
+/* Socials already linked to this profile, for the "connected accounts" row. */
+function pmConnectedSocialKeys(conn, except) {
+  return Object.keys(PM_CONNECT_NETWORKS).filter(k => k !== except && conn[k]);
+}
+/* Resolves once the page has been backgrounded and comes back (the user
+   returned from the network's app / tab). Falls back to the "I've signed in"
+   button when the platform never hides the page. */
+function usePMReturnFromApp(active, onReturn) {
+  useEffectPM(() => {
+    if (!active) return;
+    let left = false;
+    const startedAt = Date.now();
+    const away = () => {
+      left = true;
+    };
+    const back = () => {
+      if ((left || Date.now() - startedAt > 1500) && !document.hidden) onReturn();
+    };
+    const vis = () => {
+      if (document.hidden) away();else back();
+    };
+    document.addEventListener("visibilitychange", vis);
+    window.addEventListener("blur", away);
+    window.addEventListener("focus", back);
+    window.addEventListener("pageshow", back);
+    return () => {
+      document.removeEventListener("visibilitychange", vis);
+      window.removeEventListener("blur", away);
+      window.removeEventListener("focus", back);
+      window.removeEventListener("pageshow", back);
+    };
+  }, [active]);
+}
+
+/* Full-screen sheet: 1) "Add an Instagram banner to this profile" with the
+   Accounts Center card (new account · · · this profile + connected accounts),
+   2) hand-off to the network's app, 3) confirm the account that came back. */
+function PMConnectAccountScreen({
+  item,
+  conn,
+  onDone,
+  onClose
+}) {
+  const initialStep = (() => {
+    try {
+      return new URLSearchParams(window.location.search).get("step") === "confirm" ? "confirm" : "prompt";
+    } catch (e) {
+      return "prompt";
+    }
+  })();
+  /* prompt  → iOS-style alert "Add Instagram to profile · Go to Instagram"
+     waiting → the alert stays while the network's app is open
+     confirm → Accounts Center-style screen; Confirm saves the connection */
+  const net = pmConnectNetwork(item.key);
+  const [step, setStep] = useStatePM(initialStep);
+  const [handle, setHandle] = useStatePM(() => conn[item.key] || (net ? net.def() : ""));
+  const [editing, setEditing] = useStatePM(false);
+  const inputRef = React.useRef(null);
+  usePMReturnFromApp(step === "waiting", () => setStep("confirm"));
+  React.useEffect(() => {
+    if (editing) {
+      const t = setTimeout(() => {
+        try {
+          inputRef.current && inputRef.current.focus();
+        } catch (e) {}
+      }, 60);
+      return () => clearTimeout(t);
+    }
+  }, [editing]);
+  if (!net) return null;
+  const others = pmConnectedSocialKeys(conn, item.key);
+  const isAt = !!item.value;
+  const clean = (isAt ? handle.replace(/^@+/, "") : handle).trim();
+  const shown = clean ? isAt ? "@" + clean : clean : "";
+  const an = /^[aeiou]/i.test(net.brand) ? "an" : "a";
+  function Av({
+    badgeKey,
+    className
+  }) {
+    const bi = badgeKey ? pmBannerItem(badgeKey) : null;
+    return /*#__PURE__*/React.createElement("span", {
+      className: "pm-cac-av" + (className ? " " + className : "")
+    }, /*#__PURE__*/React.createElement(DSPM.Avatar, {
+      name: PM_ME.name,
+      src: PM_ME.avatar,
+      size: 56
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "pm-cac-badge"
+    }, bi ? /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+      name: bi.icon,
+      size: 15,
+      color: bi.color
+    }) : /*#__PURE__*/React.createElement("b", null, "P")));
+  }
+  if (step !== "confirm") {
+    const waiting = step === "waiting";
+    return /*#__PURE__*/React.createElement("div", {
+      className: "pm-cac-alert-overlay",
+      onClick: onClose
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "pm-cac-alert",
+      role: "alertdialog",
+      "aria-modal": "true",
+      onClick: e => e.stopPropagation()
+    }, /*#__PURE__*/React.createElement("h2", null, "Add ", net.brand, " to profile"), /*#__PURE__*/React.createElement("p", null, waiting ? /*#__PURE__*/React.createElement(React.Fragment, null, "Waiting for you to ", net.login, "… Once you've confirmed it's you, come back here to finish adding your banner.") : net.alert || /*#__PURE__*/React.createElement(React.Fragment, null, "People who see your banner can find you on ", net.brand, ". We'll open ", net.brand, " so you can confirm it's your account, then come back here to add your banner.")), waiting ? /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "pm-cac-alert-go",
+      onClick: () => setStep("confirm")
+    }, "I've signed in to ", net.brand) : /*#__PURE__*/React.createElement("a", {
+      className: "pm-cac-alert-go",
+      href: net.app,
+      target: "_blank",
+      rel: "noopener noreferrer",
+      onClick: () => setStep("waiting")
+    }, "Go to ", net.brand), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "pm-cac-alert-cancel",
+      onClick: onClose
+    }, "Cancel")));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-cac",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Connect " + net.brand
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-cac-close",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:x",
+    size: 26,
+    color: "var(--pm-bn-ink)"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pm-cac-body"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "pm-cac-eyebrow"
+  }, "Add ", net.brand, " to Connected accounts"), /*#__PURE__*/React.createElement("h1", {
+    className: "pm-cac-title"
+  }, "Add ", an, " ", net.brand, " banner to this profile"), /*#__PURE__*/React.createElement("div", {
+    className: "pm-cac-card"
+  }, /*#__PURE__*/React.createElement("h2", null, "Connected accounts"), /*#__PURE__*/React.createElement("div", {
+    className: "pm-cac-row"
+  }, /*#__PURE__*/React.createElement(Av, {
+    badgeKey: item.key,
+    className: "new"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pm-cac-dots",
+    "aria-hidden": "true"
+  }, [0, 1, 2, 3, 4, 5].map(i => /*#__PURE__*/React.createElement("i", {
+    key: i
+  }))), /*#__PURE__*/React.createElement("span", {
+    className: "pm-cac-stack"
+  }, /*#__PURE__*/React.createElement(Av, {
+    className: "me"
+  }), others.map(k => /*#__PURE__*/React.createElement(Av, {
+    key: k,
+    badgeKey: k
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-cac-acct"
+  }, editing ? /*#__PURE__*/React.createElement("span", {
+    className: "pm-cac-input"
+  }, isAt && /*#__PURE__*/React.createElement("i", {
+    "aria-hidden": "true"
+  }, "@"), /*#__PURE__*/React.createElement("input", {
+    ref: inputRef,
+    type: "text",
+    value: isAt ? handle.replace(/^@+/, "") : handle,
+    placeholder: item.placeholder || "",
+    inputMode: item.inputMode || "text",
+    autoCapitalize: isAt ? "none" : "words",
+    autoCorrect: "off",
+    spellCheck: false,
+    onChange: e => setHandle(isAt ? e.target.value.replace(/^@+/, "") : e.target.value),
+    onBlur: () => {
+      if (clean) setEditing(false);
+    }
+  })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "pm-cac-acct-nm"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:check",
+    size: 14,
+    color: "#25a244"
+  }), shown || "Add your " + net.what), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-cac-acct-edit",
+    onClick: () => setEditing(true)
+  }, shown ? "Not you?" : "Add")))), /*#__PURE__*/React.createElement("ul", {
+    className: "pm-cac-points"
+  }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:circle-user-round",
+    size: 28,
+    color: "var(--pm-bn-ink)"
+  }), /*#__PURE__*/React.createElement("span", null, "Connected accounts show as banners under your bio, so people can find you on ", net.brand, " straight from your profile.")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: item.key === "whatsapp" ? "lucide:phone" : "lucide:at-sign",
+    size: 28,
+    color: "var(--pm-bn-ink)"
+  }), /*#__PURE__*/React.createElement("span", null, net.contact || "Only the " + net.what + " you confirmed on " + net.brand + " is shown. Your " + net.brand + " password is never shared with Profinity.")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:lock",
+    size: 28,
+    color: "var(--pm-bn-ink)"
+  }), /*#__PURE__*/React.createElement("span", null, net.privacy)))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-cac-foot"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "pm-cac-fine"
+  }, "We'll ", /*#__PURE__*/React.createElement("b", null, "show your ", net.brand, " ", net.what), " as a banner under your bio. You can remove it from Banners anytime."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-cac-confirm",
+    disabled: !clean,
+    onClick: () => onDone(clean)
+  }, "Confirm"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-cac-cancel",
+    onClick: onClose
+  }, "Cancel")));
+}
 function SocialStep({
   onComplete
 }) {
-  const [connected, setConnected] = useStatePM(() => Object.keys(pmLoadSocialConnections()));
-  function toggle(key) {
-    setConnected(prev => {
-      const next = prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key];
-      const conn = pmLoadSocialConnections();
-      if (next.includes(key)) conn[key] = conn[key] || pmDefaultSocialHandle(key);else delete conn[key];
-      pmSaveJSON(PM_SOCIAL_CONN_KEY, conn);
-      pmSaveBanners(pmLoadBanners().filter(k => conn[k]));
-      return next;
+  /* One optional username field per network. Anything left blank simply
+     isn't added; filled ones are saved as connections and appear as banners. */
+  const [handles, setHandles] = useStatePM(() => {
+    const conn = pmLoadSocialConnections();
+    const h = {};
+    PM_SOCIALS.forEach(s => {
+      h[s.key] = conn[s.key] || "";
     });
+    return h;
+  });
+  const filled = PM_SOCIALS.filter(s => (handles[s.key] || "").trim());
+  function save() {
+    const conn = pmLoadSocialConnections();
+    PM_SOCIALS.forEach(s => {
+      const v = (handles[s.key] || "").trim();
+      if (v) conn[s.key] = v;else delete conn[s.key];
+    });
+    pmSaveJSON(PM_SOCIAL_CONN_KEY, conn);
+    const banners = pmLoadBanners();
+    filled.forEach(s => {
+      if (!banners.includes(s.key)) banners.push(s.key);
+    });
+    pmSaveBanners(banners);
+    onComplete();
   }
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-sheet-step"
   }, /*#__PURE__*/React.createElement("p", {
     className: "pm-sheet-desc"
-  }, "Link your social profiles to build trust and grow your network."), /*#__PURE__*/React.createElement("div", {
+  }, "Add your username for the profiles you want to show. Leave any blank to skip it."), /*#__PURE__*/React.createElement("div", {
     className: "pm-sheet-socials"
   }, PM_SOCIALS.map(s => {
-    const on = connected.includes(s.key);
-    return /*#__PURE__*/React.createElement("div", {
+    const isName = s.key === "facebook" || s.key === "linkedin";
+    const v = handles[s.key] || "";
+    return /*#__PURE__*/React.createElement("label", {
       key: s.key,
-      className: "pm-sheet-social"
+      className: "pm-sheet-social" + (v.trim() ? " filled" : "")
     }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
       name: s.icon,
       size: 28,
       color: s.color
     }), /*#__PURE__*/React.createElement("span", {
       className: "pm-sheet-social-nm"
-    }, s.label), /*#__PURE__*/React.createElement("button", {
-      className: "pm-sheet-social-btn" + (on ? " connected" : ""),
-      onClick: () => toggle(s.key)
-    }, on ? "Connected" : "Connect"));
-  })), connected.length > 0 && /*#__PURE__*/React.createElement("button", {
+    }, s.label, /*#__PURE__*/React.createElement("small", null, "Optional")), /*#__PURE__*/React.createElement("span", {
+      className: "pm-sheet-social-field"
+    }, !isName && /*#__PURE__*/React.createElement("span", {
+      className: "pm-sheet-social-at",
+      "aria-hidden": "true"
+    }, "@"), /*#__PURE__*/React.createElement("input", {
+      type: "text",
+      value: v,
+      placeholder: isName ? "Profile name" : "username",
+      autoCapitalize: isName ? "words" : "none",
+      autoCorrect: "off",
+      spellCheck: false,
+      onChange: e => setHandles(prev => ({
+        ...prev,
+        [s.key]: e.target.value.replace(isName ? /^\s+/ : /^@+/, "")
+      }))
+    }), v && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "pm-sheet-social-clear",
+      "aria-label": "Clear " + s.label,
+      onClick: () => setHandles(prev => ({
+        ...prev,
+        [s.key]: ""
+      }))
+    }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+      name: "lucide:x",
+      size: 12,
+      color: "#fff"
+    }))));
+  })), /*#__PURE__*/React.createElement("button", {
     className: "pm-sheet-cta",
-    onClick: onComplete
-  }, "Save Connections"));
+    disabled: filled.length === 0,
+    onClick: save
+  }, filled.length === 0 ? "Add at least one profile" : "Save " + filled.length + (filled.length === 1 ? " profile" : " profiles")));
 }
 
 /* ---- Bottom sheet wrapper ---- */
@@ -4193,6 +5039,151 @@ function PMMentor() {
     color: "var(--success)"
   }), "Yes")));
 }
+
+/* ---------------------------------------------------------------------------
+   PMChipRows — location / clinic chips and social pills flow together in one
+   wrapping strip, capped at `maxRows` lines. Whatever would spill onto a
+   third line is folded behind a "+N" pill; tapping it shows everything.
+   Measured from real layout (offsetTop per pill), so it adapts to any
+   handle length or device width; `trailing` (the owner's "Add" button) is
+   always kept visible after the pill.
+   --------------------------------------------------------------------------- */
+
+/* "London, United Kingdom" → "London, UK": the location chip shares its line
+   with the clinic chip, so the country is always abbreviated. */
+const PM_COUNTRY_ABBR = {
+  "united kingdom": "UK",
+  "great britain": "UK",
+  "england": "UK",
+  "scotland": "UK",
+  "wales": "UK",
+  "northern ireland": "UK",
+  "united states": "USA",
+  "united states of america": "USA",
+  "australia": "AU",
+  "canada": "CA",
+  "ireland": "IE",
+  "new zealand": "NZ",
+  "united arab emirates": "UAE",
+  "south africa": "ZA",
+  "germany": "DE",
+  "france": "FR",
+  "spain": "ES",
+  "italy": "IT",
+  "netherlands": "NL",
+  "singapore": "SG",
+  "india": "IN",
+  "pakistan": "PK",
+  "philippines": "PH",
+  "portugal": "PT"
+};
+function pmShortLocation(loc) {
+  const parts = String(loc || "").split(",").map(x => x.trim()).filter(Boolean);
+  if (parts.length < 2) return loc || "";
+  const country = parts[parts.length - 1];
+  const abbr = PM_COUNTRY_ABBR[country.toLowerCase()];
+  return parts.slice(0, -1).join(", ") + ", " + (abbr || country);
+}
+/* Location + clinic chips pinned to one line (they shrink with an ellipsis
+   instead of wrapping); rendered as a single PMChipRows item. */
+function PMPlaceChips({
+  location,
+  clinic
+}) {
+  if (!location && !clinic) return null;
+  return /*#__PURE__*/React.createElement("span", {
+    className: "pm-chip-pair"
+  }, location && /*#__PURE__*/React.createElement("span", {
+    className: "pm-chip pin",
+    title: location
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:map-pin",
+    size: 16,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, pmShortLocation(location))), clinic && /*#__PURE__*/React.createElement("span", {
+    className: "pm-chip pin",
+    title: clinic
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:building-2",
+    size: 16,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, clinic)));
+}
+function PMChipRows({
+  children,
+  maxRows = 2,
+  trailing = null,
+  className = ""
+}) {
+  const items = React.Children.toArray(children).filter(Boolean);
+  const ref = React.useRef(null);
+  const [expanded, setExpanded] = useStatePM(false);
+  const [visible, setVisible] = useStatePM(items.length);
+  const key = items.length;
+  useEffectPM(() => {
+    setVisible(items.length);
+  }, [key]);
+  useEffectPM(() => {
+    const onResize = () => {
+      setVisible(items.length);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [key]);
+  React.useLayoutEffect(() => {
+    if (expanded) return;
+    const el = ref.current;
+    if (!el) return;
+    const measure = () => {
+      const kids = Array.from(el.children);
+      // item wrappers are display:contents (no box) — measure the pill inside
+      const tops = kids.map(k => (k.dataset.chipItem === "1" && k.firstElementChild ? k.firstElementChild : k).offsetTop);
+      // bucket into rows with a tolerance: pills of different heights sit a
+      // few px apart on the same centred line
+      const rows = [];
+      tops.slice().sort((a, b) => a - b).forEach(t => {
+        if (!rows.length || t - rows[rows.length - 1] > 8) rows.push(t);
+      });
+      if (rows.length <= maxRows) return;
+      const limit = rows[maxRows] - 8;
+      const fitItems = kids.filter((k, i) => k.dataset.chipItem === "1" && tops[i] < limit).length;
+      // leave one slot on the last allowed row for the "+N" pill
+      setVisible(v => Math.min(v, Math.max(0, fitItems - 1)));
+    };
+    measure();
+    // icons / fonts finish loading after first paint and widen the pills —
+    // re-measure whenever the strip's box changes (visible only ever shrinks)
+    let ro = null;
+    if (typeof ResizeObserver !== "undefined") {
+      ro = new ResizeObserver(() => measure());
+      ro.observe(el);
+    }
+    const t = setTimeout(measure, 400);
+    return () => {
+      if (ro) ro.disconnect();
+      clearTimeout(t);
+    };
+  }, [visible, expanded, key, maxRows]);
+  const shown = expanded ? items : items.slice(0, visible);
+  const hidden = items.length - shown.length;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-chiprow " + className,
+    ref: ref
+  }, shown.map((it, i) => /*#__PURE__*/React.createElement("span", {
+    className: "pm-chip-item",
+    "data-chip-item": "1",
+    key: it.key != null ? it.key : i
+  }, it)), hidden > 0 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-chip more",
+    "aria-label": "Show " + hidden + " more",
+    onClick: () => setExpanded(true)
+  }, "+", hidden), trailing);
+}
 function PMPost({
   p
 }) {
@@ -4463,6 +5454,83 @@ function PMProfessionalInfoMenu({
    what you share with them, a summarised recent-activity card, and their
    Professional Information behind the same enclosed menu used above.
    =========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   PMFollowedBy — Instagram-style social proof under the bio of someone
+   else's profile: three overlapping avatars + "Followed by a, b and N
+   others". The people are members Katy follows (mock pool below, minus the
+   profile's owner), picked deterministically per profile; N comes from
+   shared.mutualConnections. Names open that member's profile.
+   --------------------------------------------------------------------------- */
+const PM_FOLLOW_POOL = [{
+  name: "Dr Tim Pearce",
+  handle: "drtimpearce",
+  avatar: "assets/avatar-drtim.png"
+}, {
+  name: "Miranda Pearce",
+  handle: "mirandapearce",
+  avatar: "assets/avatar-miranda.jpg"
+}, {
+  name: "Priya Shah",
+  handle: "priyashah.aesthetics",
+  avatar: "assets/avatar-priya-shah.jpg"
+}, {
+  name: "Nurse Beth",
+  handle: "nursebeth",
+  avatar: "assets/avatar-nurse-beth.jpg"
+}, {
+  name: "Dr Amir Khan",
+  handle: "dramirkhan",
+  avatar: "assets/avatar-amir-khan.jpg"
+}, {
+  name: "Dr. Sarah Collins",
+  handle: "drsarahcollins",
+  avatar: "assets/avatar-sarah-collins.jpg"
+}, {
+  name: "Mark Ellis",
+  handle: "markellis.clinics",
+  avatar: "assets/avatar-mark-ellis.jpg"
+}];
+function PMFollowedBy({
+  user,
+  from
+}) {
+  const total = user.shared && user.shared.mutualConnections;
+  if (total == null || total < 1) return null;
+  const pool = PM_FOLLOW_POOL.filter(m => m.name !== user.name);
+  let h = 0;
+  for (let i = 0; i < user.name.length; i++) h = h * 31 + user.name.charCodeAt(i) >>> 0;
+  const start = h % pool.length;
+  const picks = [0, 1, 2].map(i => pool[(start + i) % pool.length]).slice(0, Math.min(3, total));
+  const named = picks.slice(0, 2);
+  const others = total - named.length;
+  const open = m => {
+    const PL = window.PFProfileLink;
+    const q = "?id=" + encodeURIComponent(PL ? PL.slug(m.name) : m.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")) + "&name=" + encodeURIComponent(m.name) + "&avatar=" + encodeURIComponent(m.avatar) + (from ? "&from=" + encodeURIComponent(from) : "");
+    goPM("ProfileMobile.html" + q);
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-followed"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-followed-avs",
+    "aria-hidden": "true"
+  }, picks.map(m => /*#__PURE__*/React.createElement("span", {
+    className: "pm-followed-av",
+    key: m.handle
+  }, /*#__PURE__*/React.createElement(DSPM.Avatar, {
+    name: m.name,
+    src: m.avatar,
+    size: 30
+  })))), /*#__PURE__*/React.createElement("p", {
+    className: "pm-followed-tx"
+  }, "Followed by ", named.map((m, i) => /*#__PURE__*/React.createElement(React.Fragment, {
+    key: m.handle
+  }, i > 0 && (others > 0 ? ", " : " and "), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-followed-nm",
+    onClick: () => open(m)
+  }, m.handle))), others > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, " and ", /*#__PURE__*/React.createElement("b", null, others, " ", others === 1 ? "other" : "others"))));
+}
 function OtherProfileTopBar({
   name,
   onBack,
@@ -4583,10 +5651,33 @@ function PMActivitySummaryCard({
     onClick: () => goPM("NewsfeedMobile.html")
   }, "View full activity"));
 }
+
+/* Tapping the message icon / Message button on someone else's profile opens
+   their DM thread directly (DirectMessage.html) instead of the Messages
+   overlay. Curated members (Dr Tim, Miranda…) resolve to their seeded thread
+   by name; everyone else gets a fresh thread built from the name/avatar/role
+   carried in the query. ?from= brings the DM's Back arrow home to this
+   profile, query intact. */
+function openDirectMessagePM(user) {
+  const q = new URLSearchParams();
+  const PL = window.PFProfileLink;
+  q.set("id", user.id || (PL && PL.slug ? PL.slug(user.name) : String(user.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")));
+  q.set("name", user.name);
+  if (user.avatar) q.set("avatar", user.avatar);
+  if (user.role) q.set("role", user.role);
+  try {
+    q.set("from", (window.location.pathname.split("/").pop() || "ProfileMobile.html") + (window.location.search || ""));
+  } catch (e) {
+    q.set("from", "ProfileMobile.html");
+  }
+  goPM("DirectMessage.html?" + q.toString());
+}
 function OtherProfileScreen({
-  user
+  user,
+  from
 }) {
-  const [msgOpen, setMsgOpen] = useStatePM(false);
+  const backTo = pmSafeReturnPM(from);
+  const activeTab = pmTabForPage(from);
   const [following, setFollowing] = useStatePM(false);
   const [avatarOpen, setAvatarOpen] = useStatePM(() => {
     try {
@@ -4602,6 +5693,7 @@ function OtherProfileScreen({
       return false;
     }
   });
+  const [shareOpen, setShareOpen] = useStatePM(false);
   const scrollRef = React.useRef(null);
   const {
     hidden: chromeHidden
@@ -4611,8 +5703,8 @@ function OtherProfileScreen({
     "data-screen-label": "Profile — " + user.name
   }, /*#__PURE__*/React.createElement(OtherProfileTopBar, {
     name: user.name,
-    onBack: () => goPM("NewsfeedMobile.html"),
-    onMessage: () => setMsgOpen(true)
+    onBack: () => goPM(backTo),
+    onMessage: () => openDirectMessagePM(user)
   }), avatarOpen && /*#__PURE__*/React.createElement(PMAvatarViewer, {
     user: user,
     following: following,
@@ -4621,11 +5713,24 @@ function OtherProfileScreen({
       setAvatarOpen(false);
       setQrOpen(true);
     },
+    onShare: () => {
+      setAvatarOpen(false);
+      setShareOpen(true);
+    },
     onClose: () => setAvatarOpen(false)
   }), qrOpen && /*#__PURE__*/React.createElement(PMQrShareScreen, {
     user: user,
     link: pmProfileLinkPM(user),
-    onClose: () => setQrOpen(false)
+    onClose: () => setQrOpen(false),
+    onShare: () => setShareOpen(true)
+  }), shareOpen && /*#__PURE__*/React.createElement(PMShareProfileSheet, {
+    user: user,
+    link: pmProfileLinkPM(user),
+    onClose: () => setShareOpen(false),
+    onQr: () => {
+      setShareOpen(false);
+      setQrOpen(true);
+    }
   }), /*#__PURE__*/React.createElement("div", {
     className: "pm-scroll",
     ref: scrollRef
@@ -4667,28 +5772,52 @@ function OtherProfileScreen({
     className: "pm-ig-name"
   }, /*#__PURE__*/React.createElement("span", {
     className: "nm"
-  }, user.name), /*#__PURE__*/React.createElement("span", {
-    className: "pn"
-  }, user.role), user.seals && /*#__PURE__*/React.createElement(DSPM.VerificationSeals, {
+  }, user.name), user.seals && /*#__PURE__*/React.createElement(DSPM.VerificationSeals, {
     seals: user.seals,
     size: 20
-  })), user.bio && /*#__PURE__*/React.createElement("div", {
+  })), (user.headline || user.flag || user.role || user.specialties && user.specialties.length || user.upcomingLive || user.bio) && /*#__PURE__*/React.createElement("div", {
     className: "pm-ig-bio"
-  }, /*#__PURE__*/React.createElement("p", null, user.bio)), /*#__PURE__*/React.createElement("div", {
-    className: "pm-ig-chips"
-  }, user.location && /*#__PURE__*/React.createElement("span", {
-    className: "pm-chip"
+  }, (user.headline || user.flag || user.role) && /*#__PURE__*/React.createElement("p", null, user.flag && /*#__PURE__*/React.createElement("span", {
+    className: "bi"
+  }, user.flag), " ", user.headline || user.role), user.specialties && user.specialties.length > 0 && /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
+    className: "bi"
+  }, "💉"), " ", user.specialties.join(" · ")), user.upcomingLive && /*#__PURE__*/React.createElement("p", {
+    className: "pm-ig-live"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "bi"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:map-pin",
-    size: 16,
-    color: "var(--brand-navy)"
-  }), user.location), user.clinic && /*#__PURE__*/React.createElement("span", {
-    className: "pm-chip"
+    name: "lucide:calendar",
+    size: 14,
+    color: "var(--text-primary)"
+  })), "Upcoming Live: ", /*#__PURE__*/React.createElement("b", null, user.upcomingLive)), user.bio && /*#__PURE__*/React.createElement("p", null, user.bio)), user.link && /*#__PURE__*/React.createElement("a", {
+    className: "pm-ig-link",
+    href: /^https?:/.test(user.link) ? user.link : "https://" + user.link,
+    target: "_blank",
+    rel: "noopener noreferrer"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:building-2",
-    size: 16,
-    color: "var(--brand-navy)"
-  }), user.clinic)), /*#__PURE__*/React.createElement("div", {
+    name: "lucide:link",
+    size: 17,
+    color: "var(--ai-purple)"
+  }), user.link.replace(/^https?:\/\//, "")), /*#__PURE__*/React.createElement(PMFollowedBy, {
+    user: user,
+    from: from
+  }), (user.location || user.clinic || user.banners && Object.keys(user.banners).length > 0) && /*#__PURE__*/React.createElement(PMChipRows, null, /*#__PURE__*/React.createElement(PMPlaceChips, {
+    key: "place",
+    location: user.location,
+    clinic: user.clinic
+  }), Object.keys(user.banners || {}).map(key => {
+    const it = pmBannerItem(key);
+    if (!it) return null;
+    /* Static chip: the handle isn't a verified account, so it never links out. */
+    return /*#__PURE__*/React.createElement("span", {
+      key: key,
+      className: "pm-banner static"
+    }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+      name: it.icon,
+      size: 17,
+      color: it.color
+    }), pmBannerText(key, user.banners));
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pm-ig-actions"
   }, /*#__PURE__*/React.createElement("button", {
     className: "pm-ig-btn" + (following ? "" : " navy"),
@@ -4699,14 +5828,20 @@ function OtherProfileScreen({
     color: "var(--text-heading)"
   }), "Following") : "Follow"), /*#__PURE__*/React.createElement("button", {
     className: "pm-ig-btn",
-    onClick: () => setMsgOpen(true)
+    onClick: () => openDirectMessagePM(user)
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:message-circle",
     size: 16,
     color: "var(--text-heading)"
-  }), "Message"))), /*#__PURE__*/React.createElement(PMSharedInfoCard, {
-    user: user
-  }), /*#__PURE__*/React.createElement(PMActivitySummaryCard, {
+  }), "Message"), /*#__PURE__*/React.createElement("button", {
+    className: "pm-ig-btn icon",
+    "aria-label": "Share profile",
+    onClick: () => setShareOpen(true)
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:share-2",
+    size: 20,
+    color: "var(--text-heading)"
+  })))), /*#__PURE__*/React.createElement(PMActivitySummaryCard, {
     user: user
   }), /*#__PURE__*/React.createElement(PMProfessionalInfoMenu, {
     services: user.services,
@@ -4715,10 +5850,8 @@ function OtherProfileScreen({
     licenses: user.licenses,
     languages: user.languages
   })), /*#__PURE__*/React.createElement(PMTabBar, {
-    compact: chromeHidden
-  }), /*#__PURE__*/React.createElement(MessagesPanelPM, {
-    open: msgOpen,
-    onClose: () => setMsgOpen(false)
+    compact: chromeHidden,
+    active: activeTab
   }));
 }
 function ProfileNotFoundScreen() {
@@ -4752,15 +5885,37 @@ function readProfileIdParamPM() {
     return {
       id: params.get("id"),
       name: params.get("name"),
-      avatar: params.get("avatar")
+      avatar: params.get("avatar"),
+      role: params.get("role"),
+      from: params.get("from")
     };
   } catch (e) {
     return {
       id: null,
       name: null,
-      avatar: null
+      avatar: null,
+      role: null,
+      from: null
     };
   }
+}
+
+/* Which footer tab the referring page (?from=<page.html?query>) belongs to. */
+function pmTabForPage(from) {
+  const page = String(from || "").split("?")[0].split("/").pop();
+  if (!page) return "Home";
+  if (/^CommunityMobile/i.test(page)) return "Community";
+  if (/^(LearningMobile|Lesson|CourseDetail|MyCourses|AllCourses|Module|SubModule|CourseCheckout|MyLearning)/i.test(page)) return "Learning";
+  if (/^Agent/i.test(page)) return "Agent";
+  if (/^(Rewards|Leaderboard|WaysToEarn|Badge|CheckInStreak|MyRewards|RedemptionSuccess|DailyGoal)/i.test(page)) return "Rewards";
+  if (/^Profile/i.test(page)) return "Profile";
+  return "Home";
+}
+/* Only ever go back to a page inside this app (relative *.html), never to an
+   arbitrary URL someone pasted into the query. */
+function pmSafeReturnPM(from) {
+  const f = String(from || "");
+  return /^[A-Za-z0-9 _-]+\.html(\?[^\s#]*)?$/.test(f) ? f : "NewsfeedMobile.html";
 }
 
 /* Fallback profile for the seeded post/comment authors across the Newsfeed
@@ -4771,21 +5926,72 @@ function readProfileIdParamPM() {
    education/licenses/languages, so PMProfessionalInfoMenu's own defaults —
    which fall back to the signed-in member's own info — never leak onto a
    stranger's profile. */
-function buildMinimalProfilePM(name, avatar) {
+function buildMinimalProfilePM(name, avatar, role) {
+  /* Deterministic per name so a member looks the same on every visit. */
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = h * 31 + name.charCodeAt(i) >>> 0;
+  const pick = (arr, n) => arr[(h >>> n) % arr.length];
+  const place = pick([["London, United Kingdom", "Harley Street Clinic", "🇬🇧"], ["Manchester, United Kingdom", "Northern Aesthetics", "🇬🇧"], ["Leeds, United Kingdom", "Skin & Tonic Clinic", "🇬🇧"], ["Dublin, Ireland", "Liffey Aesthetics", "🇮🇪"], ["Sydney, Australia", "Harbour Skin Clinic", "🇦🇺"], ["Toronto, Canada", "Lakeside Aesthetics", "🇨🇦"], ["Edinburgh, United Kingdom", "Old Town Aesthetics", "🇬🇧"], ["Glasgow, United Kingdom", "Clyde Clinic", "🇬🇧"]], 4);
+  const flag = place[2];
+  const specialties = pick([["Botox", "Fillers", "Lip Enhancement"], ["Anti-Wrinkle", "Skin Boosters", "Profhilo"], ["Lip Enhancement", "Cheek Contouring"], ["Dermal Fillers", "Jawline", "Chin"], ["Toxin", "Microneedling", "Skincare"], ["Full-Face Filler", "Tear Trough"]], 7);
+  const live = pick(["September 23, 2026", "October 1, 2026", "October 9, 2026", "October 21, 2026", null, null], 10);
+  const handle = name.toLowerCase().replace(/^(dr|mr|mrs|ms|miss|prof)\.?\s+/, "").replace(/[^a-z0-9]/g, "");
+  const first = name.split(" ").filter(w => !/^(dr|mr|mrs|ms|miss|prof)\.?$/i.test(w))[0] || name;
+  const num = (base, n) => (base + (h >>> n) % base).toLocaleString("en-GB");
   return {
     name,
     avatar: avatar || undefined,
-    role: "Profinity Community Member",
-    posts: "—",
-    followers: "—",
-    following: "—",
-    shared: {},
-    activity: {},
-    services: [],
-    experience: [],
+    role: role || "Aesthetic Practitioner",
+    seals: ["verified"],
+    flag,
+    headline: role || "Aesthetic Practitioner",
+    specialties,
+    upcomingLive: live,
+    link: handle + ".co.uk",
+    banners: {
+      instagram: handle,
+      facebook: name
+    },
+    bio: first + " is a PROfinity community member sharing cases, questions and wins with fellow practitioners.",
+    location: place[0],
+    clinic: place[1],
+    posts: num(40, 1),
+    followers: num(900, 3),
+    following: num(200, 5),
+    shared: {
+      mutualConnections: 3 + (h >>> 6) % 12,
+      community: pick(["Confidence Path", "Mastery Path", "Freedom Path"], 8),
+      courses: pick([[], ["Botox Foundations"], ["8D Lip Design"], ["Temple Filler", "Protox Course"]], 9)
+    },
+    activity: {
+      lastActive: pick(["Just now", "1h ago", "3h ago", "Yesterday"], 11),
+      highlights: [{
+        icon: "lucide:file-text",
+        text: "Posted in the community",
+        time: "This week"
+      }, {
+        icon: "lucide:thumbs-up",
+        text: "Liked one of your posts",
+        time: "2d"
+      }]
+    },
+    services: specialties.slice(0, 2).map(t => ({
+      ti: t,
+      su: "Career Academy: Dr Tim Pearce"
+    })),
+    experience: [{
+      ti: role || "Aesthetic Practitioner",
+      yrs: 3 + (h >>> 12) % 12 + " years",
+      org: place[1],
+      loc: place[0]
+    }],
     education: [],
-    licenses: [],
-    languages: []
+    licenses: pick([["Botox Foundations"], ["8D Lips Course"], ["Anatomy360", "Botox Foundations"], []], 13),
+    languages: [{
+      flag: "🇬🇧",
+      name: "English",
+      level: "Primary"
+    }]
   };
 }
 function useDeviceScalePM() {
@@ -4831,11 +6037,12 @@ function PMEditRow({
   placeholder,
   multiline,
   stack,
-  inputMode
+  inputMode,
+  className
 }) {
   const taRef = React.useRef(null);
   useAutoGrowPM(taRef, multiline ? value : null);
-  const cls = "pm-edit-row" + (options ? " pick" : "") + (multiline ? " multi" : "") + (stack ? " stack" : "");
+  const cls = "pm-edit-row" + (options ? " pick" : "") + (multiline ? " multi" : "") + (stack ? " stack" : "") + (className ? " " + className : "");
   return /*#__PURE__*/React.createElement("div", {
     className: cls
   }, /*#__PURE__*/React.createElement("span", {
@@ -4874,15 +6081,92 @@ function PMEditRow({
 }
 
 /* ---- Banners (Edit profile → Banners) ----
-   "On your profile": the connected social accounts shown as chips on the
-   profile, drag handle to reorder, × to remove. "Add to profile": the rest
-   of the accounts connected via "Connect your social profiles". */
+   Instagram-style: "On your profile" lists the banners shown under the bio
+   (drag handle to reorder, pencil on items with their own text, × to
+   remove); "Add to profile" lists everything else. Items that need text
+   (a handle, channel name, phone number) open a small sheet first. */
+function PMBannerValueSheet({
+  item,
+  initial,
+  onSave,
+  onClose
+}) {
+  const [val, setVal] = useStatePM(initial || "");
+  const inputRef = React.useRef(null);
+  React.useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        inputRef.current && inputRef.current.focus();
+      } catch (e) {}
+    }, 120);
+    return () => clearTimeout(t);
+  }, []);
+  const clean = val.trim();
+  function submit(e) {
+    e && e.preventDefault();
+    if (!clean) return;
+    onSave(clean);
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-overlay pm-bnv-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("form", {
+    className: "pm-sheet pm-bnv",
+    onClick: e => e.stopPropagation(),
+    onSubmit: submit
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-drag"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pm-bnv-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-bnv-ic"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: item.icon,
+    size: 26,
+    color: "var(--text-heading)"
+  })), /*#__PURE__*/React.createElement("h2", null, item.prompt || item.label)), /*#__PURE__*/React.createElement("div", {
+    className: "pm-bnv-field"
+  }, /*#__PURE__*/React.createElement("input", {
+    ref: inputRef,
+    type: "text",
+    value: val,
+    placeholder: item.placeholder || "",
+    maxLength: item.maxLength || 80,
+    inputMode: item.inputMode || "text",
+    autoCapitalize: item.key === "custom" ? "sentences" : "none",
+    autoCorrect: "off",
+    spellCheck: false,
+    onChange: e => setVal(e.target.value)
+  }), val && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-bnv-clear",
+    "aria-label": "Clear",
+    onClick: () => setVal("")
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:x",
+    size: 14,
+    color: "#fff"
+  }))), item.key === "custom" && /*#__PURE__*/React.createElement("p", {
+    className: "pm-bnv-hint"
+  }, "A short line that shows as a banner under your bio."), /*#__PURE__*/React.createElement("div", {
+    className: "pm-bnv-acts"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-bnv-cancel",
+    onClick: onClose
+  }, "Cancel"), /*#__PURE__*/React.createElement("button", {
+    type: "submit",
+    className: "pm-bnv-save",
+    disabled: !clean
+  }, initial ? "Save" : "Add"))));
+}
 function PMBannersScreen({
   onBack
 }) {
   const [banners, setBanners] = useStatePM(() => pmLoadBanners());
-  const [conn] = useStatePM(() => pmLoadSocialConnections());
+  const [conn, setConn] = useStatePM(() => pmLoadSocialConnections());
   const [dragKey, setDragKey] = useStatePM(null);
+  const [sheet, setSheet] = useStatePM(null); /* { key, mode: "add" | "edit" } */
   const listRef = React.useRef(null);
   const dragRef = React.useRef(null);
   function commit(next) {
@@ -4892,14 +6176,60 @@ function PMBannersScreen({
   function remove(key) {
     commit(banners.filter(k => k !== key));
   }
+  function saveValue(key, value) {
+    const next = {
+      ...pmLoadSocialConnections(),
+      [key]: value
+    };
+    pmSaveJSON(PM_SOCIAL_CONN_KEY, next);
+    setConn(next);
+  }
+  /* ?connect=instagram(&step=confirm) opens the connect flow straight away — demo / QA entry. */
+  const [connect, setConnect] = useStatePM(() => {
+    try {
+      const k = new URLSearchParams(window.location.search).get("connect");
+      return k && pmConnectNetwork(k) ? k : null;
+    } catch (e) {
+      return null;
+    }
+  }); /* banner key being connected via its app */
   function add(key) {
-    if (!banners.includes(key)) commit([...banners, key]);
+    const it = pmBannerItem(key);
+    if (!it || banners.includes(key)) return;
+    if (pmConnectNetwork(key)) {
+      setConnect(key);
+      return;
+    }
+    if (it.needsValue && !conn[key]) {
+      setSheet({
+        key,
+        mode: "add"
+      });
+      return;
+    }
+    commit([...banners, key]);
+  }
+  function onSheetSave(value) {
+    if (!sheet) return;
+    saveValue(sheet.key, value);
+    if (sheet.mode === "add" && !banners.includes(sheet.key)) commit([...banners, sheet.key]);else try {
+      window.dispatchEvent(new CustomEvent("pf-banners-changed"));
+    } catch (e) {}
+    setSheet(null);
+  }
+  function onConnected(value) {
+    if (!connect) return;
+    saveValue(connect, value);
+    if (!banners.includes(connect)) commit([...banners, connect]);else try {
+      window.dispatchEvent(new CustomEvent("pf-banners-changed"));
+    } catch (e) {}
+    setConnect(null);
   }
   function onHandleDown(e, key) {
     const row = e.currentTarget.closest(".pm-bn-row");
     if (!row) return;
     e.preventDefault();
-    const rowH = row.getBoundingClientRect().height || 64;
+    const rowH = row.getBoundingClientRect().height || 56;
     dragRef.current = {
       key,
       startY: e.clientY,
@@ -4935,9 +6265,8 @@ function PMBannersScreen({
     window.addEventListener("pointerup", up);
     window.addEventListener("pointercancel", up);
   }
-  const socialOf = key => PM_SOCIALS.find(s => s.key === key);
-  const addable = PM_SOCIALS.filter(s => conn[s.key] && !banners.includes(s.key));
-  const anyConnected = Object.keys(conn).length > 0;
+  const addable = PM_BANNER_ITEMS.filter(it => !banners.includes(it.key));
+  const sheetItem = sheet ? pmBannerItem(sheet.key) : null;
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-edit-screen pm-bn-screen",
     "data-screen-label": "Banners"
@@ -4951,7 +6280,7 @@ function PMBannersScreen({
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:chevron-left",
     size: 24,
-    color: "var(--text-heading)"
+    color: "var(--pm-bn-ink)"
   })), /*#__PURE__*/React.createElement("h1", null, "Banners"), /*#__PURE__*/React.createElement("span", {
     "aria-hidden": "true"
   })), /*#__PURE__*/React.createElement("div", {
@@ -4962,43 +6291,53 @@ function PMBannersScreen({
     className: "pm-bn-title"
   }, "On your profile"), banners.length === 0 && /*#__PURE__*/React.createElement("p", {
     className: "pm-bn-empty"
-  }, "Nothing on your profile yet. Add a connected account below and it shows up as a banner under your bio."), /*#__PURE__*/React.createElement("div", {
+  }, "Nothing on your profile yet. Add something below and it shows up under your bio."), /*#__PURE__*/React.createElement("div", {
     className: "pm-bn-list",
     ref: listRef
   }, banners.map(key => {
-    const s = socialOf(key);
-    if (!s) return null;
+    const it = pmBannerItem(key);
+    if (!it) return null;
     return /*#__PURE__*/React.createElement("div", {
       key: key,
       className: "pm-bn-row" + (dragKey === key ? " dragging" : "")
     }, /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "pm-bn-handle",
-      "aria-label": "Reorder " + s.label,
+      "aria-label": "Reorder " + it.label,
       onPointerDown: e => onHandleDown(e, key)
     }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
       name: "lucide:menu",
       size: 24,
-      color: "var(--gray-500)"
+      color: "var(--pm-bn-ink)"
     })), /*#__PURE__*/React.createElement("span", {
       className: "pm-bn-ic"
     }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-      name: s.icon,
+      name: it.icon,
       size: 26,
-      color: s.color
+      color: "var(--pm-bn-ink)"
     })), /*#__PURE__*/React.createElement("span", {
       className: "pm-bn-nm"
-    }, conn[key]), /*#__PURE__*/React.createElement("span", {
-      className: "pm-bn-sub"
-    }, s.label), /*#__PURE__*/React.createElement("button", {
+    }, pmBannerText(key, conn)), it.editable && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "pm-bn-x pm-bn-edit",
+      "aria-label": "Edit " + it.label,
+      onClick: () => setSheet({
+        key,
+        mode: "edit"
+      })
+    }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+      name: "lucide:pencil",
+      size: 22,
+      color: "var(--pm-bn-ink)"
+    })), /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "pm-bn-x",
-      "aria-label": "Remove " + s.label,
+      "aria-label": "Remove " + it.label,
       onClick: () => remove(key)
     }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
       name: "lucide:x",
       size: 24,
-      color: "var(--gray-600)"
+      color: "var(--pm-bn-ink)"
     })));
   }))), /*#__PURE__*/React.createElement("div", {
     className: "pm-bn-band"
@@ -5006,39 +6345,85 @@ function PMBannersScreen({
     className: "pm-bn-sec"
   }, /*#__PURE__*/React.createElement("h2", {
     className: "pm-bn-title"
-  }, "Add to profile"), !anyConnected && /*#__PURE__*/React.createElement("p", {
+  }, "Add to profile"), addable.length === 0 && /*#__PURE__*/React.createElement("p", {
     className: "pm-bn-empty"
-  }, "Connect your accounts first — open ", /*#__PURE__*/React.createElement("b", null, "Complete your profile → Connect your social profiles"), " on your profile page, then come back here to add them as banners."), anyConnected && addable.length === 0 && /*#__PURE__*/React.createElement("p", {
-    className: "pm-bn-empty"
-  }, "All your connected accounts are already on your profile."), /*#__PURE__*/React.createElement("div", {
+  }, "Everything is already on your profile."), /*#__PURE__*/React.createElement("div", {
     className: "pm-bn-list"
-  }, addable.map(s => /*#__PURE__*/React.createElement("button", {
-    key: s.key,
+  }, addable.map(it => /*#__PURE__*/React.createElement("button", {
+    key: it.key,
     type: "button",
     className: "pm-bn-row add",
-    onClick: () => add(s.key)
+    onClick: () => add(it.key)
   }, /*#__PURE__*/React.createElement("span", {
     className: "pm-bn-handle"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:circle-plus",
     size: 24,
-    color: "var(--gray-500)"
+    color: "var(--pm-bn-ink)"
   })), /*#__PURE__*/React.createElement("span", {
     className: "pm-bn-ic"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: s.icon,
+    name: it.icon,
     size: 26,
-    color: s.color
+    color: "var(--pm-bn-ink)"
   })), /*#__PURE__*/React.createElement("span", {
     className: "pm-bn-nm"
-  }, conn[s.key]), /*#__PURE__*/React.createElement("span", {
-    className: "pm-bn-sub"
-  }, s.label)))))));
+  }, it.label)))))), sheetItem && /*#__PURE__*/React.createElement(PMBannerValueSheet, {
+    item: sheetItem,
+    initial: sheet.mode === "edit" ? conn[sheet.key] || "" : conn[sheet.key] || "",
+    onSave: onSheetSave,
+    onClose: () => setSheet(null)
+  }), connect && pmBannerItem(connect) && /*#__PURE__*/React.createElement(PMConnectAccountScreen, {
+    item: pmBannerItem(connect),
+    conn: conn,
+    onDone: onConnected,
+    onClose: () => setConnect(null)
+  }));
+}
+
+/* One Personal Goal question: numbered badge (tick once answered), the
+   question as a heading, and a soft rounded answer box that grows as you
+   type. */
+function PMGoalField({
+  index,
+  question,
+  value,
+  onChange
+}) {
+  const taRef = React.useRef(null);
+  useAutoGrowPM(taRef, value);
+  const answered = !!(value && value.trim());
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-goal-card" + (answered ? " answered" : "")
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-goal-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-goal-num",
+    "aria-hidden": "true"
+  }, answered ? /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:check",
+    size: 15,
+    color: "#fff"
+  }) : index + 1), /*#__PURE__*/React.createElement("label", {
+    className: "pm-goal-q",
+    htmlFor: "pm-goal-" + index
+  }, question)), /*#__PURE__*/React.createElement("div", {
+    className: "pm-goal-box"
+  }, /*#__PURE__*/React.createElement("textarea", {
+    id: "pm-goal-" + index,
+    ref: taRef,
+    rows: 2,
+    className: "pm-goal-input",
+    value: value,
+    placeholder: "Write your answer…",
+    onChange: e => onChange(e.target.value)
+  })));
 }
 function PMEditProfileScreen({
   profile,
   onCancel,
-  onSave
+  onSave,
+  openBanners
 }) {
   const [form, setForm] = useStatePM(() => ({
     title: profile.title || PM_TITLE_OPTIONS[0],
@@ -5054,6 +6439,7 @@ function PMEditProfileScreen({
   const [goals, setGoals] = useStatePM(() => profile.personalGoal || PM_PERSONAL_GOAL_QUESTIONS.map(() => ""));
   const [avatar, setAvatar] = useStatePM(profile.avatar || "");
   const [bannersOpen, setBannersOpen] = useStatePM(() => {
+    if (openBanners) return true;
     try {
       return new URLSearchParams(window.location.search).get("banners") === "1";
     } catch (e) {
@@ -5160,6 +6546,7 @@ function PMEditProfileScreen({
   }), /*#__PURE__*/React.createElement(PMEditRow, {
     label: "Tell us about yourself",
     multiline: true,
+    className: "pm-edit-row-bio",
     value: form.bio,
     onChange: setField("bio"),
     placeholder: "Tell us about yourself"
@@ -5186,10 +6573,6 @@ function PMEditProfileScreen({
     inputMode: "numeric",
     value: form.yearsExperience,
     onChange: setField("yearsExperience")
-  }), /*#__PURE__*/React.createElement(PMEditRow, {
-    label: "Instagram Account",
-    value: form.instagram,
-    onChange: setField("instagram")
   })), /*#__PURE__*/React.createElement("section", {
     className: "pm-edit-group"
   }, /*#__PURE__*/React.createElement("button", {
@@ -5209,18 +6592,297 @@ function PMEditProfileScreen({
     size: 22,
     color: "var(--gray-450)"
   }))), /*#__PURE__*/React.createElement("section", {
-    className: "pm-edit-group"
+    className: "pm-edit-group pm-goalsec"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-goalsec-hd"
   }, /*#__PURE__*/React.createElement("h2", {
     className: "pm-edit-group-title"
-  }, "Personal Goal"), PM_PERSONAL_GOAL_QUESTIONS.map((q, i) => /*#__PURE__*/React.createElement(PMEditRow, {
+  }, "Personal Goal"), /*#__PURE__*/React.createElement("p", {
+    className: "pm-goalsec-sub"
+  }, "A few reflections so Ava can shape your goals around what matters to you.", /*#__PURE__*/React.createElement("span", {
+    className: "pm-goalsec-count"
+  }, goals.filter(g => g && g.trim()).length, " of ", PM_PERSONAL_GOAL_QUESTIONS.length, " answered"))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-goal-list"
+  }, PM_PERSONAL_GOAL_QUESTIONS.map((q, i) => /*#__PURE__*/React.createElement(PMGoalField, {
     key: i,
-    stack: true,
-    multiline: true,
-    label: q,
+    index: i,
+    question: q,
     value: goals[i],
-    onChange: v => setGoalAt(i, v),
-    placeholder: "Write your answer"
-  })))));
+    onChange: v => setGoalAt(i, v)
+  }))))));
+}
+
+/* ---- Share profile sheet (avatar viewer "Share" / ?share=1) ----
+   Bottom sheet: profile preview, "Share to Newsfeed" composer that drops a
+   post into the same pf-newsfeed-user-posts handoff CreatePostMobile uses,
+   then a rail of outside destinations (Messages, WhatsApp, Facebook, X,
+   LinkedIn, Email, Copy link, QR code, More = OS share sheet). */
+const PM_SHARE_TARGETS = [{
+  k: "messages",
+  label: "Messages",
+  icon: "lucide:message-circle",
+  color: "var(--brand-navy)",
+  bg: "var(--surface-sunken)"
+}, {
+  k: "copy",
+  label: "Copy link",
+  icon: "lucide:link",
+  color: "var(--brand-navy)",
+  bg: "var(--surface-sunken)"
+}, {
+  k: "whatsapp",
+  label: "WhatsApp",
+  icon: "mdi:whatsapp",
+  color: "#fff",
+  bg: "#25D366"
+}, {
+  k: "facebook",
+  label: "Facebook",
+  icon: "mdi:facebook",
+  color: "#fff",
+  bg: "#1877F2"
+}, {
+  k: "twitter",
+  label: "X",
+  icon: "mdi:twitter",
+  color: "#fff",
+  bg: "#111"
+}, {
+  k: "linkedin",
+  label: "LinkedIn",
+  icon: "mdi:linkedin",
+  color: "#fff",
+  bg: "#0A66C2"
+}, {
+  k: "email",
+  label: "Email",
+  icon: "lucide:mail",
+  color: "var(--brand-navy)",
+  bg: "var(--surface-sunken)"
+}, {
+  k: "qr",
+  label: "QR code",
+  icon: "lucide:qr-code",
+  color: "var(--brand-navy)",
+  bg: "var(--surface-sunken)"
+}, {
+  k: "more",
+  label: "More",
+  icon: "lucide:ellipsis",
+  color: "var(--brand-navy)",
+  bg: "var(--surface-sunken)"
+}];
+function PMShareProfileSheet({
+  user,
+  own,
+  link,
+  onClose,
+  onQr
+}) {
+  const [caption, setCaption] = useStatePM(() => own ? "Find me on PROfinity — follow along for aesthetics tips, lives and course notes." : "Check out " + user.name + " on PROfinity.");
+  const [toast, setToast] = useStatePM("");
+  const [posted, setPosted] = useStatePM(false);
+  const handle = pmHandleFor(user);
+  const shareText = (own ? "Follow " + PM_ME.name : user.name) + " on PROfinity " + handle;
+  useEffectPM(() => {
+    function onKey(e) {
+      if (e.key === "Escape") onClose();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  useEffectPM(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(""), 1600);
+    return () => clearTimeout(t);
+  }, [toast]);
+  function copyLink() {
+    const done = () => setToast("Link copied");
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, done);else done();
+  }
+  function openOut(url) {
+    try {
+      window.open(url, "_blank", "noopener");
+    } catch (e) {
+      window.location.href = url;
+    }
+  }
+  function go(k) {
+    const u = encodeURIComponent(link),
+      t = encodeURIComponent(shareText);
+    switch (k) {
+      case "messages":
+        goPM("Messages.html?share=" + u);
+        return;
+      case "copy":
+        copyLink();
+        return;
+      case "whatsapp":
+        openOut("https://wa.me/?text=" + t + "%20" + u);
+        return;
+      case "facebook":
+        openOut("https://www.facebook.com/sharer/sharer.php?u=" + u);
+        return;
+      case "twitter":
+        openOut("https://twitter.com/intent/tweet?text=" + t + "&url=" + u);
+        return;
+      case "linkedin":
+        openOut("https://www.linkedin.com/sharing/share-offsite/?url=" + u);
+        return;
+      case "email":
+        window.location.href = "mailto:?subject=" + t + "&body=" + t + "%0A" + u;
+        return;
+      case "qr":
+        onQr && onQr();
+        return;
+      case "more":
+        if (navigator.share) {
+          navigator.share({
+            title: user.name,
+            text: shareText,
+            url: link
+          }).catch(() => {});
+        } else copyLink();
+        return;
+      default:
+        return;
+    }
+  }
+  function postToFeed() {
+    if (posted) return;
+    const body = caption.trim();
+    const post = {
+      id: "u" + Date.now(),
+      author: {
+        name: PM_ME.name,
+        avatar: PM_ME.avatar,
+        seals: ["gb", "verified"]
+      },
+      time: "Just now",
+      hashtags: [],
+      media: [],
+      body,
+      bg: null,
+      video: null,
+      live: false,
+      sharedProfile: {
+        name: user.name,
+        role: user.role || "",
+        avatar: user.avatar || "",
+        handle,
+        link
+      },
+      likes: "0",
+      comments: "0",
+      shares: "0",
+      commentList: []
+    };
+    try {
+      const existing = JSON.parse(localStorage.getItem("pf-newsfeed-user-posts")) || [];
+      localStorage.setItem("pf-newsfeed-user-posts", JSON.stringify([post, ...existing]));
+      sessionStorage.setItem("pf-post-reward", JSON.stringify({
+        amount: 75,
+        label: "Shared a profile",
+        actionId: "evt_create_post",
+        ts: Date.now()
+      }));
+    } catch (e) {}
+    setPosted(true);
+    setToast("Shared to your Newsfeed");
+    setTimeout(() => goPM("NewsfeedMobile.html"), 700);
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-overlay pm-shp-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet pm-shp",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Share profile",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-sheet-drag"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pm-shp-hd"
+  }, /*#__PURE__*/React.createElement("h3", null, "Share profile"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-shp-x",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:x",
+    size: 20,
+    color: "var(--text-heading)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-shp-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-shp-card"
+  }, /*#__PURE__*/React.createElement(DSPM.Avatar, {
+    name: user.name,
+    src: user.avatar,
+    size: 52
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "pm-shp-card-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nm"
+  }, user.name), /*#__PURE__*/React.createElement("span", {
+    className: "rl"
+  }, user.role || "PROfinity member"), /*#__PURE__*/React.createElement("span", {
+    className: "hd"
+  }, handle)), /*#__PURE__*/React.createElement("span", {
+    className: "pm-shp-card-badge"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: "assets/profinity-icon-purple-gold.png",
+    alt: ""
+  }))), /*#__PURE__*/React.createElement("section", {
+    className: "pm-shp-feed"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-shp-feed-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-shp-feed-ic"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:rss",
+    size: 17,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Share to Newsfeed"), /*#__PURE__*/React.createElement("i", null, "Posts a link card to everyone who follows you"))), /*#__PURE__*/React.createElement("textarea", {
+    className: "pm-shp-caption",
+    rows: 2,
+    value: caption,
+    placeholder: "Say something about this profile…",
+    onChange: e => setCaption(e.target.value)
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-shp-post" + (posted ? " done" : ""),
+    onClick: postToFeed,
+    disabled: posted
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: posted ? "lucide:check" : "lucide:send",
+    size: 17,
+    color: "#fff"
+  }), posted ? "Shared" : "Post to Newsfeed")), /*#__PURE__*/React.createElement("div", {
+    className: "pm-shp-sec-lb"
+  }, "Share to"), /*#__PURE__*/React.createElement("div", {
+    className: "pm-shp-rail"
+  }, PM_SHARE_TARGETS.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.k,
+    type: "button",
+    className: "pm-shp-tile",
+    onClick: () => go(t.k)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-shp-tile-ic",
+    style: {
+      background: t.bg
+    }
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: t.icon,
+    size: 24,
+    color: t.color
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pm-shp-tile-lb"
+  }, t.label))))), toast && /*#__PURE__*/React.createElement("div", {
+    className: "pm-shp-toast",
+    role: "status"
+  }, toast)));
 }
 
 /* ---- Profile QR share screen (Share Profile / QR code action) ----
@@ -5249,7 +6911,7 @@ function pmBuildQrSvg(text, logoHref) {
   const dots = [];
   for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
     if (!qr.isDark(r, c) || inFinder(r, c) || inLogo(r, c)) continue;
-    dots.push(`<circle cx="${(c + .5) * cell}" cy="${(r + .5) * cell}" r="${cell * .42}"/>`);
+    dots.push(`<circle cx="${(c + .5) * cell}" cy="${(r + .5) * cell}" r="${cell * .45}"/>`);
   }
   const finder = (x, y) => {
     const o = cell * 0.5;
@@ -5269,7 +6931,8 @@ function pmHandleFor(user) {
 function PMQrShareScreen({
   user,
   link,
-  onClose
+  onClose,
+  onShare
 }) {
   const [toast, setToast] = useStatePM("");
   const svg = React.useMemo(() => pmBuildQrSvg(link, PM_QR_LOGO), [link]);
@@ -5291,6 +6954,11 @@ function PMQrShareScreen({
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, done);else done();
   }
   function share() {
+    /* Opens the Share profile sheet (Newsfeed + social destinations) over the QR card. */
+    if (onShare) {
+      onShare();
+      return;
+    }
     if (navigator.share) {
       navigator.share({
         title: user.name,
@@ -5334,7 +7002,7 @@ function PMQrShareScreen({
       ctx.fillRect(0, 0, cv.width, cv.height);
       ctx.drawImage(img, 90, 60, S - 180, S - 180);
       ctx.fillStyle = "#111";
-      ctx.font = "600 64px Poppins, system-ui, sans-serif";
+      ctx.font = "600 48px Poppins, system-ui, sans-serif";
       ctx.textAlign = "center";
       ctx.fillText(handle.toUpperCase(), S / 2, S + 60);
       URL.revokeObjectURL(url);
@@ -5365,17 +7033,13 @@ function PMQrShareScreen({
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:x",
     size: 26,
-    color: "var(--text-heading)"
-  })), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pm-qrs-round",
-    "aria-label": "Scan a QR code",
-    onClick: () => setToast("Scanner opens the camera on device")
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:scan-qr-code",
-    size: 26,
-    color: "var(--text-heading)"
-  }))), /*#__PURE__*/React.createElement("div", {
+    color: "var(--pm-qr-ink)"
+  })), /*#__PURE__*/React.createElement("h2", {
+    className: "pm-qrs-title"
+  }, "Share Profile"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-qrs-round pm-qrs-spacer",
+    "aria-hidden": "true"
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pm-qrs-mid"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-qrs-card"
@@ -5397,7 +7061,7 @@ function PMQrShareScreen({
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:share",
     size: 28,
-    color: "var(--text-heading)"
+    color: "var(--pm-qr-ink)"
   }), /*#__PURE__*/React.createElement("span", null, "Share profile")), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-qrs-tile",
@@ -5405,7 +7069,7 @@ function PMQrShareScreen({
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:link",
     size: 28,
-    color: "var(--text-heading)"
+    color: "var(--pm-qr-ink)"
   }), /*#__PURE__*/React.createElement("span", null, "Copy link")), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-qrs-tile",
@@ -5413,7 +7077,7 @@ function PMQrShareScreen({
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:download",
     size: 28,
-    color: "var(--text-heading)"
+    color: "var(--pm-qr-ink)"
   }), /*#__PURE__*/React.createElement("span", null, "Download")))), toast && /*#__PURE__*/React.createElement("div", {
     className: "pm-avv-toast pm-qrs-toast",
     role: "status"
@@ -5443,6 +7107,7 @@ function PMAvatarViewer({
   onToggleFollow,
   onChangeAvatar,
   onQr,
+  onShare,
   onClose
 }) {
   const [toast, setToast] = useStatePM("");
@@ -5465,6 +7130,10 @@ function PMAvatarViewer({
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, done);else done();
   }
   function share() {
+    if (onShare) {
+      onShare();
+      return;
+    }
     if (navigator.share) {
       navigator.share({
         title: user.name,
@@ -5590,6 +7259,7 @@ function PMScreen() {
       return false;
     }
   });
+  const [editBanners, setEditBanners] = useStatePM(false);
   const [avatarOpen, setAvatarOpen] = useStatePM(() => {
     try {
       return new URLSearchParams(window.location.search).get("avatar") === "1";
@@ -5600,6 +7270,13 @@ function PMScreen() {
   const [qrOpen, setQrOpen] = useStatePM(() => {
     try {
       return new URLSearchParams(window.location.search).get("qr") === "1";
+    } catch (e) {
+      return false;
+    }
+  });
+  const [shareOpen, setShareOpen] = useStatePM(() => {
+    try {
+      return new URLSearchParams(window.location.search).get("share") === "1";
     } catch (e) {
       return false;
     }
@@ -5664,8 +7341,15 @@ function PMScreen() {
   if (editOpen) {
     return /*#__PURE__*/React.createElement(PMEditProfileScreen, {
       profile: profile,
-      onCancel: () => setEditOpen(false),
-      onSave: saveProfileEdits
+      openBanners: editBanners,
+      onCancel: () => {
+        setEditOpen(false);
+        setEditBanners(false);
+      },
+      onSave: u => {
+        saveProfileEdits(u);
+        setEditBanners(false);
+      }
     });
   }
   return /*#__PURE__*/React.createElement("div", {
@@ -5682,6 +7366,10 @@ function PMScreen() {
       setAvatarOpen(false);
       setQrOpen(true);
     },
+    onShare: () => {
+      setAvatarOpen(false);
+      setShareOpen(true);
+    },
     onChangeAvatar: src => {
       setProfile(prev => ({
         ...prev,
@@ -5691,7 +7379,17 @@ function PMScreen() {
   }), qrOpen && /*#__PURE__*/React.createElement(PMQrShareScreen, {
     user: m,
     link: pmProfileLinkPM(null),
-    onClose: () => setQrOpen(false)
+    onClose: () => setQrOpen(false),
+    onShare: () => setShareOpen(true)
+  }), shareOpen && /*#__PURE__*/React.createElement(PMShareProfileSheet, {
+    user: m,
+    own: true,
+    link: pmProfileLinkPM(null),
+    onClose: () => setShareOpen(false),
+    onQr: () => {
+      setShareOpen(false);
+      setQrOpen(true);
+    }
   }), /*#__PURE__*/React.createElement("div", {
     className: "pm-scroll",
     ref: scrollRef
@@ -5778,43 +7476,36 @@ function PMScreen() {
     name: "lucide:link",
     size: 17,
     color: "var(--ai-purple)"
-  }), "allcaremedical.co.uk"), banners.length > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "pm-ig-banners"
-  }, banners.map(key => {
-    const s = PM_SOCIALS.find(x => x.key === key);
-    if (!s) return null;
-    return /*#__PURE__*/React.createElement("a", {
-      key: key,
-      className: "pm-banner",
-      href: pmSocialUrl(key, socialConn[key]),
-      target: "_blank",
-      rel: "noopener noreferrer"
+  }), "allcaremedical.co.uk"), /*#__PURE__*/React.createElement(PMChipRows, {
+    trailing: /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "pm-chip add",
+      onClick: () => {
+        setEditBanners(true);
+        setEditOpen(true);
+      }
     }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-      name: s.icon,
+      name: "lucide:plus",
+      size: 16,
+      color: "var(--gray-500)"
+    }), "Add")
+  }, /*#__PURE__*/React.createElement(PMPlaceChips, {
+    key: "place",
+    location: m.location,
+    clinic: m.clinic
+  }), banners.map(key => {
+    const it = pmBannerItem(key);
+    if (!it) return null;
+    /* Static chip: the handle isn't a verified account, so it never links out. */
+    return /*#__PURE__*/React.createElement("span", {
+      key: key,
+      className: "pm-banner static"
+    }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+      name: it.icon,
       size: 17,
-      color: s.color
-    }), socialConn[key]);
+      color: it.color
+    }), pmBannerText(key, socialConn));
   })), /*#__PURE__*/React.createElement("div", {
-    className: "pm-ig-chips"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-chip"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:map-pin",
-    size: 16,
-    color: "var(--brand-navy)"
-  }), m.location), /*#__PURE__*/React.createElement("span", {
-    className: "pm-chip"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:building-2",
-    size: 16,
-    color: "var(--brand-navy)"
-  }), m.clinic), /*#__PURE__*/React.createElement("span", {
-    className: "pm-chip add"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:plus",
-    size: 16,
-    color: "var(--gray-500)"
-  }), "Add")), /*#__PURE__*/React.createElement("div", {
     className: "pm-ig-actions"
   }, /*#__PURE__*/React.createElement("button", {
     className: "pm-ig-btn",
@@ -5862,11 +7553,14 @@ function ProfileMobileApp() {
   const {
     id: idParam,
     name: nameParam,
-    avatar: avatarParam
+    avatar: avatarParam,
+    role: roleParam,
+    from: fromParam
   } = readProfileIdParamPM();
-  const otherUser = idParam ? PM_OTHER_USERS[idParam] || (nameParam ? buildMinimalProfilePM(nameParam, avatarParam) : null) : null;
+  const otherUser = idParam ? PM_OTHER_USERS[idParam] || (nameParam ? buildMinimalProfilePM(nameParam, avatarParam, roleParam) : null) : null;
   const content = idParam ? otherUser ? /*#__PURE__*/React.createElement(OtherProfileScreen, {
-    user: otherUser
+    user: otherUser,
+    from: fromParam
   }) : /*#__PURE__*/React.createElement(ProfileNotFoundScreen, null) : /*#__PURE__*/React.createElement(PMScreen, null);
   if (mobile) {
     return /*#__PURE__*/React.createElement("div", {

@@ -12,6 +12,12 @@ const DSLB = window.ProfinityDesignSystem_c2b5cc;
 const PF_LB = window.PFLoyalty;
 
 function goLB(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
+/* Member → profile links (profile-link.js); inert pass-through if the script is absent. */
+const ProfileLinkLB = (window.PFProfileLink && window.PFProfileLink.Link) || function ({ children }) { return children; };
+function openProfileLB(a) { return !!(window.PFProfileLink && window.PFProfileLink.open(a)); }
+/* Leaderboard rows label the signed-in member "Katy", so map her back to the
+   full name profile-link.js recognises as "me" (→ her own profile page). */
+function lbAuthor(r) { return r.isKaty ? { name: (window.PFProfileLink && window.PFProfileLink.ME) || "Katy Wilson", avatar: r.avatar } : r; }
 
 const PF_LG = window.PFLeague;
 
@@ -161,10 +167,10 @@ function LBPodium({ rows, prizeFor }) {
           <span className="lb-pod-crown">
             <LBLottie src={LB_MEDAL[r.rank]} size={r.rank === 1 ? 70 : 56} />
           </span>
-          <DSLB.Avatar name={r.name} src={r.avatar} size={r.rank === 1 ? 62 : 52}
-            style={LB_RANK_AV[r.rank] ? { flex: "none", background: LB_RANK_AV[r.rank] } : { flex: "none" }} />
+          <ProfileLinkLB author={lbAuthor(r)} className="pf-prof-av"><DSLB.Avatar name={r.name} src={r.avatar} size={r.rank === 1 ? 62 : 52}
+            style={LB_RANK_AV[r.rank] ? { flex: "none", background: LB_RANK_AV[r.rank] } : { flex: "none" }} /></ProfileLinkLB>
           <span className="lb-pod-rank">#{r.rank}</span>
-          <span className="lb-pod-name">{r.name}{r.isKaty ? " (You)" : ""}</span>
+          <span className="lb-pod-name"><ProfileLinkLB author={lbAuthor(r)} className="pf-prof-nm">{r.name}{r.isKaty ? " (You)" : ""}</ProfileLinkLB></span>
           <span className="lb-pod-pts">{PF_LB.formatNumber(r.points)} pts</span>
           {prizeFor(r.rank) && <span className="lb-pod-prize">{prizeFor(r.rank)}</span>}
         </div>
@@ -182,10 +188,10 @@ function LBRow({ r, meRef, prizeFor }) {
         <span className={"lb-row-medal r" + r.rank} aria-hidden="true">
           <LBLottie src={LB_MEDAL[r.rank]} size={44} />
         </span>}
-      <DSLB.Avatar name={r.name} src={r.avatar} size={38}
-        style={r.isKaty ? { flex: "none", background: "linear-gradient(135deg,#FDBF38,#F39E3D)" } : { flex: "none" }} />
+      <ProfileLinkLB author={lbAuthor(r)} className="pf-prof-av"><DSLB.Avatar name={r.name} src={r.avatar} size={38}
+        style={r.isKaty ? { flex: "none", background: "linear-gradient(135deg,#FDBF38,#F39E3D)" } : { flex: "none" }} /></ProfileLinkLB>
       <span className="tx">
-        <b>{r.name}{r.isKaty ? " (You)" : ""}</b>
+        <b><ProfileLinkLB author={lbAuthor(r)} className="pf-prof-nm">{r.name}{r.isKaty ? " (You)" : ""}</ProfileLinkLB></b>
         {prizeFor(r.rank) && <i>{prizeFor(r.rank)}</i>}
       </span>
       <span className="pts">{PF_LB.formatNumber(r.points)}</span>

@@ -16,6 +16,15 @@ function goLS(url) {
     window.location.href = u;
   })(url);
 }
+/* Member → profile links (profile-link.js); inert pass-through if the script is absent. */
+const ProfileLinkLS = window.PFProfileLink && window.PFProfileLink.Link || function ({
+  children
+}) {
+  return children;
+};
+function openProfileLS(a) {
+  return !!(window.PFProfileLink && window.PFProfileLink.open(a));
+}
 function useDeviceScaleLS() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
   const [scale, setScale] = useStateLS(calc);
@@ -660,15 +669,21 @@ function LSCommentRow({
   const [replying, setReplying] = useStateLS(false);
   return /*#__PURE__*/React.createElement("div", {
     className: "ls-cmt-row"
+  }, /*#__PURE__*/React.createElement(ProfileLinkLS, {
+    author: c.author,
+    className: "pf-prof-av"
   }, /*#__PURE__*/React.createElement(DSLS.Avatar, {
     name: c.author.name,
     src: c.author.avatar,
     size: 36
-  }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "ls-cmt-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "ls-cmt-name"
-  }, c.author.name), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(ProfileLinkLS, {
+    author: c.author,
+    className: "pf-prof-nm"
+  }, c.author.name)), /*#__PURE__*/React.createElement("div", {
     className: "ls-cmt-time"
   }, c.time), /*#__PURE__*/React.createElement("div", {
     className: "ls-cmt-text"
@@ -685,15 +700,21 @@ function LSCommentRow({
   }, c.replies.map((r, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     className: "ls-cmt-reply"
+  }, /*#__PURE__*/React.createElement(ProfileLinkLS, {
+    author: r.author,
+    className: "pf-prof-av"
   }, /*#__PURE__*/React.createElement(DSLS.Avatar, {
     name: r.author.name,
     src: r.author.avatar,
     size: 28
-  }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "ls-cmt-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "ls-cmt-name"
-  }, r.author.name), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(ProfileLinkLS, {
+    author: r.author,
+    className: "pf-prof-nm"
+  }, r.author.name)), /*#__PURE__*/React.createElement("div", {
     className: "ls-cmt-time"
   }, r.time), /*#__PURE__*/React.createElement("div", {
     className: "ls-cmt-text"

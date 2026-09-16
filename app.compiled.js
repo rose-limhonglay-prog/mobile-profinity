@@ -324,6 +324,46 @@ const {
   PostActions
 } = DS;
 
+/* ---- member → profile links (profile-link.js) -----------------------------
+   Every avatar / author name in the feed opens that member's profile page.
+   <ProfileLink author={a} className="pf-prof-av|pf-prof-nm"> wraps the ones
+   we render ourselves; usePostCardAuthorLink() reaches into the DS PostCard
+   header (which has no author-click prop) and binds the same behaviour to
+   its avatar + name nodes. Both degrade to inert markup if the script isn't
+   on the page. */
+const ProfileLink = window.PFProfileLink && window.PFProfileLink.Link || function ({
+  children
+}) {
+  return children;
+};
+function usePostCardAuthorLink(ref, author) {
+  useEffect(() => {
+    const PL = window.PFProfileLink;
+    const wrap = ref && ref.current;
+    if (!PL || !wrap || !author) return;
+    // PostCard's root is the only class-less direct child of .post-wrap
+    // (ChannelContext before it is .chx); header row = its first child.
+    const root = wrap.querySelector(":scope > div:not([class])");
+    const hdr = root && root.firstElementChild;
+    if (!hdr) return;
+    const av = hdr.children[0];
+    const col = hdr.children[1];
+    const nm = col && col.children[0] && col.children[0].children[0];
+    const offs = [];
+    if (av) {
+      av.classList.add("pf-prof-av");
+      offs.push(PL.bind(av, author));
+    }
+    if (nm) {
+      nm.classList.add("pf-prof-nm");
+      offs.push(PL.bind(nm, author));
+    }
+    return () => {
+      offs.forEach(f => f());
+    };
+  }, [ref, author && author.name, author && author.avatar]);
+}
+
 /* ---- real on-brand imagery (from the Profinity Design System assets) ----- */
 const IMG = {
   /* clinic-toxin-guide.png is a truncated export (cut at 192 KiB, only the
@@ -8825,15 +8865,21 @@ function CommentsSheet({
     color: "var(--text-primary)"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "cmtsheet-post"
+  }, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: post.author,
+    className: "pf-prof-av"
   }, /*#__PURE__*/React.createElement(Avatar, {
     name: post.author.name,
     src: post.author.avatar,
     size: 40
-  }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "cmtsheet-post-tx"
   }, /*#__PURE__*/React.createElement("div", {
     className: "nm"
-  }, post.author.name, post.author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+  }, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: post.author,
+    className: "pf-prof-nm"
+  }, post.author.name), post.author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
     seals: post.author.seals,
     size: 14,
     gap: 3
@@ -8844,11 +8890,14 @@ function CommentsSheet({
   }, comments.map((c, i) => /*#__PURE__*/React.createElement("div", {
     key: c._id,
     className: "cmtsheet-item"
+  }, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: c.author,
+    className: "pf-prof-av"
   }, /*#__PURE__*/React.createElement(Avatar, {
     name: c.author.name,
     src: c.author.avatar,
     size: 36
-  }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "cmtsheet-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "cmtsheet-bubble"
@@ -8856,7 +8905,10 @@ function CommentsSheet({
     className: "row"
   }, /*#__PURE__*/React.createElement("span", {
     className: "nm"
-  }, c.author.name, c.author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+  }, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: c.author,
+    className: "pf-prof-nm"
+  }, c.author.name), c.author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
     seals: c.author.seals,
     size: 14,
     gap: 3
@@ -8876,11 +8928,14 @@ function CommentsSheet({
   })), (c.replies || []).map((rep, j) => /*#__PURE__*/React.createElement("div", {
     key: j,
     className: "cmtsheet-item reply"
+  }, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: rep.author,
+    className: "pf-prof-av"
   }, /*#__PURE__*/React.createElement(Avatar, {
     name: rep.author.name,
     src: rep.author.avatar,
     size: 30
-  }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "cmtsheet-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "cmtsheet-bubble"
@@ -8888,7 +8943,10 @@ function CommentsSheet({
     className: "row"
   }, /*#__PURE__*/React.createElement("span", {
     className: "nm"
-  }, rep.author.name, rep.author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+  }, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: rep.author,
+    className: "pf-prof-nm"
+  }, rep.author.name), rep.author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
     seals: rep.author.seals,
     size: 14,
     gap: 3
@@ -10404,17 +10462,23 @@ function InlineBubbleThread({
     isReply
   }) => /*#__PURE__*/React.createElement("div", {
     className: "bub-row" + (isReply ? " reply" : "")
+  }, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: c.author,
+    className: "pf-prof-av"
   }, /*#__PURE__*/React.createElement(Avatar, {
     name: c.author.name,
     src: c.author.avatar,
     size: isReply ? 34 : 40
-  }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "bub-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "bub"
   }, /*#__PURE__*/React.createElement("div", {
     className: "bub-name"
-  }, c.author.name), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: c.author,
+    className: "pf-prof-nm"
+  }, c.author.name)), /*#__PURE__*/React.createElement("div", {
     className: "bub-tx"
   }, c.text)), /*#__PURE__*/React.createElement("div", {
     className: "bub-acts"
@@ -10971,6 +11035,36 @@ const SHARE_DESTINATIONS = [{
   icon: "lucide:rocket",
   tier: 3
 }];
+/* Link card for a profile shared to the feed from ProfileMobile's "Share
+   Profile" sheet (post.sharedProfile = { name, role, avatar, handle, link }). */
+function SharedProfileCard({
+  profile
+}) {
+  const go = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    (window.pfGo || (u => {
+      window.location.href = u;
+    }))(profile.link);
+  };
+  return /*#__PURE__*/React.createElement("a", {
+    className: "pf-shared-profile",
+    href: profile.link,
+    onClick: go
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: profile.name,
+    src: profile.avatar,
+    size: 48
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pf-shared-profile-tx"
+  }, /*#__PURE__*/React.createElement("b", null, profile.name), profile.role && /*#__PURE__*/React.createElement("i", null, profile.role), /*#__PURE__*/React.createElement("u", null, profile.handle, " · PROfinity")), /*#__PURE__*/React.createElement("span", {
+    className: "pf-shared-profile-cta"
+  }, "View profile", /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 15,
+    color: "var(--brand-navy)"
+  })));
+}
 function ShareSheet({
   post,
   onClose,
@@ -11673,6 +11767,7 @@ function FeedPost({
   onAddReply
 }) {
   const ref = useRef(null);
+  usePostCardAuthorLink(ref, post.author);
   const [composerOpen, setComposerOpen] = useState(false);
   const [replyFor, setReplyFor] = useState(null);
   const [likesOpen, setLikesOpen] = useState(false);
@@ -11854,7 +11949,9 @@ function FeedPost({
       className: "pf-doc-inset"
     }, /*#__PURE__*/React.createElement(DocAttachment, {
       doc: post.document
-    })), isReel && /*#__PURE__*/React.createElement(ReelActionsRow, {
+    })), post.sharedProfile && /*#__PURE__*/React.createElement(SharedProfileCard, {
+      profile: post.sharedProfile
+    }), isReel && /*#__PURE__*/React.createElement(ReelActionsRow, {
       likes: st.likes,
       comments: st.commentsCount,
       shares: st.shares,
@@ -12084,15 +12181,21 @@ function TeaserPost({
     className: "pf-teaser-activity"
   }, /*#__PURE__*/React.createElement("strong", null, author.name), " commented in course ", /*#__PURE__*/React.createElement("strong", null, COURSE_NAMES[post.course] || "the course")), /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-head"
+  }, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: author,
+    className: "pf-prof-av"
   }, /*#__PURE__*/React.createElement(Avatar, {
     name: author.name,
     src: author.avatar,
     size: 44
-  }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-head-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-head-name"
-  }, /*#__PURE__*/React.createElement("span", null, author.name), author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: author,
+    className: "pf-prof-nm"
+  }, author.name)), author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
     seals: author.seals,
     size: 16
   })), /*#__PURE__*/React.createElement("div", {
@@ -12149,15 +12252,21 @@ function FeedEventCard({
     }
   }, author && /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-head"
+  }, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: author,
+    className: "pf-prof-av"
   }, /*#__PURE__*/React.createElement(Avatar, {
     name: author.name,
     src: author.avatar,
     size: 44
-  }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-head-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-head-name"
-  }, /*#__PURE__*/React.createElement("span", null, author.name), author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: author,
+    className: "pf-prof-nm"
+  }, author.name)), author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
     seals: author.seals,
     size: 16
   })), post.time && /*#__PURE__*/React.createElement("div", {
@@ -12188,15 +12297,21 @@ function EventRegPostCard({
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-head"
+  }, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: author,
+    className: "pf-prof-av"
   }, /*#__PURE__*/React.createElement(Avatar, {
     name: author.name,
     src: author.avatar,
     size: 44
-  }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-head-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-head-name"
-  }, /*#__PURE__*/React.createElement("span", null, author.name), author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: author,
+    className: "pf-prof-nm"
+  }, author.name)), author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
     seals: author.seals,
     size: 16
   })), /*#__PURE__*/React.createElement("div", {
@@ -12451,15 +12566,21 @@ function CourseCommentCard({
     className: "pf-teaser-activity"
   }, /*#__PURE__*/React.createElement("strong", null, post.author.name), " commented in course ", /*#__PURE__*/React.createElement("strong", null, COURSE_NAMES[post.course] || "the course")), /*#__PURE__*/React.createElement("div", {
     className: "pf-ccard-head"
+  }, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: post.author,
+    className: "pf-prof-av"
   }, /*#__PURE__*/React.createElement(Avatar, {
     name: post.author.name,
     src: post.author.avatar,
     size: 44
-  }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pf-ccard-head-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pf-ccard-head-name"
-  }, /*#__PURE__*/React.createElement("span", null, post.author.name), post.author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(ProfileLink, {
+    author: post.author,
+    className: "pf-prof-nm"
+  }, post.author.name)), post.author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
     seals: post.author.seals,
     size: 16
   })), /*#__PURE__*/React.createElement("div", {

@@ -20,6 +20,23 @@ function goLB(url) {
     window.location.href = u;
   })(url);
 }
+/* Member → profile links (profile-link.js); inert pass-through if the script is absent. */
+const ProfileLinkLB = window.PFProfileLink && window.PFProfileLink.Link || function ({
+  children
+}) {
+  return children;
+};
+function openProfileLB(a) {
+  return !!(window.PFProfileLink && window.PFProfileLink.open(a));
+}
+/* Leaderboard rows label the signed-in member "Katy", so map her back to the
+   full name profile-link.js recognises as "me" (→ her own profile page). */
+function lbAuthor(r) {
+  return r.isKaty ? {
+    name: window.PFProfileLink && window.PFProfileLink.ME || "Katy Wilson",
+    avatar: r.avatar
+  } : r;
+}
 const PF_LG = window.PFLeague;
 
 /* per-league mock fields live in league-engine.js (shared with Profile + Dashboard) */
@@ -264,7 +281,10 @@ function LBPodium({
   }, /*#__PURE__*/React.createElement(LBLottie, {
     src: LB_MEDAL[r.rank],
     size: r.rank === 1 ? 70 : 56
-  })), /*#__PURE__*/React.createElement(DSLB.Avatar, {
+  })), /*#__PURE__*/React.createElement(ProfileLinkLB, {
+    author: lbAuthor(r),
+    className: "pf-prof-av"
+  }, /*#__PURE__*/React.createElement(DSLB.Avatar, {
     name: r.name,
     src: r.avatar,
     size: r.rank === 1 ? 62 : 52,
@@ -274,11 +294,14 @@ function LBPodium({
     } : {
       flex: "none"
     }
-  }), /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     className: "lb-pod-rank"
   }, "#", r.rank), /*#__PURE__*/React.createElement("span", {
     className: "lb-pod-name"
-  }, r.name, r.isKaty ? " (You)" : ""), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement(ProfileLinkLB, {
+    author: lbAuthor(r),
+    className: "pf-prof-nm"
+  }, r.name, r.isKaty ? " (You)" : "")), /*#__PURE__*/React.createElement("span", {
     className: "lb-pod-pts"
   }, PF_LB.formatNumber(r.points), " pts"), prizeFor(r.rank) && /*#__PURE__*/React.createElement("span", {
     className: "lb-pod-prize"
@@ -301,7 +324,10 @@ function LBRow({
   }, /*#__PURE__*/React.createElement(LBLottie, {
     src: LB_MEDAL[r.rank],
     size: 44
-  })), /*#__PURE__*/React.createElement(DSLB.Avatar, {
+  })), /*#__PURE__*/React.createElement(ProfileLinkLB, {
+    author: lbAuthor(r),
+    className: "pf-prof-av"
+  }, /*#__PURE__*/React.createElement(DSLB.Avatar, {
     name: r.name,
     src: r.avatar,
     size: 38,
@@ -311,9 +337,12 @@ function LBRow({
     } : {
       flex: "none"
     }
-  }), /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, r.name, r.isKaty ? " (You)" : ""), prizeFor(r.rank) && /*#__PURE__*/React.createElement("i", null, prizeFor(r.rank))), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("b", null, /*#__PURE__*/React.createElement(ProfileLinkLB, {
+    author: lbAuthor(r),
+    className: "pf-prof-nm"
+  }, r.name, r.isKaty ? " (You)" : "")), prizeFor(r.rank) && /*#__PURE__*/React.createElement("i", null, prizeFor(r.rank))), /*#__PURE__*/React.createElement("span", {
     className: "pts"
   }, PF_LB.formatNumber(r.points)), /*#__PURE__*/React.createElement("span", {
     className: "tr",

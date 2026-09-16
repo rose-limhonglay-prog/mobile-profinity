@@ -120,6 +120,34 @@ const {
   Card, Avatar, Button, Icon, IconifyIcon, VerificationSeals, StatGroup, CommentItem, PostActions
 } = DS;
 
+/* ---- member → profile links (profile-link.js) -----------------------------
+   Every avatar / author name in the feed opens that member's profile page.
+   <ProfileLink author={a} className="pf-prof-av|pf-prof-nm"> wraps the ones
+   we render ourselves; usePostCardAuthorLink() reaches into the DS PostCard
+   header (which has no author-click prop) and binds the same behaviour to
+   its avatar + name nodes. Both degrade to inert markup if the script isn't
+   on the page. */
+const ProfileLink = (window.PFProfileLink && window.PFProfileLink.Link) || function ({ children }) { return children; };
+function usePostCardAuthorLink(ref, author) {
+  useEffect(() => {
+    const PL = window.PFProfileLink;
+    const wrap = ref && ref.current;
+    if (!PL || !wrap || !author) return;
+    // PostCard's root is the only class-less direct child of .post-wrap
+    // (ChannelContext before it is .chx); header row = its first child.
+    const root = wrap.querySelector(":scope > div:not([class])");
+    const hdr = root && root.firstElementChild;
+    if (!hdr) return;
+    const av = hdr.children[0];
+    const col = hdr.children[1];
+    const nm = col && col.children[0] && col.children[0].children[0];
+    const offs = [];
+    if (av) { av.classList.add("pf-prof-av"); offs.push(PL.bind(av, author)); }
+    if (nm) { nm.classList.add("pf-prof-nm"); offs.push(PL.bind(nm, author)); }
+    return () => { offs.forEach((f) => f()); };
+  }, [ref, author && author.name, author && author.avatar]);
+}
+
 /* ---- real on-brand imagery (from the Profinity Design System assets) ----- */
 const IMG = {
   /* clinic-toxin-guide.png is a truncated export (cut at 192 KiB, only the
@@ -4574,10 +4602,10 @@ function CommentsSheet({ post, comments, onClose, onAddComment, onAddReply }) {
           </button>
         </div>
         <div className="cmtsheet-post">
-          <Avatar name={post.author.name} src={post.author.avatar} size={40} />
+          <ProfileLink author={post.author} className="pf-prof-av"><Avatar name={post.author.name} src={post.author.avatar} size={40} /></ProfileLink>
           <div className="cmtsheet-post-tx">
             <div className="nm">
-              {post.author.name}
+              <ProfileLink author={post.author} className="pf-prof-nm">{post.author.name}</ProfileLink>
               {post.author.seals && <VerificationSeals seals={post.author.seals} size={14} gap={3} />}
             </div>
             <div className="sn">{post.body}</div>
@@ -4586,12 +4614,12 @@ function CommentsSheet({ post, comments, onClose, onAddComment, onAddReply }) {
         <div className="cmtsheet-body">
           {comments.map((c, i) =>
           <div key={c._id} className="cmtsheet-item">
-              <Avatar name={c.author.name} src={c.author.avatar} size={36} />
+              <ProfileLink author={c.author} className="pf-prof-av"><Avatar name={c.author.name} src={c.author.avatar} size={36} /></ProfileLink>
               <div className="cmtsheet-main">
                 <div className="cmtsheet-bubble">
                   <div className="row">
                     <span className="nm">
-                      {c.author.name}
+                      <ProfileLink author={c.author} className="pf-prof-nm">{c.author.name}</ProfileLink>
                       {c.author.seals && <VerificationSeals seals={c.author.seals} size={14} gap={3} />}
                     </span>
                     <span className="tm">{c.time || PF_CMT_TIMES[i % PF_CMT_TIMES.length]}</span>
@@ -4604,12 +4632,12 @@ function CommentsSheet({ post, comments, onClose, onAddComment, onAddReply }) {
                 </div>
                 {(c.replies || []).map((rep, j) =>
               <div key={j} className="cmtsheet-item reply">
-                    <Avatar name={rep.author.name} src={rep.author.avatar} size={30} />
+                    <ProfileLink author={rep.author} className="pf-prof-av"><Avatar name={rep.author.name} src={rep.author.avatar} size={30} /></ProfileLink>
                     <div className="cmtsheet-main">
                       <div className="cmtsheet-bubble">
                         <div className="row">
                           <span className="nm">
-                            {rep.author.name}
+                            <ProfileLink author={rep.author} className="pf-prof-nm">{rep.author.name}</ProfileLink>
                             {rep.author.seals && <VerificationSeals seals={rep.author.seals} size={14} gap={3} />}
                           </span>
                         </div>
@@ -5545,10 +5573,10 @@ function InlineBubbleThread({ comments, onAddComment, onAddReply }) {
 
   const Bubble = ({ c, isReply }) =>
   <div className={"bub-row" + (isReply ? " reply" : "")}>
-      <Avatar name={c.author.name} src={c.author.avatar} size={isReply ? 34 : 40} />
+      <ProfileLink author={c.author} className="pf-prof-av"><Avatar name={c.author.name} src={c.author.avatar} size={isReply ? 34 : 40} /></ProfileLink>
       <div className="bub-main">
         <div className="bub">
-          <div className="bub-name">{c.author.name}</div>
+          <div className="bub-name"><ProfileLink author={c.author} className="pf-prof-nm">{c.author.name}</ProfileLink></div>
           <div className="bub-tx">{c.text}</div>
         </div>
         <div className="bub-acts">
@@ -5861,6 +5889,23 @@ const SHARE_DESTINATIONS = [
   { k: "complications", label: "Complications", sub: "Community channel", icon: "lucide:shield-alert", tier: 2 },
   { k: "freedom", label: "Freedom Path", sub: "Community channel", icon: "lucide:rocket", tier: 3 },
 ];
+/* Link card for a profile shared to the feed from ProfileMobile's "Share
+   Profile" sheet (post.sharedProfile = { name, role, avatar, handle, link }). */
+function SharedProfileCard({ profile }) {
+  const go = (e) => { e.preventDefault(); e.stopPropagation(); (window.pfGo || ((u) => { window.location.href = u; }))(profile.link); };
+  return (
+    <a className="pf-shared-profile" href={profile.link} onClick={go}>
+      <Avatar name={profile.name} src={profile.avatar} size={48} />
+      <span className="pf-shared-profile-tx">
+        <b>{profile.name}</b>
+        {profile.role && <i>{profile.role}</i>}
+        <u>{profile.handle} · PROfinity</u>
+      </span>
+      <span className="pf-shared-profile-cta">View profile<IconifyIcon name="lucide:chevron-right" size={15} color="var(--brand-navy)" /></span>
+    </a>
+  );
+}
+
 function ShareSheet({ post, onClose, onShare }) {
   const shRank = Math.max(0, SHARE_TIER_ORDER.indexOf(shareTier()));
   const dests = SHARE_DESTINATIONS.map((d) => ({ ...d, locked: d.tier > shRank }));
@@ -6265,6 +6310,7 @@ function WebShareModal({ post, onClose, onShare }) {
 
 function FeedPost({ post, st, hideTags, pinned, canPin, onPin, pinScope, onToggleLike, onReact, onDoubleTapLove, onShare, onSave, onAddComment, onAddReply }) {
   const ref = useRef(null);
+  usePostCardAuthorLink(ref, post.author);
   const [composerOpen, setComposerOpen] = useState(false);
   const [replyFor, setReplyFor] = useState(null);
   const [likesOpen, setLikesOpen] = useState(false);
@@ -6365,6 +6411,7 @@ function FeedPost({ post, st, hideTags, pinned, canPin, onPin, pinScope, onToggl
           comments={comments} onLike={handleLike} onComment={handleComment} onShare={handleShare} caption={post.body} />
         : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} video={post.video} aspect={post.aspect} onLoveReact={handleDoubleTapLove} /> : null}
         {post.document && <div className="pf-doc-inset"><DocAttachment doc={post.document} /></div>}
+        {post.sharedProfile && <SharedProfileCard profile={post.sharedProfile} />}
         {isReel &&
         <ReelActionsRow likes={st.likes} comments={st.commentsCount} shares={st.shares}
           liked={st.liked} saved={st.saved}
@@ -6507,10 +6554,10 @@ function TeaserPost({ post, onUpgrade }) {
         </div>
       }
       <div className="pf-teaser-head">
-        <Avatar name={author.name} src={author.avatar} size={44} />
+        <ProfileLink author={author} className="pf-prof-av"><Avatar name={author.name} src={author.avatar} size={44} /></ProfileLink>
         <div className="pf-teaser-head-main">
           <div className="pf-teaser-head-name">
-            <span>{author.name}</span>
+            <span><ProfileLink author={author} className="pf-prof-nm">{author.name}</ProfileLink></span>
             {author.seals && <VerificationSeals seals={author.seals} size={16} />}
           </div>
           <div className="pf-teaser-head-sub">
@@ -6550,10 +6597,10 @@ function FeedEventCard({ post, event }) {
     <div className="post-wrap pf-event-feed" style={{ background: "transparent", overflow: "visible", padding: "0px 16px" }}>
       {author &&
       <div className="pf-teaser-head">
-        <Avatar name={author.name} src={author.avatar} size={44} />
+        <ProfileLink author={author} className="pf-prof-av"><Avatar name={author.name} src={author.avatar} size={44} /></ProfileLink>
         <div className="pf-teaser-head-main">
           <div className="pf-teaser-head-name">
-            <span>{author.name}</span>
+            <span><ProfileLink author={author} className="pf-prof-nm">{author.name}</ProfileLink></span>
             {author.seals && <VerificationSeals seals={author.seals} size={16} />}
           </div>
           {post.time && <div className="pf-teaser-head-sub"><span>{post.time}</span></div>}
@@ -6577,10 +6624,10 @@ function EventRegPostCard({ post }) {
     <div className="post-wrap pf-event-feed"
     style={{ background: "var(--surface-card)", borderRadius: "var(--r-md)", overflow: "hidden", padding: "0px 16px" }}>
       <div className="pf-teaser-head">
-        <Avatar name={author.name} src={author.avatar} size={44} />
+        <ProfileLink author={author} className="pf-prof-av"><Avatar name={author.name} src={author.avatar} size={44} /></ProfileLink>
         <div className="pf-teaser-head-main">
           <div className="pf-teaser-head-name">
-            <span>{author.name}</span>
+            <span><ProfileLink author={author} className="pf-prof-nm">{author.name}</ProfileLink></span>
             {author.seals && <VerificationSeals seals={author.seals} size={16} />}
           </div>
           <div className="pf-teaser-head-sub"><span>{post.time}</span></div>
@@ -6724,10 +6771,10 @@ function CourseCommentCard({ post, st, pinned, canPin, onPin, pinScope, onToggle
         <strong>{post.author.name}</strong> commented in course <strong>{COURSE_NAMES[post.course] || "the course"}</strong>
       </div>
       <div className="pf-ccard-head">
-        <Avatar name={post.author.name} src={post.author.avatar} size={44} />
+        <ProfileLink author={post.author} className="pf-prof-av"><Avatar name={post.author.name} src={post.author.avatar} size={44} /></ProfileLink>
         <div className="pf-ccard-head-main">
           <div className="pf-ccard-head-name">
-            <span>{post.author.name}</span>
+            <span><ProfileLink author={post.author} className="pf-prof-nm">{post.author.name}</ProfileLink></span>
             {post.author.seals && <VerificationSeals seals={post.author.seals} size={16} />}
           </div>
           <div className="pf-chcard-tags">

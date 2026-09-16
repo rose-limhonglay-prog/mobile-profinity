@@ -20,6 +20,9 @@ const { useState: useStateLX, useEffect: useEffectLX, useRef: useRefLX, useMemo:
 const DSLX = window.ProfinityDesignSystem_c2b5cc;
 
 function goLX(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
+/* Member → profile links (profile-link.js); inert pass-through if the script is absent. */
+const ProfileLinkLX = (window.PFProfileLink && window.PFProfileLink.Link) || function ({ children }) { return children; };
+function openProfileLX(a) { return !!(window.PFProfileLink && window.PFProfileLink.open(a)); }
 const LX_PARAMS = new URLSearchParams(window.location.search);
 
 /* Variant resolution, in priority order:
@@ -791,10 +794,10 @@ function LXCommentText({ text }) {
 function LXComment({ c, onLike, onReply }) {
   return (
     <div className="lc-cmt">
-      <DSLX.Avatar name={c.author.name} src={c.author.avatar} size={38} />
+      <ProfileLinkLX author={c.author} className="pf-prof-av"><DSLX.Avatar name={c.author.name} src={c.author.avatar} size={38} /></ProfileLinkLX>
       <div className="lc-cmt-main">
         <div className="lc-cmt-meta">
-          <span className="lc-cmt-name">{c.author.name}</span>
+          <span className="lc-cmt-name"><ProfileLinkLX author={c.author} className="pf-prof-nm">{c.author.name}</ProfileLinkLX></span>
           <span className="lc-cmt-time">{c.time}</span>
         </div>
         <LXCommentText text={c.text} />

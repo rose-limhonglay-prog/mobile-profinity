@@ -6,6 +6,9 @@ const { useState: useStateSR, useEffect: useEffectSR } = React;
 const DSSR = window.ProfinityDesignSystem_c2b5cc;
 
 function goSR(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
+/* Member → profile links (profile-link.js); inert pass-through if the script is absent. */
+const ProfileLinkSR = (window.PFProfileLink && window.PFProfileLink.Link) || function ({ children }) { return children; };
+function openProfileSR(a) { return !!(window.PFProfileLink && window.PFProfileLink.open(a)); }
 
 function useDeviceScaleSR() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
@@ -31,9 +34,9 @@ function useIsMobileSR() {
 
 const SR_RECENT = [
   { id: 1, name: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png", dot: "1 new comment on the latest post", ring: true },
-  { id: 2, name: "Facial Aesthetics Hub", avatar: null, dot: "9+ new", ring: true },
+  { id: 2, name: "Facial Aesthetics Hub", avatar: null, dot: "9+ new", ring: true, page: true },
   { id: 3, name: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg", dot: null, ring: false },
-  { id: 4, name: "PROfinity Business Academy", avatar: null, sub: "Business · 14K followers", dot: null, ring: false },
+  { id: 4, name: "PROfinity Business Academy", avatar: null, sub: "Business · 14K followers", dot: null, ring: false, page: true },
   { id: 5, name: "Katy Wilson", avatar: "assets/avatar-katy.jpg", dot: "1 new", ring: true },
   { id: 6, name: "Jane Harries", avatar: null, dot: "9+ new", ring: true },
 ];
@@ -45,7 +48,7 @@ const SR_PEOPLE = [
 
 function SRRecentRow({ r }) {
   return (
-    <button className="sr-row" onClick={() => {}}>
+    <button className="sr-row" onClick={() => { if (!r.page) openProfileSR(r); }}>
       <span className={"sr-av-wrap" + (r.ring ? " sr-av-ring" : "")}>
         <DSSR.Avatar name={r.name} src={r.avatar} size={44} />
       </span>
@@ -69,10 +72,10 @@ function SRRecentRow({ r }) {
 function SRPostRow({ post, tag }) {
   return (
     <button className="sr-post-row" onClick={() => {}}>
-      <DSSR.Avatar name={post.author?.name} src={post.author?.avatar} size={40} />
+      <ProfileLinkSR as="span" author={post.author} className="pf-prof-av"><DSSR.Avatar name={post.author?.name} src={post.author?.avatar} size={40} /></ProfileLinkSR>
       <span className="sr-post-main">
         <span className="sr-post-top">
-          <span className="sr-post-name">{post.author?.name}</span>
+          <span className="sr-post-name"><ProfileLinkSR as="span" author={post.author} className="pf-prof-nm">{post.author?.name}</ProfileLinkSR></span>
           {tag && ["confidence", "mastery", "freedom", "inner-circle"].includes(tag.slug) &&
             <span className="pf-hashtag-badge">#{tag.label}</span>}
         </span>
@@ -86,14 +89,16 @@ function SRPersonCard({ p }) {
   const [added, setAdded] = useStateSR(false);
   return (
     <div className="sr-person-card">
-      {p.avatar
+      <ProfileLinkSR author={p} className="sr-person-photo-link">
+        {p.avatar
         ? <img className="sr-person-photo" src={p.avatar} alt={p.name} />
         : <div className="sr-person-photo-placeholder">
             <DSSR.Avatar name={p.name} size={56} />
           </div>
-      }
+        }
+      </ProfileLinkSR>
       <div className="sr-person-body">
-        <span className="sr-person-name">{p.name}</span>
+        <span className="sr-person-name"><ProfileLinkSR author={p} className="pf-prof-nm">{p.name}</ProfileLinkSR></span>
         <span className="sr-mutual">
           <span className="sr-mutual-avs">
             {p.mutualAvatars.map((src, i) =>

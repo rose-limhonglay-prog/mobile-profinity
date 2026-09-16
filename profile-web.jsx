@@ -27,9 +27,20 @@ const { TopNav: TopNavPW, MembershipCard, ChannelItem: ChannelItemPW, Avatar: Av
 const PW_ME = {
   name: "Katy Wilson", role: "Registered Nurse", avatar: "assets/avatar-katy.jpg",
   seals: ["gb", "verified", "crown", "gold"],
+  title: "Doctor", specialty: "Nurse Practitioner",
   bio: "Enhance patient satisfaction scores by 15% over the next 6 months through improved communication and personalized care planning.",
-  followers: "1,546", following: "880", posts: "57", location: "London, United Kingdom", clinic: "Allcare Medical"
+  followers: "1,546", following: "880", posts: "57", location: "London, United Kingdom", clinic: "Allcare Medical",
+  clinicNumber: "+02 309 3928", clinicAddress: "Mr. John Smith, 132 My Street, Kingston, New York 12401.",
+  yearsExperience: "12", instagram: "@katywilson"
 };
+const PW_TITLE_OPTIONS = ["Doctor", "Nurse Practitioner", "Registered Nurse", "Aesthetic Practitioner", "Dentist", "Physician Associate"];
+const PW_PERSONAL_GOAL_QUESTIONS = [
+  "Why did you choose to become an aesthetic practitioner, and what's the impact you dream of making for your clients?",
+  "What's the one thing in your business that keeps you up at night, and how would solving it change your life?",
+  "Who or what inspires you to keep pushing forward in your business, even on the toughest days?",
+  "If you could wave a magic wand and change one thing about running your practice, what would it be?",
+  "What does success as an aesthetic practitioner look like for you"
+];
 
 const PW_SERVICES = [
 { ti: "Botox (Anti-Wrinkle Injections)", su: "Career Academy: Dr Tim Pearce" },
@@ -830,6 +841,9 @@ function pfTagActiveNavPW(activeLabel) {
   });
 }
 
+/* Member → profile links (profile-link.js); inert pass-through if the script is absent. */
+const ProfileLinkPW = (window.PFProfileLink && window.PFProfileLink.Link) || function ({ children }) { return children; };
+
 function navigatePW(label) {
   var u = { Home: "NewsfeedWeb.html", Community: "Community.html", "My Learning": "MyLearning.html", Agent: "Agent.html" }[label];
   if (u) (window.pfGo || function (x) { window.location.href = x; })(u);
@@ -857,40 +871,67 @@ function SuggestionRow({ s }) {
    level with the avatar's lower half. See this file's header comment for the
    screenshot this was built from.
    =========================================================================== */
-function PWCoverHeader() {
+function PWCoverHeader({ profile, onAvatar }) {
+  const m = profile || PW_ME;
   return (
     <div className="pw-cover">
       <div className="pw-cover-inner">
-        <div className="pw-cover-avatarwrap">
-          <img className="pw-cover-avatar" src={PW_ME.avatar} alt={PW_ME.name} />
-        </div>
+        <button type="button" className="pw-cover-avatarwrap pw-cover-avbtn" aria-label="View profile picture" onClick={onAvatar}>
+          {m.avatar ?
+          <img className="pw-cover-avatar" src={m.avatar} alt={m.name} /> :
+          <AvatarPW name={m.name} size={156} className="pw-cover-avatar pw-other-avatar-initials" />}
+        </button>
       </div>
     </div>);
 
 }
 
-function PWHeaderBand() {
+/* Banners under the facts (same pf-profile-banners store as ProfileMobile) +
+   the "Add" chip that jumps straight to Edit profile → Banners. */
+function PWBannerChips({ banners, conn, onAdd }) {
+  return (
+    <div className="pw-banners">
+      {banners.map((key) => {
+        const it = pwBannerItem(key); if (!it) return null;
+        /* Static chip: the handle isn't a verified account, so it never links out. */
+        return (
+          <span key={key} className="pw-banner static">
+            <IconifyIconPW name={it.icon} size={16} color={it.color} />{pwBannerText(key, conn)}
+          </span>);
+      })}
+      {onAdd &&
+      <button type="button" className="pw-banner add" onClick={onAdd}>
+        <IconifyIconPW name="lucide:plus" size={15} color="var(--gray-500)" />Add
+      </button>}
+    </div>);
+}
+
+function PWHeaderBand({ profile, banners, conn, onEdit, onShare, onAddBanner }) {
+  const m = profile || PW_ME;
   return (
     <div className="pw-headerband">
       <div className="pw-headerband-spacer" aria-hidden="true" />
       <div className="pw-headerband-info">
         <span className="pw-headerband-namerow">
-          <h1>{PW_ME.name}</h1>
-          <VerificationSealsPW seals={PW_ME.seals} size={19} />
+          <h1>{m.name}</h1>
+          <VerificationSealsPW seals={m.seals} size={19} />
         </span>
-        <div className="pw-headerband-stats">{PW_ME.followers} followers · {PW_ME.following} following</div>
+        <div className="pw-headerband-stats">{m.followers} followers · {m.following} following</div>
         <ul className="pw-headerband-facts">
-          <li><IconifyIconPW name="lucide:stethoscope" size={15} color="var(--gray-500)" /><span>{PW_ME.role} at {PW_ME.clinic}</span></li>
-          <li><IconifyIconPW name="lucide:map-pin" size={15} color="var(--gray-500)" /><span>Based in {PW_ME.location}</span></li>
-          <li><IconifyIconPW name="lucide:target" size={15} color="var(--gray-500)" /><span>{PW_ME.bio}</span></li>
+          <li><IconifyIconPW name="lucide:stethoscope" size={15} color="var(--gray-500)" /><span>{m.role} at {m.clinic}</span></li>
+          <li><IconifyIconPW name="lucide:map-pin" size={15} color="var(--gray-500)" /><span>Based in {m.location}</span></li>
+          {m.bio && <li><IconifyIconPW name="lucide:target" size={15} color="var(--gray-500)" /><span>{m.bio}</span></li>}
           <li><IconifyIconPW name="lucide:award" size={15} color="var(--gray-500)" /><span>PROfinity Gold Member</span></li>
         </ul>
+        <PWBannerChips banners={banners || []} conn={conn || {}} onAdd={onAddBanner} />
       </div>
       <div className="pw-headerband-actions">
-        <ButtonPW variant="brand" iconLeading={<IconPW name="edit" size={18} color="var(--white)" />}>Edit Page</ButtonPW>
-        <button type="button" className="pw-btn-outline">Edit</button>
-        <button type="button" className="pw-btn-iconsq" aria-label="More profile options">
-          <IconifyIconPW name="lucide:chevron-down" size={18} color="var(--gray-600)" />
+        <ButtonPW variant="brand" onClick={onEdit} iconLeading={<IconPW name="edit" size={18} color="var(--white)" />}>Edit Profile</ButtonPW>
+        <button type="button" className="pw-btn-outline pw-btn-share" onClick={onShare}>
+          <IconifyIconPW name="lucide:share" size={16} color="var(--text-heading)" />Share Profile
+        </button>
+        <button type="button" className="pw-btn-iconsq" aria-label="Settings" title="Settings" onClick={() => goPW("AccountSettingsWeb.html")}>
+          <IconifyIconPW name="lucide:settings" size={18} color="var(--gray-600)" />
         </button>
       </div>
     </div>);
@@ -1108,12 +1149,13 @@ function PWSuggestionsSideCard({ suggestions }) {
 /* ---- right column: composer, then the self-assessment / goals section
    (this page's main "member dashboard" content, so it gets the prominent
    slot), then the Posts feed. ---- */
-function PWComposerCard() {
-  const firstName = PW_ME.name.split(" ")[0];
+function PWComposerCard({ profile }) {
+  const m = profile || PW_ME;
+  const firstName = m.name.split(" ")[0];
   return (
     <section className="pw-composer-card">
       <div className="pw-composer-top">
-        <img className="pw-composer-avatar" src={PW_ME.avatar} alt={PW_ME.name} />
+        {m.avatar ? <img className="pw-composer-avatar" src={m.avatar} alt={m.name} /> : <AvatarPW name={m.name} size={48} />}
         <button type="button" className="pw-composer-pill" onClick={() => goPW("NewsfeedWeb.html")}>
           {"What's on your mind, " + firstName + "?"}
         </button>
@@ -1266,9 +1308,9 @@ function PWPostCard({ p, pinned }) {
   return (
     <article className={"pw-post-card" + (pinned ? " pinned" : "")}>
       <div className="pw-post-hd">
-        <AvatarPW name={p.name} src={p.avatar} size={44} />
+        <ProfileLinkPW author={p} className="pf-prof-av"><AvatarPW name={p.name} src={p.avatar} size={44} /></ProfileLinkPW>
         <div className="pw-post-by">
-          <span className="nm">{p.name}{pinned && <span className="ctx">is in <b>{p.loc}</b></span>}</span>
+          <span className="nm"><ProfileLinkPW author={p} className="pf-prof-nm">{p.name}</ProfileLinkPW>{pinned && <span className="ctx">is in <b>{p.loc}</b></span>}</span>
           <span className="meta">
             {pinned && p.tag && <span className="pw-post-tag">{p.tag}</span>}
             <span className="tm">{p.time}</span>
@@ -1337,14 +1379,14 @@ function PWPostsCard() {
 
 }
 
-function ProfileMain({ assessState, onOpenHub }) {
+function ProfileMain({ assessState, onOpenHub, profile, banners, conn, onEdit, onShare, onAvatar, onAddBanner }) {
   const D = window.APP_DATA;
   const p = D.profile;
   return (
     <>
-      <PWCoverHeader />
+      <PWCoverHeader profile={profile} onAvatar={onAvatar} />
       <div className="pw-page">
-        <PWHeaderBand />
+        <PWHeaderBand profile={profile} banners={banners} conn={conn} onEdit={onEdit} onShare={onShare} onAddBanner={onAddBanner} />
         <div className="pw-divider" />
         <PWTabBar />
         <div className="pw-body">
@@ -1361,7 +1403,7 @@ function ProfileMain({ assessState, onOpenHub }) {
             <PWSuggestionsSideCard suggestions={p.suggestions} />
           </div>
           <div className="pw-main">
-            <PWComposerCard />
+            <PWComposerCard profile={profile} />
             {PW_SHOW_UPCOMING_LIVES && <PWUpcomingLivesCard />}
             <PWGoalsSection assessState={assessState} onOpenHub={onOpenHub} />
             <PWPostsCard />
@@ -1372,11 +1414,1272 @@ function ProfileMain({ assessState, onOpenHub }) {
 
 }
 
+
+/* ===========================================================================
+   Viewing another member — Profile.html?id=<slug>[&name=&avatar=&role=].
+   Desktop counterpart of ProfileMobile's "?id=" viewer mode: every avatar /
+   author name on the web pages (feed, comments, course comments…) lands
+   here via profile-link.js. Curated members below (same data as
+   PM_OTHER_USERS in profile-mobile.jsx, copied per this file's PW_
+   convention); anyone else gets a minimal profile built from the query so
+   the link is never a dead end. Read-only: Follow / Message instead of
+   Edit, no composer or goals, and every sidebar card is conditional on the
+   member actually having that information.
+   =========================================================================== */
+const PW_OTHER_USERS = {
+  "miranda-pearce": {
+    name: "Miranda Pearce", role: "Aesthetic Nurse Practitioner", avatar: "assets/avatar-miranda.jpg", seals: ["gb", "verified", "gold"],
+    flag: "🇬🇧", headline: "Aesthetic Nurse Practitioner", specialties: ["Lip Enhancement", "Skin Boosters", "Profhilo"],
+    upcomingLive: "September 24, 2026", link: "mirandapearce.co.uk",
+    banners: { instagram: "mirandapearce", threads: "mirandapearce", facebook: "Miranda Pearce" },
+    bio: "Aesthetic nurse and PROfinity mentor. Helping practitioners build calm, confident consultations.",
+    location: "London, United Kingdom", clinic: "PROfinity Academy",
+    posts: "148", followers: "9.2K", following: "412",
+    shared: { mutualConnections: 19, community: "Confidence Path", courses: ["8D Lip Design", "Temple Filler"] },
+    activity: { lastActive: "20m ago", highlights: [
+      { icon: "lucide:file-text", text: "Posted a lip mapping walkthrough", time: "Today" },
+      { icon: "lucide:message-circle", text: "Replied to your comment", time: "Yesterday" },
+      { icon: "lucide:calendar-check", text: "Hosting Lip Design Live Q&A", time: "24 Sep" }] },
+    services: [
+      { ti: "Lip Enhancement", su: "Career Academy: Dr Tim Pearce" },
+      { ti: "Skin Boosters", su: "Career Academy: Dr Tim Pearce" }],
+    experience: [{ ti: "Aesthetic Nurse Practitioner", yrs: "11 years", org: "PROfinity Academy", loc: "London, United Kingdom" }],
+    education: [{ logo: "KCL", school: "King's College London", program: "BSc Nursing", years: "2008 - 2011" }],
+    licenses: ["8D Lips Course", "Anatomy360", "Botox Foundations"],
+    languages: [{ flag: "🇬🇧", name: "English (UK)", level: "Primary" }]
+  },
+  "dr-amir-khan": {
+    name: "Dr Amir Khan", role: "Aesthetic Doctor", avatar: "assets/avatar-amir-khan.jpg", seals: ["verified", "gold"],
+    flag: "🇬🇧", headline: "Aesthetic Medicine Doctor", specialties: ["Full-Face Filler", "Tear Trough", "Jawline"],
+    upcomingLive: "October 8, 2026", link: "dramirkhan.co.uk",
+    banners: { instagram: "dramirkhan", youtube: "Dr Amir Khan" },
+    bio: "Full-face harmonisation with a safety-first approach. Sharing cases, complications and lessons learned.",
+    location: "Manchester, United Kingdom", clinic: "Khan Aesthetics",
+    posts: "96", followers: "4.8K", following: "233",
+    shared: { mutualConnections: 12, community: "Mastery Path", courses: ["Temple Filler", "Protox Course"] },
+    activity: { lastActive: "2h ago", highlights: [
+      { icon: "lucide:file-text", text: "Posted a tear trough case review", time: "Today" },
+      { icon: "lucide:thumbs-up", text: "Liked your latest post", time: "2d" }] },
+    services: [{ ti: "Dermal Fillers", su: "Career Academy: Dr Tim Pearce" }, { ti: "Full-Face Rejuvenation", su: "Career Academy: Dr Tim Pearce" }],
+    experience: [{ ti: "Aesthetic Doctor", yrs: "8 years", org: "Khan Aesthetics", loc: "Manchester, United Kingdom" }],
+    education: [{ logo: "UoM", school: "University of Manchester", program: "MBChB Medicine", years: "2009 - 2014" }],
+    licenses: ["Anatomy360", "The Ultimate Toxin Eye Complications Masterclass"],
+    languages: [{ flag: "🇬🇧", name: "English (UK)", level: "Primary" }, { flag: "🇵🇰", name: "Urdu", level: "Secondary" }]
+  },
+  "priya-shah": {
+    name: "Priya Shah", role: "Aesthetic Nurse", avatar: "assets/avatar-priya-shah.jpg", seals: ["verified"],
+    flag: "🇬🇧", headline: "Aesthetic Nurse Prescriber", specialties: ["Anti-Wrinkle", "Skin Boosters", "Microneedling"],
+    link: "priyashahaesthetics.com",
+    banners: { instagram: "priyashah.aesthetics", facebook: "Priya Shah" },
+    bio: "Nurse prescriber growing a home clinic one happy patient at a time.",
+    location: "Leicester, United Kingdom", clinic: "Priya Shah Aesthetics",
+    posts: "61", followers: "2.1K", following: "318",
+    shared: { mutualConnections: 9, community: "Confidence Path", courses: ["Botox Foundations"] },
+    activity: { lastActive: "45m ago", highlights: [
+      { icon: "lucide:message-circle", text: "Asked a question in Confidence Path", time: "Today" },
+      { icon: "lucide:file-text", text: "Shared her first before & after", time: "3d" }] },
+    services: [{ ti: "Botox (Anti-Wrinkle Injections)", su: "Career Academy: Dr Tim Pearce" }],
+    experience: [{ ti: "Aesthetic Nurse", yrs: "4 years", org: "Priya Shah Aesthetics", loc: "Leicester, United Kingdom" }],
+    education: [{ logo: "DMU", school: "De Montfort University", program: "BSc Nursing", years: "2015 - 2018" }],
+    licenses: ["Botox Foundations"],
+    languages: [{ flag: "🇬🇧", name: "English (UK)", level: "Primary" }, { flag: "🇮🇳", name: "Gujarati", level: "Secondary" }]
+  },
+  "nurse-beth": {
+    name: "Nurse Beth", role: "Aesthetic Nurse", avatar: "assets/avatar-nurse-beth.jpg", seals: ["verified"],
+    flag: "🇬🇧", headline: "Independent Aesthetic Nurse", specialties: ["Anti-Wrinkle", "Lip Enhancement"],
+    upcomingLive: "October 15, 2026", link: "nursebeth.co.uk",
+    banners: { instagram: "nursebeth", threads: "nursebeth" },
+    bio: "Independent nurse, 2 years in. Documenting the messy middle of building a clinic.",
+    location: "Bristol, United Kingdom", clinic: "Beth Aesthetics",
+    posts: "43", followers: "1.4K", following: "290",
+    shared: { mutualConnections: 6, community: "Confidence Path", courses: ["8D Lip Design"] },
+    activity: { lastActive: "3h ago", highlights: [
+      { icon: "lucide:file-text", text: "Posted about consultation nerves", time: "Yesterday" },
+      { icon: "lucide:thumbs-up", text: "Liked 4 of your posts", time: "1w" }] },
+    services: [{ ti: "Lip Enhancement", su: "Career Academy: Dr Tim Pearce" }],
+    experience: [{ ti: "Aesthetic Nurse", yrs: "2 years", org: "Beth Aesthetics", loc: "Bristol, United Kingdom" }],
+    education: [{ logo: "UWE", school: "University of the West of England", program: "BSc Nursing", years: "2017 - 2020" }],
+    licenses: ["8D Lips Course"],
+    languages: [{ flag: "🇬🇧", name: "English (UK)", level: "Primary" }]
+  },
+  "mark-ellis": {
+    name: "Mark Ellis", role: "Clinic Owner", avatar: "assets/avatar-mark-ellis.jpg", seals: ["verified", "crown"],
+    flag: "🇬🇧", headline: "Clinic Owner & Business Mentor", specialties: ["Clinic Growth", "Marketing", "Systems"],
+    link: "ellisclinics.com",
+    banners: { linkedin: "Mark Ellis", instagram: "markellis.clinics" },
+    bio: "Three clinics, one team. Talking about the business side of aesthetics.",
+    location: "Birmingham, United Kingdom", clinic: "Ellis Clinics",
+    posts: "77", followers: "3.6K", following: "150",
+    shared: { mutualConnections: 14, community: "Freedom Path", courses: [] },
+    activity: { lastActive: "1d ago", highlights: [
+      { icon: "lucide:file-text", text: "Posted a pricing breakdown", time: "2d" },
+      { icon: "lucide:calendar-check", text: "Attending Business Systems Workshop", time: "12 Oct" }] },
+    services: [],
+    experience: [{ ti: "Founder & Director", yrs: "10 years", org: "Ellis Clinics", loc: "Birmingham, United Kingdom" }],
+    education: [{ logo: "AST", school: "Aston University", program: "BSc Business Management", years: "2005 - 2008" }],
+    licenses: ["Business Systems Masterclass"],
+    languages: [{ flag: "🇬🇧", name: "English (UK)", level: "Primary" }]
+  },
+  "dr-sarah-collins": {
+    name: "Dr. Sarah Collins", role: "Aesthetic Doctor", avatar: "assets/avatar-sarah-collins.jpg", seals: ["verified", "gold"],
+    flag: "🇮🇪", headline: "Aesthetic Doctor & Educator", specialties: ["Complications", "Toxin", "Facial Anatomy"],
+    upcomingLive: "September 29, 2026", link: "drsarahcollins.ie",
+    banners: { instagram: "drsarahcollins", linkedin: "Dr Sarah Collins" },
+    bio: "GP turned aesthetic doctor. Passionate about anatomy-led, complication-aware practice.",
+    location: "Dublin, Ireland", clinic: "Collins Clinic",
+    posts: "112", followers: "6.3K", following: "201",
+    shared: { mutualConnections: 17, community: "Mastery Path", courses: ["Protox Course", "Temple Filler"] },
+    activity: { lastActive: "Just now", highlights: [
+      { icon: "lucide:file-text", text: "Posted a vascular occlusion protocol", time: "Today" },
+      { icon: "lucide:message-circle", text: "Commented on your post", time: "Today" }] },
+    services: [{ ti: "Botox (Anti-Wrinkle Injections)", su: "Career Academy: Dr Tim Pearce" }, { ti: "Dermal Fillers", su: "Career Academy: Dr Tim Pearce" }],
+    experience: [{ ti: "Aesthetic Doctor", yrs: "9 years", org: "Collins Clinic", loc: "Dublin, Ireland" }],
+    education: [{ logo: "TCD", school: "Trinity College Dublin", program: "MB BCh BAO Medicine", years: "2004 - 2010" }],
+    licenses: ["Anatomy360", "Pro Tox Course", "The Ultimate Toxin Eye Complications Masterclass"],
+    languages: [{ flag: "🇮🇪", name: "English (IE)", level: "Primary" }]
+  },
+  "james-lee": {
+    name: "James Lee", role: "Surgical Nurse Practitioner", avatar: null, seals: ["verified"],
+    flag: "🇦🇺", headline: "Surgical Nurse Practitioner", specialties: ["Suturing", "Wound Care", "Post-Op"],
+    upcomingLive: "October 2, 2026", link: "sydneyaesthetic.com.au",
+    banners: { instagram: "jameslee.np", linkedin: "James Lee" },
+    bio: "Surgical nurse practitioner specialising in advanced suturing and post-operative care. Sharing what I learn, one case at a time.",
+    location: "Sydney, Australia", clinic: "Sydney Aesthetic Group",
+    posts: "34", followers: "612", following: "205",
+    shared: { mutualConnections: 8, community: "Confidence Path", courses: ["8D Lip Design"] },
+    activity: { lastActive: "1h ago", highlights: [
+      { icon: "lucide:file-text", text: "Posted “Advanced Suturing Techniques”", time: "Yesterday" },
+      { icon: "lucide:message-circle", text: "Commented on 3 posts this week", time: "2d" },
+      { icon: "lucide:thumbs-up", text: "Liked your “Temple Filler Techniques” post", time: "3d" }] },
+    services: [
+      { ti: "Advanced Suturing", su: "Career Academy: Dr Tim Pearce" },
+      { ti: "Post-Operative Wound Care", su: "Career Academy: Dr Tim Pearce" }],
+    experience: [
+      { ti: "Surgical Nurse Practitioner", yrs: "9 years", org: "Sydney Aesthetic Group", loc: "Sydney, Australia" }],
+    education: [
+      { logo: "UoS", school: "University of Sydney", program: "Bachelor of Nursing", years: "2011 - 2015" }],
+    licenses: ["Advanced Suturing Certification", "Anatomy360"],
+    languages: [{ flag: "🇦🇺", name: "English (AU)", level: "Primary" }]
+  },
+  "linda-garcia": {
+    name: "Linda Garcia", role: "Dental Practitioner", avatar: null, seals: ["verified"],
+    flag: "🇨🇦", headline: "Dental Practitioner", specialties: ["Digital Dentistry", "Treatment Planning"],
+    link: "garciadental.ca",
+    banners: { instagram: "drlindagarcia", facebook: "Linda Garcia" },
+    bio: "Dentist exploring emerging technologies in digital dentistry and paperless patient care.",
+    location: "Toronto, Canada", clinic: "Garcia Dental Studio",
+    posts: "21", followers: "398", following: "150",
+    shared: { mutualConnections: 5, community: "Confidence Path", courses: [] },
+    activity: { lastActive: "5h ago", highlights: [
+      { icon: "lucide:file-text", text: "Posted “Emerging Technologies in Dentistry”", time: "Last week" },
+      { icon: "lucide:thumbs-up", text: "Liked 2 of your posts", time: "1w" }] },
+    services: [{ ti: "Digital Treatment Planning", su: "Career Academy: Dr Tim Pearce" }],
+    experience: [{ ti: "Dental Practitioner", yrs: "7 years", org: "Garcia Dental Studio", loc: "Toronto, Canada" }],
+    education: [{ logo: "UoT", school: "University of Toronto", program: "Doctor of Dental Surgery", years: "2013 - 2017" }],
+    licenses: ["Botox Foundations"],
+    languages: [
+    { flag: "🇨🇦", name: "English (CA)", level: "Primary" },
+    { flag: "🇪🇸", name: "Spanish", level: "Secondary" }]
+  },
+  "dr-tim-pearce": {
+    name: "Dr Tim Pearce", role: "Founder & Lead Trainer, PROfinity Academy", avatar: "assets/avatar-drtim.png", seals: ["verified", "crown", "gold"],
+    flag: "🇬🇧", headline: "Aesthetic Medicine Doctor & Trainer", specialties: ["Botox", "Fillers", "Full-Face Rejuvenation"],
+    upcomingLive: "September 30, 2026", link: "drtimpearce.com",
+    banners: { instagram: "drtimpearce", youtube: "Dr Tim Pearce", facebook: "Dr Tim Pearce" },
+    bio: "Founder of PROfinity Academy — training the next generation of aesthetic practitioners in safe, confident injectable technique.",
+    location: "London, United Kingdom", clinic: "PROfinity Academy",
+    posts: "212", followers: "18.4K", following: "310",
+    shared: { mutualConnections: 24, community: "Confidence Path", courses: ["8D Lip Design", "Protox Course", "Temple Filler"] },
+    activity: { lastActive: "Just now", highlights: [
+      { icon: "lucide:file-text", text: "Posted a new Technique Tuesday recap", time: "Today" },
+      { icon: "lucide:message-circle", text: "Commented on your “Temple Filler Techniques” post", time: "Today" },
+      { icon: "lucide:calendar-check", text: "Hosting Technique Tuesday Webinar", time: "30 Jun" }] },
+    services: [
+      { ti: "Botox (Anti-Wrinkle Injections)", su: "Career Academy: Dr Tim Pearce" },
+      { ti: "Dermal Fillers", su: "Career Academy: Dr Tim Pearce" },
+      { ti: "Full-Face Rejuvenation", su: "Career Academy: Dr Tim Pearce" }],
+    experience: [
+      { ti: "Founder & Lead Trainer", yrs: "15 years", org: "PROfinity Academy", loc: "London, United Kingdom" },
+      { ti: "Consultant Aesthetic Practitioner", yrs: "20 years", org: "Allcare Medical", loc: "London, United Kingdom" }],
+    education: [{ logo: "UCL", school: "University College London", program: "MBBS Medicine", years: "1998 - 2004" }],
+    licenses: ["Anatomy360", "Pro Tox Course", "8D Lips Course", "Botox Foundations", "The Ultimate Toxin Eye Complications Masterclass"],
+    languages: [{ flag: "🇬🇧", name: "English (UK)", level: "Primary" }]
+  }
+};
+
+function readProfileIdParamPW() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    return { id: params.get("id"), name: params.get("name"), avatar: params.get("avatar"), role: params.get("role"), from: params.get("from") };
+  } catch (e) { return { id: null, name: null, avatar: null, role: null, from: null }; }
+}
+/* Header tab of the page a member was opened from (?from=), so the top nav
+   stays on Home / Community / My Learning instead of jumping to Profile. */
+function pwTabForPage(from) {
+  const page = String(from || "").split("?")[0].split("/").pop();
+  if (/^Community/i.test(page)) return "Community";
+  if (/^(MyLearning|LessonWeb|CourseWeb|MyCoursesWeb|AllCoursesWeb|SubModuleWeb|CourseLanding)/i.test(page)) return "My Learning";
+  if (/^Agent/i.test(page)) return "Agent";
+  if (/^Rewards/i.test(page)) return "Rewards";
+  if (/^Profile/i.test(page) || !page) return "Profile";
+  return "Home";
+}
+
+function buildMinimalProfilePW(name, avatar, role) {
+  /* Deterministic per name so a member looks the same on every visit. */
+  let h = 0; for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
+  const pick = (arr, n) => arr[(h >>> n) % arr.length];
+  const place = pick([
+    ["London, United Kingdom", "Harley Street Clinic", "🇬🇧"], ["Manchester, United Kingdom", "Northern Aesthetics", "🇬🇧"],
+    ["Leeds, United Kingdom", "Skin & Tonic Clinic", "🇬🇧"], ["Dublin, Ireland", "Liffey Aesthetics", "🇮🇪"],
+    ["Sydney, Australia", "Harbour Skin Clinic", "🇦🇺"], ["Toronto, Canada", "Lakeside Aesthetics", "🇨🇦"],
+    ["Edinburgh, United Kingdom", "Old Town Aesthetics", "🇬🇧"], ["Glasgow, United Kingdom", "Clyde Clinic", "🇬🇧"]], 4);
+  const flag = place[2];
+  const specialties = pick([
+    ["Botox", "Fillers", "Lip Enhancement"], ["Anti-Wrinkle", "Skin Boosters", "Profhilo"],
+    ["Lip Enhancement", "Cheek Contouring"], ["Dermal Fillers", "Jawline", "Chin"],
+    ["Toxin", "Microneedling", "Skincare"], ["Full-Face Filler", "Tear Trough"]], 7);
+  const live = pick(["September 23, 2026", "October 1, 2026", "October 9, 2026", "October 21, 2026", null, null], 10);
+  const handle = name.toLowerCase().replace(/^(dr|mr|mrs|ms|miss|prof)\.?\s+/, "").replace(/[^a-z0-9]/g, "");
+  const first = name.split(" ").filter((w) => !/^(dr|mr|mrs|ms|miss|prof)\.?$/i.test(w))[0] || name;
+  const num = (base, n) => (base + ((h >>> n) % base)).toLocaleString("en-GB");
+  return {
+    name,
+    avatar: avatar || undefined,
+    role: role || "Aesthetic Practitioner",
+    seals: ["verified"],
+    flag, headline: role || "Aesthetic Practitioner", specialties, upcomingLive: live,
+    link: handle + ".co.uk",
+    banners: { instagram: handle, facebook: name },
+    bio: first + " is a PROfinity community member sharing cases, questions and wins with fellow practitioners.",
+    location: place[0], clinic: place[1],
+    posts: num(40, 1), followers: num(900, 3), following: num(200, 5),
+    shared: { mutualConnections: 3 + ((h >>> 6) % 12), community: pick(["Confidence Path", "Mastery Path", "Freedom Path"], 8), courses: pick([[], ["Botox Foundations"], ["8D Lip Design"], ["Temple Filler", "Protox Course"]], 9) },
+    activity: { lastActive: pick(["Just now", "1h ago", "3h ago", "Yesterday"], 11), highlights: [
+      { icon: "lucide:file-text", text: "Posted in the community", time: "This week" },
+      { icon: "lucide:thumbs-up", text: "Liked one of your posts", time: "2d" }] },
+    services: specialties.slice(0, 2).map((t) => ({ ti: t, su: "Career Academy: Dr Tim Pearce" })),
+    experience: [{ ti: role || "Aesthetic Practitioner", yrs: (3 + ((h >>> 12) % 12)) + " years", org: place[1], loc: place[0] }],
+    education: [],
+    licenses: pick([["Botox Foundations"], ["8D Lips Course"], ["Anatomy360", "Botox Foundations"], []], 13),
+    languages: [{ flag: "🇬🇧", name: "English", level: "Primary" }]
+  };
+}
+
+function PWOtherCover({ user, onAvatar }) {
+  return (
+    <div className="pw-cover">
+      <div className="pw-cover-inner">
+        <button type="button" className="pw-cover-avatarwrap pw-other-avatarwrap pw-cover-avbtn" aria-label={"View " + user.name + "'s profile picture"} onClick={onAvatar}>
+          {user.avatar ?
+          <img className="pw-cover-avatar" src={user.avatar} alt={user.name} /> :
+          <AvatarPW name={user.name} size={156} className="pw-cover-avatar pw-other-avatar-initials" />}
+        </button>
+      </div>
+    </div>);
+}
+
+function PWOtherHeaderBand({ user, following, onFollow, onMessage }) {
+  return (
+    <div className="pw-headerband pw-other-headerband">
+      <div className="pw-headerband-spacer" aria-hidden="true" />
+      <div className="pw-headerband-info">
+        <span className="pw-headerband-namerow">
+          <h1>{user.name}</h1>
+          {user.seals && <VerificationSealsPW seals={user.seals} size={19} />}
+        </span>
+        <div className="pw-headerband-stats">{user.followers} followers · {user.following} following · {user.posts} posts</div>
+        <ul className="pw-headerband-facts">
+          {user.role && <li><IconifyIconPW name="lucide:stethoscope" size={15} color="var(--gray-500)" /><span>{user.role}{user.clinic ? " at " + user.clinic : ""}</span></li>}
+          {user.location && <li><IconifyIconPW name="lucide:map-pin" size={15} color="var(--gray-500)" /><span>Based in {user.location}</span></li>}
+          {user.bio && <li><IconifyIconPW name="lucide:quote" size={15} color="var(--gray-500)" /><span>{user.bio}</span></li>}
+          {user.shared && user.shared.community && <li><IconifyIconPW name="lucide:crown" size={15} color="var(--gray-500)" /><span>{user.shared.community} member</span></li>}
+        </ul>
+      </div>
+      <div className="pw-headerband-actions">
+        {following ?
+        <button type="button" className="pw-btn-outline pw-other-following" onClick={onFollow}>
+            <IconifyIconPW name="lucide:check" size={16} color="var(--text-heading)" />Following
+          </button> :
+        <ButtonPW variant="brand" onClick={onFollow} iconLeading={<IconifyIconPW name="lucide:user-plus" size={17} color="var(--white)" />}>Follow</ButtonPW>}
+        <button type="button" className="pw-btn-outline" onClick={onMessage}>
+          <IconifyIconPW name="lucide:message-circle" size={16} color="var(--text-heading)" />Message
+        </button>
+      </div>
+    </div>);
+}
+
+function PWOtherSharedCard({ user }) {
+  const shared = user.shared || {};
+  const courses = shared.courses || [];
+  const has = shared.mutualConnections != null || shared.community || courses.length;
+  if (!has) return null;
+  return (
+    <PWSideCard title="Shared with you">
+      <div className="pw-detail-rows">
+        {shared.mutualConnections != null &&
+        <div className="pw-detail-row"><IconifyIconPW name="lucide:users" size={17} color="var(--gray-500)" /><span className="tx"><b>{shared.mutualConnections}</b> mutual connections</span></div>}
+        {shared.community &&
+        <div className="pw-detail-row"><IconifyIconPW name="lucide:crown" size={17} color="var(--brand-gold)" /><span className="tx">Both in <b>{shared.community}</b></span></div>}
+        {courses.length > 0 &&
+        <div className="pw-detail-row"><IconifyIconPW name="lucide:book-open" size={17} color="var(--gray-500)" /><span className="tx"><b>{courses.length}</b> shared {courses.length === 1 ? "course" : "courses"}</span></div>}
+      </div>
+      {courses.length > 0 &&
+      <div className="pw-license-list pw-other-courses">
+          {courses.map((c, i) => <span className="pw-license-chip" key={i}><IconifyIconPW name="lucide:book-open" size={13} color="var(--brand-navy)" />{c}</span>)}
+        </div>}
+    </PWSideCard>);
+}
+
+function PWOtherActivityCard({ user }) {
+  const activity = user.activity || {};
+  const highlights = activity.highlights || [];
+  return (
+    <section className="pw-posts-card pw-other-activity">
+      <div className="pw-posts-hd">
+        <h2>Recent activity</h2>
+        {activity.lastActive && <span className="pw-other-lastactive">Active {activity.lastActive}</span>}
+      </div>
+      {highlights.length ?
+      <ul className="pw-other-activity-list">
+          {highlights.map((h, i) =>
+          <li key={i}>
+              <span className="ic"><IconifyIconPW name={h.icon || "lucide:activity"} size={17} color="var(--brand-navy)" /></span>
+              <span className="tx">{h.text}</span>
+              <span className="tm">{h.time}</span>
+            </li>)}
+        </ul> :
+      <div className="pw-other-empty">
+          <IconifyIconPW name="lucide:sparkles" size={22} color="var(--gray-400)" />
+          <p>{user.name.split(" ")[0]} hasn't shared anything with the community yet.</p>
+        </div>}
+    </section>);
+}
+
+function PWOtherProfileMain({ user }) {
+  const [following, setFollowing] = useStatePW(false);
+  const [avatarOpen, setAvatarOpen] = useStatePW(() => pwQuery("avatar") === "1");
+  const [qrOpen, setQrOpen] = useStatePW(() => pwQuery("qr") === "1");
+  const [shareOpen, setShareOpen] = useStatePW(() => pwQuery("share") === "1");
+  /* Message → that member's DM thread (DirectMessage.html), not the inbox.
+     Same query contract as the mobile twin: id/name/avatar/role build or
+     resolve the thread, ?from= returns to this profile. */
+  const openMessages = () => {
+    const q = new URLSearchParams();
+    const PL = window.PFProfileLink;
+    q.set("id", user.id || (PL && PL.slug ? PL.slug(user.name) : String(user.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")));
+    q.set("name", user.name);
+    if (user.avatar) q.set("avatar", user.avatar);
+    if (user.role) q.set("role", user.role);
+    try { q.set("from", (window.location.pathname.split("/").pop() || "Profile.html") + (window.location.search || "")); } catch (e) { q.set("from", "Profile.html"); }
+    goPW("DirectMessage.html?" + q.toString());
+  };
+  const services = user.services || [], experience = user.experience || [], education = user.education || [];
+  const languages = user.languages || [], licenses = user.licenses || [];
+  const link = pwProfileLink(user);
+  return (
+    <>
+      <PWOtherCover user={user} onAvatar={() => setAvatarOpen(true)} />
+      {avatarOpen &&
+      <PWAvatarViewer user={user} following={following} onToggleFollow={() => setFollowing((f) => !f)}
+        onQr={() => { setAvatarOpen(false); setQrOpen(true); }} onShare={() => { setAvatarOpen(false); setShareOpen(true); }}
+        onClose={() => setAvatarOpen(false)} />}
+      {qrOpen && <PWQrShareModal user={user} link={link} onClose={() => setQrOpen(false)} onShare={() => { setQrOpen(false); setShareOpen(true); }} />}
+      {shareOpen && <PWShareProfileModal user={user} link={link} onClose={() => setShareOpen(false)} onQr={() => { setShareOpen(false); setQrOpen(true); }} />}
+      <div className="pw-page">
+        <PWOtherHeaderBand user={user} following={following} onFollow={() => setFollowing((f) => !f)} onMessage={openMessages} />
+        <div className="pw-divider" />
+        <div className="pw-body pw-other-body">
+          <div className="pw-sidebar">
+            {(user.location || user.clinic || education[0]) &&
+            <PWSideCard title="About">
+              <div className="pw-detail-rows">
+                {user.location && <div className="pw-detail-row"><IconifyIconPW name="lucide:map-pin" size={17} color="var(--gray-500)" /><span className="tx">Lives in <b>{user.location}</b></span></div>}
+                {user.clinic && <div className="pw-detail-row"><IconifyIconPW name="lucide:building-2" size={17} color="var(--gray-500)" /><span className="tx">Works at <b>{user.clinic}</b></span></div>}
+                {education[0] && <div className="pw-detail-row"><IconifyIconPW name="lucide:graduation-cap" size={17} color="var(--gray-500)" /><span className="tx">Studied at <b>{education[0].school}</b></span></div>}
+              </div>
+            </PWSideCard>}
+            <PWOtherSharedCard user={user} />
+            {experience.length > 0 &&
+            <PWSideCard title="Work">
+              <div className="pw-detail-rows">
+                {experience.map((e, i) =>
+                <div className="pw-work-row" key={i}>
+                    <span className="pw-work-icon"><IconifyIconPW name="lucide:briefcase" size={18} color="var(--brand-navy)" /></span>
+                    <div className="pw-work-info"><span className="org">{e.org}</span><span className="role">{e.ti} · {e.yrs}</span></div>
+                  </div>)}
+              </div>
+            </PWSideCard>}
+            {services.length > 0 &&
+            <PWSideCard title="Services">
+              <div className="pw-service-list">
+                {services.map((sv, i) => <div className="pw-service-row" key={i}><span className="ti">{sv.ti}</span><span className="su">{sv.su}</span></div>)}
+              </div>
+            </PWSideCard>}
+            {education.length > 0 &&
+            <PWSideCard title="Education">
+              <div className="pw-detail-rows">
+                {education.map((ed, i) =>
+                <div className="pw-edu-row" key={i}>
+                    <span className="pw-edu-logo">{ed.logo}</span>
+                    <div className="pw-edu-info"><span className="school">{ed.school}</span><span className="program">{ed.program}</span><span className="years">{ed.years}</span></div>
+                  </div>)}
+              </div>
+            </PWSideCard>}
+            {languages.length > 0 &&
+            <PWSideCard title="Languages">
+              <div className="pw-lang-list">
+                {languages.map((l, i) => <div className="pw-lang-row" key={i}><span className="flag">{l.flag}</span><span className="nm">{l.name}</span><span className="lvl">{l.level}</span></div>)}
+              </div>
+            </PWSideCard>}
+            {licenses.length > 0 &&
+            <PWSideCard title="Licenses & courses">
+              <div className="pw-license-list">
+                {licenses.map((l, i) => <span className="pw-license-chip" key={i}><IconifyIconPW name="lucide:badge-check" size={13} color="var(--brand-gold)" />{l}</span>)}
+              </div>
+            </PWSideCard>}
+          </div>
+          <div className="pw-main">
+            <PWOtherActivityCard user={user} />
+          </div>
+        </div>
+      </div>
+    </>);
+}
+
+function PWOtherNotFound() {
+  return (
+    <div className="pw-page">
+      <div className="pw-other-notfound">
+        <IconifyIconPW name="lucide:user-x" size={40} color="var(--gray-400)" />
+        <h2>Profile not found</h2>
+        <p>This profile may have been removed, or the link is out of date.</p>
+        <ButtonPW variant="brand" onClick={() => (window.pfGo || function (u) { window.location.href = u; })("NewsfeedWeb.html")}>Back to Home</ButtonPW>
+      </div>
+    </div>);
+}
+
+/* ===========================================================================
+   Own-profile tools ported from profile-mobile.jsx (Sept 2026 pass) — the
+   avatar viewer, QR share card, "Share profile" sheet, the Instagram-style
+   Edit profile form and its Banners screen. Same localStorage stores as
+   mobile (pf-social-connections / pf-profile-banners) so banners added on
+   the phone show here and vice versa; only the chrome differs (centered
+   .pw-modal-* dialogs instead of full screens / bottom sheets).
+   =========================================================================== */
+function pwQuery(k) { try { return new URLSearchParams(window.location.search).get(k); } catch (e) { return null; } }
+
+/* ---- banners store ---- */
+const PW_SOCIAL_CONN_KEY = "pf-social-connections";   /* { key: handle/text } */
+const PW_BANNERS_KEY = "pf-profile-banners";           /* [key, ...] in display order */
+function pwLoadJSON(key, fallback) {
+  try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; }
+}
+function pwSaveJSON(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
+function pwLoadSocialConnections() { const v = pwLoadJSON(PW_SOCIAL_CONN_KEY, {}); return v && typeof v === "object" ? v : {}; }
+function pwLoadBanners() {
+  const conn = pwLoadSocialConnections();
+  const b = pwLoadJSON(PW_BANNERS_KEY, []);
+  return Array.isArray(b) ? b.filter((k) => { const it = pwBannerItem(k); return it && (!it.needsValue || conn[k]); }) : [];
+}
+function pwSaveBanners(list) { pwSaveJSON(PW_BANNERS_KEY, list); try { window.dispatchEvent(new CustomEvent("pf-banners-changed")); } catch (e) {} }
+function pwSocialUrl(key, handle) {
+  const h = String(handle || "").replace(/^@/, "").replace(/\s+/g, "");
+  switch (key) {
+    case "instagram": return "https://instagram.com/" + h;
+    case "twitter": return "https://x.com/" + h;
+    case "facebook": return "https://facebook.com/" + h;
+    case "linkedin": return "https://linkedin.com/in/" + h;
+    case "threads": return "https://threads.net/@" + h;
+    case "youtube": return "https://youtube.com/@" + h;
+    case "whatsapp": return "https://wa.me/" + h.replace(/[^0-9]/g, "");
+    default: return "#";
+  }
+}
+/* Everything the Banners screen can put under the bio (mirrors PM_BANNER_ITEMS). */
+const PW_BANNER_ITEMS = [
+  { key: "threads", icon: "simple-icons:threads", color: "#000000", label: "Threads", needsValue: true, prompt: "Threads username", placeholder: "username", value: (h) => String(h || "").replace(/^@/, "") },
+  { key: "instagram", icon: "mdi:instagram", color: "#E1306C", label: "Instagram", needsValue: true, prompt: "Instagram username", placeholder: "username", value: (h) => String(h || "").replace(/^@/, "") },
+  { key: "youtube", icon: "lucide:youtube", color: "#FF0000", label: "YouTube", needsValue: true, editable: true, prompt: "YouTube channel", placeholder: "Channel name" },
+  { key: "facebook", icon: "mdi:facebook", color: "#1877F2", label: "Facebook", needsValue: true, prompt: "Facebook profile", placeholder: "Your name on Facebook" },
+  { key: "linkedin", icon: "mdi:linkedin", color: "#0A66C2", label: "LinkedIn", needsValue: true, prompt: "LinkedIn profile", placeholder: "Your name on LinkedIn" },
+  { key: "twitter", icon: "simple-icons:x", color: "#000000", label: "X", needsValue: true, prompt: "X username", placeholder: "username", value: (h) => String(h || "").replace(/^@/, "") },
+  { key: "whatsapp", icon: "mdi:whatsapp", color: "#25D366", label: "WhatsApp", needsValue: true, editable: true, prompt: "WhatsApp number", placeholder: "+44 7700 900000", inputMode: "tel" },
+  { key: "custom", icon: "lucide:user", color: "var(--brand-navy)", label: "Fill in the blank", needsValue: true, editable: true, prompt: "Fill in the blank", placeholder: "Say something about you", maxLength: 40 },
+  { key: "insights", icon: "lucide:bar-chart-3", color: "var(--brand-navy)", label: "Insights", needsValue: false }
+];
+function pwBannerItem(key) { return PW_BANNER_ITEMS.find((it) => it.key === key); }
+function pwBannerText(key, conn) {
+  const it = pwBannerItem(key); if (!it) return "";
+  const raw = conn[key];
+  if (!it.needsValue) return it.label;
+  return it.value ? it.value(raw) : String(raw || "");
+}
+
+/* ---- Connect an account (Accounts Center–style, mirrors PM_CONNECT_NETWORKS) ----
+   Adding a social banner opens the real network in a new tab; when the user
+   comes back to this tab the account is confirmed and saved as a connection
+   + banner. */
+function pwDefaultSocialHandle(key) {
+  const name = PW_ME.name || "";
+  const handle = "@" + name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return (key === "facebook" || key === "linkedin") ? name : handle;
+}
+const PW_CONNECT_NETWORKS = {
+  instagram: { app: "https://www.instagram.com/", brand: "Instagram", login: "sign in to Instagram", what: "username", privacy: "Your Instagram messages and password stay private. Profinity only sees the username you choose to show.", def: () => pwDefaultSocialHandle("instagram") },
+  threads:   { app: "https://www.threads.net/", brand: "Threads", login: "sign in to Threads", what: "username", privacy: "Your Threads messages and password stay private. Profinity only sees the username you choose to show.", def: () => pwDefaultSocialHandle("threads") },
+  facebook:  { app: "https://www.facebook.com/", brand: "Facebook", login: "sign in to Facebook", what: "profile name", privacy: "Your Facebook messages, friends and password stay private. Profinity only sees your public profile name.", def: () => pwDefaultSocialHandle("facebook") },
+  whatsapp:  { app: "https://wa.me/", brand: "WhatsApp", login: "open WhatsApp", what: "number", privacy: "Your personal messages and calls on WhatsApp stay end-to-end encrypted. No one, not even Profinity, can read or listen to them.", contact: "Your WhatsApp number is never public without your permission and your contacts aren't shared with Profinity.", alert: "People who tap on your banner can message you. Your number won't show on Profinity until you confirm it in WhatsApp. Go to WhatsApp to add your banner.", def: () => (PW_ME.clinicNumber || "").trim() || "+44 7700 900000" },
+  linkedin:  { app: "https://www.linkedin.com/", brand: "LinkedIn", login: "sign in to LinkedIn", what: "profile name", privacy: "Your LinkedIn messages and connections stay private. Profinity only sees your public profile name.", def: () => pwDefaultSocialHandle("linkedin") },
+  twitter:   { app: "https://x.com/", brand: "X", login: "sign in to X", what: "username", privacy: "Your X messages and password stay private. Profinity only sees the username you choose to show.", def: () => pwDefaultSocialHandle("twitter") },
+  youtube:   { app: "https://www.youtube.com/", brand: "YouTube", login: "sign in to YouTube", what: "channel", privacy: "Your YouTube account and watch history stay private. Profinity only sees your public channel name.", def: () => PW_ME.name || "" }
+};
+function pwConnectNetwork(key) { return PW_CONNECT_NETWORKS[key] || null; }
+function pwConnectedSocialKeys(conn, except) {
+  return Object.keys(PW_CONNECT_NETWORKS).filter((k) => k !== except && conn[k]);
+}
+function usePWReturnFromApp(active, onReturn) {
+  useEffectPW(() => {
+    if (!active) return;
+    let left = false; const startedAt = Date.now();
+    const away = () => { left = true; };
+    const back = () => { if ((left || Date.now() - startedAt > 1500) && !document.hidden) onReturn(); };
+    const vis = () => { if (document.hidden) away(); else back(); };
+    document.addEventListener("visibilitychange", vis);
+    window.addEventListener("blur", away); window.addEventListener("focus", back); window.addEventListener("pageshow", back);
+    return () => { document.removeEventListener("visibilitychange", vis); window.removeEventListener("blur", away); window.removeEventListener("focus", back); window.removeEventListener("pageshow", back); };
+  }, [active]);
+}
+
+function PWConnectAccountModal({ item, conn, onDone, onClose }) {
+  const initialStep = (() => { try { return new URLSearchParams(window.location.search).get("step") === "confirm" ? "confirm" : "prompt"; } catch (e) { return "prompt"; } })();
+  /* prompt  → iOS-style alert "Add Instagram to profile · Go to Instagram"
+     waiting → the alert stays while the network's app is open
+     confirm → Accounts Center-style screen; Confirm saves the connection */
+  const net = pwConnectNetwork(item.key);
+  const [step, setStep] = useStatePW(initialStep);
+  const [handle, setHandle] = useStatePW(() => conn[item.key] || (net ? net.def() : ""));
+  const [editing, setEditing] = useStatePW(false);
+  const inputRef = React.useRef(null);
+  usePWReturnFromApp(step === "waiting", () => setStep("confirm"));
+  useEffectPW(() => { if (editing) { const t = setTimeout(() => { try { inputRef.current && inputRef.current.focus(); } catch (e) {} }, 60); return () => clearTimeout(t); } }, [editing]);
+  if (!net) return null;
+  const others = pwConnectedSocialKeys(conn, item.key);
+  const isAt = !!item.value;
+  const clean = (isAt ? handle.replace(/^@+/, "") : handle).trim();
+  const shown = clean ? (isAt ? "@" + clean : clean) : "";
+  const an = /^[aeiou]/i.test(net.brand) ? "an" : "a";
+
+  function Av({ badgeKey, className }) {
+    const bi = badgeKey ? pwBannerItem(badgeKey) : null;
+    return (
+      <span className={"pw-cac-av" + (className ? " " + className : "")}>
+        <AvatarPW name={PW_ME.name} src={PW_ME.avatar} size={56} />
+        <span className="pw-cac-badge">{bi ? <IconifyIconPW name={bi.icon} size={15} color={bi.color} /> : <b>P</b>}</span>
+      </span>
+    );
+  }
+
+  if (step !== "confirm") {
+    const waiting = step === "waiting";
+    return (
+      <div className="pw-modal-overlay pw-cac-alert-overlay" onClick={onClose}>
+        <div className="pw-modal-card pw-cac-alert" role="alertdialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+          <h3>Add {net.brand} to profile</h3>
+          <p>{waiting
+            ? <>Waiting for you to {net.login}… Once you've confirmed it's you, come back here to finish adding your banner.</>
+            : (net.alert || <>People who see your banner can find you on {net.brand}. We'll open {net.brand} so you can confirm it's your account, then come back here to add your banner.</>)}</p>
+          {waiting
+            ? <button type="button" className="pw-cac-alert-go" onClick={() => setStep("confirm")}>I've signed in to {net.brand}</button>
+            : <a className="pw-cac-alert-go" href={net.app} target="_blank" rel="noopener noreferrer" onClick={() => setStep("waiting")}>Go to {net.brand}</a>}
+          <button type="button" className="pw-cac-alert-cancel" onClick={onClose}>Cancel</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="pw-modal-overlay pw-cac-overlay" onClick={onClose}>
+    <div className="pw-modal-card pw-cac" role="dialog" aria-modal="true" aria-label={"Connect " + net.brand} onClick={e => e.stopPropagation()}>
+      <button type="button" className="pw-cac-close" aria-label="Close" onClick={onClose}>
+        <IconifyIconPW name="lucide:x" size={22} color="var(--text-heading)" />
+      </button>
+      <div className="pw-cac-body">
+        <p className="pw-cac-eyebrow">Add {net.brand} to Connected accounts</p>
+        <h2 className="pw-cac-title">Add {an} {net.brand} banner to this profile</h2>
+
+        <div className="pw-cac-card">
+          <h3>Connected accounts</h3>
+          <div className="pw-cac-row">
+            <Av badgeKey={item.key} className="new" />
+            <span className="pw-cac-dots" aria-hidden="true">{[0,1,2,3,4,5].map(i => <i key={i} />)}</span>
+            <span className="pw-cac-stack">
+              <Av className="me" />
+              {others.map(k => <Av key={k} badgeKey={k} />)}
+            </span>
+          </div>
+          <div className="pw-cac-acct">
+            {editing ? (
+              <span className="pw-cac-input">
+                {isAt && <i aria-hidden="true">@</i>}
+                <input ref={inputRef} type="text" value={isAt ? handle.replace(/^@+/, "") : handle} placeholder={item.placeholder || ""}
+                  inputMode={item.inputMode || "text"} autoCapitalize={isAt ? "none" : "words"} autoCorrect="off" spellCheck={false}
+                  onChange={e => setHandle(isAt ? e.target.value.replace(/^@+/, "") : e.target.value)}
+                  onBlur={() => { if (clean) setEditing(false); }} />
+              </span>
+            ) : (
+              <>
+                <span className="pw-cac-acct-nm"><IconifyIconPW name="lucide:check" size={14} color="#25a244" />{shown || ("Add your " + net.what)}</span>
+                <button type="button" className="pw-cac-acct-edit" onClick={() => setEditing(true)}>{shown ? "Not you?" : "Add"}</button>
+              </>
+            )}
+          </div>
+        </div>
+
+        <ul className="pw-cac-points">
+          <li>
+            <IconifyIconPW name="lucide:circle-user-round" size={28} color="var(--text-heading)" />
+            <span>Connected accounts show as banners under your bio, so people can find you on {net.brand} straight from your profile.</span>
+          </li>
+          <li>
+            <IconifyIconPW name={item.key === "whatsapp" ? "lucide:phone" : "lucide:at-sign"} size={28} color="var(--text-heading)" />
+            <span>{net.contact || ("Only the " + net.what + " you confirmed on " + net.brand + " is shown. Your " + net.brand + " password is never shared with Profinity.")}</span>
+          </li>
+          <li>
+            <IconifyIconPW name="lucide:lock" size={28} color="var(--text-heading)" />
+            <span>{net.privacy}</span>
+          </li>
+        </ul>
+      </div>
+      <div className="pw-cac-foot">
+        <p className="pw-cac-fine">We'll <b>show your {net.brand} {net.what}</b> as a banner under your bio. You can remove it from Banners anytime.</p>
+        <button type="button" className="pw-cac-confirm" disabled={!clean} onClick={() => onDone(clean)}>Confirm</button>
+        <button type="button" className="pw-cac-cancel" onClick={onClose}>Cancel</button>
+      </div>
+    </div>
+    </div>
+  );
+}
+
+/* ---- share helpers ---- */
+function pwProfileLink(user) {
+  try {
+    const u = new URL(window.location.href);
+    const q = new URLSearchParams();
+    if (user && user.id) q.set("id", user.id);
+    else if (user && user.name && window.PFProfileLink && !window.PFProfileLink.isMe(user.name)) {
+      q.set("id", window.PFProfileLink.slug(user.name)); q.set("name", user.name);
+      if (user.avatar) q.set("avatar", user.avatar);
+      if (user.role) q.set("role", user.role);
+    }
+    const qs = q.toString();
+    return u.origin + u.pathname + (qs ? "?" + qs : "");
+  } catch (e) { return window.location.href; }
+}
+function pwHandleFor(user) {
+  const ig = user && user.instagram && String(user.instagram).trim();
+  if (ig) return ig.startsWith("@") ? ig : "@" + ig;
+  return "@" + String((user && user.name) || "profile").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+function pwCopyText(text, done) {
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, done); else done();
+}
+function usePWToast() {
+  const [toast, setToast] = useStatePW("");
+  useEffectPW(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(""), 1600);
+    return () => clearTimeout(t);
+  }, [toast]);
+  return [toast, setToast];
+}
+
+/* IG-style QR: dot modules, rounded finder corners, PROfinity P mark in the
+   centre (error correction H so the covered modules recover). */
+const PW_QR_LOGO = "assets/profinity-icon-purple-gold.png";
+function pwBuildQrSvg(text, logoHref) {
+  if (typeof window.qrcode !== "function") return "";
+  let qr;
+  try { qr = window.qrcode(0, "H"); qr.addData(text); qr.make(); } catch (e) { return ""; }
+  const n = qr.getModuleCount(), cell = 10, size = n * cell;
+  const logoCells = Math.max(7, Math.round(n * 0.26));
+  const l0 = Math.floor((n - logoCells) / 2), l1 = l0 + logoCells;
+  const inFinder = (r, c) => (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
+  const inLogo = (r, c) => r >= l0 && r < l1 && c >= l0 && c < l1;
+  const dots = [];
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    if (!qr.isDark(r, c) || inFinder(r, c) || inLogo(r, c)) continue;
+    dots.push(`<circle cx="${(c + .5) * cell}" cy="${(r + .5) * cell}" r="${cell * .45}"/>`);
+  }
+  const finder = (x, y) => {
+    const o = cell * 0.5;
+    return `<rect x="${x * cell + o}" y="${y * cell + o}" width="${6 * cell}" height="${6 * cell}" rx="${cell * 1.9}" fill="none" stroke="#111" stroke-width="${cell}"/>` +
+      `<rect x="${(x + 2) * cell}" y="${(y + 2) * cell}" width="${3 * cell}" height="${3 * cell}" rx="${cell * .9}" fill="#111"/>`;
+  };
+  const lp = (l1 - l0) * cell, lx = l0 * cell, pad = cell * .6;
+  const logo = `<rect x="${lx}" y="${lx}" width="${lp}" height="${lp}" rx="${cell * 1.6}" fill="#fff"/>` +
+    `<image href="${logoHref}" x="${lx + pad}" y="${lx + pad}" width="${lp - pad * 2}" height="${lp - pad * 2}" preserveAspectRatio="xMidYMid meet"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="geometricPrecision"><rect width="${size}" height="${size}" fill="#fff"/><g fill="#111">${dots.join("")}</g>${finder(0, 0)}${finder(n - 7, 0)}${finder(0, n - 7)}${logo}</svg>`;
+}
+
+/* ---- Profile picture viewer (click the cover avatar) ----
+   Blurred page underneath, big round photo, round action buttons. Own
+   profile: Share / Copy link / QR code / Edit avatar (+ pencil badge);
+   someone else's: Follow / Share / Copy link / QR code. */
+function PWAvatarViewer({ user, own, following, onToggleFollow, onChangeAvatar, onQr, onShare, onClose }) {
+  const [toast, setToast] = usePWToast();
+  const fileRef = React.useRef(null);
+  const link = pwProfileLink(own ? null : user);
+  usePWEscClose(true, onClose);
+  function copyLink() { pwCopyText(link, () => setToast("Link copied")); }
+  function share() {
+    if (onShare) { onShare(); return; }
+    if (navigator.share) { navigator.share({ title: user.name, url: link }).catch(() => {}); return; }
+    copyLink();
+  }
+  function pick(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try { onChangeAvatar && onChangeAvatar(URL.createObjectURL(f)); } catch (err) {}
+    e.target.value = "";
+  }
+  const openPicker = () => fileRef.current && fileRef.current.click();
+  const actions = own ? [
+    { key: "share", label: "Share", icon: "lucide:circle-user-round", onClick: share },
+    { key: "copy", label: "Copy link", icon: "lucide:link", onClick: copyLink },
+    { key: "qr", label: "QR code", icon: "lucide:qr-code", onClick: () => onQr && onQr() },
+    { key: "edit", label: "Edit avatar", icon: "lucide:smile", onClick: openPicker }] : [
+    { key: "follow", label: following ? "Following" : "Follow", icon: following ? "lucide:user-round-check" : "lucide:user-round-plus", onClick: onToggleFollow, active: following },
+    { key: "share", label: "Share", icon: "lucide:circle-user-round", onClick: share },
+    { key: "copy", label: "Copy link", icon: "lucide:link", onClick: copyLink },
+    { key: "qr", label: "QR code", icon: "lucide:qr-code", onClick: () => onQr && onQr() }];
+  return (
+    <div className="pw-avv" role="dialog" aria-modal="true" aria-label={user.name + " profile picture"} onClick={onClose}>
+      <button type="button" className="pw-avv-x" aria-label="Close" onClick={onClose}>
+        <IconifyIconPW name="lucide:x" size={24} color="var(--text-heading)" />
+      </button>
+      <div className="pw-avv-stage" onClick={(e) => e.stopPropagation()}>
+        <div className="pw-avv-photo">
+          <AvatarPW name={user.name} src={user.avatar} size={320} className="pw-avv-img" />
+          {own &&
+          <button type="button" className="pw-avv-pencil" aria-label="Change profile picture" onClick={openPicker}>
+            <IconifyIconPW name="lucide:pencil" size={22} color="var(--text-heading)" />
+          </button>}
+        </div>
+        <div className="pw-avv-name">{user.name}</div>
+        <div className="pw-avv-actions">
+          {actions.map((a) =>
+          <button key={a.key} type="button" className={"pw-avv-act" + (a.active ? " on" : "")} onClick={a.onClick}>
+            <span className="pw-avv-act-ic"><IconifyIconPW name={a.icon} size={28} color="var(--text-heading)" /></span>
+            <span className="pw-avv-act-lb">{a.label}</span>
+          </button>)}
+        </div>
+      </div>
+      {own && <input ref={fileRef} type="file" accept="image/*" hidden onChange={pick} />}
+      {toast && <div className="pw-avv-toast" role="status">{toast}</div>}
+    </div>);
+}
+
+/* ---- Profile QR share card (Share Profile / QR code action) ---- */
+function PWQrShareModal({ user, link, onClose, onShare }) {
+  const [toast, setToast] = usePWToast();
+  const svg = React.useMemo(() => pwBuildQrSvg(link, PW_QR_LOGO), [link]);
+  const handle = pwHandleFor(user);
+  usePWEscClose(true, onClose);
+  function copyLink() { pwCopyText(link, () => setToast("Link copied")); }
+  function share() {
+    if (onShare) { onShare(); return; }
+    if (navigator.share) { navigator.share({ title: user.name, url: link }).catch(() => {}); return; }
+    copyLink();
+  }
+  async function download() {
+    if (!svg) { setToast("QR not ready"); return; }
+    try {
+      const blob = await fetch(PW_QR_LOGO).then((r) => r.blob());
+      const dataUrl = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+      const inlined = svg.replace(PW_QR_LOGO, dataUrl);
+      const img = new Image();
+      const url = URL.createObjectURL(new Blob([inlined], { type: "image/svg+xml" }));
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+      const S = 1080, cv = document.createElement("canvas"); cv.width = S; cv.height = S + 160;
+      const ctx = cv.getContext("2d");
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.drawImage(img, 90, 60, S - 180, S - 180);
+      ctx.fillStyle = "#111"; ctx.font = "600 64px Poppins, system-ui, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(handle.toUpperCase(), S / 2, S + 60);
+      URL.revokeObjectURL(url);
+      const a = document.createElement("a");
+      a.download = handle.replace(/^@/, "") + "-profinity-qr.png";
+      a.href = cv.toDataURL("image/png"); a.click();
+      setToast("Saved");
+    } catch (e) {
+      const a = document.createElement("a");
+      a.download = handle.replace(/^@/, "") + "-profinity-qr.svg";
+      a.href = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); a.click();
+    }
+  }
+  return (
+    <div className="pw-modal-overlay" onClick={onClose}>
+      <div className="pw-modal-card pw-qrs" role="dialog" aria-modal="true" aria-label="Profile QR code" onClick={(e) => e.stopPropagation()}>
+        <header className="pw-qrs-hd">
+          <h3>Share Profile</h3>
+          <button type="button" className="pw-help-x" aria-label="Close" onClick={onClose}>
+            <IconifyIconPW name="lucide:x" size={22} color="var(--gray-500)" />
+          </button>
+        </header>
+        <div className="pw-qrs-mid">
+          <div className="pw-qrs-card">
+            {svg ? <div className="pw-qrs-code" dangerouslySetInnerHTML={{ __html: svg }} /> : <div className="pw-qrs-code pw-qrs-code-fallback">{link}</div>}
+            <div className="pw-qrs-handle">{handle}</div>
+          </div>
+          <div className="pw-qrs-tiles">
+            <button type="button" className="pw-qrs-tile" onClick={share}>
+              <IconifyIconPW name="lucide:share" size={26} color="var(--text-heading)" /><span>Share profile</span>
+            </button>
+            <button type="button" className="pw-qrs-tile" onClick={copyLink}>
+              <IconifyIconPW name="lucide:link" size={26} color="var(--text-heading)" /><span>Copy link</span>
+            </button>
+            <button type="button" className="pw-qrs-tile" onClick={download}>
+              <IconifyIconPW name="lucide:download" size={26} color="var(--text-heading)" /><span>Download</span>
+            </button>
+          </div>
+        </div>
+        {toast && <div className="pw-avv-toast pw-qrs-toast" role="status">{toast}</div>}
+      </div>
+    </div>);
+}
+
+/* ---- Share profile dialog ----
+   Preview card, "Share to Newsfeed" composer (drops a sharedProfile link-card
+   post into the shared pf-newsfeed-user-posts list app.jsx reads on both
+   surfaces), then the outside destinations. */
+const PW_SHARE_TARGETS = [
+  { k: "messages", label: "Messages", icon: "lucide:message-circle", color: "var(--brand-navy)", bg: "var(--surface-sunken)" },
+  { k: "copy", label: "Copy link", icon: "lucide:link", color: "var(--brand-navy)", bg: "var(--surface-sunken)" },
+  { k: "whatsapp", label: "WhatsApp", icon: "mdi:whatsapp", color: "#fff", bg: "#25D366" },
+  { k: "facebook", label: "Facebook", icon: "mdi:facebook", color: "#fff", bg: "#1877F2" },
+  { k: "twitter", label: "X", icon: "mdi:twitter", color: "#fff", bg: "#111" },
+  { k: "linkedin", label: "LinkedIn", icon: "mdi:linkedin", color: "#fff", bg: "#0A66C2" },
+  { k: "email", label: "Email", icon: "lucide:mail", color: "var(--brand-navy)", bg: "var(--surface-sunken)" },
+  { k: "qr", label: "QR code", icon: "lucide:qr-code", color: "var(--brand-navy)", bg: "var(--surface-sunken)" },
+  { k: "more", label: "More", icon: "lucide:ellipsis", color: "var(--brand-navy)", bg: "var(--surface-sunken)" }
+];
+function PWShareProfileModal({ user, own, link, onClose, onQr }) {
+  const [caption, setCaption] = useStatePW(() => own ?
+    "Find me on PROfinity — follow along for aesthetics tips, lives and course notes." :
+    "Check out " + user.name + " on PROfinity.");
+  const [toast, setToast] = usePWToast();
+  const [posted, setPosted] = useStatePW(false);
+  const handle = pwHandleFor(user);
+  const shareText = (own ? "Follow " + PW_ME.name : user.name) + " on PROfinity " + handle;
+  usePWEscClose(true, onClose);
+  function copyLink() { pwCopyText(link, () => setToast("Link copied")); }
+  function openOut(url) { try { window.open(url, "_blank", "noopener"); } catch (e) { window.location.href = url; } }
+  function go(k) {
+    const u = encodeURIComponent(link), t = encodeURIComponent(shareText);
+    switch (k) {
+      case "messages": goPW("Messages.html?share=" + u); return;
+      case "copy": copyLink(); return;
+      case "whatsapp": openOut("https://wa.me/?text=" + t + "%20" + u); return;
+      case "facebook": openOut("https://www.facebook.com/sharer/sharer.php?u=" + u); return;
+      case "twitter": openOut("https://twitter.com/intent/tweet?text=" + t + "&url=" + u); return;
+      case "linkedin": openOut("https://www.linkedin.com/sharing/share-offsite/?url=" + u); return;
+      case "email": window.location.href = "mailto:?subject=" + t + "&body=" + t + "%0A" + u; return;
+      case "qr": onQr && onQr(); return;
+      case "more":
+        if (navigator.share) navigator.share({ title: user.name, text: shareText, url: link }).catch(() => {});
+        else copyLink();
+        return;
+      default: return;
+    }
+  }
+  function postToFeed() {
+    if (posted) return;
+    const body = caption.trim();
+    const post = {
+      id: "u" + Date.now(),
+      author: { name: PW_ME.name, avatar: PW_ME.avatar, seals: ["gb", "verified"] },
+      time: "Just now", hashtags: [], media: [], body, bg: null, video: null, live: false,
+      sharedProfile: { name: user.name, role: user.role || "", avatar: user.avatar || "", handle, link },
+      likes: "0", comments: "0", shares: "0", commentList: []
+    };
+    try {
+      const existing = JSON.parse(localStorage.getItem("pf-newsfeed-user-posts")) || [];
+      localStorage.setItem("pf-newsfeed-user-posts", JSON.stringify([post, ...existing]));
+      sessionStorage.setItem("pf-post-reward", JSON.stringify({ amount: 75, label: "Shared a profile", actionId: "evt_create_post", ts: Date.now() }));
+    } catch (e) {}
+    setPosted(true);
+    setToast("Shared to your Newsfeed");
+    setTimeout(() => goPW("NewsfeedWeb.html"), 700);
+  }
+  return (
+    <div className="pw-modal-overlay" onClick={onClose}>
+      <div className="pw-modal-card pw-shp" role="dialog" aria-modal="true" aria-label="Share profile" onClick={(e) => e.stopPropagation()}>
+        <header className="pw-shp-hd">
+          <h3>Share profile</h3>
+          <button type="button" className="pw-help-x" aria-label="Close" onClick={onClose}>
+            <IconifyIconPW name="lucide:x" size={22} color="var(--gray-500)" />
+          </button>
+        </header>
+        <div className="pw-shp-body">
+          <div className="pw-shp-card">
+            <AvatarPW name={user.name} src={user.avatar} size={52} />
+            <div className="pw-shp-card-tx">
+              <span className="nm">{user.name}</span>
+              <span className="rl">{user.role || "PROfinity member"}</span>
+              <span className="hd">{handle}</span>
+            </div>
+            <span className="pw-shp-card-badge"><img src="assets/profinity-icon-purple-gold.png" alt="" /></span>
+          </div>
+          <section className="pw-shp-feed">
+            <div className="pw-shp-feed-hd">
+              <span className="pw-shp-feed-ic"><IconifyIconPW name="lucide:rss" size={17} color="#fff" /></span>
+              <div>
+                <b>Share to Newsfeed</b>
+                <i>Posts a link card to everyone who follows you</i>
+              </div>
+            </div>
+            <textarea className="pw-shp-caption" rows={2} value={caption} placeholder="Say something about this profile…"
+              onChange={(e) => setCaption(e.target.value)} />
+            <button type="button" className={"pw-shp-post" + (posted ? " done" : "")} onClick={postToFeed} disabled={posted}>
+              <IconifyIconPW name={posted ? "lucide:check" : "lucide:send"} size={17} color="#fff" />
+              {posted ? "Shared" : "Post to Newsfeed"}
+            </button>
+          </section>
+          <div className="pw-shp-sec-lb">Share to</div>
+          <div className="pw-shp-grid">
+            {PW_SHARE_TARGETS.map((t) =>
+            <button key={t.k} type="button" className="pw-shp-tile" onClick={() => go(t.k)}>
+              <span className="pw-shp-tile-ic" style={{ background: t.bg }}>
+                <IconifyIconPW name={t.icon} size={24} color={t.color} />
+              </span>
+              <span className="pw-shp-tile-lb">{t.label}</span>
+            </button>)}
+          </div>
+        </div>
+        {toast && <div className="pw-avv-toast pw-shp-toast" role="status">{toast}</div>}
+      </div>
+    </div>);
+}
+
+/* ---- Edit profile (Instagram-style settings form) ---- */
+function usePWAutoGrow(ref, value) {
+  useEffectPW(() => {
+    const el = ref.current; if (!el) return;
+    el.style.height = "0px";
+    el.style.height = Math.max(22, el.scrollHeight) + "px";
+  }, [value]);
+}
+function PWEditRow({ label, value, onChange, options, placeholder, multiline, inputMode, className }) {
+  const taRef = React.useRef(null);
+  usePWAutoGrow(taRef, multiline ? value : null);
+  const cls = "pw-edit-row" + (options ? " pick" : "") + (multiline ? " multi" : "") + (className ? " " + className : "");
+  return (
+    <div className={cls}>
+      <span className="pw-edit-row-label">{label}</span>
+      <div className="pw-edit-row-val">
+        {options ?
+        <>
+          <span className="pw-edit-row-text">{value}</span>
+          <IconifyIconPW name="lucide:chevron-down" size={18} color="var(--gray-450)" />
+          <select className="pw-edit-row-select" aria-label={label} value={value} onChange={(e) => onChange(e.target.value)}>
+            {options.map((o) => <option key={o} value={o}>{o}</option>)}
+          </select>
+        </> :
+        multiline ?
+        <textarea ref={taRef} rows={1} className="pw-edit-row-input" value={value} placeholder={placeholder || label} onChange={(e) => onChange(e.target.value)} /> :
+        <input type="text" inputMode={inputMode} className="pw-edit-row-input" value={value} placeholder={placeholder || label} onChange={(e) => onChange(e.target.value)} />}
+      </div>
+    </div>);
+}
+
+function PWBannerValueSheet({ item, initial, onSave, onClose }) {
+  const [val, setVal] = useStatePW(initial || "");
+  const inputRef = React.useRef(null);
+  useEffectPW(() => { const t = setTimeout(() => { try { inputRef.current && inputRef.current.focus(); } catch (e) {} }, 80); return () => clearTimeout(t); }, []);
+  const clean = val.trim();
+  function submit(e) { e && e.preventDefault(); if (!clean) return; onSave(clean); }
+  return (
+    <div className="pw-modal-overlay pw-bnv-overlay" onClick={onClose}>
+      <form className="pw-modal-card pw-bnv" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+        <div className="pw-bnv-hd">
+          <span className="pw-bnv-ic"><IconifyIconPW name={item.icon} size={24} color="var(--text-heading)" /></span>
+          <h3>{item.prompt || item.label}</h3>
+        </div>
+        <div className="pw-bnv-field">
+          <input ref={inputRef} type="text" value={val} placeholder={item.placeholder || ""} maxLength={item.maxLength || 80}
+            inputMode={item.inputMode || "text"} autoCapitalize={item.key === "custom" ? "sentences" : "none"} autoCorrect="off" spellCheck={false}
+            onChange={(e) => setVal(e.target.value)} />
+          {val && <button type="button" className="pw-bnv-clear" aria-label="Clear" onClick={() => setVal("")}><IconifyIconPW name="lucide:x" size={13} color="#fff" /></button>}
+        </div>
+        {item.key === "custom" && <p className="pw-bnv-hint">A short line that shows as a banner under your bio.</p>}
+        <div className="pw-bnv-acts">
+          <button type="button" className="pw-bnv-cancel" onClick={onClose}>Cancel</button>
+          <button type="submit" className="pw-bnv-save" disabled={!clean}>{initial ? "Save" : "Add"}</button>
+        </div>
+      </form>
+    </div>);
+}
+
+/* "On your profile" (drag to reorder, pencil on items with their own text,
+   × to remove) and "Add to profile" — inside the Edit profile dialog. */
+function PWBannersPanel({ onBack }) {
+  const [banners, setBanners] = useStatePW(() => pwLoadBanners());
+  const [conn, setConn] = useStatePW(() => pwLoadSocialConnections());
+  const [dragKey, setDragKey] = useStatePW(null);
+  const [sheet, setSheet] = useStatePW(null); /* { key, mode: "add" | "edit" } */
+  const dragRef = React.useRef(null);
+  function commit(next) { setBanners(next); pwSaveBanners(next); }
+  function remove(key) { commit(banners.filter((k) => k !== key)); }
+  function saveValue(key, value) {
+    const next = { ...pwLoadSocialConnections(), [key]: value };
+    pwSaveJSON(PW_SOCIAL_CONN_KEY, next); setConn(next);
+  }
+  /* ?connect=instagram(&step=confirm) opens the connect flow straight away — demo / QA entry. */
+  const [connect, setConnect] = useStatePW(() => {
+    try { const k = new URLSearchParams(window.location.search).get("connect"); return k && pwConnectNetwork(k) ? k : null; } catch (e) { return null; }
+  }); /* banner key being connected via its network */
+  function add(key) {
+    const it = pwBannerItem(key); if (!it || banners.includes(key)) return;
+    if (pwConnectNetwork(key)) { setConnect(key); return; }
+    if (it.needsValue && !conn[key]) { setSheet({ key, mode: "add" }); return; }
+    commit([...banners, key]);
+  }
+  function onSheetSave(value) {
+    if (!sheet) return;
+    saveValue(sheet.key, value);
+    if (sheet.mode === "add" && !banners.includes(sheet.key)) commit([...banners, sheet.key]);
+    else try { window.dispatchEvent(new CustomEvent("pf-banners-changed")); } catch (e) {}
+    setSheet(null);
+  }
+  function onConnected(value) {
+    if (!connect) return;
+    saveValue(connect, value);
+    if (!banners.includes(connect)) commit([...banners, connect]);
+    else try { window.dispatchEvent(new CustomEvent("pf-banners-changed")); } catch (e) {}
+    setConnect(null);
+  }
+  function onHandleDown(e, key) {
+    const row = e.currentTarget.closest(".pw-bn-row");
+    if (!row) return;
+    e.preventDefault();
+    const rowH = row.getBoundingClientRect().height || 56;
+    dragRef.current = { key, startY: e.clientY, rowH, list: banners.slice() };
+    setDragKey(key);
+    const move = (ev) => {
+      const d = dragRef.current; if (!d) return;
+      const from = d.list.indexOf(d.key);
+      const delta = Math.round((ev.clientY - d.startY) / d.rowH);
+      const to = Math.max(0, Math.min(d.list.length - 1, from + delta));
+      if (to !== from) {
+        const next = d.list.slice(); next.splice(from, 1); next.splice(to, 0, d.key);
+        d.list = next; d.startY += (to - from) * d.rowH;
+        setBanners(next);
+      }
+    };
+    const up = () => {
+      const d = dragRef.current; dragRef.current = null; setDragKey(null);
+      if (d) pwSaveBanners(d.list);
+      window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+    };
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+  }
+  const addable = PW_BANNER_ITEMS.filter((it) => !banners.includes(it.key));
+  const sheetItem = sheet ? pwBannerItem(sheet.key) : null;
+  return (
+    <>
+      <header className="pw-edit-hd">
+        <button type="button" className="pw-edit-back" aria-label="Back" onClick={onBack}>
+          <IconifyIconPW name="lucide:chevron-left" size={22} color="var(--text-heading)" />
+        </button>
+        <h2>Banners</h2>
+        <span aria-hidden="true" />
+      </header>
+      <div className="pw-edit-body pw-bn-body">
+        <section className="pw-bn-sec">
+          <h4 className="pw-bn-title">On your profile</h4>
+          {banners.length === 0 && <p className="pw-bn-empty">Nothing on your profile yet. Add something below and it shows up under your bio.</p>}
+          <div className="pw-bn-list">
+            {banners.map((key) => {
+              const it = pwBannerItem(key); if (!it) return null;
+              return (
+                <div key={key} className={"pw-bn-row" + (dragKey === key ? " dragging" : "")}>
+                  <button type="button" className="pw-bn-handle" aria-label={"Reorder " + it.label} onPointerDown={(e) => onHandleDown(e, key)}>
+                    <IconifyIconPW name="lucide:menu" size={22} color="var(--gray-500)" />
+                  </button>
+                  <span className="pw-bn-ic"><IconifyIconPW name={it.icon} size={24} color={it.color} /></span>
+                  <span className="pw-bn-nm">{pwBannerText(key, conn)}</span>
+                  <span className="pw-bn-sub">{it.label}</span>
+                  {it.editable &&
+                  <button type="button" className="pw-bn-x" aria-label={"Edit " + it.label} onClick={() => setSheet({ key, mode: "edit" })}>
+                    <IconifyIconPW name="lucide:pencil" size={19} color="var(--gray-600)" />
+                  </button>}
+                  <button type="button" className="pw-bn-x" aria-label={"Remove " + it.label} onClick={() => remove(key)}>
+                    <IconifyIconPW name="lucide:x" size={21} color="var(--gray-600)" />
+                  </button>
+                </div>);
+            })}
+          </div>
+        </section>
+        <section className="pw-bn-sec">
+          <h4 className="pw-bn-title">Add to profile</h4>
+          {addable.length === 0 && <p className="pw-bn-empty">Everything is already on your profile.</p>}
+          <div className="pw-bn-list">
+            {addable.map((it) =>
+            <button key={it.key} type="button" className="pw-bn-row add" onClick={() => add(it.key)}>
+              <span className="pw-bn-handle"><IconifyIconPW name="lucide:circle-plus" size={22} color="var(--gray-500)" /></span>
+              <span className="pw-bn-ic"><IconifyIconPW name={it.icon} size={24} color={it.color} /></span>
+              <span className="pw-bn-nm">{it.label}</span>
+            </button>)}
+          </div>
+        </section>
+      </div>
+      {sheetItem && <PWBannerValueSheet item={sheetItem} initial={conn[sheet.key] || ""} onSave={onSheetSave} onClose={() => setSheet(null)} />}
+      {connect && pwBannerItem(connect) && <PWConnectAccountModal item={pwBannerItem(connect)} conn={conn} onDone={onConnected} onClose={() => setConnect(null)} />}
+    </>);
+}
+
+/* One Personal Goal question: numbered badge (tick once answered), the
+   question as a heading, a soft answer box that grows as you type. */
+function PWGoalField({ index, question, value, onChange }) {
+  const taRef = React.useRef(null);
+  usePWAutoGrow(taRef, value);
+  const answered = !!(value && value.trim());
+  return (
+    <div className={"pw-pg-card" + (answered ? " answered" : "")}>
+      <div className="pw-pg-top">
+        <span className="pw-pg-num" aria-hidden="true">
+          {answered ? <IconifyIconPW name="lucide:check" size={14} color="#fff" /> : index + 1}
+        </span>
+        <label className="pw-pg-q" htmlFor={"pw-goal-" + index}>{question}</label>
+      </div>
+      <div className="pw-pg-box">
+        <textarea id={"pw-goal-" + index} ref={taRef} rows={2} className="pw-pg-input" value={value}
+          placeholder="Write your answer…" onChange={(e) => onChange(e.target.value)} />
+      </div>
+    </div>);
+}
+
+function PWEditProfileModal({ profile, onCancel, onSave, openBanners }) {
+  const [form, setForm] = useStatePW(() => ({
+    title: profile.title || PW_TITLE_OPTIONS[0],
+    fullName: profile.name || "",
+    bio: profile.bio || "",
+    specialty: profile.specialty || "",
+    clinic: profile.clinic || "",
+    clinicNumber: profile.clinicNumber || "",
+    clinicAddress: profile.clinicAddress || "",
+    yearsExperience: profile.yearsExperience || ""
+  }));
+  const [goals, setGoals] = useStatePW(() => profile.personalGoal || PW_PERSONAL_GOAL_QUESTIONS.map(() => ""));
+  const [avatar, setAvatar] = useStatePW(profile.avatar || "");
+  const [bannersOpen, setBannersOpen] = useStatePW(!!openBanners);
+  const [bannerCount, setBannerCount] = useStatePW(() => pwLoadBanners().length);
+  const fileRef = React.useRef(null);
+  usePWEscClose(true, bannersOpen ? () => { setBannersOpen(false); setBannerCount(pwLoadBanners().length); } : onCancel);
+  function setField(key) { return (value) => setForm((f) => ({ ...f, [key]: value })); }
+  function setGoalAt(i, value) { setGoals((g) => g.map((v, gi) => gi === i ? value : v)); }
+  function pickAvatar(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try { setAvatar(URL.createObjectURL(f)); } catch (err) {}
+    e.target.value = "";
+  }
+  function handleSave() {
+    const patch = {
+      name: form.fullName, bio: form.bio, title: form.title, specialty: form.specialty,
+      clinic: form.clinic, clinicNumber: form.clinicNumber, clinicAddress: form.clinicAddress,
+      yearsExperience: form.yearsExperience, personalGoal: goals
+    };
+    if (avatar && avatar !== profile.avatar) patch.avatar = avatar;
+    onSave(patch);
+  }
+  const answered = goals.filter((g) => g && g.trim()).length;
+  return (
+    <div className="pw-modal-overlay" onClick={onCancel}>
+      <div className="pw-modal-card pw-edit" role="dialog" aria-modal="true" aria-label={bannersOpen ? "Banners" : "Edit profile"} onClick={(e) => e.stopPropagation()}>
+        {bannersOpen ?
+        <PWBannersPanel onBack={() => { setBannersOpen(false); setBannerCount(pwLoadBanners().length); }} /> :
+        <>
+          <header className="pw-edit-hd">
+            <button type="button" className="pw-edit-back" aria-label="Cancel" onClick={onCancel}>
+              <IconifyIconPW name="lucide:x" size={22} color="var(--text-heading)" />
+            </button>
+            <h2>Edit profile</h2>
+            <button type="button" className="pw-edit-done" onClick={handleSave}>Save</button>
+          </header>
+          <div className="pw-edit-body">
+            <div className="pw-edit-avblock">
+              <button type="button" className="pw-edit-avbtn" aria-label="Edit profile picture" onClick={() => fileRef.current && fileRef.current.click()}>
+                <AvatarPW name={form.fullName || profile.name} src={avatar} size={96} />
+              </button>
+              <button type="button" className="pw-edit-avlink" onClick={() => fileRef.current && fileRef.current.click()}>Edit picture</button>
+              <input ref={fileRef} type="file" accept="image/*" hidden onChange={pickAvatar} />
+            </div>
+            <section className="pw-edit-group">
+              <h4 className="pw-edit-group-title">Public Profile Information</h4>
+              <PWEditRow label="Title" value={form.title} onChange={setField("title")} options={PW_TITLE_OPTIONS} />
+              <PWEditRow label="Full Name" value={form.fullName} onChange={setField("fullName")} />
+              <PWEditRow label="Tell us about yourself" multiline className="pw-edit-row-bio" value={form.bio} onChange={setField("bio")} placeholder="Tell us about yourself" />
+              <PWEditRow label="Primary Specialty" value={form.specialty} onChange={setField("specialty")} />
+              <PWEditRow label="Clinic Name" value={form.clinic} onChange={setField("clinic")} />
+              <PWEditRow label="Clinic Number" inputMode="tel" value={form.clinicNumber} onChange={setField("clinicNumber")} />
+              <PWEditRow label="Clinic Address" multiline value={form.clinicAddress} onChange={setField("clinicAddress")} />
+              <PWEditRow label="Years of Experience" inputMode="numeric" value={form.yearsExperience} onChange={setField("yearsExperience")} />
+            </section>
+            <section className="pw-edit-group">
+              <button type="button" className="pw-edit-navrow" onClick={() => setBannersOpen(true)}>
+                <span className="pw-edit-navrow-txt">
+                  <span className="pw-edit-navrow-lb">Banners</span>
+                  <span className="pw-edit-navrow-sub">Show your connected social profiles.</span>
+                </span>
+                {bannerCount > 0 && <span className="pw-edit-navrow-count">{bannerCount}</span>}
+                <IconifyIconPW name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+              </button>
+            </section>
+            <section className="pw-edit-group pw-pg-sec">
+              <h4 className="pw-edit-group-title">Personal Goal</h4>
+              <p className="pw-pg-sub">
+                A few reflections so Ava can shape your goals around what matters to you.
+                <span className="pw-pg-count">{answered} of {PW_PERSONAL_GOAL_QUESTIONS.length} answered</span>
+              </p>
+              <div className="pw-pg-list">
+                {PW_PERSONAL_GOAL_QUESTIONS.map((q, i) => <PWGoalField key={i} index={i} question={q} value={goals[i]} onChange={(v) => setGoalAt(i, v)} />)}
+              </div>
+            </section>
+          </div>
+        </>}
+      </div>
+    </div>);
+}
+
 function ProfileWebApp() {
   useEffectPW(() => pfTagActiveNavPW("Profile"));
   const [assessState, setAssessState] = useStatePW(() => pwLoadAssessState());
   const [hubOpen, setHubOpen] = useStatePW(false);
   const [openAssessKey, setOpenAssessKey] = useStatePW(null);
+
+  /* Own profile: editable copy of PW_ME (same in-memory lifetime as
+     ProfileMobile's PMScreen state), the banners store, and the overlays —
+     ?edit=1 / ?banners=1 / ?avatar=1 / ?qr=1 / ?share=1 deep-link each one. */
+  const [profile, setProfile] = useStatePW(() => ({ ...PW_ME }));
+  const [editOpen, setEditOpen] = useStatePW(() => pwQuery("edit") === "1" || pwQuery("banners") === "1");
+  const [editBanners, setEditBanners] = useStatePW(() => pwQuery("banners") === "1");
+  const [avatarOpen, setAvatarOpen] = useStatePW(() => pwQuery("avatar") === "1");
+  const [qrOpen, setQrOpen] = useStatePW(() => pwQuery("qr") === "1");
+  const [shareOpen, setShareOpen] = useStatePW(() => pwQuery("share") === "1");
+  const [banners, setBanners] = useStatePW(() => pwLoadBanners());
+  const [conn, setConn] = useStatePW(() => pwLoadSocialConnections());
+  useEffectPW(() => {
+    const sync = () => { setBanners(pwLoadBanners()); setConn(pwLoadSocialConnections()); };
+    window.addEventListener("pf-banners-changed", sync);
+    window.addEventListener("storage", sync);
+    return () => { window.removeEventListener("pf-banners-changed", sync); window.removeEventListener("storage", sync); };
+  }, []);
+  const ownLink = pwProfileLink(null);
+  function saveProfileEdits(patch) { setProfile((prev) => ({ ...prev, ...patch })); setEditOpen(false); setEditBanners(false); }
+  const { id: idParam, name: nameParam, avatar: avatarParam, role: roleParam, from: fromParam } = readProfileIdParamPW();
+  const otherUser = idParam ? PW_OTHER_USERS[idParam] || (nameParam ? buildMinimalProfilePW(nameParam, avatarParam, roleParam) : null) : null;
 
   function patchAssessState(key, patch) {
     setAssessState((prev) => {
@@ -1401,12 +2704,39 @@ function ProfileWebApp() {
     }
   }
 
+  if (idParam) {
+    return (
+      <div className="app wa-screen" data-screen-label={"Profile — " + (otherUser ? otherUser.name : "not found")}>
+        <TopNavPW active={pwTabForPage(fromParam)} user={PW_ME} logoSrc="assets/profinity-icon-purple-gold.png"
+          onNavigate={navigatePW}
+          style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />
+        {otherUser ? <PWOtherProfileMain user={otherUser} /> : <PWOtherNotFound />}
+      </div>);
+  }
+
   return (
     <div className="app wa-screen">
       <TopNavPW active="Profile" user={PW_ME} logoSrc="assets/profinity-icon-purple-gold.png"
         onNavigate={navigatePW}
         style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />
-      <ProfileMain assessState={assessState} onOpenHub={() => setHubOpen(true)} />
+      <ProfileMain assessState={assessState} onOpenHub={() => setHubOpen(true)}
+        profile={profile} banners={banners} conn={conn}
+        onEdit={() => { setEditBanners(false); setEditOpen(true); }}
+        onShare={() => setShareOpen(true)}
+        onAvatar={() => setAvatarOpen(true)}
+        onAddBanner={() => { setEditBanners(true); setEditOpen(true); }} />
+      {editOpen &&
+      <PWEditProfileModal profile={profile} openBanners={editBanners}
+        onCancel={() => { setEditOpen(false); setEditBanners(false); }} onSave={saveProfileEdits} />}
+      {avatarOpen &&
+      <PWAvatarViewer user={profile} own onClose={() => setAvatarOpen(false)}
+        onQr={() => { setAvatarOpen(false); setQrOpen(true); }}
+        onShare={() => { setAvatarOpen(false); setShareOpen(true); }}
+        onChangeAvatar={(src) => setProfile((prev) => ({ ...prev, avatar: src }))} />}
+      {qrOpen && <PWQrShareModal user={profile} link={ownLink} onClose={() => setQrOpen(false)} onShare={() => { setQrOpen(false); setShareOpen(true); }} />}
+      {shareOpen &&
+      <PWShareProfileModal user={profile} own link={ownLink} onClose={() => setShareOpen(false)}
+        onQr={() => { setShareOpen(false); setQrOpen(true); }} />}
       {hubOpen &&
       <PWAssessHub
         assessState={assessState}

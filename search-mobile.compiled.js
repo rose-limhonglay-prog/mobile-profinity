@@ -12,6 +12,15 @@ function goSR(url) {
     window.location.href = u;
   })(url);
 }
+/* Member → profile links (profile-link.js); inert pass-through if the script is absent. */
+const ProfileLinkSR = window.PFProfileLink && window.PFProfileLink.Link || function ({
+  children
+}) {
+  return children;
+};
+function openProfileSR(a) {
+  return !!(window.PFProfileLink && window.PFProfileLink.open(a));
+}
 function useDeviceScaleSR() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
   const [scale, setScale] = useStateSR(calc);
@@ -43,7 +52,8 @@ const SR_RECENT = [{
   name: "Facial Aesthetics Hub",
   avatar: null,
   dot: "9+ new",
-  ring: true
+  ring: true,
+  page: true
 }, {
   id: 3,
   name: "Miranda Pearce",
@@ -56,7 +66,8 @@ const SR_RECENT = [{
   avatar: null,
   sub: "Business · 14K followers",
   dot: null,
-  ring: false
+  ring: false,
+  page: true
 }, {
   id: 5,
   name: "Katy Wilson",
@@ -88,7 +99,9 @@ function SRRecentRow({
 }) {
   return /*#__PURE__*/React.createElement("button", {
     className: "sr-row",
-    onClick: () => {}
+    onClick: () => {
+      if (!r.page) openProfileSR(r);
+    }
   }, /*#__PURE__*/React.createElement("span", {
     className: "sr-av-wrap" + (r.ring ? " sr-av-ring" : "")
   }, /*#__PURE__*/React.createElement(DSSR.Avatar, {
@@ -124,17 +137,25 @@ function SRPostRow({
   return /*#__PURE__*/React.createElement("button", {
     className: "sr-post-row",
     onClick: () => {}
+  }, /*#__PURE__*/React.createElement(ProfileLinkSR, {
+    as: "span",
+    author: post.author,
+    className: "pf-prof-av"
   }, /*#__PURE__*/React.createElement(DSSR.Avatar, {
     name: post.author?.name,
     src: post.author?.avatar,
     size: 40
-  }), /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     className: "sr-post-main"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sr-post-top"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sr-post-name"
-  }, post.author?.name), tag && ["confidence", "mastery", "freedom", "inner-circle"].includes(tag.slug) && /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement(ProfileLinkSR, {
+    as: "span",
+    author: post.author,
+    className: "pf-prof-nm"
+  }, post.author?.name)), tag && ["confidence", "mastery", "freedom", "inner-circle"].includes(tag.slug) && /*#__PURE__*/React.createElement("span", {
     className: "pf-hashtag-badge"
   }, "#", tag.label)), /*#__PURE__*/React.createElement("span", {
     className: "sr-post-body"
@@ -146,6 +167,9 @@ function SRPersonCard({
   const [added, setAdded] = useStateSR(false);
   return /*#__PURE__*/React.createElement("div", {
     className: "sr-person-card"
+  }, /*#__PURE__*/React.createElement(ProfileLinkSR, {
+    author: p,
+    className: "sr-person-photo-link"
   }, p.avatar ? /*#__PURE__*/React.createElement("img", {
     className: "sr-person-photo",
     src: p.avatar,
@@ -155,11 +179,14 @@ function SRPersonCard({
   }, /*#__PURE__*/React.createElement(DSSR.Avatar, {
     name: p.name,
     size: 56
-  })), /*#__PURE__*/React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "sr-person-body"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sr-person-name"
-  }, p.name), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement(ProfileLinkSR, {
+    author: p,
+    className: "pf-prof-nm"
+  }, p.name)), /*#__PURE__*/React.createElement("span", {
     className: "sr-mutual"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sr-mutual-avs"

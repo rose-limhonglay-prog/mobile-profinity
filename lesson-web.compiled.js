@@ -54,6 +54,15 @@ const INK_LW = {
 function goLW(url) {
   CDL.go(url);
 }
+/* Member → profile links (profile-link.js); inert pass-through if the script is absent. */
+const ProfileLinkLW = window.PFProfileLink && window.PFProfileLink.Link || function ({
+  children
+}) {
+  return children;
+};
+function openProfileLW(a) {
+  return !!(window.PFProfileLink && window.PFProfileLink.open(a));
+}
 function navigateLW(label) {
   const u = {
     Home: "NewsfeedWeb.html",
@@ -633,17 +642,23 @@ function LWComment({
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "cd-cmt"
+  }, /*#__PURE__*/React.createElement(ProfileLinkLW, {
+    author: c.author,
+    className: "pf-prof-av"
   }, /*#__PURE__*/React.createElement(AvatarLW, {
     name: c.author.name,
     src: c.author.avatar,
     size: 38
-  }), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "cd-cmt-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "cd-cmt-meta"
   }, /*#__PURE__*/React.createElement("span", {
     className: "cd-cmt-name"
-  }, c.author.name), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement(ProfileLinkLW, {
+    author: c.author,
+    className: "pf-prof-nm"
+  }, c.author.name)), /*#__PURE__*/React.createElement("span", {
     className: "cd-cmt-time"
   }, c.time)), /*#__PURE__*/React.createElement(LWCommentText, {
     text: c.text

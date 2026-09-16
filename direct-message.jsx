@@ -854,7 +854,10 @@ function DmPage() {
   if (view === "info") {
     return <DmInfoScreen thread={thread} onBack={() => setView("chat")}
       onAddPeople={() => setView("addPeople")}
-      onOpenProfile={() => goDM("ClinicianDirectory.html?from=" + encodeURIComponent("DirectMessage.html?id=" + thread.id + "&from=" + fromPage))} />;
+      onOpenProfile={() => {
+        if (!thread.isGroup && window.PFProfileLink && window.PFProfileLink.open({ name: thread.name, avatar: thread.avatar })) return;
+        goDM("ClinicianDirectory.html?from=" + encodeURIComponent("DirectMessage.html?id=" + thread.id + "&from=" + fromPage));
+      }} />;
   }
 
   return (

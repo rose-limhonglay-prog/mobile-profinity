@@ -9,6 +9,9 @@ const DSLS = window.ProfinityDesignSystem_c2b5cc;
 const PFALS = window.PFApp;
 
 function goLS(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
+/* Member → profile links (profile-link.js); inert pass-through if the script is absent. */
+const ProfileLinkLS = (window.PFProfileLink && window.PFProfileLink.Link) || function ({ children }) { return children; };
+function openProfileLS(a) { return !!(window.PFProfileLink && window.PFProfileLink.open(a)); }
 
 function useDeviceScaleLS() {
   const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
@@ -472,9 +475,9 @@ function LSCommentRow({ c, onAddReply }) {
   const [replying, setReplying] = useStateLS(false);
   return (
     <div className="ls-cmt-row">
-      <DSLS.Avatar name={c.author.name} src={c.author.avatar} size={36} />
+      <ProfileLinkLS author={c.author} className="pf-prof-av"><DSLS.Avatar name={c.author.name} src={c.author.avatar} size={36} /></ProfileLinkLS>
       <div className="ls-cmt-main">
-        <div className="ls-cmt-name">{c.author.name}</div>
+        <div className="ls-cmt-name"><ProfileLinkLS author={c.author} className="pf-prof-nm">{c.author.name}</ProfileLinkLS></div>
         <div className="ls-cmt-time">{c.time}</div>
         <div className="ls-cmt-text">{c.text}</div>
         <div className="cmt-actions">
@@ -486,9 +489,9 @@ function LSCommentRow({ c, onAddReply }) {
         <div className="cmt-replies">
             {c.replies.map((r, i) =>
           <div key={i} className="ls-cmt-reply">
-                <DSLS.Avatar name={r.author.name} src={r.author.avatar} size={28} />
+                <ProfileLinkLS author={r.author} className="pf-prof-av"><DSLS.Avatar name={r.author.name} src={r.author.avatar} size={28} /></ProfileLinkLS>
                 <div className="ls-cmt-main">
-                  <div className="ls-cmt-name">{r.author.name}</div>
+                  <div className="ls-cmt-name"><ProfileLinkLS author={r.author} className="pf-prof-nm">{r.author.name}</ProfileLinkLS></div>
                   <div className="ls-cmt-time">{r.time}</div>
                   <div className="ls-cmt-text">{r.text}</div>
                   <div className="cmt-actions"><PFALS.ReactTrigger /></div>

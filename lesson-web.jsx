@@ -33,6 +33,9 @@ const LW_PARAMS = new URLSearchParams(window.location.search);
 const INK_LW = { gold: "var(--cd-gold)", text: "var(--cd-text)", muted: "var(--cd-text-3)", success: "var(--cd-success)", onNavy: "#FFFFFF", onGold: "var(--cd-on-gold)", heading: "var(--cd-heading)" };
 
 function goLW(url) { CDL.go(url); }
+/* Member → profile links (profile-link.js); inert pass-through if the script is absent. */
+const ProfileLinkLW = (window.PFProfileLink && window.PFProfileLink.Link) || function ({ children }) { return children; };
+function openProfileLW(a) { return !!(window.PFProfileLink && window.PFProfileLink.open(a)); }
 function navigateLW(label) {
   const u = { Home: "NewsfeedWeb.html", Profile: "Profile.html", "My Learning": PFLW.myLearningUrl, Community: "Community.html", Agent: "Agent.html" }[label];
   if (u) goLW(u);
@@ -265,9 +268,9 @@ function LWCommentText({ text }) {
 function LWComment({ c, onLike, onReply }) {
   return (
     <div className="cd-cmt">
-      <AvatarLW name={c.author.name} src={c.author.avatar} size={38} />
+      <ProfileLinkLW author={c.author} className="pf-prof-av"><AvatarLW name={c.author.name} src={c.author.avatar} size={38} /></ProfileLinkLW>
       <div className="cd-cmt-main">
-        <div className="cd-cmt-meta"><span className="cd-cmt-name">{c.author.name}</span><span className="cd-cmt-time">{c.time}</span></div>
+        <div className="cd-cmt-meta"><span className="cd-cmt-name"><ProfileLinkLW author={c.author} className="pf-prof-nm">{c.author.name}</ProfileLinkLW></span><span className="cd-cmt-time">{c.time}</span></div>
         <LWCommentText text={c.text} />
         <div className="cd-cmt-actions">
           <button type="button" className={"cd-cmt-act" + (c.liked ? " on" : "")} aria-pressed={!!c.liked} onClick={onLike}>

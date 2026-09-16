@@ -39,7 +39,8 @@ const ASW_ITEMS_BEFORE = [
 ];
 
 const ASW_ITEMS_AFTER = [
-  { label: "Privacy & Security", icon: "lucide:shield", desc: "Manage password, sign-in and data sharing.", href: null }
+  { label: "Privacy & Security", icon: "lucide:shield", desc: "Manage password, sign-in and data sharing.", href: null },
+  { label: "Chat Support", icon: "lucide:headset", desc: "Message our team about billing, courses or points.", href: "ChatSupportWeb.html" }
 ];
 
 function AswRow({ icon, label, desc, href }) {
