@@ -518,17 +518,16 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
 .m-tab:active .ic{transform:scale(.88)}
 .m-tab:active{opacity:.7}
 
-/* floating "Share a Post" button (home/newsfeed only) */
+/* floating "+" (Share a Post) button (home/newsfeed only) — icon only, round */
 .m-fab{position:absolute;left:50%;bottom:104px;z-index:40;
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;width:auto;height:44px;padding:0 18px;border:none;cursor:pointer;
-  background:var(--brand-navy);color:#fff;border-radius:var(--r-pill);
+  display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;padding:0;border:none;cursor:pointer;
+  background:var(--brand-navy);color:#fff;border-radius:50%;
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14px;
   box-shadow:0 10px 26px rgba(41,37,105,.38);
   transform:translateX(-50%);
   transition:transform .28s cubic-bezier(.22,.61,.36,1),opacity .28s cubic-bezier(.22,.61,.36,1),bottom .3s cubic-bezier(.22,1,.36,1),width .3s cubic-bezier(.22,1,.36,1),padding .3s cubic-bezier(.22,1,.36,1)}
 .m-fab:active{transform:translateX(-50%) scale(.96)}
 .m-fab.m-fab-hidden{transform:translateX(-50%) translateY(160%);opacity:0;pointer-events:none}
-.m-fab .lbl{overflow:hidden;white-space:nowrap;max-width:160px;transition:opacity .2s ease,max-width .3s ease}
 .m-fab.m-fab-compact{bottom:70px}
 
 /* keep reaction bar above device chrome */

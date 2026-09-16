@@ -910,31 +910,120 @@ img{max-width:100%}
 .pm-goals-gate-cta:hover{background:var(--brand-navy-700,#201d54)}
 
 /* ===== full-page profile editor ===== */
+/* Edit profile — IG-style settings sheet (Sept 2026). Label | value rows,
+   dividers under the value column only, bold group titles, header Save. */
 .pm-edit-screen{height:100%;display:flex;flex-direction:column;background:var(--surface-card)}
-.pm-edit-hd{flex:none;display:flex;align-items:center;gap:8px;padding:54px 16px 14px;border-bottom:1px solid var(--border-default)}
-.pm-edit-back{flex:none;width:34px;height:34px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--brand-navy)}
-.pm-edit-hd h1{flex:1;margin:0;text-align:center;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:17px;color:var(--brand-navy)}
-.pm-edit-hd-spacer{flex:none;width:34px}
-.pm-edit-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 16px 24px;display:flex;flex-direction:column;gap:20px}
+.pm-edit-hd{flex:none;display:grid;grid-template-columns:64px 1fr 64px;align-items:center;padding:52px 12px 10px;background:var(--surface-card);
+  border-bottom:1px solid var(--border-default)}
+.pm-edit-back{justify-self:start;width:44px;height:44px;border:none;border-radius:50%;background:var(--surface-card);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 18px rgba(16,24,40,.14),0 0 0 1px rgba(16,24,40,.03);color:var(--text-heading)}
+.pm-edit-back:active{transform:scale(.94)}
+.pm-edit-hd h1{margin:0;text-align:center;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:17px;color:var(--text-heading)}
+.pm-edit-done{justify-self:end;border:none;background:none;cursor:pointer;padding:8px 4px;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:16px;color:var(--ai-purple)}
+.pm-edit-done:active{opacity:.6}
+.pm-edit-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 0 calc(28px + env(safe-area-inset-bottom))}
 .pm-edit-body::-webkit-scrollbar{width:0}
-.pm-edit-avwrap{align-self:flex-start}
-.pm-edit-card{padding:18px 16px 6px;border:1px solid var(--border-default);border-radius:var(--r-lg);display:flex;flex-direction:column}
-.pm-edit-card h2{margin:0 0 14px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:17px;color:var(--brand-navy)}
-.pm-edit-field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.pm-edit-label{font-family:var(--font-sans);font-size:13.5px;color:var(--gray-600)}
-.pm-edit-input-wrap{display:flex;align-items:center;gap:10px;padding:0 14px;height:48px;border:1.5px solid var(--border-default);
-  border-radius:10px;background:var(--surface-card);transition:border-color .15s ease}
-.pm-edit-input-wrap:focus-within{border-color:var(--brand-navy)}
-.pm-edit-input,.pm-edit-select{flex:1;border:none;outline:none;background:none;font-family:var(--font-sans);font-size:15px;
-  color:var(--text-heading);height:100%;padding:0}
-.pm-edit-select{appearance:none;-webkit-appearance:none;cursor:pointer}
-.pm-edit-footer{flex:none;display:flex;align-items:center;gap:14px;padding:14px 16px calc(14px + env(safe-area-inset-bottom));
-  border-top:1px solid var(--border-default)}
-.pm-edit-cancel{flex:none;border:none;background:none;cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);
-  font-size:16px;color:var(--gray-600)}
-.pm-edit-save{flex:1;min-height:50px;border:none;border-radius:10px;cursor:pointer;background:var(--brand-navy);color:#fff;
-  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:16px;transition:background .15s ease}
-.pm-edit-save:hover{background:var(--brand-navy-700,#201d54)}
+.pm-edit-avblock{display:flex;flex-direction:column;align-items:center;gap:16px;padding:28px 16px 24px;border-bottom:1px solid var(--border-default)}
+.pm-edit-avbtn{border:none;background:none;padding:0;border-radius:50%;cursor:pointer;line-height:0}
+.pm-edit-avbtn:active{transform:scale(.97)}
+.pm-edit-avlink{border:none;background:none;cursor:pointer;padding:2px 6px;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:16px;color:var(--ai-purple)}
+.pm-edit-group{padding:0 0 6px;border-bottom:1px solid var(--border-default)}
+.pm-edit-group:last-child{border-bottom:none}
+.pm-edit-group-title{margin:0;padding:18px 16px 4px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:17px;color:var(--text-heading)}
+.pm-edit-row{position:relative;display:flex;align-items:flex-start;padding:0 16px}
+.pm-edit-row-label{flex:none;width:118px;padding:15px 8px 15px 0;font-family:var(--font-sans);font-size:15.5px;line-height:22px;color:var(--text-heading)}
+.pm-edit-row-val{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:15px 0;border-bottom:1px solid var(--border-default);transition:border-color .15s ease}
+.pm-edit-row:last-child .pm-edit-row-val{border-bottom-color:transparent}
+.pm-edit-row-val:focus-within{border-bottom-color:var(--brand-navy)}
+.pm-edit-row-input,.pm-edit-row-text{flex:1;min-width:0;display:block;border:none;outline:none;background:none;padding:0;margin:0;
+  font-family:var(--font-sans);font-size:16px;line-height:22px;color:var(--text-heading)}
+.pm-edit-row-input{resize:none;overflow:hidden;height:22px}
+.pm-edit-row-input::placeholder{color:var(--gray-450)}
+.pm-edit-row.pick .pm-edit-row-val{cursor:pointer}
+.pm-edit-row-select{position:absolute;inset:0;width:100%;height:100%;opacity:0;appearance:none;-webkit-appearance:none;cursor:pointer;font-size:16px}
+.pm-edit-row.stack{flex-direction:column;align-items:stretch}
+.pm-edit-row.stack .pm-edit-row-label{width:auto;padding:14px 0 4px;font-size:14.5px;line-height:20px;color:var(--gray-600)}
+.pm-edit-row.stack .pm-edit-row-val{padding:2px 0 14px}
+
+/* Banners row in the editor + Banners drill-in screen */
+.pm-edit-navrow{width:100%;display:flex;align-items:center;gap:10px;padding:16px 16px;border:none;background:none;text-align:left;cursor:pointer;font-family:var(--font-sans)}
+.pm-edit-navrow:active{background:var(--gray-50)}
+.pm-edit-navrow-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pm-edit-navrow-lb{font-size:16px;line-height:22px;color:var(--text-heading)}
+.pm-edit-navrow-sub{font-size:14px;line-height:18px;color:var(--gray-600)}
+.pm-edit-navrow-count{font-size:16px;color:var(--gray-600)}
+.pm-bn-screen .pm-edit-hd{border-bottom:none}
+.pm-bn-sec{padding:6px 0 10px}
+.pm-bn-title{margin:0;padding:16px 16px 10px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:19px;color:var(--text-heading)}
+.pm-bn-empty{margin:0;padding:2px 16px 12px;font-family:var(--font-sans);font-size:14px;line-height:20px;color:var(--gray-600)}
+.pm-bn-list{display:flex;flex-direction:column}
+.pm-bn-row{position:relative;display:flex;align-items:center;gap:6px;min-height:64px;padding:0 10px 0 6px;background:var(--surface-card);
+  border:none;width:100%;text-align:left;font-family:var(--font-sans);transition:background .12s ease,box-shadow .12s ease}
+.pm-bn-row.add{cursor:pointer}
+.pm-bn-row.add:active{background:var(--gray-50)}
+.pm-bn-row.dragging{z-index:2;box-shadow:0 8px 24px rgba(16,24,40,.14);border-radius:12px;background:var(--surface-card)}
+.pm-bn-handle{flex:none;width:44px;height:44px;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:grab;touch-action:none;color:var(--gray-500)}
+.pm-bn-row.dragging .pm-bn-handle{cursor:grabbing}
+.pm-bn-ic{flex:none;width:30px;display:flex;align-items:center;justify-content:center}
+.pm-bn-nm{font-size:16.5px;color:var(--text-heading);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm-bn-sub{flex:1;min-width:0;font-size:13px;color:var(--gray-450);padding-left:6px;white-space:nowrap}
+.pm-bn-x{flex:none;width:44px;height:44px;border:none;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%}
+.pm-bn-x:active{background:var(--gray-100)}
+.pm-bn-band{height:8px;background:var(--gray-100)}
+[data-theme="dark"] .pm-bn-band{background:var(--border-default)}
+
+/* Social banners under the bio on the own profile */
+.pm-ig-banners{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.pm-banner{display:inline-flex;align-items:center;gap:7px;padding:8px 13px;border-radius:var(--r-pill);border:1px solid var(--border-default);background:var(--surface-card);
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13.5px;color:var(--text-heading);text-decoration:none}
+.pm-banner:active{background:var(--gray-50)}
+
+/* Profile picture viewer — blurred profile underneath, big round photo,
+   round action buttons pinned to the bottom (IG parity). */
+.pm-ig-avbtn{border:none;background:none;padding:0;cursor:pointer;line-height:0;border-radius:50%;-webkit-tap-highlight-color:transparent}
+.pm-ig-avbtn:active{transform:scale(.97)}
+.pm-avv{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(34px) saturate(1.4);backdrop-filter:blur(34px) saturate(1.4);
+  animation:pm-avv-in .22s ease-out;cursor:zoom-out}
+@keyframes pm-avv-in{from{opacity:0}to{opacity:1}}
+.pm-avv-photo{position:relative;flex:none;cursor:default;animation:pm-avv-pop .26s cubic-bezier(.2,.8,.2,1)}
+@keyframes pm-avv-pop{from{transform:scale(.86);opacity:0}to{transform:scale(1);opacity:1}}
+.pm-avv-img{display:block;border-radius:50%;box-shadow:0 18px 50px rgba(16,24,40,.18)}
+.pm-avv-photo img,.pm-avv-photo>*{border-radius:50%}
+.pm-avv-pencil{position:absolute;right:14px;bottom:16px;width:52px;height:52px;border:none;border-radius:50%;background:var(--surface-card);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(16,24,40,.16);color:var(--text-heading)}
+.pm-avv-pencil:active{transform:scale(.94)}
+.pm-avv-actions{position:absolute;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom));display:flex;justify-content:space-evenly;padding:0 14px;cursor:default}
+.pm-avv-act{flex:1;max-width:96px;display:flex;flex-direction:column;align-items:center;gap:10px;border:none;background:none;padding:0;cursor:pointer;
+  font-family:var(--font-sans);font-size:14px;color:var(--text-heading);-webkit-tap-highlight-color:transparent}
+.pm-avv-act-ic{width:72px;height:72px;border-radius:50%;background:var(--surface-card);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(16,24,40,.12);transition:transform .12s ease}
+.pm-avv-act:active .pm-avv-act-ic{transform:scale(.94)}
+.pm-avv-act-lb{line-height:18px;white-space:nowrap}
+.pm-avv-toast{position:absolute;left:50%;bottom:calc(190px + env(safe-area-inset-bottom));transform:translateX(-50%);padding:10px 16px;border-radius:999px;
+  background:var(--brand-navy);color:#fff;font-family:var(--font-sans);font-size:14px;font-weight:var(--fw-semibold);box-shadow:0 8px 24px rgba(16,24,40,.2);animation:pm-avv-in .18s ease-out}
+/* Profile QR share screen */
+.pm-qrs{position:absolute;inset:0;z-index:70;display:flex;flex-direction:column;background:var(--gray-50);animation:pm-avv-in .2s ease-out}
+.pm-qrs-hd{flex:none;display:flex;justify-content:space-between;align-items:center;padding:54px 16px 0}
+.pm-qrs-round{width:48px;height:48px;border:none;border-radius:50%;background:var(--surface-card);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 18px rgba(16,24,40,.12),0 0 0 1px rgba(16,24,40,.03)}
+.pm-qrs-round:active{transform:scale(.94)}
+.pm-qrs-mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:0 16px calc(40px + env(safe-area-inset-bottom))}
+.pm-qrs-card{width:100%;max-width:360px;padding:38px 36px 30px;border-radius:32px;background:var(--surface-card);display:flex;flex-direction:column;align-items:center;gap:22px;
+  box-shadow:0 20px 50px rgba(16,24,40,.10),0 0 0 1px rgba(16,24,40,.03);animation:pm-avv-pop .26s cubic-bezier(.2,.8,.2,1)}
+.pm-qrs-code{width:100%;aspect-ratio:1/1;border-radius:14px;overflow:hidden;background:#fff}
+.pm-qrs-code svg{width:100%;height:100%;display:block}
+.pm-qrs-code-fallback{display:flex;align-items:center;justify-content:center;padding:16px;font-family:var(--font-sans);font-size:12px;word-break:break-all;color:#111}
+.pm-qrs-handle{font-family:var(--font-display);font-weight:var(--fw-semibold);font-size:30px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-heading);text-align:center;line-height:1.1;word-break:break-all}
+.pm-qrs-tiles{width:100%;max-width:360px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pm-qrs-tile{display:flex;flex-direction:column;align-items:center;gap:12px;padding:24px 8px 22px;border:none;border-radius:22px;background:var(--surface-card);cursor:pointer;
+  font-family:var(--font-sans);font-size:14px;color:var(--text-heading);box-shadow:0 10px 30px rgba(16,24,40,.07),0 0 0 1px rgba(16,24,40,.03);transition:transform .12s ease}
+.pm-qrs-tile:active{transform:scale(.96)}
+.pm-qrs-toast{bottom:auto;top:calc(54px + 60px)}
+[data-theme="dark"] .pm-qrs-round,[data-theme="dark"] .pm-qrs-card,[data-theme="dark"] .pm-qrs-tile{box-shadow:0 0 0 1px var(--border-default)}
+@media (prefers-reduced-motion:reduce){.pm-avv,.pm-avv-photo,.pm-avv-toast,.pm-qrs,.pm-qrs-card{animation:none}}
+[data-theme="dark"] .pm-avv{background:rgba(12,16,32,.72)}
+[data-theme="dark"] .pm-edit-back,[data-theme="dark"] .pm-avv-pencil,[data-theme="dark"] .pm-avv-act-ic{box-shadow:0 0 0 1px var(--border-default)}
 
 /* ===========================================================================
    "Track your goals" pane + "Get to know you" overlay — Sept 2026 pass.

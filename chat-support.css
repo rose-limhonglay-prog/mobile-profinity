@@ -1,0 +1,133 @@
+/* ===========================================================================
+   PROfinity — Chat Support (mobile) · layout
+   Support thread (welcome, topic chips, deep-link replies, ticket banner) and
+   a pill composer, styled after the Messages thread view (messages-mobile.css).
+   Colours ride on the DS tokens so dark mode mostly comes for free; the few
+   hard-coded surfaces get [data-theme="dark"] overrides at the bottom.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden;
+  font-family: var(--font-sans); color: var(--text-primary); }
+.app:not(.device-stage) { height: 100vh; height: 100dvh; font-family: var(--font-sans); color: var(--text-primary); }
+
+.cs-screen { position: relative; height: 100%; display: flex; flex-direction: column; background: var(--surface-page); overflow: hidden; }
+
+/* header */
+.cs-top { flex: none; display: flex; align-items: center; gap: 10px; padding: 56px 12px 12px 8px;
+  background: var(--surface-card); border-bottom: 1px solid var(--border-default); }
+.cs-back, .cs-more { flex: none; width: 40px; height: 40px; border: none; background: none; cursor: pointer; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; -webkit-tap-highlight-color: transparent; }
+.cs-back:active, .cs-more:active { background: var(--surface-sunken); }
+.cs-id { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.cs-id h1 { margin: 0; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 16.5px; color: var(--text-heading);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cs-status { font-family: var(--font-sans); font-size: 12.5px; color: var(--gray-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* agent face: navy disc + headset, green presence dot */
+.cs-agent { position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand-navy) 0%, #3d3a8c 100%); box-shadow: 0 4px 12px rgba(41,37,105,.22); }
+.cs-online { position: absolute; right: -1px; bottom: -1px; width: 12px; height: 12px; border-radius: 50%; background: var(--success);
+  border: 2px solid var(--surface-card); }
+
+/* ticket banner */
+.cs-ticket { flex: none; display: flex; align-items: center; gap: 8px; padding: 9px 16px; background: #EEF0FF; border-bottom: 1px solid var(--border-default);
+  font-family: var(--font-sans); font-size: 12.5px; color: var(--text-primary); animation: cs-fade .25s ease; }
+.cs-ticket b { font-weight: var(--fw-semibold); color: var(--brand-navy); }
+
+/* thread */
+.cs-body { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 14px 12px; display: flex; flex-direction: column; gap: 2px; }
+.cs-body::-webkit-scrollbar { width: 0; }
+.cs-daychip { display: flex; justify-content: center; margin: 4px 0 10px; }
+.cs-daychip span { font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 11.5px; letter-spacing: .04em; color: var(--gray-500);
+  background: var(--gray-150); border-radius: var(--r-pill); padding: 4px 11px; }
+.cs-hours { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0 0 8px;
+  font-family: var(--font-sans); font-size: 12px; color: var(--gray-500); text-align: center; }
+
+.cs-msg { display: flex; align-items: flex-end; gap: 8px; margin-top: 3px; animation: cs-pop .22s cubic-bezier(.22,1,.36,1); }
+.cs-msg.first { margin-top: 12px; }
+.cs-msg.me { flex-direction: row-reverse; }
+.cs-msg-av { flex: none; width: 28px; height: 28px; display: inline-flex; align-self: flex-start; }
+.cs-msg-av .cs-agent { box-shadow: none; }
+.cs-msg-col { display: flex; flex-direction: column; align-items: flex-start; max-width: 78%; min-width: 0; }
+.cs-msg.me .cs-msg-col { align-items: flex-end; }
+.cs-bubble { display: inline-block; max-width: 100%; padding: 10px 14px; border-radius: 18px; text-align: left;
+  font-family: var(--font-sans); font-size: 15px; line-height: 1.4; color: var(--text-heading); background: var(--surface-card);
+  border: 1px solid var(--border-default); border-bottom-left-radius: 6px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.cs-bubble.me { background: var(--brand-navy); color: #fff; border-color: transparent; border-bottom-left-radius: 18px; border-bottom-right-radius: 6px; }
+.cs-msg-time { font-family: var(--font-sans); font-size: 11px; color: var(--gray-450); margin: 3px 12px 0; }
+.cs-msg.me .cs-msg-time { text-align: right; }
+
+/* deep links under a support reply */
+.cs-links { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0 2px; }
+.cs-link { display: inline-flex; align-items: center; gap: 4px; min-height: 34px; padding: 0 12px 0 14px; border-radius: var(--r-pill); cursor: pointer;
+  border: 1.5px solid var(--brand-navy); background: var(--surface-card); font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13px; color: var(--brand-navy);
+  -webkit-tap-highlight-color: transparent; }
+.cs-link:active { background: var(--surface-sunken); }
+
+/* typing */
+.cs-typing { display: inline-flex; gap: 4px; align-items: center; padding: 14px 16px; }
+.cs-typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--gray-400); animation: cs-typing 1.1s ease-in-out infinite; }
+.cs-typing i:nth-child(2) { animation-delay: .15s; } .cs-typing i:nth-child(3) { animation-delay: .3s; }
+
+/* topic chips */
+.cs-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 6px 36px; animation: cs-pop .25s cubic-bezier(.22,1,.36,1); }
+.cs-chip { display: inline-flex; align-items: center; gap: 7px; min-height: 38px; padding: 0 14px 0 12px; border-radius: var(--r-pill); cursor: pointer;
+  border: 1px solid var(--border-default); background: var(--surface-card); box-shadow: 0 1px 2px rgba(16,24,40,.05);
+  font-family: var(--font-sans); font-weight: var(--fw-medium); font-size: 14px; color: var(--text-heading); -webkit-tap-highlight-color: transparent; }
+.cs-chip:active { background: var(--surface-sunken); }
+
+/* composer */
+.cs-composer { flex: none; display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--surface-card); border-top: 1px solid var(--border-default); }
+.cs-attach { flex: none; width: 44px; height: 44px; border: none; background: none; cursor: pointer; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.cs-attach:active { background: var(--surface-sunken); }
+.cs-field { flex: 1; min-width: 0; display: flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: var(--r-pill); background: var(--gray-100); }
+.cs-field input { flex: 1; min-width: 0; height: 44px; border: none; background: none; outline: none; font-family: var(--font-sans); font-size: 16px; color: var(--text-primary); }
+.cs-field input::placeholder { color: var(--gray-450); }
+.cs-send { flex: none; width: 44px; height: 44px; border-radius: 50%; border: none; cursor: pointer; padding: 0; background: var(--gray-300);
+  display: flex; align-items: center; justify-content: center; transition: background .18s ease, transform .18s cubic-bezier(.34,1.56,.64,1); }
+.cs-send.on { background: var(--brand-navy); }
+.cs-send.on:active { transform: scale(.92); }
+.cs-send:disabled { cursor: default; }
+.cs-safe { flex: none; height: calc(22px + env(safe-area-inset-bottom, 0px)); background: var(--surface-card); }
+
+/* options sheet */
+.cs-sheet-wrap { position: absolute; inset: 0; z-index: 50; display: flex; align-items: flex-end; }
+.cs-scrim { position: absolute; inset: 0; border: none; background: rgba(16,24,40,.42); animation: cs-fade .2s ease; cursor: pointer; }
+.cs-sheet { position: relative; width: 100%; padding: 10px 16px calc(24px + env(safe-area-inset-bottom, 0px)); border-radius: 22px 22px 0 0;
+  background: var(--surface-card); box-shadow: 0 -12px 40px rgba(16,24,40,.18); animation: cs-rise .28s cubic-bezier(.22,.61,.36,1); }
+.cs-sheet-handle { display: block; width: 40px; height: 5px; margin: 0 auto 14px; border-radius: 3px; background: var(--gray-300); }
+.cs-sheet-ttl { margin: 0 0 10px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 17px; color: var(--text-heading); }
+.cs-opt { display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px 6px; border: none; background: none; cursor: pointer; text-align: left;
+  border-top: 1px solid var(--border-default); -webkit-tap-highlight-color: transparent; }
+.cs-opt:first-of-type { border-top: none; }
+.cs-opt:active { background: var(--surface-sunken); border-radius: 10px; }
+.cs-opt-ic { flex: none; width: 40px; height: 40px; border-radius: 12px; background: var(--gray-100); display: flex; align-items: center; justify-content: center; }
+.cs-opt-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cs-opt-label { font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; color: var(--text-heading); }
+.cs-opt-sub { font-family: var(--font-sans); font-size: 13px; color: var(--gray-500); }
+.cs-opt-cancel { justify-content: center; margin-top: 8px; min-height: 48px; border: none; border-radius: 14px; background: var(--gray-100);
+  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; color: var(--text-heading); }
+
+/* toast */
+.cs-toast { position: absolute; left: 16px; right: 16px; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); z-index: 60;
+  display: flex; align-items: center; gap: 10px; padding: 13px 16px; border-radius: 14px; background: #1A1736; color: #fff;
+  box-shadow: 0 12px 30px rgba(16,24,40,.28); font-family: var(--font-sans); font-size: 14px; font-weight: var(--fw-medium);
+  animation: cs-rise .26s cubic-bezier(.22,.61,.36,1); }
+
+@keyframes cs-rise { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes cs-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes cs-pop { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes cs-typing { 0%, 100% { transform: translateY(0); opacity: .5; } 50% { transform: translateY(-4px); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .cs-scrim, .cs-sheet, .cs-toast, .cs-msg, .cs-chips, .cs-ticket { animation: none; } .cs-typing i { animation: none; } }
+
+/* dark mode — tokens flip at :root in dark-mode.css; only the hard-coded bits need help */
+[data-theme="dark"] .cs-ticket { background: rgba(206,153,87,.14); }
+[data-theme="dark"] .cs-toast { background: var(--brand-navy); color: #1A1736; }
+[data-theme="dark"] .cs-toast .iconify, [data-theme="dark"] .cs-toast iconify-icon { color: #1A1736; }
+[data-theme="dark"] .cs-bubble.me { color: #1A1736; }
+[data-theme="dark"] .cs-send.on .iconify, [data-theme="dark"] .cs-send.on iconify-icon { color: #1A1736; }
+[data-theme="dark"] .cs-agent { background: linear-gradient(135deg, var(--brand-navy) 0%, #E2BC6A 100%); }
+[data-theme="dark"] .cs-agent iconify-icon { color: #1A1736; }

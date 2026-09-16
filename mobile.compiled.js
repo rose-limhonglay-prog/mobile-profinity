@@ -727,7 +727,7 @@ const SM_PROFILE_BEFORE_M = [{
   href: "ProfileMobile.html"
 }, {
   label: "Account Settings",
-  icon: "lucide:graduation-cap",
+  icon: "lucide:settings",
   href: null
 }, {
   label: "Payments",
@@ -745,6 +745,10 @@ const SM_PROFILE_BEFORE_M = [{
   label: "Privacy & Security",
   icon: "lucide:book-open",
   href: null
+}, {
+  label: "Chat Support",
+  icon: "lucide:headset",
+  href: "ChatSupport.html"
 }, {
   label: "Display Settings",
   icon: "lucide:cpu",
@@ -2191,11 +2195,9 @@ function MobileHome() {
     onClick: () => go("CreatePostMobile.html")
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {
     name: "lucide:plus",
-    size: 16,
+    size: 24,
     color: "#fff"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "lbl"
-  }, "Share a Post")), /*#__PURE__*/React.createElement(SideMenu, {
+  })), /*#__PURE__*/React.createElement(SideMenu, {
     open: menuOpen,
     onClose: () => setMenuOpen(false)
   }), /*#__PURE__*/React.createElement(NotificationsPanel, {

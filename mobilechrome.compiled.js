@@ -566,7 +566,7 @@
     href: "ProfileMobile.html"
   }, {
     label: "Account Settings",
-    icon: "lucide:graduation-cap",
+    icon: "lucide:settings",
     href: null
   }, {
     label: "Payments",
@@ -584,6 +584,10 @@
     label: "Privacy & Security",
     icon: "lucide:book-open",
     href: null
+  }, {
+    label: "Chat Support",
+    icon: "lucide:headset",
+    href: "ChatSupport.html"
   }, {
     label: "Display Settings",
     icon: "lucide:cpu",

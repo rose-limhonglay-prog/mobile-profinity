@@ -200,7 +200,7 @@ const SM_PROFILE_BEFORE_CM = [{
   href: "ProfileMobile.html"
 }, {
   label: "Account Settings",
-  icon: "lucide:graduation-cap",
+  icon: "lucide:settings",
   href: null
 }, {
   label: "Payments",
@@ -218,6 +218,10 @@ const SM_PROFILE_BEFORE_CM = [{
   label: "Privacy & Security",
   icon: "lucide:book-open",
   href: null
+}, {
+  label: "Chat Support",
+  icon: "lucide:headset",
+  href: "ChatSupport.html"
 }];
 function useDarkModeCM() {
   const [dark, setDark] = React.useState(() => {
@@ -1343,11 +1347,9 @@ function CMScreen({
     }
   }, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
     name: "lucide:plus",
-    size: 20,
+    size: 24,
     color: "#fff"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "lbl"
-  }, "Share a Post")), /*#__PURE__*/React.createElement(CMTabBar, {
+  })), /*#__PURE__*/React.createElement(CMTabBar, {
     ref: tabsRef,
     compact: chromeHidden
   }), /*#__PURE__*/React.createElement(MessagesPanelCM, {

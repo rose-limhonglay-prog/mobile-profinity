@@ -41,7 +41,7 @@
       "crown", "gem", "badge-check", "log-out", "moon", "sun", "cloud-sun", "syringe", "more-vertical", "calendar",
       "graduation-cap", "phone", "phone-call", "maximize-2", "square-pen", "bell-off", "megaphone",
       "rotate-ccw", "rotate-cw", "skip-forward", "presentation", "info", "flag", "star", "pause", "volume-2", "volume-x", "maximize",
-      "plus", "tag", "link", "newspaper", "more-horizontal"],
+      "plus", "tag", "link", "newspaper", "more-horizontal", "headset", "settings"],
     fluent: ["play-16-filled", "pause-16-filled", "ribbon-star-16-filled"]
   };
   var extra = window.PF_ICONS_EXTRA || {};

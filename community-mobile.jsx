@@ -96,11 +96,12 @@ const SM_EVENTS_CM = [
 
 const SM_PROFILE_BEFORE_CM = [
 { label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
-{ label: "Account Settings",   icon: "lucide:graduation-cap",  href: null },
+{ label: "Account Settings",   icon: "lucide:settings",  href: null },
 { label: "Payments",           icon: "lucide:credit-card",     href: "PaymentsMobile.html" },
 { label: "My Saved",           icon: "lucide:bookmark",        href: "MySaved.html" },
 { label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" },
-{ label: "Privacy & Security", icon: "lucide:book-open",       href: null }];
+{ label: "Privacy & Security", icon: "lucide:book-open",       href: null },
+{ label: "Chat Support",       icon: "lucide:headset",         href: "ChatSupport.html" }];
 
 function useDarkModeCM() {
   const [dark, setDark] = React.useState(() => {
@@ -787,8 +788,7 @@ function CMScreen({ scrollRef }) {
         try { sessionStorage.setItem("pf_post_channels", JSON.stringify([channel])); } catch (e) {}
         goCM("CreatePostMobile.html?from=community");
       }}>
-        <DSCM.IconifyIcon name="lucide:plus" size={20} color="#fff" />
-        <span className="lbl">Share a Post</span>
+        <DSCM.IconifyIcon name="lucide:plus" size={24} color="#fff" />
       </button>
       <CMTabBar ref={tabsRef} compact={chromeHidden} />
       <MessagesPanelCM open={msgOpen} onClose={() => setMsgOpen(false)} />

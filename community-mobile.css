@@ -120,11 +120,11 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
 @keyframes cm-newposts-in{from{opacity:0;transform:translateX(-50%) translateY(-12px) scale(.9)}to{opacity:1;transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){.cm-newposts{animation:none}}
 
-/* ===== floating "Share a Post" action button — stays a labelled pill,
+/* ===== floating "+" (Share a Post) action button — round, icon only,
    just tucks closer to the compact tab dock while scrolling ===== */
 .m-fab{position:absolute;left:50%;transform:translateX(-50%);bottom:104px;z-index:10;
-  display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 20px;border:none;cursor:pointer;
-  background:var(--brand-navy);border-radius:var(--r-pill);color:var(--white);
+  display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;padding:0;border:none;cursor:pointer;
+  background:var(--brand-navy);border-radius:50%;color:var(--white);
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14px;line-height:1;
   box-shadow:0 8px 24px rgba(41,37,105,.34),inset 0 1px 0 rgba(255,255,255,.22);
   transition:transform .28s cubic-bezier(.22,.61,.36,1),width .28s cubic-bezier(.22,.61,.36,1),
@@ -132,7 +132,6 @@ body{background:#d8dae2;-webkit-font-smoothing:antialiased;text-rendering:optimi
     gap .28s ease,border-radius .28s ease,bottom .28s cubic-bezier(.22,.61,.36,1)}
 .m-fab:active{transform:translateX(-50%) scale(.96)}
 .m-fab:focus-visible{outline:2px solid #fff;outline-offset:2px}
-.m-fab .lbl{transition:font-size .22s ease,opacity .18s ease,margin-left .22s ease;overflow:hidden;white-space:nowrap}
 .m-fab.m-fab-compact{bottom:76px}
 
 /* ===== floating glass navigation dock ===== */

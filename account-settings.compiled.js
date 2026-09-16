@@ -56,7 +56,7 @@ const AS_PROFILE_ITEMS_BEFORE = [{
   href: "ProfileMobile.html"
 }, {
   label: "Account Settings",
-  icon: "lucide:graduation-cap",
+  icon: "lucide:settings",
   href: null
 }, {
   label: "Payments",
@@ -75,6 +75,10 @@ const AS_PROFILE_ITEMS_AFTER = [{
   label: "Privacy & Security",
   icon: "lucide:shield",
   href: null
+}, {
+  label: "Chat Support",
+  icon: "lucide:headset",
+  href: "ChatSupport.html"
 }];
 function ASRow({
   icon,

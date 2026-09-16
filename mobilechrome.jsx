@@ -338,11 +338,12 @@
     { d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM", access: "members" }];
   const SM_PROFILE_C = [
     { label: "Edit Profile", icon: "lucide:book-open", href: "ProfileMobile.html" },
-    { label: "Account Settings", icon: "lucide:graduation-cap", href: null },
+    { label: "Account Settings", icon: "lucide:settings", href: null },
     { label: "Payments", icon: "lucide:credit-card", href: "PaymentsMobile.html" },
     { label: "My Saved", icon: "lucide:bookmark", href: "MySaved.html" },
     { label: "Notifications", icon: "lucide:calendar", href: "NotificationSettings.html" },
     { label: "Privacy & Security", icon: "lucide:book-open", href: null },
+    { label: "Chat Support", icon: "lucide:headset", href: "ChatSupport.html" },
     { label: "Display Settings", icon: "lucide:cpu", href: "DisplaySettings.html" }];
 
   const NT_BADGE_C = {

@@ -878,11 +878,12 @@ const SM_EVENTS_PM = [
 
 const SM_PROFILE_BEFORE_PM = [
 { label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
-{ label: "Account Settings",   icon: "lucide:graduation-cap",  href: "AccountSettings.html" },
+{ label: "Account Settings",   icon: "lucide:settings",  href: "AccountSettings.html" },
 { label: "Payments",           icon: "lucide:credit-card",     href: "PaymentsMobile.html" },
 { label: "My Saved",           icon: "lucide:bookmark",        href: "MySaved.html" },
 { label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" },
-{ label: "Privacy & Security", icon: "lucide:book-open",       href: null }];
+{ label: "Privacy & Security", icon: "lucide:book-open",       href: null },
+{ label: "Chat Support",       icon: "lucide:headset",         href: "ChatSupport.html" }];
 
 function useDarkModePM() {
   const [dark, setDark] = useStatePM(() => {
@@ -2005,6 +2006,39 @@ function CredentialsStep({ onClose, onPending, onComplete }) {
   );
 }
 
+/* ---- Connected socials + profile banners store ----
+   "Connect your social profiles" (Complete your profile step) writes the
+   connected accounts here; the Edit profile → Banners screen picks from
+   them, and the chosen ones render as chips on the profile. */
+const PM_SOCIAL_CONN_KEY = "pf-social-connections";   /* { key: handle } */
+const PM_BANNERS_KEY = "pf-profile-banners";           /* [key, ...] in display order */
+function pmLoadJSON(key, fallback) {
+  try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; }
+}
+function pmSaveJSON(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
+function pmLoadSocialConnections() { const v = pmLoadJSON(PM_SOCIAL_CONN_KEY, {}); return v && typeof v === "object" ? v : {}; }
+function pmLoadBanners() {
+  const conn = pmLoadSocialConnections();
+  const b = pmLoadJSON(PM_BANNERS_KEY, []);
+  return Array.isArray(b) ? b.filter(k => conn[k]) : [];
+}
+function pmSaveBanners(list) { pmSaveJSON(PM_BANNERS_KEY, list); try { window.dispatchEvent(new CustomEvent("pf-banners-changed")); } catch (e) {} }
+function pmDefaultSocialHandle(key) {
+  const name = PM_ME.name || "";
+  const handle = "@" + name.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return (key === "facebook" || key === "linkedin") ? name : handle;
+}
+function pmSocialUrl(key, handle) {
+  const h = String(handle || "").replace(/^@/, "").replace(/\s+/g, "");
+  switch (key) {
+    case "instagram": return "https://instagram.com/" + h;
+    case "twitter": return "https://x.com/" + h;
+    case "facebook": return "https://facebook.com/" + h;
+    case "linkedin": return "https://linkedin.com/in/" + h;
+    default: return "#";
+  }
+}
+
 /* ---- Step sheet: Social profiles ---- */
 const PM_SOCIALS = [
   { key: "linkedin", icon: "mdi:linkedin", color: "#0A66C2", label: "LinkedIn" },
@@ -2014,9 +2048,16 @@ const PM_SOCIALS = [
 ];
 
 function SocialStep({ onComplete }) {
-  const [connected, setConnected] = useStatePM([]);
+  const [connected, setConnected] = useStatePM(() => Object.keys(pmLoadSocialConnections()));
   function toggle(key) {
-    setConnected(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+    setConnected(prev => {
+      const next = prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key];
+      const conn = pmLoadSocialConnections();
+      if (next.includes(key)) conn[key] = conn[key] || pmDefaultSocialHandle(key); else delete conn[key];
+      pmSaveJSON(PM_SOCIAL_CONN_KEY, conn);
+      pmSaveBanners(pmLoadBanners().filter(k => conn[k]));
+      return next;
+    });
   }
   return (
     <div className="pm-sheet-step">
@@ -2828,17 +2869,28 @@ function PMActivitySummaryCard({ user }) {
 function OtherProfileScreen({ user }) {
   const [msgOpen, setMsgOpen] = useStatePM(false);
   const [following, setFollowing] = useStatePM(false);
+  const [avatarOpen, setAvatarOpen] = useStatePM(() => {
+    try { return new URLSearchParams(window.location.search).get("avatar") === "1"; } catch (e) { return false; }
+  });
+  const [qrOpen, setQrOpen] = useStatePM(() => {
+    try { return new URLSearchParams(window.location.search).get("qr") === "1"; } catch (e) { return false; }
+  });
   const scrollRef = React.useRef(null);
   const { hidden: chromeHidden } = useHeaderHidePM(scrollRef);
   return (
     <div className="pm-screen" data-screen-label={"Profile — " + user.name}>
       <OtherProfileTopBar name={user.name} onBack={() => goPM("NewsfeedMobile.html")} onMessage={() => setMsgOpen(true)} />
+      {avatarOpen && (
+        <PMAvatarViewer user={user} following={following} onToggleFollow={() => setFollowing((f) => !f)}
+          onQr={() => { setAvatarOpen(false); setQrOpen(true); }} onClose={() => setAvatarOpen(false)} />
+      )}
+      {qrOpen && <PMQrShareScreen user={user} link={pmProfileLinkPM(user)} onClose={() => setQrOpen(false)} />}
       <div className="pm-scroll" ref={scrollRef}>
         <div className="pm-ig">
           <div className="pm-ig-top">
-            <div className="pm-ig-avwrap">
+            <button type="button" className="pm-ig-avwrap pm-ig-avbtn" aria-label={"View " + user.name + "'s profile picture"} onClick={() => setAvatarOpen(true)}>
               <DSPM.Avatar name={user.name} src={user.avatar} size={92} className="pm-ig-av" />
-            </div>
+            </button>
             <div className="pm-ig-stats">
               <div className="pm-ig-stat"><span className="n">{user.posts}</span><span className="l">posts</span></div>
               <div className="pm-ig-stat"><span className="n">{user.followers}</span><span className="l">followers</span></div>
@@ -2958,24 +3010,147 @@ function useIsMobilePM() {
   return mobile;
 }
 
-/* ---- Full-page profile editor (opened from "Edit Profile") ---- */
-function PMEditField({ label, icon, value, onChange, options, placeholder }) {
+/* ---- Full-page profile editor (opened from "Edit Profile") ----
+   Instagram-style settings sheet: centred avatar with an "Edit picture"
+   link, then label | value rows whose hairline dividers run under the value
+   column only, grouped under bold section titles. The field set is the
+   finalised one from the earlier card layout — only the presentation moved.
+   Save lives in the header (IG "Done" slot); the back chevron cancels. */
+function useAutoGrowPM(ref, value) {
+  useEffectPM(() => {
+    const el = ref.current; if (!el) return;
+    el.style.height = "0px";
+    el.style.height = Math.max(22, el.scrollHeight) + "px";
+  }, [value]);
+}
+
+function PMEditRow({ label, value, onChange, options, placeholder, multiline, stack, inputMode }) {
+  const taRef = React.useRef(null);
+  useAutoGrowPM(taRef, multiline ? value : null);
+  const cls = "pm-edit-row" + (options ? " pick" : "") + (multiline ? " multi" : "") + (stack ? " stack" : "");
   return (
-    <div className="pm-edit-field">
-      <label className="pm-edit-label">{label}</label>
-      <div className="pm-edit-input-wrap">
-        {icon && <DSPM.IconifyIcon name={icon} size={18} color="var(--gray-450)" />}
+    <div className={cls}>
+      <span className="pm-edit-row-label">{label}</span>
+      <div className="pm-edit-row-val">
         {options ? (
           <>
-            <select className="pm-edit-select" value={value} onChange={e => onChange(e.target.value)}>
+            <span className="pm-edit-row-text">{value}</span>
+            <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+            <select className="pm-edit-row-select" aria-label={label} value={value} onChange={e => onChange(e.target.value)}>
               {options.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
-            <DSPM.IconifyIcon name="lucide:chevron-down" size={16} color="var(--gray-450)" />
           </>
+        ) : multiline ? (
+          <textarea ref={taRef} rows={1} className="pm-edit-row-input" value={value} placeholder={placeholder || label}
+            onChange={e => onChange(e.target.value)} />
         ) : (
-          <input type="text" className="pm-edit-input" value={value} placeholder={placeholder || label}
+          <input type="text" inputMode={inputMode} className="pm-edit-row-input" value={value} placeholder={placeholder || label}
             onChange={e => onChange(e.target.value)} />
         )}
+      </div>
+    </div>
+  );
+}
+
+/* ---- Banners (Edit profile → Banners) ----
+   "On your profile": the connected social accounts shown as chips on the
+   profile, drag handle to reorder, × to remove. "Add to profile": the rest
+   of the accounts connected via "Connect your social profiles". */
+function PMBannersScreen({ onBack }) {
+  const [banners, setBanners] = useStatePM(() => pmLoadBanners());
+  const [conn] = useStatePM(() => pmLoadSocialConnections());
+  const [dragKey, setDragKey] = useStatePM(null);
+  const listRef = React.useRef(null);
+  const dragRef = React.useRef(null);
+
+  function commit(next) { setBanners(next); pmSaveBanners(next); }
+  function remove(key) { commit(banners.filter(k => k !== key)); }
+  function add(key) { if (!banners.includes(key)) commit([...banners, key]); }
+
+  function onHandleDown(e, key) {
+    const row = e.currentTarget.closest(".pm-bn-row");
+    if (!row) return;
+    e.preventDefault();
+    const rowH = row.getBoundingClientRect().height || 64;
+    dragRef.current = { key, startY: e.clientY, rowH, list: banners.slice() };
+    setDragKey(key);
+    const move = (ev) => {
+      const d = dragRef.current; if (!d) return;
+      const from = d.list.indexOf(d.key);
+      const delta = Math.round((ev.clientY - d.startY) / d.rowH);
+      const to = Math.max(0, Math.min(d.list.length - 1, from + delta));
+      if (to !== from) {
+        const next = d.list.slice(); next.splice(from, 1); next.splice(to, 0, d.key);
+        d.list = next; d.startY += (to - from) * d.rowH;
+        setBanners(next);
+      }
+    };
+    const up = () => {
+      const d = dragRef.current; dragRef.current = null; setDragKey(null);
+      if (d) pmSaveBanners(d.list);
+      window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+    };
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+  }
+
+  const socialOf = (key) => PM_SOCIALS.find(s => s.key === key);
+  const addable = PM_SOCIALS.filter(s => conn[s.key] && !banners.includes(s.key));
+  const anyConnected = Object.keys(conn).length > 0;
+
+  return (
+    <div className="pm-edit-screen pm-bn-screen" data-screen-label="Banners">
+      <header className="pm-edit-hd">
+        <button type="button" className="pm-edit-back" aria-label="Back" onClick={onBack}>
+          <DSPM.IconifyIcon name="lucide:chevron-left" size={24} color="var(--text-heading)" />
+        </button>
+        <h1>Banners</h1>
+        <span aria-hidden="true" />
+      </header>
+      <div className="pm-edit-body">
+        <section className="pm-bn-sec">
+          <h2 className="pm-bn-title">On your profile</h2>
+          {banners.length === 0 && (
+            <p className="pm-bn-empty">Nothing on your profile yet. Add a connected account below and it shows up as a banner under your bio.</p>
+          )}
+          <div className="pm-bn-list" ref={listRef}>
+            {banners.map(key => {
+              const s = socialOf(key); if (!s) return null;
+              return (
+                <div key={key} className={"pm-bn-row" + (dragKey === key ? " dragging" : "")}>
+                  <button type="button" className="pm-bn-handle" aria-label={"Reorder " + s.label} onPointerDown={(e) => onHandleDown(e, key)}>
+                    <DSPM.IconifyIcon name="lucide:menu" size={24} color="var(--gray-500)" />
+                  </button>
+                  <span className="pm-bn-ic"><DSPM.IconifyIcon name={s.icon} size={26} color={s.color} /></span>
+                  <span className="pm-bn-nm">{conn[key]}</span>
+                  <span className="pm-bn-sub">{s.label}</span>
+                  <button type="button" className="pm-bn-x" aria-label={"Remove " + s.label} onClick={() => remove(key)}>
+                    <DSPM.IconifyIcon name="lucide:x" size={24} color="var(--gray-600)" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+        <div className="pm-bn-band" />
+        <section className="pm-bn-sec">
+          <h2 className="pm-bn-title">Add to profile</h2>
+          {!anyConnected && (
+            <p className="pm-bn-empty">Connect your accounts first — open <b>Complete your profile → Connect your social profiles</b> on your profile page, then come back here to add them as banners.</p>
+          )}
+          {anyConnected && addable.length === 0 && (
+            <p className="pm-bn-empty">All your connected accounts are already on your profile.</p>
+          )}
+          <div className="pm-bn-list">
+            {addable.map(s => (
+              <button key={s.key} type="button" className="pm-bn-row add" onClick={() => add(s.key)}>
+                <span className="pm-bn-handle"><DSPM.IconifyIcon name="lucide:circle-plus" size={24} color="var(--gray-500)" /></span>
+                <span className="pm-bn-ic"><DSPM.IconifyIcon name={s.icon} size={26} color={s.color} /></span>
+                <span className="pm-bn-nm">{conn[s.key]}</span>
+                <span className="pm-bn-sub">{s.label}</span>
+              </button>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );
@@ -2994,61 +3169,290 @@ function PMEditProfileScreen({ profile, onCancel, onSave }) {
     instagram: profile.instagram || "",
   }));
   const [goals, setGoals] = useStatePM(() => profile.personalGoal || PM_PERSONAL_GOAL_QUESTIONS.map(() => ""));
+  const [avatar, setAvatar] = useStatePM(profile.avatar || "");
+  const [bannersOpen, setBannersOpen] = useStatePM(() => {
+    try { return new URLSearchParams(window.location.search).get("banners") === "1"; } catch (e) { return false; }
+  });
+  const [bannerCount, setBannerCount] = useStatePM(() => pmLoadBanners().length);
+  const fileRef = React.useRef(null);
 
   function setField(key) { return (value) => setForm(f => ({ ...f, [key]: value })); }
   function setGoalAt(i, value) { setGoals(g => g.map((v, gi) => gi === i ? value : v)); }
+  function pickAvatar(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try { setAvatar(URL.createObjectURL(f)); } catch (err) {}
+    e.target.value = "";
+  }
 
   function handleSave() {
-    onSave({
+    const patch = {
       name: form.fullName, bio: form.bio, title: form.title, specialty: form.specialty,
       clinic: form.clinic, clinicNumber: form.clinicNumber, clinicAddress: form.clinicAddress,
       yearsExperience: form.yearsExperience, instagram: form.instagram, personalGoal: goals,
-    });
+    };
+    if (avatar && avatar !== profile.avatar) patch.avatar = avatar;
+    onSave(patch);
+  }
+
+  if (bannersOpen) {
+    return <PMBannersScreen onBack={() => { setBannersOpen(false); setBannerCount(pmLoadBanners().length); }} />;
   }
 
   return (
     <div className="pm-edit-screen" data-screen-label="Edit profile">
       <header className="pm-edit-hd">
         <button type="button" className="pm-edit-back" aria-label="Back" onClick={onCancel}>
-          <DSPM.IconifyIcon name="lucide:arrow-left" size={22} color="var(--brand-navy)" />
+          <DSPM.IconifyIcon name="lucide:chevron-left" size={24} color="var(--text-heading)" />
         </button>
-        <h1>Edit Profile</h1>
-        <span className="pm-edit-hd-spacer" aria-hidden="true" />
+        <h1>Edit profile</h1>
+        <button type="button" className="pm-edit-done" onClick={handleSave}>Save</button>
       </header>
       <div className="pm-edit-body">
-        <div className="pm-edit-avwrap">
-          <DSPM.Avatar name={profile.name} src={profile.avatar} size={96} />
+        <div className="pm-edit-avblock">
+          <button type="button" className="pm-edit-avbtn" aria-label="Edit profile picture" onClick={() => fileRef.current && fileRef.current.click()}>
+            <DSPM.Avatar name={form.fullName || profile.name} src={avatar} size={96} />
+          </button>
+          <button type="button" className="pm-edit-avlink" onClick={() => fileRef.current && fileRef.current.click()}>Edit Profile</button>
+          <input ref={fileRef} type="file" accept="image/*" hidden onChange={pickAvatar} />
         </div>
 
-        <section className="pm-edit-card">
-          <h2>Public Profile Information</h2>
-          <PMEditField label="Title" icon="lucide:contact" value={form.title} onChange={setField("title")} options={PM_TITLE_OPTIONS} />
-          <PMEditField label="Full Name" icon="lucide:user" value={form.fullName} onChange={setField("fullName")} />
-          <PMEditField label="Tell us about yourself" value={form.bio} onChange={setField("bio")} placeholder="Tell us about yourself" />
-          <PMEditField label="Primary Specialty" icon="lucide:stethoscope" value={form.specialty} onChange={setField("specialty")} />
-          <PMEditField label="Clinic Name" icon="lucide:image" value={form.clinic} onChange={setField("clinic")} />
-          <PMEditField label="Clinic Number" icon="lucide:phone" value={form.clinicNumber} onChange={setField("clinicNumber")} />
-          <PMEditField label="Clinic Address" icon="lucide:map-pin" value={form.clinicAddress} onChange={setField("clinicAddress")} />
-          <PMEditField label="Years of Experience" icon="lucide:hash" value={form.yearsExperience} onChange={setField("yearsExperience")} />
-          <PMEditField label="Instagram Account" icon="lucide:instagram" value={form.instagram} onChange={setField("instagram")} />
+        <section className="pm-edit-group">
+          <h2 className="pm-edit-group-title">Public Profile Information</h2>
+          <PMEditRow label="Title" value={form.title} onChange={setField("title")} options={PM_TITLE_OPTIONS} />
+          <PMEditRow label="Full Name" value={form.fullName} onChange={setField("fullName")} />
+          <PMEditRow label="Tell us about yourself" multiline value={form.bio} onChange={setField("bio")} placeholder="Tell us about yourself" />
+          <PMEditRow label="Primary Specialty" value={form.specialty} onChange={setField("specialty")} />
+          <PMEditRow label="Clinic Name" value={form.clinic} onChange={setField("clinic")} />
+          <PMEditRow label="Clinic Number" inputMode="tel" value={form.clinicNumber} onChange={setField("clinicNumber")} />
+          <PMEditRow label="Clinic Address" multiline value={form.clinicAddress} onChange={setField("clinicAddress")} />
+          <PMEditRow label="Years of Experience" inputMode="numeric" value={form.yearsExperience} onChange={setField("yearsExperience")} />
+          <PMEditRow label="Instagram Account" value={form.instagram} onChange={setField("instagram")} />
         </section>
 
-        <section className="pm-edit-card">
-          <h2>Personal Goal</h2>
+        <section className="pm-edit-group">
+          <button type="button" className="pm-edit-navrow" onClick={() => setBannersOpen(true)}>
+            <span className="pm-edit-navrow-txt">
+              <span className="pm-edit-navrow-lb">Banners</span>
+              <span className="pm-edit-navrow-sub">Show your connected social profiles.</span>
+            </span>
+            {bannerCount > 0 && <span className="pm-edit-navrow-count">{bannerCount}</span>}
+            <DSPM.IconifyIcon name="lucide:chevron-right" size={22} color="var(--gray-450)" />
+          </button>
+        </section>
+
+        <section className="pm-edit-group">
+          <h2 className="pm-edit-group-title">Personal Goal</h2>
           {PM_PERSONAL_GOAL_QUESTIONS.map((q, i) => (
-            <div className="pm-edit-field" key={i}>
-              <label className="pm-edit-label">{q}</label>
-              <div className="pm-edit-input-wrap">
-                <input type="text" className="pm-edit-input" value={goals[i]} onChange={e => setGoalAt(i, e.target.value)} />
-              </div>
-            </div>
+            <PMEditRow key={i} stack multiline label={q} value={goals[i]} onChange={v => setGoalAt(i, v)} placeholder="Write your answer" />
           ))}
         </section>
       </div>
-      <div className="pm-edit-footer">
-        <button type="button" className="pm-edit-cancel" onClick={onCancel}>Cancel</button>
-        <button type="button" className="pm-edit-save" onClick={handleSave}>Save</button>
+    </div>
+  );
+}
+
+/* ---- Profile QR share screen (Share Profile / QR code action) ----
+   IG-style QR card: dot-style modules, rounded finder corners, PROfinity P
+   mark in the centre (error correction H so the covered modules recover),
+   handle underneath, then Share profile / Copy link / Download tiles. */
+const PM_QR_LOGO = "assets/profinity-icon-purple-gold.png";
+function pmBuildQrSvg(text, logoHref) {
+  if (typeof window.qrcode !== "function") return "";
+  let qr;
+  try { qr = window.qrcode(0, "H"); qr.addData(text); qr.make(); } catch (e) { return ""; }
+  const n = qr.getModuleCount(), cell = 10, size = n * cell;
+  const logoCells = Math.max(7, Math.round(n * 0.26));
+  const l0 = Math.floor((n - logoCells) / 2), l1 = l0 + logoCells;
+  const inFinder = (r, c) => (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
+  const inLogo = (r, c) => r >= l0 && r < l1 && c >= l0 && c < l1;
+  const dots = [];
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) {
+    if (!qr.isDark(r, c) || inFinder(r, c) || inLogo(r, c)) continue;
+    dots.push(`<circle cx="${(c + .5) * cell}" cy="${(r + .5) * cell}" r="${cell * .42}"/>`);
+  }
+  const finder = (x, y) => {
+    const o = cell * 0.5;
+    return `<rect x="${x * cell + o}" y="${y * cell + o}" width="${6 * cell}" height="${6 * cell}" rx="${cell * 1.9}" fill="none" stroke="#111" stroke-width="${cell}"/>` +
+      `<rect x="${(x + 2) * cell}" y="${(y + 2) * cell}" width="${3 * cell}" height="${3 * cell}" rx="${cell * .9}" fill="#111"/>`;
+  };
+  const lp = (l1 - l0) * cell, lx = l0 * cell, pad = cell * .6;
+  const logo = `<rect x="${lx}" y="${lx}" width="${lp}" height="${lp}" rx="${cell * 1.6}" fill="#fff"/>` +
+    `<image href="${logoHref}" x="${lx + pad}" y="${lx + pad}" width="${lp - pad * 2}" height="${lp - pad * 2}" preserveAspectRatio="xMidYMid meet"/>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" shape-rendering="geometricPrecision"><rect width="${size}" height="${size}" fill="#fff"/><g fill="#111">${dots.join("")}</g>${finder(0, 0)}${finder(n - 7, 0)}${finder(0, n - 7)}${logo}</svg>`;
+}
+
+function pmHandleFor(user) {
+  const ig = user && user.instagram && String(user.instagram).trim();
+  if (ig) return ig.startsWith("@") ? ig : "@" + ig;
+  return "@" + String((user && user.name) || "profile").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function PMQrShareScreen({ user, link, onClose }) {
+  const [toast, setToast] = useStatePM("");
+  const svg = React.useMemo(() => pmBuildQrSvg(link, PM_QR_LOGO), [link]);
+  const handle = pmHandleFor(user);
+
+  useEffectPM(() => {
+    function onKey(e) { if (e.key === "Escape") onClose(); }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  useEffectPM(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(""), 1600);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  function copyLink() {
+    const done = () => setToast("Link copied");
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, done); else done();
+  }
+  function share() {
+    if (navigator.share) { navigator.share({ title: user.name, url: link }).catch(() => {}); return; }
+    copyLink();
+  }
+  async function download() {
+    if (!svg) { setToast("QR not ready"); return; }
+    try {
+      /* Inline the logo so the SVG rasterises with it (external hrefs are
+         dropped when an SVG is painted through <img> → canvas). */
+      const blob = await fetch(PM_QR_LOGO).then(r => r.blob());
+      const dataUrl = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(blob); });
+      const inlined = svg.replace(PM_QR_LOGO, dataUrl);
+      const img = new Image();
+      const url = URL.createObjectURL(new Blob([inlined], { type: "image/svg+xml" }));
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+      const S = 1080, cv = document.createElement("canvas"); cv.width = S; cv.height = S + 160;
+      const ctx = cv.getContext("2d");
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, cv.width, cv.height);
+      ctx.drawImage(img, 90, 60, S - 180, S - 180);
+      ctx.fillStyle = "#111"; ctx.font = "600 64px Poppins, system-ui, sans-serif"; ctx.textAlign = "center";
+      ctx.fillText(handle.toUpperCase(), S / 2, S + 60);
+      URL.revokeObjectURL(url);
+      const a = document.createElement("a");
+      a.download = handle.replace(/^@/, "") + "-profinity-qr.png";
+      a.href = cv.toDataURL("image/png"); a.click();
+      setToast("Saved");
+    } catch (e) {
+      const a = document.createElement("a");
+      a.download = handle.replace(/^@/, "") + "-profinity-qr.svg";
+      a.href = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg); a.click();
+    }
+  }
+
+  return pmScreenPortal(
+    <div className="pm-qrs" role="dialog" aria-modal="true" aria-label="Profile QR code">
+      <header className="pm-qrs-hd">
+        <button type="button" className="pm-qrs-round" aria-label="Close" onClick={onClose}>
+          <DSPM.IconifyIcon name="lucide:x" size={26} color="var(--text-heading)" />
+        </button>
+        <button type="button" className="pm-qrs-round" aria-label="Scan a QR code" onClick={() => setToast("Scanner opens the camera on device")}>
+          <DSPM.IconifyIcon name="lucide:scan-qr-code" size={26} color="var(--text-heading)" />
+        </button>
+      </header>
+      <div className="pm-qrs-mid">
+        <div className="pm-qrs-card">
+          {svg ? <div className="pm-qrs-code" dangerouslySetInnerHTML={{ __html: svg }} /> : <div className="pm-qrs-code pm-qrs-code-fallback">{link}</div>}
+          <div className="pm-qrs-handle">{handle}</div>
+        </div>
+        <div className="pm-qrs-tiles">
+          <button type="button" className="pm-qrs-tile" onClick={share}>
+            <DSPM.IconifyIcon name="lucide:share" size={28} color="var(--text-heading)" /><span>Share profile</span>
+          </button>
+          <button type="button" className="pm-qrs-tile" onClick={copyLink}>
+            <DSPM.IconifyIcon name="lucide:link" size={28} color="var(--text-heading)" /><span>Copy link</span>
+          </button>
+          <button type="button" className="pm-qrs-tile" onClick={download}>
+            <DSPM.IconifyIcon name="lucide:download" size={28} color="var(--text-heading)" /><span>Download</span>
+          </button>
+        </div>
       </div>
+      {toast && <div className="pm-avv-toast pm-qrs-toast" role="status">{toast}</div>}
+    </div>
+  );
+}
+
+/* ---- Profile picture viewer (tap the avatar on a profile) ----
+   IG-style: the profile stays underneath, heavily blurred; the photo sits
+   large and round in the middle with a round action row pinned to the
+   bottom. Own profile gets a pencil badge + "Edit avatar" (both open the
+   file picker); someone else's profile gets Follow/Following instead. */
+function pmProfileLinkPM(user) {
+  try {
+    const u = new URL(window.location.href);
+    if (user && user.id) { u.searchParams.set("id", user.id); }
+    return u.origin + u.pathname + (u.search || "");
+  } catch (e) { return window.location.href; }
+}
+
+function PMAvatarViewer({ user, own, following, onToggleFollow, onChangeAvatar, onQr, onClose }) {
+  const [toast, setToast] = useStatePM("");
+  const fileRef = React.useRef(null);
+  const link = pmProfileLinkPM(own ? null : user);
+
+  useEffectPM(() => {
+    function onKey(e) { if (e.key === "Escape") onClose(); }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  useEffectPM(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(""), 1600);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  function copyLink() {
+    const done = () => setToast("Link copied");
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(done, done);
+    else done();
+  }
+  function share() {
+    if (navigator.share) { navigator.share({ title: user.name, url: link }).catch(() => {}); return; }
+    copyLink();
+  }
+  function pick(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try { onChangeAvatar && onChangeAvatar(URL.createObjectURL(f)); } catch (err) {}
+    e.target.value = "";
+  }
+  const openPicker = () => fileRef.current && fileRef.current.click();
+
+  const actions = own
+    ? [
+        { key: "share", label: "Share", icon: "lucide:circle-user-round", onClick: share },
+        { key: "copy", label: "Copy link", icon: "lucide:link", onClick: copyLink },
+        { key: "qr", label: "QR code", icon: "lucide:qr-code", onClick: () => onQr && onQr() },
+        { key: "edit", label: "Edit avatar", icon: "lucide:smile", onClick: openPicker },
+      ]
+    : [
+        { key: "follow", label: following ? "Following" : "Follow", icon: following ? "lucide:user-round-check" : "lucide:user-round-plus", onClick: onToggleFollow, active: following },
+        { key: "share", label: "Share", icon: "lucide:circle-user-round", onClick: share },
+        { key: "copy", label: "Copy link", icon: "lucide:link", onClick: copyLink },
+        { key: "qr", label: "QR code", icon: "lucide:qr-code", onClick: () => onQr && onQr() },
+      ];
+
+  return pmScreenPortal(
+    <div className="pm-avv" role="dialog" aria-modal="true" aria-label={user.name + " profile picture"} onClick={onClose}>
+      <div className="pm-avv-photo" onClick={e => e.stopPropagation()}>
+        <DSPM.Avatar name={user.name} src={user.avatar} size={300} className="pm-avv-img" />
+        {own && (
+          <button type="button" className="pm-avv-pencil" aria-label="Change profile picture" onClick={openPicker}>
+            <DSPM.IconifyIcon name="lucide:pencil" size={22} color="var(--text-heading)" />
+          </button>
+        )}
+      </div>
+      <div className="pm-avv-actions" onClick={e => e.stopPropagation()}>
+        {actions.map(a => (
+          <button key={a.key} type="button" className={"pm-avv-act" + (a.active ? " on" : "")} onClick={a.onClick}>
+            <span className="pm-avv-act-ic"><DSPM.IconifyIcon name={a.icon} size={28} color="var(--text-heading)" /></span>
+            <span className="pm-avv-act-lb">{a.label}</span>
+          </button>
+        ))}
+      </div>
+      {own && <input ref={fileRef} type="file" accept="image/*" hidden onChange={pick} />}
+      {toast && <div className="pm-avv-toast" role="status">{toast}</div>}
     </div>
   );
 }
@@ -3058,10 +3462,27 @@ function PMScreen() {
   const m = profile;
   const [msgOpen, setMsgOpen] = useStatePM(false);
   const [menuOpen, setMenuOpen] = useStatePM(false);
-  const [editOpen, setEditOpen] = useStatePM(false);
+  const [editOpen, setEditOpen] = useStatePM(() => {
+    try { const q = new URLSearchParams(window.location.search); return q.get("edit") === "1" || q.get("banners") === "1"; } catch (e) { return false; }
+  });
+  const [avatarOpen, setAvatarOpen] = useStatePM(() => {
+    try { return new URLSearchParams(window.location.search).get("avatar") === "1"; } catch (e) { return false; }
+  });
+  const [qrOpen, setQrOpen] = useStatePM(() => {
+    try { return new URLSearchParams(window.location.search).get("qr") === "1"; } catch (e) { return false; }
+  });
   const [assessState, setAssessState] = useStatePM(() => pmLoadAssessState());
   const scrollRef = React.useRef(null);
   const { hidden: chromeHidden, floating: chromeFloat } = useHeaderHidePM(scrollRef);
+
+  const [banners, setBanners] = useStatePM(() => pmLoadBanners());
+  const socialConn = React.useMemo(() => pmLoadSocialConnections(), [banners, editOpen]);
+  useEffectPM(() => {
+    const sync = () => setBanners(pmLoadBanners());
+    window.addEventListener("pf-banners-changed", sync);
+    window.addEventListener("storage", sync);
+    return () => { window.removeEventListener("pf-banners-changed", sync); window.removeEventListener("storage", sync); };
+  }, []);
 
   function saveProfileEdits(updated) {
     const bioJustAdded = !profile.bio && updated.bio && updated.bio.trim().length > 0;
@@ -3100,12 +3521,18 @@ function PMScreen() {
   return (
     <div className={"pm-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="Profile (mobile)">
           <PMTopBar onMenu={() => setMenuOpen(true)} onMessages={() => setMsgOpen(true)} />
+          {avatarOpen && (
+            <PMAvatarViewer user={m} own onClose={() => setAvatarOpen(false)}
+              onQr={() => { setAvatarOpen(false); setQrOpen(true); }}
+              onChangeAvatar={(src) => { setProfile((prev) => ({ ...prev, avatar: src })); }} />
+          )}
+          {qrOpen && <PMQrShareScreen user={m} link={pmProfileLinkPM(null)} onClose={() => setQrOpen(false)} />}
           <div className="pm-scroll" ref={scrollRef}>
             <div className="pm-ig">
               <div className="pm-ig-top">
-                <div className="pm-ig-avwrap">
+                <button type="button" className="pm-ig-avwrap pm-ig-avbtn" aria-label="View profile picture" onClick={() => setAvatarOpen(true)}>
                   <DSPM.Avatar name={m.name} src={m.avatar} size={92} className="pm-ig-av" />
-                </div>
+                </button>
                 <div className="pm-ig-stats">
                   <div className="pm-ig-stat"><span className="n">{m.posts}</span><span className="l">posts</span></div>
                   <div className="pm-ig-stat"><span className="n">{m.followers}</span><span className="l">followers</span></div>
@@ -3134,6 +3561,18 @@ function PMScreen() {
                 <DSPM.IconifyIcon name="lucide:link" size={17} color="var(--ai-purple)" />allcaremedical.co.uk
               </a>
 
+              {banners.length > 0 && (
+                <div className="pm-ig-banners">
+                  {banners.map(key => {
+                    const s = PM_SOCIALS.find(x => x.key === key); if (!s) return null;
+                    return (
+                      <a key={key} className="pm-banner" href={pmSocialUrl(key, socialConn[key])} target="_blank" rel="noopener noreferrer">
+                        <DSPM.IconifyIcon name={s.icon} size={17} color={s.color} />{socialConn[key]}
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
               <div className="pm-ig-chips">
                 <span className="pm-chip"><DSPM.IconifyIcon name="lucide:map-pin" size={16} color="var(--brand-navy)" />{m.location}</span>
                 <span className="pm-chip"><DSPM.IconifyIcon name="lucide:building-2" size={16} color="var(--brand-navy)" />{m.clinic}</span>
@@ -3142,7 +3581,7 @@ function PMScreen() {
 
               <div className="pm-ig-actions">
                 <button className="pm-ig-btn" onClick={() => setEditOpen(true)}>Edit Profile</button>
-                <button className="pm-ig-btn navy">Share Profile</button>
+                <button className="pm-ig-btn" onClick={() => setQrOpen(true)}>Share Profile</button>
                 <button className="pm-ig-btn icon" aria-label="Settings" onClick={() => goPM("AccountSettings.html")}>
                   <DSPM.IconifyIcon name="lucide:settings" size={20} color="var(--text-heading)" />
                 </button>

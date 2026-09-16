@@ -408,11 +408,12 @@ const SM_EVENTS = [
 
 const SM_PROFILE_BEFORE_M = [
 { label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
-{ label: "Account Settings",   icon: "lucide:graduation-cap",  href: null },
+{ label: "Account Settings",   icon: "lucide:settings",  href: null },
 { label: "Payments",           icon: "lucide:credit-card",     href: "PaymentsMobile.html" },
 { label: "My Saved",           icon: "lucide:bookmark",        href: "MySaved.html" },
 { label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" },
 { label: "Privacy & Security", icon: "lucide:book-open",       href: null },
+{ label: "Chat Support",       icon: "lucide:headset",         href: "ChatSupport.html" },
 { label: "Display Settings",   icon: "lucide:cpu",             href: "DisplaySettings.html" }];
 
 const NT_BADGE = {
@@ -1241,8 +1242,7 @@ function MobileHome() {
       </div>
       <MTabBar ref={tabsRefM} compact={chromeHidden} />
       <button className={"m-fab" + (chromeHidden ? " m-fab-compact" : "")} aria-label="Share a Post" onClick={() => go("CreatePostMobile.html")}>
-        <DSM.IconifyIcon name="lucide:plus" size={16} color="#fff" />
-        <span className="lbl">Share a Post</span>
+        <DSM.IconifyIcon name="lucide:plus" size={24} color="#fff" />
       </button>
       <SideMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
       <NotificationsPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
