@@ -779,6 +779,10 @@ img{max-width:100%}
 .pf-shq-media{width:100%;background:var(--gray-100)}
 .pf-shq-media .mc-wrap{margin-bottom:0}
 .pf-shq-media .mc-dots{padding:8px 0 6px;background:var(--surface-card)}
+/* Shared poll / quiz: the interactive block sits flush inside the repost card */
+.pf-shq-embed{width:100%}
+.pf-shq-embed .pf-poll,.pf-shq-embed .pf-quiz{margin-bottom:0;padding:20px 16px 18px}
+.pf-shq-embed .pf-poll-q,.pf-shq-embed .pf-quiz-q{font-size:15px}
 .pf-shq-video{width:100%;max-height:420px;background:#000}
 .pf-shq-poster{position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden}
 .pf-shq-poster.square{aspect-ratio:1/1}

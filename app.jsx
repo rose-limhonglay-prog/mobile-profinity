@@ -6020,7 +6020,8 @@ function slimSharedPost(post) {
   const video = post.video && post.video.src ? { src: post.video.src, cover: post.video.cover, ratio: post.video.ratio } : undefined;
   return { id: post.id, author: { name: post.author.name, avatar: post.author.avatar }, time: post.time, body: post.body || "",
     media: (post.media || []).slice(0, 10), sample, video, liveNow: post.liveNow ? { viewers: post.liveNow.viewers, frame: post.liveNow.frame } : undefined,
-    poll: post.poll ? { question: post.poll.question } : undefined, questionnaire: post.questionnaire ? { question: post.questionnaire.question } : undefined,
+    poll: post.poll ? { question: post.poll.question, options: (post.poll.options || []).map((o) => ({ label: o.label, pct: o.pct })), votes: post.poll.votes || 0 } : undefined,
+    questionnaire: post.questionnaire ? { question: post.questionnaire.question, options: (post.questionnaire.options || []).map((o) => ({ label: o.label, correct: !!o.correct })) } : undefined,
     document: post.document ? { name: post.document.name, title: post.document.title } : undefined };
 }
 /* Pages that host each share destination, per surface (PF_EMBED = mobile). */
@@ -6109,6 +6110,14 @@ function SharePostQuote({ post, full }) {
     } else if (media.length > 0) {
       mediaNode = <MediaCarousel images={media} />;
     }
+    /* Polls and quizzes are shared as the real interactive block (same
+       component the original card uses) so a repost can be answered in
+       place; reposts saved before options were carried fall back to the
+       kind label below. */
+    const livePoll = !mediaNode && post.poll && Array.isArray(post.poll.options) && post.poll.options.length > 0;
+    const liveQuiz = !mediaNode && !livePoll && post.questionnaire && Array.isArray(post.questionnaire.options) && post.questionnaire.options.length > 0;
+    if (livePoll) mediaNode = <div className="pf-shq-embed"><Poll poll={post.poll} /></div>;
+    else if (liveQuiz) mediaNode = <div className="pf-shq-embed"><Questionnaire questionnaire={post.questionnaire} /></div>;
     const kindOnly = !mediaNode && (post.poll ? "Poll · " + (post.poll.question || "") : post.questionnaire ? "Quiz · " + (post.questionnaire.question || "") : post.document ? (post.document.name || post.document.title || "Document") : null);
     return (
       <div className="pf-shq-full" aria-label={"Post by " + post.author.name}>

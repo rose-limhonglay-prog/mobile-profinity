@@ -11256,10 +11256,19 @@ function slimSharedPost(post) {
       frame: post.liveNow.frame
     } : undefined,
     poll: post.poll ? {
-      question: post.poll.question
+      question: post.poll.question,
+      options: (post.poll.options || []).map(o => ({
+        label: o.label,
+        pct: o.pct
+      })),
+      votes: post.poll.votes || 0
     } : undefined,
     questionnaire: post.questionnaire ? {
-      question: post.questionnaire.question
+      question: post.questionnaire.question,
+      options: (post.questionnaire.options || []).map(o => ({
+        label: o.label,
+        correct: !!o.correct
+      }))
     } : undefined,
     document: post.document ? {
       name: post.document.name,
@@ -11413,6 +11422,21 @@ function SharePostQuote({
         images: media
       });
     }
+    /* Polls and quizzes are shared as the real interactive block (same
+       component the original card uses) so a repost can be answered in
+       place; reposts saved before options were carried fall back to the
+       kind label below. */
+    const livePoll = !mediaNode && post.poll && Array.isArray(post.poll.options) && post.poll.options.length > 0;
+    const liveQuiz = !mediaNode && !livePoll && post.questionnaire && Array.isArray(post.questionnaire.options) && post.questionnaire.options.length > 0;
+    if (livePoll) mediaNode = /*#__PURE__*/React.createElement("div", {
+      className: "pf-shq-embed"
+    }, /*#__PURE__*/React.createElement(Poll, {
+      poll: post.poll
+    }));else if (liveQuiz) mediaNode = /*#__PURE__*/React.createElement("div", {
+      className: "pf-shq-embed"
+    }, /*#__PURE__*/React.createElement(Questionnaire, {
+      questionnaire: post.questionnaire
+    }));
     const kindOnly = !mediaNode && (post.poll ? "Poll · " + (post.poll.question || "") : post.questionnaire ? "Quiz · " + (post.questionnaire.question || "") : post.document ? post.document.name || post.document.title || "Document" : null);
     return /*#__PURE__*/React.createElement("div", {
       className: "pf-shq-full",
