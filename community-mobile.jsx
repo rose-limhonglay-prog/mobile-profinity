@@ -716,7 +716,14 @@ function useHeaderHideCM(scrollRef) {
 }
 
 function CMScreen({ scrollRef }) {
-  const [channel, setChannel] = React.useState("Confidence");
+  /* ?channel=<bucket> (e.g. from a share redirect) opens that channel first. */
+  const [channel, setChannel] = React.useState(() => {
+    try {
+      const b = new URLSearchParams(location.search).get("channel");
+      const name = Object.keys(CM_CHANNEL_BUCKET).find((k) => CM_CHANNEL_BUCKET[k] === b);
+      return name || "Confidence";
+    } catch (e) { return "Confidence"; }
+  });
   const [msgOpen, setMsgOpen] = React.useState(false);
   const [menuOpen, setMenuOpen] = React.useState(false);
   const headerRef = React.useRef(null);

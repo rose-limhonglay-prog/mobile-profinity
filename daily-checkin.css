@@ -1,44 +1,78 @@
 /* ===========================================================================
-   PROfinity — daily check-in "Welcome back" modal (plain JS, see daily-checkin.js)
-   Mounts inside the phone frame on desktop / the screen root on a real phone.
-   Fixed navy palette so it reads the same in light and dark mode. pf-dci-*.
+   PROfinity — daily check-in "Welcome back" full-screen takeover
+   (plain JS, see daily-checkin.js). Fills the phone frame on desktop / the
+   screen root on a real phone. Fixed dark-navy palette (same gradient as the
+   Daily Goal page) so it reads the same in light and dark mode. pf-dci-*.
    =========================================================================== */
-.pf-dci-root { position: absolute; inset: 0; z-index: 720; font-family: var(--font-sans, Poppins, system-ui, sans-serif); }
+.pf-dci-root { position: absolute; inset: 0; z-index: 720; font-family: var(--font-sans, Poppins, system-ui, sans-serif);
+  --dci-bg: radial-gradient(120% 90% at 50% 0%, #3a3480 0%, #292569 55%, #1b1848 100%);
+  --dci-ink: #ffffff; --dci-muted: rgba(255,255,255,.78); --dci-kicker: #e7a769; --dci-amber: #fdc35d; --dci-amber-deep: #e7a64a;
+  --dci-dot-bg: rgba(255,255,255,.10); --dci-dot-bd: rgba(255,255,255,.22); --dci-ghost-bg: rgba(255,255,255,.14); --dci-ghost-ink: #ffffff;
+  --dci-close-bg: rgba(255,255,255,.14); --dci-close-ink: #ffffff; }
+/* dark mode uses the same navy on purpose — no separate variant */
 .pf-dci-root--fixed { position: fixed; }
-.pf-dci-scrim { position: absolute; inset: 0; background: rgba(16, 15, 40, .62); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
-  opacity: 0; transition: opacity .22s ease; }
-.pf-dci-root.is-open .pf-dci-scrim { opacity: 1; }
-.pf-dci-card { position: absolute; left: 20px; right: 20px; top: 50%; transform: translateY(-50%) scale(.92); opacity: 0;
-  transition: transform .34s cubic-bezier(.2, 1.3, .4, 1), opacity .22s ease; overflow: hidden; border-radius: 26px; padding: 28px 22px 22px;
-  text-align: center; color: #fff; background: radial-gradient(120% 90% at 50% 0%, #3a3480 0%, #292569 55%, #1b1848 100%);
-  box-shadow: 0 24px 60px rgba(0,0,0,.45); }
-.pf-dci-root.is-open .pf-dci-card { transform: translateY(-50%) scale(1); opacity: 1; }
-.pf-dci-close { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; border-radius: 50%; border: none; cursor: pointer; z-index: 3;
-  background: rgba(255,255,255,.14); color: #fff; font-size: 22px; line-height: 1; display: flex; align-items: center; justify-content: center; }
-.pf-dci-glow { position: absolute; left: 50%; top: 30%; width: 280px; height: 200px; transform: translate(-50%, -50%); border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(253, 195, 93, .42), rgba(253, 195, 93, 0)); pointer-events: none; }
-.pf-dci-lottie { position: relative; z-index: 2; width: 150px; height: 150px; margin: 0 auto 0; display: block;
+
+/* the page */
+.pf-dci-screen { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; text-align: center;
+  color: var(--dci-ink); background: var(--dci-bg);
+  padding: calc(env(safe-area-inset-top, 0px) + 58px) 24px calc(env(safe-area-inset-bottom, 0px) + 22px);
+  opacity: 0; transform: translateY(22px); transition: transform .38s cubic-bezier(.2, 1, .3, 1), opacity .26s ease; }
+.pf-dci-root.is-open .pf-dci-screen { opacity: 1; transform: translateY(0); }
+
+.pf-dci-close { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 58px); right: 18px; width: 38px; height: 38px; border-radius: 50%; border: none; cursor: pointer; z-index: 3;
+  background: var(--dci-close-bg); color: var(--dci-close-ink); font-size: 22px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+
+/* centred body */
+.pf-dci-body { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }
+.pf-dci-glow { position: absolute; left: 50%; top: 24%; width: 320px; height: 240px; transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(253, 195, 93, .40), rgba(253, 195, 93, 0)); pointer-events: none; }
+.pf-dci-lottie { position: relative; z-index: 2; width: 230px; height: 190px; margin: 0 auto 4px; display: block;
   animation: pfDciPop .6s cubic-bezier(.2, 1.4, .4, 1) both .08s; }
 .pf-dci-lottie svg { width: 100% !important; height: 100% !important; display: block; }
-.pf-dci-kicker { position: relative; z-index: 2; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #e7a769; margin: 4px 0 6px; }
-.pf-dci-title { position: relative; z-index: 2; margin: 0; font-size: 32px; line-height: 1.05; font-weight: 800; letter-spacing: -.02em; }
-.pf-dci-pts { position: relative; z-index: 2; margin: 12px auto 0; display: inline-flex; align-items: baseline; gap: 5px; padding: 8px 18px; border-radius: 999px;
-  font-size: 30px; line-height: 1; font-weight: 800; letter-spacing: -.02em; color: #1a1736; font-variant-numeric: tabular-nums;
-  background: linear-gradient(135deg, #fdc35d, #e7a64a); box-shadow: 0 10px 26px rgba(253, 195, 93, .35); }
-.pf-dci-pts small { font-size: 14px; font-weight: 800; letter-spacing: 0; }
-.pf-dci-sub { position: relative; z-index: 2; margin: 14px auto 0; font-size: 14px; line-height: 1.45; color: rgba(255,255,255,.8); max-width: 300px; }
-.pf-dci-sub b { color: #fdc35d; font-weight: 800; }
-.pf-dci-dots { position: relative; z-index: 2; display: flex; justify-content: center; gap: 8px; margin: 18px 0 22px; }
-.pf-dci-dot { width: 32px; height: 32px; border-radius: 50%; background: rgba(253, 195, 93, .12); border: 1.5px solid rgba(253, 195, 93, .4);
-  display: flex; align-items: center; justify-content: center; color: #1a1736; font-size: 13px; font-weight: 800;
+.pf-dci-kicker { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--dci-kicker); margin: 6px 0 8px; }
+.pf-dci-title { margin: 0; font-size: 36px; line-height: 1.05; font-weight: 800; letter-spacing: -.02em; color: var(--dci-ink); }
+.pf-dci-pts { margin: 16px auto 0; display: inline-flex; align-items: baseline; gap: 5px; padding: 10px 22px; border-radius: 999px;
+  font-size: 32px; line-height: 1; font-weight: 800; letter-spacing: -.02em; color: #1a1736; font-variant-numeric: tabular-nums;
+  background: linear-gradient(135deg, var(--dci-amber), var(--dci-amber-deep)); box-shadow: 0 12px 28px rgba(253, 195, 93, .30); }
+.pf-dci-pts small { font-size: 15px; font-weight: 800; letter-spacing: 0; }
+.pf-dci-pts.is-settled { animation: pfDciSettle .42s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes pfDciSettle { 0% { transform: scale(1); } 40% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.pf-dci-sub { margin: 18px auto 0; font-size: 15px; line-height: 1.5; color: var(--dci-muted); max-width: 310px; }
+.pf-dci-sub b { color: var(--dci-amber); font-weight: 800; }
+.pf-dci-dots { display: flex; justify-content: center; align-items: flex-start; gap: 9px; margin: 22px 0 0; }
+.pf-dci-day { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.pf-dci-dow { font: 600 11px/1 var(--font-sans, Poppins, system-ui, sans-serif); letter-spacing: .04em; color: var(--dci-muted); opacity: 0;
+  animation: pfDciDowIn .4s ease both; animation-delay: calc(var(--d, 0ms) + 120ms); }
+.pf-dci-dow.is-today { color: var(--dci-kicker); }
+@keyframes pfDciDowIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.pf-dci-dot { width: 36px; height: 36px; border-radius: 50%; background: var(--dci-dot-bg); border: 1.5px solid var(--dci-dot-bd);
+  display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.85); font-size: 14px; font-weight: 800;
   animation: pfDciPop .5s cubic-bezier(.2, 1.4, .4, 1) both; animation-delay: var(--d, 0ms); }
-.pf-dci-dot.is-lit { background: linear-gradient(135deg, #fdc35d, #e7a64a); border-color: transparent; }
-.pf-dci-dot.is-today { box-shadow: 0 0 0 3px rgba(253, 195, 93, .35), 0 0 18px rgba(253, 195, 93, .55); }
-.pf-dci-actions { position: relative; z-index: 2; display: flex; flex-direction: column; gap: 10px; }
-.pf-dci-btn { height: 48px; border-radius: 14px; border: none; cursor: pointer; font-family: inherit; font-size: 15px; font-weight: 700; width: 100%; }
-.pf-dci-btn-gold { background: linear-gradient(135deg, #f4ad3d 0%, #e7820a 100%); color: #fff; }
-.pf-dci-btn-ghost { background: rgba(255,255,255,.14); color: #fff; }
-.pf-dci-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+.pf-dci-dot { position: relative; transition: background .35s ease, border-color .35s ease, box-shadow .35s ease; }
+.pf-dci-dot.is-lit { background: linear-gradient(135deg, var(--dci-amber), var(--dci-amber-deep)); border-color: transparent; color: #1a1736; }
+.pf-dci-dot.is-today.is-lit { box-shadow: 0 0 0 3px rgba(253, 195, 93, .35), 0 0 18px rgba(253, 195, 93, .55); }
+/* today's check-in: the tick pops in and two glow rings ripple out, then the dot rests lit like the others */
+.pf-dci-dot.is-checking { animation: pfDciCheckBounce .55s cubic-bezier(.2, 1.4, .4, 1); animation-delay: 0ms; }
+.pf-dci-dot.is-checking > i { display: inline-block; font-style: normal; animation: pfDciTick .4s cubic-bezier(.2, 1.5, .4, 1) both .12s; }
+.pf-dci-dot.is-checking::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; border: 2px solid rgba(253, 195, 93, .9); pointer-events: none;
+  animation: pfDciRing .9s ease-out 2 .1s; opacity: 0; }
+@keyframes pfDciCheckBounce { 0% { transform: scale(1); } 45% { transform: scale(1.22); } 100% { transform: scale(1); } }
+@keyframes pfDciTick { 0% { transform: scale(0) rotate(-30deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+@keyframes pfDciRing { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(1.9); opacity: 0; } }
+
+/* bottom actions */
+.pf-dci-actions { position: relative; z-index: 2; flex: none; display: flex; flex-direction: column; gap: 10px; padding-top: 18px; }
+.pf-dci-btn { height: 52px; border-radius: 16px; border: none; cursor: pointer; font-family: inherit; font-size: 16px; font-weight: 700; width: 100%; }
+.pf-dci-btn-gold { background: linear-gradient(135deg, #f4ad3d 0%, #e7820a 100%); color: #fff; box-shadow: 0 10px 24px rgba(231, 130, 10, .28); }
+.pf-dci-btn-ghost { background: var(--dci-ghost-bg); color: var(--dci-ghost-ink); }
+
+/* the header's floating points tally (mobile.jsx / mobilechrome.jsx) would sit
+   above the takeover and repeat the +N — keep it hidden while the screen is up */
+html.pf-dci-open .m-pts-tally { opacity: 0 !important; pointer-events: none !important; }
+
+.pf-dci-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; transition: opacity .6s ease; }
+.pf-dci-confetti.is-done { opacity: 0; }
 .pf-dci-confetti svg { width: 100% !important; height: 100% !important; display: block; }
 @keyframes pfDciPop { 0% { transform: scale(.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-@media (prefers-reduced-motion: reduce) { .pf-dci-dot, .pf-dci-lottie { animation: none; } .pf-dci-confetti { display: none; } .pf-dci-scrim, .pf-dci-card { transition: none; } }
+@media (max-height: 700px) { .pf-dci-lottie { width: 180px; height: 150px; } .pf-dci-title { font-size: 30px; } .pf-dci-pts { font-size: 28px; } }
+@media (prefers-reduced-motion: reduce) { .pf-dci-dow { animation: none; opacity: 1; } .pf-dci-dot, .pf-dci-dot > i, .pf-dci-dot::after, .pf-dci-lottie, .pf-dci-pts { animation: none; } .pf-dci-dot { transition: none; } .pf-dci-confetti { display: none; } .pf-dci-screen { transition: none; } }

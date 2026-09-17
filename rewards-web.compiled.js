@@ -565,7 +565,6 @@ function WalletCardRW({
 function DemoCardRW({
   onRisk,
   onMilestone,
-  onFive,
   onGoal,
   onReset
 }) {
@@ -583,10 +582,6 @@ function DemoCardRW({
     type: "button",
     onClick: onMilestone
   }, "Simulate 50k milestone"), /*#__PURE__*/React.createElement("button", {
-    className: "rw-demo-btn",
-    type: "button",
-    onClick: onFive
-  }, "5 in a row"), /*#__PURE__*/React.createElement("button", {
     className: "rw-demo-btn",
     type: "button",
     onClick: onGoal
@@ -707,9 +702,6 @@ function RewardsWebApp() {
         lifetimePoints: 49700
       });
       goRW("MilestoneSplash.html");
-    },
-    onFive: () => {
-      if (window.PFEarnStreak) window.PFEarnStreak.show(375);else flash("Earn-streak script not loaded.");
     },
     onGoal: () => {
       if (window.PFDailyGoal) window.PFDailyGoal.reset();

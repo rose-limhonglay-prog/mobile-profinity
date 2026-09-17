@@ -275,7 +275,7 @@ function NotificationSettingsWeb() {
           <SectionNSW title="Gamification" desc="Points, streaks and celebrations — turn the fanfare up or down.">
             <GamiToggleNSW on={gami.pointsPopup} onChange={(v) => updateGami({ ...gami, pointsPopup: v })} label="Points pop-ups" desc="Flash the “+pts” on the header points pill when you earn points." />
             <div className="nsw-divider" />
-            <GamiToggleNSW on={gami.streakPopup} onChange={(v) => updateGami({ ...gami, streakPopup: v })} label="Streak celebrations" desc="The “5 in a row” splash and the daily check-in welcome card. Points are still earned." />
+            <GamiToggleNSW on={gami.streakPopup} onChange={(v) => updateGami({ ...gami, streakPopup: v })} label="Streak celebrations" desc="The daily check-in welcome card. Points are still earned." />
             <div className="nsw-divider" />
             <GamiToggleNSW on={gami.dailyGoalPopup} onChange={(v) => updateGami({ ...gami, dailyGoalPopup: v })} label="Daily goal celebration" desc="Full-screen celebration each time you pass another 50 points in a day." />
             <div className="nsw-divider" />

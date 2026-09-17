@@ -246,6 +246,37 @@ function Reel({
       }, 300);
     }
   };
+
+  /* Share → the newsfeed's ShareSheet (window.PFApp from app.compiled.js),
+     then a repost is written and we land on it in the destination feed. */
+  const [shareOpen, setShareOpen] = useStateRL(false);
+  const PFA = window.PFApp || {};
+  const reelAsPost = {
+    id: reel.id,
+    author: reel.author,
+    time: "Reel",
+    body: reel.caption,
+    sample: {
+      type: "vertical",
+      image: reel.media,
+      duration: reel.dur ? "0:" + String(reel.dur).padStart(2, "0") : undefined
+    }
+  };
+  const onShared = ({
+    caption,
+    destKey
+  }) => {
+    setShareOpen(false);
+    if (!PFA.createRepost) return;
+    const channelKey = destKey && destKey !== "feed" ? destKey : null;
+    const id = PFA.createRepost({
+      caption,
+      sharedPost: PFA.slimSharedPost(reelAsPost),
+      channelBucket: channelKey
+    });
+    if (PFA.rewardShare) setTimeout(() => PFA.rewardShare(null), 260);
+    setTimeout(() => goRL(PFA.sharePageFor(channelKey, true) + (channelKey ? "&" : "") + "post=" + id), 900);
+  };
   useEffectRL(() => {
     if (!playing || !active) return undefined;
     const step = 100 / (reel.dur * 4);
@@ -290,7 +321,11 @@ function Reel({
     style: {
       "--a": i * 60 + "deg"
     }
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), shareOpen && PFA.ShareSheet && /*#__PURE__*/React.createElement(PFA.ShareSheet, {
+    post: reelAsPost,
+    onClose: () => setShareOpen(false),
+    onShare: onShared
+  }), /*#__PURE__*/React.createElement("div", {
     className: "rl-rail-actions"
   }, /*#__PURE__*/React.createElement(ReelAction, {
     icon: loved ? "fluent:heart-16-filled" : liked ? "fluent:thumb-like-16-filled" : "fluent:thumb-like-16-regular",
@@ -306,7 +341,8 @@ function Reel({
   }), /*#__PURE__*/React.createElement(ReelAction, {
     icon: "lucide:share-2",
     label: "Share",
-    count: reel.shares
+    count: reel.shares,
+    onClick: () => setShareOpen(true)
   }), /*#__PURE__*/React.createElement(ReelAction, {
     icon: saved ? "fluent:bookmark-16-filled" : "lucide:bookmark",
     label: "Save",

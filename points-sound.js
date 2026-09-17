@@ -1,8 +1,8 @@
 /* ===========================================================================
    PROfinity — points-earned sound (plain JS, no React, no assets)
    Plays a short two-note "coin" chime on every successful pf:points-earned
-   event — the same event the header points pill, the earn-streak splash and
-   the Rewards dashboard already listen to, so every earn site (popPoints in
+   event — the same event the header points pill and the Rewards dashboard
+   already listen to, so every earn site (popPoints in
    app.jsx, Ways to Earn, Check-In Streak, badge claims, daily target) gets the
    sound without touching the dispatchers.
 
@@ -19,7 +19,7 @@
    • Debounced to one chime per 250ms so rapid multi-earns don't stack.
    • Three voices: coin chime (every earn), welcome chime (daily check-in,
      detail.actionId evt_mobile_checkin / detail.sound "checkin") and the
-     streak fanfare (pf:five-in-a-row splash, pf:daily-goal page); plus
+     streak fanfare (pf:daily-goal page); plus
      "correct" (poll vote / right quiz answer), "wrong" (pf:answer-wrong, no
      points) and "post" (shared a post — fuller coin chime).
    • Sound styles: the user can pick how the three voices sound from the
@@ -30,7 +30,7 @@
      preview(kind, themeId) — preview ignores mute/debounce for the settings
      page's "Play" buttons. ?soundtheme=bell etc. switches for demos.
    • window.PFGamification = { get, set, on } — the shared "pf-gamification"
-     store the popups (points pill, "5 in a row", daily goal, check-in modal)
+     store the popups (points pill, daily goal, check-in modal)
      read: { pointsPopup, streakPopup, dailyGoalPopup }, all default true.
    =========================================================================== */
 (function () {
@@ -131,7 +131,7 @@
     note(c, 2093.0, t + 0.42, 0.7, 0.035, "triangle");
   }
 
-  /* ---- the streak fanfare: "5 in a row" splash + Daily Goal page ----
+  /* ---- the streak fanfare: Daily Goal page ----
      Same warm family as the check-in chime, but bigger: a quick G5→B5→D6
      triplet, a held G6 with a bell shimmer on top, and a soft low "thump"
      underneath so it lands like a celebration rather than a ping. To use a
@@ -262,16 +262,13 @@
   window.addEventListener("pf:points-earned", onEarn);
 
   /* ---- celebration moments ----
-     "5 in a row" (earn-streak.js) fires right after a points earn, so let the
-     coin chime finish before the fanfare. The Daily Goal page (daily-goal.jsx)
-     fires on mount. Sounds always trigger when the popup shows — never later
-     on a tap (see canPlayNow). */
+     The Daily Goal page (daily-goal.jsx) fires on mount. Sounds always trigger
+     when the popup shows — never later on a tap (see canPlayNow). */
   function playStreak(delayMs) {
     if (!enabled()) return;
     var fire = function () { lastPlay = 0; play(0, "streak"); };
     if (delayMs) setTimeout(fire, delayMs); else fire();
   }
-  window.addEventListener("pf:five-in-a-row", function () { playStreak(300); });
   /* wrong quiz answer (app.jsx popWrong): no points, just the sound */
   window.addEventListener("pf:answer-wrong", function () { lastPlay = 0; play(0, "wrong"); });
   window.addEventListener("pf:daily-goal", function () { playStreak(120); });

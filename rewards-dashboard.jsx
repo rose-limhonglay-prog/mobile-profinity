@@ -365,7 +365,6 @@ function RewardsDashboardHome() {
         <div className="ml-demo-bar">
           <button className="ml-demo-btn" type="button" onClick={() => { PF_RDB.setStreakAtRisk(6); refresh(); }}>Demo: simulate streak at risk</button>
           <button className="ml-demo-btn" type="button" onClick={() => { PF_RDB.setState({ lifetimePoints: 49700 }); goRDB("MilestoneSplash.html"); }}>Demo: simulate 50k milestone</button>
-          <button className="ml-demo-btn" type="button" onClick={() => { if (window.PFEarnStreak) window.PFEarnStreak.show(375); }}>Demo: 5 in a row</button>
           <button className="ml-demo-btn" type="button" onClick={() => { if (window.PFDailyGoal) window.PFDailyGoal.reset(); goRDB("DailyGoal.html?ret=RewardsDashboard.html"); }}>Demo: daily goal reached</button>
           <button className="ml-demo-btn" type="button" onClick={() => { PF_RDB.resetDemo(); refresh(); flash("Demo data reset."); }}>Reset demo data</button>
         </div>

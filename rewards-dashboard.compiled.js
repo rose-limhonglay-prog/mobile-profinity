@@ -702,12 +702,6 @@ function RewardsDashboardHome() {
     className: "ml-demo-btn",
     type: "button",
     onClick: () => {
-      if (window.PFEarnStreak) window.PFEarnStreak.show(375);
-    }
-  }, "Demo: 5 in a row"), /*#__PURE__*/React.createElement("button", {
-    className: "ml-demo-btn",
-    type: "button",
-    onClick: () => {
       if (window.PFDailyGoal) window.PFDailyGoal.reset();
       goRDB("DailyGoal.html?ret=RewardsDashboard.html");
     }

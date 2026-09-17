@@ -1,10 +1,11 @@
 /* PROfinity — launch splash.
    Plays the PROfinity logo Lottie (assets/lottie/launch-logo.json) full-screen
-   inside the phone frame the first time the app opens in a browser session,
-   then fades away to reveal the page underneath. Subsequent page loads in the
-   same tab skip it (sessionStorage "pf-launch-seen"). Honors
-   prefers-reduced-motion (splash is skipped). Debug: ?splash=1 forces it,
-   ?splash=0 suppresses it. API: window.PFLaunchSplash.replay(). */
+   like a cold start, then fades away to reveal the page underneath. It plays
+   once per tab — on the first entry page the tab opens — and again only on a
+   hard refresh (Navigation Timing type "reload"). Ordinary navigation between
+   screens (newsfeed → profile → back) never replays it. Debug: ?splash=1
+   forces it, ?splash=0 suppresses it. API: window.PFLaunchSplash.replay() /
+   .reset(). */
 (function () {
   var KEY = "pf-launch-seen";
   var SRC = "assets/lottie/launch-logo.json";
@@ -15,11 +16,14 @@
 
   var q = "";
   try { q = new URLSearchParams(location.search).get("splash") || ""; } catch (e) {}
-  var reduce = false;
-  try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
-
+  // Once per tab (sessionStorage), replayed on a hard refresh.
   var seen = false;
   try { seen = sessionStorage.getItem(KEY) === "1"; } catch (e) {}
+  var reloaded = false;
+  try {
+    var nav = performance.getEntriesByType("navigation")[0];
+    reloaded = !!nav && nav.type === "reload";
+  } catch (e) {}
 
   function markSeen() { try { sessionStorage.setItem(KEY, "1"); } catch (e) {} }
 
@@ -104,8 +108,11 @@
     })();
   }
 
-  var should = q === "1" || (!seen && q !== "0" && !reduce);
+  // First load of the tab or a hard refresh; ?splash=1 forces, ?splash=0 suppresses
+  // (reduced-motion doesn't skip it).
+  var should = q === "1" || ((!seen || reloaded) && q !== "0");
   if (should) {
+    markSeen();
     // Hide the page paint under the splash instantly (before React mounts).
     document.documentElement.classList.add("pf-launch-active");
     if (document.readyState === "loading") {

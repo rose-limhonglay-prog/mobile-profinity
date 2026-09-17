@@ -221,7 +221,7 @@ function GamificationNS() {
     className: "ns-divider"
   }), /*#__PURE__*/React.createElement(ToggleNS, {
     label: "Streak celebrations",
-    desc: "The “5 in a row” splash and the daily check-in welcome card. Points are still earned.",
+    desc: "The daily check-in welcome card. Points are still earned.",
     on: gami.streakPopup,
     onToggle: flip("streakPopup")
   }), /*#__PURE__*/React.createElement("div", {

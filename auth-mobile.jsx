@@ -402,7 +402,8 @@ function DailyReward({ onDone, points, kicker, title, sub }) {
         <span className="au-rw-ring" style={{ display: "none" }} />
         <span className="au-rw-ring d2" style={{ display: "none" }} />
         <span className="au-rw-coin">
-          <AULottie src="https://lottie.host/cc6c5973-9f61-481c-85ed-0fe2089a9176/CwHL9yTPJJ.json" size={168} />
+          {/* Dr Tim avatar greeting (4:3 Lottie — wider than the burst so the face sits at owl size) */}
+          <AULottie src="https://lottie.host/c18a79c2-beca-4d8d-921a-df9ee2394688/m6ViMA5SuC.json" size={224} />
         </span>
       </div>
       <p className="au-rw-kicker">{kicker || "Daily login reward"}</p>

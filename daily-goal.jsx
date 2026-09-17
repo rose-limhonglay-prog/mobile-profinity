@@ -3,7 +3,7 @@
    Full page (not a modal) that opens each time the day's earned points
    cross another 50-point mark (50, 100, 150 … — see daily-goal.js, which
    listens to pf:points-earned on every earning page and navigates here).
-   Celebrates with the lottie.host comet animation, shows today's total /
+   Celebrates with the check-in doctor avatar (Lottie), shows today's total /
    day streak / actions, nudges Katy to keep earning and opens a
    Duolingo-style share sheet (shareable stat card + Instagram / Facebook /
    Messages / Save / More). Fixed navy palette so it reads the same in both themes.
@@ -13,7 +13,11 @@ const { useState: useStateDG, useEffect: useEffectDG, useRef: useRefDG, useMemo:
 const DSDG = window.ProfinityDesignSystem_c2b5cc;
 const PF_DG = window.PFLoyalty;
 
-const DG_LOTTIE = "https://lottie.host/8bde83bd-5362-4c56-8b17-cb14ac67d039/jDJFN2u2DN.json";
+/* Hero mascot: the same doctor-with-glasses avatar the daily check-in
+   "Welcome back" screen uses (assets/lottie/checkin-welcome.json), replacing
+   the earlier lottie.host falling-star comet. 800×600 (4:3) — .dg-hero is
+   sized to match so the svg fills the box without letterboxing. */
+const DG_LOTTIE = "assets/lottie/checkin-welcome.json?v=20260917d";
 const DG_CONFETTI = "https://lottie.host/1b8bdd21-9711-48bb-873f-3889b01b43c8/jrTeYYuQqi.json";
 const DG_GOAL = (window.PFDailyGoal && window.PFDailyGoal.goal) || window.PF_DAILY_GOAL || 50;
 
@@ -200,15 +204,24 @@ function DgShareSheet({ first, points, streak, actions, onClose, onPick }) {
   );
 }
 
-/* Full-frame confetti (lottie.host burst), loops softly for the whole visit */
+/* Full-frame confetti (lottie.host burst): plays DG_CONFETTI_PLAYS times,
+   then fades the layer out and frees the animation. lottie-web's numeric
+   `loop` is the number of *repeats*, so PLAYS - 1 repeats = PLAYS full runs. */
+const DG_CONFETTI_PLAYS = 2;
 function DgConfetti() {
   const host = useRefDG(null);
   useEffectDG(() => {
     let anim, dead = false;
     const start = () => {
       if (dead || !window.lottie || !host.current) return;
-      anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: true, autoplay: true, path: DG_CONFETTI,
+      anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: DG_CONFETTI_PLAYS - 1, autoplay: true, path: DG_CONFETTI,
         rendererSettings: { preserveAspectRatio: "xMidYMid slice" } });
+      anim.addEventListener("complete", () => {
+        const el = host.current;
+        if (el) el.classList.add("is-done");
+        const a = anim; anim = null;
+        setTimeout(() => { if (a) a.destroy(); if (el && el.classList.contains("is-done")) el.innerHTML = ""; }, 700);
+      });
     };
     if (window.lottie) start();
     else {

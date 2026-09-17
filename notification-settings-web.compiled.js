@@ -493,7 +493,7 @@ function NotificationSettingsWeb() {
       streakPopup: v
     }),
     label: "Streak celebrations",
-    desc: "The “5 in a row” splash and the daily check-in welcome card. Points are still earned."
+    desc: "The daily check-in welcome card. Points are still earned."
   }), /*#__PURE__*/React.createElement("div", {
     className: "nsw-divider"
   }), /*#__PURE__*/React.createElement(GamiToggleNSW, {

@@ -31,6 +31,7 @@
     { id: "evt_case_study_share", label: "Share Case Study", category: "Community", basePoints: 150, dailyCap: 2, weeklyCap: 5, lifetimeCap: null, velocitySeconds: 60, minCharacters: 0, requiresMedia: true, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Deduplication of uploaded case files.", linkedReward: "badge:community_pillar" },
     { id: "evt_comment_post", label: "Comment on Post", category: "Social", basePoints: 10, dailyCap: 20, weeklyCap: null, lifetimeCap: null, velocitySeconds: 120, minCharacters: 15, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Min 15 chars; 2-min cooling cooldown.", linkedReward: null },
     { id: "evt_react_post", label: "React to Post", category: "Social", basePoints: 10, dailyCap: 30, weeklyCap: null, lifetimeCap: null, velocitySeconds: 3, minCharacters: 0, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Max 30/day; minimum 3s between.", linkedReward: null },
+    { id: "evt_share_post", label: "Share a Post", category: "Social", basePoints: 25, dailyCap: 10, weeklyCap: null, lifetimeCap: null, velocitySeconds: 10, minCharacters: 0, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Max 10 reshares a day; 10-second cooldown.", linkedReward: null },
     { id: "evt_course_complete", label: "Complete Course", category: "Learning", basePoints: 200, dailyCap: null, weeklyCap: null, lifetimeCap: null, velocitySeconds: 0, minCharacters: 0, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Requires assessment pass.", linkedReward: null },
     { id: "evt_webinar_attend", label: "Attend Webinar", category: "Learning", basePoints: 100, dailyCap: null, weeklyCap: null, lifetimeCap: null, velocitySeconds: 0, minCharacters: 0, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Attendance duration verified >= 60% of session.", linkedReward: null },
     { id: "evt_mobile_checkin", label: "Mobile Check-In", category: "Habit", basePoints: 50, dailyCap: 1, weeklyCap: 7, lifetimeCap: null, velocitySeconds: 0, minCharacters: 0, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["ios", "android"], active: true, oneTimeLock: false, guardrail: "Consecutive 5-day streak check.", linkedReward: null },
@@ -138,6 +139,13 @@
     if (cfg.storeCatalogVersion !== STORE_CATALOG_VERSION) {
       cfg = Object.assign({}, cfg, { storeItems: JSON.parse(JSON.stringify(DEFAULT_STORE_ITEMS)), storeCatalogVersion: STORE_CATALOG_VERSION });
       writeJSON(CONFIG_KEY, cfg);
+    }
+    // actions added after a user's config was first seeded (e.g. Share a
+    // Post) get appended so Ways to Earn and the ledger know about them
+    if (Array.isArray(cfg.actions)) {
+      var have = cfg.actions.map(function (a) { return a && a.id; });
+      var missing = DEFAULT_ACTIONS.filter(function (a) { return have.indexOf(a.id) < 0; });
+      if (missing.length) { cfg = Object.assign({}, cfg, { actions: cfg.actions.concat(JSON.parse(JSON.stringify(missing))) }); writeJSON(CONFIG_KEY, cfg); }
     }
     // backfill any keys added after a user's config was first seeded
     var merged = Object.assign({}, DEFAULT_CONFIG, cfg);

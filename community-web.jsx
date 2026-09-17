@@ -110,7 +110,9 @@ function ChannelsSidebar({ active, onPick }) {
 
 function CommunityMain() {
   const D = window.APP_DATA;
-  const [channel, setChannel] = useStateCW("confidence");
+  const [channel, setChannel] = useStateCW((() => {
+    try { const b = new URLSearchParams(location.search).get("channel"); return b && CW_CHANNEL_MAP[b] ? b : "confidence"; } catch (e) { return "confidence"; }
+  })());
   const meta = CW_CHANNEL_MAP[channel];
   const Feed = window.PFApp && window.PFApp.Feed;
   return (

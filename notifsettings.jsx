@@ -107,7 +107,7 @@ function GamificationNS() {
         <ToggleNS label="Points pop-ups" desc="Flash the “+pts” on the header pill and float a tally when you earn points."
           on={gami.pointsPopup} onToggle={flip("pointsPopup")} />
         <div className="ns-divider" />
-        <ToggleNS label="Streak celebrations" desc="The “5 in a row” splash and the daily check-in welcome card. Points are still earned."
+        <ToggleNS label="Streak celebrations" desc="The daily check-in welcome card. Points are still earned."
           on={gami.streakPopup} onToggle={flip("streakPopup")} />
         <div className="ns-divider" />
         <ToggleNS label="Daily goal celebration" desc="Full-screen celebration each time you pass another 50 points in a day."

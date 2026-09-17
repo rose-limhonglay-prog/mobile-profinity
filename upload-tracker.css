@@ -1,0 +1,59 @@
+/* ===========================================================================
+   PROfinity — floating background-upload card (plain JS, see
+   upload-tracker.js). Sits just above the bottom tab bar inside the phone
+   frame on every page that isn't the feed while a post is still uploading.
+   White-first; dark variant follows data-theme="dark". pf-uplt-*.
+   =========================================================================== */
+.pf-uplt { position: absolute; left: 14px; right: 14px; bottom: calc(22px + env(safe-area-inset-bottom, 0px)); z-index: 640; pointer-events: none;
+  font-family: var(--font-body, Poppins, system-ui, sans-serif);
+  --uplt-bg: #ffffff; --uplt-ink: #1a1736; --uplt-muted: #6b6985; --uplt-navy: #292569; --uplt-track: rgba(41,37,105,.12);
+  --uplt-thumb: rgba(41,37,105,.08); --uplt-btn: rgba(41,37,105,.06); --uplt-ok: #2e9a5b; --uplt-shadow: 0 10px 30px rgba(26,23,54,.18), 0 1px 2px rgba(26,23,54,.08);
+  opacity: 0; transform: translateY(18px) scale(.98); transition: transform .34s cubic-bezier(.2, 1, .3, 1), opacity .22s ease; }
+.pf-uplt.has-tabs { bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+.pf-uplt--fixed { position: fixed; }
+.pf-uplt.is-open { opacity: 1; transform: none; pointer-events: auto; }
+[data-theme="dark"] .pf-uplt { --uplt-bg: var(--surface-card, #171633); --uplt-ink: #ffffff; --uplt-muted: rgba(255,255,255,.7); --uplt-navy: var(--brand-gold, #ce9957);
+  --uplt-track: rgba(255,255,255,.12); --uplt-thumb: rgba(255,255,255,.1); --uplt-btn: rgba(255,255,255,.1); --uplt-shadow: 0 10px 30px rgba(0,0,0,.45); }
+
+.pf-uplt-card { display: flex; align-items: center; gap: 12px; min-width: 0; padding: 12px 12px 12px 12px; border-radius: 18px;
+  background: var(--uplt-bg); color: var(--uplt-ink); box-shadow: var(--uplt-shadow); border: 1px solid rgba(41,37,105,.08); cursor: default; }
+[data-theme="dark"] .pf-uplt-card { border-color: rgba(255,255,255,.08); }
+.pf-uplt.is-done .pf-uplt-card { cursor: pointer; }
+
+.pf-uplt-thumb { position: relative; flex: 0 0 auto; width: 48px; height: 48px; border-radius: 12px; overflow: hidden; background: var(--uplt-thumb); }
+.pf-uplt-thumb img { width: 100%; height: 100%; object-fit: cover; display: none; }
+.pf-uplt.has-cover .pf-uplt-thumb img { display: block; }
+.pf-uplt-ph { position: absolute; inset: 0; display: grid; place-items: center; color: var(--uplt-navy); font-size: 18px; }
+.pf-uplt.has-cover .pf-uplt-ph { display: none; }
+.pf-uplt-play { display: none; position: absolute; left: 50%; top: 50%; width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; background: rgba(0,0,0,.5); color: #fff; font-size: 10px; place-items: center; padding-left: 1px; }
+.pf-uplt.is-video.has-cover .pf-uplt-play { display: grid; }
+.pf-uplt-count { position: absolute; right: 3px; bottom: 3px; font: 600 10px/1 var(--font-body, Poppins, sans-serif); color: #fff; background: rgba(0,0,0,.55); padding: 3px 5px; border-radius: 6px; }
+.pf-uplt-dim { position: absolute; left: 0; right: 0; top: 0; background: rgba(255,255,255,.55); transition: height .18s linear; pointer-events: none; }
+[data-theme="dark"] .pf-uplt-dim { background: rgba(0,0,0,.5); }
+.pf-uplt.is-done .pf-uplt-dim { display: none; }
+
+.pf-uplt-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.pf-uplt-title { font: 600 13px/1.25 var(--font-body, Poppins, sans-serif); color: var(--uplt-ink); }
+.pf-uplt.is-done .pf-uplt-title { color: var(--uplt-ok); }
+.pf-uplt-sub { display: flex; align-items: center; gap: 6px; min-width: 0; font: 400 11.5px/1.3 var(--font-body, Poppins, sans-serif); color: var(--uplt-muted); }
+.pf-uplt-snippet { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-uplt-snippet:empty { display: none; }
+.pf-uplt-pct { flex: 0 0 auto; margin-left: auto; font-weight: 600; color: var(--uplt-navy); font-variant-numeric: tabular-nums; }
+.pf-uplt-track { position: relative; height: 5px; border-radius: 999px; background: var(--uplt-track); overflow: hidden; }
+.pf-uplt-bar { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: var(--uplt-navy); transition: width .16s linear; }
+.pf-uplt-bar::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.45) 50%, transparent 100%); background-size: 200% 100%; animation: pf-uplt-shine 1.4s linear infinite; }
+.pf-uplt.is-done .pf-uplt-bar { background: var(--uplt-ok); transition: width .3s ease, background .3s ease; }
+.pf-uplt.is-done .pf-uplt-bar::after { animation: none; }
+
+.pf-uplt-cancel { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 50%; border: none; background: var(--uplt-btn); color: var(--uplt-muted); font-size: 16px;
+  display: grid; place-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; position: relative; padding: 0; }
+.pf-uplt-cancel::before { content: ""; position: absolute; inset: -6px; }
+.pf-uplt-cancel:active { opacity: .7; }
+.pf-uplt.is-done .pf-uplt-cancel { display: none; }
+.pf-uplt-check { display: none; flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%; background: var(--uplt-ok); color: #fff; font-size: 15px; place-items: center;
+  animation: pf-uplt-pop .42s cubic-bezier(.34, 1.56, .64, 1); }
+.pf-uplt.is-done .pf-uplt-check { display: grid; }
+
+@keyframes pf-uplt-shine { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@keyframes pf-uplt-pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .pf-uplt { transition: none; } .pf-uplt-bar::after { animation: none; } .pf-uplt-check { animation: none; } }

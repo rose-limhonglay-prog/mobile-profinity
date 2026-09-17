@@ -1,7 +1,7 @@
 /* ===========================================================================
    PROfinity — Daily goal trigger (plain JS, no React)
-   Watches pf:points-earned (the same event the header points pill and the
-   "5 in a row" splash listen to) and tallies what Katy has earned today.
+   Watches pf:points-earned (the same event the header points pill listens
+   to) and tallies what Katy has earned today.
    Each time today's total crosses another 50-point mark (50, 100, 150 …)
    it navigates to DailyGoal.html — a full page, not a modal — with ?ret=
    pointing back at the page she was on so "Keep earning" drops her straight
@@ -62,17 +62,8 @@
     var url = "DailyGoal.html?ret=" + encodeURIComponent(currentPage());
     (window.pfGo || function (u) { window.location.href = u; })(url);
   }
-  /* let the +pts pop / toast land, and if the "5 in a row" splash is up let
-     Katy dismiss that first — then take her to the page */
-  function celebrate() {
-    var t0 = Date.now();
-    var tick = function () {
-      var fiar = document.querySelector(".pf-fiar-root.is-open");
-      if (fiar && Date.now() - t0 < 60000) { setTimeout(tick, 400); return; }
-      show();
-    };
-    setTimeout(tick, 1300);
-  }
+  /* let the +pts pop / toast land first — then take her to the page */
+  function celebrate() { setTimeout(show, 1300); }
 
   function onEarn(e) {
     var amount = e && e.detail && Number(e.detail.amount) || 0;

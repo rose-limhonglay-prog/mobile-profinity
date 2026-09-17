@@ -2741,7 +2741,7 @@ function likeButtonOf(wrap) {
 }
 
 /* Burst of floating reaction glyphs + a springy pop on the like icon.
-   `reward` additionally floats a "+15 pts" chip up from the button — passed
+   `reward` additionally floats a "+15" up from the button — passed
    only when the post goes from unreacted → reacted, so switching Like → Love
    doesn't look like it pays out twice. */
 function burstReaction(wrap, key, reward) {
@@ -2757,6 +2757,7 @@ const COMMENT_POINTS = 15;
 const POLL_POINTS = 75;    // any poll vote counts as a correct answer
 const QUIZ_POINTS = 100;   // quiz: only a correct answer pays out
 const POST_POINTS = 75;    // sharing a post (booked when the feed reloads with the new post)
+const SHARE_POINTS = 25;   // resharing someone's post to your feed / a channel
 const POST_REWARD_KEY = "pf-post-reward";
 
 
@@ -2774,17 +2775,131 @@ function frameScaleOf(el) {
   return s > 0 && isFinite(s) ? s : 1;
 }
 
-/* Reward moment for a like/comment payout. Deliberately no floating
-   "+N points" chip beside the button any more — the only feedback is the
-   header points pill (PointsPillM / PointsPillC), which listens for this event,
-   books the points, counts up, flashes a gold ring and floats a "+N" delta.
-   `anchor` is kept in the signature so existing call sites stay unchanged. */
+/* Points pop-ups preference (Notification Settings → Gamification), read
+   straight from localStorage so this doesn't depend on points-sound.js. */
+function ptsPopupOn() {
+  try { const s = JSON.parse(localStorage.getItem("pf-gamification")) || {}; return s.pointsPopup !== false; } catch (e) { return true; }
+}
+
+/* The daily check-in doctor (daily-checkin.js' welcome avatar,
+   assets/lottie/checkin-welcome.json) rides beside the floating "+N" so the
+   like / comment payout and the morning check-in read as the same character
+   handing out the points. lottie-web is loaded on demand (daily-checkin.js
+   usually already has it on the page) and the animation JSON is fetched
+   once and kept in memory, both warmed shortly after load so the first tap
+   already shows him; until they are ready the float is text-only. */
+const PTS_DOC_SRC = "assets/lottie/checkin-welcome.json?v=20260917c";
+const PTS_LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
+let ptsLottieLib = null, ptsDocData = null, ptsDocFetch = null;
+function ensurePtsLottie() {
+  if (typeof window === "undefined") return Promise.reject(new Error("no window"));
+  if (window.lottie) return Promise.resolve(window.lottie);
+  if (ptsLottieLib) return ptsLottieLib;
+  ptsLottieLib = new Promise((resolve, reject) => {
+    const s = document.createElement("script"); s.src = PTS_LOTTIE_LIB; s.async = true;
+    s.onload = () => resolve(window.lottie); s.onerror = () => { ptsLottieLib = null; reject(new Error("lottie failed")); };
+    document.head.appendChild(s);
+  });
+  return ptsLottieLib;
+}
+function ensurePtsDocData() {
+  if (ptsDocData) return Promise.resolve(ptsDocData);
+  if (ptsDocFetch) return ptsDocFetch;
+  ptsDocFetch = fetch(PTS_DOC_SRC).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(d => (ptsDocData = d));
+  ptsDocFetch.catch(() => { ptsDocFetch = null; });
+  return ptsDocFetch;
+}
+function warmPtsDoctor() { ensurePtsLottie().catch(() => {}); ensurePtsDocData().catch(() => {}); }
+if (typeof window !== "undefined" && typeof document !== "undefined") {
+  const warm = () => setTimeout(warmPtsDoctor, 1200);
+  if (document.readyState === "complete") warm(); else window.addEventListener("load", warm, { once: true });
+}
+
+/* Floating "+N" that rises from the button just tapped (like, comment, poll
+   option, quiz answer): same amber bold as the header pill's delta so the two
+   read as one payout, with the check-in doctor Lottie beside the number.
+   Fixed-position on body so it escapes overflow:hidden cards / sheets;
+   scaled to the IOSDevice preview frame like burstFrom. */
+function floatPoints(anchor, amount) {
+  if (!anchor || !anchor.getBoundingClientRect || !ptsPopupOn()) return;
+  const rect = anchor.getBoundingClientRect();
+  if (!rect.width && !rect.height) return;
+  const s = frameScaleOf(anchor);
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const x = rect.left + Math.min(rect.width / 2, 22 * s), y = rect.top - 2 * s;
+  const el = document.createElement("span");
+  el.className = "pf-pts-float";
+  el.setAttribute("role", "status");
+  el.setAttribute("aria-live", "polite");
+  el.style.cssText = "left:" + x + "px;top:" + y + "px;font-size:" + 15 * s + "px;opacity:0;";
+  /* doctor first, "+N" beside him (text-only until lottie + JSON are warm) */
+  let docAnim = null;
+  if (!reduce && ptsDocData && window.lottie) {
+    const doc = document.createElement("span");
+    doc.className = "pf-pts-doc";
+    doc.setAttribute("aria-hidden", "true");
+    /* square, centre-cropped: the 800×600 source has empty side padding
+       around the round avatar, so slicing keeps him snug against the "+N" */
+    doc.style.width = 40 * s + "px"; doc.style.height = 40 * s + "px"; doc.style.marginRight = -5 * s + "px";
+    el.appendChild(doc);
+    try {
+      docAnim = window.lottie.loadAnimation({ container: doc, renderer: "svg", loop: true, autoplay: true, animationData: ptsDocData,
+        rendererSettings: { preserveAspectRatio: "xMidYMid slice" } });
+    } catch (e) { doc.remove(); docAnim = null; }
+  } else {
+    warmPtsDoctor();
+  }
+  const txt = document.createElement("b");
+  txt.className = "pf-pts-num";
+  txt.textContent = "+" + amount;
+  el.appendChild(txt);
+  document.body.appendChild(el);
+  let gone = false;
+  const done = () => {
+    if (gone) return; gone = true;
+    try { docAnim && docAnim.destroy(); } catch (e) { /* already torn down */ }
+    el.remove();
+  };
+  if (!el.animate || reduce) {
+    el.style.opacity = "1"; el.style.transform = "translate(-50%,-140%)";
+    setTimeout(done, 1100);
+    return;
+  }
+  const dy = 36 * s;
+  const anim = el.animate(
+    [
+      { transform: "translate(-50%,-40%) scale(.7)", opacity: 0 },
+      { transform: "translate(-50%,-100%) scale(1.18)", opacity: 1, offset: 0.18 },
+      { transform: "translate(-50%,calc(-100% - " + dy * 0.65 + "px)) scale(1)", opacity: 1, offset: 0.7 },
+      { transform: "translate(-50%,calc(-100% - " + dy + "px)) scale(1)", opacity: 0 }],
+    { duration: 1500, easing: "cubic-bezier(.22,.61,.36,1)" }
+  );
+  anim.onfinish = done;
+  setTimeout(done, 2000);
+}
+
+/* Reward moment for a like/comment/poll/quiz payout: a "+N" floats up from
+   `anchor` (the button just tapped, null for off-screen earns such as a shared
+   post) and the header points pill (PointsPillM / PointsPillC), which listens
+   for this event, books the points, counts up and flashes its gold ring. */
 function popPoints(anchor, amount, extra) {
   if (typeof window === "undefined") return;
+  try { floatPoints(anchor, amount); } catch (e) { /* purely cosmetic */ }
   /* `extra` may carry label / actionId (ledger line in Rewards) and `sound`
      (which voice points-sound.js plays: coin chime by default, "correct",
      "post", …). The header points pill books the points on this event. */
   try { window.dispatchEvent(new CustomEvent("pf:points-earned", { detail: Object.assign({ amount }, extra || {}) })); } catch (e) { /* older WebView */ }
+}
+/* Resharing a post: book "Shared a post" in the loyalty engine right here
+   (so it also lands on pages without a header pill, e.g. Reels), then pop
+   the points with the fuller "post" chime. detail.booked stops the pill
+   from awarding a second time. */
+function rewardShare(anchor) {
+  if (typeof window === "undefined") return;
+  const eng = window.PFLoyalty;
+  let booked = false;
+  if (eng && eng.awardPoints) { try { eng.awardPoints(SHARE_POINTS, "Shared a post", "evt_share_post"); booked = true; } catch (e) {} }
+  popPoints(anchor || null, SHARE_POINTS, { label: "Shared a post", actionId: "evt_share_post", sound: "post", booked });
 }
 /* A wrong quiz answer earns nothing but still gets its own sound. */
 function popWrong() {
@@ -3549,7 +3664,6 @@ function PostComposer({ onPost, superUser, devRole, onDevRole, lockedAdmin }) {
       if (!file) return;
       const src = URL.createObjectURL(file);
       setVideo({ src, cover: null, coverIsCustom: false, ratio: null, duration: null });
-      setCoverPickerOpen(true);
       const probe = document.createElement("video");
       probe.preload = "metadata";
       probe.muted = true;
@@ -5886,9 +6000,34 @@ const SHARE_DESTINATIONS = [
   { k: "feed", label: "My feed", sub: "Everyone who follows you", icon: "lucide:rss", tier: 0 },
   { k: "confidence", label: "Confidence", sub: "Community channel", icon: "lucide:message-circle", tier: 1 },
   { k: "mastery", label: "Mastery", sub: "Community channel", icon: "lucide:crown", tier: 2 },
-  { k: "complications", label: "Complications", sub: "Community channel", icon: "lucide:shield-alert", tier: 2 },
-  { k: "freedom", label: "Freedom Path", sub: "Community channel", icon: "lucide:rocket", tier: 3 },
+  { k: "freedom", label: "Freedom", sub: "Community channel", icon: "lucide:rocket", tier: 3 },
+  { k: "inner", label: "Inner Circle", sub: "Community channel", icon: "lucide:gem", tier: 5 },
 ];
+/* Preselect the channel a post lives in (Community channel cards carry
+   `bucket`; reposts carry `channelBucket`), falling back to the feed when
+   there is none or the viewer hasn't unlocked it. */
+function defaultShareDest(post, dests) {
+  const want = post && (post.channelBucket || post.bucket);
+  const hit = want && dests.find((d) => d.k === want && !d.locked);
+  return hit ? hit.k : "feed";
+}
+/* Trimmed copy of a post embedded in a repost (post.sharedPost) — only what
+   SharePostQuote needs, so it serialises cleanly into pf-newsfeed-user-posts. */
+function slimSharedPost(post) {
+  if (!post) return null;
+  const sp = post.sample;
+  const sample = sp ? { type: sp.type, poster: sp.poster, image: sp.image, images: (sp.images || []).slice(0, 10), src: sp.src, ratio: sp.ratio, duration: sp.duration, aspect: sp.aspect } : undefined;
+  const video = post.video && post.video.src ? { src: post.video.src, cover: post.video.cover, ratio: post.video.ratio } : undefined;
+  return { id: post.id, author: { name: post.author.name, avatar: post.author.avatar }, time: post.time, body: post.body || "",
+    media: (post.media || []).slice(0, 10), sample, video, liveNow: post.liveNow ? { viewers: post.liveNow.viewers, frame: post.liveNow.frame } : undefined,
+    poll: post.poll ? { question: post.poll.question } : undefined, questionnaire: post.questionnaire ? { question: post.questionnaire.question } : undefined,
+    document: post.document ? { name: post.document.name, title: post.document.title } : undefined };
+}
+/* Pages that host each share destination, per surface (PF_EMBED = mobile). */
+function sharePageFor(channelKey, embed) {
+  if (channelKey) return (embed ? "CommunityMobile.html" : "Community.html") + "?channel=" + channelKey;
+  return (embed ? "NewsfeedMobile.html" : "NewsfeedWeb.html") + "?";
+}
 /* Link card for a profile shared to the feed from ProfileMobile's "Share
    Profile" sheet (post.sharedProfile = { name, role, avatar, handle, link }). */
 function SharedProfileCard({ profile }) {
@@ -5906,113 +6045,336 @@ function SharedProfileCard({ profile }) {
   );
 }
 
+/* Contacts offered in the "Send in Messages" rail of both share surfaces. */
+const SHARE_CONTACTS = [TIM, MIRANDA, SARAH, PRIYA, AMIR, MARK, BETH, OWEN, RACHEL, LEO];
+const SHARE_TILE_TONES = {
+  messages: "var(--brand-navy)", whatsapp: "#25D366", copy: "var(--ai-purple)",
+  channel: "var(--brand-gold)", profile: "var(--info)", email: "var(--reaction-love)", more: "var(--gray-600)" };
+const shareFirstName = (n) => n.replace(/^(Dr\.?|Nurse)\s+/i, "").split(" ")[0];
+function sharePostUrl(post) {
+  const base = typeof location !== "undefined" ? location.origin + location.pathname : "";
+  return base + "#post-" + (post && post.id ? post.id : "");
+}
+function sharePostText(post) {
+  const who = post && post.author ? post.author.name : "a member";
+  return "Check out this post from " + who + " on Profinity";
+}
+
+/* Compact preview of the post being shared — sits inside both share surfaces
+   so the member always sees what they're passing on. */
+function SharePostQuote({ post, full }) {
+  if (!post) return null;
+  const sampleImgs = post.sample && post.sample.type === "gallery" ? post.sample.images || [] : [];
+  const media = (post.media && post.media.length ? post.media : sampleImgs) || [];
+  const shown = media.slice(0, 3);
+  const extra = media.length - shown.length;
+  /* Repost variant: show the original's media for real — a playable clip
+     when we have a source, the poster with a play badge for demo videos,
+     the live frame, or a swipeable carousel for photos. */
+  if (full) {
+    const sp = post.sample || {};
+    const vidSrc = (post.video && post.video.src) || (sp.type === "video" && sp.src) || null;
+    const vidPoster = (post.video && post.video.cover) || sp.poster || null;
+    const ratio = (post.video && post.video.ratio) || sp.ratio || 16 / 9;
+    let mediaNode = null;
+    if (vidSrc) {
+      mediaNode = (
+        <>
+          <div className="pf-shq-video" style={{ aspectRatio: ratio }}>
+            <PFMediaVideo src={vidSrc} poster={vidPoster} style={{ width: "100%", height: "100%", display: "block", objectFit: "contain", background: "#000" }} />
+          </div>
+          {media.length > 0 && <MediaCarousel images={media} />}
+        </>);
+    } else if (sp.type === "video" && sp.poster) {
+      mediaNode = (
+        <div className={"pf-shq-poster" + (sp.aspect === "square" ? " square" : "")}>
+          <img src={sp.poster} alt="" />
+          <span className="pf-shq-play"><IconifyIcon name="fluent:play-16-filled" size={26} color="#fff" /></span>
+          {sp.duration && <span className="pf-shq-dur">{sp.duration}</span>}
+        </div>);
+    } else if (sp.type === "vertical" && sp.image) {
+      mediaNode = (
+        <div className="pf-shq-poster reel">
+          <img src={sp.image} alt="" />
+          <span className="pf-shq-play"><IconifyIcon name="fluent:play-16-filled" size={26} color="#fff" /></span>
+          <span className="pf-shq-dur">Reel</span>
+        </div>);
+    } else if (post.liveNow && post.liveNow.frame) {
+      mediaNode = (
+        <div className="pf-shq-poster">
+          <img src={post.liveNow.frame} alt="" />
+          <span className="pf-shq-livebadge"><i />LIVE</span>
+          <span className="pf-shq-dur"><IconifyIcon name="lucide:eye" size={12} color="#fff" /> {post.liveNow.viewers}</span>
+        </div>);
+    } else if (media.length > 0) {
+      mediaNode = <MediaCarousel images={media} />;
+    }
+    const kindOnly = !mediaNode && (post.poll ? "Poll · " + (post.poll.question || "") : post.questionnaire ? "Quiz · " + (post.questionnaire.question || "") : post.document ? (post.document.name || post.document.title || "Document") : null);
+    return (
+      <div className="pf-shq-full" aria-label={"Post by " + post.author.name}>
+        <div className="pf-shq-fhd">
+          <Avatar name={post.author.name} src={post.author.avatar} size={40} />
+          <div className="pf-shq-fhd-tx">
+            <span className="pf-shq-fnm">{post.author.name}<IconifyIcon name="lucide:badge-check" size={15} color="var(--info)" /></span>
+            <span className="pf-shq-fmeta">{post.time || "Just now"}<i>·</i><IconifyIcon name="lucide:globe" size={13} color="var(--gray-500)" /></span>
+          </div>
+        </div>
+        {post.body && <div className="pf-shq-fbody"><ClampText text={post.body} lines={2} more="See more" /></div>}
+        {kindOnly && <div className="pf-shq-fbody"><div className="pf-shq-kind"><span className="pf-shq-kind-tx"><IconifyIcon name={post.poll ? "lucide:bar-chart-3" : post.questionnaire ? "lucide:help-circle" : "lucide:file-text"} size={15} color="var(--brand-navy)" /><span>{kindOnly}</span></span></div></div>}
+        {mediaNode && <div className="pf-shq-media">{mediaNode}</div>}
+      </div>);
+  }
+  /* Posts without text/photos still need something to preview: a live
+     stream, video, poll, quiz or document gets a thumbnail + kind label. */
+  const sample = post.sample || {};
+  const kind = post.liveNow ? { icon: "lucide:radio", label: "Live now · " + (post.liveNow.viewers || "") + " watching", thumb: post.liveNow.frame, live: true } :
+    post.poll ? { icon: "lucide:bar-chart-3", label: "Poll · " + (post.poll.question || "") } :
+    post.questionnaire ? { icon: "lucide:help-circle", label: "Quiz · " + (post.questionnaire.question || "") } :
+    post.sample && sample.type !== "gallery" ? { icon: "lucide:play-circle", label: sample.type === "vertical" ? "Reel" : "Video" + (sample.duration ? " · " + sample.duration : ""), thumb: sample.poster || sample.image } :
+    post.document ? { icon: "lucide:file-text", label: post.document.name || post.document.title || "Document" } :
+    post.sharedProfile ? { icon: "lucide:user", label: "Profile · " + post.sharedProfile.name } : null;
+  const showKind = kind && (!post.body || shown.length === 0);
+  return (
+    <div className="pf-shq" aria-label={"Post by " + post.author.name}>
+      <span className="pf-shq-bar" aria-hidden="true" />
+      <div className="pf-shq-in">
+        <div className="pf-shq-hd">
+          <Avatar name={post.author.name} src={post.author.avatar} size={32} />
+          <span className="pf-shq-nm">{post.author.name}</span>
+          <IconifyIcon name="lucide:badge-check" size={14} color="var(--info)" />
+          {post.time && <span className="pf-shq-tm">{post.time}</span>}
+        </div>
+        {post.body && <p className="pf-shq-body">{post.body}</p>}
+        {shown.length > 0 &&
+        <div className="pf-shq-imgs">
+          {shown.map((src, i) =>
+          <span key={i} className="pf-shq-img">
+            <img src={src} alt="" />
+            {i === shown.length - 1 && extra > 0 && <b>+{extra}</b>}
+          </span>)}
+        </div>}
+        {showKind &&
+        <div className={"pf-shq-kind" + (kind.thumb ? " has-thumb" : "")}>
+          {kind.thumb &&
+          <span className="pf-shq-thumb">
+            <img src={kind.thumb} alt="" />
+            <IconifyIcon name={kind.live ? "lucide:radio" : "lucide:play"} size={16} color="#fff" />
+          </span>}
+          <span className="pf-shq-kind-tx">
+            {kind.live && <b className="pf-shq-live">LIVE</b>}
+            {!kind.thumb && <IconifyIcon name={kind.icon} size={15} color="var(--brand-navy)" />}
+            <span>{kind.label}</span>
+          </span>
+        </div>}
+      </div>
+    </div>);
+}
+
+/* Mobile share sheet — a slide-up bottom sheet. Compose block mirrors the
+   desktop dialog (avatar · name · "Feed ▾" destination drop-down listing the
+   community channels · "Say something…" · emoji + tag people · Share now),
+   followed by a "Send in Messages" contact rail and a row of share tiles. */
 function ShareSheet({ post, onClose, onShare }) {
   const shRank = Math.max(0, SHARE_TIER_ORDER.indexOf(shareTier()));
   const dests = SHARE_DESTINATIONS.map((d) => ({ ...d, locked: d.tier > shRank }));
-  const unlockedCount = dests.filter((d) => !d.locked).length;
-  const [step, setStep] = useState("say"); // "say" | "where"
-  const [pick, setPick] = useState("feed");
+  const [pick, setPick] = useState(() => defaultShareDest(post, dests));
   const [caption, setCaption] = useState("");
-  const cardRef = useRef(null);
+  const [pop, setPop] = useState(null); // null | "dest" | "emoji" | "tag"
+  const [sent, setSent] = useState({});
+  const [note, setNote] = useState(null);
+  const [leaving, setLeaving] = useState(false);
+  const sheetRef = useRef(null);
+  const taRef = useRef(null);
+  const noteTimer = useRef(null);
+  const leaveTimer = useRef(null);
+
+  const close = () => {
+    if (leaving) return;
+    setLeaving(true);
+    leaveTimer.current = setTimeout(onClose, 230);
+  };
   useEffect(() => {
     const prev = document.activeElement;
-    if (cardRef.current) cardRef.current.focus();
-    const onKey = (e) => {
-      if (e.key !== "Escape") return;
-      if (step === "where") setStep("say");else
-      onClose();
-    };
+    if (sheetRef.current) sheetRef.current.focus();
+    const onKey = (e) => { if (e.key === "Escape" && !pop) close(); };
     window.addEventListener("keydown", onKey);
     return () => {
       window.removeEventListener("keydown", onKey);
+      clearTimeout(noteTimer.current);
+      clearTimeout(leaveTimer.current);
       if (prev && prev.focus) prev.focus();
     };
-  }, [step]);
-  const chosen = dests.find((d) => d.k === pick);
-  const destText = chosen.k === "feed" ? "Share to Newsfeed" : chosen.label;
-  const submit = () => onShare({ destKey: chosen.k, destLabel: chosen.label, caption: caption.trim() });
-  const images = post && post.media ? post.media.slice(0, 2) : [];
+  }, [pop]);
+
+  const flash = (msg) => {
+    setNote(msg);
+    clearTimeout(noteTimer.current);
+    noteTimer.current = setTimeout(() => setNote(null), 1800);
+  };
+  const chosen = dests.find((d) => d.k === pick) || dests[0];
+  const destName = chosen.k === "feed" ? "Feed" : chosen.label;
+  const submit = () => onShare({ destKey: chosen.k, destLabel: chosen.k === "feed" ? "My feed" : chosen.label, caption: caption.trim() });
+  const insertText = (txt) => {
+    const ta = taRef.current;
+    const start = ta ? ta.selectionStart : caption.length;
+    const end = ta ? ta.selectionEnd : caption.length;
+    const next = caption.slice(0, start) + txt + caption.slice(end);
+    setCaption(next);
+    const caret = start + txt.length;
+    requestAnimationFrame(() => { if (ta) { ta.focus(); try { ta.setSelectionRange(caret, caret); } catch (e) {} } });
+  };
+  const sendTo = (p) => {
+    if (sent[p.name]) return;
+    setSent((s) => ({ ...s, [p.name]: true }));
+    flash("Sent to " + shareFirstName(p.name));
+  };
+  const copyLink = () => {
+    const done = () => flash("Link copied");
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(sharePostUrl(post)).then(done, done);else
+    done();
+  };
+  const openWhatsApp = () => window.open("https://wa.me/?text=" + encodeURIComponent(sharePostText(post) + " " + sharePostUrl(post)), "_blank", "noopener");
+  const openEmail = () => {
+    window.location.href = "mailto:?subject=" + encodeURIComponent(sharePostText(post)) +
+    "&body=" + encodeURIComponent(sharePostText(post) + "\n\n" + sharePostUrl(post));
+  };
+  const moreShare = () => {
+    if (navigator.share) navigator.share({ title: "Profinity", text: sharePostText(post), url: sharePostUrl(post) }).catch(() => {});else
+    copyLink();
+  };
+  const tiles = [
+  { k: "copy", label: "Copy link", icon: "lucide:link", onClick: copyLink },
+  { k: "whatsapp", label: "WhatsApp", icon: "mdi:whatsapp", onClick: openWhatsApp },
+  { k: "email", label: "Email", icon: "lucide:mail", onClick: openEmail },
+  { k: "more", label: "More", icon: "lucide:ellipsis", onClick: moreShare }];
+
   const sheet = (
-    <div className="pf-share-overlay" role="dialog" aria-modal="true" aria-label="New post" ref={cardRef} tabIndex={-1}>
-      <div className="pf-share-hd">
-        <button type="button" className="pf-share-cancel" onClick={onClose}>Cancel</button>
-        <span className="pf-share-title">New post</span>
-        <span className="pf-share-hd-spacer" aria-hidden="true" />
-      </div>
-      <div className="pf-share-body">
-        <div className="pf-share-crumb">
-          <Avatar name={ME.name} src={ME.avatar} size={40} />
-          <div className="pf-share-crumb-tx">
-            <span className="me">{ME.name}</span>
-            <IconifyIcon name="lucide:chevron-right" size={13} color="var(--gray-450)" />
-            <button type="button" className="pf-share-dest-btn" disabled={unlockedCount <= 1}
-              aria-haspopup="dialog" aria-expanded={step === "where"}
-              onClick={() => setStep((s) => s === "where" ? "say" : "where")}>
-              {destText}
-              {unlockedCount > 1 && <IconifyIcon name="lucide:chevron-down" size={14} color="#A26301" />}
-            </button>
-          </div>
-          {step === "where" &&
-          <div className="pf-share-dd" role="radiogroup" aria-label="Destination">
-            {dests.map((d) => (
-              <button key={d.k} type="button" role="radio" aria-checked={!d.locked && pick === d.k}
-                disabled={d.locked}
-                className={"pf-share-dd-opt" + (d.locked ? " locked" : "") + (!d.locked && pick === d.k ? " on" : "")}
-                onClick={() => { if (d.locked) return;setPick(d.k);setStep("say"); }}>
-                <span className="ic">
-                  <IconifyIcon name={d.locked ? "lucide:lock" : d.icon} size={18}
-                    color={d.locked ? "var(--gray-450)" : "var(--brand-navy)"} />
+    <div className={"pf-shs-root" + (leaving ? " leaving" : "")}>
+      <button type="button" className="pf-shs-scrim" aria-label="Close" onClick={close} />
+      <div className="pf-shs-sheet" role="dialog" aria-modal="true" aria-labelledby="pf-shs-title" ref={sheetRef} tabIndex={-1}>
+        <span className="pf-shs-grab" aria-hidden="true" />
+        <header className="pf-shs-hd">
+          <div className="pf-shs-hd-tx"><b id="pf-shs-title">Share</b></div>
+          <button type="button" className="pf-shs-x" aria-label="Close" onClick={close}>
+            <IconifyIcon name="lucide:x" size={18} color="var(--text-heading)" />
+          </button>
+        </header>
+
+        <div className="pf-shs-scroll">
+          {/* ---- compose ---- */}
+          <section className="pf-shs-compose" aria-label="Share to your feed">
+            <div className="pf-shs-who">
+              <Avatar name={ME.name} src={ME.avatar} size={44} />
+              <div className="pf-shs-who-tx">
+                <span className="pf-shs-name">{ME.name}</span>
+                <span className="pf-shs-chip-wrap">
+                  <button type="button" className={"pf-shs-chip" + (pop === "dest" ? " on" : "")}
+                    aria-haspopup="dialog" aria-expanded={pop === "dest"}
+                    onClick={() => setPop((p) => p === "dest" ? null : "dest")}>
+                    {chosen.k !== "feed" && <IconifyIcon name={chosen.icon} size={14} color="currentColor" />}
+                    {destName}
+                    <IconifyIcon name="lucide:chevron-down" size={14} color="currentColor" />
+                  </button>
+                  {pop === "dest" &&
+                  <WebShareDrop label="Share destination" className="pf-shs-dd" onClose={() => setPop(null)}>
+                    <div className="pfw-sh-dd-hd">Share to</div>
+                    <div role="radiogroup" aria-label="Destination">
+                      {dests.map((d) =>
+                      <button key={d.k} type="button" role="radio" aria-checked={!d.locked && pick === d.k}
+                        disabled={d.locked}
+                        className={"pf-share-dd-opt" + (d.locked ? " locked" : "") + (!d.locked && pick === d.k ? " on" : "")}
+                        onClick={() => { if (d.locked) return;setPick(d.k);setPop(null); }}>
+                        <span className="ic">
+                          <IconifyIcon name={d.locked ? "lucide:lock" : d.icon} size={18}
+                            color={d.locked ? "var(--gray-450)" : "var(--brand-navy)"} />
+                        </span>
+                        <span className="tx"><b>{d.k === "feed" ? "Feed" : d.label}</b><i>{d.locked ? "Upgrade to share here" : d.sub}</i></span>
+                        {!d.locked && pick === d.k &&
+                        <span className="ck"><IconifyIcon name="lucide:check" size={12} color="#fff" /></span>}
+                      </button>)}
+                    </div>
+                  </WebShareDrop>}
                 </span>
-                <span className="tx"><b>{d.label}</b><i>{d.locked ? "Upgrade to share here" : d.sub}</i></span>
-                {!d.locked && pick === d.k &&
-                <span className="ck"><IconifyIcon name="lucide:check" size={12} color="#fff" /></span>
-                }
-              </button>
-            ))}
-          </div>
-          }
+              </div>
+            </div>
+
+            <textarea ref={taRef} className="pf-shs-ta" rows={3} placeholder="Say something…"
+              aria-label="Say something" value={caption} onChange={(e) => setCaption(e.target.value)} />
+
+            {pop === "emoji" &&
+            <div className="pf-shs-emoji" role="menu" aria-label="Pick an emoji">
+              {COMMENT_EMOJI.map((em) =>
+              <button key={em} type="button" role="menuitem" onClick={() => { insertText(em); setPop(null); }}>{em}</button>)}
+            </div>}
+
+            <div className="pf-shs-cta-row">
+              <div className="pf-shs-tools">
+                <button type="button" className={"pf-shs-tool" + (pop === "emoji" ? " on" : "")} aria-label="Add emoji"
+                  aria-haspopup="menu" aria-expanded={pop === "emoji"}
+                  onClick={() => setPop((p) => p === "emoji" ? null : "emoji")}>
+                  <IconifyIcon name="lucide:smile" size={26} color="var(--gray-600)" />
+                </button>
+                <span className="pf-shs-chip-wrap">
+                  <button type="button" className={"pf-shs-tool" + (pop === "tag" ? " on" : "")} aria-label="Tag people"
+                    aria-haspopup="dialog" aria-expanded={pop === "tag"}
+                    onClick={() => setPop((p) => p === "tag" ? null : "tag")}>
+                    <IconifyIcon name="mdi:account-tag-outline" size={27} color="var(--gray-600)" />
+                  </button>
+                  {pop === "tag" &&
+                  <WebShareDrop label="Tag people" className="pf-shs-dd up" onClose={() => setPop(null)}>
+                    <div className="pfw-sh-dd-hd">Tag people</div>
+                    {SHARE_CONTACTS.map((p) =>
+                    <button key={p.name} type="button" className="pf-share-dd-opt"
+                      onClick={() => { setPop(null); insertText((caption && !/\s$/.test(caption) ? " " : "") + "@" + p.name + " "); }}>
+                      <Avatar name={p.name} src={p.avatar} size={36} />
+                      <span className="tx"><b>{p.name}</b></span>
+                    </button>)}
+                  </WebShareDrop>}
+                </span>
+              </div>
+              <button type="button" className="pf-shs-cta" onClick={submit}>Share now</button>
+            </div>
+          </section>
+
+          <section className="pf-shs-sec" aria-label="Send in Messages">
+            <div className="pf-shs-sec-hd">
+              <b>Send in Messages</b>
+              <a href="Messages.html" onClick={(e) => { e.preventDefault(); (window.pfGo || ((u) => { location.href = u; }))("Messages.html"); }}>See all</a>
+            </div>
+            <div className="pf-shs-rail" role="list">
+              {SHARE_CONTACTS.map((p) => {
+                const done = !!sent[p.name];
+                return (
+                  <button key={p.name} type="button" role="listitem" className={"pf-shs-contact" + (done ? " sent" : "")}
+                    aria-label={done ? "Sent to " + p.name : "Send to " + p.name} aria-pressed={done}
+                    onClick={() => sendTo(p)}>
+                    <span className="av">
+                      <Avatar name={p.name} src={p.avatar} size={56} />
+                      <span className="ck"><IconifyIcon name={done ? "lucide:check" : "lucide:send"} size={11} color="currentColor" /></span>
+                    </span>
+                    <span className="nm">{done ? "Sent" : shareFirstName(p.name)}</span>
+                  </button>);
+              })}
+            </div>
+          </section>
+
+          <section className="pf-shs-sec" aria-label="More ways to share">
+            <div className="pf-shs-sec-hd"><b>More ways to share</b></div>
+            <div className="pf-shs-tiles">
+              {tiles.map((t) =>
+              <button key={t.k} type="button" className="pf-shs-tile" onClick={t.onClick} style={{ "--tone": SHARE_TILE_TONES[t.k] }}>
+                <span className="ic"><IconifyIcon name={t.icon} size={22} color={SHARE_TILE_TONES[t.k]} /></span>
+                <span className="lb">{t.label}</span>
+              </button>)}
+            </div>
+          </section>
         </div>
-        <textarea className="pf-share-caption" placeholder="Share your thoughts…" rows={3}
-          value={caption} onChange={(e) => setCaption(e.target.value)} />
-        <div className="pf-share-tools">
-          <button type="button" className="pf-share-tool" aria-label="Add photo">
-            <IconifyIcon name="lucide:image" size={20} color="var(--gray-500)" />
-          </button>
-          <button type="button" className="pf-share-tool" aria-label="Add sticker">
-            <IconifyIcon name="lucide:sticker" size={20} color="var(--gray-500)" />
-          </button>
-          <button type="button" className="pf-share-tool" aria-label="More options">
-            <IconifyIcon name="lucide:more-horizontal" size={20} color="var(--gray-500)" />
-          </button>
-        </div>
-        {post &&
-        <div className="pf-share-quote">
-          <div className="pf-share-quote-hd">
-            <Avatar name={post.author.name} src={post.author.avatar} size={30} />
-            <span className="nm">{post.author.name}</span>
-            <IconifyIcon name="lucide:badge-check" size={14} color="var(--info)" />
-            <span className="tm">{post.time}</span>
-          </div>
-          {post.body && <p className="pf-share-quote-body">{post.body}</p>}
-          {images.length > 0 &&
-          <div className={"pf-share-quote-imgs pf-share-quote-imgs-" + images.length}>
-            {images.map((src, i) => <img key={i} src={src} alt="" />)}
-          </div>
-          }
-        </div>
-        }
+        {note && <div className="pf-shs-note" role="status">{note}</div>}
       </div>
-      <div className="pf-share-ft">
-        <button type="button" className="pf-share-ft-cancel" onClick={onClose}>Cancel</button>
-        <button type="button" className="pf-share-cta" onClick={submit}>Post</button>
-      </div>
-      {step === "where" &&
-      <button type="button" className="pf-share-scrim2" aria-label="Close" onClick={() => setStep("say")} />
-      }
     </div>
   );
   const host = typeof document !== "undefined" &&
-    document.querySelector(".m-screen, .cm-screen, .lm-screen, .pm-screen, .ev-screen");
+    document.querySelector(".m-screen, .cm-screen, .lm-screen, .pm-screen, .ev-screen, .rl-screen");
   return host ? ReactDOM.createPortal(sheet, host) : sheet;
 }
 
@@ -6027,7 +6389,7 @@ const WEB_SHARE_AUDIENCES = [
   { k: "tier", label: "My tier", sub: "Members in your tier and above", icon: "lucide:crown" },
   { k: "me", label: "Only me", sub: "Just you", icon: "lucide:lock" }];
 
-const WEB_SHARE_CONTACTS = [TIM, MIRANDA, SARAH, PRIYA, AMIR, MARK, BETH, OWEN, RACHEL, LEO];
+const WEB_SHARE_CONTACTS = SHARE_CONTACTS;
 
 function WebShareDrop({ label, className, onClose, children }) {
   useEffect(() => {
@@ -6045,9 +6407,8 @@ function WebShareDrop({ label, className, onClose, children }) {
 function WebShareModal({ post, onClose, onShare }) {
   const shRank = Math.max(0, SHARE_TIER_ORDER.indexOf(shareTier()));
   const dests = SHARE_DESTINATIONS.map((d) => ({ ...d, locked: d.tier > shRank }));
-  const [dest, setDest] = useState("feed");
-  const [aud, setAud] = useState("public");
-  const [pop, setPop] = useState(null); // null | "dest" | "aud" | "emoji" | "profile"
+  const [dest, setDest] = useState(() => defaultShareDest(post, dests));
+  const [pop, setPop] = useState(null); // null | "dest" | "emoji" | "tag" | "profile"
   const [caption, setCaption] = useState("");
   const [sent, setSent] = useState({});
   const [note, setNote] = useState(null);
@@ -6088,7 +6449,6 @@ function WebShareModal({ post, onClose, onShare }) {
   };
 
   const chosen = dests.find((d) => d.k === dest);
-  const audience = WEB_SHARE_AUDIENCES.find((a) => a.k === aud);
   const firstName = (n) => n.replace(/^(Dr\.?|Nurse)\s+/i, "").split(" ")[0];
   const postUrl = () => {
     const base = typeof location !== "undefined" ? location.origin + location.pathname : "";
@@ -6145,7 +6505,7 @@ function WebShareModal({ post, onClose, onShare }) {
       <div className="pfw-sh-modal" role="dialog" aria-modal="true" aria-labelledby="pfw-sh-title"
       onClick={(e) => e.stopPropagation()}>
         <header className="pfw-sh-top">
-          <span className="pfw-sh-title" id="pfw-sh-title">Share</span>
+          <span className="pfw-sh-title" id="pfw-sh-title">Share post</span>
           <button type="button" className="pfw-cover-x pfw-sh-x" aria-label="Close" ref={closeRef} onClick={onClose}>
             <IconifyIcon name="lucide:x" size={20} color="var(--text-heading)" />
           </button>
@@ -6186,52 +6546,49 @@ function WebShareModal({ post, onClose, onShare }) {
                       </div>
                     </WebShareDrop>}
                   </span>
-                  <span className="pfw-sh-chip-wrap">
-                    <button type="button" className={"pfw-sh-chip" + (pop === "aud" ? " on" : "")}
-                    aria-haspopup="dialog" aria-expanded={pop === "aud"}
-                    onClick={() => setPop((p) => p === "aud" ? null : "aud")}>
-                      <IconifyIcon name={audience.icon} size={13} color="var(--text-primary)" />
-                      {audience.label}
-                      <IconifyIcon name="lucide:chevron-down" size={13} color="var(--text-primary)" />
-                    </button>
-                    {pop === "aud" &&
-                    <WebShareDrop label="Who can see this" onClose={() => setPop(null)}>
-                      <div role="radiogroup" aria-label="Audience">
-                        {WEB_SHARE_AUDIENCES.map((a) =>
-                        <button key={a.k} type="button" role="radio" aria-checked={aud === a.k}
-                        className={"pf-share-dd-opt" + (aud === a.k ? " on" : "")}
-                        onClick={() => { setAud(a.k);setPop(null); }}>
-                          <span className="ic"><IconifyIcon name={a.icon} size={18} color="var(--brand-navy)" /></span>
-                          <span className="tx"><b>{a.label}</b><i>{a.sub}</i></span>
-                          {aud === a.k && <span className="ck"><IconifyIcon name="lucide:check" size={12} color="#fff" /></span>}
-                        </button>)}
-                      </div>
-                    </WebShareDrop>}
-                  </span>
                 </div>
               </div>
             </div>
 
             <div className="pfw-sh-write">
-              <textarea ref={taRef} className="pfw-sh-ta" rows={2} placeholder="Say something about this…"
-              aria-label="Say something about this" value={caption} onChange={(e) => setCaption(e.target.value)} />
-              <span className="pfw-sh-emoji-anchor">
-                <button type="button" className={"pfw-sh-emoji" + (pop === "emoji" ? " on" : "")} aria-label="Add emoji" title="Emoji"
-                aria-haspopup="dialog" aria-expanded={pop === "emoji"}
-                onClick={() => setPop((p) => p === "emoji" ? null : "emoji")}>
-                  <IconifyIcon name="lucide:smile" size={24} color="var(--gray-500)" />
-                </button>
-                {pop === "emoji" &&
-                <PfwPopover label="Pick an emoji" width={244} onClose={() => setPop(null)}>
-                  <div className="pfw-emoji-grid" role="menu">
-                    {COMMENT_EMOJI.map((em) =>
-                    <button key={em} type="button" role="menuitem" onClick={() => { insertEmoji(em); setPop(null); }}>{em}</button>)}
-                  </div>
-                </PfwPopover>}
-              </span>
+              <textarea ref={taRef} className="pfw-sh-ta" rows={3} placeholder="Say something…"
+              aria-label="Say something" value={caption} onChange={(e) => setCaption(e.target.value)} />
             </div>
 
             <div className="pfw-sh-cta-row">
+              <div className="pfw-sh-tools">
+                <span className="pfw-sh-emoji-anchor">
+                  <button type="button" className={"pfw-sh-emoji" + (pop === "emoji" ? " on" : "")} aria-label="Add emoji" title="Emoji"
+                  aria-haspopup="dialog" aria-expanded={pop === "emoji"}
+                  onClick={() => setPop((p) => p === "emoji" ? null : "emoji")}>
+                    <IconifyIcon name="lucide:smile" size={26} color="var(--gray-600)" />
+                  </button>
+                  {pop === "emoji" &&
+                  <PfwPopover label="Pick an emoji" width={244} onClose={() => setPop(null)}>
+                    <div className="pfw-emoji-grid" role="menu">
+                      {COMMENT_EMOJI.map((em) =>
+                      <button key={em} type="button" role="menuitem" onClick={() => { insertEmoji(em); setPop(null); }}>{em}</button>)}
+                    </div>
+                  </PfwPopover>}
+                </span>
+                <span className="pfw-sh-chip-wrap">
+                  <button type="button" className={"pfw-sh-emoji" + (pop === "tag" ? " on" : "")} aria-label="Tag people" title="Tag people"
+                  aria-haspopup="dialog" aria-expanded={pop === "tag"}
+                  onClick={() => setPop((p) => p === "tag" ? null : "tag")}>
+                    <IconifyIcon name="mdi:account-tag-outline" size={27} color="var(--gray-600)" />
+                  </button>
+                  {pop === "tag" &&
+                  <WebShareDrop label="Tag people" onClose={() => setPop(null)}>
+                    <div className="pfw-sh-dd-hd">Tag people</div>
+                    {WEB_SHARE_CONTACTS.map((p) =>
+                    <button key={p.name} type="button" className="pf-share-dd-opt"
+                    onClick={() => { setPop(null); insertEmoji((caption && !/\s$/.test(caption) ? " " : "") + "@" + p.name + " "); }}>
+                      <Avatar name={p.name} src={p.avatar} size={36} />
+                      <span className="tx"><b>{p.name}</b></span>
+                    </button>)}
+                  </WebShareDrop>}
+                </span>
+              </div>
               <button type="button" className="pfw-sh-cta" onClick={submit}>Share now</button>
             </div>
           </section>
@@ -6281,10 +6638,10 @@ function WebShareModal({ post, onClose, onShare }) {
               <div className="pfw-sh-tiles">
                 {tiles.map((t) =>
                 <button key={t.k} type="button" className={"pfw-sh-tile" + (pop === "profile" && t.k === "profile" ? " on" : "")}
-                onClick={t.onClick}
+                onClick={t.onClick} style={{ "--tone": SHARE_TILE_TONES[t.k] }}
                 aria-haspopup={t.k === "profile" || t.k === "channel" ? "dialog" : undefined}
                 aria-expanded={t.k === "profile" ? pop === "profile" : undefined}>
-                  <span className="ic"><IconifyIcon name={t.icon} size={26} color="var(--text-heading)" /></span>
+                  <span className="ic"><IconifyIcon name={t.icon} size={26} color={SHARE_TILE_TONES[t.k]} /></span>
                   <span className="lb">{t.label}</span>
                 </button>)}
               </div>
@@ -6350,7 +6707,7 @@ function FeedPost({ post, st, hideTags, pinned, canPin, onPin, pinScope, onToggl
   };
   const doShare = ({ destKey, destLabel, caption }) => {
     setShareOpen(false);
-    onShare(destKey === "feed" ? caption : "");
+    onShare({ caption, destKey, destLabel, sharedPost: slimSharedPost(post) });
     const g = actionIcon(2);
     if (g && g.animate) {
       g.animate(
@@ -6374,7 +6731,7 @@ function FeedPost({ post, st, hideTags, pinned, canPin, onPin, pinScope, onToggl
   const isReel = post.sample && post.sample.type === "vertical";
 
   return (
-    <div className={"post-wrap" + (post.channel ? " has-chx" : "") + (isReel ? " is-reel" : "")} ref={ref}
+    <div className={"post-wrap" + (post.channel ? " has-chx" : "") + (isReel ? " is-reel" : "")} ref={ref} id={"post-" + post.id}
     style={{ background: "var(--surface-card)", borderRadius: "var(--r-md)", overflow: "hidden", padding: "0px 16px" }}>
       {post.channel && <ChannelContext channel={post.channel} />}
       <PostCard {...post} commentList={[]}
@@ -6387,7 +6744,7 @@ function FeedPost({ post, st, hideTags, pinned, canPin, onPin, pinScope, onToggl
         : post.time}
       hashtags={hideTags || post.questionnaire || post.poll || post.liveNow ? [] : [...resolveHashtags(post.hashtags), ...categoryTags(post.categories)]}
       title={post.author === PROFINITY ? null : post.title}
-      body={post.questionnaire || post.poll || post.liveNow ? null : post.bg
+      body={post.questionnaire || post.poll || post.liveNow || !post.body ? null : post.bg
         ? <div className="pf-post-bg" style={{ background: post.bg.css, color: post.bg.fg }}>
             <ClampText text={post.body} lines={6} more={post.channel ? "Learn More" : "See more"} color={post.bg.fg} />
           </div>
@@ -6412,6 +6769,7 @@ function FeedPost({ post, st, hideTags, pinned, canPin, onPin, pinScope, onToggl
         : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} video={post.video} aspect={post.aspect} onLoveReact={handleDoubleTapLove} /> : null}
         {post.document && <div className="pf-doc-inset"><DocAttachment doc={post.document} /></div>}
         {post.sharedProfile && <SharedProfileCard profile={post.sharedProfile} />}
+        {post.sharedPost && <div className="pf-repost"><SharePostQuote post={post.sharedPost} full /></div>}
         {isReel &&
         <ReelActionsRow likes={st.likes} comments={st.commentsCount} shares={st.shares}
           liked={st.liked} saved={st.saved}
@@ -6664,6 +7022,18 @@ function ChannelFeedCard({ post, st, pinned, canPin, onPin, pinScope, onToggleLi
   const [reportedOpen, setReportedOpen] = useState(false);
   const liked = !!st.reaction;
   const ref = useRef(null);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareToast, setShareToast] = useState(null);
+  const shareTimer = useRef(null);
+  useEffect(() => () => clearTimeout(shareTimer.current), []);
+  const handleShare = () => setShareOpen(true);
+  const doShare = ({ destKey, destLabel, caption }) => {
+    setShareOpen(false);
+    onShare({ caption, destKey, destLabel, sharedPost: slimSharedPost(post) });
+    setShareToast("Shared to " + destLabel);
+    clearTimeout(shareTimer.current);
+    shareTimer.current = setTimeout(() => setShareToast(null), 2200);
+  };
   const { picker, pick, cancelHide, scheduleHide } = useReactionPicker(ref, st.reaction, onReact);
   const comments = st.comments || [];
   const handleLike = () => {
@@ -6677,7 +7047,7 @@ function ChannelFeedCard({ post, st, pinned, canPin, onPin, pinScope, onToggleLi
     if (willReact) burstReaction(ref.current, "love", true);
   };
   return (
-    <div className="pf-chcard" ref={ref}
+    <div className="pf-chcard" ref={ref} id={"post-" + post.id}
     style={{ background: "var(--surface-card)", borderRadius: "var(--r-md)", padding: "16px" }}>
       <div className="pf-chcard-head">
         <Avatar name={post.channel.by} src={post.channel.byAvatar} size={40} />
@@ -6706,14 +7076,18 @@ function ChannelFeedCard({ post, st, pinned, canPin, onPin, pinScope, onToggleLi
           saved={st.saved} onSave={onSave}
           author={{ name: post.channel.by, avatar: post.channel.byAvatar }}
           likes={st.likes} commentsCount={st.commentsCount} shares={st.shares} liked={liked}
-          comments={comments} onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={onShare} /> :
+          comments={comments} onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={handleShare} /> :
         <MediaCarousel images={post.media} video={post.video} onLoveReact={handleDoubleTapLove} />}
       </div>}
       <PostActions likes={st.likes} comments={st.commentsCount} shares={st.shares}
       liked={liked} saved={st.saved} actioned={false}
-      onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={onShare} onSave={onSave}
+      onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={handleShare} onSave={onSave}
       onReactionsClick={() => setLikesOpen(true)}
       style={{ borderTop: "1px solid var(--border-default)", paddingTop: 14 }} />
+      {shareOpen && (typeof window !== "undefined" && !window.PF_EMBED ?
+      <WebShareModal post={post} onClose={() => setShareOpen(false)} onShare={doShare} /> :
+      <ShareSheet post={post} onClose={() => setShareOpen(false)} onShare={doShare} />)}
+      {shareToast && <div className="pf-share-toast" role="status">{shareToast}</div>}
       <div>
         <LikedByRow onOpen={() => setLikesOpen(true)} />
       </div>
@@ -6758,6 +7132,18 @@ function CourseCommentCard({ post, st, pinned, canPin, onPin, pinScope, onToggle
   const liked = !!st.reaction;
   const lesson = post.lesson;
   const ref = useRef(null);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareToast, setShareToast] = useState(null);
+  const shareTimer = useRef(null);
+  useEffect(() => () => clearTimeout(shareTimer.current), []);
+  const handleShare = () => setShareOpen(true);
+  const doShare = ({ destKey, destLabel, caption }) => {
+    setShareOpen(false);
+    onShare({ caption, destKey, destLabel, sharedPost: slimSharedPost(post) });
+    setShareToast("Shared to " + destLabel);
+    clearTimeout(shareTimer.current);
+    shareTimer.current = setTimeout(() => setShareToast(null), 2200);
+  };
   const { picker, pick, cancelHide, scheduleHide } = useReactionPicker(ref, st.reaction, onReact);
   const handleLike = () => {
     const willReact = !st.reaction;
@@ -6808,9 +7194,13 @@ function CourseCommentCard({ post, st, pinned, canPin, onPin, pinScope, onToggle
       }
       <PostActions likes={st.likes} comments={st.commentsCount} shares={st.shares}
       liked={liked} saved={st.saved} actioned={false}
-      onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={onShare} onSave={onSave}
+      onLike={handleLike} onComment={() => setReplying((r) => !r)} onShare={handleShare} onSave={onSave}
       onReactionsClick={() => setLikesOpen(true)}
       style={{ borderTop: "1px solid var(--border-default)", paddingTop: 14 }} />
+      {shareOpen && (typeof window !== "undefined" && !window.PF_EMBED ?
+      <WebShareModal post={post} onClose={() => setShareOpen(false)} onShare={doShare} /> :
+      <ShareSheet post={post} onClose={() => setShareOpen(false)} onShare={doShare} />)}
+      {shareToast && <div className="pf-share-toast" role="status">{shareToast}</div>}
       {replying &&
       <CommentComposer placeholder="Write a reply…" autoFocus small
       onSubmit={(t) => {onAddComment(t);setReplying(false);}} />
@@ -7128,7 +7518,7 @@ const PF_USER_POSTS_KEY = "pf-newsfeed-user-posts";
 function readUserPosts() {
   try {
     const list = JSON.parse(localStorage.getItem(PF_USER_POSTS_KEY)) || [];
-    return list.filter((p) => p && p.author && p.author.name && p.body).map((p) =>
+    return list.filter((p) => p && p.author && p.author.name && (p.body || p.sharedPost)).map((p) =>
       /* CreatePostMobile stores its clip as `video: { src, cover, ratio }`;
          a video-only post renders through `sample`, so map one to the other.
          A post carrying photos *and* a clip keeps both and renders them as
@@ -7138,6 +7528,16 @@ function readUserPosts() {
 }
 function writeUserPosts(list) {
   try { localStorage.setItem(PF_USER_POSTS_KEY, JSON.stringify(list)); } catch (e) {}
+}
+/* Create a repost outside the Feed component (Reels page etc.): same shape
+   Feed.addPost writes, so the destination feed picks it up on load. */
+function createRepost({ caption, sharedPost, channelBucket }) {
+  const post = { id: "u" + Date.now(), author: { name: ME.name, avatar: ME.avatar, seals: ["gb", "verified"] },
+    time: "Just now", body: caption || "", media: [], sample: null, live: false, categories: [],
+    ...(sharedPost ? { sharedPost } : {}), ...(channelBucket ? { channelBucket } : {}),
+    likes: "0", comments: "0", shares: "0", commentList: [] };
+  writeUserPosts([post, ...readUserPosts()]);
+  return post.id;
 }
 
 /* Background uploads. CreatePostMobile hands a media post over immediately
@@ -7433,6 +7833,22 @@ function Feed({ channel } = {}) {
   userPostsRef.current = userPosts;
   const [, setUploadTick] = useState(0);
   const anyUploading = userPosts.some((p) => p.uploading);
+  /* upload-tracker.js shows a floating progress card on every *other* page
+     and books the reward if an upload finishes there; while a Feed is on
+     screen it owns the cards (FeedUploadCard below), so tell it to step back. */
+  useEffect(() => {
+    const t = window.PFUploadTracker;
+    if (!t || !t.setOwner) return;
+    t.setOwner(true);
+    return () => t.setOwner(false);
+  }, []);
+  /* Storage may change under us while we're mounted (the tracker or a cancel
+     from another tab): re-read so a finished/cancelled upload doesn't linger. */
+  useEffect(() => {
+    const onStorage = (e) => { if (!e.key || e.key === PF_USER_POSTS_KEY) setUserPosts(readUserPosts()); };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
   useEffect(() => {
     if (!anyUploading) return;
     const id = setInterval(() => {
@@ -7543,7 +7959,7 @@ function Feed({ channel } = {}) {
   /* Composer submits straight into the feed — same post shape + localStorage
      key ("pf-newsfeed-user-posts") that CreatePostMobile writes, so posts
      made from either surface show up on both. */
-  const addPost = ({ body, media, video, live, categories, poll, document: doc, location, bg }) => {
+  const addPost = ({ body, media, video, live, categories, poll, document: doc, location, bg, sharedPost, channelBucket }) => {
     /* A clip on its own renders through `sample`; a clip alongside photos
        stays as `video` + `media` and renders as one mixed strip. */
     const mixed = !!(video && media && media.length);
@@ -7552,10 +7968,64 @@ function Feed({ channel } = {}) {
       time: "Just now", body, media: media || [], sample, live: !!live, categories: categories || [],
       ...(mixed ? { video: { src: video.src, cover: video.cover, ratio: video.ratio } } : {}),
       ...(poll ? { poll } : {}), ...(doc ? { document: doc } : {}), ...(location ? { location } : {}), ...(bg ? { bg } : {}),
+      ...(sharedPost ? { sharedPost } : {}), ...(channelBucket ? { channelBucket } : {}),
       likes: "0", comments: "0", shares: "0", commentList: [] };
     try { localStorage.setItem(PF_USER_POSTS_KEY, JSON.stringify([post, ...readUserPosts()])); } catch (e) {}
     setUserPosts((list) => [post, ...list]);
     setState((s) => ({ ...s, [post.id]: { liked: false, saved: false, actioned: post.actioned, likes: post.likes, base: post.likes, reaction: null, shares: post.shares, sharesBase: post.shares, comments: withIds(post.commentList), commentsCount: post.comments } }));
+    return post.id;
+  };
+
+  /* ---- Share → repost → land on it ----
+     Sharing always creates a repost (caption + quoted original) in the chosen
+     destination and then takes the member to it: scroll + gold pulse when the
+     destination is this feed, otherwise navigate to the hosting page with
+     ?post=<id> and pulse there on arrival. */
+  const [focusId, setFocusId] = useState(() => {
+    try { return new URLSearchParams(window.location.search).get("post"); } catch (e) { return null; }
+  });
+  const [landToast, setLandToast] = useState(null);
+  useEffect(() => {
+    if (!focusId) return;
+    let tries = 0;
+    const tick = () => {
+      const el = document.getElementById("post-" + focusId);
+      if (!el) { if (tries++ < 25) setTimeout(tick, 120); return; }
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.remove("pf-post-flash");
+      void el.offsetWidth;
+      el.classList.add("pf-post-flash");
+      setTimeout(() => el.classList.remove("pf-post-flash"), 2800);
+      setFocusId(null);
+    };
+    const t = setTimeout(tick, 350);
+    return () => clearTimeout(t);
+  }, [focusId]);
+  useEffect(() => {
+    let fromUrl = null;
+    try { fromUrl = new URLSearchParams(window.location.search).get("post"); } catch (e) {}
+    if (!fromUrl) return;
+    const mine = readUserPosts().find((p) => p.id === fromUrl);
+    if (!mine) return;
+    setLandToast(mine.channelBucket ? "Posted to " + ((BUCKET_META[mine.channelBucket] || {}).label || "the channel") : "Shared to your feed");
+    const t = setTimeout(() => setLandToast(null), 3200);
+    return () => clearTimeout(t);
+  }, []);
+  const shareFrom = (p, info) => {
+    setState((s) => {
+      const cur = s[p.id];
+      return { ...s, [p.id]: { ...cur, shares: bump(cur.sharesBase) } };
+    });
+    if (!info || typeof info !== "object") return;
+    const channelKey = info.destKey && info.destKey !== "feed" ? info.destKey : null;
+    const id = addPost({ body: info.caption || "", sharedPost: info.sharedPost, channelBucket: channelKey });
+    const embed = typeof window !== "undefined" && !!window.PF_EMBED;
+    const here = channelKey ? channel === channelKey : !channel;
+    const card = typeof document !== "undefined" ? document.getElementById("post-" + p.id) : null;
+    setTimeout(() => rewardShare(card), 260);
+    if (here) { setFocusId(id); return; }
+    const url = sharePageFor(channelKey, embed) + (channelKey ? "&" : "") + "post=" + id;
+    setTimeout(() => (window.pfGo || function (u) { window.location.href = u; })(url), 900);
   };
 
   const viewerCurrent = PERSONA_MAP[viewerPersona] || PERSONA_MAP.confidence;
@@ -7586,7 +8056,7 @@ function Feed({ channel } = {}) {
      spreadEventPosts below, rather than left to stack at the top and repeat
      every cycle — see its comment for why. */
   const feedItems = spreadEventPosts([
-  ...userPosts.filter((p) => !p.uploading).map((p) => ({ item: p, mode: "full" })),
+  ...userPosts.filter((p) => !p.uploading && !p.channelBucket).map((p) => ({ item: p, mode: "full" })),
   { item: LIVE_NOW_POST, mode: "full" },
   { item: SAMPLE_LONG_TEXT_POST, mode: "full" },
   // web-only sample: the single-slide image carousel (see SAMPLE_CAROUSEL_POST)
@@ -7613,7 +8083,8 @@ function Feed({ channel } = {}) {
      still runs through resolveBucketFeed, so a channel the viewer hasn't
      unlocked renders its normal teaser/upgrade card instead of the post. */
   const visibleFeedItems = channel ?
-  bucketResolved.filter(({ item: p }) => p.bucket === channel) :
+  [...userPosts.filter((p) => !p.uploading && p.channelBucket === channel).map((p) => ({ item: p, mode: "full" })),
+  ...bucketResolved.filter(({ item: p }) => p.bucket === channel)] :
   feedItems;
 
   /* Admin-pinned posts are lifted out of wherever the sequence placed them
@@ -7676,10 +8147,7 @@ function Feed({ channel } = {}) {
               return { ...s, [p.id]: { ...cur, comments, commentsCount: bump(cur.commentsCount) } };
             })}
             onSave={() => toggleSave(p.id)}
-            onShare={() => setState((s) => {
-              const cur = s[p.id];
-              return { ...s, [p.id]: { ...cur, shares: bump(cur.sharesBase) } };
-            })} />);
+            onShare={(info) => shareFrom(p, info)} />);
 
         }
         if (p.bucket === "coursecomment") {
@@ -7687,10 +8155,7 @@ function Feed({ channel } = {}) {
             <CourseCommentCard key={p.id} post={p} st={st} {...pinProps}
             onToggleLike={onToggleLike} onReact={setReaction} onAddComment={onAddComment}
             onSave={() => toggleSave(p.id)}
-            onShare={() => setState((s) => {
-              const cur = s[p.id];
-              return { ...s, [p.id]: { ...cur, shares: bump(cur.sharesBase) } };
-            })} />);
+            onShare={(info) => shareFrom(p, info)} />);
 
         }
         return (
@@ -7706,13 +8171,7 @@ function Feed({ channel } = {}) {
             c);
             return { ...s, [p.id]: { ...cur, comments, commentsCount: bump(cur.commentsCount) } };
           })}
-          onShare={(caption) => {
-            setState((s) => {
-              const cur = s[p.id];
-              return { ...s, [p.id]: { ...cur, shares: bump(cur.sharesBase) } };
-            });
-            if (caption) addPost({ body: caption });
-          }}
+          onShare={(info) => shareFrom(p, info)}
           onSave={() => toggleSave(p.id)} />);
 
 
@@ -7734,6 +8193,12 @@ function Feed({ channel } = {}) {
         expandedIds={expandedPins} onToggleItem={toggleMinimizePin} renderItem={renderFeedItem} innerRef={pinnedRef} />
       }
       {regularItems.map(renderFeedItem)}
+      {landToast &&
+      <div className="pf-save-toast" role="status">
+        <span className="pf-save-toast-ck"><IconifyIcon name="lucide:check" size={12} color="#0a0a0a" /></span>
+        <span className="pf-save-toast-tx">{landToast}</span>
+      </div>
+      }
       {pinToast &&
       <div className="pf-save-toast" role="status">
         <span className="pf-save-toast-ck"><IconifyIcon name="lucide:pin" size={12} color="#0a0a0a" /></span>
@@ -7818,7 +8283,8 @@ function App() {
    duplicating the reaction/comment logic. CommentComposer + ReactTrigger are
    exposed so standalone pages (e.g. lesson detail) get the same comment
    composer + Like control instead of rebuilding them. */
-window.PFApp = { Feed, EVENTS, ME, smNextTier, smIncludedTiers, pfTagActiveNav, LeftRail, RightRail, getAllPosts, CommentComposer, ReactTrigger, getUserTier, setUserTier, readEventRegPosts };
+window.PFApp = { Feed, EVENTS, ME, smNextTier, smIncludedTiers, pfTagActiveNav, LeftRail, RightRail, getAllPosts, CommentComposer, ReactTrigger, getUserTier, setUserTier, readEventRegPosts,
+  ShareSheet, WebShareModal, SharePostQuote, slimSharedPost, sharePageFor, createRepost, rewardShare };
 
 /* Standalone web pages that only borrow window.PFApp.Feed (Community.html)
    set PF_NO_MOUNT so the newsfeed App doesn't also mount into their root. */

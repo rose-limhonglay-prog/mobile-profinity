@@ -138,51 +138,6 @@ function useIsMobileCP() {
   return mobile;
 }
 
-const CP_AUDIENCE_OPTS = [
-  { label: "Everyone",       icon: "lucide:globe",       badge: null },
-  { label: "Members Only",   icon: "lucide:users",       badge: "fluent:ribbon-star-16-filled" },
-  { label: "Patients Only",  icon: "lucide:user",        badge: null },
-  { label: "Clinicians Only",icon: "lucide:stethoscope", badge: null },
-  { label: "Only Me",        icon: "lucide:lock",        badge: null },
-];
-
-function CPAudiencePicker({ value, onChange }) {
-  const [open, setOpen] = React.useState(false);
-  React.useEffect(() => {
-    if (!open) return;
-    const close = () => setOpen(false);
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, [open]);
-  const current = CP_AUDIENCE_OPTS.find((o) => o.label === value) || CP_AUDIENCE_OPTS[0];
-  return (
-    <div className="cp-audience-wrap" onClick={(e) => e.stopPropagation()}>
-      <button className="cp-audience-btn" onClick={() => setOpen((o) => !o)}>
-        <DSCP.IconifyIcon name={current.icon} size={13} color="var(--brand-navy)" />
-        {current.label}
-        <DSCP.IconifyIcon name="lucide:chevron-down" size={12} color="var(--brand-navy)"
-          style={{ transition: "transform .2s", transform: open ? "rotate(180deg)" : "none" }} />
-      </button>
-      {open && (
-        <div className="cp-audience-menu" role="listbox" aria-label="Audience">
-          {CP_AUDIENCE_OPTS.map((opt) => (
-            <button key={opt.label} role="option" aria-selected={opt.label === value}
-              className={"cp-audience-opt" + (opt.label === value ? " on" : "")}
-              onClick={() => { onChange(opt.label); setOpen(false); }}>
-              <span className="cp-aopt-ic">
-                <DSCP.IconifyIcon name={opt.icon} size={22} color="var(--gray-700)" />
-              </span>
-              <span className="cp-aopt-lbl">{opt.label}</span>
-              {opt.badge && (
-                <DSCP.IconifyIcon name={opt.badge} size={20} color="#ce9957" />
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-    </div>);
-}
-
 const CP_ATTACH = [
   { icon: "lucide:image", label: "Photo", color: "#2d9d5a" },
   { icon: "lucide:video", label: "Video", color: "#e56c1b" },
@@ -1211,7 +1166,6 @@ function CPScreen() {
   const [video, setVideo] = React.useState(null);
   const [coverPickerOpen, setCoverPickerOpen] = React.useState(false);
   const [mediaSheet, setMediaSheet] = React.useState(null); // null | "photo" | "video"
-  const [audience, setAudience] = React.useState("Everyone");
   const [allTags] = React.useState(() => (window.PFHashtags ? window.PFHashtags.getAll() : []));
   const [selectedTags, setSelectedTags] = React.useState([]);
   const [bgId, setBgId] = React.useState("none");
@@ -1259,7 +1213,6 @@ function CPScreen() {
     if (!readyAt) return undefined;
     const t2 = setTimeout(() => {
       setVideo((v) => v && v.readyAt === readyAt ? { ...v, readyAt: null } : v);
-      setCoverPickerOpen(true);
     }, CP_VIDEO_READY_HOLD);
     return () => clearTimeout(t2);
   }, [readyAt]);
@@ -1368,7 +1321,6 @@ function CPScreen() {
       setVideo((v) => v && v.token === token
         ? { ...v, ratio, probing: false, prep: long ? { started: Date.now(), duration: cpVideoPrepDuration(meta), meta } : null }
         : v);
-      if (!long) setCoverPickerOpen(true);
     });
   };
   const pickVideo = (source) => {
@@ -1472,7 +1424,6 @@ function CPScreen() {
           <div className="cp-author-meta">
             <div className="cp-author-name-row">
               <span className="cp-author-name">{PFACP.ME.name}</span>
-              <CPAudiencePicker value={audience} onChange={setAudience} />
             </div>
             <button type="button" className={"cp-channel-btn" + (canPickChannel ? "" : " static")}
               onClick={() => canPickChannel && setChanSheet(true)}

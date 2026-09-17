@@ -93,6 +93,7 @@
 [data-theme="dark"] .m-iconbtn:active { background: rgba(206, 153, 87, 0.22); }
 [data-theme="dark"] .m-pts { background: rgba(252, 194, 93, 0.16); color: #F5C542; }
 [data-theme="dark"] .m-pts-delta { color: #F5C542; }
+[data-theme="dark"] .pf-pts-float { color: #F5C542; text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 10px rgba(245,197,66,.35); }
 [data-theme="dark"] .m-pts.earn { background: rgba(252, 194, 93, 0.28); }
 [data-theme="dark"] .m-pts:active { background: rgba(252, 194, 93, 0.26); }
 [data-theme="dark"] .m-screen.chrome-float .m-pts { background: rgba(38, 34, 70, 0.6); border-color: rgba(255, 255, 255, 0.14); }
@@ -433,3 +434,15 @@
 [data-theme="dark"] .lm2-courseband .lm-ghost { border-color: var(--brand-navy); color: var(--brand-navy); }
 [data-theme="dark"] .lm2-courseband .lm-ghost.lm-fill { background: var(--brand-navy); color: #1a1736; border-color: var(--brand-navy); }
 [data-theme="dark"] .lm2-courseband .lm-ghost.lm-fill:active { background: var(--brand-navy-700); }
+
+/* ===== Share sheet (mobile bottom sheet) + web share modal: gold fills take ink text ===== */
+[data-theme="dark"] .pf-shs-scrim { background: rgba(0, 0, 0, .62); }
+[data-theme="dark"] .pf-shs-sheet { box-shadow: 0 -18px 50px rgba(0, 0, 0, .6); }
+[data-theme="dark"] .pf-shs-dest.on,
+[data-theme="dark"] .pf-shs-cta,
+[data-theme="dark"] .pf-shs-note,
+[data-theme="dark"] .pfw-sh-cta,
+[data-theme="dark"] .pf-shs-contact .av .ck { color: #1a1736; }
+[data-theme="dark"] .pf-shs-contact.sent .av .ck { color: #fff; }
+[data-theme="dark"] .pf-shq { background: linear-gradient(180deg, var(--surface-card), var(--surface-sunken)); }
+[data-theme="dark"] .pf-shq-img b { background: rgba(0, 0, 0, .55); }

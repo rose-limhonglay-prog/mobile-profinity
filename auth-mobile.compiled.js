@@ -731,8 +731,8 @@ function DailyReward({
   }), /*#__PURE__*/React.createElement("span", {
     className: "au-rw-coin"
   }, /*#__PURE__*/React.createElement(AULottie, {
-    src: "https://lottie.host/cc6c5973-9f61-481c-85ed-0fe2089a9176/CwHL9yTPJJ.json",
-    size: 168
+    src: "https://lottie.host/c18a79c2-beca-4d8d-921a-df9ee2394688/m6ViMA5SuC.json",
+    size: 224
   }))), /*#__PURE__*/React.createElement("p", {
     className: "au-rw-kicker"
   }, kicker || "Daily login reward"), /*#__PURE__*/React.createElement("p", {

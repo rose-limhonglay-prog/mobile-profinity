@@ -304,14 +304,13 @@ function WalletCardRW({ state }) {
   );
 }
 
-function DemoCardRW({ onRisk, onMilestone, onFive, onGoal, onReset }) {
+function DemoCardRW({ onRisk, onMilestone, onGoal, onReset }) {
   return (
     <section className="rw-card rw-side-card rw-demo" aria-label="Demo controls">
       <h3>Demo controls</h3>
       <div className="rw-demo-bar">
         <button className="rw-demo-btn" type="button" onClick={onRisk}>Simulate streak at risk</button>
         <button className="rw-demo-btn" type="button" onClick={onMilestone}>Simulate 50k milestone</button>
-        <button className="rw-demo-btn" type="button" onClick={onFive}>5 in a row</button>
         <button className="rw-demo-btn" type="button" onClick={onGoal}>Daily goal reached</button>
         <button className="rw-demo-btn" type="button" onClick={onReset}>Reset demo data</button>
       </div>
@@ -387,7 +386,6 @@ function RewardsWebApp() {
             <DemoCardRW
               onRisk={() => { PF_RW.setStreakAtRisk(6); refresh(); }}
               onMilestone={() => { PF_RW.setState({ lifetimePoints: 49700 }); goRW("MilestoneSplash.html"); }}
-              onFive={() => { if (window.PFEarnStreak) window.PFEarnStreak.show(375); else flash("Earn-streak script not loaded."); }}
               onGoal={() => { if (window.PFDailyGoal) window.PFDailyGoal.reset(); goRW("DailyGoal.html?ret=RewardsWeb.html"); }}
               onReset={() => { PF_RW.resetDemo(); refresh(); flash("Demo data reset."); }} />
           </aside>

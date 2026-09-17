@@ -219,84 +219,6 @@ function useIsMobileCP() {
   }, []);
   return mobile;
 }
-const CP_AUDIENCE_OPTS = [{
-  label: "Everyone",
-  icon: "lucide:globe",
-  badge: null
-}, {
-  label: "Members Only",
-  icon: "lucide:users",
-  badge: "fluent:ribbon-star-16-filled"
-}, {
-  label: "Patients Only",
-  icon: "lucide:user",
-  badge: null
-}, {
-  label: "Clinicians Only",
-  icon: "lucide:stethoscope",
-  badge: null
-}, {
-  label: "Only Me",
-  icon: "lucide:lock",
-  badge: null
-}];
-function CPAudiencePicker({
-  value,
-  onChange
-}) {
-  const [open, setOpen] = React.useState(false);
-  React.useEffect(() => {
-    if (!open) return;
-    const close = () => setOpen(false);
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, [open]);
-  const current = CP_AUDIENCE_OPTS.find(o => o.label === value) || CP_AUDIENCE_OPTS[0];
-  return /*#__PURE__*/React.createElement("div", {
-    className: "cp-audience-wrap",
-    onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "cp-audience-btn",
-    onClick: () => setOpen(o => !o)
-  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
-    name: current.icon,
-    size: 13,
-    color: "var(--brand-navy)"
-  }), current.label, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
-    name: "lucide:chevron-down",
-    size: 12,
-    color: "var(--brand-navy)",
-    style: {
-      transition: "transform .2s",
-      transform: open ? "rotate(180deg)" : "none"
-    }
-  })), open && /*#__PURE__*/React.createElement("div", {
-    className: "cp-audience-menu",
-    role: "listbox",
-    "aria-label": "Audience"
-  }, CP_AUDIENCE_OPTS.map(opt => /*#__PURE__*/React.createElement("button", {
-    key: opt.label,
-    role: "option",
-    "aria-selected": opt.label === value,
-    className: "cp-audience-opt" + (opt.label === value ? " on" : ""),
-    onClick: () => {
-      onChange(opt.label);
-      setOpen(false);
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cp-aopt-ic"
-  }, /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
-    name: opt.icon,
-    size: 22,
-    color: "var(--gray-700)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "cp-aopt-lbl"
-  }, opt.label), opt.badge && /*#__PURE__*/React.createElement(DSCP.IconifyIcon, {
-    name: opt.badge,
-    size: 20,
-    color: "#ce9957"
-  })))));
-}
 const CP_ATTACH = [{
   icon: "lucide:image",
   label: "Photo",
@@ -1965,7 +1887,6 @@ function CPScreen() {
   const [video, setVideo] = React.useState(null);
   const [coverPickerOpen, setCoverPickerOpen] = React.useState(false);
   const [mediaSheet, setMediaSheet] = React.useState(null); // null | "photo" | "video"
-  const [audience, setAudience] = React.useState("Everyone");
   const [allTags] = React.useState(() => window.PFHashtags ? window.PFHashtags.getAll() : []);
   const [selectedTags, setSelectedTags] = React.useState([]);
   const [bgId, setBgId] = React.useState("none");
@@ -2020,7 +1941,6 @@ function CPScreen() {
         ...v,
         readyAt: null
       } : v);
-      setCoverPickerOpen(true);
     }, CP_VIDEO_READY_HOLD);
     return () => clearTimeout(t2);
   }, [readyAt]);
@@ -2198,7 +2118,6 @@ function CPScreen() {
           meta
         } : null
       } : v);
-      if (!long) setCoverPickerOpen(true);
     });
   };
   const pickVideo = source => {
@@ -2352,10 +2271,7 @@ function CPScreen() {
     className: "cp-author-name-row"
   }, /*#__PURE__*/React.createElement("span", {
     className: "cp-author-name"
-  }, PFACP.ME.name), /*#__PURE__*/React.createElement(CPAudiencePicker, {
-    value: audience,
-    onChange: setAudience
-  })), /*#__PURE__*/React.createElement("button", {
+  }, PFACP.ME.name)), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "cp-channel-btn" + (canPickChannel ? "" : " static"),
     onClick: () => canPickChannel && setChanSheet(true),

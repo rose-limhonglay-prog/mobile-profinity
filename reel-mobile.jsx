@@ -152,6 +152,20 @@ function Reel({ reel, active }) {
     }
   };
 
+  /* Share → the newsfeed's ShareSheet (window.PFApp from app.compiled.js),
+     then a repost is written and we land on it in the destination feed. */
+  const [shareOpen, setShareOpen] = useStateRL(false);
+  const PFA = window.PFApp || {};
+  const reelAsPost = { id: reel.id, author: reel.author, time: "Reel", body: reel.caption,
+    sample: { type: "vertical", image: reel.media, duration: reel.dur ? "0:" + String(reel.dur).padStart(2, "0") : undefined } };
+  const onShared = ({ caption, destKey }) => {
+    setShareOpen(false);
+    if (!PFA.createRepost) return;
+    const channelKey = destKey && destKey !== "feed" ? destKey : null;
+    const id = PFA.createRepost({ caption, sharedPost: PFA.slimSharedPost(reelAsPost), channelBucket: channelKey });
+    if (PFA.rewardShare) setTimeout(() => PFA.rewardShare(null), 260);
+    setTimeout(() => goRL(PFA.sharePageFor(channelKey, true) + (channelKey ? "&" : "") + "post=" + id), 900);
+  };
   useEffectRL(() => {
     if (!playing || !active) return undefined;
     const step = 100 / (reel.dur * 4);
@@ -178,13 +192,15 @@ function Reel({ reel, active }) {
           ))}
         </span>}
 
+      {shareOpen && PFA.ShareSheet &&
+        <PFA.ShareSheet post={reelAsPost} onClose={() => setShareOpen(false)} onShare={onShared} />}
       <div className="rl-rail-actions">
         <ReelAction icon={loved ? "fluent:heart-16-filled" : (liked ? "fluent:thumb-like-16-filled" : "fluent:thumb-like-16-regular")}
           label={loved ? "Loved" : "Like"} count={reel.likes} active={liked || loved}
           accent={loved ? "var(--reaction-love,#F0425F)" : "var(--reaction-like,#2E86FF)"}
           onClick={() => (loved ? setLoved(false) : setLiked((v) => !v))} />
         <ReelAction icon="lucide:message-circle" label="Comments" count={reel.comments} />
-        <ReelAction icon="lucide:share-2" label="Share" count={reel.shares} />
+        <ReelAction icon="lucide:share-2" label="Share" count={reel.shares} onClick={() => setShareOpen(true)} />
         <ReelAction icon={saved ? "fluent:bookmark-16-filled" : "lucide:bookmark"} label="Save"
           count={reel.saves} active={saved} accent="#FFD60A" onClick={onSaveClick} />
         <ReelAction icon="lucide:more-horizontal" label="More options" />
