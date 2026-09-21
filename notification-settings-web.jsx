@@ -134,7 +134,9 @@ function GamiToggleNSW({ on, onChange, label, desc }) {
 const PREVIEWS_NSW = [
   { kind: "points", label: "Points", icon: "lucide:coins" },
   { kind: "checkin", label: "Check-in", icon: "lucide:sun" },
-  { kind: "streak", label: "Streak", icon: "lucide:flame" }];
+  { kind: "streak", label: "Streak", icon: "lucide:flame" },
+  { kind: "milestone", label: "Milestone", icon: "lucide:award" },
+  { kind: "combined", label: "Celebration", icon: "lucide:party-popper" }];
 
 function SoundStyleRowNSW({ gami, onChange }) {
   const [open, setOpen] = useStateNSW(false);
@@ -277,9 +279,9 @@ function NotificationSettingsWeb() {
             <div className="nsw-divider" />
             <GamiToggleNSW on={gami.streakPopup} onChange={(v) => updateGami({ ...gami, streakPopup: v })} label="Streak celebrations" desc="The daily check-in welcome card. Points are still earned." />
             <div className="nsw-divider" />
-            <GamiToggleNSW on={gami.dailyGoalPopup} onChange={(v) => updateGami({ ...gami, dailyGoalPopup: v })} label="Daily goal celebration" desc="Full-screen celebration each time you pass another 50 points in a day." />
+            <GamiToggleNSW on={gami.dailyGoalPopup} onChange={(v) => updateGami({ ...gami, dailyGoalPopup: v })} label="Daily goal celebration" desc="Full-screen celebration when you reach 280, 500, 750 and 1,000 points in a day." />
             <div className="nsw-divider" />
-            <GamiToggleNSW on={gami.sound} onChange={(v) => { updateGami({ ...gami, sound: v }); if (v) previewNSW("points", gami.theme); }} label="Sound effects" desc="The coin chime, welcome chime and streak fanfare." />
+            <GamiToggleNSW on={gami.sound} onChange={(v) => { updateGami({ ...gami, sound: v }); if (v) previewNSW("points", gami.theme); }} label="Sound effects" desc="The coin chime, welcome chime, streak, milestone and celebration fanfares." />
             <div className="nsw-divider" />
             <SoundStyleRowNSW gami={gami} onChange={updateGami} />
           </SectionNSW>

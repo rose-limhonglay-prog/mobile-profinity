@@ -243,6 +243,14 @@ const PREVIEWS_NSW = [{
   kind: "streak",
   label: "Streak",
   icon: "lucide:flame"
+}, {
+  kind: "milestone",
+  label: "Milestone",
+  icon: "lucide:award"
+}, {
+  kind: "combined",
+  label: "Celebration",
+  icon: "lucide:party-popper"
 }];
 function SoundStyleRowNSW({
   gami,
@@ -503,7 +511,7 @@ function NotificationSettingsWeb() {
       dailyGoalPopup: v
     }),
     label: "Daily goal celebration",
-    desc: "Full-screen celebration each time you pass another 50 points in a day."
+    desc: "Full-screen celebration when you reach 280, 500, 750 and 1,000 points in a day."
   }), /*#__PURE__*/React.createElement("div", {
     className: "nsw-divider"
   }), /*#__PURE__*/React.createElement(GamiToggleNSW, {
@@ -516,7 +524,7 @@ function NotificationSettingsWeb() {
       if (v) previewNSW("points", gami.theme);
     },
     label: "Sound effects",
-    desc: "The coin chime, welcome chime and streak fanfare."
+    desc: "The coin chime, welcome chime, streak, milestone and celebration fanfares."
   }), /*#__PURE__*/React.createElement("div", {
     className: "nsw-divider"
   }), /*#__PURE__*/React.createElement(SoundStyleRowNSW, {

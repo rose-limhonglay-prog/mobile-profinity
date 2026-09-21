@@ -546,7 +546,26 @@ function ForgotModal({
 }
 
 /* -------------------------------- COMPLETE -------------------------------- */
+/* Sign-up complete → Reward Splash Screen with the 100-point welcome bonus
+   (MilestoneSplash.html?kind=signup books it once and plays the fanfare);
+   mirrors the mobile flow. */
+/* Sign-up (+100) and login (daily reward) hand off to the reward router on
+   the web newsfeed, which shows the Reward Splash as a ~2.5s overlay — same
+   as mobile. */
+function handoffAW(type, extra) {
+  try {
+    sessionStorage.setItem("pf-celebration-handoff", JSON.stringify(Object.assign({
+      type: type,
+      ts: Date.now()
+    }, extra || {})));
+  } catch (e) {}
+  goAW("NewsfeedWeb.html");
+}
 function Complete() {
+  useEffectAW(() => {
+    const t = setTimeout(() => handoffAW("signup"), 900);
+    return () => clearTimeout(t);
+  }, []);
   return /*#__PURE__*/React.createElement("div", {
     className: "auw-view",
     "data-screen-label": "Sign up · complete"
@@ -662,7 +681,7 @@ function AuthWebApp() {
       setSent(false);
       setForgot(true);
     },
-    onDone: () => goAW("NewsfeedWeb.html")
+    onDone: () => handoffAW("login")
   }), view === "signup" && step === 0 && /*#__PURE__*/React.createElement(StepType, {
     type: type,
     setType: setType,

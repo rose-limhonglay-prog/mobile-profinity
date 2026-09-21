@@ -110,7 +110,7 @@ function GamificationNS() {
         <ToggleNS label="Streak celebrations" desc="The daily check-in welcome card. Points are still earned."
           on={gami.streakPopup} onToggle={flip("streakPopup")} />
         <div className="ns-divider" />
-        <ToggleNS label="Daily goal celebration" desc="Full-screen celebration each time you pass another 50 points in a day."
+        <ToggleNS label="Daily goal celebration" desc="Full-screen celebration when you reach 280, 500, 750 and 1,000 points in a day."
           on={gami.dailyGoalPopup} onToggle={flip("dailyGoalPopup")} />
       </div>
 

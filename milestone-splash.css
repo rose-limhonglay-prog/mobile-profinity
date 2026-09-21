@@ -10,26 +10,35 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 img { max-width: 100%; }
 
 .spl-screen { position: relative; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  overflow: hidden; padding: 40px 28px; text-align: center;
+  overflow: hidden; padding: 40px 28px 34px; text-align: center;
   background: radial-gradient(120% 90% at 50% 0%, #3a3480 0%, var(--brand-navy) 55%, var(--brand-navy-900) 100%); color: #fff; }
 
 .spl-close { position: absolute; top: 22px; right: 20px; width: 38px; height: 38px; border-radius: 50%;
   background: rgba(255,255,255,.14); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; }
 
-.spl-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.spl-confetti-piece { position: absolute; top: -20px; width: 8px; height: 14px; border-radius: 2px; opacity: .85;
-  animation: splFall 3.2s linear infinite; }
-.spl-confetti-piece.p0 { background: var(--brand-gold); }
-.spl-confetti-piece.p1 { background: #fff; }
-.spl-confetti-piece.p2 { background: var(--ai-purple); }
-.spl-confetti-piece.p3 { background: var(--success); }
-.spl-confetti-piece.p4 { background: var(--brand-rose); }
-.spl-confetti-piece.p5 { background: var(--info); }
-@keyframes splFall { 0% { transform: translateY(-20px) rotate(0deg); } 100% { transform: translateY(920px) rotate(340deg); } }
+/* lottie.host confetti burst (SplConfetti): plays twice over the content,
+   never catches taps, then fades out */
+.spl-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 3; transition: opacity .6s ease; }
+.spl-confetti.is-done { opacity: 0; }
+.spl-confetti svg { display: block; width: 100% !important; height: 100% !important; }
+.spl-glow { position: absolute; left: 50%; top: 32%; width: 320px; height: 240px; transform: translate(-50%, -50%); border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(253, 195, 93, .40), rgba(253, 195, 93, 0)); pointer-events: none; }
 
 .spl-body { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
-.spl-medal { width: 92px; height: 92px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  margin-bottom: 18px; box-shadow: 0 12px 32px rgba(0,0,0,.3); }
+/* the winking check-in doctor (4:3 Lottie) with the reward's medal tucked at his shoulder */
+.spl-hero { position: relative; width: 272px; height: 204px; margin: 0 auto 6px; animation: splPop .7s cubic-bezier(.2, 1.4, .4, 1) both .05s; }
+.spl-hero.is-square { width: 240px; height: 240px; margin-bottom: 12px; }
+.spl-lottie { display: block; width: 100%; height: 100%; }
+.spl-lottie svg { display: block; width: 100% !important; height: 100% !important; }
+.spl-medal { position: absolute; right: 42px; bottom: 6px; width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  border: 3px solid #292569; box-shadow: 0 10px 24px rgba(0,0,0,.35); }
+@keyframes splPop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
+/* the big rolling "+100" on the sign-up splash */
+.spl-points { display: flex; align-items: baseline; justify-content: center; gap: 8px; margin: 4px 0 10px; line-height: 1; color: var(--brand-gold);
+  animation: splRise .5s ease both .2s; }
+.spl-points b { font-size: 40px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; text-shadow: 0 4px 18px rgba(253, 195, 93, .35); }
+.spl-points i { font-style: normal; font-size: 15px; font-weight: 700; color: var(--brand-gold-soft); }
+@keyframes splRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .spl-kicker { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brand-gold-soft); margin-bottom: 8px; }
 .spl-body h1 { margin: 0 0 10px; font-size: 26px; font-weight: 800; }
 .spl-sub { margin: 0 0 24px; font-size: 14px; color: rgba(255,255,255,.78); max-width: 300px; }

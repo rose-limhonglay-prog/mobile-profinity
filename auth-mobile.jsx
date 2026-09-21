@@ -370,63 +370,22 @@ function VerifySuccess({ onNext }) {
   );
 }
 
-/* ------------------------------ DAILY REWARD ------------------------------ */
-function DailyReward({ onDone, points, kicker, title, sub }) {
-  const TOTAL = points || 1000;
-  const [n, setN] = useStateAU(0);
-  const [phase, setPhase] = useStateAU("in");
-  React.useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) { setN(TOTAL); setPhase("done"); return undefined; }
-    let raf, t0 = null;
-    const dur = 1300, delay = 620;
-    const start = setTimeout(function tick() {
-      raf = requestAnimationFrame(function step(ts) {
-        if (t0 === null) t0 = ts;
-        const p = Math.min(1, (ts - t0) / dur);
-        const eased = 1 - Math.pow(1 - p, 3);
-        setN(Math.round(TOTAL * eased));
-        if (p < 1) raf = requestAnimationFrame(step);
-        else setPhase("done");
-      });
-    }, delay);
-    return () => { clearTimeout(start); if (raf) cancelAnimationFrame(raf); };
-  }, []);
-  const sparks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-  return (
-    <div className={"au-reward " + phase} data-screen-label="Daily reward" role="dialog" aria-modal="true" aria-label="Daily login reward">
-      <button type="button" className="au-rw-scrim" aria-label="Close" onClick={onDone} />
-      <div className="au-rw-card">
-      <div className="au-rw-burst" aria-hidden="true">
-        {sparks.map((i) => <span key={i} className="au-rw-spark" style={{ "--i": i }} />)}
-        <span className="au-rw-ring" style={{ display: "none" }} />
-        <span className="au-rw-ring d2" style={{ display: "none" }} />
-        <span className="au-rw-coin">
-          {/* Dr Tim avatar greeting (4:3 Lottie — wider than the burst so the face sits at owl size) */}
-          <AULottie src="https://lottie.host/c18a79c2-beca-4d8d-921a-df9ee2394688/m6ViMA5SuC.json" size={224} />
-        </span>
-      </div>
-      <p className="au-rw-kicker">{kicker || "Daily login reward"}</p>
-      <p className="au-rw-points" aria-live="polite">
-        <b>+{n.toLocaleString()}</b><i>points</i>
-      </p>
-      <h1 className="au-rw-h1">{title || "Nice work, Katy!"}</h1>
-      <p className="au-rw-sub">{sub || "You've earned today's points just for showing up. Keep your streak going to unlock bonus rewards."}</p>
-      <button type="button" className="au-cta" onClick={onDone}>Collect &amp; continue</button>
-      </div>
-    </div>
-  );
-}
-
 /* -------------------------------- COMPLETE -------------------------------- */
+/* Signing up is worth 100 points; signing in pays the daily login reward.
+   Neither is a page any more: the auth page stores a hand-off for the reward
+   router (reward-router.js on the newsfeed), which books the points and shows
+   the Reward Splash as an overlay that lifts itself after ~2.5s. */
+function handoffAU(type, extra) {
+  try { sessionStorage.setItem("pf-celebration-handoff", JSON.stringify(Object.assign({ type: type, ts: Date.now() }, extra || {}))); } catch (e) {}
+  goAU("NewsfeedMobile.html");
+}
 function Complete() {
-  const [claimed, setClaimedAU] = useStateAU(false);
+  useEffectAU(() => {
+    const t = setTimeout(() => handoffAU("signup"), 900);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <div className="au-screen" data-screen-label="Sign up · complete">
-      {!claimed &&
-        <DailyReward points={250} kicker="Welcome bonus" title="You're all set, Katy!"
-          sub="Here's 250 points just for joining — keep learning and connecting to earn more."
-          onDone={() => setClaimedAU(true)} />}
       <div className="au-done">
         <span className="au-done-ic"><Ico n="lucide:check" s={40} c="var(--success)" /></span>
         <h1>You're all set!</h1>
@@ -469,18 +428,10 @@ function AuthMobileApp() {
       <div style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
       <IOSDeviceAU width={440} height={956}>
         {view === "splash" && <Splash onGo={() => go("signin")} />}
-        {view === "reward" &&
-          <React.Fragment>
-            <SignIn onSignUp={() => {}} onForgot={() => {}} onDone={() => {}} />
-            <DailyReward onDone={() => {
-              try { localStorage.setItem("pf-tour", "1"); localStorage.setItem("pf-tour-step", "welcome"); } catch (e) {}
-              goAU("NewsfeedMobile.html");
-            }} />
-          </React.Fragment>}
         {view === "signin" &&
           <React.Fragment>
             <SignIn onSignUp={() => go("type")} onForgot={() => setForgot(true)}
-              onDone={() => go("reward")} />
+              onDone={() => handoffAU("login", { tour: true, flavor: "mobile" })} />
             {forgot && <ForgotSheet onClose={() => setForgot(false)} onSent={() => { setForgot(false); go("sent"); }} />}
           </React.Fragment>}
         {view === "sent" && <ResetSent onBack={() => go("signin")} />}

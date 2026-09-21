@@ -164,7 +164,7 @@ function CheckInStreakScreen() {
         }
       }));
     } catch (e) {/* older WebView */}
-    if (res.leveledUp) setTimeout(() => goCIS("MilestoneSplash.html"), 900);
+    if (window.PFRewards) window.PFRewards.fromAction(res);else if (res.leveledUp) setTimeout(() => goCIS("MilestoneSplash.html"), 900);
   };
   const freeze = () => {
     const res = PF_CIS.spendCreditsToFreezeStreak();

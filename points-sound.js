@@ -17,11 +17,18 @@
      a future settings toggle: window.PFPointsSound = { play, mute, unmute,
      toggle, enabled }. ?pointsound=0 mutes, ?pointsound=1 unmutes.
    • Debounced to one chime per 250ms so rapid multi-earns don't stack.
-   • Three voices: coin chime (every earn), welcome chime (daily check-in,
-     detail.actionId evt_mobile_checkin / detail.sound "checkin") and the
-     streak fanfare (pf:daily-goal page); plus
-     "correct" (poll vote / right quiz answer), "wrong" (pf:answer-wrong, no
-     points) and "post" (shared a post — fuller coin chime).
+   • One voice per reward surface (see reward-router.js for the rule):
+       Points indicator  → coin chime (every small everyday earn)
+       Streak screen     → welcome chime (daily check-in, detail.actionId
+                           evt_mobile_checkin / detail.sound "checkin")
+       Goal Reached      → streak fanfare (pf:daily-goal, DailyGoal.html at
+                           each mark of the day's points ladder)
+       Reward Splash     → "milestone" fanfare (MilestoneSplash.html:
+                           level-up, achievement badge, league promotion)
+       Combined          → "combined" fanfare (CombinedCelebration.html:
+                           several major rewards from one action)
+     plus "correct" (poll vote / right quiz answer), "wrong" (pf:answer-wrong,
+     no points) and "post" (shared a post — fuller coin chime).
    • Sound styles: the user can pick how the three voices sound from the
      Gamification section of Notification Settings — Coin (default), Bell,
      Arcade, Soft or Bubble. Stored under "pf-sound-theme". Every voice is
@@ -31,7 +38,9 @@
      page's "Play" buttons. ?soundtheme=bell etc. switches for demos.
    • window.PFGamification = { get, set, on } — the shared "pf-gamification"
      store the popups (points pill, daily goal, check-in modal)
-     read: { pointsPopup, streakPopup, dailyGoalPopup }, all default true.
+     read: { pointsPopup, streakPopup, dailyGoalPopup, milestonePopup }, all
+     default true (milestonePopup gates the Reward Splash / Combined pages
+     opened by reward-router.js).
    =========================================================================== */
 (function () {
   "use strict";
@@ -61,7 +70,7 @@
   var T = THEMES.coin;
 
   /* ---- shared gamification store (popups) ---- */
-  function gamiGet() { var s = {}; try { s = JSON.parse(localStorage.getItem(GAMI_KEY)) || {}; } catch (e) {} return { pointsPopup: s.pointsPopup !== false, streakPopup: s.streakPopup !== false, dailyGoalPopup: s.dailyGoalPopup !== false }; }
+  function gamiGet() { var s = {}; try { s = JSON.parse(localStorage.getItem(GAMI_KEY)) || {}; } catch (e) {} return { pointsPopup: s.pointsPopup !== false, streakPopup: s.streakPopup !== false, dailyGoalPopup: s.dailyGoalPopup !== false, milestonePopup: s.milestonePopup !== false }; }
   function gamiSet(patch) { var s = gamiGet(); Object.keys(patch || {}).forEach(function (k) { s[k] = !!patch[k]; }); try { localStorage.setItem(GAMI_KEY, JSON.stringify(s)); } catch (e) {} try { window.dispatchEvent(new CustomEvent("pf:gamification-changed", { detail: s })); } catch (e) {} return s; }
   window.PFGamification = { get: gamiGet, set: gamiSet, on: function (k) { return gamiGet()[k] !== false; }, KEY: GAMI_KEY };
 
@@ -159,6 +168,72 @@
     note(c, 1975.53, top + 0.30, 0.55, 0.06, "sine");
   }
 
+  /* ---- the milestone fanfare: Splash screen (MilestoneSplash.html) ----
+     One major reward — a level badge, an achievement or a league promotion.
+     Brighter and more ceremonial than the streak fanfare: a low thump, a
+     quick C-major climb (C5 E5 G5 C6) and a held C-major chord on top with a
+     bell shimmer, so it reads as "you've reached something" rather than
+     "you've kept going". To use a real clip set `window.PF_MILESTONE_SOUND_SRC`. */
+  function synthMilestone() {
+    var c = getCtx();
+    if (!c) return;
+    var t = c.currentTime + 0.01;
+    /* thump */
+    note(c, 130.81, t, 0.36, 0.24, "sine");
+    note(c, 261.63, t, 0.2, 0.08, "triangle");
+    /* climb */
+    var steps = [523.25, 659.25, 783.99, 1046.5];
+    for (var i = 0; i < steps.length; i++) {
+      note(c, steps[i], t + 0.05 + i * 0.085, 0.24, 0.2, "sine");
+      note(c, steps[i] * 2, t + 0.05 + i * 0.085, 0.13, 0.04, "triangle");
+    }
+    /* held chord: C6 E6 G6 + a shimmering C7 */
+    var top = t + 0.05 + steps.length * 0.085;
+    note(c, 1046.5, top, 1.1, 0.24, "sine");
+    note(c, 1318.5, top + 0.02, 1.0, 0.16, "sine");
+    note(c, 1567.98, top + 0.04, 0.95, 0.14, "sine");
+    note(c, 2093.0, top + 0.1, 0.8, 0.06, "triangle");
+    /* soft echo */
+    note(c, 1046.5, top + 0.42, 0.7, 0.08, "sine");
+  }
+
+  /* ---- the combined fanfare: Combined Celebration (CombinedCelebration.html) ----
+     Several major rewards from the same action. The biggest voice in the
+     set (~2.2s): a double thump, a six-note run up to C6, a full four-note
+     chord hit that is held while a cascade of sparkles falls from C7, and
+     one last high "ting" — unmistakably more than the single-milestone
+     fanfare. To use a real clip set `window.PF_COMBINED_SOUND_SRC`. */
+  function synthCombined() {
+    var c = getCtx();
+    if (!c) return;
+    var t = c.currentTime + 0.01;
+    /* double thump */
+    note(c, 130.81, t, 0.3, 0.22, "sine");
+    note(c, 130.81, t + 0.16, 0.42, 0.26, "sine");
+    note(c, 261.63, t + 0.16, 0.22, 0.08, "triangle");
+    /* run: C5 D5 E5 G5 A5 C6 */
+    var run = [523.25, 587.33, 659.25, 783.99, 880.0, 1046.5];
+    for (var i = 0; i < run.length; i++) {
+      note(c, run[i], t + 0.2 + i * 0.075, 0.2, 0.18, "sine");
+      note(c, run[i] * 2, t + 0.2 + i * 0.075, 0.11, 0.035, "triangle");
+    }
+    /* chord hit: C6 E6 G6 C7, held */
+    var hit = t + 0.2 + run.length * 0.075;
+    note(c, 1046.5, hit, 1.4, 0.26, "sine");
+    note(c, 1318.5, hit + 0.02, 1.3, 0.18, "sine");
+    note(c, 1567.98, hit + 0.04, 1.25, 0.16, "sine");
+    note(c, 2093.0, hit + 0.06, 1.1, 0.1, "sine");
+    note(c, 3135.96, hit + 0.06, 0.5, 0.04, "triangle");
+    /* sparkle cascade falling from C7 */
+    var fall = [2093.0, 1975.53, 1567.98, 1318.5, 1174.66];
+    for (var j = 0; j < fall.length; j++) {
+      note(c, fall[j], hit + 0.3 + j * 0.09, 0.32, 0.06, "triangle");
+    }
+    /* final ting */
+    note(c, 2637.02, hit + 0.85, 0.9, 0.12, "sine");
+    note(c, 5274.04, hit + 0.85, 0.4, 0.03, "triangle");
+  }
+
   /* ---- quiz / poll answers ----
      "correct": a bright, quick major-triad sparkle (C6 E6 G6 → held C7) —
      clearly a "yes!", shorter than the streak fanfare.
@@ -233,6 +308,16 @@
       if (ssrc) playClip(ssrc, synthStreak); else synthStreak();
       return;
     }
+    if (kind === "milestone") {
+      var msrc = window.PF_MILESTONE_SOUND_SRC;
+      if (msrc) playClip(msrc, synthMilestone); else synthMilestone();
+      return;
+    }
+    if (kind === "combined") {
+      var bsrc = window.PF_COMBINED_SOUND_SRC;
+      if (bsrc) playClip(bsrc, synthCombined); else synthCombined();
+      return;
+    }
     if (kind === "correct") {
       var ksrc = window.PF_CORRECT_SOUND_SRC;
       if (ksrc) playClip(ksrc, synthCorrect); else synthCorrect();
@@ -272,11 +357,22 @@
   /* wrong quiz answer (app.jsx popWrong): no points, just the sound */
   window.addEventListener("pf:answer-wrong", function () { lastPlay = 0; play(0, "wrong"); });
   window.addEventListener("pf:daily-goal", function () { playStreak(120); });
+  /* Splash / Combined pages (milestone-splash.jsx, combined-celebration.jsx)
+     fire these on mount — the sound always lands as the screen appears */
+  function playKind(kind, delayMs) {
+    if (!enabled()) return;
+    var fire = function () { lastPlay = 0; play(0, kind); };
+    if (delayMs) setTimeout(fire, delayMs); else fire();
+  }
+  window.addEventListener("pf:milestone", function () { playKind("milestone", 120); });
+  window.addEventListener("pf:celebration", function () { playKind("combined", 150); });
 
   window.PFPointsSound = {
     play: function (amount) { lastPlay = 0; play(amount == null ? 10 : amount); },
     playCheckin: function () { lastPlay = 0; play(50, "checkin"); },
     playStreak: function () { playStreak(0); },
+    playMilestone: function () { playKind("milestone", 0); },
+    playCelebration: function () { playKind("combined", 0); },
     playCorrect: function () { lastPlay = 0; play(0, "correct"); },
     playWrong: function () { lastPlay = 0; play(0, "wrong"); },
     mute: function () { setEnabled(false); },
@@ -287,7 +383,8 @@
     themes: function () { return THEME_ORDER.map(function (id) { var t = THEMES[id]; return { id: id, label: t.label, desc: t.desc }; }); },
     getTheme: getTheme,
     setTheme: setTheme,
-    /* preview(kind, themeId): kind "points" | "checkin" | "streak". Ignores
+    /* preview(kind, themeId): kind "points" | "checkin" | "streak" |
+       "milestone" | "combined". Ignores
        mute and the debounce so the settings page can audition styles. */
     preview: function (kind, themeId) {
       if (!canPlayNow()) return false;

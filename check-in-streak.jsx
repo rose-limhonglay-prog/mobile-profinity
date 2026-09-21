@@ -103,7 +103,7 @@ function CheckInStreakScreen() {
     if (res.capped) { flash(action.label + ": " + res.capReason); return; }
     flash("Checked in · +" + res.pointsAwarded + " pts");
     try { window.dispatchEvent(new CustomEvent("pf:points-earned", { detail: { amount: res.pointsAwarded, label: action.label, actionId: action.id, booked: true } })); } catch (e) { /* older WebView */ }
-    if (res.leveledUp) setTimeout(() => goCIS("MilestoneSplash.html"), 900);
+    if (window.PFRewards) window.PFRewards.fromAction(res); else if (res.leveledUp) setTimeout(() => goCIS("MilestoneSplash.html"), 900);
   };
 
   const freeze = () => {

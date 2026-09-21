@@ -228,7 +228,7 @@ function GamificationNS() {
     className: "ns-divider"
   }), /*#__PURE__*/React.createElement(ToggleNS, {
     label: "Daily goal celebration",
-    desc: "Full-screen celebration each time you pass another 50 points in a day.",
+    desc: "Full-screen celebration when you reach 280, 500, 750 and 1,000 points in a day.",
     on: gami.dailyGoalPopup,
     onToggle: flip("dailyGoalPopup")
   })), /*#__PURE__*/React.createElement("div", {

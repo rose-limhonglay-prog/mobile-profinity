@@ -94,6 +94,7 @@
 [data-theme="dark"] .m-pts { background: rgba(252, 194, 93, 0.16); color: #F5C542; }
 [data-theme="dark"] .m-pts-delta { color: #F5C542; }
 [data-theme="dark"] .pf-pts-float { color: #F5C542; text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 10px rgba(245,197,66,.35); }
+[data-theme="dark"] .pf-pts-float.is-free { text-shadow: 0 1px 0 rgba(0,0,0,.7), 0 0 3px rgba(0,0,0,.6), 0 0 14px rgba(245,197,66,.45); }
 [data-theme="dark"] .m-pts.earn { background: rgba(252, 194, 93, 0.28); }
 [data-theme="dark"] .m-pts:active { background: rgba(252, 194, 93, 0.26); }
 [data-theme="dark"] .m-screen.chrome-float .m-pts { background: rgba(38, 34, 70, 0.6); border-color: rgba(255, 255, 255, 0.14); }

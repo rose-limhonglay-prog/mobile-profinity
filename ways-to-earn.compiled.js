@@ -198,7 +198,7 @@ function WaysToEarnScreen() {
     }
     setTimeout(() => setToast(null), 2600);
     /* crossing the next threshold hands off to the Milestone Splash */
-    if (res.leveledUp) setTimeout(() => goWTE("MilestoneSplash.html"), 900);
+    if (window.PFRewards) window.PFRewards.fromAction(res);else if (res.leveledUp) setTimeout(() => goWTE("MilestoneSplash.html"), 900);
   };
   return /*#__PURE__*/React.createElement("div", {
     className: "ml-screen wte-screen",

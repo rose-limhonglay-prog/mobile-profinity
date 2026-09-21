@@ -41,7 +41,7 @@ function BadgeProgressScreen() {
     }
     setTimeout(() => setToast(null), 2400);
     /* crossing the next threshold hands off to the Milestone Splash (same as Ways to Earn) */
-    if (res.leveledUp) setTimeout(() => goBPR("MilestoneSplash.html"), 900);
+    if (window.PFRewards) window.PFRewards.fromAction(res); else if (res.leveledUp) setTimeout(() => goBPR("MilestoneSplash.html"), 900);
   };
 
   const pct = progress.pct;

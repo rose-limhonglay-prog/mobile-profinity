@@ -5663,19 +5663,71 @@ if (typeof window !== "undefined" && typeof document !== "undefined") {
    read as one payout, with the check-in doctor Lottie beside the number.
    Fixed-position on body so it escapes overflow:hidden cards / sheets;
    scaled to the IOSDevice preview frame like burstFrom. */
-function floatPoints(anchor, amount) {
-  if (!anchor || !anchor.getBoundingClientRect || !ptsPopupOn()) return;
-  const rect = anchor.getBoundingClientRect();
-  if (!rect.width && !rect.height) return;
-  const s = frameScaleOf(anchor);
+/* Where the "+N" starts. With an on-screen anchor it rises from that button;
+   for earns without one (a shared post whose source card has scrolled away,
+   the "shared a post" payout when the feed reopens after Create Post, a
+   background upload finishing) it rises from the middle of the shell instead
+   — the IOSDevice preview frame when there is one, else the viewport — a
+   touch larger so it still reads without a button beneath it. */
+function ptsFloatOrigin(anchor) {
+  const vw = window.innerWidth,
+    vh = window.innerHeight;
+  let frame = anchor && anchor.closest ? anchor.closest("[data-ios-device]") : null;
+  if (!frame) frame = document.querySelector("[data-ios-device]");
+  const fr = frame ? frame.getBoundingClientRect() : {
+    left: 0,
+    top: 0,
+    right: vw,
+    bottom: vh,
+    width: vw,
+    height: vh
+  };
+  const s = frameScaleOf(anchor || frame);
+  if (anchor && anchor.getBoundingClientRect) {
+    const rect = anchor.getBoundingClientRect();
+    /* the tapped button must actually be in view (below the header, above
+       the tab bar) or the float would paint where nobody is looking */
+    if ((rect.width || rect.height) && rect.top > fr.top + 48 * s && rect.top < fr.bottom - 72 * s && rect.right > fr.left && rect.left < fr.right) {
+      return {
+        x: rect.left + Math.min(rect.width / 2, 22 * s),
+        y: rect.top - 2 * s,
+        s,
+        free: false
+      };
+    }
+  }
+  return {
+    x: fr.left + fr.width / 2,
+    y: fr.top + fr.height * 0.42,
+    s,
+    free: true
+  };
+}
+/* The launch splash / daily check-in takeover covers the whole shell: a float
+   fired underneath would never be seen, so hold it until they lift. */
+function ptsTakeoverUp() {
+  const h = document.documentElement;
+  return h.classList.contains("pf-launch-active") || !!document.querySelector(".pf-launch") || h.classList.contains("pf-dci-open") || !!document.querySelector(".pf-dci-screen.is-open");
+}
+function floatPoints(anchor, amount, _t0) {
+  if (typeof document === "undefined" || !ptsPopupOn()) return;
+  if (ptsTakeoverUp()) {
+    const t0 = _t0 || Date.now();
+    if (Date.now() - t0 < 30000) setTimeout(() => floatPoints(anchor, amount, t0), 250);
+    return;
+  }
+  const o = ptsFloatOrigin(anchor);
+  const s = o.s,
+    free = o.free,
+    k = free ? 1.25 : 1;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const x = rect.left + Math.min(rect.width / 2, 22 * s),
-    y = rect.top - 2 * s;
+  const x = o.x,
+    y = o.y;
   const el = document.createElement("span");
-  el.className = "pf-pts-float";
+  el.className = "pf-pts-float" + (free ? " is-free" : "");
   el.setAttribute("role", "status");
   el.setAttribute("aria-live", "polite");
-  el.style.cssText = "left:" + x + "px;top:" + y + "px;font-size:" + 15 * s + "px;opacity:0;";
+  el.style.cssText = "left:" + x + "px;top:" + y + "px;font-size:" + 15 * s * k + "px;opacity:0;";
   /* doctor first, "+N" beside him (text-only until lottie + JSON are warm) */
   let docAnim = null;
   if (!reduce && ptsDocData && window.lottie) {
@@ -5684,9 +5736,9 @@ function floatPoints(anchor, amount) {
     doc.setAttribute("aria-hidden", "true");
     /* square, centre-cropped: the 800×600 source has empty side padding
        around the round avatar, so slicing keeps him snug against the "+N" */
-    doc.style.width = 40 * s + "px";
-    doc.style.height = 40 * s + "px";
-    doc.style.marginRight = -5 * s + "px";
+    doc.style.width = 40 * s * k + "px";
+    doc.style.height = 40 * s * k + "px";
+    doc.style.marginRight = -5 * s * k + "px";
     el.appendChild(doc);
     try {
       docAnim = window.lottie.loadAnimation({
@@ -5726,7 +5778,7 @@ function floatPoints(anchor, amount) {
     setTimeout(done, 1100);
     return;
   }
-  const dy = 36 * s;
+  const dy = 36 * s * k;
   const anim = el.animate([{
     transform: "translate(-50%,-40%) scale(.7)",
     opacity: 0
@@ -5742,16 +5794,17 @@ function floatPoints(anchor, amount) {
     transform: "translate(-50%,calc(-100% - " + dy + "px)) scale(1)",
     opacity: 0
   }], {
-    duration: 1500,
+    duration: free ? 1900 : 1500,
     easing: "cubic-bezier(.22,.61,.36,1)"
   });
   anim.onfinish = done;
-  setTimeout(done, 2000);
+  setTimeout(done, 2400);
 }
 
-/* Reward moment for a like/comment/poll/quiz payout: a "+N" floats up from
-   `anchor` (the button just tapped, null for off-screen earns such as a shared
-   post) and the header points pill (PointsPillM / PointsPillC), which listens
+/* Reward moment for a like/comment/poll/quiz/share/post payout: a "+N" floats
+   up from `anchor` (the button just tapped; with null, or an anchor that has
+   scrolled out of view, it rises from the middle of the shell instead — see
+   ptsFloatOrigin) and the header points pill (PointsPillM / PointsPillC), which listens
    for this event, books the points, counts up and flashes its gold ring. */
 function popPoints(anchor, amount, extra) {
   if (typeof window === "undefined") return;
@@ -13861,7 +13914,11 @@ const PF_USER_POSTS_KEY = "pf-newsfeed-user-posts";
 function readUserPosts() {
   try {
     const list = JSON.parse(localStorage.getItem(PF_USER_POSTS_KEY)) || [];
-    return list.filter(p => p && p.author && p.author.name && (p.body || p.sharedPost)).map(p =>
+    /* A post needs *something* to show: text, a repost, photos, a clip or a
+       still-running background upload (a media post shared with no caption
+       used to be dropped here — so its upload card never appeared on the
+       feed, its marker was never cleared and its reward never booked). */
+    return list.filter(p => p && p.author && p.author.name && (p.body || p.sharedPost || p.media && p.media.length || p.video || p.sample || p.uploading)).map(p =>
     /* CreatePostMobile stores its clip as `video: { src, cover, ratio }`;
        a video-only post renders through `sample`, so map one to the other.
        A post carrying photos *and* a clip keeps both and renders them as
@@ -14361,10 +14418,66 @@ function spreadEventPosts(items, minGap = 10, maxGap = 20) {
   while (ei < events.length) result.push(events[ei++]);
   return result;
 }
+
+/* Minimum time an in-progress upload card stays on the feed after it mounts.
+   A small photo "uploads" in ~4s and the page transition from Create Post eats
+   a chunk of that, so a nearly-finished upload is stretched to land no sooner
+   than this — the member always sees the card arrive before it flips to
+   "Posted". Written back to storage so upload-tracker.js agrees. */
+const UPLOAD_MIN_VISIBLE = 2800;
+function uploadTakeoverActive() {
+  const h = document.documentElement.classList;
+  return h.contains("pf-dci-open") || h.contains("pf-launch-active") || h.contains("pf-rsp-open");
+}
+function settleUploadTimings(list, persist = true) {
+  const now = Date.now();
+  let changed = false;
+  const next = list.map(p => {
+    const u = p && p.uploading;
+    if (!u || !u.started || u.doneAt) return p;
+    const dur = Math.max(1, u.duration || 6000);
+    const elapsed = now - u.started;
+    if (dur - elapsed >= UPLOAD_MIN_VISIBLE) return p;
+    /* keep the bar where it is (same fraction t) but re-anchor the timeline
+       so exactly UPLOAD_MIN_VISIBLE remains — no jump, no parking at 99% */
+    const t = Math.min(0.9, Math.max(0, elapsed / dur));
+    const duration = Math.round(UPLOAD_MIN_VISIBLE / (1 - t));
+    changed = true;
+    return {
+      ...p,
+      uploading: {
+        ...u,
+        started: now - Math.round(t * duration),
+        duration
+      }
+    };
+  });
+  if (!changed) return list;
+  if (persist) writeUserPosts(next);
+  return next;
+}
+/* Behind a takeover the card can't be seen: freeze every in-flight upload by
+   sliding its start forward with the clock (in memory only). */
+function freezeUploadTimings(list, by) {
+  let changed = false;
+  const next = list.map(p => {
+    const u = p && p.uploading;
+    if (!u || !u.started || u.doneAt) return p;
+    changed = true;
+    return {
+      ...p,
+      uploading: {
+        ...u,
+        started: u.started + by
+      }
+    };
+  });
+  return changed ? next : list;
+}
 function Feed({
   channel
 } = {}) {
-  const [userPosts, setUserPosts] = useState(() => readUserPosts());
+  const [userPosts, setUserPosts] = useState(() => settleUploadTimings(readUserPosts()));
   /* Background uploads (see uploadProgressOf): while any composed post is
      still "uploading", tick the progress cards, flip a finished one into its
      "Posted" hold (booking its reward), then drop the marker so the real
@@ -14373,6 +14486,7 @@ function Feed({
   const userPostsRef = useRef(userPosts);
   userPostsRef.current = userPosts;
   const [, setUploadTick] = useState(0);
+  const lastUploadTickRef = useRef(0);
   const anyUploading = userPosts.some(p => p.uploading);
   /* upload-tracker.js shows a floating progress card on every *other* page
      and books the reward if an upload finishes there; while a Feed is on
@@ -14392,10 +14506,31 @@ function Feed({
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
+  /* A full-screen takeover (launch splash, daily check-in, reward splash) can sit over the
+     feed while an upload runs down behind it: once it closes, give any card
+     still in flight its minimum on-screen time again. */
+  useEffect(() => {
+    const resettle = () => {
+      if (userPostsRef.current.some(p => p.uploading && !p.uploading.doneAt)) setUserPosts(settleUploadTimings(userPostsRef.current));
+    };
+    const evs = ["pf:launch-splash-done", "pf:daily-checkin-done", "pf:reward-splash-done"];
+    evs.forEach(ev => window.addEventListener(ev, resettle));
+    return () => evs.forEach(ev => window.removeEventListener(ev, resettle));
+  }, []);
   useEffect(() => {
     if (!anyUploading) return;
+    lastUploadTickRef.current = Date.now();
     const id = setInterval(() => {
+      /* behind the launch splash / daily check-in nobody can see the card:
+         hold it short of finishing (in memory only) so it completes on screen */
       const now = Date.now();
+      const since = now - (lastUploadTickRef.current || now);
+      lastUploadTickRef.current = now;
+      if (uploadTakeoverActive()) {
+        const held = freezeUploadTimings(userPostsRef.current, since);
+        if (held !== userPostsRef.current) setUserPosts(held);else setUploadTick(t => t + 1);
+        return;
+      }
       const rewards = [];
       let changed = false;
       const next = userPostsRef.current.map(p => {
@@ -14411,7 +14546,10 @@ function Feed({
         }
         if (uploadProgressOf(p) < 1) return p;
         changed = true;
-        if (u.reward) rewards.push(u.reward);
+        if (u.reward) rewards.push({
+          ...u.reward,
+          postId: p.id
+        });
         return {
           ...p,
           uploading: {
@@ -14426,7 +14564,9 @@ function Feed({
           uploading: null
         } : p));
         setUserPosts(next);
-        rewards.forEach(r => setTimeout(() => popPoints(null, r.amount || POST_POINTS, {
+        /* "+75" rises from the post that just finished uploading (falls
+           back to the centre of the shell when it has scrolled away) */
+        rewards.forEach(r => setTimeout(() => popPoints(document.getElementById("post-" + r.postId), r.amount || POST_POINTS, {
           label: r.label || "Shared a post",
           actionId: r.actionId || "evt_create_post",
           sound: "post"
@@ -14454,11 +14594,17 @@ function Feed({
       sessionStorage.removeItem(POST_REWARD_KEY);
     } catch (e) {}
     if (!reward || !reward.amount) return;
-    const t = setTimeout(() => popPoints(null, reward.amount, {
-      label: reward.label || "Shared a post",
-      actionId: reward.actionId || "evt_create_post",
-      sound: "post"
-    }), 700);
+    /* the "+75" rises from the post just published (newest own card, top of
+       the feed) — or from the centre of the shell when it isn't in view */
+    const t = setTimeout(() => {
+      const mine = readUserPosts().find(p => p && !p.uploading);
+      const card = mine ? document.getElementById("post-" + mine.id) : null;
+      popPoints(card, reward.amount, {
+        label: reward.label || "Shared a post",
+        actionId: reward.actionId || "evt_create_post",
+        sound: "post"
+      });
+    }, 700);
     return () => clearTimeout(t);
   }, []);
   /* Capped at 2 (newest first): the seed plus up to 3 of your own
@@ -14718,6 +14864,9 @@ function Feed({
     });
     const embed = typeof window !== "undefined" && !!window.PF_EMBED;
     const here = channelKey ? channel === channelKey : !channel;
+    /* "+N" rises from the card just shared; when it has scrolled out of view
+       (or we're about to leave for the destination page) popPoints centres
+       it in the shell instead so the payout is always seen */
     const card = typeof document !== "undefined" ? document.getElementById("post-" + p.id) : null;
     setTimeout(() => rewardShare(card), 260);
     if (here) {

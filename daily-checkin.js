@@ -212,6 +212,8 @@
     var node = el;
     setTimeout(function () { if (node && node.parentElement && !node.classList.contains("is-open")) node.parentElement.removeChild(node); }, 400);
     if (lastFocus && lastFocus.focus) { try { lastFocus.focus(); } catch (e) {} }
+    /* the feed re-times an in-flight upload card once the takeover is gone */
+    try { window.dispatchEvent(new CustomEvent("pf:daily-checkin-done")); } catch (e) {}
   }
 
   /* Book the check-in. Returns the engine result (or null when nothing to do). */
@@ -237,7 +239,11 @@
     }
     if (!modal) return res;
     show(res.capped ? 0 : res.pointsAwarded, streak, mult);
-    if (res.leveledUp) setTimeout(function () { hide(); go("MilestoneSplash.html"); }, 2400);
+    /* a level-up / badge on the same check-in: the reward router waits for
+       this takeover to close, then opens the Reward Splash (or a Combined
+       Celebration when the day's goal tipped over too) */
+    if (window.PFRewards) window.PFRewards.fromAction(res);
+    else if (res.leveledUp) setTimeout(function () { hide(); go("MilestoneSplash.html"); }, 2400);
     return res;
   }
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 
   <script src="dark-mode-init.js"></script>
-  <title>PROfinity — Lesson · My Learning</title>
+  <title>PROfinity — Combined Celebration (mobile)</title>
 
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fonts.css" />
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/colors.css" />
@@ -13,39 +13,33 @@
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/spacing.css" />
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fig-tokens.css" />
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/styles.css" />
-  <!-- shared comment/reaction styles (reused for the comment composer + Like control) -->
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="stylesheet" href="lesson.css" />
-  <link rel="stylesheet" href="comment-share-prompt.css" />
+  <link rel="stylesheet" href="mobile-loyalty-shared.css" />
+  <link rel="stylesheet" href="combined-celebration.css" />
   <link rel="stylesheet" href="dark-mode.css" />
-  <link rel="stylesheet" href="daily-checkin.css?v=20260917e" />
-  <link rel="stylesheet" href="upload-tracker.css" />
-  <link rel="stylesheet" href="coach.css" />
 </head>
 <body>
   <div id="pf-root"></div>
 
   <script src="vendor/react.production.min.js"></script>
   <script src="vendor/react-dom.production.min.js"></script>
-  <script src="vendor/iconify-icon.min.js" data-iconify></script>
+  <!-- NOT the bare iconify-icon script: claims the data-iconify slot, bulk-loads
+       the glyphs this page uses so nothing renders 0×0 (achievement badge icons
+       from the loyalty catalog included) -->
+  <script>window.PF_ICONS_EXTRA = { lucide: ["x", "target", "gem", "award", "trophy", "sparkles", "party-popper", "coins", "flame", "arrow-right", "zap", "users", "star"] };</script>
+  <script src="icons-preload.js" data-iconify></script>
+  <!-- raw-JSON Lottie player (mascot + confetti) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 
   <script src="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/_ds_bundle.js"></script>
 
   <script src="pagetrans.js"></script>
-  <script src="profile-link.js"></script>
 
   <script src="ios-frame.compiled.js"></script>
-  <script>window.PF_EMBED = true;</script>
-  <script src="app.compiled.js"></script>
-  <script src="comment-share-prompt.compiled.js"></script>
-  <script src="learning-shared.js"></script>
-  <script src="lesson.compiled.js"></script>
-  <script src="daily-goal.js"></script>
-  <script src="reward-router.js"></script>
-  <script src="daily-checkin.js?v=20260917d"></script>
-  <script src="points-sound.js"></script>
-  <script src="upload-tracker.js"></script>
-  <script src="coach.js"></script>
 
+  <script src="loyalty-engine.js"></script>
+  <script src="league-engine.js"></script>
+  <script src="daily-goal.js"></script>
+  <script src="points-sound.js"></script>
+  <script src="combined-celebration.compiled.js"></script>
 </body>
 </html>

@@ -659,109 +659,29 @@ function VerifySuccess({
   }, "Continue")));
 }
 
-/* ------------------------------ DAILY REWARD ------------------------------ */
-function DailyReward({
-  onDone,
-  points,
-  kicker,
-  title,
-  sub
-}) {
-  const TOTAL = points || 1000;
-  const [n, setN] = useStateAU(0);
-  const [phase, setPhase] = useStateAU("in");
-  React.useEffect(() => {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      setN(TOTAL);
-      setPhase("done");
-      return undefined;
-    }
-    let raf,
-      t0 = null;
-    const dur = 1300,
-      delay = 620;
-    const start = setTimeout(function tick() {
-      raf = requestAnimationFrame(function step(ts) {
-        if (t0 === null) t0 = ts;
-        const p = Math.min(1, (ts - t0) / dur);
-        const eased = 1 - Math.pow(1 - p, 3);
-        setN(Math.round(TOTAL * eased));
-        if (p < 1) raf = requestAnimationFrame(step);else setPhase("done");
-      });
-    }, delay);
-    return () => {
-      clearTimeout(start);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, []);
-  const sparks = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-  return /*#__PURE__*/React.createElement("div", {
-    className: "au-reward " + phase,
-    "data-screen-label": "Daily reward",
-    role: "dialog",
-    "aria-modal": "true",
-    "aria-label": "Daily login reward"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "au-rw-scrim",
-    "aria-label": "Close",
-    onClick: onDone
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "au-rw-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "au-rw-burst",
-    "aria-hidden": "true"
-  }, sparks.map(i => /*#__PURE__*/React.createElement("span", {
-    key: i,
-    className: "au-rw-spark",
-    style: {
-      "--i": i
-    }
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "au-rw-ring",
-    style: {
-      display: "none"
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "au-rw-ring d2",
-    style: {
-      display: "none"
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "au-rw-coin"
-  }, /*#__PURE__*/React.createElement(AULottie, {
-    src: "https://lottie.host/c18a79c2-beca-4d8d-921a-df9ee2394688/m6ViMA5SuC.json",
-    size: 224
-  }))), /*#__PURE__*/React.createElement("p", {
-    className: "au-rw-kicker"
-  }, kicker || "Daily login reward"), /*#__PURE__*/React.createElement("p", {
-    className: "au-rw-points",
-    "aria-live": "polite"
-  }, /*#__PURE__*/React.createElement("b", null, "+", n.toLocaleString()), /*#__PURE__*/React.createElement("i", null, "points")), /*#__PURE__*/React.createElement("h1", {
-    className: "au-rw-h1"
-  }, title || "Nice work, Katy!"), /*#__PURE__*/React.createElement("p", {
-    className: "au-rw-sub"
-  }, sub || "You've earned today's points just for showing up. Keep your streak going to unlock bonus rewards."), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "au-cta",
-    onClick: onDone
-  }, "Collect & continue")));
-}
-
 /* -------------------------------- COMPLETE -------------------------------- */
+/* Signing up is worth 100 points; signing in pays the daily login reward.
+   Neither is a page any more: the auth page stores a hand-off for the reward
+   router (reward-router.js on the newsfeed), which books the points and shows
+   the Reward Splash as an overlay that lifts itself after ~2.5s. */
+function handoffAU(type, extra) {
+  try {
+    sessionStorage.setItem("pf-celebration-handoff", JSON.stringify(Object.assign({
+      type: type,
+      ts: Date.now()
+    }, extra || {})));
+  } catch (e) {}
+  goAU("NewsfeedMobile.html");
+}
 function Complete() {
-  const [claimed, setClaimedAU] = useStateAU(false);
+  useEffectAU(() => {
+    const t = setTimeout(() => handoffAU("signup"), 900);
+    return () => clearTimeout(t);
+  }, []);
   return /*#__PURE__*/React.createElement("div", {
     className: "au-screen",
     "data-screen-label": "Sign up · complete"
-  }, !claimed && /*#__PURE__*/React.createElement(DailyReward, {
-    points: 250,
-    kicker: "Welcome bonus",
-    title: "You're all set, Katy!",
-    sub: "Here's 250 points just for joining — keep learning and connecting to earn more.",
-    onDone: () => setClaimedAU(true)
-  }), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "au-done"
   }, /*#__PURE__*/React.createElement("span", {
     className: "au-done-ic"
@@ -819,22 +739,13 @@ function AuthMobileApp() {
     height: 956
   }, view === "splash" && /*#__PURE__*/React.createElement(Splash, {
     onGo: () => go("signin")
-  }), view === "reward" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SignIn, {
-    onSignUp: () => {},
-    onForgot: () => {},
-    onDone: () => {}
-  }), /*#__PURE__*/React.createElement(DailyReward, {
-    onDone: () => {
-      try {
-        localStorage.setItem("pf-tour", "1");
-        localStorage.setItem("pf-tour-step", "welcome");
-      } catch (e) {}
-      goAU("NewsfeedMobile.html");
-    }
-  })), view === "signin" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SignIn, {
+  }), view === "signin" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SignIn, {
     onSignUp: () => go("type"),
     onForgot: () => setForgot(true),
-    onDone: () => go("reward")
+    onDone: () => handoffAU("login", {
+      tour: true,
+      flavor: "mobile"
+    })
   }), forgot && /*#__PURE__*/React.createElement(ForgotSheet, {
     onClose: () => setForgot(false),
     onSent: () => {

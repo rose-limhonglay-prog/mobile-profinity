@@ -1,8 +1,9 @@
 /* ===========================================================================
    PROfinity — Katy · Daily Goal Reached · iPhone 17 Pro Max
    Full page (not a modal) that opens each time the day's earned points
-   cross another 50-point mark (50, 100, 150 … — see daily-goal.js, which
-   listens to pf:points-earned on every earning page and navigates here).
+   reach the next mark on the day's ladder — 280, 500, 750, 1,000 (see
+   daily-goal.js, which listens to pf:points-earned on every earning page
+   and navigates here; the ladder restarts from 280 every day).
    Celebrates with the check-in doctor avatar (Lottie), shows today's total /
    day streak / actions, nudges Katy to keep earning and opens a
    Duolingo-style share sheet (shareable stat card + Instagram / Facebook /
@@ -13,13 +14,17 @@ const { useState: useStateDG, useEffect: useEffectDG, useRef: useRefDG, useMemo:
 const DSDG = window.ProfinityDesignSystem_c2b5cc;
 const PF_DG = window.PFLoyalty;
 
-/* Hero mascot: the same doctor-with-glasses avatar the daily check-in
-   "Welcome back" screen uses (assets/lottie/checkin-welcome.json), replacing
-   the earlier lottie.host falling-star comet. 800×600 (4:3) — .dg-hero is
-   sized to match so the svg fills the box without letterboxing. */
-const DG_LOTTIE = "assets/lottie/checkin-welcome.json?v=20260917d";
+/* Hero mascot: square 1:1 Lottie — .dg-hero is sized to match so the svg
+   fills the box without letterboxing. */
+/* User-supplied celebration character (lottie.host rssigJRNIC, saved locally
+   as assets/lottie/goal-reached.json — 1000×1000, 50 frames, loops). Replaced
+   the check-in doctor cut on 2026-09-18. */
+const DG_LOTTIE = "assets/lottie/goal-reached.json?v=20260918a";
 const DG_CONFETTI = "https://lottie.host/1b8bdd21-9711-48bb-873f-3889b01b43c8/jrTeYYuQqi.json";
-const DG_GOAL = (window.PFDailyGoal && window.PFDailyGoal.goal) || window.PF_DAILY_GOAL || 50;
+const DG_MARKS = (window.PFDailyGoal && window.PFDailyGoal.marks) || window.PF_DAILY_GOAL_MARKS || [280, 500, 750, 1000];
+const DG_GOAL = DG_MARKS[0];
+const dgMarkFor = (pts) => { let m = 0; DG_MARKS.forEach((k) => { if (pts >= k) m = k; }); return m; };
+const dgNextMark = (pts) => DG_MARKS.find((k) => pts < k) || null;
 
 function goDG(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
 
@@ -245,8 +250,9 @@ function DailyGoalScreen() {
   const tier = (state.user && state.user.membershipTier) || "Confidence";
   const first = state.user && state.user.name ? state.user.name.split(" ")[0] : "";
 
-  /* the 50-point mark just crossed — 50 the first time, then 100, 150 … */
-  const mark = Math.max(DG_GOAL, Math.floor(points / DG_GOAL) * DG_GOAL);
+  /* the mark just reached on today's ladder — 280 first, then 500, 750, 1,000 */
+  const mark = Math.max(DG_GOAL, dgMarkFor(points));
+  const next = dgNextMark(mark);
   const ret = returnUrlDG();
   const shareText = "🔥 " + (streak > 0 ? streak + "-day streak on PROfinity and " : "") + points + " points banked today — daily goal smashed! Come and earn with me.";
   const shareUrl = location.origin + location.pathname.replace(/[^/]*$/, "") + "NewsfeedMobile.html";
@@ -395,7 +401,8 @@ function DailyGoalScreen() {
         <div className="dg-kicker"><DSDG.IconifyIcon name="lucide:target" size={13} color="currentColor" /> Daily goal</div>
         <h1 className="dg-title">Goal reached{first ? ", " + first : ""}!</h1>
         <p className="dg-sub">
-          You've banked <b>{points} pts</b> today — {mark > DG_GOAL ? "that's your " + mark + "-point mark, " + (mark / DG_GOAL) + "× your " + DG_GOAL + "-point goal" : "past your " + DG_GOAL + "-point goal"}. Every point from here still counts toward your {tier} tier and this week's leaderboard, so keep it rolling.
+          You've earned <b>{points.toLocaleString("en-GB")} pts</b> today.<br />
+          {next ? <>Next goal: <b>{next.toLocaleString("en-GB")} pts</b></> : "Every goal hit for today — keep it rolling!"}
         </p>
 
         <div className="dg-stats" role="list">

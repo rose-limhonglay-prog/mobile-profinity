@@ -49,35 +49,7 @@
       prompt: "Draft a polite follow-up email for a client who enquired about Botox last week but hasn't booked." },
   ];
 
-  var DONE = [
-    "Home Dashboard Overview",
-    "Professional Profile Setup",
-    "Learning Center & Courses",
-    "Community Channels",
-    "AI Agent Interaction",
-  ];
 
-  var TOUR_POINTS = 250;
-  var OWL_LOTTIE_SRC = "https://lottie.host/cc6c5973-9f61-481c-85ed-0fe2089a9176/CwHL9yTPJJ.json";
-  var LOTTIE_LIB_SRC = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
-
-  /* Lazy-loads lottie-web (shared with auth-mobile.jsx's AULottie) only when
-     the finish screen actually needs it — most tour pages never do. */
-  function ensureLottie(cb) {
-    if (window.lottie) { cb(); return; }
-    if (!document.querySelector("script[data-pf-lottie]")) {
-      var s = document.createElement("script");
-      s.src = LOTTIE_LIB_SRC;
-      s.setAttribute("data-pf-lottie", "1");
-      document.head.appendChild(s);
-    }
-    var tries = 0;
-    var iv = setInterval(function () {
-      tries++;
-      if (window.lottie) { clearInterval(iv); cb(); }
-      else if (tries > 60) clearInterval(iv);
-    }, 120);
-  }
 
   function read(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function write(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
@@ -103,43 +75,11 @@
   /* Reuses the site-wide .pf-confetti/.pf-confetti-piece keyframes (styles.css,
      loaded on every page) so the tour doesn't need its own copy — same math
      as app.jsx's ConfettiBurst, just built as a markup string. */
-  function confettiHTML(count) {
-    var colors = ["#CE9957", "#F2D08A", "#fff", "var(--success)", "var(--info)"];
-    var pieces = "";
-    for (var i = 0; i < count; i++) {
-      var angle = Math.random() * Math.PI * 2;
-      var radius = 60 + Math.random() * 140;
-      var w = 6 + Math.random() * 5;
-      var vars = "--pf-confetti-dx:" + (Math.cos(angle) * radius) + "px;" +
-        "--pf-confetti-dy:" + (Math.sin(angle) * radius * 0.5) + "px;" +
-        "--pf-confetti-fall:" + (160 + Math.random() * 120) + "px;" +
-        "--pf-confetti-drift:" + ((Math.random() - 0.5) * 50) + "px;" +
-        "--pf-confetti-rotate:" + ((Math.random() - 0.5) * 720) + "deg;" +
-        "animation-delay:" + (Math.random() * 0.25) + "s;" +
-        "animation-duration:" + (1.8 + Math.random() * 0.9) + "s;" +
-        "background:" + colors[i % colors.length] + ";" +
-        "width:" + w + "px;height:" + (w * 0.4) + "px";
-      pieces += '<span class="pf-confetti-piece" style="' + vars + '"></span>';
-    }
-    return '<div class="pf-confetti" aria-hidden="true">' + pieces + "</div>";
-  }
+
 
   /* Eased count-up for a "+N points" reveal, matching auth-mobile.jsx's
      DailyReward animation. Skips straight to the total under reduced motion. */
-  function animateCount(node, total, dur, delay) {
-    if (!node) return;
-    if (reduceMotion) { node.textContent = total.toLocaleString(); return; }
-    var raf, t0 = null;
-    setTimeout(function tick() {
-      raf = requestAnimationFrame(function step(ts) {
-        if (t0 === null) t0 = ts;
-        var p = Math.min(1, (ts - t0) / dur);
-        var eased = 1 - Math.pow(1 - p, 3);
-        node.textContent = Math.round(total * eased).toLocaleString();
-        if (p < 1) raf = requestAnimationFrame(step);
-      });
-    }, delay);
-  }
+
   var SCREEN_SEL = ".m-screen, .cm-screen, .lm-screen, .pm-screen, .ev-screen";
   var WEB_READY_SEL = "header nav";
   function readySel() { return isWeb() ? WEB_READY_SEL : SCREEN_SEL; }
@@ -283,48 +223,13 @@
     if (act) act.addEventListener("click", function (e) { e.preventDefault(); });
   }
 
-  /* ------------------------------- finished ------------------------------- */
-  function finish() {
-    var wrap = el("div", "pf-tour-overlay");
-    wrap.setAttribute("role", "dialog");
-    wrap.setAttribute("aria-modal", "true");
-    wrap.setAttribute("aria-label", "Tour complete");
-    wrap.innerHTML =
-      '<div class="pf-tour-welcome">' +
-        (reduceMotion ? "" : confettiHTML(32)) +
-        '<button class="pf-tour-x light" aria-label="Close">' + ico("lucide:x", 20, "#fff") + "</button>" +
-        '<div class="pf-tour-pts-burst" aria-hidden="true">' +
-          (reduceMotion ?
-            '<span class="pf-tour-pts-coin">' + ico("lucide:award", 40, "#CE9957") + "</span>" :
-            '<span class="pf-tour-owl"></span>') +
-        "</div>" +
-        '<p class="pf-tour-pts-kicker">Tour Complete</p>' +
-        '<p class="pf-tour-pts-num" aria-live="polite"><b>+<span class="pf-tour-pts-n">0</span></b><i>points</i></p>' +
-        "<h2>Welcome to Profinity</h2>" +
-        "<p>We're excited to have you here. Connect, learn, and grow with a community of expert clinicians and exclusive resources.</p>" +
-        '<span class="pf-tour-donek">Steps completed</span>' +
-        '<ul class="pf-tour-done">' +
-          DONE.map(function (d) { return "<li>" + ico("lucide:check", 17, "#CE9957") + d + "</li>"; }).join("") +
-        "</ul>" +
-        '<button class="pf-tour-go">Let\'s Get Started</button>' +
-      "</div>";
-    mount(wrap);
-    animateCount(wrap.querySelector(".pf-tour-pts-n"), TOUR_POINTS, 1100, 500);
-    if (!reduceMotion) {
-      ensureLottie(function () {
-        var host = wrap.querySelector(".pf-tour-owl");
-        if (host) window.lottie.loadAnimation({ container: host, renderer: "svg", loop: true, autoplay: true, path: OWL_LOTTIE_SRC });
-      });
-    }
-    wrap.querySelector(".pf-tour-x").addEventListener("click", skip);
-    wrap.querySelector(".pf-tour-go").addEventListener("click", skip);
-  }
-
   function render() {
     if (read(KEY) !== "1") return;
     var st = read(STEP) || "welcome";
     if (st === "welcome") { if (onPage(STEPS()[0].page)) welcome(); return; }
-    if (st === "done") { if (onPage(STEPS()[0].page)) finish(); return; }
+    /* "Finish Tour" lands back on the home page and simply ends the tour —
+       the "Tour complete · +250 points" modal was removed (2026-09-18). */
+    if (st === "done") { skip(); return; }
     var s = STEPS()[parseInt(st, 10) - 1];
     if (s && onPage(s.page)) step(s);
   }
