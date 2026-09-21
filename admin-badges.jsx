@@ -1,7 +1,7 @@
 /* ===========================================================================
    PROfinity — Admin · Badge Management (desktop console)
    Dashboard / All Badges library / Automation Rules tabs, Create·Edit modal,
-   Assign-to-members modal, Create Rule modal, and a badge detail drill-in
+   Assign-to-users modal (Clinicians | Patients picker, also embedded in the Create/Edit modal), Create Rule modal, and a badge detail drill-in
    with a revocable holders list. Static mock data, all client-side state.
    Suffixed -BDG to avoid global-scope clashes.
    =========================================================================== */
@@ -123,19 +123,26 @@ const BDG_CATEGORY_TONE = {
 const BDG_TIERS = ["Basic", "Confidence", "Mastery", "Sovereign and Builder"];
 function bdgTierRank(tier) { return BDG_TIERS.indexOf(tier); }
 
+const BDG_ROLES = ["Clinician", "Patient"];
 const BDG_MEMBERS = [
-  { id: "m1", name: "Miranda Pearce", email: "miranda.pearce@gmail.com", tier: "Mastery", avatar: "assets/avatar-miranda.jpg" },
-  { id: "m2", name: "Amir Khan", email: "amir.khan@gmail.com", tier: "Confidence", avatar: "assets/avatar-amir-khan.jpg" },
-  { id: "m3", name: "Priya Shah", email: "priya.shah@gmail.com", tier: "Sovereign and Builder", avatar: "assets/avatar-priya-shah.jpg" },
-  { id: "m4", name: "Mark Ellis", email: "mark.ellis@gmail.com", tier: "Basic", avatar: "assets/avatar-mark-ellis.jpg" },
-  { id: "m5", name: "Sarah Collins", email: "sarah.collins@gmail.com", tier: "Mastery", avatar: "assets/avatar-sarah-collins.jpg" },
-  { id: "m6", name: "Beth Turner", email: "beth.turner@gmail.com", tier: "Confidence", avatar: "assets/avatar-nurse-beth.jpg" },
-  { id: "m7", name: "Katy Nguyen", email: "katy.nguyen@gmail.com", tier: "Sovereign and Builder", avatar: "assets/avatar-katy.jpg" },
-  { id: "m8", name: "Dr Tim Pearce", email: "tim.pearce@drtimpearce.com", tier: "Sovereign and Builder", avatar: "assets/avatar-drtim.png" },
-  { id: "m9", name: "Jo Bennett", email: "jo.bennett@gmail.com", tier: "Confidence", avatar: null },
-  { id: "m10", name: "Leah Osei", email: "leah.osei@gmail.com", tier: "Mastery", avatar: null },
-  { id: "m11", name: "Connor Reid", email: "connor.reid@gmail.com", tier: "Basic", avatar: null },
-  { id: "m12", name: "Farah Hussain", email: "farah.hussain@gmail.com", tier: "Mastery", avatar: null },
+  { id: "m1", name: "Miranda Pearce", email: "miranda.pearce@gmail.com", tier: "Mastery", role: "Clinician", avatar: "assets/avatar-miranda.jpg" },
+  { id: "m2", name: "Amir Khan", email: "amir.khan@gmail.com", tier: "Confidence", role: "Clinician", avatar: "assets/avatar-amir-khan.jpg" },
+  { id: "m3", name: "Priya Shah", email: "priya.shah@gmail.com", tier: "Sovereign and Builder", role: "Clinician", avatar: "assets/avatar-priya-shah.jpg" },
+  { id: "m4", name: "Mark Ellis", email: "mark.ellis@gmail.com", tier: "Basic", role: "Clinician", avatar: "assets/avatar-mark-ellis.jpg" },
+  { id: "m5", name: "Sarah Collins", email: "sarah.collins@gmail.com", tier: "Mastery", role: "Clinician", avatar: "assets/avatar-sarah-collins.jpg" },
+  { id: "m6", name: "Beth Turner", email: "beth.turner@gmail.com", tier: "Confidence", role: "Clinician", avatar: "assets/avatar-nurse-beth.jpg" },
+  { id: "m7", name: "Katy Nguyen", email: "katy.nguyen@gmail.com", tier: "Sovereign and Builder", role: "Clinician", avatar: "assets/avatar-katy.jpg" },
+  { id: "m8", name: "Dr Tim Pearce", email: "tim.pearce@drtimpearce.com", tier: "Sovereign and Builder", role: "Clinician", avatar: "assets/avatar-drtim.png" },
+  { id: "m9", name: "Jo Bennett", email: "jo.bennett@gmail.com", tier: "Confidence", role: "Clinician", avatar: null },
+  { id: "m10", name: "Leah Osei", email: "leah.osei@gmail.com", tier: "Mastery", role: "Clinician", avatar: null },
+  { id: "m11", name: "Connor Reid", email: "connor.reid@gmail.com", tier: "Basic", role: "Clinician", avatar: null },
+  { id: "m12", name: "Farah Hussain", email: "farah.hussain@gmail.com", tier: "Mastery", role: "Clinician", avatar: null },
+  { id: "p1", name: "Hannah Wright", email: "hannah.wright@gmail.com", tier: "Patient", role: "Patient", avatar: null },
+  { id: "p2", name: "Olivia Grant", email: "olivia.grant@gmail.com", tier: "Patient", role: "Patient", avatar: null },
+  { id: "p3", name: "Daniel Moore", email: "daniel.moore@gmail.com", tier: "Patient", role: "Patient", avatar: null },
+  { id: "p4", name: "Sophie Clarke", email: "sophie.clarke@gmail.com", tier: "Patient", role: "Patient", avatar: null },
+  { id: "p5", name: "Ethan Patel", email: "ethan.patel@gmail.com", tier: "Patient", role: "Patient", avatar: null },
+  { id: "p6", name: "Grace Foster", email: "grace.foster@gmail.com", tier: "Patient", role: "Patient", avatar: null },
 ];
 const bdgMemberById = (id) => BDG_MEMBERS.find((m) => m.id === id);
 
@@ -449,7 +456,7 @@ function BDGLibraryView({ badges, assignments, openCreate, openEdit, openAssign,
                 {openMenuId === b.id && (
                   <div className="bdg-card-menu" onMouseLeave={() => setOpenMenuId(null)}>
                     <button type="button" onClick={() => { openEdit(b); setOpenMenuId(null); }}><iconify-icon icon="lucide:pencil"></iconify-icon>Edit</button>
-                    <button type="button" disabled={archived} onClick={() => { openAssign(b); setOpenMenuId(null); }}><iconify-icon icon="lucide:user-plus"></iconify-icon>Assign to members</button>
+                    <button type="button" disabled={archived} onClick={() => { openAssign(b); setOpenMenuId(null); }}><iconify-icon icon="lucide:user-plus"></iconify-icon>Assign to users</button>
                     <button type="button" onClick={() => { onToggleArchive(b); setOpenMenuId(null); }}>
                       <iconify-icon icon={archived ? "lucide:archive-restore" : "lucide:archive"}></iconify-icon>{archived ? "Unarchive" : "Archive"}
                     </button>
@@ -622,7 +629,7 @@ function BDGDetailView({ badge, assignments, rules, onBack, onRevoke, onEdit }) 
                 <div className="bdg-trow-user">
                   <BDGAvatar name={member.name} avatar={member.avatar} size={32} />
                   <div>
-                    <div className="bdg-holder-name">{member.name}</div>
+                    <div className="bdg-holder-name">{member.name} <span className={"bdg-role-tag is-" + member.role.toLowerCase()}>{member.role}</span></div>
                     <div className="bdg-holder-email">{member.email}</div>
                   </div>
                 </div>
@@ -654,9 +661,93 @@ function BDGDetailView({ badge, assignments, rules, onBack, onRevoke, onEdit }) 
   );
 }
 
+/* --------------------------------------------------------- user picker
+   Shared by the Create/Edit Badge modal and the Assign modal. Clinicians and
+   Patients live in separate lists; `selected` is a { [memberId]: true } map. */
+function BDGRoleTabs({ role, setRole, counts }) {
+  return (
+    <div className="bdg-role-tabs" role="tablist">
+      {BDG_ROLES.map((r) => (
+        <button key={r} type="button" role="tab" aria-selected={role === r} className={"bdg-role-tab" + (role === r ? " is-active" : "")} onClick={() => setRole(r)}>
+          <iconify-icon icon={r === "Clinician" ? "lucide:stethoscope" : "lucide:heart-pulse"}></iconify-icon>
+          {r === "Clinician" ? "Clinicians" : "Patients"}
+          {counts && counts[r] > 0 && <span className="bdg-role-tab-count">{counts[r]}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function BDGUserPicker({ selected, onToggle, holderIds, compact }) {
+  const [role, setRole] = useStateBDG(BDG_ROLES[0]);
+  const [query, setQuery] = useStateBDG("");
+  const holders = holderIds || new Set();
+
+  const filtered = useMemoBDG(() => {
+    const q = query.trim().toLowerCase();
+    return BDG_MEMBERS.filter((m) => m.role === role && (!q || m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q)));
+  }, [query, role]);
+
+  const counts = useMemoBDG(() => {
+    const c = { Clinician: 0, Patient: 0 };
+    Object.keys(selected).forEach((id) => { if (selected[id]) { const m = bdgMemberById(id); if (m) c[m.role] += 1; } });
+    return c;
+  }, [selected]);
+
+  const selectedMembers = Object.keys(selected).filter((id) => selected[id]).map(bdgMemberById).filter(Boolean);
+
+  return (
+    <div className={"bdg-user-picker" + (compact ? " is-compact" : "")}>
+      <BDGRoleTabs role={role} setRole={setRole} counts={counts} />
+      <div className="bdg-search-input-wrap bdg-user-picker-search">
+        <iconify-icon icon="lucide:search"></iconify-icon>
+        <input placeholder={"Search " + (role === "Clinician" ? "clinicians" : "patients") + " by name or email..."} value={query} onChange={(e) => setQuery(e.target.value)} />
+      </div>
+      {selectedMembers.length > 0 && (
+        <div className="bdg-selected-chips">
+          {selectedMembers.map((m) => (
+            <span key={m.id} className="bdg-selected-chip">
+              <BDGAvatar name={m.name} avatar={m.avatar} size={20} />
+              {m.name}
+              <button type="button" aria-label={"Remove " + m.name} onClick={() => onToggle(m.id)}><iconify-icon icon="lucide:x"></iconify-icon></button>
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="bdg-member-list">
+        {filtered.map((m) => {
+          const already = holders.has(m.id);
+          const on = !!selected[m.id];
+          return (
+            <button type="button" key={m.id} className={"bdg-member-row" + (already ? " is-disabled" : "")} onClick={() => !already && onToggle(m.id)} disabled={already}>
+              <BDGCheck on={on || already} disabled={already} />
+              <BDGAvatar name={m.name} avatar={m.avatar} size={36} />
+              <span className="bdg-member-info">
+                <span className="bdg-member-name">{m.name}</span>
+                <span className="bdg-member-email">{m.email}</span>
+              </span>
+              <span className={"bdg-role-tag is-" + m.role.toLowerCase()}>{m.role}</span>
+              {m.role === "Clinician" && <span className="bdg-member-tier">{m.tier}</span>}
+              {already && <span className="bdg-already-tag">Already earned</span>}
+            </button>
+          );
+        })}
+        {filtered.length === 0 && <div className="bdg-empty-row">No {role === "Clinician" ? "clinicians" : "patients"} match your search.</div>}
+      </div>
+    </div>
+  );
+}
+
 /* -------------------------------------------------------- create/edit modal */
-function BDGCreateModal({ editing, onClose, onSave }) {
+function BDGCreateModal({ editing, assignments, onClose, onSave }) {
   const [name, setName] = useStateBDG(editing ? editing.name : "");
+  const [selected, setSelected] = useStateBDG({});
+  const toggleMember = (id) => setSelected((st) => ({ ...st, [id]: !st[id] }));
+  const selectedIds = Object.keys(selected).filter((id) => selected[id]);
+  const holderIds = useMemoBDG(
+    () => new Set(editing ? (assignments || []).filter((a) => a.badgeId === editing.id && a.status === "Active").map((a) => a.memberId) : []),
+    [assignments, editing]
+  );
   const [description, setDescription] = useStateBDG(editing ? editing.description : "");
   const [icon, setIcon] = useStateBDG(editing ? editing.icon : null);
   const [category, setCategory] = useStateBDG(editing ? editing.category : BDG_CATEGORIES[0]);
@@ -666,7 +757,7 @@ function BDGCreateModal({ editing, onClose, onSave }) {
 
   const handleSubmit = () => {
     if (!canSubmit) return;
-    onSave({ name: name.trim(), description: description.trim(), icon, category, notify });
+    onSave({ name: name.trim(), description: description.trim(), icon, category, notify }, selectedIds);
   };
 
   const handleUploadIcon = () => {
@@ -685,7 +776,7 @@ function BDGCreateModal({ editing, onClose, onSave }) {
 
   return (
     <div className="bdg-modal-overlay" onClick={onClose}>
-      <div className="bdg-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="bdg-modal bdg-modal-lg" onClick={(e) => e.stopPropagation()}>
         <div className="bdg-modal-head">
           <h2>{editing ? "Edit Badge" : "Create Badge"}</h2>
           <button className="bdg-modal-close" type="button" onClick={onClose}><iconify-icon icon="lucide:x"></iconify-icon></button>
@@ -736,9 +827,19 @@ function BDGCreateModal({ editing, onClose, onSave }) {
           </label>
         </div>
 
+        <div className="bdg-field-label-row">
+          <label className="bdg-field-label">{editing ? "Add users to this badge" : "Assign to users"} <span className="bdg-optional">(optional)</span></label>
+          {selectedIds.length > 0 && <span className="bdg-selected-count">{selectedIds.length} selected</span>}
+        </div>
+        <p className="bdg-field-hint">Pick the clinicians or patients who should receive this badge {editing ? "when you save." : "as soon as it is created."}</p>
+        <BDGUserPicker selected={selected} onToggle={toggleMember} holderIds={holderIds} compact />
+
         <div className="bdg-modal-actions">
           <button className="bdg-btn bdg-btn-outline" type="button" onClick={onClose}>Cancel</button>
-          <button className="bdg-btn bdg-btn-navy" type="button" disabled={!canSubmit} onClick={handleSubmit}>{editing ? "Save Changes" : "Create Badge"}</button>
+          <button className="bdg-btn bdg-btn-navy" type="button" disabled={!canSubmit} onClick={handleSubmit}>
+            {editing ? (selectedIds.length ? "Save & Add " + selectedIds.length + " User" + (selectedIds.length === 1 ? "" : "s") : "Save Changes")
+                     : (selectedIds.length ? "Create & Assign to " + selectedIds.length : "Create Badge")}
+          </button>
         </div>
       </div>
     </div>
@@ -747,17 +848,10 @@ function BDGCreateModal({ editing, onClose, onSave }) {
 
 /* -------------------------------------------------------------- assign modal */
 function BDGAssignModal({ badge, assignments, onClose, onAssign }) {
-  const [query, setQuery] = useStateBDG("");
   const [selected, setSelected] = useStateBDG({});
   const [note, setNote] = useStateBDG("");
 
   const holderIds = useMemoBDG(() => new Set(assignments.filter((a) => a.badgeId === badge.id && a.status === "Active").map((a) => a.memberId)), [assignments, badge.id]);
-
-  const filtered = useMemoBDG(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return BDG_MEMBERS;
-    return BDG_MEMBERS.filter((m) => m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q));
-  }, [query]);
 
   const toggle = (id) => setSelected((st) => ({ ...st, [id]: !st[id] }));
   const count = Object.values(selected).filter(Boolean).length;
@@ -782,35 +876,13 @@ function BDGAssignModal({ badge, assignments, onClose, onAssign }) {
           <button className="bdg-modal-close" type="button" onClick={onClose}><iconify-icon icon="lucide:x"></iconify-icon></button>
         </div>
 
-        <div className="bdg-search-input-wrap" style={{ marginBottom: 14 }}>
-          <iconify-icon icon="lucide:search"></iconify-icon>
-          <input placeholder="Search members by name or email..." value={query} onChange={(e) => setQuery(e.target.value)} />
-        </div>
-
-        <div className="bdg-member-list">
-          {filtered.map((m) => {
-            const already = holderIds.has(m.id);
-            const on = !!selected[m.id];
-            return (
-              <button type="button" key={m.id} className={"bdg-member-row" + (already ? " is-disabled" : "")} onClick={() => !already && toggle(m.id)} disabled={already}>
-                <BDGCheck on={on || already} disabled={already} />
-                <BDGAvatar name={m.name} avatar={m.avatar} size={36} />
-                <span className="bdg-member-info">
-                  <span className="bdg-member-name">{m.name}</span>
-                  <span className="bdg-member-email">{m.email}</span>
-                </span>
-                <span className="bdg-member-tier">{m.tier}</span>
-                {already && <span className="bdg-already-tag">Already earned</span>}
-              </button>
-            );
-          })}
-        </div>
+        <BDGUserPicker selected={selected} onToggle={toggle} holderIds={holderIds} />
 
         <label className="bdg-field-label" style={{ marginTop: 18 }}>Note <span className="bdg-optional">(optional)</span></label>
         <textarea className="bdg-textarea" style={{ minHeight: 64 }} placeholder="Add a note for the audit log..." value={note} onChange={(e) => setNote(e.target.value)} />
 
         <div className="bdg-modal-actions bdg-modal-actions-assign">
-          <span className="bdg-selected-count">{count} member{count === 1 ? "" : "s"} selected</span>
+          <span className="bdg-selected-count">{count} user{count === 1 ? "" : "s"} selected</span>
           <div className="bdg-modal-actions-btns">
             <button className="bdg-btn bdg-btn-outline" type="button" onClick={onClose}>Cancel</button>
             <button className="bdg-btn bdg-btn-navy" type="button" disabled={count === 0} onClick={handleSubmit}>Assign badge</button>
@@ -930,15 +1002,33 @@ function BDGApp() {
   const openCreate = () => setCreateModal({ editing: null });
   const openEdit = (badge) => setCreateModal({ editing: badge });
 
-  const handleSaveBadge = (draft) => {
+  const BDG_TODAY = "07 Aug 2026";
+  const BDG_TODAY_SORT = "2026-08-07";
+  const buildAssignments = (badgeId, memberIds, note) => memberIds.map((memberId) => ({
+    id: "a" + Math.random().toString(16).slice(2, 8),
+    badgeId,
+    memberId,
+    type: "Manual",
+    date: BDG_TODAY,
+    dateSort: BDG_TODAY_SORT,
+    status: "Active",
+    note: note || undefined,
+  }));
+  const userWord = (n) => n + " user" + (n === 1 ? "" : "s");
+
+  const handleSaveBadge = (draft, memberIds) => {
+    const ids = memberIds || [];
     if (createModal.editing) {
-      setBadges((st) => st.map((b) => (b.id === createModal.editing.id ? { ...b, ...draft } : b)));
-      if (detailBadge && detailBadge.id === createModal.editing.id) setDetailBadge((d) => ({ ...d, ...draft }));
-      showToast("Badge updated.");
+      const badgeId = createModal.editing.id;
+      setBadges((st) => st.map((b) => (b.id === badgeId ? { ...b, ...draft } : b)));
+      if (detailBadge && detailBadge.id === badgeId) setDetailBadge((d) => ({ ...d, ...draft }));
+      if (ids.length) setAssignments((st) => [...st, ...buildAssignments(badgeId, ids)]);
+      showToast(ids.length ? "Badge updated — assigned to " + userWord(ids.length) + (draft.notify ? ", notifications sent." : ".") : "Badge updated.");
     } else {
       const id = "b" + Math.random().toString(16).slice(2, 8);
       setBadges((st) => [...st, { id, status: "Active", ...draft }]);
-      showToast("Badge created.");
+      if (ids.length) setAssignments((st) => [...st, ...buildAssignments(id, ids)]);
+      showToast(ids.length ? "Badge created — assigned to " + userWord(ids.length) + (draft.notify ? ", notifications sent." : ".") : "Badge created.");
     }
     setCreateModal(null);
   };
@@ -949,20 +1039,9 @@ function BDGApp() {
 
   const handleAssign = (memberIds, note) => {
     const badge = assignModal;
-    const today = "07 Aug 2026";
-    const newRecords = memberIds.map((memberId) => ({
-      id: "a" + Math.random().toString(16).slice(2, 8),
-      badgeId: badge.id,
-      memberId,
-      type: "Manual",
-      date: today,
-      dateSort: "2026-08-07",
-      status: "Active",
-      note: note || undefined,
-    }));
-    setAssignments((st) => [...st, ...newRecords]);
+    setAssignments((st) => [...st, ...buildAssignments(badge.id, memberIds, note)]);
     setAssignModal(null);
-    showToast("Assigned to " + memberIds.length + " member" + (memberIds.length === 1 ? "" : "s") + (badge.notify ? " — notifications sent." : "."));
+    showToast("Assigned to " + userWord(memberIds.length) + (badge.notify ? " — notifications sent." : "."));
   };
 
   const handleRevoke = (assignmentId) => {
@@ -1004,7 +1083,7 @@ function BDGApp() {
         </div>
       </main>
 
-      {createModal && <BDGCreateModal editing={createModal.editing} onClose={() => setCreateModal(null)} onSave={handleSaveBadge} />}
+      {createModal && <BDGCreateModal editing={createModal.editing} assignments={assignments} onClose={() => setCreateModal(null)} onSave={handleSaveBadge} />}
       {assignModal && <BDGAssignModal badge={assignModal} assignments={assignments} onClose={() => setAssignModal(null)} onAssign={handleAssign} />}
       {ruleModal && <BDGRuleModal badges={badges} onClose={() => setRuleModal(false)} onCreate={handleCreateRule} />}
       <BDGToast message={toast} />

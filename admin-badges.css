@@ -395,3 +395,39 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
   .bdg-header-search { display: none; }
   .bdg-icon-grid { grid-template-columns: repeat(6, 1fr); }
 }
+
+/* ------------------------------------------------------------- user picker
+   Clinicians | Patients segmented tabs + search + selected chips + list.
+   Used inside the Create/Edit Badge modal (compact) and the Assign modal. */
+.bdg-field-label-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
+.bdg-field-label-row .bdg-field-label { margin: 0; }
+.bdg-field-hint { margin: 4px 0 10px; font-size: 13px; line-height: 1.45; color: var(--gray-500); }
+.bdg-user-picker { display: flex; flex-direction: column; gap: 10px; }
+.bdg-role-tabs { display: inline-flex; align-self: flex-start; gap: 4px; padding: 4px; border-radius: 12px;
+  background: var(--gray-100); }
+.bdg-role-tab { display: flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px; border-radius: 9px;
+  border: none; background: none; font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--gray-600);
+  cursor: pointer; transition: background .15s, color .15s; }
+.bdg-role-tab iconify-icon { font-size: 16px; }
+.bdg-role-tab:hover { color: var(--brand-navy); }
+.bdg-role-tab.is-active { background: var(--white); color: var(--brand-navy); box-shadow: 0 1px 3px rgba(16,24,40,.12); }
+.bdg-role-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px;
+  padding: 0 6px; border-radius: 999px; background: var(--brand-navy); color: #fff; font-size: 11.5px; font-weight: 700; }
+.bdg-user-picker-search { min-width: 0; }
+.bdg-user-picker.is-compact .bdg-user-picker-search input { height: 44px; }
+.bdg-user-picker.is-compact .bdg-member-list { max-height: 232px; }
+.bdg-user-picker.is-compact .bdg-member-row { padding: 8px 10px; }
+.bdg-selected-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.bdg-selected-chip { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 6px 0 5px;
+  border-radius: 999px; background: var(--brand-navy); color: #fff; font-size: 12.5px; font-weight: 600; }
+.bdg-selected-chip .bdg-avatar, .bdg-selected-chip img { border-radius: 50%; }
+.bdg-selected-chip button { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px;
+  border-radius: 50%; border: none; background: rgba(255,255,255,.18); color: #fff; cursor: pointer; padding: 0; }
+.bdg-selected-chip button:hover { background: rgba(255,255,255,.32); }
+.bdg-selected-chip button iconify-icon { font-size: 12px; }
+.bdg-role-tag { flex-shrink: 0; display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; vertical-align: middle; }
+.bdg-role-tag.is-clinician { background: var(--info-bg); color: var(--info); }
+.bdg-role-tag.is-patient { background: var(--ai-purple-100); color: var(--ai-purple); }
+.bdg-holder-name .bdg-role-tag { margin-left: 6px; height: 18px; font-size: 10px; }
+.bdg-user-picker .bdg-empty-row { padding: 28px 16px; }
