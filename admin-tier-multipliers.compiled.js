@@ -69,6 +69,10 @@ const ADL_NAV_TOP = [{
   label: "Badges",
   href: "AdminBadges.html"
 }, {
+  icon: "lucide:clipboard-list",
+  label: "Quizzes & Surveys",
+  href: "AdminQuizEditor.html"
+}, {
   icon: "lucide:receipt-text",
   label: "Transactions",
   href: "AdminTransactions.html",
@@ -86,7 +90,7 @@ const ADL_NAV_TOP = [{
 }];
 const ADL_LOYALTY_SUBNAV = [{
   key: "actions",
-  label: "Actions Editor",
+  label: "Ways to Earn",
   href: "AdminActionsEditor.html"
 }, {
   key: "tiers",
@@ -98,7 +102,7 @@ const ADL_LOYALTY_SUBNAV = [{
   href: "AdminRewardEditor.html"
 }, {
   key: "ledger",
-  label: "Audit Ledger",
+  label: "Points Ledger",
   href: "AdminAuditLedger.html"
 }, {
   key: "users",

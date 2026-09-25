@@ -951,7 +951,7 @@ function CWShareModal({
     k: "dm",
     label: "Messages",
     icon: "lucide:message-circle",
-    run: () => goCW("Messages.html")
+    run: () => goCW("MessagesWeb.html")
   }, {
     k: "more",
     label: "More",

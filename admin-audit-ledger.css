@@ -3,7 +3,12 @@
    Shared shell/sidebar/header/card/form/stat/table/panel styles live in
    admin-loyalty-shared.css. Classes prefixed ldg- to avoid clashes.
    =========================================================================== */
-.ldg-row-grid { grid-template-columns: 1.1fr 1.1fr 1.6fr 1.3fr 0.7fr 0.7fr 1fr; }
+.ldg-row-grid { grid-template-columns: 1.25fr 1fr 1.8fr 1.15fr 0.75fr 0.75fr 1.9fr; }
+.ldg-th { white-space: nowrap; }
+.ldg-th { display: inline-flex; align-items: center; }
+.ldg-th .adl-info { margin-left: 4px; width: 16px; height: 16px; }
+.ldg-th .adl-info iconify-icon { font-size: 14px; }
+.adl-stat-label .adl-info { margin-left: 4px; }
 .ldg-admin-tag { color: var(--gray-500); font-size: 12px; }
 
 .ldg-user-results { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto;
@@ -17,6 +22,42 @@
 .ldg-live-pill { background: var(--success-bg); color: var(--success); font-size: 10px; font-weight: 700;
   padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .03em; }
 
-@media (max-width: 1180px) {
-  .ldg-row-grid { grid-template-columns: 1fr; gap: 4px; }
-}
+
+/* column-header tips open downward so the table's rounded overflow doesn't clip them */
+.ldg-th .adl-info-tip { bottom: auto; top: calc(100% + 8px); }
+.ldg-th .adl-info-tip::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: #0C1928; }
+
+/* manual adjustment modal */
+.ldg-modal { width: 600px; }
+.ldg-modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.ldg-modal .adl-field select, .ldg-modal .adl-field input { width: 100%; }
+@media (max-width: 640px) { .ldg-modal-row { grid-template-columns: 1fr; } }
+
+/* pending review rows */
+.ldg-note { display: block; font-size: 12px; margin-top: 2px; }
+.ldg-held { color: var(--warning); font-weight: 700; display: inline-flex; align-items: baseline; gap: 4px; }
+.ldg-held small { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #96690a; }
+.ldg-flags-cell { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.ldg-pill-pending { background: var(--warning-bg); color: #96690a; }
+.ldg-pill-pending .adl-pill-dot { background: #96690a; }
+.ldg-review-actions { display: inline-flex; gap: 6px; }
+.ldg-review-btn { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border-radius: 8px;
+  font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid var(--border-default); background: var(--white); color: var(--gray-700); }
+.ldg-review-btn iconify-icon { font-size: 14px; }
+.ldg-review-btn.is-approve:hover { background: var(--success-bg); color: var(--success); border-color: var(--success); }
+.ldg-review-btn.is-reject:hover { background: var(--error-bg); color: var(--error); border-color: var(--error); }
+.ldg-stats-3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 720px) { .ldg-stats-3 { grid-template-columns: 1fr; } }
+
+/* who flagged a pending row */
+.ldg-flags-cell { flex-direction: column; align-items: flex-start; gap: 6px; }
+.ldg-source { display: grid; grid-template-columns: 14px 1fr; column-gap: 5px; align-items: center; font-size: 11.5px; font-weight: 600; color: var(--gray-500); line-height: 1.3; }
+.ldg-source-label { white-space: nowrap; }
+.ldg-source-detail { grid-column: 2; font-weight: 500; color: var(--gray-500); }
+.ldg-source iconify-icon { font-size: 14px; color: var(--gray-400); flex-shrink: 0; }
+.ldg-source.is-member { color: #96690a; }
+.ldg-source.is-member iconify-icon { color: #96690a; }
+
+/* user name links to the member rewards board */
+.ldg-user-link { border: none; background: none; padding: 0; font-family: inherit; font-size: 14px; line-height: inherit; color: var(--brand-navy); font-weight: 600; cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; transition: text-decoration-color .12s; }
+.ldg-user-link:hover, .ldg-user-link:focus-visible { text-decoration-color: var(--brand-gold); color: var(--brand-navy); }

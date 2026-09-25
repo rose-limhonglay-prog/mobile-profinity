@@ -68,6 +68,10 @@ const ADL_NAV_TOP = [{
   label: "Badges",
   href: "AdminBadges.html"
 }, {
+  icon: "lucide:clipboard-list",
+  label: "Quizzes & Surveys",
+  href: "AdminQuizEditor.html"
+}, {
   icon: "lucide:receipt-text",
   label: "Transactions",
   href: "AdminTransactions.html",
@@ -85,7 +89,7 @@ const ADL_NAV_TOP = [{
 }];
 const ADL_LOYALTY_SUBNAV = [{
   key: "actions",
-  label: "Actions Editor",
+  label: "Ways to Earn",
   href: "AdminActionsEditor.html"
 }, {
   key: "tiers",
@@ -97,7 +101,7 @@ const ADL_LOYALTY_SUBNAV = [{
   href: "AdminRewardEditor.html"
 }, {
   key: "ledger",
-  label: "Audit Ledger",
+  label: "Points Ledger",
   href: "AdminAuditLedger.html"
 }, {
   key: "users",
@@ -208,11 +212,27 @@ const OVW_DISPUTES = [{
   status: "Resolved",
   opened: "6 days ago"
 }];
+function OvwInfo({
+  text
+}) {
+  return /*#__PURE__*/React.createElement("span", {
+    className: "adl-info is-left",
+    tabIndex: 0,
+    role: "img",
+    "aria-label": text
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:info"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "adl-info-tip",
+    "aria-hidden": "true"
+  }, text));
+}
 function OvwStat({
   label,
   value,
   sub,
-  tone
+  tone,
+  tip
 }) {
   return /*#__PURE__*/React.createElement("div", {
     className: "adl-stat-card"
@@ -220,7 +240,9 @@ function OvwStat({
     className: "adl-stat-body"
   }, /*#__PURE__*/React.createElement("div", {
     className: "adl-stat-label"
-  }, label), /*#__PURE__*/React.createElement("div", {
+  }, label, tip && /*#__PURE__*/React.createElement(OvwInfo, {
+    text: tip
+  })), /*#__PURE__*/React.createElement("div", {
     className: "adl-stat-value",
     style: tone ? {
       color: tone
@@ -256,19 +278,23 @@ function OverviewView() {
   }, /*#__PURE__*/React.createElement(OvwStat, {
     label: "Daily Active Users",
     value: "8,214",
-    sub: "+3.2% vs. last week"
+    sub: "+3.2% vs. last week",
+    tip: "Members who opened the app or website at least once in the last 24 hours."
   }), /*#__PURE__*/React.createElement(OvwStat, {
     label: "Points Inflation Rate",
     value: inflationRate + "%",
     sub: "Share of attempts silently capped",
+    tip: "How often members hit a daily or weekly points cap. A high rate means points are being handed out faster than the rules intend.",
     tone: inflationRate > 15 ? "var(--error)" : undefined
   }), /*#__PURE__*/React.createElement(OvwStat, {
     label: "Overall Redemption Rate",
     value: redemptionRate + "%",
-    sub: "Credits spent vs. credits earned"
+    sub: "Credits spent vs. credits earned",
+    tip: "Share of all credits earned that members have gone on to spend in the Rewards Store. Low means credits are piling up unused."
   }), /*#__PURE__*/React.createElement(OvwStat, {
     label: "Open Dispute Tickets",
-    value: OVW_DISPUTES.filter(d => d.status !== "Resolved").length
+    value: OVW_DISPUTES.filter(d => d.status !== "Resolved").length,
+    tip: "Members currently disputing a points or credit balance that still need a reply or a manual adjustment."
   })), /*#__PURE__*/React.createElement("div", {
     className: "adl-card"
   }, /*#__PURE__*/React.createElement("div", {

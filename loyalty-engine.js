@@ -20,39 +20,154 @@
   var CONFIG_KEY = "pf-loyalty-config-v1";
   var STATE_KEY = "pf-loyalty-state-v1";
 
-  var TIER_KEYS = ["Basic", "Confidence", "Mastery", "Freedom"];
+  var TIER_KEYS = ["Basic", "Confidence", "Mastery", "Freedom", "Sovereign"];
 
   /* ------------------------------------------------------------ defaults */
 
+  /* Ways to Earn catalog — the points matrix v2.1 (2026-09-22). Each row
+     carries the Reward UI it fires (see reward-router.js KINDS):
+       indicator    Points Indicator — the "+N" float, pill count-up, coin chime
+       streak       Streak Screen   — the "Welcome back · Day N in a row" takeover
+       goalReached  Goal Reached    — DailyGoal.html at the day's ladder marks
+       rewardSplash Reward Splash   — 2.5s in-page overlay
+       major        Major Celebration Splash — full-page, one big reward
+       combined     Combined Celebration — full-page, several rewards
+     status: live | partial | planned — whether the earn site exists yet. */
+  var ALL = ["web", "ios", "android"], WEB = ["web"], MOBILE = ["ios", "android"];
+  function act(id, label, category, basePoints, celebration, platforms, o) {
+    return Object.assign({ id: id, label: label, category: category, basePoints: basePoints, celebration: celebration, platforms: platforms,
+      dailyCap: null, weeklyCap: null, lifetimeCap: null, velocitySeconds: 0, minCharacters: 0, requiresMedia: false, requiresApproval: false,
+      holdDays: 0, active: true, oneTimeLock: false, guardrail: "", linkedReward: null, status: "planned" }, o || {});
+  }
   var DEFAULT_ACTIONS = [
-    { id: "evt_prod_review_submit", label: "Write a Product Review", category: "Reviews", basePoints: 150, dailyCap: 3, weeklyCap: 10, lifetimeCap: null, velocitySeconds: 600, minCharacters: 50, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Max 1 completion per 10 minutes; 50-character floor.", linkedReward: "badge:master_reviewer" },
-    { id: "evt_license_verify", label: "Verify Medical License", category: "Onboarding", basePoints: 200, dailyCap: null, weeklyCap: null, lifetimeCap: 1, velocitySeconds: 0, minCharacters: 0, requiresMedia: true, requiresApproval: true, holdDays: 1, platforms: ["web", "ios", "android"], active: true, oneTimeLock: true, guardrail: "Manual admin review or API validation.", linkedReward: null },
-    { id: "evt_bio_write", label: "Write Bio / About", category: "Profile", basePoints: 60, dailyCap: 1, weeklyCap: 3, lifetimeCap: null, velocitySeconds: 0, minCharacters: 100, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "100 char floor + duplication check.", linkedReward: null },
-    { id: "evt_case_study_share", label: "Share Case Study", category: "Community", basePoints: 150, dailyCap: 2, weeklyCap: 5, lifetimeCap: null, velocitySeconds: 60, minCharacters: 0, requiresMedia: true, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Deduplication of uploaded case files.", linkedReward: "badge:community_pillar" },
-    { id: "evt_comment_post", label: "Comment on Post", category: "Social", basePoints: 10, dailyCap: 20, weeklyCap: null, lifetimeCap: null, velocitySeconds: 120, minCharacters: 15, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Min 15 chars; 2-min cooling cooldown.", linkedReward: null },
-    { id: "evt_react_post", label: "React to Post", category: "Social", basePoints: 10, dailyCap: 30, weeklyCap: null, lifetimeCap: null, velocitySeconds: 3, minCharacters: 0, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Max 30/day; minimum 3s between.", linkedReward: null },
-    { id: "evt_share_post", label: "Share a Post", category: "Social", basePoints: 25, dailyCap: 10, weeklyCap: null, lifetimeCap: null, velocitySeconds: 10, minCharacters: 0, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Max 10 reshares a day; 10-second cooldown.", linkedReward: null },
-    { id: "evt_course_complete", label: "Complete Course", category: "Learning", basePoints: 200, dailyCap: null, weeklyCap: null, lifetimeCap: null, velocitySeconds: 0, minCharacters: 0, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Requires assessment pass.", linkedReward: null },
-    { id: "evt_webinar_attend", label: "Attend Webinar", category: "Learning", basePoints: 100, dailyCap: null, weeklyCap: null, lifetimeCap: null, velocitySeconds: 0, minCharacters: 0, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Attendance duration verified >= 60% of session.", linkedReward: null },
-    { id: "evt_mobile_checkin", label: "Mobile Check-In", category: "Habit", basePoints: 50, dailyCap: 1, weeklyCap: 7, lifetimeCap: null, velocitySeconds: 0, minCharacters: 0, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["ios", "android"], active: true, oneTimeLock: false, guardrail: "Consecutive 5-day streak check.", linkedReward: null },
-    { id: "evt_refer_colleague", label: "Refer a Colleague", category: "Social", basePoints: 200, dailyCap: null, weeklyCap: 3, lifetimeCap: null, velocitySeconds: 0, minCharacters: 0, requiresMedia: false, requiresApproval: false, holdDays: 2, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Unique device/email fraud screen.", linkedReward: null },
-    { id: "evt_profile_complete", label: "Complete Profile 100%", category: "Onboarding", basePoints: 300, dailyCap: null, weeklyCap: null, lifetimeCap: 1, velocitySeconds: 0, minCharacters: 0, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: true, guardrail: "One-time lock upon profile completion.", linkedReward: null, overrides: { Basic: 1.0, Confidence: 1.0, Mastery: 1.0, Freedom: 1.0 } },
-    { id: "evt_purchase_item", label: "Purchase Item", category: "Purchases", basePoints: 300, dailyCap: null, weeklyCap: null, lifetimeCap: null, velocitySeconds: 0, minCharacters: 0, requiresMedia: false, requiresApproval: false, holdDays: 0, platforms: ["web", "ios", "android"], active: true, oneTimeLock: false, guardrail: "Points processed strictly server-side from order total.", linkedReward: null, overrides: { Confidence: 1.2 } }
+    /* Onboarding */
+    act("evt_signup", "Sign Up / Create Account", "Onboarding", 100, "rewardSplash", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Unique device/email; max 1 per lifetime account. Award on completed account creation, not on starting the form." }),
+    act("evt_virtual_tour", "Complete Virtual Tour", "Onboarding", 100, "rewardSplash", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Max 1 per lifetime account." }),
+    act("evt_onboarding_checklist", "Complete Onboarding Checklist", "Onboarding", 120, "rewardSplash", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Lifetime-locked once all steps are done." }),
+    act("evt_verify_email", "Verify Email Address", "Onboarding", 50, "indicator", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Lifetime-locked; awarded on verification-link click, not on send." }),
+    act("evt_notification_prefs", "Set Notification Preferences", "Onboarding", 20, "indicator", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Lifetime-locked; edits award 0." }),
+    /* Profile */
+    act("evt_profile_picture", "Add Profile Picture", "Profile", 50, "indicator", ALL, { oneTimeLock: true, lifetimeCap: 1, requiresMedia: true, guardrail: "Editing the photo later awards 0." }),
+    act("evt_professional_title", "Add Professional Title / Headline", "Profile", 40, "indicator", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Lifetime-locked." }),
+    act("evt_languages", "Add Languages Spoken", "Profile", 40, "indicator", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Lifetime-locked." }),
+    act("evt_social_links", "Add Social Links", "Profile", 50, "indicator", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Lifetime-locked." }),
+    act("evt_services_offered", "List Services Offered", "Profile", 60, "indicator", WEB, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Must populate at least 3 distinct services." }),
+    act("evt_bio_write", "Write Bio / About", "Profile", 60, "indicator", WEB, { dailyCap: 1, weeklyCap: 3, minCharacters: 100, status: "live", guardrail: "100-character floor + duplicate-text check." }),
+    act("evt_clinic_location", "Add Clinic / Location", "Profile", 40, "indicator", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Lifetime-locked." }),
+    act("evt_profile_complete", "Complete Profile 100%", "Profile", 200, "rewardSplash", WEB, { oneTimeLock: true, lifetimeCap: 1, status: "live", guardrail: "All foundational fields + avatar populated. One-time lock upon completion." }),
+    /* Credentials */
+    act("evt_license_verify", "Verify Medical License", "Credentials", 500, "rewardSplash", WEB, { oneTimeLock: true, lifetimeCap: 1, requiresMedia: true, requiresApproval: true, holdDays: 1, status: "live", guardrail: "Manual admin review or API validation required." }),
+    act("evt_certification_add", "Add Certification / Qualification", "Credentials", 80, "indicator", WEB, { lifetimeCap: 5, requiresMedia: true, guardrail: "Document upload + dedup check. Max 5 lifetime." }),
+    act("evt_registry_connect", "Connect Professional Registry ID", "Credentials", 160, "indicator", WEB, { oneTimeLock: true, lifetimeCap: 1, guardrail: "External registry validation." }),
+    /* Feed (Admin Posts) */
+    act("evt_react_admin_post", "React to Admin Post", "Feed (Admin Posts)", 10, "indicator", MOBILE, { dailyCap: 10, velocitySeconds: 3, status: "partial", guardrail: "Min 3s between reactions." }),
+    act("evt_comment_admin_post", "Comment on Admin Post", "Feed (Admin Posts)", 10, "indicator", ALL, { dailyCap: 3, minCharacters: 15, status: "partial", guardrail: "Comment >15 chars; copy-paste blocks score 0." }),
+    act("evt_share_admin_post", "Share Admin Post", "Feed (Admin Posts)", 20, "indicator", ALL, { dailyCap: 2, guardrail: "Same target shared once per day." }),
+    /* Community */
+    act("evt_create_post", "Create a Community Post", "Community", 20, "indicator", ALL, { dailyCap: 3, minCharacters: 15, status: "partial", guardrail: "Min length + dedup check." }),
+    act("evt_clinical_media_post", "Post a Clinical Photo / Video", "Community", 40, "indicator", ALL, { dailyCap: 2, requiresMedia: true, guardrail: "Media hash dedup; re-upload scores 0." }),
+    act("evt_case_study_share", "Share a Clinical Case Study", "Community", 150, "rewardSplash", WEB, { weeklyCap: 1, requiresMedia: true, status: "live", guardrail: "Dedup check; re-uploading a deleted file = 0.", linkedReward: "badge:community_pillar" }),
+    act("evt_react_post", "React to a Community Post", "Community", 10, "indicator", MOBILE, { dailyCap: 30, velocitySeconds: 3, status: "live", guardrail: "Max 30/day; minimum 3s between reactions." }),
+    act("evt_comment_post", "Reply to a Discussion", "Community", 10, "indicator", ALL, { dailyCap: 5, velocitySeconds: 120, minCharacters: 15, status: "partial", guardrail: "2-min cooling-off between scored replies." }),
+    act("evt_share_post", "Share a Post", "Community", 25, "indicator", ALL, { dailyCap: 10, velocitySeconds: 10, status: "live", guardrail: "Max 10 reshares a day; 10-second cooldown." }),
+    act("evt_likes_10", "Receive 10 Likes on a Post", "Community", 50, "rewardSplash", ALL, { guardrail: "Organic check; self-account likes excluded." }),
+    act("evt_likes_50", "Receive 50 Likes on a Post", "Community", 150, "rewardSplash", ALL, { guardrail: "Organic check; self-account likes excluded." }),
+    act("evt_best_answer", "Answer Marked Best Answer", "Community", 60, "indicator", ALL, { dailyCap: 1, guardrail: "Admin/OP-designated only." }),
+    act("evt_join_community", "Join a Community", "Community", 20, "indicator", ALL, { lifetimeCap: 3, guardrail: "Lifetime cap of 3 awards." }),
+    act("evt_receive_comment", "Receive a Comment", "Community", 5, "indicator", ALL, { guardrail: "No cap in spec — recommend a daily cap + self-account exclusion." }),
+    act("evt_receive_share", "Receive a Share", "Community", 10, "indicator", ALL, { guardrail: "No cap in spec — recommend a daily cap + self-account exclusion." }),
+    act("evt_mention_user", "Mention a User", "Community", 5, "indicator", ALL, { dailyCap: 5, guardrail: "Reciprocal-spam and self-mention excluded." }),
+    act("evt_get_mentioned", "Get Mentioned", "Community", 5, "indicator", ALL, { guardrail: "No cap in spec — recommend a daily cap + self-account exclusion." }),
+    /* Learning */
+    act("evt_module_complete", "Complete a Module", "Learning", 10, "indicator", WEB, { dailyCap: 5, guardrail: "Time-on-page >= 60% of average reading speed." }),
+    act("evt_course_complete", "Complete a Full Course", "Learning", 200, "rewardSplash", WEB, { status: "live", guardrail: "All modules + assessment passed." }),
+    act("evt_first_certificate", "Earn First Certificate", "Learning", 400, "rewardSplash", WEB, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Triggered on assessment success." }),
+    act("evt_course_quiz_100", "Achieve 100% on Course Quiz", "Learning", 40, "indicator", WEB, { dailyCap: 2, guardrail: "First attempt only." }),
+    /* Events */
+    act("evt_event_register", "Register for an Event", "Events", 20, "indicator", ALL, { weeklyCap: 5, guardrail: "No-show forfeits attendance points." }),
+    act("evt_webinar_attend", "Attend a Live Webinar / Event", "Events", 100, "indicator", ALL, { status: "live", guardrail: "Verified check-in / attendance duration >= 60% of session." }),
+    act("evt_conference_attend", "Attend Annual Conference", "Events", 500, "major", ALL, { guardrail: "Validated ticket / on-site check-in." }),
+    act("evt_event_speak", "Speak / Host at an Event", "Events", 300, "rewardSplash", WEB, { requiresApproval: true, guardrail: "Manual admin approval." }),
+    act("evt_event_feedback", "Submit Post-Event Feedback", "Events", 20, "indicator", ALL, { guardrail: "One scored response per event." }),
+    /* Cross-Platform */
+    act("evt_first_mobile_login", "First Mobile App Log-In", "Cross-Platform", 200, "rewardSplash", MOBILE, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Device-ID mapping prevents multi-account farming." }),
+    act("evt_daily_login", "Daily App Login (Web or Mobile)", "Cross-Platform", 10, "streak", ALL, { dailyCap: 1, guardrail: "One scored login per calendar day; distinct from First Mobile App Log-In and the check-in streak." }),
+    act("evt_omnichannel_week", "Omnichannel Week", "Cross-Platform", 50, "indicator", ALL, { weeklyCap: 1, guardrail: ">= 1 web + >= 1 mobile session within 7 days." }),
+    act("evt_push_enable", "Enable Push Notifications", "Cross-Platform", 20, "indicator", MOBILE, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Lifetime-locked." }),
+    /* Social Growth & Referral */
+    act("evt_refer_colleague", "Refer a Colleague Who Joins", "Social Growth & Referral", 200, "rewardSplash", ALL, { holdDays: 2, status: "live", guardrail: "Max 10 per month. Unique device/email fraud screen." }),
+    act("evt_referee_verified", "Referred Colleague Verifies License", "Social Growth & Referral", 150, "rewardSplash", WEB, { guardrail: "Awarded only after the referee passes verification." }),
+    act("evt_follow_peer", "Follow / Connect with a Peer", "Social Growth & Referral", 10, "indicator", ALL, { dailyCap: 10, guardrail: "Reciprocal-spam and self-follow excluded." }),
+    /* Streaks */
+    act("evt_mobile_checkin", "Daily Mobile Check-In Streak", "Streaks", 50, "streak", MOBILE, { dailyCap: 1, weeklyCap: 7, status: "partial", guardrail: "Per 5 consecutive days. Resets to 0 if midnight passes with no mobile open." }),
+    act("evt_learning_streak", "Continuous Learning Streak", "Streaks", 100, "streak", WEB, { weeklyCap: 1, guardrail: ">= 1 completed module/day for 3 days within a week." }),
+    act("evt_streak_7", "7-Day Streak Milestone", "Streaks", 100, "streak", ALL, { weeklyCap: 1, guardrail: "Awarded once per unbroken 7-day activity streak." }),
+    act("evt_streak_30", "30-Day Streak Milestone", "Streaks", 500, "streak", ALL, { guardrail: "Awarded once per unbroken 30-day activity streak." }),
+    act("evt_streak_365", "365-Day Streak Milestone", "Streaks", 5000, "major", ALL, { guardrail: "Awarded once per unbroken 365-day activity streak." }),
+    /* Follower Milestones */
+    act("evt_followers_10", "Reach 10 Followers", "Follower Milestones", 100, "rewardSplash", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Organic check; self-follow and bot accounts excluded." }),
+    act("evt_followers_100", "Reach 100 Followers", "Follower Milestones", 500, "rewardSplash", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Organic check; self-follow and bot accounts excluded." }),
+    act("evt_followers_1000", "Reach 1,000 Followers", "Follower Milestones", 2000, "rewardSplash", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Organic check; self-follow and bot accounts excluded." }),
+    act("evt_followers_10000", "Reach 10,000 Followers", "Follower Milestones", 10000, "major", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Organic check; self-follow and bot accounts excluded." }),
+    act("evt_followers_100000", "Reach 100,000 Followers", "Follower Milestones", 50000, "major", ALL, { oneTimeLock: true, lifetimeCap: 1, guardrail: "Organic check; self-follow and bot accounts excluded." }),
+    /* Reviews / Purchases (live in prototype, kept from v2.0) */
+    act("evt_prod_review_submit", "Write a Product Review", "Reviews", 150, "indicator", ALL, { dailyCap: 3, weeklyCap: 10, velocitySeconds: 600, minCharacters: 50, status: "live", guardrail: "Max 1 completion per 10 minutes; 50-character floor.", linkedReward: "badge:master_reviewer" }),
+    act("evt_purchase_item", "Purchase Item", "Purchases", 300, "indicator", ALL, { status: "live", guardrail: "Points processed strictly server-side from order total." })
   ];
+  /* bump when DEFAULT_ACTIONS changes so a cached config re-seeds the rows
+     that come from the matrix (a member's own switched-off state is kept;
+     actions an admin added by hand stay untouched) */
+  var ACTIONS_CATALOG_VERSION = 3;
 
-  var DEFAULT_TIER_MULTIPLIERS = { Basic: 1.0, Confidence: 1.5, Mastery: 2.0, Freedom: 3.0 };
+  var DEFAULT_TIER_MULTIPLIERS = { Basic: 1.0, Confidence: 1.5, Mastery: 2.0, Freedom: 3.0, Sovereign: 4.5 };
 
   var DEFAULT_LEVEL_BADGES = [
-    { key: "bronze", name: "Bronze", threshold: 1000, color: "#b06a3a" },
-    { key: "silver", name: "Silver", threshold: 5000, color: "#8a94a6" },
-    { key: "gold", name: "Gold", threshold: 10000, color: "#e2a300" },
-    { key: "platinum", name: "Platinum", threshold: 20000, color: "#5b6b8c" },
-    { key: "diamond", name: "Diamond", threshold: 50000, color: "#3f8fd1", splashTitle: "Sapphire Collector", splashPerks: ["2.0x permanent multiplier", "VIP Store Access", "Monthly Bonus Box"] }
+    { key: "bronze", name: "Bronze", threshold: 2000, color: "#b06a3a", celebration: "rewardSplash" },
+    { key: "silver", name: "Silver", threshold: 5000, color: "#8a94a6", celebration: "rewardSplash" },
+    { key: "gold", name: "Gold", threshold: 10000, color: "#e2a300", celebration: "rewardSplash" },
+    { key: "platinum", name: "Platinum", threshold: 20000, color: "#5b6b8c", celebration: "rewardSplash" },
+    { key: "diamond", name: "Diamond", threshold: 50000, color: "#3f8fd1", celebration: "major", splashTitle: "Sapphire Collector", splashPerks: ["2.0x permanent multiplier", "VIP Store Access", "Monthly Bonus Box"] }
   ];
+
+  /* Milestone Path: ONE linear journey every member walks along the same
+     Lifetime Points balance as the Level Badges above. Since 2026-09-24 the
+     milestones ARE the six league badges (league-engine.js): Jade → Topaz →
+     Ruby → Emerald → Amethyst → Sapphire, so the league a member holds and
+     "how far to the next league" are read straight off these thresholds
+     (PFLeague matches by `key`). Each milestone's `benefits` unlock
+     automatically and permanently the instant lifetimePoints crosses
+     `threshold` — nothing to choose, nothing to redeem, and points never get
+     spent so nothing here locks back up. */
+  var DEFAULT_MILESTONE_PATH = [
+    { key: "jade", name: "Jade", threshold: 0, benefits: [
+      { title: "Jade League Leaderboard", description: "Your starting league. Compete with fellow newcomers on the Jade board and start banking points from day one.", delivery: "Active from your first check-in" }
+    ] },
+    { key: "topaz", name: "Topaz", threshold: 1500, benefits: [
+      { title: "Aesthetic Clinical Tools Bundle", description: "Premium procedural video sets and clinical intake templates, unlocked in your account.", delivery: "Instant digital unlock" }
+    ] },
+    { key: "ruby", name: "Ruby", threshold: 6000, benefits: [
+      { title: "Course Credit — up to £250", description: "Applied automatically toward any course in the PROfinity catalogue.", delivery: "Voucher code, redeemable at checkout" },
+      { title: "Priority Directory Placement (30 days)", description: "Your profile is boosted to the top of the Clinician Directory for 30 days.", delivery: "Applied automatically to your profile" }
+    ] },
+    { key: "emerald", name: "Emerald", threshold: 15000, benefits: [
+      { title: "Permanent 10% Discount", description: "10% off every course and product in the PROfinity catalogue, for good.", delivery: "Applied automatically at checkout" },
+      { title: "1-on-1 Personal Mentorship Session", description: "A 45-minute clinical or business consulting session with leadership.", delivery: "Calendar booking link" }
+    ] },
+    { key: "amethyst", name: "Amethyst", threshold: 30000, benefits: [
+      { title: "Course Credit — up to £1,000", description: "Applied automatically toward any course, bundle, or certification in the PROfinity catalogue.", delivery: "Voucher code, redeemable at checkout" }
+    ] },
+    { key: "sapphire", name: "Sapphire", threshold: 60000, benefits: [
+      { title: "Dinner with Dr Tim Pearce", description: "An exclusive dining and mentorship experience with the platform founder. Subject to quarterly availability.", delivery: "Concierge booking" },
+      { title: "Exclusive Event Seat", description: "Priority VIP seating at a live aesthetic workshop or the annual conference.", delivery: "E-ticket via email" }
+    ] }
+  ];
+  /* bump when DEFAULT_MILESTONE_PATH changes shape so a member's cached
+     config is re-seeded (admin edits made after that still stick) */
+  var MILESTONE_PATH_VERSION = 2;
 
   var DEFAULT_ACHIEVEMENT_BADGES = [
     { key: "first_blood", name: "First Blood", icon: "lucide:zap", description: "Complete your very first point-earning action.", criteria: { type: "actionCount", actionId: null, count: 1 }, reward: "50 bonus credits" },
-    { key: "high_roller", name: "High Roller", icon: "lucide:gem", description: "Redeem 3 items from the Rewards Store.", criteria: { type: "redeemCount", count: 3 }, reward: "VIP Store Access" },
+    { key: "high_roller", name: "High Roller", icon: "lucide:gem", description: "Complete 3 courses end to end.", criteria: { type: "actionCount", actionId: "evt_course_complete", count: 3 }, reward: "2x multiplier for 7 days" },
     { key: "streak_master", name: "Streak Master", icon: "lucide:flame", description: "Reach a 30-day check-in streak.", criteria: { type: "streak", count: 30 }, reward: "1.5x multiplier for 7 days" },
     { key: "community_pillar", name: "Community Pillar", icon: "lucide:users", description: "Share 10 case studies with the community.", criteria: { type: "actionCount", actionId: "evt_case_study_share", count: 10 }, reward: "Featured Clinician spotlight" },
     { key: "master_reviewer", name: "Master Reviewer", icon: "lucide:star", description: "Write 10 product reviews.", criteria: { type: "actionCount", actionId: "evt_prod_review_submit", count: 10 }, reward: "5,000 bonus credits + 2x multiplier" }
@@ -87,7 +202,7 @@
   var DEFAULT_LEADERBOARD_PRIZES = [
     { rank: "1", prize: "1:1 Mentorship with Dr Tim Pearce" },
     { rank: "2–3", prize: "Exclusive Special Event Seat" },
-    { rank: "4–15", prize: "500 bonus Spendable Credits" }
+    { rank: "4–15", prize: "500 bonus points" }
   ];
 
   var DEFAULT_CONFIG = {
@@ -99,9 +214,12 @@
     tierMultipliers: DEFAULT_TIER_MULTIPLIERS,
     actions: DEFAULT_ACTIONS,
     levelBadges: DEFAULT_LEVEL_BADGES,
+    milestonePath: DEFAULT_MILESTONE_PATH,
+    milestonePathVersion: MILESTONE_PATH_VERSION,
     achievementBadges: DEFAULT_ACHIEVEMENT_BADGES,
     storeItems: DEFAULT_STORE_ITEMS,
     storeCatalogVersion: STORE_CATALOG_VERSION,
+    actionsCatalogVersion: ACTIONS_CATALOG_VERSION,
     leaderboardPrizes: DEFAULT_LEADERBOARD_PRIZES
   };
 
@@ -140,6 +258,32 @@
       cfg = Object.assign({}, cfg, { storeItems: JSON.parse(JSON.stringify(DEFAULT_STORE_ITEMS)), storeCatalogVersion: STORE_CATALOG_VERSION });
       writeJSON(CONFIG_KEY, cfg);
     }
+    // the Milestone Path became the six league badges: re-seed it once
+    if (cfg.milestonePathVersion !== MILESTONE_PATH_VERSION) {
+      cfg = Object.assign({}, cfg, { milestonePath: JSON.parse(JSON.stringify(DEFAULT_MILESTONE_PATH)), milestonePathVersion: MILESTONE_PATH_VERSION });
+      writeJSON(CONFIG_KEY, cfg);
+    }
+    // the points matrix moved on: re-seed every default row (keeping the
+    // member's switched-off state), leave hand-added actions alone
+    if (cfg.actionsCatalogVersion !== ACTIONS_CATALOG_VERSION) {
+      var byId = {};
+      (cfg.actions || []).forEach(function (a) { if (a && a.id) byId[a.id] = a; });
+      var reseeded = DEFAULT_ACTIONS.map(function (d) {
+        var prev = byId[d.id]; var row = JSON.parse(JSON.stringify(d));
+        if (prev && prev.active === false) row.active = false;
+        return row;
+      });
+      var defaultIds = DEFAULT_ACTIONS.map(function (d) { return d.id; });
+      var custom = (cfg.actions || []).filter(function (a) { return a && a.id && defaultIds.indexOf(a.id) < 0; })
+        .map(function (a) { return a.celebration ? a : Object.assign({}, a, { celebration: "indicator" }); });
+      cfg = Object.assign({}, cfg, { actions: reseeded.concat(custom), actionsCatalogVersion: ACTIONS_CATALOG_VERSION,
+        tierMultipliers: Object.assign({}, DEFAULT_TIER_MULTIPLIERS, cfg.tierMultipliers || {}),
+        levelBadges: (cfg.levelBadges || DEFAULT_LEVEL_BADGES).map(function (b) {
+          var d = DEFAULT_LEVEL_BADGES.filter(function (x) { return x.key === b.key; })[0];
+          return d ? Object.assign({}, b, { threshold: d.threshold, celebration: d.celebration }) : b;
+        }) });
+      writeJSON(CONFIG_KEY, cfg);
+    }
     // actions added after a user's config was first seeded (e.g. Share a
     // Post) get appended so Ways to Earn and the ledger know about them
     if (Array.isArray(cfg.actions)) {
@@ -175,6 +319,14 @@
   function setAchievementBadges(list) { return setConfig({ achievementBadges: list }); }
   function setLevelBadges(list) { return setConfig({ levelBadges: list }); }
   function setLeaderboardPrizes(list) { return setConfig({ leaderboardPrizes: list }); }
+  function setMilestonePath(list) { return setConfig({ milestonePath: list }); }
+  function upsertMilestone(milestone) {
+    var cfg = getConfig();
+    var list = (cfg.milestonePath || []).slice();
+    var idx = list.findIndex(function (m) { return m.key === milestone.key; });
+    if (idx >= 0) list[idx] = Object.assign({}, list[idx], milestone); else list.push(milestone);
+    return setMilestonePath(list);
+  }
 
   /* -------------------------------------------------------------- state */
 
@@ -215,6 +367,8 @@
       rollingPoints30: 2100,
       streak: { current: 5, longest: 45, lastCheckIn: new Date(Date.now() - 20 * 3600000).toISOString(), frozen: false, riskDeadline: null },
       unlockedAchievements: ["first_blood"],
+      // Katy sits at 14,000 pts: Jade (0), Topaz (1,500) and Ruby (6,000) already passed — 1,000 pts short of Emerald
+      milestonesReachedAt: { jade: new Date(Date.now() - 120 * 86400000).toISOString(), topaz: new Date(Date.now() - 62 * 86400000).toISOString(), ruby: new Date(Date.now() - 11 * 86400000).toISOString() },
       redeemedVouchers: [],
       ledger: ledger,
       actionCounts: {}
@@ -231,6 +385,17 @@
     writeJSON(STATE_KEY, st);
     return st;
   }
+  /* a brand-new member: zero points, no streak, empty ledger — Jade League.
+     Used by the dashboards' "new member view" demo (?new=1). */
+  function newMemberState() {
+    return {
+      user: KATY, lifetimePoints: 0, spendableCredits: 0, expiringCredits: 0, rollingPoints30: 0,
+      streak: { current: 0, longest: 0, lastCheckIn: null, frozen: false, riskDeadline: null },
+      unlockedAchievements: [], milestonesReachedAt: {}, redeemedVouchers: [], ledger: [], actionCounts: {}
+    };
+  }
+  function resetNewMember() { writeJSON(STATE_KEY, newMemberState()); return getState(); }
+
   function resetDemo() {
     writeJSON(STATE_KEY, seedState());
     writeJSON(CONFIG_KEY, JSON.parse(JSON.stringify(DEFAULT_CONFIG)));
@@ -270,6 +435,43 @@
     var span = Math.max(1, ceiling - floor);
     var pct = next ? Math.max(0, Math.min(100, Math.round(((state.lifetimePoints - floor) / span) * 100))) : 100;
     return { current: current, next: next, pct: pct, remaining: next ? Math.max(0, next.threshold - state.lifetimePoints) : 0 };
+  }
+
+  /* Milestone Path progress — same Lifetime Points balance, separate ladder
+     and naming from Level Badges. `passed` is every milestone at or below the
+     member's current points (i.e. every benefit bundle they already hold). */
+  function getMilestoneProgress(state) {
+    state = state || getState();
+    var path = (getConfig().milestonePath || []).slice().sort(function (a, b) { return a.threshold - b.threshold; });
+    var pts = state.lifetimePoints || 0;
+    var current = null, next = null;
+    for (var i = 0; i < path.length; i++) {
+      if (pts >= path[i].threshold) current = path[i]; else { next = path[i]; break; }
+    }
+    var floor = current ? current.threshold : 0;
+    var ceiling = next ? next.threshold : (current ? current.threshold : (path[0] ? path[0].threshold : 1));
+    var span = Math.max(1, ceiling - floor);
+    var pct = next ? Math.max(0, Math.min(100, Math.round(((pts - floor) / span) * 100))) : 100;
+    var passed = path.filter(function (m) { return pts >= m.threshold; });
+    return { current: current, next: next, pct: pct, remaining: next ? Math.max(0, next.threshold - pts) : 0, passed: passed, path: path };
+  }
+
+  /* Records any Milestone Path entries newly crossed between `beforePoints`
+     and `afterState.lifetimePoints` (timestamped for a future Milestone
+     Unlocked moment) and returns them in threshold order. */
+  function detectAndRecordMilestones(beforePoints, afterState) {
+    var path = getConfig().milestonePath || [];
+    var reached = Object.assign({}, afterState.milestonesReachedAt || {});
+    var newly = [];
+    path.forEach(function (m) {
+      if (afterState.lifetimePoints >= m.threshold && beforePoints < m.threshold) { reached[m.key] = nowIso(); newly.push(m); }
+    });
+    if (newly.length) {
+      setState({ milestonesReachedAt: reached });
+      try { window.dispatchEvent(new CustomEvent("pf:milestone-reached", { detail: { milestones: newly } })); } catch (e) { /* older WebView */ }
+    }
+    newly.sort(function (a, b) { return a.threshold - b.threshold; });
+    return newly;
   }
 
   /* --------------------------------------------------------- mutations */
@@ -329,12 +531,13 @@
     var newBadge = getBadgeProgress(patchedState).current;
     var leveledUp = newBadge && (!prevBadge || newBadge.key !== prevBadge.key);
     var newlyUnlocked = evaluateAchievements(patchedState);
+    var newlyReachedMilestones = detectAndRecordMilestones(state.lifetimePoints, patchedState);
 
     return {
       ok: true, capped: capped, capReason: capped ? capReason : null,
       pointsAwarded: pointsAwarded, creditsAwarded: creditsAwarded, txn: txn,
       leveledUp: !!leveledUp, newLevel: leveledUp ? newBadge : null,
-      newlyUnlockedAchievements: newlyUnlocked
+      newlyUnlockedAchievements: newlyUnlocked, newlyReachedMilestones: newlyReachedMilestones
     };
   }
 
@@ -415,11 +618,13 @@
       adminId: adminId, adjustmentReason: reason
     };
 
-    return { ok: true, txn: txn, newState: setState({
+    var newState = setState({
       lifetimePoints: Math.max(0, state.lifetimePoints + pointsDelta),
       spendableCredits: Math.max(0, state.spendableCredits + creditsDelta),
       ledger: state.ledger.concat([txn])
-    }) };
+    });
+    var newlyReachedMilestones = detectAndRecordMilestones(state.lifetimePoints, newState);
+    return { ok: true, txn: txn, newState: getState(), newlyReachedMilestones: newlyReachedMilestones };
   }
 
   function checkIn() {
@@ -487,12 +692,14 @@
       id: uid("txn"), ts: nowIso(), actionId: actionId || "evt_react_post", label: label || "Newsfeed engagement",
       pointsDelta: amount, creditsDelta: credits, guardrailFlags: null, adminId: null, adjustmentReason: null
     };
-    return setState({
+    var newState = setState({
       lifetimePoints: state.lifetimePoints + amount,
       spendableCredits: state.spendableCredits + credits,
       rollingPoints30: (state.rollingPoints30 || 0) + amount,
       ledger: state.ledger.concat([txn])
     });
+    detectAndRecordMilestones(state.lifetimePoints, newState);
+    return getState();
   }
 
   function getCourseDiscount(slug) { var d = readJSON(COURSE_DISCOUNTS_KEY, {}); return d[slug] || null; }
@@ -505,9 +712,10 @@
     setStoreItems: setStoreItems, upsertStoreItem: upsertStoreItem,
     setAchievementBadges: setAchievementBadges, setLevelBadges: setLevelBadges,
     setLeaderboardPrizes: setLeaderboardPrizes,
-    getState: getState, setState: setState, resetDemo: resetDemo,
+    setMilestonePath: setMilestonePath, upsertMilestone: upsertMilestone,
+    getState: getState, setState: setState, resetDemo: resetDemo, resetNewMember: resetNewMember,
     getActionById: getActionById, tierMultiplierFor: tierMultiplierFor,
-    getBadgeProgress: getBadgeProgress,
+    getBadgeProgress: getBadgeProgress, getMilestoneProgress: getMilestoneProgress,
     completeAction: completeAction, redeemItem: redeemItem, manualAdjust: manualAdjust,
     checkIn: checkIn, setStreakAtRisk: setStreakAtRisk, freezeStreak: freezeStreak,
     spendCreditsToFreezeStreak: spendCreditsToFreezeStreak, restoreBrokenStreak: restoreBrokenStreak,

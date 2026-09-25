@@ -75,6 +75,10 @@ function describeCC(m) {
     const lg = m.league || {};
     return { tag: "League", title: m.title || ("Promoted to the " + (lg.name || "next") + " League"), sub: "A new leaderboard, new rivals, new prizes", icon: "lucide:trophy", tone: "league", color: m.color || lg.accent };
   }
+  if (m.type === "action") {
+    /* a way to earn whose admin-set Reward UI is Major / Combined */
+    return { tag: "Reward", title: m.points ? "+" + Number(m.points).toLocaleString("en-GB") + " pts" : (m.title || "Reward earned"), sub: m.points ? (m.title || "") : (m.sub || ""), icon: m.icon || "lucide:coins", tone: "gold" };
+  }
   return { tag: "Reward", title: m.title || "Reward unlocked", sub: m.sub || "", icon: "lucide:sparkles", tone: "gold" };
 }
 
@@ -158,10 +162,16 @@ function CombinedCelebrationScreen() {
   }, []);
 
   const words = { 2: "Double", 3: "Triple", 4: "Quadruple" };
-  const headline = (words[n] || n + "-way") + " celebration" + (first ? ", " + first : "") + "!";
+  /* Major Celebration Splash: one big reward gets the full page to itself */
+  const isMajor = payload.kind === "major" || n === 1;
+  const headline = isMajor ? "Huge win" + (first ? ", " + first : "") + "!" : (words[n] || n + "-way") + " celebration" + (first ? ", " + first : "") + "!";
+  const kicker = isMajor ? "Major celebration" : n + " rewards · one move";
+  const sub = isMajor
+    ? <>That was a <b>big one</b>. Here's what you just unlocked.</>
+    : <>That one action set off <b>{n} celebrations</b> at once. Here's everything you just unlocked.</>;
 
   return (
-    <div className="cc-screen" data-screen-label="Combined Celebration">
+    <div className={"cc-screen" + (isMajor ? " is-major" : "")} data-screen-label={isMajor ? "Major Celebration" : "Combined Celebration"}>
       <div className="cc-glow" aria-hidden="true" />
       <CcConfetti />
       <button className="cc-close" type="button" aria-label="Close" onClick={() => goCC(ret)}>
@@ -170,9 +180,9 @@ function CombinedCelebrationScreen() {
 
       <div className="cc-body">
         <div className="cc-hero"><CcLottie /></div>
-        <div className="cc-kicker"><DSCC.IconifyIcon name="lucide:party-popper" size={13} color="currentColor" />{n} rewards · one move</div>
+        <div className="cc-kicker"><DSCC.IconifyIcon name="lucide:party-popper" size={13} color="currentColor" />{kicker}</div>
         <h1 className="cc-title">{headline}</h1>
-        <p className="cc-sub">That one action set off <b>{n} celebrations</b> at once. Here's everything you just unlocked.</p>
+        <p className="cc-sub">{sub}</p>
 
         <ol className="cc-stack" aria-label="Rewards unlocked">
           {items.map((m, i) => {

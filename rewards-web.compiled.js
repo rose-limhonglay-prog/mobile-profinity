@@ -2,11 +2,12 @@
    PROfinity — Rewards Dashboard (web)
    Desktop counterpart to RewardsDashboard.html (rewards-dashboard.jsx): the
    Loyalty & Gamification hub — greeting, league badge progress card (PFLeague
-   gems, milestone-based), streak-at-risk banner, Lifetime Points / Spendable
-   Credits / Active Streak stat tiles (streak → CheckInStreak), "Your league"
-   card, "Jump back in" quick nav (Store / My Rewards / Leaderboard / Ways to
-   Earn), Next Available Reward (course discount) and Recent Activity — on the
-   web page shell (TopNav + centered two-column layout)
+   gems, points-based via the Milestone Path), streak-at-risk banner, Lifetime
+   Points / Active Streak stat tiles (streak → CheckInStreak), "Your league"
+   card (leaderboard snapshot: own league + rank) with a Milestone Path button
+   beneath, "Jump back in" quick nav (My Rewards), Recent Activity and a "Your points" side card — on the
+   web page shell (TopNav + centered two-column layout). Points-only since
+   2026-09-24: no Spendable Credits, no Rewards Store.
    instead of the phone frame. Reads/writes the same localStorage-backed
    window.PFLoyalty engine, so the numbers match the mobile screens. Reached from
    the account menu (account-menu.js). Suffixed -RW to avoid global-scope clashes.
@@ -147,7 +148,7 @@ function StreakRiskBannerRW({
 /* ------------------------------------------------------------ league */
 /* The member's league gem (window.PFLeague, league-engine.js) rendered via
    lottie-web from the engine's hosted JSON — same as the mobile dashboard and
-   the leaderboard. Milestone-based, not points-based. */
+   the leaderboard. Points-based: thresholds come from the Milestone Path. */
 const RW_LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
 function rwEnsureLottieLib() {
   if (window.lottie || document.querySelector("script[data-pf-lottie]")) return;
@@ -213,11 +214,11 @@ function rwLeagueProgress() {
     return null;
   }
 }
-function rwPlural(n, word) {
-  return n + " " + word + (n === 1 ? "" : "s");
+function rwPts(n) {
+  return PF_RW.formatNumber(n) + " pts";
 }
 
-/* League badge progress: current gem left, next gem (locked) right, milestone
+/* League badge progress: current gem left, next gem (locked) right, points
    progress between them; the whole card opens the leaderboard. */
 function LeagueProgressCardRW({
   league
@@ -238,7 +239,7 @@ function LeagueProgressCardRW({
     className: "rw-card rw-league-progress",
     onClick: () => goRW("Leaderboard.html"),
     style: vars,
-    "aria-label": cur ? cur.name + " League, " + (next ? rwPlural(p.need, "more milestone") + " to " + next.name : "highest badge") + ". Open the leaderboard" : "Open the leaderboard"
+    "aria-label": cur ? cur.name + " League, " + (next ? rwPts(p.need) + " more to " + next.name : "highest badge") + ". Open the leaderboard" : "Open the leaderboard"
   }, /*#__PURE__*/React.createElement("span", {
     className: "rw-gem cur"
   }, cur && /*#__PURE__*/React.createElement(LeagueLottieRW, {
@@ -268,13 +269,13 @@ function LeagueProgressCardRW({
     }
   })), /*#__PURE__*/React.createElement("span", {
     className: "rw-progress-scale"
-  }, /*#__PURE__*/React.createElement("span", null, p ? p.done + " of " + (next ? next.requires : p.total) + " milestones" : ""), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, p ? PF_RW.formatNumber(p.points) + (next ? " of " + PF_RW.formatNumber(next.requires) : "") + " lifetime pts" : ""), /*#__PURE__*/React.createElement("span", {
     style: {
       color: "var(--nx-deep)"
     }
-  }, next ? "Unlocks at " + next.requires : "Complete")), /*#__PURE__*/React.createElement("span", {
+  }, next ? "Unlocks at " + rwPts(next.requires) : "Complete")), /*#__PURE__*/React.createElement("span", {
     className: "rw-progress-note"
-  }, next ? rwPlural(p.need, "more milestone") + " to " + next.name + " League" : "You've earned the highest badge!"), /*#__PURE__*/React.createElement("span", {
+  }, next ? rwPts(p.need) + " more to " + next.name + " League" : "You've earned the highest badge!"), /*#__PURE__*/React.createElement("span", {
     className: "rw-progress-link"
   }, "Open the leaderboard", /*#__PURE__*/React.createElement(IconifyRW, {
     name: "lucide:chevron-right",
@@ -294,14 +295,38 @@ function LeagueProgressCardRW({
   }))));
 }
 
-/* "Your league" card (aside) → leaderboard. */
+/* Leaderboard snapshot (aside): only the member's own league — her gem, her
+   rank on that board (same 30-day rolling points the Leaderboard page ranks
+   on) and who's just ahead. Opens the full leaderboard. */
+function rwStandings(state) {
+  const LG = window.PFLeague;
+  if (!LG || !LG.getStandings) return null;
+  try {
+    const me = {
+      name: (state.user && state.user.name ? state.user.name : ME_RW.name) + " (You)",
+      avatar: ME_RW.avatar,
+      points: state.rollingPoints30 || 0
+    };
+    return LG.getStandings(me);
+  } catch (e) {
+    return null;
+  }
+}
+function rwOrdinal(n) {
+  const s = ["th", "st", "nd", "rd"],
+    v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
 function LeagueCardRW({
-  league
+  state
 }) {
-  const p = league;
-  if (!p) return null;
-  const cur = p.current,
-    next = p.next;
+  const st = rwStandings(state);
+  if (!st || !st.me) return null;
+  const cur = st.league,
+    me = st.me,
+    above = st.above;
+  const total = st.rows.length;
+  const gap = above ? above.points - me.points : 0;
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "rw-card rw-league",
@@ -311,7 +336,7 @@ function LeagueCardRW({
       "--lg-soft": cur.soft
     },
     onClick: () => goRW("Leaderboard.html"),
-    "aria-label": cur.name + " League. Open the leaderboard"
+    "aria-label": "Leaderboard. You're " + rwOrdinal(me.rank) + " of " + total + " in the " + cur.name + " League with " + rwPts(me.points) + ". Open the leaderboard"
   }, /*#__PURE__*/React.createElement("span", {
     className: "rw-league-gem"
   }, /*#__PURE__*/React.createElement(LeagueLottieRW, {
@@ -321,16 +346,67 @@ function LeagueCardRW({
     className: "rw-league-tx"
   }, /*#__PURE__*/React.createElement("span", {
     className: "rw-league-eyebrow"
-  }, "Your league"), /*#__PURE__*/React.createElement("b", null, cur.name, " League"), /*#__PURE__*/React.createElement("i", null, next ? rwPlural(p.need, "more milestone") + " to " + next.name : "Highest badge earned")), /*#__PURE__*/React.createElement("span", {
+  }, "Leaderboard · ", cur.name, " League"), /*#__PURE__*/React.createElement("b", null, /*#__PURE__*/React.createElement("span", {
+    className: "rw-league-rank"
+  }, "#", me.rank), " of ", total), /*#__PURE__*/React.createElement("i", null, rwPts(me.points), above ? " · " + PF_RW.formatNumber(gap) + " behind " + above.name.split(" ")[0] : " · You lead the league!")), /*#__PURE__*/React.createElement("span", {
     className: "rw-league-cta"
-  }, "Leaderboard", /*#__PURE__*/React.createElement(IconifyRW, {
+  }, /*#__PURE__*/React.createElement(IconifyRW, {
     name: "lucide:chevron-right",
-    size: 16,
+    size: 18,
     color: "var(--lg-deep)"
   })));
 }
 
+/* Two simple buttons (mirror of RdbFeatureTiles on mobile): navy icon,
+   label, one-line note, chevron. */
+function FeatureTilesRW({
+  state
+}) {
+  let milestone = null;
+  try {
+    milestone = PF_RW.getMilestoneProgress ? PF_RW.getMilestoneProgress(state) : null;
+  } catch (e) {}
+  const mpNote = milestone ? milestone.next ? PF_RW.formatNumber(milestone.remaining) + " pts to go" : "Every badge earned" : "Badges & benefits";
+  const vouchers = (state.redeemedVouchers || []).length;
+  const mrNote = vouchers ? vouchers + " unlocked" : "Course discounts";
+  const items = [{
+    label: "Milestone Path",
+    note: mpNote,
+    icon: "lucide:milestone",
+    href: "MilestonePath.html?ret=RewardsWeb.html"
+  }, {
+    label: "My Rewards",
+    note: mrNote,
+    icon: "lucide:ticket",
+    href: "MyRewards.html"
+  }];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "rw-feats"
+  }, items.map(it => /*#__PURE__*/React.createElement("button", {
+    key: it.label,
+    type: "button",
+    className: "rw-card rw-feat",
+    onClick: () => goRW(it.href),
+    "aria-label": it.label + ". " + it.note
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "rw-feat-ic",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyRW, {
+    name: it.icon,
+    size: 22,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "rw-feat-tx"
+  }, /*#__PURE__*/React.createElement("b", null, it.label), /*#__PURE__*/React.createElement("i", null, it.note)), /*#__PURE__*/React.createElement(IconifyRW, {
+    name: "lucide:chevron-right",
+    size: 18,
+    color: "var(--gray-400)"
+  }))));
+}
+
 /* ------------------------------------------------------------ stat tiles */
+/* Lifetime Points tile: the header points pill's smiling-face Lottie (was a coin-stack iframe) */
+const RW_MASCOT_SRC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
 function EngagementCardsRW({
   state
 }) {
@@ -339,14 +415,8 @@ function EngagementCardsRW({
     value: PF_RW.formatNumber(state.lifetimePoints),
     label: "Lifetime Points",
     sub: "+" + PF_RW.formatNumber(week) + " this week",
-    lottie: "https://lottie.host/embed/c7c98875-fe8d-4de8-95c1-3e12acf7ad0a/fpeaeGfS64.json",
-    size: 40
-  }, {
-    value: PF_RW.formatNumber(state.spendableCredits),
-    label: "Spendable Credits",
-    sub: state.expiringCredits ? PF_RW.formatNumber(state.expiringCredits) + " expiring soon" : "Ready to redeem",
-    lottie: "https://lottie.host/embed/1470432e-8f5e-4eb4-a73c-75e6b6972d46/qk3KaEmMpz.json",
-    size: 60
+    json: RW_MASCOT_SRC,
+    size: 48
   }, {
     value: state.streak.current + " Days",
     label: "Active Streak",
@@ -360,9 +430,12 @@ function EngagementCardsRW({
     className: "rw-eng-grid"
   }, tiles.map(t => {
     const inner = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
-      className: "rw-eng-lottie",
+      className: "rw-eng-lottie" + (t.json ? " rw-eng-lottie--face" : ""),
       "aria-hidden": "true"
-    }, /*#__PURE__*/React.createElement("iframe", {
+    }, t.json ? /*#__PURE__*/React.createElement(LeagueLottieRW, {
+      src: t.json,
+      size: t.size
+    }) : /*#__PURE__*/React.createElement("iframe", {
       src: t.lottie,
       title: "",
       scrolling: "no",
@@ -402,29 +475,13 @@ function QuickNavRW({
   league
 }) {
   const redeemed = (state.redeemedVouchers || []).length;
+  // Leaderboard + Milestone Path live in the aside snapshot card
   const items = [{
-    label: "Rewards Store",
-    desc: "Spend credits on course discounts",
-    icon: "lucide:shopping-bag",
-    href: "RewardsStore.html",
-    dot: true
-  }, {
     label: "My Rewards",
-    desc: redeemed > 0 ? "Your redeemed discount codes" : "Nothing redeemed yet",
+    desc: redeemed > 0 ? "Your unlocked discount codes" : "Nothing unlocked yet",
     icon: "lucide:ticket",
     href: "MyRewards.html",
     note: redeemed > 0 ? String(redeemed) : null
-  }, {
-    label: "Leaderboard",
-    desc: "See where you rank",
-    icon: "lucide:bar-chart-3",
-    href: "Leaderboard.html",
-    note: league ? league.current.name : null
-  }, {
-    label: "Ways to Earn",
-    desc: "Boost your points",
-    icon: "lucide:sparkles",
-    href: "WaysToEarn.html"
   }];
   return /*#__PURE__*/React.createElement("div", {
     className: "rw-quicknav"
@@ -459,6 +516,183 @@ function QuickNavRW({
   }))));
 }
 
+/* --------------------------------------------------------------- welcome */
+/* ?new=1 → show the page as a brand-new member, then drop the flag */
+function rwApplyNewMemberFlag() {
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get("new") !== "1") return;
+    PF_RW.resetNewMember();
+    try {
+      localStorage.removeItem(RW_WELCOME_SEEN);
+    } catch (e) {}
+    q.delete("new");
+    history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q.toString() : "") + location.hash);
+  } catch (e) {}
+}
+function rwIsNewMember(state) {
+  return !state.lifetimePoints && !(state.ledger || []).length;
+}
+/* first-visit welcome modal: shown once over the page while the member has
+   no points; dismissing remembers it (pf-rewards-welcome-seen). */
+const RW_WELCOME_SEEN = "pf-rewards-welcome-seen";
+function rwWelcomeSeen() {
+  try {
+    return localStorage.getItem(RW_WELCOME_SEEN) === "1";
+  } catch (e) {
+    return true;
+  }
+}
+function rwMarkWelcomeSeen() {
+  try {
+    localStorage.setItem(RW_WELCOME_SEEN, "1");
+  } catch (e) {}
+}
+const RW_STARTERS = [{
+  id: "evt_mobile_checkin",
+  label: "Check in every day",
+  icon: "lucide:calendar-check"
+}, {
+  id: "evt_profile_complete",
+  label: "Complete your profile",
+  icon: "lucide:user-check"
+}, {
+  id: "evt_create_post",
+  label: "Post in the community",
+  icon: "lucide:pen-line"
+}, {
+  id: "evt_module_complete",
+  label: "Finish a lesson module",
+  icon: "lucide:book-open"
+}, {
+  id: "evt_follow_peer",
+  label: "Connect with a peer",
+  icon: "lucide:user-plus"
+}];
+function rwStarterRows(state) {
+  let actions = [];
+  try {
+    actions = PF_RW.getConfig().actions || [];
+  } catch (e) {}
+  const tier = state.user && state.user.membershipTier;
+  return RW_STARTERS.map(st => {
+    const a = actions.find(x => x.id === st.id);
+    let pts = a ? a.basePoints : 0;
+    try {
+      if (a && tier) pts = Math.round(a.basePoints * PF_RW.tierMultiplierFor(a, tier));
+    } catch (e) {}
+    return Object.assign({}, st, {
+      pts
+    });
+  }).filter(r => r.pts > 0);
+}
+function rwWelcomeStep() {
+  try {
+    return new URLSearchParams(location.search).get("welcome") === "earn" ? 2 : 1;
+  } catch (e) {
+    return 1;
+  }
+}
+function WelcomeModalRW({
+  state,
+  league,
+  onClose,
+  initialStep
+}) {
+  const [step, setStep] = useStateRW(initialStep || 1);
+  const next = league ? league.next : null;
+  const first = (state.user && state.user.name ? state.user.name : ME_RW.name).split(" ")[0];
+  const tier = state.user && state.user.membershipTier;
+  useEffectRW(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [onClose]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "rw-welcome-scrim",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rw-welcome" + (step === 2 ? " rw-welcome-earn" : ""),
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-labelledby": "rw-welcome-title",
+    onClick: e => e.stopPropagation()
+  }, step === 1 ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "rw-welcome-doc",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(LeagueLottieRW, {
+    src: "assets/lottie/checkin-welcome.json",
+    size: 210
+  })), /*#__PURE__*/React.createElement("b", {
+    id: "rw-welcome-title"
+  }, "Welcome to Rewards, ", first, "!"), /*#__PURE__*/React.createElement("p", null, "Every check-in, post and lesson earns points. ", next ? /*#__PURE__*/React.createElement(React.Fragment, null, "Reach ", /*#__PURE__*/React.createElement("strong", null, rwPts(next.requires)), " to move up to ", /*#__PURE__*/React.createElement("strong", null, next.name, " League"), " and unlock your first benefit bundle.") : null), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rw-welcome-btn",
+    onClick: () => setStep(2)
+  }, "See ways to earn", /*#__PURE__*/React.createElement(IconifyRW, {
+    name: "lucide:arrow-right",
+    size: 15,
+    color: "#3D2A00"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rw-welcome-skip",
+    onClick: onClose
+  }, "Explore my Rewards")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rw-welcome-back",
+    "aria-label": "Back",
+    onClick: () => setStep(1)
+  }, /*#__PURE__*/React.createElement(IconifyRW, {
+    name: "lucide:chevron-left",
+    size: 22,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "rw-welcome-steps",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", {
+    className: "on"
+  })), /*#__PURE__*/React.createElement("b", {
+    id: "rw-welcome-title"
+  }, "Ways to earn points"), /*#__PURE__*/React.createElement("p", null, "Your quickest wins", tier ? " as a " + tier + " member" : "", " — points land the moment you do them."), /*#__PURE__*/React.createElement("ul", {
+    className: "rw-welcome-list"
+  }, rwStarterRows(state).map(r => /*#__PURE__*/React.createElement("li", {
+    key: r.id
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyRW, {
+    name: r.icon,
+    size: 18,
+    color: "#FCC25D"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lb"
+  }, r.label), /*#__PURE__*/React.createElement("span", {
+    className: "pt"
+  }, "+", PF_RW.formatNumber(r.pts), " pts")))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rw-welcome-btn",
+    onClick: onClose
+  }, "Let's start", /*#__PURE__*/React.createElement(IconifyRW, {
+    name: "lucide:arrow-right",
+    size: 15,
+    color: "#3D2A00"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rw-welcome-skip",
+    onClick: () => {
+      onClose();
+      goRW("WaysToEarn.html");
+    }
+  }, "See all ways to earn"))));
+}
+
 /* -------------------------------------------------------------- activity */
 function RecentActivityRW({
   state
@@ -473,7 +707,7 @@ function RecentActivityRW({
     className: "rw-activity-ic",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(IconifyRW, {
-    name: t.pointsDelta > 0 ? "lucide:plus" : t.creditsDelta < 0 ? "lucide:shopping-bag" : "lucide:minus",
+    name: t.pointsDelta > 0 ? "lucide:plus" : "lucide:minus",
     size: 14,
     color: t.pointsDelta > 0 ? "#9C6A0E" : "var(--gray-500)"
   })), /*#__PURE__*/React.createElement("span", {
@@ -484,79 +718,33 @@ function RecentActivityRW({
     className: "rw-activity-time",
     title: fmtFullDateRW(t.ts)
   }, fmtRelDateRW(t.ts))), /*#__PURE__*/React.createElement("span", {
-    className: "rw-activity-cr" + (t.creditsDelta >= 0 ? "" : " is-spend")
-  }, t.creditsDelta >= 0 ? "+" : "", t.creditsDelta, " cr"), /*#__PURE__*/React.createElement("span", {
     className: "rw-activity-amt" + (t.pointsDelta > 0 ? "" : " is-spend")
   }, t.pointsDelta > 0 ? "+" + PF_RW.formatNumber(t.pointsDelta) + " pts" : "—"))), rows.length === 0 ? /*#__PURE__*/React.createElement("div", {
     className: "rw-empty"
-  }, "No activity yet — complete an action to start earning.") : null);
-}
-
-/* ----------------------------------------------------------- next reward */
-function NextRewardRW({
-  state,
-  config
-}) {
-  const items = (config.storeItems || []).filter(i => i && i.inventory !== 0);
-  const affordable = items.filter(i => i.cost <= state.spendableCredits + 500).sort((a, b) => a.cost - b.cost)[0] || items[0];
-  if (!affordable) return null;
-  const canAfford = affordable.cost <= state.spendableCredits;
-  const pct = Math.max(0, Math.min(100, Math.round(state.spendableCredits / Math.max(1, affordable.cost) * 100)));
-  const course = affordable.course || null;
-  return /*#__PURE__*/React.createElement("button", {
-    className: "rw-card rw-next-reward",
-    type: "button",
-    onClick: () => goRW("RewardsStore.html")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "rw-next-reward-tag"
-  }, "NEXT UP"), /*#__PURE__*/React.createElement("span", {
-    className: "rw-next-reward-icon" + (affordable.image ? " has-img" : "")
-  }, affordable.image ? /*#__PURE__*/React.createElement("img", {
-    src: affordable.image,
-    alt: ""
-  }) : /*#__PURE__*/React.createElement(IconifyRW, {
-    name: "lucide:gift",
-    size: 26,
-    color: "#3D2A00"
-  }), course && course.discountPct ? /*#__PURE__*/React.createElement("span", {
-    className: "rw-next-reward-off"
-  }, course.discountPct, "% off") : null), /*#__PURE__*/React.createElement("span", {
-    className: "rw-next-reward-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ti"
-  }, "Next Available Reward"), /*#__PURE__*/React.createElement("span", {
-    className: "nm"
-  }, course && course.discountPct ? course.discountPct + "% off " + affordable.name : affordable.name), /*#__PURE__*/React.createElement("span", {
-    className: "su"
-  }, PF_RW.formatNumber(affordable.cost), " credits", canAfford ? " · ready to redeem" : " · " + PF_RW.formatNumber(affordable.cost - state.spendableCredits) + " more to go"), /*#__PURE__*/React.createElement("span", {
-    className: "rw-next-reward-track",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      width: pct + "%"
-    }
-  }))));
+  }, "No activity yet — check in today to earn your first points.") : null);
 }
 
 /* ---------------------------------------------------------- side summary */
-function WalletCardRW({
-  state
+function PointsCardRW({
+  state,
+  league
 }) {
   const week = PF_RW.getWeekPoints(state);
   const tier = state.user && state.user.membershipTier ? String(state.user.membershipTier) : null;
   const mult = tier ? PF_RW.tierMultiplierFor(null, tier) : null;
+  const next = league ? league.next : null;
   return /*#__PURE__*/React.createElement("section", {
     className: "rw-card rw-side-card",
-    "aria-label": "Wallet summary"
-  }, /*#__PURE__*/React.createElement("h3", null, "Your wallet"), /*#__PURE__*/React.createElement("dl", {
+    "aria-label": "Points summary"
+  }, /*#__PURE__*/React.createElement("h3", null, "Your points"), /*#__PURE__*/React.createElement("dl", {
     className: "rw-kv"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", null, "Spendable credits"), /*#__PURE__*/React.createElement("dd", null, PF_RW.formatNumber(state.spendableCredits))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", null, "Lifetime points"), /*#__PURE__*/React.createElement("dd", null, PF_RW.formatNumber(state.lifetimePoints))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", null, "Points this week"), /*#__PURE__*/React.createElement("dd", null, PF_RW.formatNumber(week))), state.expiringCredits ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", null, "Expiring soon"), /*#__PURE__*/React.createElement("dd", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", null, "Lifetime points"), /*#__PURE__*/React.createElement("dd", null, PF_RW.formatNumber(state.lifetimePoints))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", null, "Points this week"), /*#__PURE__*/React.createElement("dd", null, PF_RW.formatNumber(week))), next ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", null, "To ", next.name, " League"), /*#__PURE__*/React.createElement("dd", {
     className: "warn"
-  }, PF_RW.formatNumber(state.expiringCredits), " cr")) : null, mult ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", null, tier, " tier multiplier"), /*#__PURE__*/React.createElement("dd", null, mult, "×")) : null), /*#__PURE__*/React.createElement("button", {
+  }, rwPts(league.need))) : null, mult ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("dt", null, tier, " tier multiplier"), /*#__PURE__*/React.createElement("dd", null, mult, "×")) : null), /*#__PURE__*/React.createElement("button", {
     className: "rw-btn rw-btn-coral",
     type: "button",
-    onClick: () => goRW("RewardsStore.html")
-  }, "Go to Rewards Store", /*#__PURE__*/React.createElement(IconifyRW, {
+    onClick: () => goRW("MilestonePath.html?ret=RewardsWeb.html")
+  }, "View Milestone Path", /*#__PURE__*/React.createElement(IconifyRW, {
     name: "lucide:arrow-right",
     size: 16,
     color: "#3D2A00"
@@ -566,6 +754,7 @@ function DemoCardRW({
   onRisk,
   onMilestone,
   onGoal,
+  onNew,
   onReset
 }) {
   return /*#__PURE__*/React.createElement("section", {
@@ -588,19 +777,29 @@ function DemoCardRW({
   }, "Daily goal reached"), /*#__PURE__*/React.createElement("button", {
     className: "rw-demo-btn",
     type: "button",
+    onClick: onNew
+  }, "New member view"), /*#__PURE__*/React.createElement("button", {
+    className: "rw-demo-btn",
+    type: "button",
     onClick: onReset
   }, "Reset demo data")));
 }
 
 /* ------------------------------------------------------------------ page */
 function RewardsWebApp() {
-  const [state, setState] = useStateRW(() => PF_RW.getState());
-  const [config, setConfig] = useStateRW(() => PF_RW.getConfig());
+  const [state, setState] = useStateRW(() => {
+    rwApplyNewMemberFlag();
+    return PF_RW.getState();
+  });
   const [league, setLeague] = useStateRW(rwLeagueProgress);
+  const [welcomeOpen, setWelcomeOpen] = useStateRW(() => rwIsNewMember(PF_RW.getState()) && !rwWelcomeSeen());
+  const closeWelcome = React.useCallback(() => {
+    rwMarkWelcomeSeen();
+    setWelcomeOpen(false);
+  }, []);
   const [toast, setToast] = useStateRW(null);
   const refresh = () => {
     setState(PF_RW.getState());
-    setConfig(PF_RW.getConfig());
     setLeague(rwLeagueProgress());
   };
   const flash = m => {
@@ -651,47 +850,32 @@ function RewardsWebApp() {
     className: "rw-head"
   }, /*#__PURE__*/React.createElement("div", {
     className: "rw-head-copy"
-  }, /*#__PURE__*/React.createElement("h1", null, greet, ", ", firstName, "!"), /*#__PURE__*/React.createElement("p", null, "Your points, credits, streak and league progress — all in one place."))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("h1", null, greet, ", ", firstName, "!"), /*#__PURE__*/React.createElement("p", null, "Your points, streak and league progress — all in one place."))), /*#__PURE__*/React.createElement("div", {
     className: "rw-grid"
   }, /*#__PURE__*/React.createElement("main", {
     className: "rw-main"
-  }, /*#__PURE__*/React.createElement(LeagueProgressCardRW, {
-    league: league
+  }, window.PFRewardsEmbed ? /*#__PURE__*/React.createElement(window.PFRewardsEmbed.LeagueRail, {
+    href: "Leaderboard.html"
+  }) : null, /*#__PURE__*/React.createElement(EngagementCardsRW, {
+    state: state
+  }), /*#__PURE__*/React.createElement(FeatureTilesRW, {
+    state: state
   }), /*#__PURE__*/React.createElement(StreakRiskBannerRW, {
     state: state,
     onCheckIn: checkIn
-  }), /*#__PURE__*/React.createElement(EngagementCardsRW, {
-    state: state
   }), /*#__PURE__*/React.createElement("section", {
     className: "rw-sec"
   }, /*#__PURE__*/React.createElement("div", {
     className: "rw-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Jump back in")), /*#__PURE__*/React.createElement(QuickNavRW, {
-    state: state,
-    league: league
-  })), /*#__PURE__*/React.createElement("section", {
-    className: "rw-sec"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "rw-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Recent Activity"), /*#__PURE__*/React.createElement("button", {
-    className: "rw-sec-link",
-    type: "button",
-    onClick: () => goRW("WaysToEarn.html")
-  }, "Ways to earn", /*#__PURE__*/React.createElement(IconifyRW, {
-    name: "lucide:arrow-right",
-    size: 14,
-    color: "var(--brand-navy)"
-  }))), /*#__PURE__*/React.createElement(RecentActivityRW, {
+  }, /*#__PURE__*/React.createElement("h2", null, "Recent Activity")), /*#__PURE__*/React.createElement(RecentActivityRW, {
     state: state
   }))), /*#__PURE__*/React.createElement("aside", {
     className: "rw-side"
   }, /*#__PURE__*/React.createElement(LeagueCardRW, {
-    league: league
-  }), /*#__PURE__*/React.createElement(NextRewardRW, {
-    state: state,
-    config: config
-  }), /*#__PURE__*/React.createElement(WalletCardRW, {
     state: state
+  }), /*#__PURE__*/React.createElement(PointsCardRW, {
+    state: state,
+    league: league
   }), /*#__PURE__*/React.createElement(DemoCardRW, {
     onRisk: () => {
       PF_RW.setStreakAtRisk(6);
@@ -707,12 +891,18 @@ function RewardsWebApp() {
       if (window.PFDailyGoal) window.PFDailyGoal.reset();
       goRW("DailyGoal.html?ret=RewardsWeb.html");
     },
+    onNew: () => goRW("RewardsWeb.html?new=1"),
     onReset: () => {
       PF_RW.resetDemo();
       refresh();
       flash("Demo data reset.");
     }
-  })))), toast && /*#__PURE__*/React.createElement("div", {
+  })))), welcomeOpen && /*#__PURE__*/React.createElement(WelcomeModalRW, {
+    state: state,
+    league: league,
+    onClose: closeWelcome,
+    initialStep: rwWelcomeStep()
+  }), toast && /*#__PURE__*/React.createElement("div", {
     className: "rw-toast",
     role: "status"
   }, /*#__PURE__*/React.createElement(IconifyRW, {

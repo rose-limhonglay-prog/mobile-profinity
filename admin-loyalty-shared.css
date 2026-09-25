@@ -71,7 +71,7 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
 .adl-user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; background: var(--gray-200); }
 .adl-header > iconify-icon { color: var(--gray-500); font-size: 20px; cursor: pointer; }
 
-.adl-view { padding: 32px; display: flex; flex-direction: column; gap: 24px; max-width: 1320px; }
+.adl-view { padding: 32px; display: flex; flex-direction: column; gap: 24px; width: 100%; box-sizing: border-box; }
 
 /* --------------------------------------------------------------- buttons */
 .adl-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -196,3 +196,39 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
   .adl-stat-grid { grid-template-columns: 1fr; }
   .adl-header-search { display: none; }
 }
+
+/* ------------------------------------------------------------ info tips
+   Small "i" beside a section title or field label. Hover or focus shows a
+   plain-English explanation. Used on Ways to Earn; reusable on every page. */
+.adl-info { position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%; color: var(--gray-400); cursor: help; vertical-align: middle;
+  margin-left: 6px; outline: none; flex-shrink: 0; }
+.adl-info iconify-icon { font-size: 16px; }
+.adl-info:hover, .adl-info:focus-visible { color: var(--brand-navy); }
+.adl-info-tip { position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(4px);
+  width: max-content; max-width: 260px; padding: 9px 12px; border-radius: 10px; background: #0C1928; color: #fff; border: 1px solid rgba(255,255,255,.12);
+  font-size: 12px; font-weight: 500; line-height: 1.45; text-align: left; text-transform: none; letter-spacing: 0;
+  box-shadow: 0 8px 24px rgba(12, 25, 40, .22); opacity: 0; pointer-events: none; transition: opacity .12s, transform .12s; z-index: 20; white-space: normal; }
+.adl-info-tip::after { content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: #0C1928; }
+.adl-info:hover .adl-info-tip, .adl-info:focus-visible .adl-info-tip, .adl-info:focus .adl-info-tip { opacity: 1; transform: translateX(-50%) translateY(0); }
+.adl-info.is-left .adl-info-tip { left: 0; transform: translateX(-6px) translateY(4px); }
+.adl-info.is-left:hover .adl-info-tip, .adl-info.is-left:focus .adl-info-tip { transform: translateX(-6px) translateY(0); }
+.adl-info.is-left .adl-info-tip::after { left: 15px; }
+
+/* ------------------------------------------------------------ centered modal
+   Same head/body/foot structure as the slide-out, but centered on screen. */
+.adl-scrim.is-center { justify-content: center; align-items: center; padding: 24px; }
+.adl-modal { height: auto; max-height: calc(100vh - 48px); width: 560px; max-width: 100%; border-radius: 20px;
+  box-shadow: 0 24px 64px rgba(16,24,40,.28); animation: adlPop .18s ease; overflow: hidden; }
+@keyframes adlPop { from { transform: translateY(10px) scale(.98); opacity: .6; } to { transform: none; opacity: 1; } }
+
+/* ------------------------------------------------------- shared member bits
+   Used by Points Ledger, User Diagnostics and Member Rewards Board. */
+.ldg-live-pill { background: var(--success-bg); color: var(--success); font-size: 10px; font-weight: 700;
+  padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+.ldg-admin-tag { color: var(--gray-500); font-size: 12px; }
+.diag-balance-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0;
+  border-bottom: 1px solid var(--border-default); font-size: 14px; color: var(--gray-600); }
+.diag-balance-row:last-of-type { border-bottom: none; }
+.diag-balance-row b { color: var(--gray-900); font-size: 15px; }

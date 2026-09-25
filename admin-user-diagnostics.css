@@ -2,52 +2,223 @@
    PROfinity — Admin · User Directory & Diagnostics — page-specific layout
    Shared shell/sidebar/header/card/form/table styles live in
    admin-loyalty-shared.css. Classes prefixed diag- to avoid clashes.
+   Layout: paginated member directory (left) + diagnostics panel (right).
    =========================================================================== */
-.diag-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
+.diag-view { gap: 20px; }
+.diag-grid { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 24px; align-items: start; }
 
-.diag-rail { background: var(--white); border: 1px solid var(--border-default); border-radius: 16px; overflow: hidden; }
-.diag-rail-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: none;
-  background: none; border-bottom: 1px solid var(--border-default); cursor: pointer; text-align: left; font-family: inherit; }
-.diag-rail-row:hover { background: var(--gray-50); }
-.diag-rail-row.is-active { background: var(--brand-gold-100); }
-.diag-rail-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--brand-navy); color: #fff;
-  display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
-.diag-rail-main { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.diag-rail-name { font-size: 13px; font-weight: 700; color: var(--gray-800); }
-.diag-rail-email { font-size: 12px; color: var(--gray-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* --------------------------------------------------------------- toast */
+.diag-toast { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-radius: 12px;
+  background: var(--success-bg); color: var(--success); font-size: 14px; font-weight: 600;
+  border: 1px solid color-mix(in srgb, var(--success) 25%, transparent); animation: diag-in .18s ease-out; }
+.diag-toast iconify-icon { font-size: 18px; }
+@keyframes diag-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
 
-.diag-main { display: flex; flex-direction: column; gap: 20px; }
-.diag-profile-head { display: flex; align-items: center; gap: 16px; }
-.diag-profile-avatar { width: 56px; height: 56px; border-radius: 50%; background: var(--brand-navy); color: #fff;
-  display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; }
-.diag-profile-name { font-size: 20px; font-weight: 700; color: var(--brand-navy); }
-.diag-profile-email { font-size: 13px; color: var(--gray-500); }
+/* ------------------------------------------------------------ directory */
+.diag-dir { background: var(--white); border: 1px solid var(--border-default); border-radius: 16px; display: flex; flex-direction: column;
+  position: sticky; top: 96px; max-height: calc(100vh - 120px); overflow: hidden; }
+.diag-dir-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 18px 12px; }
+.diag-dir-title { font-size: 16px; font-weight: 700; color: var(--brand-navy); }
+.diag-dir-sub { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+.diag-link-btn { display: inline-flex; align-items: center; gap: 4px; border: none; background: none; padding: 4px 0; font-family: inherit;
+  font-size: 13px; font-weight: 700; color: var(--ai-purple); cursor: pointer; white-space: nowrap; }
+.diag-link-btn:hover { text-decoration: underline; }
+
+.diag-dir-search { position: relative; margin: 0 18px 10px; }
+.diag-dir-search > iconify-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 17px; pointer-events: none; }
+.diag-dir-search input { width: 100%; height: 42px; box-sizing: border-box; padding: 0 38px 0 38px; border-radius: 12px;
+  border: 1px solid var(--border-default); background: var(--gray-50); font-family: inherit; font-size: 14px; color: var(--text-primary); outline: none; }
+.diag-dir-search input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--focus-ring); background: var(--white); }
+.diag-dir-search-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border-radius: 50%;
+  border: none; background: var(--gray-200); color: var(--gray-600); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.diag-dir-search-clear iconify-icon { font-size: 14px; }
+
+.diag-dir-filters { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 0 18px 14px; border-bottom: 1px solid var(--border-default); }
+.diag-select { position: relative; display: flex; align-items: center; min-width: 0; }
+.diag-select > iconify-icon { position: absolute; left: 8px; color: var(--gray-500); font-size: 13px; pointer-events: none; }
+.diag-select select { width: 100%; height: 34px; padding: 0 20px 0 26px; border-radius: 9px; border: 1px solid var(--border-default); background: var(--white);
+  font-family: inherit; font-size: 12px; font-weight: 600; color: var(--gray-700); appearance: none; -webkit-appearance: none; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--gray-500) 50%), linear-gradient(135deg, var(--gray-500) 50%, transparent 50%);
+  background-position: calc(100% - 13px) 15px, calc(100% - 9px) 15px; background-size: 4px 4px; background-repeat: no-repeat; text-overflow: ellipsis; }
+.diag-select select:focus { outline: none; border-color: var(--border-focus); }
+
+.diag-dir-list { flex: 1; overflow-y: auto; min-height: 240px; }
+.diag-dir-row { width: 100%; display: flex; align-items: center; gap: 12px; padding: 11px 18px; border: none; background: none;
+  border-bottom: 1px solid var(--border-default); cursor: pointer; text-align: left; font-family: inherit; position: relative; transition: background .12s; }
+.diag-dir-row:last-child { border-bottom: none; }
+.diag-dir-row:hover { background: var(--gray-50); }
+.diag-dir-row.is-active { background: var(--brand-gold-100); }
+.diag-dir-row.is-active::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--brand-navy); }
+.diag-dir-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.diag-dir-name { display: flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.diag-dir-email { font-size: 12px; color: var(--gray-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.diag-dir-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.diag-dir-pts { font-size: 11px; font-weight: 600; color: var(--gray-500); font-variant-numeric: tabular-nums; }
+.diag-dir-empty { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 44px 24px; text-align: center; color: var(--gray-500); font-size: 13px; }
+.diag-dir-empty iconify-icon { font-size: 30px; color: var(--gray-300); margin-bottom: 4px; }
+.diag-dir-empty b { color: var(--text-primary); font-size: 14px; }
+
+.diag-live { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px; border-radius: 999px; background: var(--success-bg); color: var(--success);
+  font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.diag-live::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+/* pager */
+.diag-pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--border-default); background: var(--gray-50); }
+.diag-pager-info { font-size: 12px; font-weight: 600; color: var(--gray-500); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.diag-pager-btns { display: flex; align-items: center; gap: 4px; }
+.diag-pager-btn, .diag-pager-num { height: 30px; min-width: 30px; padding: 0 6px; border-radius: 8px; border: 1px solid var(--border-default); background: var(--white);
+  font-family: inherit; font-size: 12px; font-weight: 700; color: var(--gray-700); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.diag-pager-btn iconify-icon { font-size: 16px; }
+.diag-pager-btn:hover:not(:disabled), .diag-pager-num:hover { background: var(--gray-100); }
+.diag-pager-btn:disabled { opacity: .4; cursor: default; background: var(--gray-50); }
+.diag-pager-num.is-active { background: var(--brand-navy); border-color: var(--brand-navy); color: #fff; }
+.diag-pager-ellipsis { font-size: 12px; color: var(--gray-400); padding: 0 2px; }
+
+/* -------------------------------------------------------------- avatars */
+.diag-avatar { border-radius: 50%; flex-shrink: 0; object-fit: cover; display: inline-flex; align-items: center; justify-content: center; }
+.diag-avatar-initials { color: #fff; font-weight: 700; letter-spacing: .02em; }
+
+/* pills */
+.diag-tier { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: .01em; white-space: nowrap; }
+.diag-tier.is-lg { padding: 5px 12px; font-size: 12px; }
+.diag-tier-basic { background: var(--gray-100); color: var(--gray-600); }
+.diag-tier-confidence { background: #eceff5; color: #4f5b73; }
+.diag-tier-mastery { background: var(--brand-gold-100); color: #8a5a10; }
+.diag-tier-freedom { background: var(--ai-purple-200); color: var(--ai-purple-700); }
+.diag-status { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.diag-status iconify-icon { font-size: 13px; }
+.diag-status-active { background: var(--success-bg); color: var(--success); }
+.diag-status-at-risk { background: var(--warning-bg); color: #96690a; }
+.diag-status-frozen { background: var(--info-bg); color: var(--info); }
+.diag-status-dormant { background: var(--gray-100); color: var(--gray-500); }
+
+/* ----------------------------------------------------------------- main */
+.diag-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; animation: diag-in .2s ease-out; }
+.diag-hero { display: flex; align-items: center; gap: 20px; padding: 22px 24px; }
+.diag-hero-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.diag-hero-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.diag-hero-name { margin: 0; display: flex; align-items: center; gap: 8px; font-size: 22px; font-weight: 700; color: var(--brand-navy); }
+.diag-hero-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--gray-500); }
+.diag-hero-meta span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.diag-hero-meta iconify-icon { font-size: 15px; color: var(--gray-400); flex-shrink: 0; }
+.diag-hero-actions { display: flex; gap: 10px; flex-shrink: 0; align-self: flex-start; }
+
+/* adjust panel */
+.diag-adjust { border: 1px dashed var(--brand-gold-soft); background: var(--brand-gold-100); border-radius: 14px; padding: 14px 18px; display: flex; flex-direction: column; gap: 10px; animation: diag-in .18s ease-out; }
+.diag-adjust-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--brand-navy); }
+.diag-adjust-title span { font-weight: 500; color: var(--gray-500); }
+.diag-adjust-title iconify-icon { font-size: 16px; }
+.diag-adjust-form { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.diag-adjust-form select, .diag-adjust-form input { height: 36px; border-radius: 9px; border: 1px solid var(--border-default); background: var(--white); padding: 0 10px; font-family: inherit; font-size: 13px; color: var(--text-primary); }
+.diag-adjust-form input[type="number"] { width: 100px; }
+.diag-adjust-form input:not([type="number"]) { flex: 1; min-width: 200px; }
+.diag-adjust-form select:focus, .diag-adjust-form input:focus { outline: none; border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--focus-ring); }
+.diag-adjust-error { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--error); }
+
+/* KPI strip */
+.diag-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.diag-stat { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border-radius: 14px; background: var(--white); border: 1px solid var(--border-default); position: relative; min-width: 0; }
+.diag-stat-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.diag-stat-icon { width: 28px; height: 28px; border-radius: 9px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--gray-100); color: var(--gray-600); }
+.diag-stat-icon iconify-icon { font-size: 15px; }
+.diag-stat-label { font-size: 11px; font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.diag-stat-value { font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.diag-stat-sub { font-size: 12px; color: var(--gray-500); margin-top: 2px; line-height: 1.35; }
+.diag-stat.is-good .diag-stat-icon { background: var(--success-bg); color: var(--success); }
+.diag-stat.is-warn .diag-stat-icon { background: var(--warning-bg); color: #b7791f; }
+.diag-stat.is-warn .diag-stat-value { color: #b7791f; }
+.diag-stat.is-cool .diag-stat-icon { background: var(--info-bg); color: var(--info); }
 
 .diag-card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 .diag-card { display: flex; flex-direction: column; }
-.diag-balance-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0;
-  border-bottom: 1px solid var(--border-default); font-size: 14px; color: var(--gray-600); }
-.diag-balance-row:last-of-type { border-bottom: none; }
-.diag-balance-row b { color: var(--gray-900); font-size: 15px; }
-.diag-streak-actions { display: flex; gap: 10px; margin-top: 14px; }
 
-.diag-quick-adjust { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.diag-quick-adjust select, .diag-quick-adjust input { height: 34px; border-radius: 8px; border: 1px solid var(--border-default);
-  padding: 0 8px; font-family: inherit; font-size: 12px; }
-.diag-quick-adjust input[type="number"] { width: 80px; }
-.diag-quick-adjust input:not([type="number"]) { width: 150px; }
-.diag-quick-error { width: 100%; font-size: 12px; color: var(--error); }
+/* streak */
+.diag-streak-dots { display: flex; align-items: center; gap: 6px; margin-top: 4px; }
+.diag-streak-dot { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; background: var(--gray-100); color: var(--gray-400); }
+.diag-streak-dot iconify-icon { font-size: 15px; }
+.diag-streak-dot.is-on { background: var(--brand-gold-100); color: #b7791f; }
+.diag-streak-dot.is-frozen { background: var(--info-bg); color: var(--info); }
+.diag-streak-dots-label { margin-left: auto; font-size: 12px; color: var(--gray-500); }
+.diag-streak-note { margin: 12px 0 0; font-size: 13px; line-height: 1.5; color: var(--gray-600); flex: 1; }
+.diag-streak-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+.diag-streak-actions .adl-btn:disabled { opacity: .45; cursor: not-allowed; }
 
-.diag-badge-progress { display: flex; flex-direction: column; gap: 10px; font-size: 14px; font-weight: 600; color: var(--gray-800); margin-bottom: 18px; }
-.diag-achievement-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-.diag-achievement-chip { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px;
-  border: 1px solid var(--border-default); font-size: 13px; font-weight: 600; color: var(--gray-400); background: var(--gray-50); }
-.diag-achievement-chip iconify-icon { font-size: 18px; }
-.diag-achievement-chip.is-unlocked { color: var(--brand-navy); background: var(--brand-gold-100); border-color: var(--brand-gold-soft); }
-.diag-achievement-toggle { margin-left: auto; border: none; background: none; font-family: inherit; font-size: 11px;
-  font-weight: 700; color: var(--ai-purple); cursor: pointer; text-transform: uppercase; }
+/* level */
+.diag-level-now { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  color: var(--lvl); background: color-mix(in srgb, var(--lvl) 14%, transparent); white-space: nowrap; }
+.diag-level-now iconify-icon { font-size: 14px; }
+.diag-level-bar { height: 10px; border-radius: 999px; background: var(--gray-200); overflow: hidden; margin-top: 4px; }
+.diag-level-bar > div { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--brand-gold), var(--brand-gold-soft)); transition: width .4s ease; }
+.diag-level-caption { font-size: 13px; color: var(--gray-500); margin-top: 8px; }
+.diag-level-caption b { color: var(--text-primary); }
+.diag-level-track { display: flex; justify-content: space-between; gap: 4px; margin-top: 16px; }
+.diag-level-step { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; min-width: 0; text-align: center; }
+.diag-level-step i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--gray-300); background: var(--white); box-sizing: border-box; }
+.diag-level-step.is-done i { background: var(--lvl); border-color: var(--lvl); }
+.diag-level-step span { font-size: 11px; font-weight: 700; color: var(--gray-400); }
+.diag-level-step.is-done span { color: var(--gray-800); }
+.diag-level-step small { font-size: 10px; color: var(--gray-400); font-variant-numeric: tabular-nums; }
 
+/* achievements */
+.diag-achievement-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.diag-achievement { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--border-default); background: var(--gray-50); min-width: 0; }
+.diag-achievement-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--gray-200); color: var(--gray-500); flex-shrink: 0; }
+.diag-achievement-icon iconify-icon { font-size: 18px; }
+.diag-achievement-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.diag-achievement-body b { font-size: 13px; color: var(--gray-500); }
+.diag-achievement-body span { font-size: 12px; line-height: 1.4; color: var(--gray-400); }
+.diag-achievement.is-unlocked { background: var(--brand-gold-100); border-color: var(--brand-gold-soft); }
+.diag-achievement.is-unlocked .diag-achievement-icon { background: var(--brand-gold); color: var(--brand-navy); }
+.diag-achievement.is-unlocked .diag-achievement-body b { color: var(--brand-navy); }
+.diag-achievement.is-unlocked .diag-achievement-body span { color: var(--gray-600); }
+.diag-achievement-toggle { align-self: center; flex-shrink: 0; height: 28px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--border-default); background: var(--white); font-family: inherit;
+  font-size: 11px; font-weight: 700; color: var(--ai-purple); cursor: pointer; text-transform: uppercase; letter-spacing: .03em; }
+.diag-achievement-toggle:hover { background: var(--ai-purple-100); }
+.diag-achievement-toggle.is-revoke { color: var(--gray-500); }
+.diag-achievement-toggle.is-revoke:hover { color: var(--error); background: var(--error-bg); border-color: var(--error-bg); }
+
+/* ledger */
+.diag-ledger-head { padding: 18px 20px 12px; border: none; }
+.diag-ledger-grid { grid-template-columns: minmax(0, 1.8fr) 1.1fr 0.7fr 0.7fr; }
+.diag-right { text-align: right; }
+.diag-ledger-label { display: flex; align-items: center; gap: 10px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.diag-ledger-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+.diag-ledger-dot.is-neg { background: var(--error); }
+.diag-delta { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--gray-400); }
+.diag-delta.is-pos { color: var(--success); }
+.diag-delta.is-neg { color: var(--error); }
+.diag-ledger-empty { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 28px; font-size: 13px; color: var(--gray-500); border-top: 1px solid var(--border-default); }
+.diag-ledger-empty iconify-icon { font-size: 18px; }
+
+/* ----------------------------------------------------------- responsive */
+@media (max-width: 1380px) { .diag-grid { grid-template-columns: 320px minmax(0, 1fr); } .diag-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 1180px) {
   .diag-grid { grid-template-columns: 1fr; }
+  .diag-dir { position: static; max-height: none; }
+  .diag-dir-list { max-height: 520px; }
   .diag-card-row { grid-template-columns: 1fr; }
+  .diag-hero { flex-wrap: wrap; }
+  .diag-hero-actions { width: 100%; }
 }
+@media (max-width: 640px) {
+  .diag-stats { grid-template-columns: 1fr; }
+  .diag-dir-filters { grid-template-columns: 1fr 1fr; }
+  .diag-pager { flex-direction: column; align-items: stretch; }
+  .diag-pager-btns { justify-content: center; }
+}
+
+/* ------------------------------------------------------------ dark mode */
+/* dark-mode.css never remaps --white, so cards built on it would stay white
+   under light text. Re-point the token for this view only. */
+[data-theme="dark"] .diag-view { --white: var(--surface-card); }
+[data-theme="dark"] .diag-dir-search input:focus { background: var(--surface-sunken); }
+[data-theme="dark"] .diag-level-step i { background: var(--surface-sunken); }
+[data-theme="dark"] .diag-ledger .adl-cell { color: var(--text-primary); }
+[data-theme="dark"] .diag-tier-confidence { background: #262b3a; color: #b3bccf; }
+[data-theme="dark"] .diag-tier-mastery { color: var(--brand-gold-soft); }
+[data-theme="dark"] .diag-tier-freedom { background: #2a2650; color: #b8b2ff; }
+[data-theme="dark"] .diag-status-at-risk { color: #e0a93a; }
+[data-theme="dark"] .diag-stat.is-warn .diag-stat-icon, [data-theme="dark"] .diag-stat.is-warn .diag-stat-value, [data-theme="dark"] .diag-streak-dot.is-on { color: var(--brand-gold-soft); }
+[data-theme="dark"] .diag-pager-num.is-active { background: var(--brand-gold); border-color: var(--brand-gold); color: #131126; }
+[data-theme="dark"] .diag-dir-row.is-active::before { background: var(--brand-gold); }
+[data-theme="dark"] .diag-achievement.is-unlocked .diag-achievement-icon { color: #131126; }

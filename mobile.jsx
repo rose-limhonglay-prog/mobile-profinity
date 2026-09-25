@@ -616,8 +616,8 @@ const DM_THREADS_SEED = [
 
 
 const VOICE_CONFS_SEED = [
-{ id: "vc1", name: "Clinical Case Review", who: "Dr Tim Pearce, Dr Sarah Kim +3", t: "Today, 4:00 PM", live: true },
-{ id: "vc2", name: "Business Growth Sync", who: "Miranda Pearce, Dr Alex Chen", t: "Tomorrow, 10:00 AM", live: false }];
+  { id: "c1", name: "Case Study Discussion", who: "Dr Tim Pearce, Dr Rachel Adams +98", t: "Live now · 100 participants", live: true },
+  { id: "c2", name: "Business Growth Sync", who: "Miranda Pearce, Mark Ellis", t: "Tomorrow, 10:00 AM", live: false }];
 
 const PF_GROUPS_KEY = "pf-dm-groups";
 
@@ -734,7 +734,7 @@ function NewConversationScreenM({ contacts, picked, onToggle, query, onQuery, gr
 
 function VoiceConfRow({ v }) {
   return (
-    <div className="mp-row mp-vc-row">
+    <button type="button" className="mp-row mp-vc-row" onClick={() => go("Messages.html?tab=conference&conf=" + v.id)} aria-label={v.name + (v.live ? ", live now" : "")}>
       <span className="mp-av mp-vc-icon">
         <DSM.IconifyIcon name="lucide:phone-call" size={22} color="var(--brand-navy)" />
       </span>
@@ -748,7 +748,7 @@ function VoiceConfRow({ v }) {
         </span>
         <span className="mp-vc-time">{v.t}</span>
       </span>
-    </div>);
+    </button>);
 
 }
 

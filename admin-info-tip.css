@@ -1,0 +1,18 @@
+/* ===========================================================================
+   PROfinity — Admin · shared "i" info tip for stat tiles and column headers
+   on pages that do not load admin-loyalty-shared.css (Dashboard, Transactions,
+   Badges ...). Hover or focus shows a plain-English explanation.
+   =========================================================================== */
+.adm-info { position: relative; display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%; color: var(--gray-400); cursor: help; vertical-align: middle;
+  margin-left: 6px; outline: none; flex-shrink: 0; }
+.adm-info iconify-icon { font-size: 16px; }
+.adm-info:hover, .adm-info:focus-visible { color: var(--brand-navy); }
+.adm-info-tip { position: absolute; bottom: calc(100% + 8px); left: 0; transform: translateX(-6px) translateY(4px);
+  width: max-content; max-width: 260px; padding: 9px 12px; border-radius: 10px; background: #0C1928; color: #fff;
+  border: 1px solid rgba(255,255,255,.12); font-size: 12px; font-weight: 500; line-height: 1.45; text-align: left;
+  text-transform: none; letter-spacing: 0; box-shadow: 0 8px 24px rgba(12, 25, 40, .22); opacity: 0; pointer-events: none;
+  transition: opacity .12s, transform .12s; z-index: 20; white-space: normal; }
+.adm-info-tip::after { content: ""; position: absolute; top: 100%; left: 15px; border: 6px solid transparent; border-top-color: #0C1928; }
+.adm-info:hover .adm-info-tip, .adm-info:focus-visible .adm-info-tip, .adm-info:focus .adm-info-tip { opacity: 1; transform: translateX(-6px) translateY(0); }
+.dash-stat-label, .txn-stat-label, .bdg-stat-label { display: flex; align-items: center; }

@@ -93,9 +93,16 @@ function CourseCheckout() {
   const total = subtotal + vat;
   const detailUrl = buildCourseDetailUrlCC(course);
 
+  /* Today's Targets funnel (daily-targets.js): a checkout reached from the
+     day's paid pick is counted once; paying books the attributed revenue. */
+  useEffectCC(() => {
+    try { if (window.PFDailyTargets) window.PFDailyTargets.checkoutStarted(course.slug); } catch (e) {}
+  }, []);
+
   function handlePay() {
     setPaying(true);
     markPurchasedCC(course.slug);
+    try { if (window.PFDailyTargets) window.PFDailyTargets.recordPurchase(course.slug, total); } catch (e) {}
     goCC(detailUrl);
   }
 

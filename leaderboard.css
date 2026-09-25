@@ -144,7 +144,10 @@ img { max-width: 100%; }
 .lb-ms-list li + li { border-top: 1px solid var(--border-default); }
 .lb-ms-list .ic { flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--gray-50); display: flex; align-items: center; justify-content: center; }
 .lb-ms-list .lb { flex: 1; min-width: 0; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 14px; color: var(--brand-navy); }
-.lb-ms-list li.done .lb { color: var(--gray-500); text-decoration: line-through; text-decoration-color: var(--gray-300); }
+.lb-ms-list li.done .lb { color: var(--gray-500); }
+.lb-ms-list .ic .lb-gem-mini, .lb-ms-list .ic > span { display: block; }
+.lb-ms-link { display: inline-flex; align-items: center; gap: 4px; margin: 8px 0 6px; padding: 0; border: 0; background: none; cursor: pointer;
+  font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 13px; color: var(--brand-navy); }
 .lb-ms-list .ct { flex: none; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 13px; color: var(--gray-500); font-variant-numeric: tabular-nums; }
 
 /* promotion toast stays fixed-dark like the other loyalty toasts */

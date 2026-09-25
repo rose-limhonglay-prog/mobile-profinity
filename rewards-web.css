@@ -94,7 +94,7 @@ img{max-width:100%}
 .rw-notif-text{font-size:13px;margin-top:3px;color:var(--gray-600);line-height:1.45}
 
 /* ----------------------------------------------------------- stat tiles */
-.rw-eng-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.rw-eng-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .rw-eng-card{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:18px 20px}
 .rw-eng-lottie{display:flex;align-items:center;justify-content:flex-start;height:44px;margin-bottom:4px;pointer-events:none;overflow:visible}
 .rw-eng-value{font-size:26px;font-weight:800;color:var(--text-heading);font-variant-numeric:tabular-nums;line-height:1.1}
@@ -171,6 +171,46 @@ img{max-width:100%}
 .rw-league-tx b{font-size:16px;font-weight:800;color:var(--lg-deep);letter-spacing:-.01em;white-space:nowrap}
 .rw-league-tx i{font-style:normal;font-size:12.5px;color:var(--gray-600)}
 .rw-league-cta{flex:none;display:inline-flex;align-items:center;gap:2px;font-size:12px;font-weight:800;color:var(--lg-deep)}
+.rw-league-rank{font-size:26px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+/* Milestone Path button under the leaderboard snapshot */
+/* first-visit welcome modal (new member, shown once) */
+.rw-welcome-scrim{position:fixed;inset:0;z-index:120;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(12,14,40,.55);backdrop-filter:blur(4px);animation:rw-fade .22s ease}
+.rw-welcome{position:relative;width:100%;max-width:440px;display:flex;flex-direction:column;align-items:center;gap:12px;padding:34px 30px 24px;border-radius:26px;text-align:center;color:#fff;
+  background:linear-gradient(150deg,var(--brand-navy),#3F4E86);box-shadow:0 30px 80px rgba(12,14,40,.45),inset 0 1px 0 rgba(255,255,255,.12);animation:rw-welcome-pop .32s cubic-bezier(.34,1.56,.64,1)}
+.rw-welcome-doc{position:relative;width:210px;height:210px;margin:-12px 0 0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 45%,rgba(252,194,93,.28),rgba(252,194,93,0) 70%)}
+.rw-welcome-doc::before{content:"";position:absolute;inset:16px;border-radius:50%;background:rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+.rw-welcome-doc>span{position:relative}
+.rw-welcome b{font-size:24px;font-weight:800;letter-spacing:-.01em;line-height:1.2}
+.rw-welcome p{margin:0;font-size:15px;line-height:1.55;color:rgba(255,255,255,.84);text-wrap:pretty}
+.rw-welcome p strong{color:#FCC25D;font-weight:800}
+.rw-welcome-btn{margin-top:10px;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:48px;padding:0 18px;border-radius:14px;border:0;cursor:pointer;background:linear-gradient(135deg,#FDD07A,#E8A63A);color:#3D2A00;font:inherit;font-size:15px;font-weight:800;box-shadow:0 8px 18px rgba(232,166,58,.35);transition:transform .16s ease}
+.rw-welcome-btn:hover{transform:translateY(-1px)}
+.rw-welcome-skip{border:0;background:none;padding:6px 10px;cursor:pointer;font:inherit;font-size:13.5px;font-weight:700;color:rgba(255,255,255,.72)}
+.rw-welcome-skip:hover{color:#fff}
+.rw-welcome-back{position:absolute;left:14px;top:14px;width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.rw-welcome-back:hover{background:rgba(255,255,255,.2)}
+.rw-welcome-steps{display:flex;gap:6px;margin-bottom:2px}
+.rw-welcome-steps i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.3)}
+.rw-welcome-steps i.on{width:22px;border-radius:999px;background:#FCC25D}
+.rw-welcome-earn{padding-top:28px}
+.rw-welcome-list{list-style:none;margin:8px 0 0;padding:0;width:100%;display:flex;flex-direction:column;gap:8px;text-align:left}
+.rw-welcome-list li{display:flex;align-items:center;gap:12px;padding:11px 14px 11px 11px;border-radius:14px;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.08)}
+.rw-welcome-list .ic{flex:none;width:36px;height:36px;border-radius:11px;background:rgba(252,194,93,.16);display:flex;align-items:center;justify-content:center}
+.rw-welcome-list .lb{flex:1;min-width:0;font-size:14.5px;font-weight:700;color:#fff}
+.rw-welcome-list .pt{flex:none;font-size:13px;font-weight:800;color:#FCC25D;font-variant-numeric:tabular-nums}
+@keyframes rw-fade{from{opacity:0}to{opacity:1}}
+@keyframes rw-welcome-pop{from{transform:translateY(18px) scale(.94);opacity:0}to{transform:none;opacity:1}}
+
+/* two simple buttons: Milestone Path + My Rewards */
+.rw-feats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:16px 0 4px}
+.rw-feat{display:flex;align-items:center;gap:14px;padding:16px 16px 16px 18px;text-align:left;cursor:pointer;font-family:inherit;color:var(--text-primary);transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.rw-feat:hover{border-color:var(--brand-navy);box-shadow:0 8px 22px rgba(41,37,105,.13);transform:translateY(-2px)}
+.rw-feat:active{transform:scale(.985)}
+.rw-feat:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+.rw-feat-ic{flex:none;width:44px;height:44px;border-radius:13px;background:var(--brand-navy);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(41,37,105,.26),inset 0 1px 0 rgba(255,255,255,.18)}
+.rw-feat-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.rw-feat-tx b{font-size:15px;font-weight:800;color:var(--text-heading);letter-spacing:-.01em}
+.rw-feat-tx i{font-style:normal;font-size:12.5px;color:var(--gray-500);font-variant-numeric:tabular-nums}
 
 /* ----------------------------------------------------------- side cards */
 .rw-side-card h3{margin:0 0 14px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;color:var(--text-heading)}
@@ -204,12 +244,13 @@ img{max-width:100%}
   .rw-league-progress{grid-template-columns:auto minmax(0,1fr);row-gap:14px}
   .rw-gem{width:72px;height:72px}
   .rw-gem.next{grid-column:2;justify-self:end}
-  .rw-league-cta{display:none}
   .rw-activity-cr{display:none}
 }
 
 @media (prefers-reduced-motion:reduce){
   .rw-progress-fill,.rw-progress-fill::after{animation:none;transition:none}
-  .rw-quicknav-item,.rw-next-reward,.rw-btn,.rw-league,.rw-league-progress,.rw-eng-link{transition:none}
-  .rw-toast{animation:none}
+  .rw-quicknav-item,.rw-next-reward,.rw-btn,.rw-league,.rw-league-progress,.rw-eng-link,.rw-feat{transition:none}
+  .rw-toast,.rw-welcome,.rw-welcome-scrim{animation:none}
 }
+/* Lifetime Points tile: header-pill smiley (lottie-web), nudged up like .m-pts-ic-anim */
+.rw-eng-lottie--face svg{display:block;transform:scale(1.22);transform-origin:50% 50%;overflow:visible}

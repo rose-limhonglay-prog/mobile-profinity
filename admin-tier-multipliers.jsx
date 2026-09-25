@@ -25,15 +25,16 @@ const ADL_NAV_TOP = [
   { icon: "lucide:smartphone", label: "App Versions", href: "AdminAppVersions.html" },
   { icon: "lucide:bell", label: "Push Notification", href: "AdminPushNotifications.html" },
   { icon: "lucide:badge-check", label: "Badges", href: "AdminBadges.html" },
+  { icon: "lucide:clipboard-list", label: "Quizzes & Surveys", href: "AdminQuizEditor.html" },
   { icon: "lucide:receipt-text", label: "Transactions", href: "AdminTransactions.html", chevron: true },
   { icon: "lucide:table-2", label: "Courses", href: "AdminCourses.html", chevron: true },
   { icon: "lucide:users", label: "Community", href: "AdminCommunity.html", chevron: true }
 ];
 const ADL_LOYALTY_SUBNAV = [
-  { key: "actions", label: "Actions Editor", href: "AdminActionsEditor.html" },
+  { key: "actions", label: "Ways to Earn", href: "AdminActionsEditor.html" },
   { key: "tiers", label: "Tier Multipliers", href: "AdminTierMultipliers.html" },
   { key: "rewards", label: "Reward Editor", href: "AdminRewardEditor.html" },
-  { key: "ledger", label: "Audit Ledger", href: "AdminAuditLedger.html" },
+  { key: "ledger", label: "Points Ledger", href: "AdminAuditLedger.html" },
   { key: "users", label: "User Diagnostics", href: "AdminUserDiagnostics.html" },
   { key: "overview", label: "System Overview", href: "AdminLoyaltyOverview.html" }
 ];

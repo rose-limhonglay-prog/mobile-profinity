@@ -41,7 +41,9 @@
    store points-sound.js owns; dailyGoalPopup still gates the daily goal.
    API: window.PFRewards = { classify, major, fromAction, pending, flush,
    route, preview, KINDS }. classify() returns one of KINDS:
-   "indicator" | "streak" | "goalReached" | "rewardSplash" | "combined".
+   "indicator" | "streak" | "goalReached" | "rewardSplash" | "major" | "combined".
+   A way to earn's own Reward UI (action.celebration, set in Admin → Ways to
+   Earn) is applied by actionSurface() after every pf:points-earned.
    ?celebrate=combined|rewardSplash opens a demo of the two new surfaces.
    =========================================================================== */
 (function () {
@@ -50,8 +52,8 @@
   var STASH_KEY = "pf-celebration-pending";
   var PAYLOAD_KEY = "pf-celebration";
   var STASH_TTL = 25000;
-  var MAJOR_TYPES = { level: 1, achievement: 1, league: 1, dailyGoal: 1 };
-  var KINDS = ["indicator", "streak", "goalReached", "rewardSplash", "combined"];
+  var MAJOR_TYPES = { level: 1, achievement: 1, league: 1, dailyGoal: 1, action: 1 };   /* action = a way to earn whose admin-set Reward UI is bigger than the indicator */
+  var KINDS = ["indicator", "streak", "goalReached", "rewardSplash", "major", "combined"];
 
   var pending = [];               /* majors collected for the current action */
   var timer = null;
@@ -97,7 +99,7 @@
     if (lk && lastLevelKey !== null && lk !== lastLevelKey) {
       var cfg = e.getConfig();
       var badge = (cfg.levelBadges || []).filter(function (b) { return b.key === lk; })[0];
-      if (badge) major({ type: "level", key: lk, title: badge.splashTitle || (badge.name + " unlocked"), sub: "You've crossed " + e.formatNumber(badge.threshold) + " lifetime points.", color: badge.color, badge: badge });
+      if (badge) major({ type: "level", key: lk, kind: badge.celebration === "major" ? "major" : undefined, title: badge.splashTitle || (badge.name + " unlocked"), sub: "You've crossed " + e.formatNumber(badge.threshold) + " lifetime points.", color: badge.color, badge: badge });
     }
     lastLevelKey = lk;
     var before = lastUnlocked || [];
@@ -140,7 +142,7 @@
     if (!res) return;
     var e = eng();
     if (res.leveledUp && res.newLevel) {
-      major({ type: "level", key: res.newLevel.key, title: res.newLevel.splashTitle || (res.newLevel.name + " unlocked"),
+      major({ type: "level", key: res.newLevel.key, kind: res.newLevel.celebration === "major" ? "major" : undefined, title: res.newLevel.splashTitle || (res.newLevel.name + " unlocked"),
         sub: e ? "You've crossed " + e.formatNumber(res.newLevel.threshold) + " lifetime points." : "", color: res.newLevel.color, badge: res.newLevel });
     }
     (res.newlyUnlockedAchievements || []).forEach(function (b) {
@@ -153,8 +155,13 @@
   /* ---- the rule: indicator | streak | goalReached | rewardSplash | combined ---- */
   function classify(items) {
     var majors = (items || []).filter(function (m) { return MAJOR_TYPES[m.type]; });
+    if (majors.some(function (m) { return m.kind === "combined"; })) return "combined";
     if (majors.length >= 2) return "combined";
-    if (majors.length === 1) return majors[0].type === "dailyGoal" ? "goalReached" : "rewardSplash";
+    if (majors.length === 1) {
+      if (majors[0].type === "dailyGoal") return "goalReached";
+      if (majors[0].kind === "major") return "major";        /* Major Celebration Splash: one big reward, full page */
+      return "rewardSplash";
+    }
     if ((items || []).some(function (m) { return m.type === "checkin"; })) return "streak";
     return "indicator";
   }
@@ -164,7 +171,7 @@
     var h = document.documentElement;
     return h.classList.contains("pf-launch-active") || !!document.querySelector(".pf-launch") ||
       h.classList.contains("pf-dci-open") || !!document.querySelector(".pf-dci-screen.is-open") ||
-      h.classList.contains("pf-rsp-open");
+      h.classList.contains("pf-rsp-open") || h.classList.contains("pf-wn-open");
   }
   function whenClear(cb, maxMs) {
     var t0 = Date.now();
@@ -200,7 +207,7 @@
     if (kind === "rewardSplash") { showSplash(m); return kind; }
     saveScroll();
     var ret = encodeURIComponent(payload.ret);
-    if (kind === "combined") { go("CombinedCelebration.html?ret=" + ret); return kind; }
+    if (kind === "combined" || kind === "major") { go("CombinedCelebration.html?ret=" + ret); return kind; }
     if (!gamiOn("dailyGoalPopup")) return "muted";
     go("DailyGoal.html?ret=" + ret);
     return kind;
@@ -246,6 +253,7 @@
       var streak = 0; try { streak = eng().getState().streak.current || 0; } catch (e) {}
       return { kicker: null, points: m.points || 0, title: "Welcome back" + (f ? ", " + f : "") + "!", sub: streak > 1 ? "Daily login bonus — " + streak + " days in a row." : "Daily login bonus — see you again tomorrow.", icon: null, wave: true };
     }
+    if (m.type === "action") return { kicker: "Reward earned", points: m.points || 0, title: m.title || "Nice work", sub: m.sub || "", icon: m.icon || "lucide:sparkles", color: "#d9a21b" };
     if (m.type === "achievement") return { kicker: "Achievement unlocked", title: m.title || b.name || "New badge", sub: m.reward || b.reward || m.sub || "", icon: m.icon || b.icon || "lucide:award", color: "#d9a21b" };
     if (m.type === "league") return { kicker: "League promotion", title: m.title || ("Welcome to the " + (lg.name || "next") + " League"), sub: "A new leaderboard, new rivals, new prizes", icon: "lucide:trophy", color: m.color || lg.accent || "#d9a21b" };
     return { kicker: "Milestone reached", title: m.title || ((b.name || "Level") + " unlocked"), sub: m.sub || "", icon: "lucide:gem", color: m.color || b.color || "#d9a21b" };
@@ -376,13 +384,46 @@
   }
   window.addEventListener("pagehide", stash);
 
+  /* ---- the admin-set Reward UI of the way to earn itself ----
+     Ways to Earn rows carry action.celebration (loyalty-engine DEFAULT_ACTIONS
+     / AdminActionsEditor): indicator (nothing extra), streak, goalReached,
+     rewardSplash, major, combined. Badge / level / daily-goal majors detected
+     above still stack on top, so a rewardSplash action that also unlocks a
+     badge becomes one Combined Celebration. */
+  function showStreak(pts) {
+    if (!gamiOn("streakPopup")) return;
+    var st = null; try { st = eng().getState(); } catch (err) {}
+    var streak = (st && st.streak && st.streak.current) || 1;
+    if (window.PFDailyCheckin && window.PFDailyCheckin.show) { window.PFDailyCheckin.show(pts, streak); return; }
+    showSplash({ type: "login", points: pts });
+  }
+  function actionSurface(d) {
+    var e = eng(); if (!e || !d.actionId || !e.getActionById) return;
+    var a = null; try { a = e.getActionById(d.actionId); } catch (err) {}
+    if (!a || !a.celebration || a.celebration === "indicator") return;
+    var pts = Number(d.amount) || a.basePoints || 0;
+    if (a.celebration === "streak") {
+      /* the automatic check-in already paints its own Welcome back screen */
+      if (a.id === "evt_mobile_checkin" || d.sound === "checkin") return;
+      setTimeout(function () { whenClear(function () { showStreak(pts); }); }, 400);
+      return;
+    }
+    if (a.celebration === "goalReached") {
+      var G = window.PFDailyGoal, mark = 280;
+      try { mark = (G && (G.markFor(G.today()) || G.goal)) || 280; } catch (err) {}
+      major({ type: "dailyGoal", key: "action:" + a.id + ":" + Date.now(), mark: mark });
+      return;
+    }
+    major({ type: "action", kind: a.celebration, key: a.id + ":" + Date.now(), actionId: a.id, title: a.label, sub: d.label && d.label !== a.label ? d.label : "", points: pts, icon: "lucide:sparkles" });
+  }
+
   /* ---- listeners ---- */
   window.addEventListener("pf:points-earned", function (e) {
     var d = (e && e.detail) || {};
     if (!(Number(d.amount) > 0)) return;
     /* the engine books the points synchronously in the pill / awardPoints
        listeners; diff one tick later so we see the new lifetime total */
-    setTimeout(function () { diffEngine(d); }, 60);
+    setTimeout(function () { diffEngine(d); actionSurface(d); }, 60);
   });
   document.addEventListener("pf:league-changed", function (e) {
     var d = (e && e.detail) || {};
@@ -443,12 +484,14 @@
     snapshot();
     unstash();
     setTimeout(showHandoff, 500);
-    var q = /[?&]celebrate=(combined|rewardSplash|goalReached|milestone)/.exec(location.search);
+    var q = /[?&]celebrate=(combined|rewardSplash|goalReached|milestone|major|streak)/.exec(location.search);
     if (q) setTimeout(function () { preview(q[1]); }, 800);
   }
   /* demo: fake a set of majors so the pages can be reviewed without earning */
   function preview(kind) {
     var e = eng(), cfg = e ? e.getConfig() : { levelBadges: [], achievementBadges: [] };
+    if (kind === "streak") { showStreak(50); return "streak"; }
+    if (kind === "major") return route([{ type: "action", kind: "major", key: "demo:" + Date.now(), title: "Attend Annual Conference", points: 500, icon: "lucide:sparkles" }]);
     if (kind === "goalReached") { var gg = (window.PFDailyGoal && window.PFDailyGoal.goal) || 280; return route([{ type: "dailyGoal", key: String(gg), mark: gg }]); }
     var lvl = (cfg.levelBadges || [])[1] || { key: "silver", name: "Silver", threshold: 5000, color: "#8a94a6" };
     var ach = (cfg.achievementBadges || [])[0] || { key: "first_blood", name: "First Blood", description: "Complete your very first point-earning action.", reward: "50 bonus credits", icon: "lucide:zap" };

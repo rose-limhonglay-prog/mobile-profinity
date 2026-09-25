@@ -22,7 +22,9 @@ const TXN_NAV = [
   { icon: "lucide:smartphone", label: "App Versions" },
   { icon: "lucide:bell", label: "Push Notification" },
   { icon: "lucide:badge-check", label: "Badges" },
+  { icon: "lucide:clipboard-list", label: "Quizzes & Surveys" },
   { icon: "lucide:trophy", label: "Loyalty & Gamification", chevron: true },
+  { icon: "lucide:scroll-text", label: "Points Ledger" },
   { icon: "lucide:receipt-text", label: "Transactions", chevron: true, active: true },
   { icon: "lucide:table-2", label: "Courses", chevron: true },
   { icon: "lucide:users", label: "Community", chevron: true },
@@ -42,7 +44,9 @@ const TXN_NAV_LINKS = {
   "App Versions": "AdminAppVersions.html",
   "Push Notification": "AdminPushNotifications.html",
   "Badges": "AdminBadges.html",
+  "Quizzes & Surveys": "AdminQuizEditor.html",
   "Loyalty & Gamification": "AdminActionsEditor.html",
+  "Points Ledger": "AdminAuditLedger.html",
   "Transactions": "AdminTransactions.html",
   "Courses": "AdminCourses.html",
   "Community": "AdminCommunity.html",
@@ -113,10 +117,10 @@ function TXNCheck({ on, onClick }) {
 
 /* ------------------------------------------------------------------ data */
 const TXN_STATS = [
-  { label: "Overdue", value: "£ 0.00", labelColor: "var(--error)" },
-  { label: "Due within next 30 days", value: "0", labelColor: "var(--gray-500)" },
-  { label: "Upcoming Payout", value: "£ 301,614.31", labelColor: "var(--gray-500)" },
-  { label: "No. of Transaction", value: "1000", labelColor: "var(--gray-500)" },
+  { label: "Overdue", tip: "Total value of invoices past their due date that are still unpaid.", value: "£ 0.00", labelColor: "var(--error)" },
+  { label: "Due within next 30 days", tip: "Number of invoices that fall due in the next 30 days.", value: "0", labelColor: "var(--gray-500)" },
+  { label: "Upcoming Payout", tip: "Money collected and cleared that will be paid out to the clinic in the next payout run.", value: "£ 301,614.31", labelColor: "var(--gray-500)" },
+  { label: "No. of Transaction", tip: "Total number of invoices recorded, both paid and unpaid.", value: "1000", labelColor: "var(--gray-500)" },
 ];
 
 const TXN_ROWS = [
@@ -128,10 +132,19 @@ const TXN_ROWS = [
 ];
 
 /* ------------------------------------------------------------ stat card */
+function AdmInfo({ text }) {
+  return (
+    <span className="adm-info" tabIndex={0} role="img" aria-label={text}>
+      <iconify-icon icon="lucide:info"></iconify-icon>
+      <span className="adm-info-tip" aria-hidden="true">{text}</span>
+    </span>
+  );
+}
+
 function TXNStatCard({ stat }) {
   return (
     <div className="txn-stat-card">
-      <div className="txn-stat-label" style={{ color: stat.labelColor }}>{stat.label}</div>
+      <div className="txn-stat-label" style={{ color: stat.labelColor }}>{stat.label}{stat.tip && <AdmInfo text={stat.tip} />}</div>
       <div className="txn-stat-value">{stat.value}</div>
     </div>
   );

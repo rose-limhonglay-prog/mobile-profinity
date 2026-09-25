@@ -139,6 +139,16 @@ function describeCC(m) {
       color: m.color || lg.accent
     };
   }
+  if (m.type === "action") {
+    /* a way to earn whose admin-set Reward UI is Major / Combined */
+    return {
+      tag: "Reward",
+      title: m.points ? "+" + Number(m.points).toLocaleString("en-GB") + " pts" : m.title || "Reward earned",
+      sub: m.points ? m.title || "" : m.sub || "",
+      icon: m.icon || "lucide:coins",
+      tone: "gold"
+    };
+  }
   return {
     tag: "Reward",
     title: m.title || "Reward unlocked",
@@ -288,10 +298,14 @@ function CombinedCelebrationScreen() {
     3: "Triple",
     4: "Quadruple"
   };
-  const headline = (words[n] || n + "-way") + " celebration" + (first ? ", " + first : "") + "!";
+  /* Major Celebration Splash: one big reward gets the full page to itself */
+  const isMajor = payload.kind === "major" || n === 1;
+  const headline = isMajor ? "Huge win" + (first ? ", " + first : "") + "!" : (words[n] || n + "-way") + " celebration" + (first ? ", " + first : "") + "!";
+  const kicker = isMajor ? "Major celebration" : n + " rewards · one move";
+  const sub = isMajor ? /*#__PURE__*/React.createElement(React.Fragment, null, "That was a ", /*#__PURE__*/React.createElement("b", null, "big one"), ". Here's what you just unlocked.") : /*#__PURE__*/React.createElement(React.Fragment, null, "That one action set off ", /*#__PURE__*/React.createElement("b", null, n, " celebrations"), " at once. Here's everything you just unlocked.");
   return /*#__PURE__*/React.createElement("div", {
-    className: "cc-screen",
-    "data-screen-label": "Combined Celebration"
+    className: "cc-screen" + (isMajor ? " is-major" : ""),
+    "data-screen-label": isMajor ? "Major Celebration" : "Combined Celebration"
   }, /*#__PURE__*/React.createElement("div", {
     className: "cc-glow",
     "aria-hidden": "true"
@@ -314,11 +328,11 @@ function CombinedCelebrationScreen() {
     name: "lucide:party-popper",
     size: 13,
     color: "currentColor"
-  }), n, " rewards · one move"), /*#__PURE__*/React.createElement("h1", {
+  }), kicker), /*#__PURE__*/React.createElement("h1", {
     className: "cc-title"
   }, headline), /*#__PURE__*/React.createElement("p", {
     className: "cc-sub"
-  }, "That one action set off ", /*#__PURE__*/React.createElement("b", null, n, " celebrations"), " at once. Here's everything you just unlocked."), /*#__PURE__*/React.createElement("ol", {
+  }, sub), /*#__PURE__*/React.createElement("ol", {
     className: "cc-stack",
     "aria-label": "Rewards unlocked"
   }, items.map((m, i) => {

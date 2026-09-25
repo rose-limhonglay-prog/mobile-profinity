@@ -1311,17 +1311,18 @@ img{max-width:100%}
   font-weight:var(--fw-bold);font-size:13px;letter-spacing:.01em}
 .pm-wiz-result-band--arch{background:#F4F3FF;color:#4A40D6;font-size:16px}
 
-/* ---- hub: intro note + single-row tiles ---- */
-.pm-hub-intro{display:flex;gap:12px;align-items:flex-start;padding:14px 14px 14px 12px;margin-bottom:16px;
-  background:#F4F3FF;border:1px solid #E2DEFB;border-radius:14px}
-.pm-hub-intro-ic{flex:none;width:36px;height:36px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;
+/* ---- hub: "Why Ava asks" help pill (opens the explainer) + single-row tiles ---- */
+.pm-hub-why{display:inline-flex;align-items:center;gap:8px;min-height:38px;margin:-2px 0 14px;padding:5px 12px 5px 6px;
+  border:1px solid #E2DEFB;border-radius:100px;background:#F4F3FF;cursor:pointer;font:inherit;
+  -webkit-tap-highlight-color:transparent;transition:background .15s ease,transform .15s ease}
+.pm-hub-why:hover{background:#ECE9FF}
+.pm-hub-why:active{transform:scale(.98)}
+.pm-hub-why-ic{flex:none;width:26px;height:26px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;
   box-shadow:0 1px 3px rgba(108,99,255,.18)}
-.pm-hub-intro-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-.pm-hub-intro-copy b{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:14px;color:#3F37B8}
-.pm-hub-intro-copy p{margin:0;font-family:var(--font-sans);font-size:13.5px;line-height:1.5;color:var(--gray-600)}
-.pm-hub-intro-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.pm-hub-intro-chips span{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;background:#fff;
-  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:11.5px;color:#4A40D6}
+.pm-hub-why-tx{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13.5px;color:#3F37B8}
+.pm-help-chips{display:flex;flex-wrap:wrap;gap:6px;margin:-6px 0 18px}
+.pm-help-chips span{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:100px;background:#F4F3FF;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px;color:#4A40D6}
 .pm-hub-tile{position:relative;display:flex;flex-direction:row;align-items:center;gap:14px;width:100%;min-height:92px;text-align:left;cursor:pointer;
   background:var(--wash,var(--surface-card));border:1px solid var(--line,var(--border-default));border-radius:16px;padding:14px 14px 14px 14px;
   font:inherit;color:inherit;transition:transform .15s ease,box-shadow .15s ease;-webkit-tap-highlight-color:transparent}
@@ -1492,3 +1493,44 @@ img{max-width:100%}
 .pm-cac-input i{position:absolute;left:14px;font-style:normal;font-size:16px;color:var(--gray-500)}
 .pm-cac-input input{width:100%;height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--brand-navy);background:var(--surface-card);font-family:var(--font-sans);font-size:16px;color:var(--pm-bn-ink,#000);outline:none}
 .pm-cac-input i+input{padding-left:32px}
+
+/* ===== Today's Targets — daily picks (free PDF download + paid course CTA, daily-targets.js) ===== */
+.pm-picks{display:flex;flex-direction:column;gap:8px;margin:0 0 12px}
+.pm-pick{--pm-pick-free:#1E7A5C;padding-left:10px;gap:8px}
+.pm-pick-free{border-color:color-mix(in srgb,#1E7A5C 28%,var(--border-default))}
+.pm-pick-paid{border-color:color-mix(in srgb,var(--brand-gold) 45%,var(--border-default));background:color-mix(in srgb,var(--brand-gold) 7%,var(--surface-card))}
+.pm-pick.done{border-color:transparent;background:var(--surface-sunken)}
+.pm-pick .pm-target-main{gap:10px}
+.pm-pick-badge{flex:none;writing-mode:vertical-rl;transform:rotate(180deg);padding:6px 3px;border-radius:6px;font-family:var(--font-sans);font-weight:var(--fw-bold);
+  font-size:10px;letter-spacing:.06em;text-transform:uppercase;line-height:1;background:#EAF6F0;color:#1E7A5C}
+.pm-pick-badge-paid{background:var(--brand-gold-100,#f7efe3);color:var(--brand-gold-700,#8A5303)}
+.pm-pick-icon{flex:none;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--surface-sunken)}
+.pm-pick-paid .pm-pick-icon{background:color-mix(in srgb,var(--brand-gold) 18%,var(--surface-card))}
+.pm-pick.done .pm-target-copy .tx{text-decoration:none;color:var(--gray-500)}
+.pm-pick-cta{flex:none;align-self:center;margin-right:8px;min-height:34px;padding:0 12px;border-radius:100px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px;letter-spacing:.01em;background:var(--brand-navy);color:#fff;white-space:nowrap}
+.pm-pick-cta:active{opacity:.8;transform:scale(.97)}
+.pm-pick-cta-buy{background:var(--brand-gold);color:var(--brand-navy)}
+.pm-pick-cta.is-done{background:#EAF6F0;color:#1E7A5C}
+.pm-picks-note{margin:0;font-family:var(--font-sans);font-size:12px;color:var(--gray-500)}
+
+/* ===== One-pillar start (2026-09-24): Track your goals opens after a single
+   "Get to know you" pillar. Unassessed Spiral tiles, the Goal Focus "assess
+   more" link and the Today's Targets "Next up" row. Theme-safe via vars +
+   color-mix so the dark shell needs no overrides. ===== */
+.pm-spiral-tile.unassessed{--band:var(--gray-300);--band-soft:var(--surface-sunken);--band-text:var(--gray-600);
+  border-style:dashed;border-color:var(--gray-300);background:var(--surface-sunken)}
+.pm-spiral-tile.unassessed .pm-spiral-ring{background:var(--gray-150)}
+.pm-spiral-tile.unassessed .pm-spiral-ring::before{inset:8px;border:2px dashed var(--gray-300);box-sizing:border-box;background:var(--surface-card)}
+.pm-spiral-tile.unassessed .pm-spiral-ring .n.q{color:var(--gray-400);font-size:30px}
+.pm-spiral-tile.unassessed .pm-spiral-tile-name{color:var(--gray-600)}
+.pm-spiral-tile-chip.assess{background:#EDEBFF;color:#4A40D6}
+.pm-spiral-tile.unassessed .pm-spiral-tile-avg{color:var(--ai-purple);font-weight:var(--fw-semibold)}
+.pm-goal-more{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:0;border:none;background:none;cursor:pointer;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14px;color:var(--ai-purple);-webkit-tap-highlight-color:transparent}
+.pm-goal-more:hover{text-decoration:underline}
+.pm-target-row.pm-target-assess{margin-bottom:8px;
+  border-color:color-mix(in srgb,var(--ai-purple) 32%,var(--border-default));background:color-mix(in srgb,var(--ai-purple) 7%,var(--surface-card))}
+.pm-target-assess-ic{flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.pm-target-assess .pm-target-copy .tx{color:var(--brand-navy);font-weight:var(--fw-semibold)}
+.pm-target-assess-cta{background:var(--ai-purple);color:#fff}

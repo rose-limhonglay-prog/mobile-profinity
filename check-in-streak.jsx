@@ -67,6 +67,51 @@ function buildSlotsCIS(streak) {
   return slots;
 }
 
+/* Streak-at-risk banner — same card as the Rewards dashboard's StreakRiskBanner
+   (rewards-dashboard.jsx). The streak lapses 24h after the last check-in, so it
+   shows once the member hasn't checked in for 12h+ and counts down live; an
+   explicit riskDeadline (demo button / server nudge) wins. Checking in or
+   freezing clears riskDeadline in the engine, which hides it. */
+const CIS_STREAK_WINDOW_MS = 24 * 3600000;
+const CIS_STREAK_WARN_MS = 12 * 3600000;
+function cisStreakDeadline(streak) {
+  if (!streak || !streak.current || streak.frozen) return null;
+  if (streak.riskDeadline) return new Date(streak.riskDeadline).getTime();
+  const last = streak.lastCheckIn ? new Date(streak.lastCheckIn).getTime() : 0;
+  if (!last || Date.now() - last < CIS_STREAK_WARN_MS) return null;
+  return last + CIS_STREAK_WINDOW_MS;
+}
+function fmtClockCIS(ms) {
+  if (ms <= 0) return "00:00:00";
+  const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000), s = Math.floor((ms % 60000) / 1000);
+  return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":");
+}
+function CisNotifPreview({ hoursLabel, body }) {
+  return (
+    <div className="cis-notif-preview" role="note">
+      <div className="cis-notif-icon"><DSCIS.IconifyIcon name="lucide:bell-ring" size={16} color="#292569" /></div>
+      <div className="cis-notif-body"><div className="cis-notif-title">PROfinity <span>{hoursLabel}</span></div><div className="cis-notif-text">{body}</div></div>
+    </div>
+  );
+}
+function CisStreakRiskBanner({ streak }) {
+  const [now, setNow] = useStateCIS(() => Date.now());
+  useEffectCIS(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
+  const deadline = cisStreakDeadline(streak);
+  if (!deadline) return null;
+  const days = streak.current;
+  return (
+    <section className="cis-risk-banner" aria-label={"Your " + days + "-day streak is at risk"}>
+      <div className="cis-risk-head"><DSCIS.IconifyIcon name="lucide:flame" size={22} color="#3D2A00" /><span>Your {days}-Day Streak is at Risk!</span></div>
+      <div className="cis-risk-clock" aria-live="off">Expires in {fmtClockCIS(deadline - now)}</div>
+      <div className="cis-notif-stack">
+        <CisNotifPreview hoursLabel="· 6h before" body={"Don't lose your " + days + "-day streak — check in before it expires!"} />
+        <CisNotifPreview hoursLabel="· 2h before" body={"Last call! Your streak expires in 2 hours."} />
+      </div>
+    </section>
+  );
+}
+
 function CheckInStreakScreen() {
   const [config] = useStateCIS(() => PF_CIS.getConfig());
   const [state, setState] = useStateCIS(() => PF_CIS.getState());
@@ -159,6 +204,8 @@ function CheckInStreakScreen() {
           : <button className="ml-btn ml-btn-navy cis-cta" type="button" onClick={checkIn} aria-label={"Check in today for " + projected + " points"}><DSCIS.IconifyIcon name="lucide:zap" size={18} color="currentColor" /> Check in today <span className="cis-cta-pts">· +{projected} pts</span></button>}
         <p className="cis-cta-note">{checkedInToday ? "Your streak is safe until tomorrow." : "Check in once a day to keep the row growing."}</p>
 
+        <CisStreakRiskBanner streak={streak} />
+
         <div className="cis-stats">
           <div className="ml-card cis-stat">
             <span className="cis-stat-ico"><DSCIS.IconifyIcon name="lucide:flame" size={16} color="currentColor" /></span>
@@ -203,6 +250,7 @@ function CheckInStreakScreen() {
         <div className="ml-demo-bar">
           <button className="ml-demo-btn" type="button" onClick={() => { PF_CIS.setState({ streak: Object.assign({}, streak, { current: 3, lastCheckIn: new Date(Date.now() - 20 * 3600000).toISOString(), frozen: false }) }); refresh(); }}>Demo: 3 of 5</button>
           <button className="ml-demo-btn" type="button" onClick={() => { PF_CIS.setState({ streak: Object.assign({}, streak, { current: 5, lastCheckIn: new Date(Date.now() - 20 * 3600000).toISOString(), frozen: false }) }); refresh(); }}>Demo: 5 in a row</button>
+          <button className="ml-demo-btn" type="button" onClick={() => { PF_CIS.setStreakAtRisk(6); refresh(); }}>Demo: streak at risk</button>
           <button className="ml-demo-btn" type="button" onClick={() => { PF_CIS.resetDemo(); refresh(); flash("Demo data reset."); }}>Reset demo data</button>
         </div>
         <div style={{ height: 8 }} />

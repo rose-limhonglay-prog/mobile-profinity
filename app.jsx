@@ -1517,25 +1517,11 @@ function makeImagePicker(pool) {
 
 const nextPostImages = makeImagePicker(POST_PHOTO_POOL);
 
-/* Quiz/poll content pool — individual entries are referenced by index from
-   FEED_SEQUENCE (see below) at their designed slots, rather than always
-   leading the feed. */
+/* Poll content pool — referenced by index from the tier sequences (see
+   cycleSlots below) at its designed slot rather than always leading the
+   feed. Knowledge-check quizzes no longer live here: they're drawn at random
+   from the quiz engine's question pool per feed load (planFeedQuizzes). */
 const PINNED_POSTS = [
-{
-  id: "p_quiz", author: PROFINITY, time: "6h",
-  body: "Knowledge check ✅ — test yourself before this week's masterclass. Tap an answer to see if you're right.",
-  questionnaire: {
-    question: "Which facial danger zone carries the highest risk of vascular occlusion during tear trough filler injection?",
-    options: [
-    { label: "Angular artery, medial canthus region", correct: true },
-    { label: "Superficial temporal artery", correct: false },
-    { label: "Facial artery, nasolabial fold", correct: false },
-    { label: "Supratrochlear artery", correct: false }]
-
-  },
-  likes: "980", comments: "64", shares: "22", actioned: false,
-  commentList: thread("Got it right first try — this danger zone comes up constantly in the masterclass Q&A!")
-},
 {
   id: "p8", author: PROFINITY, time: "1d",
   body: "Quick poll for the community — we're planning next month's masterclass and want to focus where you need it most. Cast your vote 👇",
@@ -1609,160 +1595,6 @@ const EDITORIAL_POSTS = [
   body: "Watch the full walkthrough of the Golden Ratio full-face assessment — every landmark, every measurement, explained step by step.",
   likes: "3.4K", comments: "210", shares: "180", actioned: false,
   commentList: thread("Watched it twice already — incredibly clear teaching.")
-}];
-
-/* Ten extra knowledge-check quizzes — a content pool FEED_SEQUENCE pulls
-   specific entries from by index for its quiz slots. */
-const QUIZ_POSTS = [
-{
-  id: "p_quiz2", author: PROFINITY, time: "9h",
-  body: "Knowledge check ✅ — quick one on nerve anatomy. Tap an answer to see if you're right.",
-  questionnaire: {
-    question: "Which nerve exits at the mental foramen and must be avoided when injecting the chin and jawline?",
-    options: [
-    { label: "Mental nerve", correct: true },
-    { label: "Marginal mandibular nerve", correct: false },
-    { label: "Buccal nerve", correct: false },
-    { label: "Zygomatic nerve", correct: false }]
-
-  },
-  likes: "742", comments: "51", shares: "18", actioned: false,
-  commentList: thread("Mixed up the mental and marginal mandibular nerves for years — this one's a great reminder!")
-},
-{
-  id: "p_quiz3", author: PROFINITY, time: "14h",
-  body: "Knowledge check ✅ — safety first. Tap an answer to see if you're right.",
-  questionnaire: {
-    question: "What is the recommended first step if you suspect a vascular occlusion during filler injection?",
-    options: [
-    { label: "Stop injecting immediately and assess", correct: true },
-    { label: "Massage the area vigorously", correct: false },
-    { label: "Apply ice only and continue", correct: false },
-    { label: "Wait 24 hours to see if it resolves", correct: false }]
-
-  },
-  likes: "1.1K", comments: "88", shares: "34", actioned: false,
-  commentList: thread("This is drilled into us every masterclass and it still saves lives — stop first, always.")
-},
-{
-  id: "p_quiz4", author: PROFINITY, time: "1d",
-  body: "Knowledge check ✅ — toxin mechanism basics. Tap an answer to see if you're right.",
-  questionnaire: {
-    question: "Botulinum toxin type A works by blocking release of which neurotransmitter at the neuromuscular junction?",
-    options: [
-    { label: "Acetylcholine", correct: true },
-    { label: "Dopamine", correct: false },
-    { label: "Serotonin", correct: false },
-    { label: "GABA", correct: false }]
-
-  },
-  likes: "890", comments: "42", shares: "15", actioned: false,
-  commentList: thread("Good refresher — the mechanism question always comes up in patient consults too.")
-},
-{
-  id: "p_quiz5", author: PROFINITY, time: "2d",
-  body: "Knowledge check ✅ — cannula technique. Tap an answer to see if you're right.",
-  questionnaire: {
-    question: "Which layer should a cannula typically stay within to minimize risk when treating the tear trough?",
-    options: [
-    { label: "Supraperiosteal plane", correct: true },
-    { label: "Intradermal layer", correct: false },
-    { label: "Subdermal fat only", correct: false },
-    { label: "Intramuscular plane", correct: false }]
-
-  },
-  likes: "1.3K", comments: "76", shares: "29", actioned: false,
-  commentList: thread("Staying supraperiosteal changed my tear trough results overnight.")
-},
-{
-  id: "p_quiz6", author: PROFINITY, time: "2d",
-  body: "Knowledge check ✅ — full-face planning. Tap an answer to see if you're right.",
-  questionnaire: {
-    question: "In the “liquid facelift” concept, which combination of areas is most commonly addressed?",
-    options: [
-    { label: "Cheek, jawline, chin and temples", correct: true },
-    { label: "Only the lips", correct: false },
-    { label: "Only the forehead", correct: false },
-    { label: "Only under-eye", correct: false }]
-
-  },
-  likes: "965", comments: "58", shares: "21", actioned: false,
-  commentList: thread("Treating all four together is what actually gives that natural lift.")
-},
-{
-  id: "p_quiz7", author: PROFINITY, time: "3d",
-  body: "Knowledge check ✅ — patient expectations. Tap an answer to see if you're right.",
-  questionnaire: {
-    question: "What is the typical onset time for a visible botulinum toxin effect?",
-    options: [
-    { label: "3–14 days", correct: true },
-    { label: "Immediately", correct: false },
-    { label: "6 months", correct: false },
-    { label: "24 hours guaranteed", correct: false }]
-
-  },
-  likes: "1.5K", comments: "94", shares: "37", actioned: false,
-  commentList: thread("Setting this expectation upfront saves so many anxious follow-up messages!")
-},
-{
-  id: "p_quiz8", author: PROFINITY, time: "3d",
-  body: "Knowledge check ✅ — temple danger zones. Tap an answer to see if you're right.",
-  questionnaire: {
-    question: "Which structure is the key danger zone when injecting the temporal region?",
-    options: [
-    { label: "Superficial temporal artery / frontal branch of facial nerve", correct: true },
-    { label: "Angular artery", correct: false },
-    { label: "Supratrochlear artery", correct: false },
-    { label: "Facial vein only", correct: false }]
-
-  },
-  likes: "812", comments: "47", shares: "16", actioned: false,
-  commentList: thread("The temple is so underestimated as a danger zone — great question.")
-},
-{
-  id: "p_quiz9", author: PROFINITY, time: "4d",
-  body: "Knowledge check ✅ — reversal agents. Tap an answer to see if you're right.",
-  questionnaire: {
-    question: "Hyaluronidase is used to?",
-    options: [
-    { label: "Dissolve hyaluronic acid filler", correct: true },
-    { label: "Numb the skin", correct: false },
-    { label: "Reverse botulinum toxin", correct: false },
-    { label: "Increase filler longevity", correct: false }]
-
-  },
-  likes: "1.2K", comments: "70", shares: "25", actioned: false,
-  commentList: thread("Every clinic should keep this stocked and know the dosing cold.")
-},
-{
-  id: "p_quiz10", author: PROFINITY, time: "5d",
-  body: "Knowledge check ✅ — contraindications. Tap an answer to see if you're right.",
-  questionnaire: {
-    question: "Which patient factor is a contraindication to elective filler treatment on the day?",
-    options: [
-    { label: "Active infection at the injection site", correct: true },
-    { label: "Being over 40", correct: false },
-    { label: "Having had filler before", correct: false },
-    { label: "Mild seasonal allergies", correct: false }]
-
-  },
-  likes: "930", comments: "53", shares: "19", actioned: false,
-  commentList: thread("Always reschedule for active infection — not worth the risk.")
-},
-{
-  id: "p_quiz11", author: PROFINITY, time: "6d",
-  body: "Knowledge check ✅ — lip anatomy. Tap an answer to see if you're right.",
-  questionnaire: {
-    question: "For lip filler, which vessel is the primary danger zone clinicians must map before injecting?",
-    options: [
-    { label: "Labial artery", correct: true },
-    { label: "Facial vein", correct: false },
-    { label: "Superficial temporal artery", correct: false },
-    { label: "Supratrochlear artery", correct: false }]
-
-  },
-  likes: "1.4K", comments: "81", shares: "30", actioned: false,
-  commentList: thread("Mapping the labial artery chairside before every lip case, no exceptions.")
 }];
 
 /* ---- Free-newsfeed fixed sequence: net-new post-type demos ---- */
@@ -2167,12 +1999,12 @@ const EXTRA_VIDEO_POST_10 = {
 /* Tier-aware newsfeed sequences — every subscription tier (Free/Confidence/
    Mastery) walks the same designed post-format order (text, square image,
    vertical image, 5-image carousel, square video, event-registration,
-   reel/vertical video, poll, quiz, paywall lock), but a paid tier blends in
+   reel/vertical video, poll, paywall lock), but a paid tier blends in
    extra posts "sourced" from its own tier on top of everything the tier
    below it sees, and the sequence runs twice — once teasing the next tier
    up, once (repeat) teasing the tier after that. See cycleSlots() below. */
-function cycleSlots({ text, sqImg, vertImg, carousel, sqVideo, event, reel, poll, quiz, lock }) {
-  return [text, ...sqImg, ...vertImg, ...carousel, ...sqVideo, event, ...reel, poll, quiz, lock];
+function cycleSlots({ text, sqImg, vertImg, carousel, sqVideo, event, reel, poll, lock }) {
+  return [text, ...sqImg, ...vertImg, ...carousel, ...sqVideo, event, ...reel, poll, lock];
 }
 
 /* Gives a repeated-cycle post a distinct id from its first appearance, so two
@@ -2378,27 +2210,27 @@ const MASTERY_REEL_3 = {
 };
 
 /* Free viewers: two designed cycles (Text/SqImg/VertImg/Carousel5/SqVideo/
-   Event/Reel/Poll/Quiz/Lock), teasing Confidence then Mastery, followed by
+   Event/Reel/Poll/Lock), teasing Confidence then Mastery, followed by
    the rest of today's editorial/video library as scroll-depth filler. */
 const FREE_FEED_SEQUENCE = [
 ...cycleSlots({
   text: TEXT_POST_1, sqImg: [SQUARE_IMG_POST_1], vertImg: [PORTRAIT_IMG_POST_1],
   carousel: [FREE_CAROUSEL5_1], sqVideo: [EDITORIAL_POSTS[6]] /* p5 */, event: FREE_EVENTREG_1,
-  reel: [EDITORIAL_POSTS[1]] /* p6 */, poll: PINNED_POSTS[1], quiz: PINNED_POSTS[0],
+  reel: [EDITORIAL_POSTS[1]] /* p6 */, poll: PINNED_POSTS[0],
   lock: CONFIDENCE_POST_2
 }),
 ...cycleSlots({
   text: TEXT_POST_2, sqImg: [SQUARE_IMG_POST_2], vertImg: [PORTRAIT_IMG_POST_2],
   carousel: [FREE_CAROUSEL5_2], sqVideo: [SQUARE_VIDEO_POST_2], event: FREE_EVENTREG_2,
-  reel: [PORTRAIT_VIDEO_POST_2], poll: POLL_POST_2, quiz: QUIZ_POSTS[0],
+  reel: [PORTRAIT_VIDEO_POST_2], poll: POLL_POST_2,
   lock: MASTERY_POST_2
 }),
 // Extra library — everything else already authored, kept as scroll-depth filler.
 TEXT_POST_3, SQUARE_IMG_POST_3, PORTRAIT_IMG_POST_3, EDITORIAL_POSTS[3] /* p2: carousel */,
-SQUARE_VIDEO_POST_3, PORTRAIT_VIDEO_POST_3, QUIZ_POSTS[1] /* p_quiz3 */, POLL_POST_3,
+SQUARE_VIDEO_POST_3, PORTRAIT_VIDEO_POST_3, POLL_POST_3,
 COURSE_COMMENT_2, MASTERCLASS_UNLOCK_POST,
 TEXT_POST_4, SQUARE_IMG_POST_4, PORTRAIT_IMG_POST_4, EDITORIAL_POSTS[4] /* p3: carousel */,
-SQUARE_VIDEO_POST_4, PORTRAIT_VIDEO_POST_4, QUIZ_POSTS[2] /* p_quiz4 */, POLL_POST_4,
+SQUARE_VIDEO_POST_4, PORTRAIT_VIDEO_POST_4, POLL_POST_4,
 EDITORIAL_POSTS[0] /* p7: 10-image gallery */, EDITORIAL_POSTS[5] /* p4: carousel */,
 EXTRA_VIDEO_POST_1, EXTRA_VIDEO_POST_2, EXTRA_VIDEO_POST_3, EXTRA_VIDEO_POST_4, EXTRA_VIDEO_POST_5,
 EXTRA_VIDEO_POST_6, EXTRA_VIDEO_POST_7, EXTRA_VIDEO_POST_8, EXTRA_VIDEO_POST_9, EXTRA_VIDEO_POST_10];
@@ -2417,7 +2249,7 @@ const CONFIDENCE_FEED_SEQUENCE = [
   sqVideo: [SQUARE_VIDEO_POST_2, CONFIDENCE_SQVIDEO_1],
   event: FREE_EVENTREG_1,
   reel: [PORTRAIT_VIDEO_POST_2, CONFIDENCE_REEL_1],
-  poll: PINNED_POSTS[1], quiz: PINNED_POSTS[0],
+  poll: PINNED_POSTS[0],
   lock: MASTERY_POST_2
 }),
 ...cycleSlots({
@@ -2428,7 +2260,7 @@ const CONFIDENCE_FEED_SEQUENCE = [
   sqVideo: [SQUARE_VIDEO_POST_3, reid(CONFIDENCE_SQVIDEO_1, "_b")],
   event: FREE_EVENTREG_2,
   reel: [PORTRAIT_VIDEO_POST_3, reid(CONFIDENCE_REEL_1, "_b")],
-  poll: POLL_POST_2, quiz: QUIZ_POSTS[0],
+  poll: POLL_POST_2,
   lock: FREEDOM_POST_2
 })];
 
@@ -2445,7 +2277,7 @@ const MASTERY_FEED_SEQUENCE = [
   sqVideo: [SQUARE_VIDEO_POST_2, CONFIDENCE_SQVIDEO_1, MASTERY_SQVIDEO_1, MASTERY_SQVIDEO_2],
   event: FREE_EVENTREG_1,
   reel: [PORTRAIT_VIDEO_POST_2, CONFIDENCE_REEL_1, MASTERY_REEL_1, MASTERY_REEL_2, MASTERY_REEL_3],
-  poll: PINNED_POSTS[1], quiz: PINNED_POSTS[0],
+  poll: PINNED_POSTS[0],
   lock: FREEDOM_POST_2
 }),
 ...cycleSlots({
@@ -2456,7 +2288,7 @@ const MASTERY_FEED_SEQUENCE = [
   sqVideo: [SQUARE_VIDEO_POST_3, ...reidAll([CONFIDENCE_SQVIDEO_1, MASTERY_SQVIDEO_1, MASTERY_SQVIDEO_2], "_c")],
   event: FREE_EVENTREG_2,
   reel: [PORTRAIT_VIDEO_POST_3, ...reidAll([CONFIDENCE_REEL_1, MASTERY_REEL_1, MASTERY_REEL_2, MASTERY_REEL_3], "_c")],
-  poll: POLL_POST_2, quiz: QUIZ_POSTS[0],
+  poll: POLL_POST_2,
   lock: INNER_POST_2
 })];
 
@@ -2474,6 +2306,66 @@ const ALL_FEED_SEQUENCE_POSTS = Object.values(
     (m, p) => { m[p.id] = p; return m; }, {}
   )
 );
+
+/* ---- Feed Quiz: random knowledge-check posts ----
+   Two quiz posts per feed load, drawn from the quiz engine's question pool
+   (quiz-engine.js — existing course quizzes plus new questions from Dr Tim
+   and Alicia) and scattered through the feed: the first lands somewhere
+   between posts 4 and 17, each one after that another 9–17 posts further
+   down. The positions and the questions are chosen once per load (useState
+   initialiser in Feed) so likes/comments never reshuffle the feed. */
+const FEED_QUIZ_COUNT = 2;
+const FEED_QUIZ_FIRST = [4, 17];
+const FEED_QUIZ_GAP = [9, 17];
+const ALICIA = { name: "Alicia", avatar: null, seals: ["verified"] };
+const FEED_QUIZ_AUTHORS = { course: PROFINITY, tim: TIM, alicia: ALICIA };
+const FEED_QUIZ_TIMES = ["2h", "5h", "9h", "14h", "1d", "2d"];
+function randBetween([lo, hi]) { return lo + Math.floor(Math.random() * (hi - lo + 1)); }
+function feedQuizBody(q, course) {
+  if (q.caption && String(q.caption).trim()) return q.caption;   // admin-written caption (Quizzes & Surveys page)
+  const topic = q.topic || "knowledge check";
+  if (q.source === "tim") return "Quick one from me 🧠 — " + topic + ". Tap an answer and I'll tell you where this sits in " + course.title + ".";
+  if (q.source === "alicia") return "Pop quiz from the Profinity team ✨ — " + topic + ". Tap an answer to see if you're right.";
+  return "Knowledge check ✅ — " + topic + ", straight from the " + course.title + " quiz. Tap an answer to see if you're right.";
+}
+/* Shapes an engine question into a feed post: the existing Questionnaire
+   card renders `questionnaire`; `feedQuiz` carries the engine key + course
+   so the card can score it and pick the right post-answer scenario. */
+function buildFeedQuizPost(q, i) {
+  const eng = typeof window !== "undefined" ? window.PFQuizEngine : null;
+  const course = eng && eng.courseFor ? eng.courseFor(q) : { title: "the course", slug: q.course, owned: false, price: 0 };
+  return {
+    id: "fq_" + q.key, author: FEED_QUIZ_AUTHORS[q.source] || PROFINITY, time: FEED_QUIZ_TIMES[i % FEED_QUIZ_TIMES.length],
+    keepAuthor: true, hashtags: ["quiz", (course.slug || "").split("-")[0]].filter(Boolean),
+    body: feedQuizBody(q, course),
+    questionnaire: { question: q.question, options: q.options.map((o) => ({ label: o.label, correct: !!o.correct })) },
+    feedQuiz: { key: q.key, course: q.course, lesson: q.lesson, source: q.source, points: eng && eng.pointsFor ? eng.pointsFor(q) : QUIZ_POINTS },
+    likes: q.likes || "640", comments: q.comments || "38", shares: q.shares || "12", actioned: false,
+    commentList: thread(q.chat)
+  };
+}
+function planFeedQuizzes() {
+  const eng = typeof window !== "undefined" ? window.PFQuizEngine : null;
+  if (!eng || !eng.pick) return { posts: [], positions: [] };
+  const posts = eng.pick(FEED_QUIZ_COUNT).map(buildFeedQuizPost);
+  const positions = [];
+  let at = randBetween(FEED_QUIZ_FIRST);
+  posts.forEach(() => { positions.push(at); at += randBetween(FEED_QUIZ_GAP) + 1; });
+  return { posts, positions };
+}
+/* Drops each planned quiz post in at its position (index in the final list,
+   so `positions[0] = 4` means four posts scroll by first); any that don't
+   fit a short feed spill to the end rather than vanish. */
+function scatterFeedQuizzes(items, plan) {
+  if (!plan || !plan.posts.length) return items;
+  const out = items.slice();
+  plan.posts.forEach((p, i) => {
+    const entry = { item: p, mode: "full" };
+    const pos = plan.positions[i];
+    if (pos <= out.length) out.splice(pos, 0, entry); else out.push(entry);
+  });
+  return out;
+}
 
 /* Tier-tagged posts — genuine member activity carrying a coloured tierTag
    chip (see TierTagChip), stacked on top of the membership ladder: each
@@ -5544,42 +5436,57 @@ function SampleMedia({ sample, postId, saved, onSave, onReport, onLoveReact, aut
 
 /* Community poll — Profinity posts a question with a fixed set of options;
    tapping any option casts the viewer's vote (once) and reveals the result
-   bars for all options, with the viewer's own pick marked by a checkmark. */
+   bars for all options. Styled after the Feed Quiz card in the admin quiz
+   simulator (AdminQuizEditor → PhonePreview): inset bordered card, square
+   navy question badge, lettered A/B/C/D option rows, a "+N pts" footer, and
+   a post-answer outcome panel with the points chip. The viewer's own pick
+   turns navy (letter + trailing check) — navy rather than the quiz's green,
+   since a poll has no right answer. */
 function Poll({ poll }) {
   const [voted, setVoted] = useState(null);
   const answered = voted !== null;
   const totalVotes = poll.votes + (answered ? 1 : 0);
+  const pctOf = (o, i) => poll.votes ? o.pct : voted === i ? 100 : 0;
+  const leadIdx = poll.options.reduce((b, o, i) => pctOf(o, i) > pctOf(poll.options[b], b) ? i : b, 0);
+  const lead = poll.options[leadIdx];
 
   return (
-    <div className="pf-poll">
+    <div className={"pf-poll" + (answered ? " answered" : "")}>
       <div className="pf-poll-q">
         <span className="pf-poll-badge">
-          <IconifyIcon name="lucide:bar-chart-2" size={20} color="var(--white)" />
+          <IconifyIcon name="lucide:bar-chart-2" size={15} color="var(--white)" />
         </span>
         <span>{poll.question}</span>
       </div>
       <div className="pf-poll-opts">
-        {poll.options.map((o, i) =>
-        <button type="button" key={o.label}
-        className={"pf-poll-opt" + (answered ? " answered" : "") + (voted === i ? " selected" : "")}
-        disabled={answered}
-        onClick={(e) => { setVoted(i); popPoints(e.currentTarget, POLL_POINTS, { label: "Voted in a poll", actionId: "evt_poll_vote", sound: "correct" }); }}>
-            {answered && <span className="pf-poll-fill" style={{ width: (poll.votes ? o.pct : voted === i ? 100 : 0) + "%" }} />}
-            <span className="pf-poll-opt-row">
-              {answered ?
-            voted === i && <span className="pf-poll-check"><IconifyIcon name="lucide:check" size={12} color="var(--white)" /></span> :
-
-            <span className="pf-poll-radio" />
-            }
-              <span className="pf-poll-label">{o.label}</span>
-              {answered && <span className="pf-poll-pct">{poll.votes ? o.pct : voted === i ? 100 : 0}%</span>}
-            </span>
-          </button>
-        )}
+        {poll.options.map((o, i) => {
+          const p = pctOf(o, i);
+          const mine = voted === i;
+          return (
+            <button type="button" key={o.label}
+            className={"pf-poll-opt" + (answered ? " answered" : "") + (mine ? " selected" : "") + (answered && i === leadIdx ? " leading" : "")}
+            disabled={answered} aria-pressed={mine}
+            onClick={(e) => { setVoted(i); popPoints(e.currentTarget, POLL_POINTS, { label: "Voted in a poll", actionId: "evt_poll_vote", sound: "correct" }); }}>
+              {answered && <span className="pf-poll-fill" style={{ width: p + "%" }} />}
+              <span className="pf-poll-opt-row">
+                <span className="pf-poll-letter">{String.fromCharCode(65 + i)}</span>
+                <span className="pf-poll-label">{o.label}</span>
+                {answered && <span className="pf-poll-pct">{p}%</span>}
+                {mine && <span className="pf-poll-check"><IconifyIcon name="lucide:check" size={16} color="var(--pf-poll-accent)" /></span>}
+              </span>
+            </button>);
+        })}
       </div>
-      <div className="pf-poll-foot">
-        {totalVotes.toLocaleString()} votes · {answered ? "Thanks for voting" : "Tap an option to vote"}
-      </div>
+      {answered ?
+      <div className="pf-poll-after">
+        <div className="pf-poll-after-head">
+          <b>Thanks for voting!</b>
+          <span className="pf-poll-chip">+{POLL_POINTS} pts</span>
+        </div>
+        <p>{totalVotes.toLocaleString()} votes so far · <b>{lead.label}</b> is leading with {pctOf(lead, leadIdx)}%.</p>
+      </div> :
+      <div className="pf-poll-foot">{totalVotes.toLocaleString()} votes · Tap an option to vote · <b>+{POLL_POINTS} pts</b></div>
+      }
     </div>);
 
 }
@@ -5635,14 +5542,22 @@ function ConfettiBurst({ active }) {
 
 }
 
-/* Community questionnaire — Profinity posts a knowledge-check question with one
-   correct option; tapping any option locks in the viewer's answer and reveals
-   whether they were right (their pick + the correct one both highlighted). */
-function Questionnaire({ questionnaire: q }) {
+/* Community questionnaire — a knowledge-check question with one correct
+   option; tapping any option locks in the viewer's answer and reveals whether
+   they were right (their pick + the correct one both highlighted). When the
+   post is a Feed Quiz (post.feedQuiz, built from the quiz engine's pool) the
+   answer is scored against the engine: a correct answer pays QUIZ_POINTS
+   unless the member already knew this question (answered it right before),
+   the answer is remembered, and one of the four designed post-answer
+   scenarios renders underneath with its CTA (FeedQuizAfter). */
+function Questionnaire({ questionnaire: q, post }) {
   const [picked, setPicked] = useState(null);
   const [celebrate, setCelebrate] = useState(false);
+  const [outcome, setOutcome] = useState(null);
   const answered = picked !== null;
   const isCorrect = answered && q.options[picked].correct;
+  const fq = post && post.feedQuiz;
+  const eng = typeof window !== "undefined" ? window.PFQuizEngine : null;
 
   useEffect(() => {
     if (!isCorrect) return;
@@ -5651,12 +5566,29 @@ function Questionnaire({ questionnaire: q }) {
     return () => clearTimeout(t);
   }, [isCorrect]);
 
+  const answer = (o, i, el) => {
+    setPicked(i);
+    if (fq && eng && eng.byKey) {
+      const question = eng.byKey(fq.key);
+      const known = eng.isKnown(fq.key);
+      const sc = question ? eng.scenario(question, !!o.correct, { known }) : null;
+      eng.markAnswered(fq.key, !!o.correct);
+      setOutcome(sc);
+      if (o.correct && !known) popPoints(el, (sc && sc.points) || fq.points || QUIZ_POINTS, { label: "Quiz answered correctly", actionId: "evt_quiz_correct", sound: "correct" });
+      else if (o.correct) popRepeatCorrect();
+      else popWrong();
+      return;
+    }
+    if (o.correct) popPoints(el, QUIZ_POINTS, { label: "Quiz answered correctly", actionId: "evt_quiz_correct", sound: "correct" });
+    else popWrong();
+  };
+
   return (
     <div className="pf-quiz">
       <ConfettiBurst active={celebrate} />
       <div className="pf-quiz-q">
         <span className="pf-quiz-badge">
-          <IconifyIcon name="lucide:brain" size={20} color="var(--white)" />
+          <IconifyIcon name="lucide:brain" size={15} color="var(--white)" />
         </span>
         <span>{q.question}</span>
       </div>
@@ -5667,32 +5599,86 @@ function Questionnaire({ questionnaire: q }) {
             <button type="button" key={o.label}
             className={"pf-quiz-opt" + (answered ? " answered" : "") + (state ? " " + state : "")}
             disabled={answered}
-            onClick={(e) => {
-              setPicked(i);
-              if (o.correct) popPoints(e.currentTarget, QUIZ_POINTS, { label: "Quiz answered correctly", actionId: "evt_quiz_correct", sound: "correct" });
-              else popWrong();
-            }}>
+            onClick={(e) => answer(o, i, e.currentTarget)}>
               <span className="pf-quiz-opt-row">
-                {state ?
-                <span className={"pf-quiz-mark " + state}>
-                    <IconifyIcon name={state === "correct" ? "lucide:check" : "lucide:x"} size={12} color="var(--white)" />
-                  </span> :
-                <span className="pf-quiz-radio" />
-                }
+                <span className={"pf-quiz-letter" + (state ? " " + state : "")}>{String.fromCharCode(65 + i)}</span>
                 <span className="pf-quiz-label">{o.label}</span>
+                {state &&
+                <span className={"pf-quiz-mark " + state}>
+                  <IconifyIcon name={state === "correct" ? "lucide:check" : "lucide:x"} size={16} color={state === "correct" ? "var(--success)" : "var(--error)"} />
+                </span>}
               </span>
             </button>);
 
         })}
       </div>
+      {outcome ?
+      <FeedQuizAfter outcome={outcome} /> :
       <div className={"pf-quiz-foot" + (answered ? " " + (isCorrect ? "correct" : "incorrect") : "")}>
         {answered ?
         isCorrect ? "Correct! Nice work." : "Not quite — the correct answer is highlighted above." :
-        <>Tap an option to answer <IconifyIcon name="lucide:wand-sparkles" size={14} color="var(--gray-500)" /></>
+        <>Tap an option to answer · <span className="pf-quiz-foot-pts">+{(fq && fq.points) || QUIZ_POINTS} pts</span></>
         }
       </div>
+      }
     </div>);
 
+}
+
+/* A correct answer to a question the member already knew: no points, but
+   the "correct" chime still plays so the tap doesn't feel dead. */
+function popRepeatCorrect() {
+  if (typeof window === "undefined") return;
+  const snd = window.PFPointsSound;
+  if (snd && snd.playCorrect) { try { snd.playCorrect(); } catch (e) {} }
+}
+
+/* Post-answer panel for a Feed Quiz — the four designed scenarios from
+   PFQuizEngine.scenario(): owns course + correct (finish the course quiz),
+   owns course + wrong (revisit the lesson), no course + correct / wrong
+   (buy the course). Status row (tinted icon, headline, amber points chip),
+   one line of copy, the course tile (thumbnail, eyebrow, title, lesson,
+   price or "In your library") and a full-width navy CTA. */
+function FeedQuizAfter({ outcome }) {
+  const go = (e) => {
+    if (!window.pfGo) return;
+    e.preventDefault();
+    window.pfGo(outcome.cta.href);
+  };
+  const ok = outcome.tone === "success";
+  const c = outcome.course || {};
+  const ctaIcon = outcome.kind === "owned-correct" ? "lucide:list-checks" : outcome.kind === "owned-wrong" ? "lucide:rotate-ccw" : "lucide:graduation-cap";
+  return (
+    <div className={"pf-quiz-after " + outcome.tone + " " + outcome.kind}>
+      <div className="pf-quiz-after-status">
+        <span className="pf-quiz-after-ic">
+          <IconifyIcon name={ok ? "lucide:party-popper" : "lucide:lightbulb"} size={18} color={ok ? "var(--success)" : "var(--error)"} />
+        </span>
+        <span className="pf-quiz-after-title">{outcome.title}</span>
+        {outcome.chip && <span className={"pf-quiz-after-chip " + outcome.chip.kind}>{outcome.chip.label}</span>}
+      </div>
+      <p className="pf-quiz-after-body">{outcome.body}</p>
+      <a className="pf-quiz-after-course" href={outcome.cta.href} onClick={go}>
+        <span className="pf-quiz-after-thumb">
+          {c.image ? <img src={c.image} alt="" loading="lazy" /> : <IconifyIcon name="lucide:graduation-cap" size={22} color="var(--brand-navy)" />}
+        </span>
+        <span className="pf-quiz-after-course-main">
+          <span className={"pf-quiz-after-eyebrow" + (c.owned ? " owned" : "")}>
+            {c.owned && <IconifyIcon name="lucide:badge-check" size={12} color="var(--success)" />}
+            {c.eyebrow}
+          </span>
+          <span className="pf-quiz-after-course-title">{c.title}</span>
+          {c.lesson && <span className="pf-quiz-after-lesson"><IconifyIcon name="lucide:play-circle" size={12} color="var(--text-muted)" />{c.lesson}</span>}
+          {c.meta && <span className="pf-quiz-after-meta">{c.meta}</span>}
+        </span>
+        <IconifyIcon name="lucide:chevron-right" size={18} color="var(--gray-400)" />
+      </a>
+      <a className="pf-quiz-after-cta" href={outcome.cta.href} onClick={go}>
+        <IconifyIcon name={ctaIcon} size={16} color="currentColor" />
+        <span>{outcome.cta.label}</span>
+        <IconifyIcon name="lucide:arrow-right" size={16} color="currentColor" />
+      </a>
+    </div>);
 }
 
 const PILL_EMOJI = {
@@ -6151,7 +6137,7 @@ function SharePostQuote({ post, full }) {
     const livePoll = !mediaNode && post.poll && Array.isArray(post.poll.options) && post.poll.options.length > 0;
     const liveQuiz = !mediaNode && !livePoll && post.questionnaire && Array.isArray(post.questionnaire.options) && post.questionnaire.options.length > 0;
     if (livePoll) mediaNode = <div className="pf-shq-embed"><Poll poll={post.poll} /></div>;
-    else if (liveQuiz) mediaNode = <div className="pf-shq-embed"><Questionnaire questionnaire={post.questionnaire} /></div>;
+    else if (liveQuiz) mediaNode = <div className="pf-shq-embed"><Questionnaire questionnaire={post.questionnaire} post={post} /></div>;
     const kindOnly = !mediaNode && (post.poll ? "Poll · " + (post.poll.question || "") : post.questionnaire ? "Quiz · " + (post.questionnaire.question || "") : post.document ? (post.document.name || post.document.title || "Document") : null);
     return (
       <div className="pf-shq-full" aria-label={"Post by " + post.author.name}>
@@ -6640,7 +6626,7 @@ function WebShareModal({ post, onClose, onShare }) {
           <section className="pfw-sh-section" aria-label="Send in Messages">
             <div className="pfw-sh-sec-hd">
               <span className="pfw-sh-sec-title">Send in Messages</span>
-              <a className="pfw-sh-sec-link" href="Messages.html" aria-label="Open Messages">
+              <a className="pfw-sh-sec-link" href="MessagesWeb.html" aria-label="Open Messages" onClick={(e) => { e.preventDefault(); (window.pfGo || ((u) => { location.href = u; }))("MessagesWeb.html"); }}>
                 <IconifyIcon name="lucide:message-circle" size={18} color="var(--text-primary)" />
               </a>
             </div>
@@ -6787,7 +6773,7 @@ function FeedPost({ post, st, hideTags, pinned, canPin, onPin, pinScope, onToggl
         : post.time}
       hashtags={hideTags || post.questionnaire || post.poll || post.liveNow ? [] : [...resolveHashtags(post.hashtags), ...categoryTags(post.categories)]}
       title={post.author === PROFINITY ? null : post.title}
-      body={post.questionnaire || post.poll || post.liveNow || !post.body ? null : post.bg
+      body={post.liveNow || !post.body ? null : post.bg
         ? <div className="pf-post-bg" style={{ background: post.bg.css, color: post.bg.fg }}>
             <ClampText text={post.body} lines={6} more={post.channel ? "Learn More" : "See more"} color={post.bg.fg} />
           </div>
@@ -6801,7 +6787,7 @@ function FeedPost({ post, st, hideTags, pinned, canPin, onPin, pinScope, onToggl
         {post.liveNow
         ? <LiveNowMedia live={post.liveNow} author={post.author} onLoveReact={handleDoubleTapLove} />
         : post.questionnaire
-        ? <Questionnaire questionnaire={post.questionnaire} />
+        ? <Questionnaire questionnaire={post.questionnaire} post={post} />
         : post.poll
         ? <Poll poll={post.poll} />
         : post.sample
@@ -8018,12 +8004,15 @@ function Feed({ channel } = {}) {
      spreadEventPosts even runs — 2 is enough "you're going" social proof
      without needing more events than a 40-60 post feed can spread thinly. */
   const [eventRegPosts] = useState(() => [...EVENT_REG_SEED, ...readEventRegPosts()].slice(0, 2));
+  /* Two random knowledge-check posts + their scatter positions, fixed for
+     this feed load (see planFeedQuizzes / scatterFeedQuizzes). */
+  const [feedQuizPlan] = useState(planFeedQuizzes);
   const [state, setState] = useState(() => {
     const m = {};
     /* Seeded from the union of every tier's sequence (not just the one the
        current viewer sees) so switching tiers via the live persona-preview
        switcher never leaves a post with no interaction state. */
-    [...readUserPosts(), ...ALL_FEED_SEQUENCE_POSTS, ...BUCKET_POSTS, ...TIER_TAG_POSTS].forEach((p) => {m[p.id] = { liked: false, saved: false, actioned: p.actioned, likes: p.likes, base: p.likes, reaction: null, shares: p.shares, sharesBase: p.shares, comments: withIds(p.commentList), commentsCount: p.comments };});
+    [...readUserPosts(), ...ALL_FEED_SEQUENCE_POSTS, ...BUCKET_POSTS, ...TIER_TAG_POSTS, ...feedQuizPlan.posts].forEach((p) => {m[p.id] = { liked: false, saved: false, actioned: p.actioned, likes: p.likes, base: p.likes, reaction: null, shares: p.shares, sharesBase: p.shares, comments: withIds(p.commentList), commentsCount: p.comments };});
     return m;
   });
   /* Defaults to whatever tier is actually persisted (set for real by the
@@ -8175,8 +8164,10 @@ function Feed({ channel } = {}) {
   /* eventReg posts (top-pinned social proof + each tier sequence's two
      designed slots) are re-spread to a ~1-in-10-to-20 cadence by
      spreadEventPosts below, rather than left to stack at the top and repeat
-     every cycle — see its comment for why. */
-  const feedItems = spreadEventPosts([
+     every cycle — see its comment for why. The two random Feed Quiz posts
+     are dropped in last (scatterFeedQuizzes) so their designed positions
+     count real, already-spread posts. */
+  const feedItems = scatterFeedQuizzes(spreadEventPosts([
   ...userPosts.filter((p) => !p.uploading && !p.channelBucket).map((p) => ({ item: p, mode: "full" })),
   { item: LIVE_NOW_POST, mode: "full" },
   { item: SAMPLE_LONG_TEXT_POST, mode: "full" },
@@ -8196,7 +8187,7 @@ function Feed({ channel } = {}) {
       return { item: p, mode: "teaser" };
     }
     return { item: p, mode: "full" };
-  })]);
+  })]), feedQuizPlan);
 
   /* a channel (Confidence/Mastery/Freedom/Inner Circle) narrows the feed
      down to just that bucket's posts — used by the Community page's channel

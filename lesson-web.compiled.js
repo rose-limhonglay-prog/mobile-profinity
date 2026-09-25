@@ -855,7 +855,7 @@ function LWShareModal({
     k: "dm",
     label: "Messages",
     icon: "lucide:message-circle",
-    run: () => goLW("Messages.html")
+    run: () => goLW("MessagesWeb.html")
   }, {
     k: "more",
     label: "More",

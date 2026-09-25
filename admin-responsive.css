@@ -1,0 +1,127 @@
+/* admin-responsive.css — shared responsive layer for every desktop admin page.
+   Loaded after the page CSS and before dark-mode.css. Makes the main column
+   fill whatever width the device gives it, scales padding down on tablets,
+   lets the grid tables scroll sideways instead of crushing, and turns the
+   264px sidebar into an off-canvas drawer (toggled by the header panel icon
+   via admin-responsive.js) below 1024px. */
+
+/* ---- main column always fills the space beside the sidebar ---- */
+.adl-main, .agt-main, .ana-main, .apv-main, .dash-main, .crs-main, .com-main, .map-main,
+.svc-main, .bdg-main, .usr-main, .txn-main, .mod-main, .evt-main, .apm-main, .ver-main, .apn-main {
+  flex: 1 1 auto; min-width: 0; width: 100%; }
+
+.adl-view, .agt-view, .ana-view, .com-view, .dash-view, .bdg-content, .evt-content, .apv-content,
+.map-content, .mod-view, .crs-content, .svc-view, .txn-view, .usr-view, .apn-view, .apm-view, .ver-content {
+  width: 100%; max-width: none; box-sizing: border-box; }
+
+/* ---- tablet: tighter gutters, tables scroll sideways ---- */
+@media (max-width: 1180px) {
+  .adl-view, .agt-view, .ana-view, .com-view, .dash-view, .bdg-content, .evt-content, .apv-content,
+  .map-content, .mod-view, .crs-content, .svc-view, .txn-view, .usr-view, .apn-view, .apm-view, .ver-content {
+    padding: 24px; gap: 20px; }
+  .adl-header, .agt-header, .ana-header, .apv-header, .dash-header, .crs-header, .com-header, .map-header,
+  .svc-header, .bdg-header, .usr-header, .txn-header, .mod-header, .evt-header, .apm-header, .ver-header, .apn-header {
+    padding: 14px 24px; gap: 16px; }
+  .adl-header-search, .agt-header-search, .ana-header-search, .apv-header-search, .dash-header-search,
+  .crs-header-search, .com-header-search, .map-header-search, .svc-header-search, .bdg-header-search,
+  .usr-header-search, .txn-header-search, .mod-header-search, .evt-header-search, .apm-header-search,
+  .ver-header-search, .apn-header-search { width: 240px; }
+  .adl-header-title, .agt-header-title, .ana-header-title, .apv-header-title, .dash-header-title,
+  .crs-header-title, .com-header-title, .map-header-title, .svc-header-title, .bdg-header-title,
+  .usr-header-title, .txn-header-title, .mod-header-title, .evt-header-title, .apm-header-title,
+  .ver-header-title, .apn-header-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+  .adl-table, .agt-table, .ana-table, .com-table, .map-table, .evt-table, .svc-table, .apn-table,
+  .usr-table, .apm-table, .txn-table, .bdg-table, .crs-table {
+    overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .adl-row-grid, .agt-row-grid, .ana-row-grid, .apm-row-grid, .apn-row-grid, .bdg-row-grid, .com-row-grid,
+  .crs-row-grid, .evt-row-grid, .ldg-row-grid, .map-row-grid, .svc-row-grid, .txn-row-grid, .usr-row-grid {
+    min-width: 960px; }
+  .agt-row-grid, .ana-row-grid { min-width: 640px; }
+  .map-row-grid, .svc-row-grid, .bdg-row-grid { min-width: 720px; }
+}
+
+/* ---- small tablet / phone: sidebar becomes an off-canvas drawer ---- */
+@media (max-width: 1024px) {
+  .adl-sidebar, .agt-sidebar, .ana-sidebar, .apv-sidebar, .dash-sidebar, .crs-sidebar, .com-sidebar, .map-sidebar,
+  .svc-sidebar, .bdg-sidebar, .usr-sidebar, .txn-sidebar, .mod-sidebar, .evt-sidebar, .apm-sidebar, .ver-sidebar, .apn-sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 60; height: 100vh; height: 100dvh; overflow-y: auto;
+    transform: translateX(-100%); transition: transform .24s cubic-bezier(.2,.7,.2,1);
+    box-shadow: none; }
+  body.adm-nav-open .adl-sidebar, body.adm-nav-open .agt-sidebar, body.adm-nav-open .ana-sidebar,
+  body.adm-nav-open .apv-sidebar, body.adm-nav-open .dash-sidebar, body.adm-nav-open .crs-sidebar,
+  body.adm-nav-open .com-sidebar, body.adm-nav-open .map-sidebar, body.adm-nav-open .svc-sidebar,
+  body.adm-nav-open .bdg-sidebar, body.adm-nav-open .usr-sidebar, body.adm-nav-open .txn-sidebar,
+  body.adm-nav-open .mod-sidebar, body.adm-nav-open .evt-sidebar, body.adm-nav-open .apm-sidebar,
+  body.adm-nav-open .ver-sidebar, body.adm-nav-open .apn-sidebar {
+    transform: translateX(0); box-shadow: 0 24px 60px -20px rgba(12,25,40,.45); }
+
+  .adm-nav-backdrop { position: fixed; inset: 0; z-index: 55; background: rgba(12,25,40,.42);
+    opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+  body.adm-nav-open .adm-nav-backdrop { opacity: 1; pointer-events: auto; }
+  body.adm-nav-open { overflow: hidden; }
+
+  /* header panel icon becomes the drawer toggle */
+  .adl-header > iconify-icon[icon="lucide:panel-left"], .agt-header > iconify-icon[icon="lucide:panel-left"],
+  .ana-header > iconify-icon[icon="lucide:panel-left"], .apv-header > iconify-icon[icon="lucide:panel-left"],
+  .dash-header > iconify-icon[icon="lucide:panel-left"], .crs-header > iconify-icon[icon="lucide:panel-left"],
+  .com-header > iconify-icon[icon="lucide:panel-left"], .map-header > iconify-icon[icon="lucide:panel-left"],
+  .svc-header > iconify-icon[icon="lucide:panel-left"], .bdg-header > iconify-icon[icon="lucide:panel-left"],
+  .usr-header > iconify-icon[icon="lucide:panel-left"], .txn-header > iconify-icon[icon="lucide:panel-left"],
+  .mod-header > iconify-icon[icon="lucide:panel-left"], .evt-header > iconify-icon[icon="lucide:panel-left"],
+  .apm-header > iconify-icon[icon="lucide:panel-left"], .ver-header > iconify-icon[icon="lucide:panel-left"],
+  .apn-header > iconify-icon[icon="lucide:panel-left"] { color: var(--brand-navy) !important; }
+}
+
+/* ---- phone ---- */
+@media (max-width: 720px) {
+  .adl-view, .agt-view, .ana-view, .com-view, .dash-view, .bdg-content, .evt-content, .apv-content,
+  .map-content, .mod-view, .crs-content, .svc-view, .txn-view, .usr-view, .apn-view, .apm-view, .ver-content {
+    padding: 16px; gap: 16px; }
+  .adl-header, .agt-header, .ana-header, .apv-header, .dash-header, .crs-header, .com-header, .map-header,
+  .svc-header, .bdg-header, .usr-header, .txn-header, .mod-header, .evt-header, .apm-header, .ver-header, .apn-header {
+    padding: 12px 16px; gap: 12px; }
+  .adl-header-title, .agt-header-title, .ana-header-title, .apv-header-title, .dash-header-title,
+  .crs-header-title, .com-header-title, .map-header-title, .svc-header-title, .bdg-header-title,
+  .usr-header-title, .txn-header-title, .mod-header-title, .evt-header-title, .apm-header-title,
+  .ver-header-title, .apn-header-title { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .adl-header-search, .agt-header-search, .ana-header-search, .apv-header-search, .dash-header-search,
+  .crs-header-search, .com-header-search, .map-header-search, .svc-header-search, .bdg-header-search,
+  .usr-header-search, .txn-header-search, .mod-header-search, .evt-header-search, .apm-header-search,
+  .ver-header-search, .apn-header-search { display: none; }
+  .adl-user, .agt-user, .ana-user, .apv-user, .dash-user, .crs-user, .com-user, .map-user, .svc-user,
+  .bdg-user, .usr-user, .txn-user, .mod-user, .evt-user, .apm-user, .ver-user, .apn-user { display: none; }
+}
+
+/* ---- hidden info tips must not widen the page (they are opacity:0 but still laid out) ---- */
+.adm-info-tip, .adl-info-tip { visibility: hidden; transition: opacity .12s, transform .12s, visibility 0s linear .12s; }
+.adm-info:hover .adm-info-tip, .adm-info:focus-visible .adm-info-tip, .adm-info:focus .adm-info-tip,
+.adl-info:hover .adl-info-tip, .adl-info:focus-visible .adl-info-tip, .adl-info:focus .adl-info-tip {
+  visibility: visible; transition: opacity .12s, transform .12s, visibility 0s; }
+
+/* ---- safety net: the main column never widens the page on small screens ---- */
+@media (max-width: 1180px) {
+  .adl-main, .agt-main, .ana-main, .apv-main, .dash-main, .crs-main, .com-main, .map-main,
+  .svc-main, .bdg-main, .usr-main, .txn-main, .mod-main, .evt-main, .apm-main, .ver-main, .apn-main { overflow-x: clip; }
+}
+
+/* ---- phone: toolbars wrap, tab strips scroll, filters stack ---- */
+@media (max-width: 720px) {
+  .adl-page-head-actions, .agt-page-head-actions, .ana-page-head-actions, .apv-page-head-actions,
+  .bdg-page-head-actions, .com-page-head-actions, .evt-page-head-actions, .map-summary-actions,
+  .mod-page-head-actions, .apm-page-head-actions, .txn-page-head-actions, .usr-page-head-actions,
+  .ver-page-head-actions, .apn-page-head-actions, .diag-page-head-actions, .qze-page-head-actions {
+    flex-wrap: wrap; width: 100%; flex-shrink: 1; min-width: 0; }
+  .adl-tabs, .bdg-tabs, .evt-subnav, .txn-tabs, .usr-segmented, .apn-tabs, .com-tabs, .crs-tabs {
+    max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .adl-tabs::-webkit-scrollbar, .bdg-tabs::-webkit-scrollbar, .evt-subnav::-webkit-scrollbar { display: none; }
+  .adl-tabs > *, .bdg-tabs > *, .evt-subnav > * { flex-shrink: 0; white-space: nowrap; }
+  .mod-filters, .apm-filters, .apn-filters, .usr-filters, .com-filters, .evt-filters { flex-wrap: wrap; gap: 10px; }
+  .mod-filter-select, .apm-filter-select, .apn-filter-select { flex: 1 1 150px; min-width: 0; max-width: 100%; }
+  .adl-card.diag-card, .adl-card { min-width: 0; max-width: 100%; }
+}
+@media (max-width: 720px) {
+  .adl-page-head, .agt-page-head, .ana-page-head, .apv-page-head, .bdg-page-head, .com-page-head, .crs-page-head,
+  .dash-page-head, .evt-page-head, .map-summary, .mod-page-head, .apm-page-head, .svc-page-head, .txn-page-head,
+  .usr-page-head, .ver-page-head, .apn-page-head { flex-direction: column; align-items: stretch; gap: 14px; }
+}

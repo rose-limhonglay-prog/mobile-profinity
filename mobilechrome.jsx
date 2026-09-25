@@ -536,8 +536,8 @@
   { me: true, text: "Anytime, Hannah.", t: "2 Sep" }] }];
 
   const VOICE_CONFS_SEED_C = [
-    { id: "vc1", name: "Clinical Case Review", who: "Dr Tim Pearce, Dr Sarah Kim +3", t: "Today, 4:00 PM", live: true },
-    { id: "vc2", name: "Business Growth Sync", who: "Miranda Pearce, Dr Alex Chen", t: "Tomorrow, 10:00 AM", live: false }];
+    { id: "c1", name: "Case Study Discussion", who: "Dr Tim Pearce, Dr Rachel Adams +98", t: "Live now · 100 participants", live: true },
+    { id: "c2", name: "Business Growth Sync", who: "Miranda Pearce, Mark Ellis", t: "Tomorrow, 10:00 AM", live: false }];
 
   const PF_GROUPS_KEY = "pf-dm-groups";
 
@@ -651,7 +651,7 @@ function readDmGroupsC() {
 
   function VoiceConfRowC({ v }) {
     return (
-      <div className="mp-row mp-vc-row">
+      <button type="button" className="mp-row mp-vc-row" onClick={() => goC("Messages.html?tab=conference&conf=" + v.id)} aria-label={v.name + (v.live ? ", live now" : "")}>
         <span className="mp-av mp-vc-icon">
           <DSC.IconifyIcon name="lucide:phone-call" size={22} color="var(--brand-navy)" />
         </span>
@@ -665,7 +665,7 @@ function readDmGroupsC() {
           </span>
           <span className="mp-vc-time">{v.t}</span>
         </span>
-      </div>);
+      </button>);
   }
 
   function MessagesPanelC({ open, onClose }) {
@@ -914,16 +914,28 @@ function readDmGroupsC() {
     const [menuOpen, setMenuOpen] = useStateC(false);
     const [notifOpen, setNotifOpen] = useStateC(false);
     const [msgOpen, setMsgOpen] = useStateC(false);
-    const [dark, setDark] = useStateC(() => {
-      try { return localStorage.getItem("pf-mobile-dark") === "1"; } catch (e) { return false; }
-    });
+    /* Follows the app-wide theme (pf-theme + <html data-theme>) like the
+       newsfeed / community / profile drawers do — the old private
+       "pf-mobile-dark" flag left this drawer dark on light-mode pages. */
+    const readDarkC = () => { try { return localStorage.getItem("pf-theme") === "dark" || document.documentElement.getAttribute("data-theme") === "dark"; } catch (e) { return false; } };
+    const [dark, setDark] = useStateC(readDarkC);
     useEffectC(() => {
-      try { localStorage.setItem("pf-mobile-dark", dark ? "1" : "0"); } catch (e) {}
-    }, [dark]);
+      try { localStorage.removeItem("pf-mobile-dark"); } catch (e) {}
+      const sync = () => setDark(readDarkC());
+      window.addEventListener("storage", sync);
+      const mo = new MutationObserver(sync);
+      mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+      return () => { window.removeEventListener("storage", sync); mo.disconnect(); };
+    }, []);
+    const toggleDark = () => {
+      const next = !dark;
+      setDark(next);
+      try { localStorage.setItem("pf-theme", next ? "dark" : "light"); document.documentElement.setAttribute("data-theme", next ? "dark" : "light"); } catch (e) {}
+    };
     return (
       <React.Fragment>
         <MTopBarC onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} onMessages={() => setMsgOpen(true)} dark={dark} />
-        <SideMenuC open={menuOpen} onClose={() => setMenuOpen(false)} dark={dark} onToggleDark={() => setDark((v) => !v)} />
+        <SideMenuC open={menuOpen} onClose={() => setMenuOpen(false)} dark={dark} onToggleDark={toggleDark} />
         <NotificationsPanelC open={notifOpen} onClose={() => setNotifOpen(false)} />
         <MessagesPanelC open={msgOpen} onClose={() => setMsgOpen(false)} />
       </React.Fragment>);

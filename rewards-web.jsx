@@ -2,11 +2,12 @@
    PROfinity — Rewards Dashboard (web)
    Desktop counterpart to RewardsDashboard.html (rewards-dashboard.jsx): the
    Loyalty & Gamification hub — greeting, league badge progress card (PFLeague
-   gems, milestone-based), streak-at-risk banner, Lifetime Points / Spendable
-   Credits / Active Streak stat tiles (streak → CheckInStreak), "Your league"
-   card, "Jump back in" quick nav (Store / My Rewards / Leaderboard / Ways to
-   Earn), Next Available Reward (course discount) and Recent Activity — on the
-   web page shell (TopNav + centered two-column layout)
+   gems, points-based via the Milestone Path), streak-at-risk banner, Lifetime
+   Points / Active Streak stat tiles (streak → CheckInStreak), "Your league"
+   card (leaderboard snapshot: own league + rank) with a Milestone Path button
+   beneath, "Jump back in" quick nav (My Rewards), Recent Activity and a "Your points" side card — on the
+   web page shell (TopNav + centered two-column layout). Points-only since
+   2026-09-24: no Spendable Credits, no Rewards Store.
    instead of the phone frame. Reads/writes the same localStorage-backed
    window.PFLoyalty engine, so the numbers match the mobile screens. Reached from
    the account menu (account-menu.js). Suffixed -RW to avoid global-scope clashes.
@@ -85,7 +86,7 @@ function StreakRiskBannerRW({ state, onCheckIn }) {
 /* ------------------------------------------------------------ league */
 /* The member's league gem (window.PFLeague, league-engine.js) rendered via
    lottie-web from the engine's hosted JSON — same as the mobile dashboard and
-   the leaderboard. Milestone-based, not points-based. */
+   the leaderboard. Points-based: thresholds come from the Milestone Path. */
 const RW_LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
 function rwEnsureLottieLib() {
   if (window.lottie || document.querySelector("script[data-pf-lottie]")) return;
@@ -120,9 +121,9 @@ function rwLeagueProgress() {
   if (!LG) return null;
   try { return LG.getProgress(); } catch (e) { return null; }
 }
-function rwPlural(n, word) { return n + " " + word + (n === 1 ? "" : "s"); }
+function rwPts(n) { return PF_RW.formatNumber(n) + " pts"; }
 
-/* League badge progress: current gem left, next gem (locked) right, milestone
+/* League badge progress: current gem left, next gem (locked) right, points
    progress between them; the whole card opens the leaderboard. */
 function LeagueProgressCardRW({ league }) {
   const p = league;
@@ -131,7 +132,7 @@ function LeagueProgressCardRW({ league }) {
   const vars = cur ? { "--lg-accent": cur.accent, "--lg-deep": cur.deep, "--lg-soft": cur.soft, "--nx-accent": (next || cur).accent, "--nx-deep": (next || cur).deep } : null;
   return (
     <button type="button" className="rw-card rw-league-progress" onClick={() => goRW("Leaderboard.html")} style={vars}
-      aria-label={cur ? cur.name + " League, " + (next ? rwPlural(p.need, "more milestone") + " to " + next.name : "highest badge") + ". Open the leaderboard" : "Open the leaderboard"}>
+      aria-label={cur ? cur.name + " League, " + (next ? rwPts(p.need) + " more to " + next.name : "highest badge") + ". Open the leaderboard" : "Open the leaderboard"}>
       <span className="rw-gem cur">{cur && <LeagueLottieRW src={cur.lottie} size={96} />}</span>
       <span className="rw-league-progress-body">
         <span className="rw-progress-kicker">League badge progress</span>
@@ -143,10 +144,10 @@ function LeagueProgressCardRW({ league }) {
           <span className="rw-progress-fill" style={{ width: pct + "%", background: "linear-gradient(90deg, var(--lg-accent), var(--nx-accent))" }} />
         </span>
         <span className="rw-progress-scale">
-          <span>{p ? p.done + " of " + (next ? next.requires : p.total) + " milestones" : ""}</span>
-          <span style={{ color: "var(--nx-deep)" }}>{next ? "Unlocks at " + next.requires : "Complete"}</span>
+          <span>{p ? PF_RW.formatNumber(p.points) + (next ? " of " + PF_RW.formatNumber(next.requires) : "") + " lifetime pts" : ""}</span>
+          <span style={{ color: "var(--nx-deep)" }}>{next ? "Unlocks at " + rwPts(next.requires) : "Complete"}</span>
         </span>
-        <span className="rw-progress-note">{next ? rwPlural(p.need, "more milestone") + " to " + next.name + " League" : "You've earned the highest badge!"}</span>
+        <span className="rw-progress-note">{next ? rwPts(p.need) + " more to " + next.name + " League" : "You've earned the highest badge!"}</span>
         <span className="rw-progress-link">Open the leaderboard<IconifyRW name="lucide:chevron-right" size={16} color="var(--brand-navy)" /></span>
       </span>
       <span className={"rw-gem next" + (next ? " locked" : "")}>
@@ -157,31 +158,71 @@ function LeagueProgressCardRW({ league }) {
   );
 }
 
-/* "Your league" card (aside) → leaderboard. */
-function LeagueCardRW({ league }) {
-  const p = league;
-  if (!p) return null;
-  const cur = p.current, next = p.next;
+/* Leaderboard snapshot (aside): only the member's own league — her gem, her
+   rank on that board (same 30-day rolling points the Leaderboard page ranks
+   on) and who's just ahead. Opens the full leaderboard. */
+function rwStandings(state) {
+  const LG = window.PFLeague;
+  if (!LG || !LG.getStandings) return null;
+  try {
+    const me = { name: (state.user && state.user.name ? state.user.name : ME_RW.name) + " (You)", avatar: ME_RW.avatar, points: state.rollingPoints30 || 0 };
+    return LG.getStandings(me);
+  } catch (e) { return null; }
+}
+function rwOrdinal(n) { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+function LeagueCardRW({ state }) {
+  const st = rwStandings(state);
+  if (!st || !st.me) return null;
+  const cur = st.league, me = st.me, above = st.above;
+  const total = st.rows.length;
+  const gap = above ? above.points - me.points : 0;
   return (
     <button type="button" className="rw-card rw-league" style={{ "--lg-accent": cur.accent, "--lg-deep": cur.deep, "--lg-soft": cur.soft }}
-      onClick={() => goRW("Leaderboard.html")} aria-label={cur.name + " League. Open the leaderboard"}>
+      onClick={() => goRW("Leaderboard.html")}
+      aria-label={"Leaderboard. You're " + rwOrdinal(me.rank) + " of " + total + " in the " + cur.name + " League with " + rwPts(me.points) + ". Open the leaderboard"}>
       <span className="rw-league-gem"><LeagueLottieRW src={cur.lottie} size={64} /></span>
       <span className="rw-league-tx">
-        <span className="rw-league-eyebrow">Your league</span>
-        <b>{cur.name} League</b>
-        <i>{next ? rwPlural(p.need, "more milestone") + " to " + next.name : "Highest badge earned"}</i>
+        <span className="rw-league-eyebrow">Leaderboard · {cur.name} League</span>
+        <b><span className="rw-league-rank">#{me.rank}</span> of {total}</b>
+        <i>{rwPts(me.points)}{above ? " · " + PF_RW.formatNumber(gap) + " behind " + above.name.split(" ")[0] : " · You lead the league!"}</i>
       </span>
-      <span className="rw-league-cta">Leaderboard<IconifyRW name="lucide:chevron-right" size={16} color="var(--lg-deep)" /></span>
+      <span className="rw-league-cta"><IconifyRW name="lucide:chevron-right" size={18} color="var(--lg-deep)" /></span>
     </button>
   );
 }
 
+/* Two simple buttons (mirror of RdbFeatureTiles on mobile): navy icon,
+   label, one-line note, chevron. */
+function FeatureTilesRW({ state }) {
+  let milestone = null;
+  try { milestone = PF_RW.getMilestoneProgress ? PF_RW.getMilestoneProgress(state) : null; } catch (e) {}
+  const mpNote = milestone ? (milestone.next ? PF_RW.formatNumber(milestone.remaining) + " pts to go" : "Every badge earned") : "Badges & benefits";
+  const vouchers = (state.redeemedVouchers || []).length;
+  const mrNote = vouchers ? vouchers + " unlocked" : "Course discounts";
+  const items = [
+    { label: "Milestone Path", note: mpNote, icon: "lucide:milestone", href: "MilestonePath.html?ret=RewardsWeb.html" },
+    { label: "My Rewards", note: mrNote, icon: "lucide:ticket", href: "MyRewards.html" }
+  ];
+  return (
+    <div className="rw-feats">
+      {items.map((it) => (
+        <button key={it.label} type="button" className="rw-card rw-feat" onClick={() => goRW(it.href)} aria-label={it.label + ". " + it.note}>
+          <span className="rw-feat-ic" aria-hidden="true"><IconifyRW name={it.icon} size={22} color="#fff" /></span>
+          <span className="rw-feat-tx"><b>{it.label}</b><i>{it.note}</i></span>
+          <IconifyRW name="lucide:chevron-right" size={18} color="var(--gray-400)" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------ stat tiles */
+/* Lifetime Points tile: the header points pill's smiling-face Lottie (was a coin-stack iframe) */
+const RW_MASCOT_SRC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
 function EngagementCardsRW({ state }) {
   const week = PF_RW.getWeekPoints(state);
   const tiles = [
-    { value: PF_RW.formatNumber(state.lifetimePoints), label: "Lifetime Points", sub: "+" + PF_RW.formatNumber(week) + " this week", lottie: "https://lottie.host/embed/c7c98875-fe8d-4de8-95c1-3e12acf7ad0a/fpeaeGfS64.json", size: 40 },
-    { value: PF_RW.formatNumber(state.spendableCredits), label: "Spendable Credits", sub: state.expiringCredits ? PF_RW.formatNumber(state.expiringCredits) + " expiring soon" : "Ready to redeem", lottie: "https://lottie.host/embed/1470432e-8f5e-4eb4-a73c-75e6b6972d46/qk3KaEmMpz.json", size: 60 },
+    { value: PF_RW.formatNumber(state.lifetimePoints), label: "Lifetime Points", sub: "+" + PF_RW.formatNumber(week) + " this week", json: RW_MASCOT_SRC, size: 48 },
     { value: state.streak.current + " Days", label: "Active Streak", sub: "Longest " + state.streak.longest + " days", lottie: "https://lottie.host/embed/d7ce0087-b4ad-4b7a-b657-558f841da6e5/pSvC2r0DRZ.json", size: 60,
       href: "CheckInStreak.html", aria: "Active streak: " + state.streak.current + " days. Open check-in streak" }
   ];
@@ -190,7 +231,7 @@ function EngagementCardsRW({ state }) {
       {tiles.map((t) => {
         const inner = (
           <React.Fragment>
-            <span className="rw-eng-lottie" aria-hidden="true"><iframe src={t.lottie} title="" scrolling="no" style={{ width: t.size + "px", height: t.size + "px", border: "none", background: "transparent" }} /></span>
+            <span className={"rw-eng-lottie" + (t.json ? " rw-eng-lottie--face" : "")} aria-hidden="true">{t.json ? <LeagueLottieRW src={t.json} size={t.size} /> : <iframe src={t.lottie} title="" scrolling="no" style={{ width: t.size + "px", height: t.size + "px", border: "none", background: "transparent" }} />}</span>
             <div className="rw-eng-value">{t.value}</div>
             <div className="rw-eng-label">{t.label}{t.href ? <IconifyRW name="lucide:chevron-right" size={14} color="var(--gray-400)" /> : null}</div>
             <div className="rw-eng-sub">{t.sub}</div>
@@ -207,11 +248,9 @@ function EngagementCardsRW({ state }) {
 /* -------------------------------------------------------------- quicknav */
 function QuickNavRW({ state, league }) {
   const redeemed = (state.redeemedVouchers || []).length;
+  // Leaderboard + Milestone Path live in the aside snapshot card
   const items = [
-    { label: "Rewards Store", desc: "Spend credits on course discounts", icon: "lucide:shopping-bag", href: "RewardsStore.html", dot: true },
-    { label: "My Rewards", desc: redeemed > 0 ? "Your redeemed discount codes" : "Nothing redeemed yet", icon: "lucide:ticket", href: "MyRewards.html", note: redeemed > 0 ? String(redeemed) : null },
-    { label: "Leaderboard", desc: "See where you rank", icon: "lucide:bar-chart-3", href: "Leaderboard.html", note: league ? league.current.name : null },
-    { label: "Ways to Earn", desc: "Boost your points", icon: "lucide:sparkles", href: "WaysToEarn.html" }
+    { label: "My Rewards", desc: redeemed > 0 ? "Your unlocked discount codes" : "Nothing unlocked yet", icon: "lucide:ticket", href: "MyRewards.html", note: redeemed > 0 ? String(redeemed) : null }
   ];
   return (
     <div className="rw-quicknav">
@@ -236,6 +275,90 @@ function QuickNavRW({ state, league }) {
   );
 }
 
+/* --------------------------------------------------------------- welcome */
+/* ?new=1 → show the page as a brand-new member, then drop the flag */
+function rwApplyNewMemberFlag() {
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get("new") !== "1") return;
+    PF_RW.resetNewMember();
+    try { localStorage.removeItem(RW_WELCOME_SEEN); } catch (e) {}
+    q.delete("new");
+    history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q.toString() : "") + location.hash);
+  } catch (e) {}
+}
+function rwIsNewMember(state) { return !state.lifetimePoints && !(state.ledger || []).length; }
+/* first-visit welcome modal: shown once over the page while the member has
+   no points; dismissing remembers it (pf-rewards-welcome-seen). */
+const RW_WELCOME_SEEN = "pf-rewards-welcome-seen";
+function rwWelcomeSeen() { try { return localStorage.getItem(RW_WELCOME_SEEN) === "1"; } catch (e) { return true; } }
+function rwMarkWelcomeSeen() { try { localStorage.setItem(RW_WELCOME_SEEN, "1"); } catch (e) {} }
+const RW_STARTERS = [
+  { id: "evt_mobile_checkin", label: "Check in every day", icon: "lucide:calendar-check" },
+  { id: "evt_profile_complete", label: "Complete your profile", icon: "lucide:user-check" },
+  { id: "evt_create_post", label: "Post in the community", icon: "lucide:pen-line" },
+  { id: "evt_module_complete", label: "Finish a lesson module", icon: "lucide:book-open" },
+  { id: "evt_follow_peer", label: "Connect with a peer", icon: "lucide:user-plus" }
+];
+function rwStarterRows(state) {
+  let actions = [];
+  try { actions = PF_RW.getConfig().actions || []; } catch (e) {}
+  const tier = state.user && state.user.membershipTier;
+  return RW_STARTERS.map((st) => {
+    const a = actions.find((x) => x.id === st.id);
+    let pts = a ? a.basePoints : 0;
+    try { if (a && tier) pts = Math.round(a.basePoints * PF_RW.tierMultiplierFor(a, tier)); } catch (e) {}
+    return Object.assign({}, st, { pts });
+  }).filter((r) => r.pts > 0);
+}
+function rwWelcomeStep() { try { return new URLSearchParams(location.search).get("welcome") === "earn" ? 2 : 1; } catch (e) { return 1; } }
+function WelcomeModalRW({ state, league, onClose, initialStep }) {
+  const [step, setStep] = useStateRW(initialStep || 1);
+  const next = league ? league.next : null;
+  const first = (state.user && state.user.name ? state.user.name : ME_RW.name).split(" ")[0];
+  const tier = state.user && state.user.membershipTier;
+  useEffectRW(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
+  }, [onClose]);
+  return (
+    <div className="rw-welcome-scrim" onClick={onClose}>
+      <div className={"rw-welcome" + (step === 2 ? " rw-welcome-earn" : "")} role="dialog" aria-modal="true" aria-labelledby="rw-welcome-title" onClick={(e) => e.stopPropagation()}>
+        {step === 1 ? (
+          <React.Fragment>
+            {/* Dr Tim avatar Lottie — same file as the daily check-in "Welcome back" screen */}
+            <span className="rw-welcome-doc" aria-hidden="true"><LeagueLottieRW src="assets/lottie/checkin-welcome.json" size={210} /></span>
+            <b id="rw-welcome-title">Welcome to Rewards, {first}!</b>
+            <p>Every check-in, post and lesson earns points. {next ? <React.Fragment>Reach <strong>{rwPts(next.requires)}</strong> to move up to <strong>{next.name} League</strong> and unlock your first benefit bundle.</React.Fragment> : null}</p>
+            <button type="button" className="rw-welcome-btn" onClick={() => setStep(2)}>See ways to earn<IconifyRW name="lucide:arrow-right" size={15} color="#3D2A00" /></button>
+            <button type="button" className="rw-welcome-skip" onClick={onClose}>Explore my Rewards</button>
+          </React.Fragment>
+        ) : (
+          <React.Fragment>
+            <button type="button" className="rw-welcome-back" aria-label="Back" onClick={() => setStep(1)}><IconifyRW name="lucide:chevron-left" size={22} color="#fff" /></button>
+            <span className="rw-welcome-steps" aria-hidden="true"><i /><i className="on" /></span>
+            <b id="rw-welcome-title">Ways to earn points</b>
+            <p>Your quickest wins{tier ? " as a " + tier + " member" : ""} — points land the moment you do them.</p>
+            <ul className="rw-welcome-list">
+              {rwStarterRows(state).map((r) => (
+                <li key={r.id}>
+                  <span className="ic" aria-hidden="true"><IconifyRW name={r.icon} size={18} color="#FCC25D" /></span>
+                  <span className="lb">{r.label}</span>
+                  <span className="pt">+{PF_RW.formatNumber(r.pts)} pts</span>
+                </li>
+              ))}
+            </ul>
+            <button type="button" className="rw-welcome-btn" onClick={onClose}>Let's start<IconifyRW name="lucide:arrow-right" size={15} color="#3D2A00" /></button>
+            <button type="button" className="rw-welcome-skip" onClick={() => { onClose(); goRW("WaysToEarn.html"); }}>See all ways to earn</button>
+          </React.Fragment>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* -------------------------------------------------------------- activity */
 function RecentActivityRW({ state }) {
   const rows = state.ledger.slice().sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 8);
@@ -244,67 +367,41 @@ function RecentActivityRW({ state }) {
       {rows.map((t) => (
         <div key={t.id} className="rw-activity-row">
           <span className="rw-activity-ic" aria-hidden="true">
-            <IconifyRW name={t.pointsDelta > 0 ? "lucide:plus" : t.creditsDelta < 0 ? "lucide:shopping-bag" : "lucide:minus"} size={14} color={t.pointsDelta > 0 ? "#9C6A0E" : "var(--gray-500)"} />
+            <IconifyRW name={t.pointsDelta > 0 ? "lucide:plus" : "lucide:minus"} size={14} color={t.pointsDelta > 0 ? "#9C6A0E" : "var(--gray-500)"} />
           </span>
           <span className="rw-activity-main">
             <span className="rw-activity-label">{t.label}</span>
             <span className="rw-activity-time" title={fmtFullDateRW(t.ts)}>{fmtRelDateRW(t.ts)}</span>
           </span>
-          <span className={"rw-activity-cr" + (t.creditsDelta >= 0 ? "" : " is-spend")}>{t.creditsDelta >= 0 ? "+" : ""}{t.creditsDelta} cr</span>
           <span className={"rw-activity-amt" + (t.pointsDelta > 0 ? "" : " is-spend")}>{t.pointsDelta > 0 ? "+" + PF_RW.formatNumber(t.pointsDelta) + " pts" : "—"}</span>
         </div>
       ))}
-      {rows.length === 0 ? <div className="rw-empty">No activity yet — complete an action to start earning.</div> : null}
+      {rows.length === 0 ? <div className="rw-empty">No activity yet — check in today to earn your first points.</div> : null}
     </div>
   );
 }
 
-/* ----------------------------------------------------------- next reward */
-function NextRewardRW({ state, config }) {
-  const items = (config.storeItems || []).filter((i) => i && i.inventory !== 0);
-  const affordable = items.filter((i) => i.cost <= state.spendableCredits + 500).sort((a, b) => a.cost - b.cost)[0] || items[0];
-  if (!affordable) return null;
-  const canAfford = affordable.cost <= state.spendableCredits;
-  const pct = Math.max(0, Math.min(100, Math.round((state.spendableCredits / Math.max(1, affordable.cost)) * 100)));
-  const course = affordable.course || null;
-  return (
-    <button className="rw-card rw-next-reward" type="button" onClick={() => goRW("RewardsStore.html")}>
-      <span className="rw-next-reward-tag">NEXT UP</span>
-      <span className={"rw-next-reward-icon" + (affordable.image ? " has-img" : "")}>
-        {affordable.image ? <img src={affordable.image} alt="" /> : <IconifyRW name="lucide:gift" size={26} color="#3D2A00" />}
-        {course && course.discountPct ? <span className="rw-next-reward-off">{course.discountPct}% off</span> : null}
-      </span>
-      <span className="rw-next-reward-main">
-        <span className="ti">Next Available Reward</span>
-        <span className="nm">{course && course.discountPct ? course.discountPct + "% off " + affordable.name : affordable.name}</span>
-        <span className="su">{PF_RW.formatNumber(affordable.cost)} credits{canAfford ? " · ready to redeem" : " · " + PF_RW.formatNumber(affordable.cost - state.spendableCredits) + " more to go"}</span>
-        <span className="rw-next-reward-track" aria-hidden="true"><span style={{ width: pct + "%" }} /></span>
-      </span>
-    </button>
-  );
-}
-
 /* ---------------------------------------------------------- side summary */
-function WalletCardRW({ state }) {
+function PointsCardRW({ state, league }) {
   const week = PF_RW.getWeekPoints(state);
   const tier = state.user && state.user.membershipTier ? String(state.user.membershipTier) : null;
   const mult = tier ? PF_RW.tierMultiplierFor(null, tier) : null;
+  const next = league ? league.next : null;
   return (
-    <section className="rw-card rw-side-card" aria-label="Wallet summary">
-      <h3>Your wallet</h3>
+    <section className="rw-card rw-side-card" aria-label="Points summary">
+      <h3>Your points</h3>
       <dl className="rw-kv">
-        <div><dt>Spendable credits</dt><dd>{PF_RW.formatNumber(state.spendableCredits)}</dd></div>
         <div><dt>Lifetime points</dt><dd>{PF_RW.formatNumber(state.lifetimePoints)}</dd></div>
         <div><dt>Points this week</dt><dd>{PF_RW.formatNumber(week)}</dd></div>
-        {state.expiringCredits ? <div><dt>Expiring soon</dt><dd className="warn">{PF_RW.formatNumber(state.expiringCredits)} cr</dd></div> : null}
+        {next ? <div><dt>To {next.name} League</dt><dd className="warn">{rwPts(league.need)}</dd></div> : null}
         {mult ? <div><dt>{tier} tier multiplier</dt><dd>{mult}×</dd></div> : null}
       </dl>
-      <button className="rw-btn rw-btn-coral" type="button" onClick={() => goRW("RewardsStore.html")}>Go to Rewards Store<IconifyRW name="lucide:arrow-right" size={16} color="#3D2A00" /></button>
+      <button className="rw-btn rw-btn-coral" type="button" onClick={() => goRW("MilestonePath.html?ret=RewardsWeb.html")}>View Milestone Path<IconifyRW name="lucide:arrow-right" size={16} color="#3D2A00" /></button>
     </section>
   );
 }
 
-function DemoCardRW({ onRisk, onMilestone, onGoal, onReset }) {
+function DemoCardRW({ onRisk, onMilestone, onGoal, onNew, onReset }) {
   return (
     <section className="rw-card rw-side-card rw-demo" aria-label="Demo controls">
       <h3>Demo controls</h3>
@@ -312,6 +409,7 @@ function DemoCardRW({ onRisk, onMilestone, onGoal, onReset }) {
         <button className="rw-demo-btn" type="button" onClick={onRisk}>Simulate streak at risk</button>
         <button className="rw-demo-btn" type="button" onClick={onMilestone}>Simulate 50k milestone</button>
         <button className="rw-demo-btn" type="button" onClick={onGoal}>Daily goal reached</button>
+        <button className="rw-demo-btn" type="button" onClick={onNew}>New member view</button>
         <button className="rw-demo-btn" type="button" onClick={onReset}>Reset demo data</button>
       </div>
     </section>
@@ -320,11 +418,12 @@ function DemoCardRW({ onRisk, onMilestone, onGoal, onReset }) {
 
 /* ------------------------------------------------------------------ page */
 function RewardsWebApp() {
-  const [state, setState] = useStateRW(() => PF_RW.getState());
-  const [config, setConfig] = useStateRW(() => PF_RW.getConfig());
+  const [state, setState] = useStateRW(() => { rwApplyNewMemberFlag(); return PF_RW.getState(); });
   const [league, setLeague] = useStateRW(rwLeagueProgress);
+  const [welcomeOpen, setWelcomeOpen] = useStateRW(() => rwIsNewMember(PF_RW.getState()) && !rwWelcomeSeen());
+  const closeWelcome = React.useCallback(() => { rwMarkWelcomeSeen(); setWelcomeOpen(false); }, []);
   const [toast, setToast] = useStateRW(null);
-  const refresh = () => { setState(PF_RW.getState()); setConfig(PF_RW.getConfig()); setLeague(rwLeagueProgress()); };
+  const refresh = () => { setState(PF_RW.getState()); setLeague(rwLeagueProgress()); };
   const flash = (m) => { setToast(m); setTimeout(() => setToast(null), 2400); };
 
   /* Stay in sync when another tab (or the mobile preview) earns points. */
@@ -355,43 +454,41 @@ function RewardsWebApp() {
         <div className="rw-head">
           <div className="rw-head-copy">
             <h1>{greet}, {firstName}!</h1>
-            <p>Your points, credits, streak and league progress &mdash; all in one place.</p>
+            <p>Your points, streak and league progress &mdash; all in one place.</p>
           </div>
         </div>
 
         <div className="rw-grid">
           <main className="rw-main">
-            <LeagueProgressCardRW league={league} />
-            <StreakRiskBannerRW state={state} onCheckIn={checkIn} />
+            {/* page order (user, 2026-09-24): league rail first, then the stat
+                tiles, then a Milestone Path button (full path on MilestonePath.html) */}
+            {window.PFRewardsEmbed ? <window.PFRewardsEmbed.LeagueRail href="Leaderboard.html" /> : null}
             <EngagementCardsRW state={state} />
+            <FeatureTilesRW state={state} />
+            {/* the league progress card moved to MilestonePath.html (user, 2026-09-24) */}
+            <StreakRiskBannerRW state={state} onCheckIn={checkIn} />
 
+            {/* "Jump back in" quick nav removed (user, 2026-09-24) */}
             <section className="rw-sec">
-              <div className="rw-sec-h"><h2>Jump back in</h2></div>
-              <QuickNavRW state={state} league={league} />
-            </section>
-
-            <section className="rw-sec">
-              <div className="rw-sec-h">
-                <h2>Recent Activity</h2>
-                <button className="rw-sec-link" type="button" onClick={() => goRW("WaysToEarn.html")}>Ways to earn<IconifyRW name="lucide:arrow-right" size={14} color="var(--brand-navy)" /></button>
-              </div>
+              <div className="rw-sec-h"><h2>Recent Activity</h2></div>
               <RecentActivityRW state={state} />
             </section>
           </main>
 
           <aside className="rw-side">
-            <LeagueCardRW league={league} />
-            <NextRewardRW state={state} config={config} />
-            <WalletCardRW state={state} />
+            <LeagueCardRW state={state} />
+            <PointsCardRW state={state} league={league} />
             <DemoCardRW
               onRisk={() => { PF_RW.setStreakAtRisk(6); refresh(); }}
               onMilestone={() => { PF_RW.setState({ lifetimePoints: 49700 }); goRW("MilestoneSplash.html"); }}
               onGoal={() => { if (window.PFDailyGoal) window.PFDailyGoal.reset(); goRW("DailyGoal.html?ret=RewardsWeb.html"); }}
+              onNew={() => goRW("RewardsWeb.html?new=1")}
               onReset={() => { PF_RW.resetDemo(); refresh(); flash("Demo data reset."); }} />
           </aside>
         </div>
       </div>
 
+      {welcomeOpen && <WelcomeModalRW state={state} league={league} onClose={closeWelcome} initialStep={rwWelcomeStep()} />}
       {toast && <div className="rw-toast" role="status"><IconifyRW name="lucide:check-circle" size={16} color="#fff" />{toast}</div>}
     </div>
   );

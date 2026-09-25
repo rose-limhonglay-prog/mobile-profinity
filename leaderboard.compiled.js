@@ -1,8 +1,8 @@
 /* ===========================================================================
    PROfinity — Katy · Leaderboard (Screen 13) · iPhone 17 Pro Max
    Six gem leagues (Jade → Sapphire, window.PFLeague) sit in a swipeable
-   rail at the top; the member's badge is earned through milestones, higher
-   badges are locked. Every league has its own board: podium for its top
+   rail at the top; the member's badge is earned with Lifetime Points — each
+   league is a stop on the Milestone Path — and higher badges are locked. Every league has its own board: podium for its top
    three (Lottie medals, photo avatars) then a table, with the member's own
    row pinned in view on her league. Katy's live rolling points
    (window.PFLoyalty) are merged into her league's mock field. Suffixed -LB.
@@ -188,38 +188,38 @@ function LBLeagueRail({
   }));
 }
 
-/* Badge milestones: what earns the next gem. */
-function LBMilestones({
-  progress,
-  milestones
+/* League path: the six badges as points thresholds (Milestone Path), with the
+   member's progress toward the next one. */
+function LBLeaguePath({
+  progress
 }) {
   const {
     current,
     next,
-    done,
     need,
-    pct
+    pct,
+    points,
+    leagues,
+    index
   } = progress;
-  const pending = milestones.filter(m => !m.done);
-  const finished = milestones.filter(m => m.done);
-  const list = pending.slice(0, 4).concat(finished.slice(-2));
+  const lg = next || current;
   return /*#__PURE__*/React.createElement("div", {
     className: "lb-ms",
-    "data-screen-label": "Badge milestones"
+    "data-screen-label": "League path"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lb-ms-head"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lb-ms-gem"
   }, /*#__PURE__*/React.createElement(LBLottie, {
-    src: (next || current).lottie,
+    src: lg.lottie,
     size: 54,
     play: false
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, next ? "Next badge: " + next.name : "Highest badge earned"), /*#__PURE__*/React.createElement("i", null, next ? need + " more milestone" + (need === 1 ? "" : "s") + " to unlock · " + done + " of " + milestones.length + " done" : "You've completed every league milestone.")), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("b", null, next ? "Next badge: " + next.name : "Highest badge earned"), /*#__PURE__*/React.createElement("i", null, next ? PF_LB.formatNumber(need) + " pts to unlock · " + PF_LB.formatNumber(points) + " of " + PF_LB.formatNumber(next.requires) + " lifetime pts" : "You've reached the top of the Milestone Path.")), /*#__PURE__*/React.createElement("span", {
     className: "lb-ms-pct",
     style: {
-      color: (next || current).deep
+      color: lg.deep
     }
   }, pct, "%")), /*#__PURE__*/React.createElement("div", {
     className: "lb-ms-bar",
@@ -230,31 +230,44 @@ function LBMilestones({
   }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: pct + "%",
-      background: (next || current).accent
+      background: lg.accent
     }
   })), /*#__PURE__*/React.createElement("ul", {
     className: "lb-ms-list"
-  }, list.map(m => /*#__PURE__*/React.createElement("li", {
-    key: m.id,
-    className: m.done ? "done" : ""
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ic",
-    style: m.done ? {
-      background: (next || current).soft,
-      color: (next || current).deep
-    } : null
-  }, /*#__PURE__*/React.createElement(DSLB.IconifyIcon, {
-    name: m.done ? "lucide:check" : m.icon,
-    size: 17,
-    color: m.done ? (next || current).deep : "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "lb"
-  }, m.label), /*#__PURE__*/React.createElement("span", {
-    className: "ct",
-    style: m.done ? {
-      color: (next || current).deep
-    } : null
-  }, m.done ? "Done" : Math.min(m.have, m.target) + "/" + m.target)))));
+  }, leagues.map((l, i) => {
+    const done = i <= index;
+    return /*#__PURE__*/React.createElement("li", {
+      key: l.key,
+      className: done ? "done" : ""
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ic",
+      style: {
+        background: done ? l.soft : null
+      }
+    }, /*#__PURE__*/React.createElement(LBLottie, {
+      src: l.lottie,
+      size: 30,
+      play: false
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "lb",
+      style: done ? {
+        color: l.deep
+      } : null
+    }, l.name, " League"), /*#__PURE__*/React.createElement("span", {
+      className: "ct",
+      style: done ? {
+        color: l.deep
+      } : null
+    }, done ? l.requires > 0 ? "Earned" : "Start" : PF_LB.formatNumber(l.requires) + " pts"));
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lb-ms-link",
+    onClick: () => goLB("MilestonePath.html?ret=Leaderboard.html")
+  }, "See what each badge unlocks", /*#__PURE__*/React.createElement(DSLB.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 14,
+    color: "var(--brand-navy)"
+  })));
 }
 function prizeForLB(config, rank) {
   const p = config.leaderboardPrizes.find(pr => {
@@ -359,7 +372,6 @@ function LeaderboardScreen() {
   const [state] = useStateLB(() => PF_LB.getState());
   const leagues = useMemoLB(() => PF_LG.getLeagues(), []);
   const [progress, setProgress] = useStateLB(() => PF_LG.getProgress());
-  const milestones = useMemoLB(() => PF_LG.getMilestones(), [progress]);
   const myIndex = progress.index;
   const [selected, setSelected] = useStateLB(myIndex);
   const [toast, setToast] = useStateLB(null);
@@ -431,7 +443,7 @@ function LeaderboardScreen() {
   const top3 = ranked.slice(0, 3);
   const me = ranked.find(r => r.isKaty);
   const ahead = me ? ranked.find(r => r.rank === me.rank - 1) : null;
-  const needFor = idx => Math.max(0, leagues[idx].requires - progress.done);
+  const needFor = idx => Math.max(0, leagues[idx].requires - progress.points);
   const goMilestones = () => {
     const sc = scrollRef.current,
       el = msRef.current;
@@ -474,7 +486,7 @@ function LeaderboardScreen() {
     }
   }, league.name, " League"), /*#__PURE__*/React.createElement("p", {
     className: "lb-sub"
-  }, isMine ? (progress.preview ? "Preview · " : "Your league · ") + "rolling 30-day points" : locked ? "Locked · " + needFor(selected) + " more milestone" + (needFor(selected) === 1 ? "" : "s") + " to unlock" : "Earned · you've moved up from here")), /*#__PURE__*/React.createElement(LBLeagueRail, {
+  }, isMine ? (progress.preview ? "Preview · " : "Your league · ") + "rolling 30-day points" : locked ? "Locked · " + PF_LB.formatNumber(needFor(selected)) + " more pts to unlock" : "Earned · you've moved up from here")), /*#__PURE__*/React.createElement(LBLeagueRail, {
     leagues: leagues,
     myIndex: myIndex,
     selected: selected,
@@ -508,11 +520,11 @@ function LeaderboardScreen() {
     color: "var(--brand-navy)"
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, "Unlock ", league.name, " League"), /*#__PURE__*/React.createElement("i", null, "Complete ", needFor(selected), " more milestone", needFor(selected) === 1 ? "" : "s", " to earn this badge")), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("b", null, "Unlock ", league.name, " League"), /*#__PURE__*/React.createElement("i", null, "Earn ", PF_LB.formatNumber(needFor(selected)), " more lifetime pts to unlock this badge")), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lb-you-cta",
     onClick: goMilestones
-  }, "See milestones")), !isMine && !locked && /*#__PURE__*/React.createElement("div", {
+  }, "See the path")), !isMine && !locked && /*#__PURE__*/React.createElement("div", {
     className: "lb-you lb-you-earned",
     "data-screen-label": "Earned league"
   }, /*#__PURE__*/React.createElement("span", {
@@ -541,12 +553,11 @@ function LeaderboardScreen() {
     ref: msRef
   }, /*#__PURE__*/React.createElement("div", {
     className: "ml-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Badge milestones")), /*#__PURE__*/React.createElement(LBMilestones, {
-    progress: progress,
-    milestones: milestones
+  }, /*#__PURE__*/React.createElement("h2", null, "League path")), /*#__PURE__*/React.createElement(LBLeaguePath, {
+    progress: progress
   })), /*#__PURE__*/React.createElement("p", {
     className: "lb-foot"
-  }, "Points shown are earned in the last 30 days, so the board reflects recent activity rather than your lifetime total of ", PF_LB.formatNumber(state.lifetimePoints), " pts. Badges are earned through milestones, not points."), /*#__PURE__*/React.createElement("div", {
+  }, "Points shown are earned in the last 30 days, so the board reflects recent activity rather than your lifetime total of ", PF_LB.formatNumber(state.lifetimePoints), " pts. Badges are earned with Lifetime Points along your Milestone Path."), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 24
     }

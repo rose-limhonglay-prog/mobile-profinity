@@ -330,6 +330,8 @@ function CourseCheckoutWebApp() {
 
   useEffectCCW(() => {
     document.title = "PROfinity — Checkout · " + course.title;
+    /* Today's Targets funnel (daily-targets.js): count a target-driven checkout once */
+    try { if (window.PFDailyTargets) window.PFDailyTargets.checkoutStarted(course.slug); } catch (e) {}
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);
 
@@ -337,6 +339,7 @@ function CourseCheckoutWebApp() {
     setPaying(true);
     timerRef.current = setTimeout(() => {
       LearnCCW.addPurchased(course.slug);
+      try { if (window.PFDailyTargets) window.PFDailyTargets.recordPurchase(course.slug, total); } catch (e) {}
       setPaying(false);
       setDone(true);
       try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch (e) {}

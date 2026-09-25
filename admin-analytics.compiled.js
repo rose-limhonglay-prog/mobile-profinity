@@ -52,9 +52,15 @@ const ANA_NAV = [{
   icon: "lucide:badge-check",
   label: "Badges"
 }, {
+  icon: "lucide:clipboard-list",
+  label: "Quizzes & Surveys"
+}, {
   icon: "lucide:trophy",
   label: "Loyalty & Gamification",
   chevron: true
+}, {
+  icon: "lucide:scroll-text",
+  label: "Points Ledger"
 }, {
   icon: "lucide:receipt-text",
   label: "Transactions",
@@ -82,7 +88,9 @@ const ANA_NAV_LINKS = {
   "App Versions": "AdminAppVersions.html",
   "Push Notification": "AdminPushNotifications.html",
   "Badges": "AdminBadges.html",
+  "Quizzes & Surveys": "AdminQuizEditor.html",
   "Loyalty & Gamification": "AdminActionsEditor.html",
+  "Points Ledger": "AdminAuditLedger.html",
   "Transactions": "AdminTransactions.html",
   "Courses": "AdminCourses.html",
   "Community": "AdminCommunity.html"
@@ -213,6 +221,195 @@ function ANATable({
   }, r.revenue))));
 }
 
+/* ------------------------------------------------ Today's Targets funnel */
+/* Reads the local funnel that daily-targets.js keeps (pf-targets-analytics):
+   impressions → free taps / downloads, paid taps → checkouts → purchases and
+   the revenue those purchases brought in. Prototype scope: this device's
+   data; the production read would come from the events pipeline. */
+const ANA_FUNNEL_RANGES = [{
+  label: "7 days",
+  days: 7
+}, {
+  label: "30 days",
+  days: 30
+}, {
+  label: "All time",
+  days: 0
+}];
+const anaGBP = n => "£" + Number(n || 0).toLocaleString("en-GB", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
+const anaPct = v => v == null ? "—" : v + "%";
+function ANATargetsFunnel() {
+  const T = window.PFDailyTargets;
+  const [range, setRange] = React.useState(7);
+  const [tick, setTick] = React.useState(0);
+  React.useEffect(() => {
+    const bump = () => setTick(n => n + 1);
+    window.addEventListener("pf:daily-targets-analytics", bump);
+    window.addEventListener("storage", bump);
+    return () => {
+      window.removeEventListener("pf:daily-targets-analytics", bump);
+      window.removeEventListener("storage", bump);
+    };
+  }, []);
+  if (!T) return null;
+  const f = T.getFunnel(range);
+  const picks = T.get();
+  const stages = [{
+    label: "Targets shown (daily pairs)",
+    value: f.impressions,
+    rate: null,
+    note: "one per member per day"
+  }, {
+    label: "Free item tapped",
+    value: f.freeTaps,
+    rate: f.rates.freeTap,
+    note: "of shown"
+  }, {
+    label: "Free PDF downloaded",
+    value: f.freeDownloads,
+    rate: f.rates.freeDownload,
+    note: "of shown"
+  }, {
+    label: "Paid CTA tapped",
+    value: f.paidTaps,
+    rate: f.rates.paidTap,
+    note: "of shown"
+  }, {
+    label: "Checkout started",
+    value: f.checkouts,
+    rate: f.rates.checkout,
+    note: "of paid taps"
+  }, {
+    label: "Course purchased",
+    value: f.purchases,
+    rate: f.rates.purchase,
+    note: "of paid taps",
+    bold: true
+  }];
+  return /*#__PURE__*/React.createElement("section", {
+    className: "ana-funnel",
+    "data-tick": tick
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ana-funnel-head"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", null, "Today's Targets — usage funnel & revenue"), /*#__PURE__*/React.createElement("p", null, "Daily free download + paid course pick. Today: ", /*#__PURE__*/React.createElement("b", null, picks.free.title), " · ", /*#__PURE__*/React.createElement("b", null, picks.paid.title), " (", anaGBP(picks.paid.price).replace(".00", ""), ")")), /*#__PURE__*/React.createElement("div", {
+    className: "ana-funnel-ranges",
+    role: "tablist",
+    "aria-label": "Date range"
+  }, ANA_FUNNEL_RANGES.map(r => /*#__PURE__*/React.createElement("button", {
+    key: r.days,
+    type: "button",
+    role: "tab",
+    "aria-selected": range === r.days,
+    className: "ana-range" + (range === r.days ? " is-active" : ""),
+    onClick: () => setRange(r.days)
+  }, r.label)))), /*#__PURE__*/React.createElement("div", {
+    className: "ana-kpis"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ana-kpi is-revenue"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ana-kpi-l"
+  }, "Attributed revenue"), /*#__PURE__*/React.createElement("span", {
+    className: "ana-kpi-v"
+  }, anaGBP(f.revenue)), /*#__PURE__*/React.createElement("span", {
+    className: "ana-kpi-s"
+  }, f.purchases, " purchase", f.purchases === 1 ? "" : "s", " · avg order ", anaGBP(f.avgOrder))), /*#__PURE__*/React.createElement("div", {
+    className: "ana-kpi"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ana-kpi-l"
+  }, "Revenue per target shown"), /*#__PURE__*/React.createElement("span", {
+    className: "ana-kpi-v"
+  }, anaGBP(f.revenuePerImpression)), /*#__PURE__*/React.createElement("span", {
+    className: "ana-kpi-s"
+  }, f.impressions, " daily pairs shown")), /*#__PURE__*/React.createElement("div", {
+    className: "ana-kpi"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ana-kpi-l"
+  }, "Shown → purchase"), /*#__PURE__*/React.createElement("span", {
+    className: "ana-kpi-v"
+  }, anaPct(f.rates.overallConversion)), /*#__PURE__*/React.createElement("span", {
+    className: "ana-kpi-s"
+  }, "overall conversion")), /*#__PURE__*/React.createElement("div", {
+    className: "ana-kpi"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ana-kpi-l"
+  }, "Free download rate"), /*#__PURE__*/React.createElement("span", {
+    className: "ana-kpi-v"
+  }, anaPct(f.rates.freeDownload)), /*#__PURE__*/React.createElement("span", {
+    className: "ana-kpi-s"
+  }, f.freeDownloads, " PDFs downloaded"))), /*#__PURE__*/React.createElement("div", {
+    className: "ana-table"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ana-row-grid ana-thead"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ana-th"
+  }, "FUNNEL STAGE"), /*#__PURE__*/React.createElement("span", {
+    className: "ana-th ana-th-right"
+  }, "COUNT"), /*#__PURE__*/React.createElement("span", {
+    className: "ana-th ana-th-right"
+  }, "RATE")), stages.map((st, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "ana-row-grid ana-trow" + (st.bold ? " is-bold" : "")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ana-metric-cell"
+  }, st.label), /*#__PURE__*/React.createElement("span", {
+    className: "ana-count-cell"
+  }, anaFormatCount(st.value)), /*#__PURE__*/React.createElement("span", {
+    className: "ana-revenue-cell"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ana-funnel-rate"
+  }, anaPct(st.rate)), st.rate != null && /*#__PURE__*/React.createElement("span", {
+    className: "ana-funnel-note"
+  }, " ", st.note))))), /*#__PURE__*/React.createElement("div", {
+    className: "ana-table"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ana-row-grid ana-row-grid-days ana-thead"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ana-th"
+  }, "DAY"), /*#__PURE__*/React.createElement("span", {
+    className: "ana-th ana-th-right"
+  }, "SHOWN"), /*#__PURE__*/React.createElement("span", {
+    className: "ana-th ana-th-right"
+  }, "FREE DL"), /*#__PURE__*/React.createElement("span", {
+    className: "ana-th ana-th-right"
+  }, "PAID TAPS"), /*#__PURE__*/React.createElement("span", {
+    className: "ana-th ana-th-right"
+  }, "PURCHASES"), /*#__PURE__*/React.createElement("span", {
+    className: "ana-th ana-th-right"
+  }, "REVENUE")), f.perDay.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "ana-row-grid ana-trow"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ana-metric-cell ana-empty"
+  }, "No target activity recorded yet in this range.")), f.perDay.map(d => /*#__PURE__*/React.createElement("div", {
+    key: d.date,
+    className: "ana-row-grid ana-row-grid-days ana-trow"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ana-metric-cell"
+  }, new Date(d.date + "T12:00:00").toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "ana-count-cell"
+  }, d.impressions), /*#__PURE__*/React.createElement("span", {
+    className: "ana-count-cell"
+  }, d.freeDownloads, /*#__PURE__*/React.createElement("span", {
+    className: "ana-funnel-note"
+  }, " / ", d.freeTaps)), /*#__PURE__*/React.createElement("span", {
+    className: "ana-count-cell"
+  }, d.paidTaps, /*#__PURE__*/React.createElement("span", {
+    className: "ana-funnel-note"
+  }, " → ", d.checkouts, " co")), /*#__PURE__*/React.createElement("span", {
+    className: "ana-count-cell"
+  }, d.purchases), /*#__PURE__*/React.createElement("span", {
+    className: "ana-revenue-cell"
+  }, anaGBP(d.revenue))))), /*#__PURE__*/React.createElement("p", {
+    className: "ana-funnel-foot"
+  }, "Attribution: a purchase counts when the same course was tapped from Today's Targets within the previous 24 hours (last touch). Revenue is the amount paid at checkout, after reward discounts, including VAT."));
+}
+
 /* ------------------------------------------------------------- view */
 function ANAView() {
   return /*#__PURE__*/React.createElement("div", {
@@ -233,7 +430,7 @@ function ANAView() {
     icon: "lucide:refresh-cw"
   }), "Refresh"))), /*#__PURE__*/React.createElement(ANATable, {
     rows: analyticsRows
-  }));
+  }), /*#__PURE__*/React.createElement(ANATargetsFunnel, null));
 }
 
 /* ------------------------------------------------------------- root */

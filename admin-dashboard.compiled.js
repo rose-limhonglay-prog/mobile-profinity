@@ -52,9 +52,15 @@ const DASH_NAV = [{
   icon: "lucide:badge-check",
   label: "Badges"
 }, {
+  icon: "lucide:clipboard-list",
+  label: "Quizzes & Surveys"
+}, {
   icon: "lucide:trophy",
   label: "Loyalty & Gamification",
   chevron: true
+}, {
+  icon: "lucide:scroll-text",
+  label: "Points Ledger"
 }, {
   icon: "lucide:receipt-text",
   label: "Transactions",
@@ -82,7 +88,9 @@ const DASH_NAV_LINKS = {
   "App Versions": "AdminAppVersions.html",
   "Push Notification": "AdminPushNotifications.html",
   "Badges": "AdminBadges.html",
+  "Quizzes & Surveys": "AdminQuizEditor.html",
   "Loyalty & Gamification": "AdminActionsEditor.html",
+  "Points Ledger": "AdminAuditLedger.html",
   "Transactions": "AdminTransactions.html",
   "Courses": "AdminCourses.html",
   "Community": "AdminCommunity.html"
@@ -158,42 +166,49 @@ function DashHeader({
 /* ---------------------------------------------------------------- data */
 const DASH_STATS = [{
   label: "Total Users",
+  tip: "Everyone with a PROfinity account, across all tiers, including clinicians and patients.",
   value: "0",
   icon: "lucide:users",
   color: "var(--info)",
   bg: "var(--info-bg)"
 }, {
   label: "Active Subscriptions",
+  tip: "Members currently on a paid tier with a subscription in good standing.",
   value: "0",
   icon: "lucide:star",
   color: "var(--warning)",
   bg: "var(--warning-bg)"
 }, {
   label: "Patient Profiles",
+  tip: "Accounts registered as patients rather than clinicians.",
   value: "0",
   icon: "lucide:contact",
   color: "var(--success)",
   bg: "var(--success-bg)"
 }, {
   label: "Total Clinicians",
+  tip: "Accounts registered as practising clinicians, verified or awaiting verification.",
   value: "0",
   icon: "lucide:briefcase-medical",
   color: "var(--success)",
   bg: "var(--success-bg)"
 }, {
   label: "Total Posts",
+  tip: "All posts published to the newsfeed and community channels since launch.",
   value: "338",
   icon: "lucide:file-text",
   color: "var(--ai-purple)",
   bg: "var(--ai-purple-100)"
 }, {
   label: "Flagged Posts",
+  tip: "Posts reported by members or caught by moderation rules that still need a decision.",
   value: "0",
   icon: "lucide:flag",
   color: "var(--error)",
   bg: "var(--error-bg)"
 }, {
   label: "Flagged Comments",
+  tip: "Comments reported or auto-flagged that are waiting for moderation.",
   value: "0",
   icon: "lucide:message-square",
   color: "var(--warning)",
@@ -214,6 +229,21 @@ const DASH_QUICK_ACTIONS = [{
 }];
 
 /* ---------------------------------------------------------------- view */
+function AdmInfo({
+  text
+}) {
+  return /*#__PURE__*/React.createElement("span", {
+    className: "adm-info",
+    tabIndex: 0,
+    role: "img",
+    "aria-label": text
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:info"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "adm-info-tip",
+    "aria-hidden": "true"
+  }, text));
+}
 function DashStatCard({
   stat
 }) {
@@ -231,7 +261,9 @@ function DashStatCard({
     className: "dash-stat-body"
   }, /*#__PURE__*/React.createElement("div", {
     className: "dash-stat-label"
-  }, stat.label), /*#__PURE__*/React.createElement("div", {
+  }, stat.label, stat.tip && /*#__PURE__*/React.createElement(AdmInfo, {
+    text: stat.tip
+  })), /*#__PURE__*/React.createElement("div", {
     className: "dash-stat-value"
   }, stat.value)));
 }

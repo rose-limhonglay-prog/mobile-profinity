@@ -1103,15 +1103,15 @@
     }]
   }];
   const VOICE_CONFS_SEED_C = [{
-    id: "vc1",
-    name: "Clinical Case Review",
-    who: "Dr Tim Pearce, Dr Sarah Kim +3",
-    t: "Today, 4:00 PM",
+    id: "c1",
+    name: "Case Study Discussion",
+    who: "Dr Tim Pearce, Dr Rachel Adams +98",
+    t: "Live now · 100 participants",
     live: true
   }, {
-    id: "vc2",
+    id: "c2",
     name: "Business Growth Sync",
-    who: "Miranda Pearce, Dr Alex Chen",
+    who: "Miranda Pearce, Mark Ellis",
     t: "Tomorrow, 10:00 AM",
     live: false
   }];
@@ -1299,8 +1299,11 @@
   function VoiceConfRowC({
     v
   }) {
-    return /*#__PURE__*/React.createElement("div", {
-      className: "mp-row mp-vc-row"
+    return /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "mp-row mp-vc-row",
+      onClick: () => goC("Messages.html?tab=conference&conf=" + v.id),
+      "aria-label": v.name + (v.live ? ", live now" : "")
     }, /*#__PURE__*/React.createElement("span", {
       className: "mp-av mp-vc-icon"
     }, /*#__PURE__*/React.createElement(DSC.IconifyIcon, {
@@ -1736,18 +1739,41 @@
     const [menuOpen, setMenuOpen] = useStateC(false);
     const [notifOpen, setNotifOpen] = useStateC(false);
     const [msgOpen, setMsgOpen] = useStateC(false);
-    const [dark, setDark] = useStateC(() => {
+    /* Follows the app-wide theme (pf-theme + <html data-theme>) like the
+       newsfeed / community / profile drawers do — the old private
+       "pf-mobile-dark" flag left this drawer dark on light-mode pages. */
+    const readDarkC = () => {
       try {
-        return localStorage.getItem("pf-mobile-dark") === "1";
+        return localStorage.getItem("pf-theme") === "dark" || document.documentElement.getAttribute("data-theme") === "dark";
       } catch (e) {
         return false;
       }
-    });
+    };
+    const [dark, setDark] = useStateC(readDarkC);
     useEffectC(() => {
       try {
-        localStorage.setItem("pf-mobile-dark", dark ? "1" : "0");
+        localStorage.removeItem("pf-mobile-dark");
       } catch (e) {}
-    }, [dark]);
+      const sync = () => setDark(readDarkC());
+      window.addEventListener("storage", sync);
+      const mo = new MutationObserver(sync);
+      mo.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"]
+      });
+      return () => {
+        window.removeEventListener("storage", sync);
+        mo.disconnect();
+      };
+    }, []);
+    const toggleDark = () => {
+      const next = !dark;
+      setDark(next);
+      try {
+        localStorage.setItem("pf-theme", next ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", next ? "dark" : "light");
+      } catch (e) {}
+    };
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(MTopBarC, {
       onMenu: () => setMenuOpen(true),
       onBell: () => setNotifOpen(true),
@@ -1757,7 +1783,7 @@
       open: menuOpen,
       onClose: () => setMenuOpen(false),
       dark: dark,
-      onToggleDark: () => setDark(v => !v)
+      onToggleDark: toggleDark
     }), /*#__PURE__*/React.createElement(NotificationsPanelC, {
       open: notifOpen,
       onClose: () => setNotifOpen(false)

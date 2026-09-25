@@ -1264,15 +1264,15 @@ const DM_THREADS_SEED = [{
   }]
 }];
 const VOICE_CONFS_SEED = [{
-  id: "vc1",
-  name: "Clinical Case Review",
-  who: "Dr Tim Pearce, Dr Sarah Kim +3",
-  t: "Today, 4:00 PM",
+  id: "c1",
+  name: "Case Study Discussion",
+  who: "Dr Tim Pearce, Dr Rachel Adams +98",
+  t: "Live now · 100 participants",
   live: true
 }, {
-  id: "vc2",
+  id: "c2",
   name: "Business Growth Sync",
-  who: "Miranda Pearce, Dr Alex Chen",
+  who: "Miranda Pearce, Mark Ellis",
   t: "Tomorrow, 10:00 AM",
   live: false
 }];
@@ -1460,8 +1460,11 @@ function NewConversationScreenM({
 function VoiceConfRow({
   v
 }) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "mp-row mp-vc-row"
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mp-row mp-vc-row",
+    onClick: () => go("Messages.html?tab=conference&conf=" + v.id),
+    "aria-label": v.name + (v.live ? ", live now" : "")
   }, /*#__PURE__*/React.createElement("span", {
     className: "mp-av mp-vc-icon"
   }, /*#__PURE__*/React.createElement(DSM.IconifyIcon, {

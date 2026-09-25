@@ -1,6 +1,7 @@
 /* ===========================================================================
    PROfinity — Katy · My Rewards · iPhone 17 Pro Max
-   Every reward Katy has redeemed in the Rewards Store, newest first: course
+   Every course discount Katy holds (unlocked along the Milestone Path; the
+   Rewards Store was removed 2026-09-24), newest first: course
    thumbnail, discount, voucher code with one-tap copy, redeemed date and a
    Ready / Used status (Used once the course shows up in pf-purchased-courses).
    Tapping a row opens a detail sheet with the full code, copy, and "Use it
@@ -211,10 +212,10 @@ function MyRewardsScreen() {
     color: "var(--gray-900)"
   })), /*#__PURE__*/React.createElement("h1", null, "My Rewards"), /*#__PURE__*/React.createElement("button", {
     className: "ml-top-action",
-    "aria-label": "Rewards Store",
-    onClick: () => goMR("RewardsStore.html")
+    "aria-label": "Milestone Path",
+    onClick: () => goMR("MilestonePath.html?ret=MyRewards.html")
   }, /*#__PURE__*/React.createElement(DSMR.IconifyIcon, {
-    name: "lucide:shopping-bag",
+    name: "lucide:milestone",
     size: 18,
     color: "var(--gray-900)"
   }))), /*#__PURE__*/React.createElement("div", {
@@ -229,14 +230,14 @@ function MyRewardsScreen() {
     name: "lucide:ticket",
     size: 30,
     color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("h2", null, "No rewards yet"), /*#__PURE__*/React.createElement("p", null, "Redeem your Spendable Credits for course discounts and they'll show up here with their codes."), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("h2", null, "No rewards yet"), /*#__PURE__*/React.createElement("p", null, "Course credits and discounts unlock as your Lifetime Points climb the Milestone Path — they'll show up here with their codes."), /*#__PURE__*/React.createElement("button", {
     className: "ml-btn mr-btn mr-btn-primary",
     type: "button",
     style: {
       width: "auto"
     },
-    onClick: () => goMR("RewardsStore.html")
-  }, "Browse the Rewards Store")) : /*#__PURE__*/React.createElement("div", {
+    onClick: () => goMR("MilestonePath.html?ret=MyRewards.html")
+  }, "See your Milestone Path")) : /*#__PURE__*/React.createElement("div", {
     className: "mr-list"
   }, rows.map(r => /*#__PURE__*/React.createElement(RewardRow, {
     key: r.voucher.code,

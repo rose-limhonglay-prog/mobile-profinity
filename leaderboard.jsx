@@ -1,8 +1,8 @@
 /* ===========================================================================
    PROfinity — Katy · Leaderboard (Screen 13) · iPhone 17 Pro Max
    Six gem leagues (Jade → Sapphire, window.PFLeague) sit in a swipeable
-   rail at the top; the member's badge is earned through milestones, higher
-   badges are locked. Every league has its own board: podium for its top
+   rail at the top; the member's badge is earned with Lifetime Points — each
+   league is a stop on the Milestone Path — and higher badges are locked. Every league has its own board: podium for its top
    three (Lottie medals, photo avatars) then a table, with the member's own
    row pinned in view on her league. Katy's live rolling points
    (window.PFLoyalty) are merged into her league's mock field. Suffixed -LB.
@@ -112,37 +112,42 @@ function LBLeagueRail({ leagues, myIndex, selected, onSelect }) {
   );
 }
 
-/* Badge milestones: what earns the next gem. */
-function LBMilestones({ progress, milestones }) {
-  const { current, next, done, need, pct } = progress;
-  const pending = milestones.filter((m) => !m.done);
-  const finished = milestones.filter((m) => m.done);
-  const list = pending.slice(0, 4).concat(finished.slice(-2));
+/* League path: the six badges as points thresholds (Milestone Path), with the
+   member's progress toward the next one. */
+function LBLeaguePath({ progress }) {
+  const { current, next, need, pct, points, leagues, index } = progress;
+  const lg = next || current;
   return (
-    <div className="lb-ms" data-screen-label="Badge milestones">
+    <div className="lb-ms" data-screen-label="League path">
       <div className="lb-ms-head">
-        <span className="lb-ms-gem"><LBLottie src={(next || current).lottie} size={54} play={false} /></span>
+        <span className="lb-ms-gem"><LBLottie src={lg.lottie} size={54} play={false} /></span>
         <span className="tx">
           <b>{next ? "Next badge: " + next.name : "Highest badge earned"}</b>
-          <i>{next ? need + " more milestone" + (need === 1 ? "" : "s") + " to unlock · " + done + " of " + milestones.length + " done"
-                   : "You've completed every league milestone."}</i>
+          <i>{next ? PF_LB.formatNumber(need) + " pts to unlock · " + PF_LB.formatNumber(points) + " of " + PF_LB.formatNumber(next.requires) + " lifetime pts"
+                   : "You've reached the top of the Milestone Path."}</i>
         </span>
-        <span className="lb-ms-pct" style={{ color: (next || current).deep }}>{pct}%</span>
+        <span className="lb-ms-pct" style={{ color: lg.deep }}>{pct}%</span>
       </div>
       <div className="lb-ms-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-        <span style={{ width: pct + "%", background: (next || current).accent }} />
+        <span style={{ width: pct + "%", background: lg.accent }} />
       </div>
       <ul className="lb-ms-list">
-        {list.map((m) => (
-          <li key={m.id} className={m.done ? "done" : ""}>
-            <span className="ic" style={m.done ? { background: (next || current).soft, color: (next || current).deep } : null}>
-              <DSLB.IconifyIcon name={m.done ? "lucide:check" : m.icon} size={17} color={m.done ? (next || current).deep : "var(--brand-navy)"} />
-            </span>
-            <span className="lb">{m.label}</span>
-            <span className="ct" style={m.done ? { color: (next || current).deep } : null}>{m.done ? "Done" : Math.min(m.have, m.target) + "/" + m.target}</span>
-          </li>
-        ))}
+        {leagues.map((l, i) => {
+          const done = i <= index;
+          return (
+            <li key={l.key} className={done ? "done" : ""}>
+              <span className="ic" style={{ background: done ? l.soft : null }}>
+                <LBLottie src={l.lottie} size={30} play={false} />
+              </span>
+              <span className="lb" style={done ? { color: l.deep } : null}>{l.name} League</span>
+              <span className="ct" style={done ? { color: l.deep } : null}>{done ? (l.requires > 0 ? "Earned" : "Start") : PF_LB.formatNumber(l.requires) + " pts"}</span>
+            </li>
+          );
+        })}
       </ul>
+      <button type="button" className="lb-ms-link" onClick={() => goLB("MilestonePath.html?ret=Leaderboard.html")}>
+        See what each badge unlocks<DSLB.IconifyIcon name="lucide:chevron-right" size={14} color="var(--brand-navy)" />
+      </button>
     </div>
   );
 }
@@ -207,7 +212,6 @@ function LeaderboardScreen() {
   const [state] = useStateLB(() => PF_LB.getState());
   const leagues = useMemoLB(() => PF_LG.getLeagues(), []);
   const [progress, setProgress] = useStateLB(() => PF_LG.getProgress());
-  const milestones = useMemoLB(() => PF_LG.getMilestones(), [progress]);
   const myIndex = progress.index;
   const [selected, setSelected] = useStateLB(myIndex);
   const [toast, setToast] = useStateLB(null);
@@ -258,7 +262,7 @@ function LeaderboardScreen() {
   const top3 = ranked.slice(0, 3);
   const me = ranked.find((r) => r.isKaty);
   const ahead = me ? ranked.find((r) => r.rank === me.rank - 1) : null;
-  const needFor = (idx) => Math.max(0, leagues[idx].requires - progress.done);
+  const needFor = (idx) => Math.max(0, leagues[idx].requires - progress.points);
   const goMilestones = () => {
     const sc = scrollRef.current, el = msRef.current;
     if (!sc || !el) return;
@@ -280,7 +284,7 @@ function LeaderboardScreen() {
           <h2 className="lb-league-title" style={{ color: league.deep }}>{league.name} League</h2>
           <p className="lb-sub">
             {isMine ? (progress.preview ? "Preview · " : "Your league · ") + "rolling 30-day points"
-              : locked ? "Locked · " + needFor(selected) + " more milestone" + (needFor(selected) === 1 ? "" : "s") + " to unlock"
+              : locked ? "Locked · " + PF_LB.formatNumber(needFor(selected)) + " more pts to unlock"
               : "Earned · you've moved up from here"}
           </p>
         </div>
@@ -304,9 +308,9 @@ function LeaderboardScreen() {
             <span className="ic"><DSLB.IconifyIcon name="lucide:lock" size={20} color="var(--brand-navy)" /></span>
             <span className="tx">
               <b>Unlock {league.name} League</b>
-              <i>Complete {needFor(selected)} more milestone{needFor(selected) === 1 ? "" : "s"} to earn this badge</i>
+              <i>Earn {PF_LB.formatNumber(needFor(selected))} more lifetime pts to unlock this badge</i>
             </span>
-            <button type="button" className="lb-you-cta" onClick={goMilestones}>See milestones</button>
+            <button type="button" className="lb-you-cta" onClick={goMilestones}>See the path</button>
           </div>
         )}
         {!isMine && !locked && (
@@ -328,13 +332,13 @@ function LeaderboardScreen() {
         </div>
 
         <div className="lb-ms-wrap" ref={msRef}>
-          <div className="ml-sec-h"><h2>Badge milestones</h2></div>
-          <LBMilestones progress={progress} milestones={milestones} />
+          <div className="ml-sec-h"><h2>League path</h2></div>
+          <LBLeaguePath progress={progress} />
         </div>
 
         <p className="lb-foot">Points shown are earned in the last 30 days, so the board reflects
           recent activity rather than your lifetime total of {PF_LB.formatNumber(state.lifetimePoints)} pts.
-          Badges are earned through milestones, not points.</p>
+          Badges are earned with Lifetime Points along your Milestone Path.</p>
 
         <div style={{ height: 24 }} />
       </div>

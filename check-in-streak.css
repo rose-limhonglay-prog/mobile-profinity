@@ -61,6 +61,19 @@ img { max-width: 100%; }
 .cis-cta.is-done { background: var(--success-bg, #ecfdf3); color: var(--success, #2a9568); cursor: default; }
 .cis-cta-note { margin: 8px 0 0; font-size: 12px; color: var(--gray-500); text-align: center; }
 
+/* ---- streak-at-risk banner (fixed amber + cream, same in both themes, mirrors .rdb-risk-banner) ---- */
+.cis-risk-banner { margin: 16px 0 0; background: linear-gradient(135deg, #FDD07A, #FCC25D 60%, #E8A63A); border-radius: 16px; padding: 16px 18px; color: #3D2A00;
+  box-shadow: 0 10px 26px rgba(232,166,58,.26); }
+.cis-risk-head { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; line-height: 1.3; }
+.cis-risk-clock { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; margin: 8px 0 0; color: rgba(61,42,0,.82); }
+.cis-notif-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.cis-notif-preview { display: flex; gap: 12px; background: rgba(255,251,240,.96); border-radius: 12px; padding: 12px 14px; box-shadow: 0 4px 14px rgba(16,24,40,.14); }
+.cis-notif-icon { width: 30px; height: 30px; border-radius: 8px; background: rgba(41,37,105,.06); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cis-notif-body { min-width: 0; }
+.cis-notif-title { font-size: 13px; font-weight: 700; color: #292569; }
+.cis-notif-title span { font-weight: 500; color: #7a7f8e; }
+.cis-notif-text { font-size: 13px; margin-top: 3px; color: #3f4453; line-height: 1.45; }
+
 /* ---- stats ---- */
 .cis-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
 .cis-stat { display: flex; flex-direction: column; gap: 4px; margin-bottom: 0; padding: 14px; }

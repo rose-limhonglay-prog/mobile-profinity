@@ -240,23 +240,34 @@ function pwPillarScore(pillarKey, assessState) {
   return Math.min(100, Math.round(seval * 0.6 + scourse));
 }
 
-/* "Track your goals" is gated behind the 4 scored pillar assessments (not
-   Dream & Vision, which never touches a pillar score). */
+/* "Track your goals" opens as soon as ONE scored pillar assessment is done
+   (user, 2026-09-24 — previously all four; twin of profile-mobile.jsx).
+   Dream & Vision never counts. The answered pillar becomes the starting
+   goal; the other three join the Spiral / Targets as they're assessed. */
 const PW_FORECAST_PILLARS = PW_PILLARS.map(p => p.key);
+const PW_FORECAST_MIN = 1;
+function pwAssessed(assessState, key) {
+  return !!(assessState[key] && assessState[key].status === "completed");
+}
 function pwForecastDone(assessState) {
-  return PW_FORECAST_PILLARS.filter(k => assessState[k] && assessState[k].status === "completed").length;
+  return PW_FORECAST_PILLARS.filter(k => pwAssessed(assessState, k)).length;
+}
+function pwNextUnassessed(assessState) {
+  return PW_FORECAST_PILLARS.find(k => !pwAssessed(assessState, k)) || null;
 }
 
-/* Dynamic Goal Focus — lowest-scoring pillar, tie-break in this order. */
+/* Dynamic Goal Focus — lowest-scoring ASSESSED pillar, tie-break in this
+   order. Assessed pillars rank first; unassessed trail with assessed:false. */
 const PW_GOAL_TIEBREAK = ["Clinical Skills", "Business Systems", "Sales", "Marketing"];
+function pwRankedPillars(assessState) {
+  return PW_PILLARS.map(p => ({
+    ...p,
+    score: pwPillarScore(p.key, assessState),
+    assessed: pwAssessed(assessState, p.key)
+  })).sort((a, b) => b.assessed - a.assessed || a.score - b.score || PW_GOAL_TIEBREAK.indexOf(a.key) - PW_GOAL_TIEBREAK.indexOf(b.key));
+}
 function pwLowestPillar(assessState) {
-  const scored = PW_PILLARS.map(p => ({
-    key: p.key,
-    score: pwPillarScore(p.key, assessState)
-  }));
-  const lowest = Math.min(...scored.map(s => s.score));
-  const tied = scored.filter(s => s.score === lowest).map(s => s.key);
-  return PW_GOAL_TIEBREAK.find(k => tied.includes(k)) || tied[0];
+  return pwRankedPillars(assessState)[0].key;
 }
 const PW_GOAL_REASONING = {
   "Sales": "Your consultations and follow-up are the fastest lever right now — tightening how you convert the patients already reaching out will move this pillar quickest.",
@@ -317,8 +328,10 @@ function PWSpiralHelpModal({
   }, /*#__PURE__*/React.createElement("p", null, "Your Spiral Score is simply a snapshot of how balanced your business is across four areas every successful clinic needs: ", /*#__PURE__*/React.createElement("b", null, "Sales"), ", ", /*#__PURE__*/React.createElement("b", null, "Marketing"), ", ", /*#__PURE__*/React.createElement("b", null, "Clinical Skills"), " and ", /*#__PURE__*/React.createElement("b", null, "Business Systems"), "."), /*#__PURE__*/React.createElement("p", null, "Each pillar's number goes up when you take actions that build it — finishing a lesson, completing a Today's Target, posting a case study, following up with a patient. There's no trick to it: the more consistently you show up in a pillar, the faster it climbs."), /*#__PURE__*/React.createElement("p", null, "A weak pillar isn't a bad grade — it's just where Ava recommends you focus next, because the fastest way to grow your clinic is usually to strengthen your lowest pillar first."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pf-coach-link pw-help-coach",
-    "data-coach": "Explain how my Spiral Score is calculated and what I can do this week to raise it.",
-    onClick: onClose
+    onClick: () => {
+      onClose();
+      pwAskAva("Explain how my Spiral Score is calculated and what I can do this week to raise it.");
+    }
   }, /*#__PURE__*/React.createElement(IconifyIconPW, {
     name: "lucide:sparkles",
     size: 14,
@@ -326,16 +339,16 @@ function PWSpiralHelpModal({
   }), "Ask Ava to explain mine"))));
 }
 function PWSpiralCard({
-  assessState
+  assessState,
+  onOpenHub
 }) {
   const [helpOpen, setHelpOpen] = useStatePW(false);
-  const scored = PW_PILLARS.map(g => ({
-    ...g,
-    score: pwPillarScore(g.key, assessState)
-  }));
-  const avg = Math.round(scored.reduce((sum, p) => sum + p.score, 0) / scored.length);
-  const strongest = scored.reduce((a, b) => b.score > a.score ? b : a);
-  const weakest = scored.reduce((a, b) => b.score < a.score ? b : a);
+  const ranked = pwRankedPillars(assessState);
+  const scored = ranked.filter(p => p.assessed);
+  const remaining = ranked.length - scored.length;
+  const avg = scored.length ? Math.round(scored.reduce((sum, p) => sum + p.score, 0) / scored.length) : 0;
+  const strongest = scored[scored.length - 1];
+  const weakest = scored[0];
   return /*#__PURE__*/React.createElement("section", {
     className: "pw-card",
     id: "prosperity-spiral"
@@ -367,9 +380,33 @@ function PWSpiralCard({
     className: "lbl"
   }, "balance")), /*#__PURE__*/React.createElement("p", {
     className: "pw-spiral-sentence"
-  }, "Your clinic is strongest in ", /*#__PURE__*/React.createElement("b", null, strongest.key), ". Lift ", /*#__PURE__*/React.createElement("b", null, weakest.key), " to bring the spiral into balance.")), /*#__PURE__*/React.createElement("div", {
+  }, remaining > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, weakest.key), " is your starting point. Answer the other ", remaining === 1 ? "pillar" : remaining + " pillars", " to complete your Spiral.") : /*#__PURE__*/React.createElement(React.Fragment, null, "Your clinic is strongest in ", /*#__PURE__*/React.createElement("b", null, strongest.key), ". Lift ", /*#__PURE__*/React.createElement("b", null, weakest.key), " to bring the spiral into balance."))), /*#__PURE__*/React.createElement("div", {
     className: "pw-spiral-rows"
-  }, scored.map(g => /*#__PURE__*/React.createElement("button", {
+  }, ranked.map(g => !g.assessed ? /*#__PURE__*/React.createElement("button", {
+    key: g.key,
+    type: "button",
+    className: "pw-spiral-row unassessed",
+    onClick: () => onOpenHub(g.key),
+    "aria-label": g.key + " — not assessed yet. Answer its questions, about 3 minutes"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dot",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "label"
+  }, g.key), /*#__PURE__*/React.createElement("span", {
+    className: "bar",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: 0
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pw-spiral-assess"
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:compass",
+    size: 12,
+    color: "currentColor"
+  }), "Assess")) : /*#__PURE__*/React.createElement("button", {
     key: g.key,
     type: "button",
     className: "pw-spiral-row" + (g.key === weakest.key ? " lowest" : ""),
@@ -404,10 +441,15 @@ function PWSpiralCard({
 
 /* "Let's work on your goal" — auto-picks the lowest-scoring pillar. */
 function PWGoalFocusCard({
-  assessState
+  assessState,
+  onOpenHub
 }) {
-  const pillarKey = pwLowestPillar(assessState);
-  const score = pwPillarScore(pillarKey, assessState);
+  const ranked = pwRankedPillars(assessState);
+  const pillarKey = ranked[0].key;
+  const score = ranked[0].score;
+  const assessedCount = ranked.filter(p => p.assessed).length;
+  const remaining = ranked.length - assessedCount;
+  const note = remaining === 0 ? "Your lowest-scoring pillar right now — Ava recommends focusing here next." : assessedCount === 1 ? "The pillar you've answered so far — Ava starts your journey here." : "Your lowest-scoring assessed pillar — Ava recommends focusing here next.";
   return /*#__PURE__*/React.createElement("section", {
     className: "pw-card pw-goal-card"
   }, /*#__PURE__*/React.createElement("div", {
@@ -424,7 +466,7 @@ function PWGoalFocusCard({
     className: "ti"
   }, pillarKey), /*#__PURE__*/React.createElement("p", {
     className: "note"
-  }, "Your lowest-scoring pillar right now — Ava recommends focusing here next.")), /*#__PURE__*/React.createElement("div", {
+  }, note)), /*#__PURE__*/React.createElement("div", {
     className: "pw-goal-ring",
     style: {
       "--pct": score
@@ -445,9 +487,144 @@ function PWGoalFocusCard({
     name: "lucide:arrow-up-right",
     size: 17,
     color: "#fff"
+  })), remaining > 0 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-goal-more",
+    onClick: () => onOpenHub(pwNextUnassessed(assessState))
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:compass",
+    size: 15,
+    color: "var(--ai-purple)"
+  }), "Assess ", remaining, " more pillar", remaining === 1 ? "" : "s", " to compare", /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:chevron-right",
+    size: 15,
+    color: "var(--ai-purple)"
   })));
 }
-function PWTargetsCard() {
+
+/* Daily picks (user, 2026-09-22) — desktop twin of profile-mobile.jsx's
+   PMDailyPicks: one FREE PDF download + one PAID course CTA per calendar
+   day, picked and tracked by daily-targets.js (window.PFDailyTargets). */
+function usePWDailyPicks() {
+  const T = window.PFDailyTargets;
+  const [picks, setPicks] = useStatePW(() => T ? T.view() : null);
+  useEffectPW(() => {
+    if (!T) return;
+    const sync = () => setPicks(Object.assign({}, T.get()));
+    window.addEventListener("pf:daily-targets", sync);
+    return () => window.removeEventListener("pf:daily-targets", sync);
+  }, []);
+  return picks;
+}
+function PWDailyPicks() {
+  const T = window.PFDailyTargets;
+  const picks = usePWDailyPicks();
+  if (!T || !picks) return null;
+  const free = picks.free,
+    paid = picks.paid;
+  const price = "£" + Number(paid.price || 0).toLocaleString("en-GB");
+  function download() {
+    T.tapFree();
+    T.downloadFree();
+  }
+  function buy() {
+    T.tapPaid("buy");
+    goPW(T.paidCheckoutUrl(true, "Profile.html"));
+  }
+  function viewCourse() {
+    T.tapPaid("detail");
+    goPW(T.paidDetailUrl(true));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pw-picks",
+    role: "group",
+    "aria-label": "Today's free download and course pick"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pw-pick pw-pick-free" + (free.done ? " done" : "")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pw-pick-badge",
+    "aria-hidden": "true"
+  }, "Free"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-pick-main",
+    onClick: download,
+    "aria-label": (free.done ? "Downloaded: " : "Download the free PDF: ") + free.title
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pw-pick-icon"
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: free.done ? "lucide:file-check-2" : "lucide:file-down",
+    size: 20,
+    color: "#1E7A5C"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pw-pick-copy"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, free.title), /*#__PURE__*/React.createElement("span", {
+    className: "cap"
+  }, "PDF guide · ", free.pages, " pages · +", free.pts, " pts"))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-pick-cta" + (free.done ? " is-done" : ""),
+    onClick: download
+  }, free.done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:check",
+    size: 14,
+    color: "#1E7A5C"
+  }), "Saved") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:download",
+    size: 15,
+    color: "#fff"
+  }), "Download"))), /*#__PURE__*/React.createElement("div", {
+    className: "pw-pick pw-pick-paid" + (paid.purchased ? " done" : "")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pw-pick-badge pw-pick-badge-paid",
+    "aria-hidden": "true"
+  }, "Course"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-pick-main",
+    onClick: viewCourse,
+    "aria-label": (paid.purchased ? "Enrolled: " : "View course: ") + paid.title + ", " + price
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pw-pick-icon"
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:graduation-cap",
+    size: 20,
+    color: "var(--brand-gold-700, #8A5303)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pw-pick-copy"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, paid.title), /*#__PURE__*/React.createElement("span", {
+    className: "cap"
+  }, paid.purchased ? "Enrolled · +" + paid.pts + " pts earned" : "Course · " + price + " · +" + paid.pts + " pts when you enrol"))), paid.purchased ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-pick-cta is-done",
+    onClick: viewCourse
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:check",
+    size: 14,
+    color: "#1E7A5C"
+  }), "Owned") : /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-pick-cta pw-pick-cta-buy",
+    onClick: buy,
+    "aria-label": "Buy " + paid.title + " for " + price
+  }, "Buy ", price)), /*#__PURE__*/React.createElement("p", {
+    className: "pw-picks-note"
+  }, "New free download and course pick every day"));
+}
+
+/* Only assessed pillars get a target, ordered by Spiral rank (weakest
+   assessed first); a "Next up" row points at the next pillar to answer. */
+const PW_TAG_PILLAR = {
+  MKT: "Marketing",
+  CLIN: "Clinical Skills",
+  SALE: "Sales",
+  SYS: "Business Systems"
+};
+function PWTargetsCard({
+  assessState,
+  onOpenHub
+}) {
   const [extra, setExtra] = useStatePW([]);
   useEffectPW(() => {
     try {
@@ -458,15 +635,18 @@ function PWTargetsCard() {
       })));
     } catch (e) {}
   }, []);
-  const all = PW_TARGETS.concat(extra);
-  const [done, setDone] = useStatePW([]);
-  const toggle = i => setDone(s => {
-    const next = s.slice();
-    while (next.length <= i) next.push(false);
-    next[i] = !next[i];
-    return next;
-  });
-  const doneCount = done.filter(Boolean).length;
+  const order = pwRankedPillars(assessState || {}).map(p => p.key);
+  const nextKey = pwNextUnassessed(assessState || {});
+  const remaining = PW_FORECAST_PILLARS.filter(k => !pwAssessed(assessState || {}, k)).length;
+  const base = PW_TARGETS.filter(t => pwAssessed(assessState || {}, PW_TAG_PILLAR[t.tag])).sort((a, b) => order.indexOf(PW_TAG_PILLAR[a.tag]) - order.indexOf(PW_TAG_PILLAR[b.tag]));
+  const all = base.concat(extra);
+  /* keyed by text, not index — the list grows as pillars are answered */
+  const [done, setDone] = useStatePW({});
+  const toggle = text => setDone(s => ({
+    ...s,
+    [text]: !s[text]
+  }));
+  const doneCount = all.filter(t => done[t.text]).length;
   const pct = all.length ? Math.round(doneCount / all.length * 100) : 0;
   return /*#__PURE__*/React.createElement("section", {
     className: "pw-card"
@@ -476,7 +656,27 @@ function PWTargetsCard() {
     className: "pw-card-hd-ti"
   }, /*#__PURE__*/React.createElement("h2", null, "Today's Targets"), /*#__PURE__*/React.createElement("span", {
     className: "pw-targets-pill"
-  }, doneCount, "/", all.length))), /*#__PURE__*/React.createElement("div", {
+  }, doneCount, "/", all.length))), /*#__PURE__*/React.createElement(PWDailyPicks, null), nextKey && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-target-assess",
+    onClick: () => onOpenHub(nextKey),
+    "aria-label": "Answer the " + nextKey + " questions in Get to know you to add it to your Spiral. About 3 minutes"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pw-target-assess-ic",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:compass",
+    size: 18,
+    color: "var(--ai-purple)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pw-target-assess-copy"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, "Answer the ", nextKey, " questions"), /*#__PURE__*/React.createElement("span", {
+    className: "cap"
+  }, "Get to know you · ", remaining, " pillar", remaining === 1 ? "" : "s", " still to assess · ~3 mins")), /*#__PURE__*/React.createElement("span", {
+    className: "pw-target-assess-cta"
+  }, "Start")), /*#__PURE__*/React.createElement("div", {
     className: "pw-targets-track",
     role: "progressbar",
     "aria-valuenow": pct,
@@ -489,16 +689,16 @@ function PWTargetsCard() {
     }
   })), /*#__PURE__*/React.createElement("div", {
     className: "pw-target-rows"
-  }, all.map((t, i) => /*#__PURE__*/React.createElement("button", {
-    key: i,
+  }, all.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.text,
     type: "button",
-    className: "pw-target-row" + (done[i] ? " done" : ""),
-    onClick: () => toggle(i),
+    className: "pw-target-row" + (done[t.text] ? " done" : ""),
+    onClick: () => toggle(t.text),
     role: "checkbox",
-    "aria-checked": !!done[i]
+    "aria-checked": !!done[t.text]
   }, /*#__PURE__*/React.createElement("span", {
     className: "circle"
-  }, done[i] && /*#__PURE__*/React.createElement(IconifyIconPW, {
+  }, done[t.text] && /*#__PURE__*/React.createElement(IconifyIconPW, {
     name: "lucide:check",
     size: 12,
     color: "#fff"
@@ -535,10 +735,10 @@ function PWGoalsGateCard({
     name: "lucide:compass",
     size: 28,
     color: "#fff"
-  })), /*#__PURE__*/React.createElement("h3", null, heading), /*#__PURE__*/React.createElement("p", null, "Your forecast unlocks once all four pillar assessments — Marketing, Sales, Clinical Skills and Business Systems — are complete."), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("h3", null, heading), /*#__PURE__*/React.createElement("p", null, "Answer just ", /*#__PURE__*/React.createElement("b", null, "one"), " pillar — Marketing, Sales, Clinical Skills or Business Systems — and your goal tracking starts there. Add the other three whenever you like to complete your Spiral."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-goals-gate-cta",
-    onClick: onOpenHub
+    onClick: () => onOpenHub()
   }, "Get to know you", /*#__PURE__*/React.createElement(IconifyIconPW, {
     name: "lucide:arrow-up-right",
     size: 17,
@@ -554,16 +754,21 @@ function PWGoalsSection({
   onOpenHub
 }) {
   const doneCount = pwForecastDone(assessState);
-  const unlocked = doneCount === PW_FORECAST_PILLARS.length;
+  const unlocked = doneCount >= PW_FORECAST_MIN;
   if (!unlocked) return /*#__PURE__*/React.createElement(PWGoalsGateCard, {
     doneCount: doneCount,
     onOpenHub: onOpenHub
   });
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PWGoalFocusCard, {
-    assessState: assessState
+    assessState: assessState,
+    onOpenHub: onOpenHub
   }), /*#__PURE__*/React.createElement(PWSpiralCard, {
-    assessState: assessState
-  }), /*#__PURE__*/React.createElement(PWTargetsCard, null));
+    assessState: assessState,
+    onOpenHub: onOpenHub
+  }), /*#__PURE__*/React.createElement(PWTargetsCard, {
+    assessState: assessState,
+    onOpenHub: onOpenHub
+  }));
 }
 const PW_ARCHETYPE_LETTERS = ["A", "B", "C", "D"];
 
@@ -997,8 +1202,70 @@ function PWAssessHelpModal({
   }, /*#__PURE__*/React.createElement("p", null, "Each pillar assessment gives you a score based on your real-world experience and honest self-evaluation — there are no wrong answers, just an honest snapshot of where your clinic is today."), /*#__PURE__*/React.createElement("p", null, "That score becomes the starting point for your personalised journey plan — it's how Ava (and your mentor) know where to focus your coaching first."), /*#__PURE__*/React.createElement("p", null, "It also feeds directly into your Prosperity Spiral: your self-assessment sets the baseline for each pillar, and completing courses can carry it the rest of the way to 100%."), /*#__PURE__*/React.createElement("p", null, "Dream & Vision works differently — it's never scored. It simply helps us understand your goals so we can build your journey around them."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-help-coach pf-coach-link",
-    "data-coach": "Explain how my self-assessment scores work and how they feed my Prosperity Spiral.",
+    onClick: () => {
+      onClose();
+      pwAskAva("Explain how my self-assessment scores work and how they feed my Prosperity Spiral.");
+    }
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "var(--ai-purple)"
+  }), "Ask Ava"))));
+}
+
+/* "Why Ava asks" — the old intro card on the hub, now behind a small Ava
+   help pill. Details + an Ask Ava CTA that redirects to Ava's quick chat. */
+function PWWhyAvaModal({
+  open,
+  onClose
+}) {
+  usePWEscClose(open, onClose);
+  if (!open) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pw-modal-overlay",
     onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pw-modal-card pw-help-card",
+    onClick: e => e.stopPropagation(),
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Why Ava asks"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pw-help-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pw-help-icon"
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:sparkles",
+    size: 18,
+    color: "var(--ai-purple)"
+  })), /*#__PURE__*/React.createElement("h3", null, "Why Ava asks"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-help-x",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:x",
+    size: 20,
+    color: "var(--gray-500)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pw-help-body"
+  }, /*#__PURE__*/React.createElement("p", null, "Your answers set your Prosperity Spiral and shape every target Ava suggests."), /*#__PURE__*/React.createElement("p", null, "Answer ", /*#__PURE__*/React.createElement("b", null, "one"), " pillar to start tracking your goals — the rest can wait. Four short assessments, about 3 minutes each."), /*#__PURE__*/React.createElement("div", {
+    className: "pw-help-chips"
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:lock",
+    size: 12,
+    color: "var(--ai-purple)"
+  }), "Private to you"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:refresh-cw",
+    size: 12,
+    color: "var(--ai-purple)"
+  }), "Retake anytime")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-help-coach pf-coach-link",
+    onClick: () => {
+      onClose();
+      pwAskAva(PW_WHY_AVA_PROMPT);
+    }
   }, /*#__PURE__*/React.createElement(IconifyIconPW, {
     name: "lucide:sparkles",
     size: 14,
@@ -1010,8 +1277,11 @@ function PWAssessHub({
   onOpenAssess,
   onClose
 }) {
-  usePWEscClose(true, onClose);
   const [helpOpen, setHelpOpen] = useStatePW(false);
+  const [whyOpen, setWhyOpen] = useStatePW(false);
+  /* Esc closes the topmost dialog only — while an explainer is open, the
+     hub's own Esc handler stands down so one keypress doesn't shut both. */
+  usePWEscClose(!helpOpen && !whyOpen, onClose);
   return /*#__PURE__*/React.createElement("div", {
     className: "pw-modal-overlay",
     role: "dialog",
@@ -1038,12 +1308,24 @@ function PWAssessHub({
   }))), /*#__PURE__*/React.createElement("div", {
     className: "pw-wiz-body pw-hub-body"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "pw-hub-intro"
+    className: "pw-hub-helps"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-hub-why",
+    "aria-haspopup": "dialog",
+    onClick: () => setWhyOpen(true)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pw-hub-why-ic",
+    "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(IconifyIconPW, {
     name: "lucide:sparkles",
-    size: 18,
+    size: 15,
     color: "var(--ai-purple)"
-  }), /*#__PURE__*/React.createElement("p", null, "We use these to get to know you — your strengths, your gaps, and your dreams for your clinic — so Ava can guide your journey and your Prosperity Spiral reflects where you really are.")), /*#__PURE__*/React.createElement("button", {
+  })), "Why Ava asks", /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:circle-help",
+    size: 15,
+    color: "#4A40D6"
+  })), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-hub-help",
     onClick: () => setHelpOpen(true)
@@ -1051,7 +1333,7 @@ function PWAssessHub({
     name: "lucide:circle-help",
     size: 15,
     color: "var(--gray-500)"
-  }), "How it works"), /*#__PURE__*/React.createElement("div", {
+  }), "How it works")), /*#__PURE__*/React.createElement("div", {
     className: "pw-hub-grid"
   }, PW_ASSESS_ORDER.map(key => /*#__PURE__*/React.createElement(PWAssessHubTile, {
     key: key,
@@ -1062,6 +1344,9 @@ function PWAssessHub({
   }))))), /*#__PURE__*/React.createElement(PWAssessHelpModal, {
     open: helpOpen,
     onClose: () => setHelpOpen(false)
+  }), /*#__PURE__*/React.createElement(PWWhyAvaModal, {
+    open: whyOpen,
+    onClose: () => setWhyOpen(false)
   }));
 }
 function goPW(url) {
@@ -1069,6 +1354,18 @@ function goPW(url) {
     window.location.href = u;
   })(url);
 }
+
+/* Ava's quick chat only mounts on My Learning (coach.js bails elsewhere), so
+   every "Ask Ava" on Profile redirects there with the question in ?ava=;
+   if Ava ever is on this page, open her inline instead. */
+function pwAskAva(prompt) {
+  if (window.PFAva && window.PFAva.open) {
+    window.PFAva.open(prompt);
+    return;
+  }
+  goPW("MyLearning.html?ava=" + encodeURIComponent(prompt || "1"));
+}
+const PW_WHY_AVA_PROMPT = "Why do you ask me to complete the four self-assessments, and how do my answers shape my Prosperity Spiral and the targets you suggest?";
 function pfTagActiveNavPW(activeLabel) {
   document.querySelectorAll("#pf-root nav > button").forEach(b => {
     const label = b.textContent.replace(/[0-9]/g, "").trim();
@@ -2864,7 +3161,7 @@ function PWOtherProfileMain({
   const [avatarOpen, setAvatarOpen] = useStatePW(() => pwQuery("avatar") === "1");
   const [qrOpen, setQrOpen] = useStatePW(() => pwQuery("qr") === "1");
   const [shareOpen, setShareOpen] = useStatePW(() => pwQuery("share") === "1");
-  /* Message → that member's DM thread (DirectMessage.html), not the inbox.
+  /* Message → that member's thread in the web Messages page, not the inbox.
      Same query contract as the mobile twin: id/name/avatar/role build or
      resolve the thread, ?from= returns to this profile. */
   const openMessages = () => {
@@ -2879,7 +3176,7 @@ function PWOtherProfileMain({
     } catch (e) {
       q.set("from", "Profile.html");
     }
-    goPW("DirectMessage.html?" + q.toString());
+    goPW("MessagesWeb.html?" + q.toString());
   };
   const services = user.services || [],
     experience = user.experience || [],
@@ -3953,7 +4250,7 @@ function PWShareProfileModal({
       t = encodeURIComponent(shareText);
     switch (k) {
       case "messages":
-        goPW("Messages.html?share=" + u);
+        goPW("MessagesWeb.html?share=" + u);
         return;
       case "copy":
         copyLink();
@@ -4826,7 +5123,12 @@ function ProfileWebApp() {
     }
   }), /*#__PURE__*/React.createElement(ProfileMain, {
     assessState: assessState,
-    onOpenHub: () => setHubOpen(true),
+    onOpenHub: key => {
+      if (typeof key === "string" && PW_PILLAR_ASSESSMENTS[key]) {
+        setHubOpen(false);
+        setOpenAssessKey(key);
+      } else setHubOpen(true);
+    },
     profile: profile,
     banners: banners,
     conn: conn,

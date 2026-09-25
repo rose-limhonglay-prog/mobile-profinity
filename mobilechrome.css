@@ -381,7 +381,8 @@
   color:#fff;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:16px}
 .mp-new-create:active{filter:brightness(1.12)}
 .mp-new-create:disabled{background:var(--gray-300);cursor:default}
-.mp-vc-row{cursor:default}
+.mp-vc-row{cursor:pointer;width:100%;text-align:left;border:none;background:none;font:inherit}
+.mp-vc-row:active{background:var(--gray-100)}
 .mp-vc-icon{width:52px;height:52px;border-radius:50%;background:var(--surface-sunken);display:flex;align-items:center;justify-content:center}
 .mp-vc-live{flex:none;font-family:var(--font-sans);font-weight:700;font-size:11px;letter-spacing:.05em;color:var(--error);
   background:var(--error-bg);border-radius:var(--r-pill);padding:3px 8px}

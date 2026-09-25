@@ -65,7 +65,7 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
 .ver-header > iconify-icon { color: var(--gray-500); font-size: 20px; cursor: pointer; }
 
 .ver-content { padding: 32px; }
-.ver-view { display: flex; flex-direction: column; gap: 24px; max-width: 1180px; }
+.ver-view { display: flex; flex-direction: column; gap: 24px; }
 
 /* --------------------------------------------------------------- topbar */
 .ver-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }

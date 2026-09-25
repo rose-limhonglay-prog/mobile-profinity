@@ -6,6 +6,8 @@
    (its top bar is hidden by CSS — this page carries its own header — but the
    side menu / notifications / messages drawers keep working).
    Suffixed -DM: Babel text/babel scripts share one global scope.
+   MessagesWeb.html runs the same file compiled, with window.PF_DM_WEB = true
+   (see DM_WEB below) — desktop three-column layout, messages-web.css.
    =========================================================================== */
 const { useState: useStateDM, useEffect: useEffectDM, useRef: useRefDM, useMemo: useMemoDM, useCallback: useCallbackDM } = React;
 const DSDM = window.ProfinityDesignSystem_c2b5cc;
@@ -13,6 +15,33 @@ const MobileChromeDM = window.MobileChromeC;
 
 function goDM(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
 function paramDM(name) { try { return new URLSearchParams(window.location.search).get(name); } catch (e) { return null; } }
+
+/* window.PF_DM_WEB = true (MessagesWeb.html) — the same app renders as a
+   desktop two-pane messenger under the DS TopNav: icon rail · conversation
+   list · open thread, with the bottom sheets shown as centred dialogs
+   (messages-web.css). Mobile pages linked from here swap for their web twins. */
+const DM_WEB = !!window.PF_DM_WEB;
+const DM_WEB_HREFS = { "NewsfeedMobile.html": "NewsfeedWeb.html", "ProfileMobile.html": "Profile.html", "NotificationSettings.html": "NotificationSettingsWeb.html", "Messages.html": "MessagesWeb.html" };
+function hrefDM(url) {
+  if (!DM_WEB) return url;
+  const parts = String(url).split("?"), web = DM_WEB_HREFS[parts[0]];
+  return web ? web + (parts[1] ? "?" + parts[1] : "") : url;
+}
+function navigateWebDM(label) {
+  const u = { Home: "NewsfeedWeb.html", Community: "Community.html", "My Learning": "MyLearning.html", Agent: "Agent.html", Profile: "Profile.html", Rewards: "RewardsWeb.html" }[label];
+  if (u) goDM(u);
+}
+/* A contact's profile page — profile-link.js when present (same slug rules
+   as every other avatar), else the ?id=&name=&avatar=&role= viewer contract. */
+function profileHrefDM(p, from) {
+  const PL = window.PFProfileLink;
+  if (PL && PL.url) { const u = PL.url({ id: p.id, name: p.name, avatar: p.avatar, role: p.role }, { web: DM_WEB, from }); if (u) return u; }
+  const q = new URLSearchParams({ id: p.id, name: p.name || "" });
+  if (p.avatar) q.set("avatar", p.avatar);
+  if (p.role) q.set("role", p.role);
+  if (from) q.set("from", from);
+  return (DM_WEB ? "Profile.html?" : "ProfileMobile.html?") + q.toString();
+}
 
 /* ---------------------------------------------------------------------------
    Time helpers — seeds are stored as "minutes ago" and resolved to epoch ms
@@ -155,9 +184,16 @@ const REQUESTS_SEED_DM = [
   { id: "lucy", personId: "lucy", text: "Hello! Miranda suggested I reach out about clinic systems.", ago: 400 }];
 
 const CONFERENCES_DM = [
-  { id: "c1", name: "Clinical Case Review", hostId: "tim", participantIds: ["tim", "sarahc", "alex", "priya"], listening: 12, live: true, when: "Live now", topic: "Mid-face volume loss · cannula vs needle" },
-  { id: "c2", name: "Business Growth Sync", hostId: "miranda", participantIds: ["miranda", "mark"], live: false, when: "Tomorrow · 10:00 AM", topic: "Recall systems & retention" },
-  { id: "c3", name: "Complications Q&A", hostId: "tim", participantIds: ["tim", "beth", "amir"], live: false, when: "Thu · 7:00 PM", topic: "Vascular occlusion protocol refresh" }];
+  { id: "c1", name: "Case Study Discussion", hostId: "tim", speakerIds: ["rachel", "michelle"], attendeeIds: ["me", "jordan", "alexm", "nadia", "sarahc", "priya", "alex", "beth"], count: 100, live: true, startedAgo: 150, scope: "public",
+    desc: "Easily engage in discussions! Anyone with the link can join without limits on the number of participants.", link: "profinity.app/voice/abc123" },
+  { id: "c2", name: "Business Growth Sync", hostId: "miranda", speakerIds: ["mark"], attendeeIds: ["me", "priya"], count: 14, live: false, scope: "invited", when: "Tomorrow · 10:00 AM",
+    desc: "Recall systems & retention — bring this month's numbers.", link: "profinity.app/voice/bgs204" },
+  { id: "c3", name: "Complications Q&A", hostId: "tim", speakerIds: ["beth", "amir"], attendeeIds: ["me", "sarah", "emily"], count: 42, live: false, scope: "public", when: "Thu · 7:00 PM",
+    desc: "Vascular occlusion protocol refresh, then open Q&A.", link: "profinity.app/voice/cqa771" },
+  { id: "c4", name: "Monthly Team Sync", hostId: "miranda", ended: true, scope: "invited", when: "May 10, 2026 · 2:00 PM", count: 125, duration: 52 * 60 * 1000 },
+  { id: "c5", name: "Quarterly Review Meeting", hostId: "tim", ended: true, scope: "public", when: "July 15, 2026 · 11:00 AM", count: 79, duration: 68 * 60 * 1000 },
+  { id: "c6", name: "Project Kickoff", hostId: "mark", ended: true, scope: "invited", when: "June 30, 2026 · 9:00 AM", count: 50, duration: 41 * 60 * 1000 },
+  { id: "c7", name: "Annual Strategy Session", hostId: "tim", ended: true, scope: "public", when: "January 5, 2026 · 1:00 PM", count: 100, duration: 95 * 60 * 1000 }];
 
 const REACTIONS_QUICK_DM = ["👍", "❤️", "😂", "😮", "🙏", "💉"];
 const EMOJI_GROUPS_DM = [
@@ -235,7 +271,67 @@ function saveStoreDM(store) {
       m.video && m.video.src && /^blob:/.test(m.video.src) ? { ...m, video: { ...m.video, src: null, poster: m.video.poster || null } } : m) })) };
     localStorage.setItem(STORE_KEY_DM, JSON.stringify(out));
   } catch (e) {}
+  try { window.dispatchEvent(new CustomEvent("pf:messages-changed")); } catch (e) {} // header badge (web-messages-chrome.js)
 }
+
+/* ?id=<slug>&name=&avatar=&role= — the "Message" button contract shared with
+   DirectMessage.html and the profile pages: make sure that person is in the
+   roster and has a thread so the route initialiser can open it. ?t=<conversation>
+   keeps working unchanged. */
+function applyDeepLinkDM(store) {
+  const id = paramDM("id");
+  if (!id || paramDM("t")) return store;
+  let out = store;
+  const known = PEOPLE_SEED_DM.some((p) => p.id === id) || store.people.some((p) => p.id === id);
+  if (!known) {
+    const name = paramDM("name");
+    if (!name) return store;
+    out = { ...out, people: out.people.concat([{ id, name, avatar: paramDM("avatar") || null, role: paramDM("role") || "Member", online: false, lastActive: 30, seals: [] }]) };
+  }
+  if (!out.conversations.some((c) => c.kind === "dm" && c.personId === id)) {
+    out = { ...out, conversations: [{ id, kind: "dm", personId: id, unread: 0, messages: [] }].concat(out.conversations) };
+  }
+  return out;
+}
+
+/* Message-level mutations shared by the Messages page and the floating chat
+   popups (MessagesChromeDM) — each holds a store in state and passes its setter. */
+function useStoreActionsDM(setStore) {
+  return useMemoDM(() => {
+    const updateConv = (id, fn) => setStore((s) => ({ ...s, conversations: s.conversations.map((c) => c.id === id ? fn(c) : c) }));
+    const updateMsg = (id, mid, fn) => updateConv(id, (c) => ({ ...c, messages: c.messages.map((m) => m.id === mid ? fn(m) : m) }));
+    return {
+      updateConv,
+      sendMessage: (id, m) => updateConv(id, (c) => ({ ...c, messages: c.messages.concat([{ id: midDM(), from: m.from, text: m.text || "", image: m.image || null, video: m.video || null, sticker: m.sticker || null, gif: m.gif || null, ts: Date.now(), reactions: {} }]) })),
+      reactMessage: (id, mid, emoji) => updateMsg(id, mid, (m) => {
+        const r = { ...(m.reactions || {}) };
+        const list = (r[emoji] || []).slice();
+        const i = list.indexOf("me");
+        if (i >= 0) list.splice(i, 1); else list.push("me");
+        if (list.length) r[emoji] = list; else delete r[emoji];
+        return { ...m, reactions: r };
+      }),
+      editMessage: (id, mid, text) => updateMsg(id, mid, (m) => ({ ...m, text, edited: true })),
+      deleteMessage: (id, mid) => updateMsg(id, mid, (m) => ({ ...m, deleted: true, pinned: false, reactions: {} })),
+      pinMessage: (id, mid) => updateMsg(id, mid, (m) => ({ ...m, pinned: !m.pinned })),
+      markRead: (id) => updateConv(id, (c) => c.unread ? { ...c, unread: 0 } : c)
+    };
+  }, [setStore]);
+}
+
+/* Per-conversation customisation (Messenger's "Customize chat"): theme colours
+   for my bubbles, the quick-send emoji and member nicknames. */
+const CHAT_THEMES_DM = [
+  { key: "navy", label: "Navy", color: "var(--brand-navy)", swatch: "#292569" },
+  { key: "violet", label: "Violet", color: "#6C63FF", swatch: "#6C63FF" },
+  { key: "ocean", label: "Ocean", color: "#0A66C2", swatch: "#0A66C2" },
+  { key: "teal", label: "Teal", color: "#0F8B8D", swatch: "#0F8B8D" },
+  { key: "forest", label: "Forest", color: "#2F6B3A", swatch: "#2F6B3A" },
+  { key: "gold", label: "Gold", color: "#B7791F", swatch: "#B7791F" },
+  { key: "rose", label: "Rose", color: "#D9376E", swatch: "#D9376E" },
+  { key: "ink", label: "Ink", color: "#1F2937", swatch: "#1F2937" }];
+function themeVarsDM(c) { const t = CHAT_THEMES_DM.find((x) => x.key === (c && c.theme)); return t && t.key !== "navy" ? { "--dm-me": t.color } : undefined; }
+function nickDM(c, p) { return p ? ((c && c.nicknames && c.nicknames[p.id]) || p.name) : ""; }
 
 /* ---------------------------------------------------------------------------
    Small hooks
@@ -389,6 +485,8 @@ function useScrollDockDM(resetKey) {
    --------------------------------------------------------------------------- */
 const PeopleCtxDM = React.createContext({ get: () => null, all: [] });
 function usePeopleDM() { return React.useContext(PeopleCtxDM); }
+/* id of the conversation open in the right-hand pane (desktop) — rows highlight */
+const ActiveConvCtxDM = React.createContext(null);
 
 /* ---------------------------------------------------------------------------
    Faces — DMFace renders the portrait when one exists, otherwise the DS
@@ -415,7 +513,9 @@ function GroupStackDM({ members, size = 52 }) {
 }
 function ConvAvatarDM({ c, size = 52, dot = true }) {
   const people = usePeopleDM();
-  if (c.kind === "group") return <GroupStackDM members={c.memberIds.map(people.get).filter(Boolean)} size={size} />;
+  if (c.kind === "group") return c.photo ?
+    <span className="dm-facewrap" style={{ width: size, height: size }}><DMFace name={c.name} src={c.photo} size={size} /></span> :
+    <GroupStackDM members={c.memberIds.map(people.get).filter(Boolean)} size={size} />;
   const p = people.get(c.personId);
   return (
     <span className="dm-facewrap" style={{ width: size, height: size }}>
@@ -538,12 +638,13 @@ function SearchDM({ value, onChange, placeholder }) {
    --------------------------------------------------------------------------- */
 function ConversationRowDM({ c, onOpen, onActions }) {
   const people = usePeopleDM();
+  const activeId = React.useContext(ActiveConvCtxDM);
   const press = usePressDM(() => onActions(c));
   const last = lastMsgDM(c);
   const name = convNameDM(c, people);
-  return (
-    <button type="button" className={"dm-row" + (c.unread ? " unread" : "")} data-thread-id={c.id} onClick={() => onOpen(c)} {...press}
-      aria-label={name + (c.unread ? ", " + c.unread + " unread" : "") + ". Hold for options."}>
+  const row = (
+    <button type="button" className={"dm-row" + (c.unread ? " unread" : "") + (activeId === c.id ? " on" : "")} data-thread-id={c.id} onClick={() => onOpen(c)} {...press}
+      aria-label={name + (c.unread ? ", " + c.unread + " unread" : "") + (DM_WEB ? ". Right-click for options." : ". Hold for options.")}>
       <span className="dm-row-av"><ConvAvatarDM c={c} size={52} /></span>
       <span className="dm-row-main">
         <span className="dm-row-top">
@@ -560,6 +661,15 @@ function ConversationRowDM({ c, onOpen, onActions }) {
         </span>
       </span>
     </button>);
+  if (!DM_WEB) return row;
+  /* desktop: a hover "⋯" beside the row (long-press has no mouse equivalent; right-click still works) */
+  return (
+    <div className="dm-row-wrap">
+      {row}
+      <button type="button" className="dm-row-more" aria-label={"Options for " + name} aria-haspopup="dialog" onClick={(e) => { e.stopPropagation(); onActions(c); }}>
+        <DSDM.IconifyIcon name="lucide:more-horizontal" size={18} color="var(--gray-600)" />
+      </button>
+    </div>);
 }
 
 /* ---------------------------------------------------------------------------
@@ -817,7 +927,7 @@ function BubbleDM({ m, c, sender, showSender, onReact, onActions, reactOpen, set
   const isGroup = c.kind === "group";
   const imgOnly = !!(m.image || m.video) && !m.text;
   const media = m.gif ? "GIF: " + m.gif.label + ". " : m.sticker ? "Sticker: " + m.sticker.label + ". " : m.video ? "Video. " : m.image ? "Photo. " : "";
-  const label = (mine ? "You: " : (sender ? sender.name + ": " : "")) + media + (m.text || "") + " Hold for options.";
+  const label = (mine ? "You: " : (sender ? sender.name + ": " : "")) + media + (m.text || "") + (DM_WEB ? " Right-click for options." : " Hold for options.");
   return (
     <div className={"dm-msg" + (mine ? " me" : "") + (isGroup && !mine ? " grouped" : "") + (showSender ? " first" : "") + (isHit ? " hit" : "")} data-mid={m.id}>
       {isGroup && !mine &&
@@ -825,7 +935,7 @@ function BubbleDM({ m, c, sender, showSender, onReact, onActions, reactOpen, set
           {showSender && sender && <DMFace name={sender.name} src={sender.avatar} size={28} />}
         </span>}
       <div className="dm-msg-col">
-        {showSender && !mine && isGroup && sender && <span className="dm-msg-sender">{sender.name}</span>}
+        {showSender && !mine && isGroup && sender && <span className="dm-msg-sender">{nickDM(c, sender)}</span>}
         <div className="dm-msg-line">
           {m.deleted ?
             <span className="dm-bubble tomb" role="note">{mine ? "You deleted this message" : "This message was deleted"}</span> :
@@ -871,6 +981,10 @@ function BubbleDM({ m, c, sender, showSender, onReact, onActions, reactOpen, set
                 <DSDM.IconifyIcon name="lucide:smile-plus" size={18} color="var(--gray-500)" />
               </button>
             </>}
+          {DM_WEB && !m.deleted &&
+            <button type="button" className="dm-msg-more" aria-label="Message options" aria-haspopup="dialog" onClick={(e) => { e.stopPropagation(); onActions(m); }}>
+              <DSDM.IconifyIcon name="lucide:more-horizontal" size={18} color="var(--gray-500)" />
+            </button>}
           {reactOpen && <ReactionBarDM current={myReactions} onPick={(e) => { onReact(m.id, e); setReactOpen(null); }} onClose={() => setReactOpen(null)} />}
         </div>
         {!m.deleted && <ReactionChipsDM reactions={m.reactions} onToggle={(e) => onReact(m.id, e)} />}
@@ -1179,7 +1293,7 @@ function DmStickerSheetDM({ onClose, onSend, onSendGif, initialMode = "sticker" 
     </div>);
 }
 
-function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete, onMenu, toast, searchOpen, onCloseSearch }) {
+function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete, onMenu, toast, searchOpen, onCloseSearch, onPin, onInfo, infoOpen, popup, onMinimize, onClose }) {
   const people = usePeopleDM();
   const [text, setText] = useStateDM("");
   const [emojiOpen, setEmojiOpen] = useStateDM(false);
@@ -1201,9 +1315,9 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
   const replyTimer = useRefDM(null);
   const now = useNowDM(!!actionsFor || editing !== null);
 
-  const name = convNameDM(c, people);
-  const firstName = stripHonorificDM(name).split(" ")[0];
   const person = c.kind === "dm" ? people.get(c.personId) : null;
+  const name = person ? nickDM(c, person) : convNameDM(c, people);
+  const firstName = stripHonorificDM(name).split(" ")[0];
   const members = c.kind === "group" ? c.memberIds.map(people.get).filter(Boolean) : [];
   const onlineN = members.filter((p) => p.online).length;
   const isEmpty = c.messages.length === 0;
@@ -1274,7 +1388,7 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
   const canEdit = actMsg && actMsg.from === "me" && editLeft > 0;
 
   return (
-    <div className="dm-view dm-thread" data-screen-label={"Thread · " + name}>
+    <div className={"dm-view dm-thread" + (popup ? " dm-thread-popup" : "")} style={themeVarsDM(c)} data-screen-label={"Thread · " + name}>
       {searchOpen ?
       <header className="dm-head dm-thread-head dm-thread-search" role="search">
         <button type="button" className="dm-iconbtn" aria-label="Close search" onClick={closeSearch}>
@@ -1310,9 +1424,27 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
             </span>
           </span>
         </button>
-        <button type="button" className="dm-iconbtn" aria-label="Conversation settings" aria-haspopup="dialog" onClick={onMenu}>
-          <DSDM.IconifyIcon name="lucide:more-vertical" size={22} color="var(--brand-navy)" />
-        </button>
+        {DM_WEB ?
+          /* Messenger-style tools: call · video, then info (page) or minimise · close (popup) */
+          <span className="dm-thread-tools">
+            <button type="button" className="dm-iconbtn sm" aria-label={"Call " + name} onClick={() => toast("Calling " + firstName + "…")}>
+              <DSDM.IconifyIcon name="lucide:phone" size={20} color="var(--dm-me, var(--brand-navy))" />
+            </button>
+            <button type="button" className="dm-iconbtn sm" aria-label={"Video call " + name} onClick={() => toast("Starting a video call with " + firstName + "…")}>
+              <DSDM.IconifyIcon name="lucide:video" size={21} color="var(--dm-me, var(--brand-navy))" />
+            </button>
+            {popup ?
+              <>
+                <button type="button" className="dm-iconbtn sm" aria-label="Minimise chat" onClick={onMinimize}><DSDM.IconifyIcon name="lucide:minus" size={20} color="var(--gray-700)" /></button>
+                <button type="button" className="dm-iconbtn sm" aria-label="Close chat" onClick={onClose}><DSDM.IconifyIcon name="lucide:x" size={20} color="var(--gray-700)" /></button>
+              </> :
+              <button type="button" className={"dm-iconbtn sm" + (infoOpen ? " on" : "")} aria-label="Conversation information" aria-pressed={!!infoOpen} onClick={onInfo}>
+                <DSDM.IconifyIcon name="lucide:info" size={21} color={infoOpen ? "#fff" : "var(--dm-me, var(--brand-navy))"} />
+              </button>}
+          </span> :
+          <button type="button" className="dm-iconbtn" aria-label="Conversation settings" aria-haspopup="dialog" onClick={onMenu}>
+            <DSDM.IconifyIcon name="lucide:more-vertical" size={22} color="var(--brand-navy)" />
+          </button>}
       </header>}
 
       <div className="dm-scroll dm-thread-body" ref={bodyRef} onClick={() => { setReactOpen(null); }}>
@@ -1345,7 +1477,7 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
           <div className={"dm-msg" + (c.kind === "group" ? " grouped first" : "")}>
             {c.kind === "group" && <span className="dm-msg-av"><DMFace name={typing.name} src={typing.avatar} size={28} /></span>}
             <div className="dm-msg-col">
-              {c.kind === "group" && <span className="dm-msg-sender">{typing.name}</span>}
+              {c.kind === "group" && <span className="dm-msg-sender">{nickDM(c, typing)}</span>}
               <div className="dm-msg-line"><span className="dm-bubble dm-typing" aria-label={typing.name + " is typing"}><i /><i /><i /></span></div>
             </div>
           </div>}
@@ -1398,9 +1530,12 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
             onChange={(e) => setText(e.target.value)} onFocus={() => setEmojiOpen(false)}
             onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape" && editing) cancelEdit(); }} />
         </div>
-        <button type="button" className={"dm-send" + (canSend ? " on" : "")} aria-label={editing ? "Save edit" : "Send"} disabled={!canSend} onClick={submit}>
-          <DSDM.IconifyIcon name={editing ? "lucide:check" : "lucide:arrow-up"} size={20} color="#fff" />
-        </button>
+        {DM_WEB && !canSend && !editing ?
+          /* nothing typed → Messenger's quick emoji (customisable per chat) */
+          <button type="button" className="dm-send dm-quick" aria-label={"Send " + (c.emoji || "👍")} onClick={() => { onSend(c.id, { from: "me", text: c.emoji || "👍" }); simulateReply(); }}>{c.emoji || "👍"}</button> :
+          <button type="button" className={"dm-send" + (canSend ? " on" : "")} aria-label={editing ? "Save edit" : "Send"} disabled={!canSend} onClick={submit}>
+            <DSDM.IconifyIcon name={editing ? "lucide:check" : "lucide:arrow-up"} size={20} color="#fff" />
+          </button>}
       </div>
       {emojiOpen && <EmojiPickerDM onPick={insertEmoji} onClose={() => { setEmojiOpen(false); requestAnimationFrame(() => inputRef.current && inputRef.current.focus()); }} />}
       {!emojiOpen && <div className="dm-composer-safe" aria-hidden="true" />}
@@ -1422,6 +1557,8 @@ function ThreadViewDM({ c, onBack, onProfile, onSend, onReact, onEdit, onDelete,
                 <button key={e} type="button" className={"dm-react-opt" + ((actMsg.reactions[e] || []).includes("me") ? " on" : "")} aria-label={"React " + e}
                   onClick={() => { onReact(c.id, actMsg.id, e); setActionsFor(null); }}>{e}</button>)}
             </div>
+            {onPin && <SheetActionDM icon={actMsg.pinned ? "lucide:pin-off" : "lucide:pin"} label={actMsg.pinned ? "Unpin message" : "Pin message"} sub={actMsg.pinned ? null : "Shows under Chat info"}
+              onClick={() => { onPin(c.id, actMsg.id); setActionsFor(null); toast(actMsg.pinned ? "Message unpinned" : "Message pinned"); }} />}
             {actMsg.text && <SheetActionDM icon="lucide:copy" label="Copy text" onClick={() => { try { navigator.clipboard && navigator.clipboard.writeText(actMsg.text); } catch (e) {} setActionsFor(null); toast("Copied"); }} />}
             {actMsg.image && <SheetActionDM icon="lucide:maximize-2" label="View photo" onClick={() => { setActionsFor(null); setLightbox({ kind: "image", src: actMsg.image }); }} />}
             {actMsg.video && actMsg.video.src && <SheetActionDM icon="lucide:play" label="Play video" onClick={() => { setActionsFor(null); setLightbox({ kind: "video", src: actMsg.video.src, poster: actMsg.video.poster }); }} />}
@@ -1525,7 +1662,7 @@ function ProfileViewDM({ c, onBack, onToggleMute, onAddMembers, onLeave, onOpenT
           <span className="dm-profile-role">{p.role}</span>
           <span className="dm-profile-presence">{presenceDM(p)}</span>
           <div className="dm-profile-actions">
-            <button type="button" className="dm-pact" onClick={() => goDM("ClinicianDirectory.html?from=" + encodeURIComponent("Messages.html?t=" + c.id))}>
+            <button type="button" className="dm-pact" onClick={() => goDM(DM_WEB ? profileHrefDM(p, "MessagesWeb.html?t=" + c.id) : "ClinicianDirectory.html?from=" + encodeURIComponent("Messages.html?t=" + c.id))}>
               <span className="ic"><DSDM.IconifyIcon name="lucide:user" size={20} color="var(--brand-navy)" /></span>View Profile
             </button>
             <button type="button" className={"dm-pact" + (c.muted ? " on" : "")} aria-pressed={!!c.muted} onClick={onToggleMute}>
@@ -1553,6 +1690,179 @@ function ProfileViewDM({ c, onBack, onToggleMute, onAddMembers, onLeave, onOpenT
         <div style={{ height: 32 }} />
       </div>
     </div>);
+}
+
+/* ---------------------------------------------------------------------------
+   Chat info panel (desktop, right-hand column) — Messenger's conversation
+   sidebar: identity, Mute · Search · More, then collapsible Chat info /
+   Customize chat / Chat members / Media / Privacy sections. Customisation
+   writes theme · emoji · nicknames · name · photo onto the conversation.
+   --------------------------------------------------------------------------- */
+function InfoSecDM({ title, open, onToggle, children }) {
+  return (
+    <section className="dm-info-sec">
+      <button type="button" className="dm-info-sech" aria-expanded={open} onClick={onToggle}>
+        <span>{title}</span><DSDM.IconifyIcon name={open ? "lucide:chevron-up" : "lucide:chevron-down"} size={18} color="var(--gray-500)" />
+      </button>
+      {open && <div className="dm-info-body">{children}</div>}
+    </section>);
+}
+function InfoRowDM({ icon, label, sub, danger, onClick }) {
+  return (
+    <button type="button" className={"dm-info-row" + (danger ? " danger" : "")} onClick={onClick}>
+      <span className="dm-info-ic"><DSDM.IconifyIcon name={icon} size={19} color={danger ? "var(--error)" : "var(--text-heading)"} /></span>
+      <span className="dm-info-label">{label}{sub && <small>{sub}</small>}</span>
+    </button>);
+}
+const CHAT_EMOJI_PICKS_DM = EMOJI_GROUPS_DM.reduce((all, g) => all.concat(g.emojis), []);
+
+function InfoSheetsDM({ c, sheet, onClose, onCustomize, toast, members }) {
+  const people = usePeopleDM();
+  const [draft, setDraft] = useStateDM("");
+  const [nicks, setNicks] = useStateDM({});
+  const photoRef = useRefDM(null);
+  useEffectDM(() => { setDraft(c.name || ""); setNicks(c.nicknames || {}); }, [sheet, c.id]);
+  const pinned = c.messages.filter((m) => m.pinned && !m.deleted);
+  const everyone = [ME_DM].concat(c.kind === "group" ? members : [people.get(c.personId)].filter(Boolean));
+  const senderOf = (m) => m.from === "me" ? ME_DM : people.get(m.from);
+  const labelOf = (m) => m.text || (m.gif ? "GIF" : m.sticker ? "Sticker" : m.video ? "Video" : m.image ? "Photo" : "");
+  return (
+    <>
+      <SheetDM open={sheet === "pinned"} onClose={onClose} title="Pinned messages" label="Pinned messages" className="dm-sheet-info">
+        {pinned.length === 0 ?
+          <div className="dm-empty"><DSDM.IconifyIcon name="lucide:pin" size={34} color="var(--gray-300)" /><b>No pinned messages</b><p>Open a message's options and choose Pin to keep it here.</p></div> :
+          <div className="dm-sheet-list">
+            {pinned.map((m) => { const p = senderOf(m); return (
+              <div key={m.id} className="dm-pinned-row">
+                <DMFace name={p ? p.name : "?"} src={p && p.avatar} size={32} />
+                <span className="dm-pinned-main"><b>{p ? nickDM(c, p) : ""}</b>{labelOf(m)}<span className="t">{fmtListTimeDM(m.ts)} · {fmtClockDM(m.ts)}</span></span>
+              </div>); })}
+          </div>}
+        <div className="dm-sheet-btns"><button type="button" className="dm-btn dm-btn-ghost dm-btn-grow" onClick={onClose}>Done</button></div>
+      </SheetDM>
+
+      <SheetDM open={sheet === "name"} onClose={onClose} title="Change chat name" label="Change chat name" className="dm-sheet-info">
+        <div className="dm-groupname"><input type="text" value={draft} maxLength={60} autoFocus placeholder="Group name" aria-label="Group name" onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter" && draft.trim()) { onCustomize({ name: draft.trim() }); toast("Chat name updated"); onClose(); } }} /></div>
+        <div className="dm-sheet-btns">
+          <button type="button" className="dm-btn dm-btn-ghost dm-btn-grow" onClick={onClose}>Cancel</button>
+          <button type="button" className="dm-btn dm-btn-navy dm-btn-grow" disabled={!draft.trim() || draft.trim() === c.name} onClick={() => { onCustomize({ name: draft.trim() }); toast("Chat name updated"); onClose(); }}>Save</button>
+        </div>
+      </SheetDM>
+
+      <SheetDM open={sheet === "photo"} onClose={onClose} title="Change photo" label="Change photo" className="dm-sheet-info">
+        <div className="dm-photo-pick">
+          <ConvAvatarDM c={c} size={96} dot={false} />
+          <input ref={photoRef} type="file" accept="image/*" hidden onChange={(e) => { const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return; shrinkImageDM(f, 320).then((url) => { onCustomize({ photo: url }); toast("Photo updated"); onClose(); }); }} />
+          <button type="button" className="dm-btn dm-btn-navy" onClick={() => photoRef.current && photoRef.current.click()}><DSDM.IconifyIcon name="lucide:image" size={18} color="#fff" />Upload photo</button>
+          {c.photo && <button type="button" className="dm-btn dm-btn-ghost" onClick={() => { onCustomize({ photo: null }); toast("Photo removed"); onClose(); }}>Remove photo</button>}
+        </div>
+      </SheetDM>
+
+      <SheetDM open={sheet === "theme"} onClose={onClose} title="Change theme" label="Change theme" className="dm-sheet-info">
+        <div className="dm-theme-grid" role="radiogroup" aria-label="Theme">
+          {CHAT_THEMES_DM.map((t) => { const on = (c.theme || "navy") === t.key; return (
+            <button key={t.key} type="button" role="radio" aria-checked={on} className={"dm-theme-opt" + (on ? " on" : "")} onClick={() => { onCustomize({ theme: t.key }); toast(t.label + " theme"); }}>
+              <i style={{ background: t.swatch }} />{t.label}
+            </button>); })}
+        </div>
+        <div className="dm-sheet-btns"><button type="button" className="dm-btn dm-btn-ghost dm-btn-grow" onClick={onClose}>Done</button></div>
+      </SheetDM>
+
+      <SheetDM open={sheet === "emoji"} onClose={onClose} title="Change emoji" label="Change emoji" className="dm-sheet-info">
+        <p className="dm-sheet-body">Sent with one tap when the message box is empty.</p>
+        <div className="dm-emoji-pick" role="radiogroup" aria-label="Quick emoji">
+          {CHAT_EMOJI_PICKS_DM.map((e) => <button key={e} type="button" role="radio" aria-checked={(c.emoji || "👍") === e} className={(c.emoji || "👍") === e ? "on" : ""} onClick={() => { onCustomize({ emoji: e }); toast("Emoji changed to " + e); onClose(); }}>{e}</button>)}
+        </div>
+      </SheetDM>
+
+      <SheetDM open={sheet === "nicknames"} onClose={onClose} title="Edit nicknames" label="Edit nicknames" className="dm-sheet-info">
+        <div className="dm-sheet-list">
+          {everyone.map((p) => (
+            <div key={p.id} className="dm-nick-row">
+              <DMFace name={p.name} src={p.avatar} size={40} />
+              <input type="text" value={nicks[p.id] || ""} placeholder={p.name} aria-label={"Nickname for " + p.name} maxLength={40}
+                onChange={(e) => setNicks((n) => ({ ...n, [p.id]: e.target.value }))} />
+            </div>))}
+        </div>
+        <div className="dm-sheet-btns">
+          <button type="button" className="dm-btn dm-btn-ghost dm-btn-grow" onClick={onClose}>Cancel</button>
+          <button type="button" className="dm-btn dm-btn-navy dm-btn-grow" onClick={() => {
+            const clean = {}; Object.keys(nicks).forEach((k) => { const v = String(nicks[k] || "").trim(); if (v) clean[k] = v; });
+            onCustomize({ nicknames: clean }); toast("Nicknames saved"); onClose(); }}>Save</button>
+        </div>
+      </SheetDM>
+    </>);
+}
+
+function InfoPanelDM({ c, onToggleMute, onSearch, onMore, onCustomize, onOpenThreadWith, onAddMembers, onLeave, onDelete, toast }) {
+  const people = usePeopleDM();
+  const [open, setOpen] = useStateDM({ info: true, custom: true, members: true, media: true, privacy: false });
+  const [sheet, setSheet] = useStateDM(null);
+  const toggle = (k) => setOpen((o) => ({ ...o, [k]: !o[k] }));
+  const isGroup = c.kind === "group";
+  const person = isGroup ? null : people.get(c.personId);
+  const members = isGroup ? c.memberIds.map(people.get).filter(Boolean) : [];
+  const name = isGroup ? c.name : nickDM(c, person);
+  const pinned = c.messages.filter((m) => m.pinned && !m.deleted);
+  const theme = CHAT_THEMES_DM.find((t) => t.key === (c.theme || "navy"));
+  const roleOf = (id) => (c.roles || {})[id] || "Member";
+  return (
+    <aside className="dm-info" aria-label="Conversation information">
+      <div className="dm-scroll dm-info-scroll">
+        <div className="dm-info-top">
+          <ConvAvatarDM c={c} size={96} dot={false} />
+          <h2 className="dm-info-name">{name}{person && person.seals && person.seals.length > 0 && <DSDM.VerificationSeals seals={person.seals} size={16} />}</h2>
+          <span className="dm-info-sub">{isGroup ? (members.length + 1) + " members · " + members.filter((p) => p.online).length + " online" : person ? person.role + " · " + presenceDM(person) : ""}</span>
+          <div className="dm-info-actions">
+            <button type="button" className="dm-info-act" aria-pressed={!!c.muted} onClick={onToggleMute}>
+              <span className="ic"><DSDM.IconifyIcon name={c.muted ? "lucide:bell-off" : "lucide:bell"} size={20} color="var(--text-heading)" /></span>{c.muted ? "Unmute" : "Mute"}
+            </button>
+            <button type="button" className="dm-info-act" onClick={onSearch}>
+              <span className="ic"><DSDM.IconifyIcon name="lucide:search" size={20} color="var(--text-heading)" /></span>Search
+            </button>
+            <button type="button" className="dm-info-act" onClick={onMore} aria-haspopup="dialog">
+              <span className="ic"><DSDM.IconifyIcon name="lucide:more-horizontal" size={20} color="var(--text-heading)" /></span>More
+            </button>
+          </div>
+        </div>
+        <InfoSecDM title="Chat info" open={open.info} onToggle={() => toggle("info")}>
+          <InfoRowDM icon="lucide:pin" label="View pinned messages" sub={pinned.length ? pinned.length + " pinned" : null} onClick={() => setSheet("pinned")} />
+          {person && <InfoRowDM icon="lucide:user" label="View profile" onClick={() => goDM(profileHrefDM(person, "MessagesWeb.html?t=" + c.id))} />}
+          {person && person.email && <InfoRowDM icon="lucide:mail" label="Email" sub={person.email} onClick={() => { try { navigator.clipboard && navigator.clipboard.writeText(person.email); } catch (e) {} toast("Email copied"); }} />}
+          {person && person.clinic && <InfoRowDM icon="lucide:building-2" label={person.clinic} sub={person.website || null} onClick={() => toast(person.clinic)} />}
+        </InfoSecDM>
+        <InfoSecDM title="Customize chat" open={open.custom} onToggle={() => toggle("custom")}>
+          {isGroup && <InfoRowDM icon="lucide:pencil" label="Change chat name" onClick={() => setSheet("name")} />}
+          {isGroup && <InfoRowDM icon="lucide:image" label="Change photo" onClick={() => setSheet("photo")} />}
+          <InfoRowDM icon="lucide:palette" label="Change theme" sub={theme ? theme.label : null} onClick={() => setSheet("theme")} />
+          <InfoRowDM icon="lucide:thumbs-up" label="Change emoji" sub={c.emoji || "👍"} onClick={() => setSheet("emoji")} />
+          <InfoRowDM icon="lucide:case-sensitive" label="Edit nicknames" onClick={() => setSheet("nicknames")} />
+        </InfoSecDM>
+        {isGroup &&
+          <InfoSecDM title="Chat members" open={open.members} onToggle={() => toggle("members")}>
+            {[{ ...ME_DM, isMe: true }].concat(members).map((p) => (
+              <div key={p.id} className="dm-info-member">
+                <span className="dm-facewrap" style={{ width: 40, height: 40 }}><DMFace name={p.name} src={p.avatar} size={40} />{p.online && <span className="dm-online sm" />}</span>
+                <span className="dm-info-member-main">
+                  <span className="dm-info-member-name">{nickDM(c, p)}{p.isMe && <span className="dm-you">You</span>}</span>
+                  <span className="dm-info-member-sub">{roleOf(p.isMe ? "me" : p.id) === "Admin" ? "Group creator" : roleOf(p.id) === "Moderator" ? "Moderator" : p.role}</span>
+                </span>
+                {!p.isMe && <button type="button" className="dm-iconbtn sm" aria-label={"Message " + p.name} onClick={() => onOpenThreadWith(p.id)}><DSDM.IconifyIcon name="lucide:message-circle" size={19} color="var(--text-heading)" /></button>}
+              </div>))}
+            <InfoRowDM icon="lucide:user-plus" label="Add people" onClick={onAddMembers} />
+          </InfoSecDM>}
+        {person && person.media && person.media.length > 0 &&
+          <InfoSecDM title="Media & files" open={open.media} onToggle={() => toggle("media")}>
+            <div className="dm-media dm-info-media">{person.media.map((src, i) => <img key={i} src={src} alt="" />)}</div>
+          </InfoSecDM>}
+        <InfoSecDM title="Privacy & support" open={open.privacy} onToggle={() => toggle("privacy")}>
+          <InfoRowDM icon={c.muted ? "lucide:bell-off" : "lucide:bell"} label={c.muted ? "Unmute notifications" : "Mute notifications"} onClick={onToggleMute} />
+          {isGroup ? <InfoRowDM icon="lucide:log-out" label="Leave group" danger onClick={onLeave} /> : <InfoRowDM icon="lucide:trash-2" label="Delete chat" danger onClick={onDelete} />}
+        </InfoSecDM>
+      </div>
+      <InfoSheetsDM c={c} sheet={sheet} onClose={() => setSheet(null)} onCustomize={onCustomize} toast={toast} members={members} />
+    </aside>);
 }
 
 /* ---------------------------------------------------------------------------
@@ -1592,73 +1902,456 @@ function PeopleViewDM({ people, onOpenThreadWith, onScroll }) {
 /* ---------------------------------------------------------------------------
    Conference tab — live rooms + scheduled
    --------------------------------------------------------------------------- */
-function ConferenceViewDM({ onScroll, toast }) {
+/* ---------------------------------------------------------------------------
+   Voice Conference — list · live stage · participants · host a room
+   The live call itself is owned by voice-call.js (window.PFVoiceCall,
+   localStorage "pf-voice-call") so it follows the member around the app as a
+   movable mini card; this tab is the full-size stage for it.
+   --------------------------------------------------------------------------- */
+const CONF_PEOPLE_DM = [
+  { id: "rachel", name: "Dr Rachel Adams", role: "Researcher", avatar: null, online: true },
+  { id: "michelle", name: "Michelle Avery", role: "Clinical Psychologist", avatar: null, online: true },
+  { id: "jordan", name: "Jordan Avery", role: "Clinical Psychologist", avatar: null, online: true },
+  { id: "alexm", name: "Alex Morgan", role: "Mental Health Specialist", avatar: null, online: true },
+  { id: "nadia", name: "Nadia Hussain", role: "Aesthetic Nurse", avatar: null, online: true }];
+const CONF_ROOMS_KEY_DM = "pf-voice-rooms";
+const CONF_SETTINGS_KEY_DM = "pf-voice-settings";
+const CONF_DESC_DM = "Easily engage in discussions! Anyone with the link can join without limits on the number of participants.";
+const CONF_SCOPES_DM = [{ key: "public", label: "Public" }, { key: "invited", label: "Invited" }, { key: "ended", label: "Ended" }];
+const CONF_EMOJIS_DM = ["👍", "❤️", "👏", "😂", "🙌", "🔥", "💯", "🤔"];
+const CONF_CHAT_SEED_DM = [
+  { id: "cc1", from: "rachel", text: "Sharing the before / after slides in a sec.", ago: 4 },
+  { id: "cc2", from: "michelle", text: "Great case — was the cannula 22G or 25G?", ago: 3 },
+  { id: "cc3", from: "tim", text: "22G 70mm, fanning from a single lateral entry point.", ago: 2 },
+  { id: "cc4", from: "jordan", text: "🙌", ago: 1 }];
+
+function confGetDM(people) {
+  return (id) => people.get(id) || CONF_PEOPLE_DM.find((p) => p.id === id) || null;
+}
+function pluralDM(n, word) { return n + " " + (n === 1 ? word : word + "s"); }
+function confStartedAtDM(c) { return c.startedAt || (NOW_DM - (c.startedAgo || 0) * 1000); }
+function fmtDurationDM(ms) {
+  const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
+  const p = (n) => (n < 10 ? "0" : "") + n;
+  return p(h) + ":" + p(m) + ":" + p(r);
+}
+function fmtConfDateDM(ts) {
+  const d = new Date(ts);
+  const h = d.getHours(), m = d.getMinutes();
+  return ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][d.getMonth()] + " " + d.getDate() + ", " + d.getFullYear() +
+    " · " + ((h % 12) || 12) + ":" + (m < 10 ? "0" : "") + m + " " + (h < 12 ? "AM" : "PM");
+}
+function loadRoomsDM() {
+  let mine = [];
+  try { mine = JSON.parse(localStorage.getItem(CONF_ROOMS_KEY_DM)) || []; } catch (e) { mine = []; }
+  if (!Array.isArray(mine)) mine = [];
+  return mine.concat(CONFERENCES_DM);
+}
+function saveRoomsDM(rooms) { try { localStorage.setItem(CONF_ROOMS_KEY_DM, JSON.stringify(rooms.filter((r) => r.mine))); } catch (e) {} }
+function loadConfSettingsDM() {
+  try { return { noise: true, joinMuted: true, chime: true, ...(JSON.parse(localStorage.getItem(CONF_SETTINGS_KEY_DM)) || {}) }; } catch (e) { return { noise: true, joinMuted: true, chime: true }; }
+}
+
+/* live call — PFVoiceCall when voice-call.js is on the page, else a tiny
+   localStorage shim with the same shape */
+function callApiDM() {
+  if (window.PFVoiceCall) return window.PFVoiceCall;
+  const KEY = "pf-voice-call";
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } };
+  const write = (c) => { try { if (c) localStorage.setItem(KEY, JSON.stringify(c)); else localStorage.removeItem(KEY); } catch (e) {} window.dispatchEvent(new CustomEvent("pf:voice-call-changed", { detail: { call: c } })); };
+  return { get: read, start: (c) => write({ ...c, joinedAt: Date.now(), muted: c.muted !== false, hand: false }), end: () => write(null),
+    set: (p) => { const c = read(); if (c) write({ ...c, ...p }); }, toggleMute() { const c = read(); if (c) write({ ...c, muted: !c.muted }); },
+    toggleHand() { const c = read(); if (c) write({ ...c, hand: !c.hand }); }, setOwner() {}, url: (c) => (DM_WEB ? "MessagesWeb.html" : "Messages.html") + "?tab=conference" + (c ? "&conf=" + c.id : "") };
+}
+function useVoiceCallDM() {
+  const [call, setCall] = useStateDM(() => callApiDM().get());
+  useEffectDM(() => {
+    const sync = () => setCall(callApiDM().get());
+    window.addEventListener("pf:voice-call-changed", sync);
+    window.addEventListener("storage", sync);
+    return () => { window.removeEventListener("pf:voice-call-changed", sync); window.removeEventListener("storage", sync); };
+  }, []);
+  return call;
+}
+
+function ConfLiveDM({ small }) { return <span className={"dm-vc-live" + (small ? " sm" : "")}><i />Live</span>; }
+function ConfStatusPillDM({ c }) {
+  if (c.ended) return <span className="dm-vc-pill ended">Ended</span>;
+  if (c.live) return <ConfLiveDM small />;
+  return <span className="dm-vc-pill sched">Scheduled</span>;
+}
+
+/* one room in the list */
+function ConfCardDM({ c, inCall, selected, onOpen }) {
   const people = usePeopleDM();
-  const [open, setOpen] = useStateDM(null);
-  const [joined, setJoined] = useStateDM(null);
-  const [reminders, setReminders] = useStateDM({});
-  const live = CONFERENCES_DM.filter((c) => c.live);
-  const upcoming = CONFERENCES_DM.filter((c) => !c.live);
-  const Card = ({ conf }) => {
-    const parts = conf.participantIds.map(people.get).filter(Boolean);
-    const host = people.get(conf.hostId);
-    return (
-      <div className={"dm-conf" + (conf.live ? " live" : "")}>
-        <button type="button" className="dm-conf-main" onClick={() => setOpen(conf)} aria-label={conf.name + ", " + conf.when}>
-          <span className="dm-conf-top">
-            <span className="dm-conf-name">{conf.name}</span>
-            {conf.live ? <span className="dm-live"><i />LIVE</span> : <span className="dm-conf-when">{conf.when}</span>}
-          </span>
-          <span className="dm-conf-topic">{conf.topic}</span>
-          <span className="dm-conf-people">
-            <span className="dm-faces">{parts.slice(0, 4).map((p) => <DMFace key={p.id} name={p.name} src={p.avatar} size={28} />)}</span>
-            <span className="dm-conf-host">Hosted by {host ? host.name : ""}{conf.live && conf.listening ? " · " + conf.listening + " listening" : ""}</span>
-          </span>
-        </button>
-        {conf.live ?
-          <button type="button" className={"dm-btn " + (joined === conf.id ? "dm-btn-ghost" : "dm-btn-navy")} onClick={() => { setJoined(joined === conf.id ? null : conf.id); toast(joined === conf.id ? "Left the room" : "Joined " + conf.name); }}>
-            {joined === conf.id ? "Leave" : "Join"}
-          </button> :
-          <button type="button" className={"dm-btn dm-btn-ghost" + (reminders[conf.id] ? " on" : "")} aria-pressed={!!reminders[conf.id]}
-            onClick={() => { setReminders((r) => ({ ...r, [conf.id]: !r[conf.id] })); toast(reminders[conf.id] ? "Reminder removed" : "We'll remind you"); }}>
-            <DSDM.IconifyIcon name={reminders[conf.id] ? "lucide:bell-ring" : "lucide:bell"} size={17} color="var(--brand-navy)" />{reminders[conf.id] ? "Reminding" : "Remind me"}
-          </button>}
-      </div>);
-  };
+  const get = confGetDM(people);
+  const host = get(c.hostId);
+  const hostName = c.mine ? "You" : (host ? host.name : "");
+  const now = useNowDM(!!c.live);
   return (
-    <div className="dm-view" data-screen-label="Messages · Conference">
-      <header className="dm-head dm-head-plain"><h1 className="dm-title">Conference</h1><span className="dm-head-sub">Voice rooms with people you follow</span></header>
-      <div className="dm-scroll" onScroll={onScroll}>
-        <div className="dm-sec-h">Live now<span className="dm-sec-n">{live.length}</span></div>
-        <div className="dm-conflist">{live.map((c) => <Card key={c.id} conf={c} />)}</div>
-        <div className="dm-sec-h">Scheduled<span className="dm-sec-n">{upcoming.length}</span></div>
-        <div className="dm-conflist">{upcoming.map((c) => <Card key={c.id} conf={c} />)}</div>
-        <div className="dm-pad">
-          <DSDM.Button variant="brand" fullWidth iconLeading={<DSDM.IconifyIcon name="lucide:mic" size={18} color="#fff" />} onClick={() => toast("Conference rooms open to Mastery members")}>Start a conference</DSDM.Button>
+    <button type="button" className={"dm-vc-card" + (c.live ? " live" : "") + (c.ended ? " ended" : "") + (inCall ? " in-call" : "") + (selected ? " on" : "")}
+      onClick={() => onOpen(c)} aria-current={selected ? "true" : undefined} aria-label={c.name + (c.live ? ", live" : c.ended ? ", ended" : ", scheduled")}>
+      <span className="dm-vc-card-ic"><DSDM.IconifyIcon name="lucide:audio-lines" size={20} color="currentColor" /></span>
+      <span className="dm-vc-card-main">
+        <span className="dm-vc-card-top"><span className="dm-vc-card-name">{c.name}</span><ConfStatusPillDM c={c} /></span>
+        {c.live ?
+          <>
+            <span className="dm-vc-card-sub">Started by: {hostName}</span>
+            <span className="dm-vc-card-meta"><span className="dm-vc-time">{fmtDurationDM(now - confStartedAtDM(c))}</span><span>{pluralDM(c.count, "Participant")}</span>{inCall && <span className="dm-vc-incall">In call</span>}</span>
+          </> :
+          <>
+            <span className="dm-vc-card-sub">{c.when}</span>
+            <span className="dm-vc-card-meta"><span>{pluralDM(c.count, "Participant")}</span>{!c.ended && <span>Hosted by {hostName}</span>}</span>
+          </>}
+      </span>
+      <DSDM.IconifyIcon name="lucide:chevron-right" size={18} color="var(--gray-400)" />
+    </button>);
+}
+
+/* ---- the list column / mobile home of the tab ---- */
+function ConferenceViewDM({ rooms, call, selectedId, onOpen, onHost, onSettings, onScroll }) {
+  const people = usePeopleDM();
+  const get = confGetDM(people);
+  const [scope, setScope] = useStateDM("public");
+  const [q, setQ] = useStateDM("");
+  const [allRecent, setAllRecent] = useStateDM(false);
+  const match = (c) => {
+    if (!q) return true;
+    const h = get(c.hostId);
+    return c.name.toLowerCase().includes(q.toLowerCase()) || (h && h.name.toLowerCase().includes(q.toLowerCase()));
+  };
+  const ended = rooms.filter((c) => c.ended && match(c));
+  const activeAll = rooms.filter((c) => !c.ended);
+  const active = activeAll.filter((c) => (c.scope === scope || (scope === "public" && c.mine)) && match(c))
+    .sort((a, b) => (call && a.id === call.id ? -1 : call && b.id === call.id ? 1 : 0) || (b.live ? 1 : 0) - (a.live ? 1 : 0));
+  const counts = { public: activeAll.filter((c) => c.scope === "public" || c.mine).length, invited: activeAll.filter((c) => c.scope === "invited").length, ended: ended.length };
+  const recent = allRecent ? ended : ended.slice(0, 4);
+  return (
+    <div className="dm-view dm-vc-list" data-screen-label="Messages · Voice Conference">
+      <header className="dm-head dm-head-inbox">
+        <div className="dm-head-row">
+          <h1 className="dm-title">Voice Conference</h1>
+          <span className="dm-vc-headbtns">
+            <button type="button" className="dm-iconbtn sm dm-vc-gear" aria-label="Conference settings" onClick={onSettings}>
+              <DSDM.IconifyIcon name="lucide:settings-2" size={20} color="var(--brand-navy)" />
+            </button>
+            <button type="button" className="dm-btn dm-btn-navy dm-vc-hostbtn" onClick={onHost}>
+              <DSDM.IconifyIcon name="lucide:plus" size={17} color="#fff" />Host a room
+            </button>
+          </span>
         </div>
+        <div className="dm-inboxtabs" role="tablist" aria-label="Conference filter">
+          {CONF_SCOPES_DM.map((t) =>
+            <button key={t.key} type="button" role="tab" aria-selected={scope === t.key} className={"dm-inboxtab" + (scope === t.key ? " on" : "")} onClick={() => setScope(t.key)}>
+              {t.label}{counts[t.key] > 0 && <span className="dm-inboxtab-n">{counts[t.key]}</span>}
+            </button>)}
+        </div>
+      </header>
+      <div className="dm-scroll" onScroll={onScroll}>
+        <SearchDM value={q} onChange={setQ} placeholder="Search conference" />
+        {scope !== "ended" &&
+          <div className="dm-conflist dm-vc-cards">
+            {active.map((c) => <ConfCardDM key={c.id} c={c} inCall={!!call && call.id === c.id} selected={selectedId === c.id} onOpen={onOpen} />)}
+            {active.length === 0 &&
+              <div className="dm-empty">
+                <DSDM.IconifyIcon name="lucide:audio-lines" size={40} color="var(--gray-300)" />
+                <b>{q ? "No rooms match" : scope === "invited" ? "No invitations right now" : "No public rooms right now"}</b>
+                <p>{q ? "Try a different name." : "Host a room and share the link — anyone with it can join."}</p>
+              </div>}
+          </div>}
+        {(scope === "ended" || ended.length > 0) &&
+          <>
+            <div className="dm-sec-h dm-vc-sec">
+              {scope === "ended" ? "Ended conferences" : "Recent Conference"}
+              {scope !== "ended" && ended.length > 4 &&
+                <button type="button" className="dm-vc-viewall" onClick={() => setAllRecent((v) => !v)}>{allRecent ? "Show less" : "View All"}</button>}
+            </div>
+            <div className="dm-conflist dm-vc-cards dm-vc-cards-ended">
+              {(scope === "ended" ? ended : recent).map((c) => <ConfCardDM key={c.id} c={c} selected={selectedId === c.id} onOpen={onOpen} />)}
+              {scope === "ended" && ended.length === 0 &&
+                <div className="dm-empty"><b>{q ? "No rooms match" : "Nothing has ended yet"}</b><p>Rooms you've hosted or joined show up here once they finish.</p></div>}
+            </div>
+          </>}
         <div style={{ height: 16 }} />
       </div>
-      <SheetDM open={!!open} onClose={() => setOpen(null)} label={open ? open.name : "Conference"}>
-        {open &&
-          <>
-            <div className="dm-sheet-head">
-              <span className="dm-sheet-ic"><DSDM.IconifyIcon name="lucide:radio" size={22} color="var(--brand-navy)" /></span>
-              <span className="dm-sheet-head-main"><b>{open.name}</b><span>{open.when} · {open.topic}</span></span>
-            </div>
-            <div className="dm-members" role="list">
-              {open.participantIds.map(people.get).filter(Boolean).map((p) =>
-                <div key={p.id} className="dm-member" role="listitem">
-                  <DMFace name={p.name} src={p.avatar} size={40} />
-                  <span className="dm-member-main"><span className="dm-member-name">{p.name}</span><span className="dm-member-sub">{p.role}</span></span>
-                  <span className={"dm-role" + (p.id === open.hostId ? " admin" : "")}>{p.id === open.hostId ? "Host" : "Speaker"}</span>
-                </div>)}
-            </div>
-            <button type="button" className={"dm-btn dm-btn-grow " + (joined === open.id ? "dm-btn-ghost" : "dm-btn-navy")} style={{ marginTop: 12 }}
-              onClick={() => { if (open.live) { setJoined(joined === open.id ? null : open.id); toast(joined === open.id ? "Left the room" : "Joined " + open.name); } else { setReminders((r) => ({ ...r, [open.id]: true })); toast("We'll remind you"); } setOpen(null); }}>
-              {open.live ? (joined === open.id ? "Leave room" : "Join room") : "Remind me"}
+    </div>);
+}
+
+/* animated purple bars — deterministic heights so SSR-free renders match */
+function ConfWaveDM({ quiet }) {
+  const bars = Array.from({ length: 34 });
+  return (
+    <div className={"dm-vc-wave" + (quiet ? " quiet" : "")} aria-hidden="true">
+      {bars.map((_, i) => <i key={i} style={{ "--h": (0.3 + ((Math.sin(i * 1.7) + 1) / 2) * 0.7).toFixed(2), animationDelay: ((i * 0.09) % 1.1).toFixed(2) + "s" }} />)}
+    </div>);
+}
+
+/* ---- the stage: navy card + control bar ---- */
+function ConferenceStageDM({ c, call, onJoin, onLeave, onToggleMute, onToggleHand, onClose, onParticipants, onRemind, reminded, toast, onHostAgain }) {
+  const people = usePeopleDM();
+  const get = confGetDM(people);
+  const host = get(c.hostId);
+  const inCall = !!call && call.id === c.id;
+  const now = useNowDM(!!c.live);
+  const [emojiOpen, setEmojiOpen] = useStateDM(false);
+  const [chatOpen, setChatOpen] = useStateDM(false);
+  const [bursts, setBursts] = useStateDM([]);
+  const [chat, setChat] = useStateDM(() => CONF_CHAT_SEED_DM.map((m) => ({ ...m, ts: NOW_DM - m.ago * MIN_DM })));
+  const [draft, setDraft] = useStateDM("");
+  const [confirmLeave, setConfirmLeave] = useStateDM(false);
+  const link = c.link || "profinity.app/voice/" + c.id;
+  const copy = () => {
+    const done = () => toast("Link copied");
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText("https://" + link).then(done, done); else done();
+  };
+  const share = () => {
+    if (navigator.share) navigator.share({ title: c.name, text: "Join my voice conference on PROfinity", url: "https://" + link }).catch(() => {});
+    else copy();
+  };
+  const react = (e) => {
+    const id = Date.now() + Math.random();
+    setBursts((b) => b.concat([{ id, e, x: 20 + Math.random() * 60 }]));
+    window.setTimeout(() => setBursts((b) => b.filter((x) => x.id !== id)), 1400);
+  };
+  const sendChat = () => {
+    const t = draft.trim(); if (!t) return;
+    setChat((m) => m.concat([{ id: midDM(), from: "me", text: t, ts: Date.now() }]));
+    setDraft("");
+  };
+  const elapsed = c.live ? fmtDurationDM(now - confStartedAtDM(c)) : c.ended && c.duration ? fmtDurationDM(c.duration) : null;
+  const leave = () => { setConfirmLeave(false); onLeave(); };
+  /* phone: a peek at who's in the room sits between the card and the controls
+     (desktop shows the full participants column instead) */
+  const roomPeople = [c.mine ? ME_DM : host].concat((c.speakerIds || []).map(get), (c.attendeeIds || []).map((id) => id === "me" ? ME_DM : get(id))).filter(Boolean)
+    .filter((p, i, arr) => arr.findIndex((x) => x.id === p.id) === i);
+  const speakingNames = (c.speakerIds || []).map(get).filter(Boolean).slice(0, 2).map((p) => stripHonorificDM(p.name).split(" ")[0]);
+  const roomLine = c.live ? (speakingNames.length ? speakingNames.join(" & ") + (speakingNames.length === 1 ? " is" : " are") + " speaking" : (c.mine ? "Waiting for people to join" : "Listening in")) :
+    (host ? "Hosted by " + (c.mine ? "you" : host.name) : "") + " · " + pluralDM(c.count, "person") .replace("persons", "people") + " going";
+  return (
+    <div className={"dm-view dm-vc-stage-view" + (inCall ? " in-call" : "")} data-screen-label={"Conference · " + c.name}>
+      <div className="dm-vc-stage-scroll">
+        <div className="dm-vc-card-stage" role="region" aria-label={c.name}>
+          <header className="dm-vc-stage-head">
+            <span className="dm-vc-stage-ic"><DSDM.IconifyIcon name="lucide:audio-lines" size={18} color="#fff" /></span>
+            <h2 className="dm-vc-stage-name">{c.name}</h2>
+            {c.live && <ConfLiveDM />}
+            {elapsed && <span className="dm-vc-stage-time" aria-label={c.live ? "Elapsed" : "Duration"}>{elapsed}</span>}
+            <button type="button" className="dm-vc-stage-x" aria-label={inCall ? "Minimise — keep the call going" : "Close"} onClick={onClose}>
+              <DSDM.IconifyIcon name="lucide:x" size={20} color="#fff" />
             </button>
-          </>}
+          </header>
+          <p className="dm-vc-stage-desc">{c.desc || CONF_DESC_DM}</p>
+          <button type="button" className="dm-vc-stage-host" onClick={onParticipants} aria-label="Show participants">
+            <DMFace name={c.mine ? ME_DM.name : (host ? host.name : "Host")} src={c.mine ? ME_DM.avatar : (host ? host.avatar : null)} size={30} />
+            <span className="dm-vc-stage-host-main"><b>{c.mine ? "You" : (host ? host.name : "Host")}</b><span>{c.ended ? "Hosted" : "Host"} · {pluralDM(c.count, "participant")}</span></span>
+            <DSDM.IconifyIcon name="lucide:chevron-right" size={18} color="rgba(255,255,255,.7)" />
+          </button>
+          {c.live ? <ConfWaveDM /> :
+            <div className="dm-vc-stage-when">
+              <DSDM.IconifyIcon name={c.ended ? "lucide:check" : "lucide:clock"} size={20} color="#fff" />
+              <span><b>{c.ended ? "This conference has ended" : c.when}</b><span>{c.ended ? c.when : "You'll get a nudge when it starts"}</span></span>
+            </div>}
+          {inCall && call.hand && <span className="dm-vc-handchip"><DSDM.IconifyIcon name="lucide:hand" size={14} color="#fff" />Your hand is raised</span>}
+          {!c.ended &&
+            <>
+              <div className="dm-vc-linkbox">
+                <span className="dm-vc-link">{link}</span>
+                <button type="button" className="dm-vc-copy" aria-label="Copy link" onClick={copy}><DSDM.IconifyIcon name="lucide:copy" size={18} color="var(--brand-navy)" /></button>
+              </div>
+              <button type="button" className="dm-vc-sharerow" onClick={share}>
+                <span className="dm-vc-sharerow-ic"><DSDM.IconifyIcon name="lucide:share-2" size={18} color="var(--brand-navy)" /></span>
+                <span className="dm-vc-sharerow-main"><b>Share Voice Conference Link</b><span>Share a link to let others join your conference.</span></span>
+              </button>
+            </>}
+          {bursts.map((b) => <span key={b.id} className="dm-vc-burst" style={{ left: b.x + "%" }}>{b.e}</span>)}
+        </div>
+
+        {!DM_WEB && !c.ended &&
+          <button type="button" className="dm-vc-roomstrip" onClick={onParticipants} aria-label="Show all participants">
+            <span className="dm-faces">{roomPeople.slice(0, 4).map((p) => <DMFace key={p.id} name={p.name} src={p.avatar} size={34} />)}</span>
+            <span className="dm-vc-roomstrip-main"><b>In the room</b><span>{roomLine}</span></span>
+            <span className="dm-vc-roomstrip-n">{c.count}</span>
+            <DSDM.IconifyIcon name="lucide:chevron-right" size={18} color="var(--gray-400)" />
+          </button>}
+
+        {/* below the card */}
+        {inCall ?
+          <div className="dm-vc-ctlwrap">
+            {emojiOpen &&
+              <div className="dm-vc-emojis" role="group" aria-label="Reactions">
+                {CONF_EMOJIS_DM.map((e) => <button key={e} type="button" onClick={() => react(e)} aria-label={"React " + e}>{e}</button>)}
+              </div>}
+            <div className="dm-vc-ctl" role="toolbar" aria-label="Call controls">
+              <button type="button" className={"dm-vc-btn mic" + (call.muted ? " off" : "")} aria-pressed={call.muted} aria-label={call.muted ? "Unmute" : "Mute"} onClick={onToggleMute}>
+                <DSDM.IconifyIcon name={call.muted ? "lucide:mic-off" : "lucide:mic"} size={22} color="currentColor" />
+              </button>
+              <button type="button" className={"dm-vc-btn" + (emojiOpen ? " on" : "")} aria-expanded={emojiOpen} aria-label="Send a reaction" onClick={() => setEmojiOpen((v) => !v)}>
+                <DSDM.IconifyIcon name="lucide:smile" size={22} color="currentColor" />
+              </button>
+              <button type="button" className="dm-vc-btn" aria-label="Room chat" onClick={() => setChatOpen(true)}>
+                <DSDM.IconifyIcon name="lucide:message-square" size={22} color="currentColor" />
+              </button>
+              <button type="button" className={"dm-vc-btn" + (call.hand ? " on" : "")} aria-pressed={call.hand} aria-label={call.hand ? "Lower hand" : "Raise hand"} onClick={onToggleHand}>
+                <DSDM.IconifyIcon name="lucide:hand" size={22} color="currentColor" />
+              </button>
+              <button type="button" className="dm-vc-btn end" aria-label={c.mine ? "End room" : "Leave conference"} onClick={() => c.mine ? setConfirmLeave(true) : leave()}>
+                <DSDM.IconifyIcon name="lucide:phone" size={22} color="#fff" />
+              </button>
+            </div>
+          </div> :
+          <div className="dm-vc-joinwrap">
+            {c.live && <button type="button" className="dm-btn dm-btn-navy dm-btn-grow dm-vc-join" onClick={onJoin}><DSDM.IconifyIcon name="lucide:mic" size={18} color="#fff" />Join conference</button>}
+            {c.live && <span className="dm-vc-joinnote">{call ? "You'll leave your current room" : "You'll join muted"} · {c.count} in the room</span>}
+            {!c.live && !c.ended &&
+              <button type="button" className={"dm-btn dm-btn-grow " + (reminded ? "dm-btn-ghost on" : "dm-btn-navy")} aria-pressed={!!reminded} onClick={onRemind}>
+                <DSDM.IconifyIcon name={reminded ? "lucide:bell-ring" : "lucide:bell"} size={18} color={reminded ? "var(--brand-navy)" : "#fff"} />{reminded ? "Reminder set" : "Remind me"}
+              </button>}
+            {c.ended &&
+              <>
+                <div className="dm-vc-endstats">
+                  <span><b>{c.count}</b>Participants</span>
+                  <span><b>{c.duration ? Math.round(c.duration / 60000) + "m" : "—"}</b>Duration</span>
+                  <span><b>{c.scope === "invited" ? "Invited" : "Public"}</b>Room</span>
+                </div>
+                <button type="button" className="dm-btn dm-btn-navy dm-btn-grow" onClick={onHostAgain}><DSDM.IconifyIcon name="lucide:plus" size={18} color="#fff" />Host a similar room</button>
+              </>}
+          </div>}
+      </div>
+
+      {/* room chat */}
+      <SheetDM open={chatOpen} onClose={() => setChatOpen(false)} label="Room chat" title="Room chat" className="dm-sheet-tall dm-vc-chatsheet">
+        <div className="dm-sheet-list dm-vc-chatlist">
+          {chat.map((m) => {
+            const p = m.from === "me" ? ME_DM : get(m.from);
+            return (
+              <div key={m.id} className={"dm-vc-chatmsg" + (m.from === "me" ? " me" : "")}>
+                <DMFace name={p ? p.name : "?"} src={p ? p.avatar : null} size={28} />
+                <span className="dm-vc-chatmsg-main"><span className="dm-vc-chatmsg-name">{m.from === "me" ? "You" : (p ? p.name : "")} · {fmtClockDM(m.ts)}</span><span className="dm-vc-chatmsg-text">{m.text}</span></span>
+              </div>);
+          })}
+        </div>
+        <form className="dm-vc-chatform" onSubmit={(e) => { e.preventDefault(); sendChat(); }}>
+          <input type="text" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Message the room" aria-label="Message the room" />
+          <button type="submit" className="dm-vc-chatsend" disabled={!draft.trim()} aria-label="Send"><DSDM.IconifyIcon name="lucide:arrow-up" size={18} color="#fff" /></button>
+        </form>
       </SheetDM>
+
+      {/* host ends the room */}
+      <SheetDM open={confirmLeave} onClose={() => setConfirmLeave(false)} label="End room" className="dm-sheet-confirm">
+        <h3 className="dm-sheet-title">End the room for everyone?</h3>
+        <p className="dm-sheet-body">You're hosting. Ending closes the room for all {c.count} participants; it will move to Ended conferences.</p>
+        <div className="dm-sheet-btns">
+          <button type="button" className="dm-btn dm-btn-ghost dm-btn-grow" onClick={() => setConfirmLeave(false)}>Keep going</button>
+          <button type="button" className="dm-btn dm-btn-danger dm-btn-grow" onClick={leave}>End room</button>
+        </div>
+      </SheetDM>
+    </div>);
+}
+
+/* ---- participants (web column / mobile sheet body) ---- */
+function ConfParticipantsDM({ c, call, onClose }) {
+  const people = usePeopleDM();
+  const get = confGetDM(people);
+  const [q, setQ] = useStateDM("");
+  const inCall = !!call && call.id === c.id;
+  const host = c.mine ? { ...ME_DM, id: "me" } : get(c.hostId);
+  const speakers = (c.speakerIds || []).map(get).filter(Boolean);
+  const attendeesRaw = (c.attendeeIds || []).map((id) => id === "me" ? ME_DM : get(id)).filter(Boolean);
+  const attendees = (c.mine || attendeesRaw.some((p) => p.id === "me") ? [ME_DM].concat(attendeesRaw.filter((p) => p.id !== "me")) : attendeesRaw);
+  const match = (p) => !q || p.name.toLowerCase().includes(q.toLowerCase());
+  const shown = 1 + speakers.length + attendees.length;
+  const extra = Math.max(0, (c.count || shown) - shown);
+  const Row = ({ p, role, mic, hand }) => (
+    <div className="dm-member dm-vc-member" role="listitem">
+      <DMFace name={p.name} src={p.avatar} size={40} />
+      <span className="dm-member-main">
+        <span className="dm-member-name">{p.name}{p.id === "me" && <span className="dm-vc-you">(You)</span>}</span>
+        <span className="dm-member-sub">{p.role}</span>
+      </span>
+      {hand && <span className="dm-vc-handic" aria-label="Hand raised"><DSDM.IconifyIcon name="lucide:hand" size={16} color="#fff" /></span>}
+      {role && <span className={"dm-role" + (role === "Host" ? " admin" : " mod")}>{role}</span>}
+      <span className={"dm-vc-micic" + (mic ? " on" : "")} aria-label={mic ? "Microphone on" : "Muted"}><DSDM.IconifyIcon name={mic ? "lucide:mic" : "lucide:mic-off"} size={16} color="currentColor" /></span>
+    </div>);
+  const meMic = inCall ? !call.muted : false, meHand = inCall && call.hand;
+  return (
+    <div className="dm-vc-people" aria-label="Participants">
+      <header className="dm-vc-people-head">
+        {onClose && <button type="button" className="dm-iconbtn sm" aria-label="Close" onClick={onClose}><DSDM.IconifyIcon name="lucide:x" size={22} color="var(--gray-900)" /></button>}
+        <h2>Participants <span>({c.count || shown})</span></h2>
+      </header>
+      <SearchDM value={q} onChange={setQ} placeholder="Search participant" />
+      <div className="dm-vc-people-scroll">
+        <div className="dm-vc-people-sec">Speaker</div>
+        <div role="list">
+          {host && match(host) && <Row p={host} role="Host" mic={c.mine ? meMic : c.live} hand={c.mine && meHand} />}
+          {speakers.filter(match).map((p, i) => <Row key={p.id} p={p} role="Speaker" mic={c.live && i < 2} />)}
+        </div>
+        <div className="dm-vc-people-sec">Other Attendees</div>
+        <div role="list">
+          {attendees.filter(match).map((p) => <Row key={p.id} p={p} mic={p.id === "me" ? meMic : false} hand={p.id === "me" && meHand} />)}
+          {q && ![host].concat(speakers, attendees).filter(Boolean).some(match) && <div className="dm-empty"><b>No one matches</b></div>}
+        </div>
+        {!q && extra > 0 &&
+          <div className="dm-vc-more">
+            <span className="dm-faces">{attendees.slice(0, 6).map((p) => <DMFace key={p.id} name={p.name} src={p.avatar} size={30} />)}</span>
+            <span className="dm-vc-more-n">+{extra}</span>
+          </div>}
+      </div>
+    </div>);
+}
+
+/* ---- host a room ---- */
+function HostRoomSheetDM({ open, onClose, onCreate, preset }) {
+  const [name, setName] = useStateDM("");
+  const [desc, setDesc] = useStateDM("");
+  const [scope, setScope] = useStateDM("public");
+  useEffectDM(() => { if (open) { setName(preset ? preset.name : ""); setDesc(preset ? (preset.desc || "") : ""); setScope(preset ? preset.scope : "public"); } }, [open]);
+  const ok = name.trim().length > 1;
+  return (
+    <SheetDM open={open} onClose={onClose} label="Host a room" title="Host a room" className="dm-vc-hostsheet">
+      <label className="dm-vc-field"><span>Room name</span><input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Case Study Discussion" maxLength={60} autoFocus /></label>
+      <label className="dm-vc-field"><span>What's it about? <em>optional</em></span><textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={CONF_DESC_DM} rows={3} maxLength={200} /></label>
+      <div className="dm-vc-field"><span>Who can join</span>
+        <div className="dm-vc-seg" role="radiogroup" aria-label="Who can join">
+          <button type="button" role="radio" aria-checked={scope === "public"} className={scope === "public" ? "on" : ""} onClick={() => setScope("public")}><DSDM.IconifyIcon name="lucide:globe" size={16} color="currentColor" />Public</button>
+          <button type="button" role="radio" aria-checked={scope === "invited"} className={scope === "invited" ? "on" : ""} onClick={() => setScope("invited")}><DSDM.IconifyIcon name="lucide:users" size={16} color="currentColor" />Invited only</button>
+        </div>
+        <p className="dm-vc-fieldnote">{scope === "public" ? "Anyone with the link can join — no limit on participants." : "Only people you share the link with in Messages can join."}</p>
+      </div>
+      <div className="dm-sheet-btns">
+        <button type="button" className="dm-btn dm-btn-ghost dm-btn-grow" onClick={onClose}>Cancel</button>
+        <button type="button" className="dm-btn dm-btn-navy dm-btn-grow" disabled={!ok} onClick={() => onCreate({ name: name.trim(), desc: desc.trim(), scope })}><DSDM.IconifyIcon name="lucide:mic" size={18} color="#fff" />Start room</button>
+      </div>
+    </SheetDM>);
+}
+
+/* ---- settings (gear) ---- */
+function ConfSettingsSheetDM({ open, onClose, settings, onChange }) {
+  const rows = [
+    { key: "noise", label: "Noise suppression", sub: "Filter clinic background noise from your mic" },
+    { key: "joinMuted", label: "Join rooms muted", sub: "Turn your mic on when you're ready to speak" },
+    { key: "chime", label: "Join & leave chimes", sub: "A soft tone when people come and go" }];
+  return (
+    <SheetDM open={open} onClose={onClose} label="Conference settings" title="Conference settings">
+      <div className="dm-vc-settings">
+        {rows.map((r) =>
+          <div key={r.key} className="dm-vc-setrow">
+            <span className="dm-vc-setrow-main"><b>{r.label}</b><span>{r.sub}</span></span>
+            <button type="button" role="switch" aria-checked={!!settings[r.key]} aria-label={r.label} className={"dm-vc-switch" + (settings[r.key] ? " on" : "")} onClick={() => onChange({ ...settings, [r.key]: !settings[r.key] })}><i /></button>
+          </div>)}
+      </div>
+      <button type="button" className="dm-sheet-cancel" onClick={onClose}>Done</button>
+    </SheetDM>);
+}
+
+/* desktop right pane when the Conference tab has nothing selected */
+function ConfEmptyPaneDM({ onHost }) {
+  return (
+    <div className="dm-view dm-web-empty" data-screen-label="Conference · nothing selected">
+      <span className="dm-web-empty-ic"><DSDM.IconifyIcon name="lucide:audio-lines" size={34} color="var(--brand-navy)" /></span>
+      <b>Voice conference</b>
+      <p>Pick a room on the left to listen in, or host your own and share the link.</p>
+      <button type="button" className="dm-btn dm-btn-navy" onClick={onHost}><DSDM.IconifyIcon name="lucide:plus" size={18} color="#fff" />Host a room</button>
     </div>);
 }
 
@@ -1671,12 +2364,14 @@ function MenuViewDM({ counts, onNav, onScroll, onTestPush }) {
     { key: "archived", label: "Archived chats", icon: "lucide:archive", n: counts.archived },
     { key: "deleted", label: "Deleted chats", icon: "lucide:trash-2", n: counts.deleted },
     { key: "groups", label: "Group chats", icon: "lucide:users", n: counts.groups }];
-  const clickChrome = (sel) => { const b = document.querySelector(".dm-screen " + sel); if (b) b.click(); };
+  /* mobile: the shared chrome's own buttons; web: the TopNav bell / account menu */
+  const openNotifications = () => { const b = document.querySelector(DM_WEB ? "#pf-notif-bell" : ".dm-screen .m-iconbtn[aria-label='Notifications']"); if (b) b.click(); };
+  const openMainMenu = () => { const b = document.querySelector(DM_WEB ? ".pf-account-trigger" : ".dm-screen .m-burger"); if (b) b.click(); };
   return (
     <div className="dm-view" data-screen-label="Messages · Menu">
       <header className="dm-head dm-head-plain"><h1 className="dm-title">Menu</h1></header>
       <div className="dm-scroll" onScroll={onScroll}>
-        <button type="button" className="dm-me" onClick={() => goDM("ProfileMobile.html")}>
+        <button type="button" className="dm-me" onClick={() => goDM(hrefDM("ProfileMobile.html"))}>
           <span className="dm-facewrap" style={{ width: 56, height: 56 }}><DMFace name={ME_DM.name} src={ME_DM.avatar} size={56} /><span className="dm-online" /></span>
           <span className="dm-me-main">
             <span className="dm-me-name">{ME_DM.name}<DSDM.IconifyIcon name="lucide:badge-check" size={18} color="var(--reaction-like, #1D9BF0)" /></span>
@@ -1696,19 +2391,19 @@ function MenuViewDM({ counts, onNav, onScroll, onTestPush }) {
         </div>
         <div className="dm-sec-h">More</div>
         <div className="dm-menu">
-          <button type="button" className="dm-menu-row" onClick={() => clickChrome(".m-iconbtn[aria-label='Notifications']")}>
+          <button type="button" className="dm-menu-row" onClick={openNotifications}>
             <span className="dm-menu-ic"><DSDM.IconifyIcon name="lucide:bell" size={21} color="var(--brand-navy)" /></span>
             <span className="dm-menu-label">Notifications</span>
             <DSDM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
           </button>
-          <button type="button" className="dm-menu-row" onClick={() => goDM("NotificationSettings.html")}>
+          <button type="button" className="dm-menu-row" onClick={() => goDM(hrefDM("NotificationSettings.html"))}>
             <span className="dm-menu-ic"><DSDM.IconifyIcon name="lucide:settings-2" size={21} color="var(--brand-navy)" /></span>
             <span className="dm-menu-label">Message settings</span>
             <DSDM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
           </button>
-          <button type="button" className="dm-menu-row" onClick={() => clickChrome(".m-burger")}>
-            <span className="dm-menu-ic"><DSDM.IconifyIcon name="lucide:menu" size={21} color="var(--brand-navy)" /></span>
-            <span className="dm-menu-label">Main menu</span>
+          <button type="button" className="dm-menu-row" onClick={openMainMenu}>
+            <span className="dm-menu-ic"><DSDM.IconifyIcon name={DM_WEB ? "lucide:user-round" : "lucide:menu"} size={21} color="var(--brand-navy)" /></span>
+            <span className="dm-menu-label">{DM_WEB ? "Account menu" : "Main menu"}</span>
             <DSDM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
           </button>
         </div>
@@ -1778,7 +2473,7 @@ function DockDM({ tab, compact, unread, onTab }) {
     const on = t.key === tab;
     return (
       <button key={t.key} type="button" className={"dm-dock-tab" + (on ? " on" : "")} style={{ "--i": i }} aria-current={on ? "page" : undefined}
-        onClick={() => t.key === "home" ? goDM("NewsfeedMobile.html") : onTab(t.key)}>
+        onClick={() => t.key === "home" ? goDM(hrefDM("NewsfeedMobile.html")) : onTab(t.key)}>
         <span className="ic">
           <DSDM.IconifyIcon name={t.icon} size={24} color={on ? "#fff" : "var(--gray-900)"} />
           {t.key === "chats" && unread > 0 && !on && <span className="dot">{unread}</span>}
@@ -1795,20 +2490,58 @@ function DockDM({ tab, compact, unread, onTab }) {
     </nav>);
 }
 
+/* Desktop rail — the dock's four Messages tabs stacked down the left of the
+   card (Home is the TopNav's job there). */
+function RailDM({ tab, unread, requests, onTab }) {
+  return (
+    <nav className="dm-rail" aria-label="Messages navigation">
+      {DOCK_TABS_DM.slice(1).map((t) => {
+        const on = t.key === tab;
+        const n = t.key === "chats" ? unread : t.key === "menu" ? requests : 0;
+        return (
+          <button key={t.key} type="button" className={"dm-rail-tab" + (on ? " on" : "")} aria-current={on ? "page" : undefined} onClick={() => onTab(t.key)}>
+            <span className="ic">
+              <DSDM.IconifyIcon name={t.icon} size={24} color={on ? "#fff" : "var(--gray-700)"} />
+              {n > 0 && !on && <span className="dot">{n}</span>}
+            </span>
+            <span className="lbl">{t.label}</span>
+          </button>);
+      })}
+    </nav>);
+}
+/* Desktop right pane with nothing open */
+function EmptyPaneDM({ onCompose }) {
+  return (
+    <div className="dm-view dm-web-empty" data-screen-label="Messages · nothing selected">
+      <span className="dm-web-empty-ic"><DSDM.IconifyIcon name="lucide:messages-square" size={34} color="var(--brand-navy)" /></span>
+      <b>Your messages</b>
+      <p>Pick a conversation on the left, or start a new one.</p>
+      <button type="button" className="dm-btn dm-btn-navy" onClick={onCompose}>
+        <DSDM.IconifyIcon name="lucide:square-pen" size={18} color="#fff" />New message
+      </button>
+    </div>);
+}
+
 /* ---------------------------------------------------------------------------
    App
    --------------------------------------------------------------------------- */
 function MessagesAppDM() {
-  const [store, setStore] = useStateDM(loadStoreDM);
-  const [tab, setTab] = useStateDM(() => ["chats", "conference", "people", "menu"].includes(paramDM("tab")) ? paramDM("tab") : "chats");
+  const [store, setStore] = useStateDM(() => applyDeepLinkDM(loadStoreDM()));
+  const [tab, setTab] = useStateDM(() => ["chats", "conference", "people", "menu"].includes(paramDM("tab")) ? paramDM("tab") : paramDM("conf") ? "conference" : "chats");
   const [route, setRoute] = useStateDM(() => {
-    const t = paramDM("t");
+    const t = paramDM("t") || paramDM("id");
     if (t) {
-      const s = loadStoreDM();
-      if (s.conversations.some((c) => c.id === t)) return { name: "thread", id: t, from: "chats" };
+      const s = applyDeepLinkDM(loadStoreDM());
+      const c = s.conversations.find((x) => x.id === t || (x.kind === "dm" && x.personId === t));
+      if (c) return { name: "thread", id: c.id, from: "chats" };
     }
+    if (paramDM("conf")) return { name: "conf", id: paramDM("conf") };
+    if (paramDM("tab") === "conference") { const live = callApiDM().get(); if (live) return { name: "conf", id: live.id }; }
+    if (paramDM("compose") !== null) return { name: "compose" };
+    if (["archived", "groups", "requests", "deleted"].includes(paramDM("view"))) return { name: paramDM("view") };
     return { name: "list" };
   });
+  const [infoOpen, setInfoOpen] = useStateDM(() => DM_WEB && window.innerWidth >= 1200); // desktop chat-info column
   const [rowActions, setRowActions] = useStateDM(null);
   const [threadSearch, setThreadSearch] = useStateDM(false); // "Search in conversation" from the options sheet
   const [addMembersFor, setAddMembersFor] = useStateDM(null);
@@ -1817,6 +2550,16 @@ function MessagesAppDM() {
   const toastTimer = useRefDM(null);
   const [compact, onScroll] = useScrollDockDM(tab + ":" + route.name);
   const [push, setPush] = useStateDM(null);
+  /* voice conference — the live call is shared app-wide via voice-call.js */
+  const call = useVoiceCallDM();
+  const [rooms, setRooms] = useStateDM(loadRoomsDM);
+  const [hostOpen, setHostOpen] = useStateDM(null);            // { preset? } while the Host a room sheet is up
+  const [confSettingsOpen, setConfSettingsOpen] = useStateDM(false);
+  const [confSettings, setConfSettings] = useStateDM(loadConfSettingsDM);
+  const [reminders, setReminders] = useStateDM({});
+  const [peopleOpen, setPeopleOpen] = useStateDM(false);        // mobile participants sheet
+  useEffectDM(() => saveRoomsDM(rooms), [rooms]);
+  useEffectDM(() => { try { localStorage.setItem(CONF_SETTINGS_KEY_DM, JSON.stringify(confSettings)); } catch (e) {} }, [confSettings]);
   useEffectDM(() => { if (route.name !== "thread") setThreadSearch(false); }, [route.name, route.id]);
   const pushSeq = useRefDM(0);
 
@@ -1829,9 +2572,14 @@ function MessagesAppDM() {
       const url = new URL(window.location.href);
       if (route.name === "thread" || route.name === "profile") url.searchParams.set("t", route.id); else url.searchParams.delete("t");
       if (tab !== "chats") url.searchParams.set("tab", tab); else url.searchParams.delete("tab");
+      if (route.name === "conf") url.searchParams.set("conf", route.id); else url.searchParams.delete("conf");
       window.history.replaceState(null, "", url.pathname + (url.search || ""));
     } catch (e) {}
   }, [route, tab]);
+  /* the full stage owns the live call while it's on screen — the movable mini
+     card (voice-call.js) hides here and shows everywhere else */
+  useEffectDM(() => { const api = window.PFVoiceCall; if (api) api.setOwner(!!call && route.name === "conf" && route.id === call.id); }, [call && call.id, route.name, route.id]);
+  useEffectDM(() => () => { const api = window.PFVoiceCall; if (api) api.setOwner(false); }, []);
 
   /* roster: seed + externally-added people, deduped by id (a later override —
      e.g. an accepted request — replaces the seeded entry in place) */
@@ -1879,7 +2627,7 @@ function MessagesAppDM() {
   }, []);
 
   /* ---- mutations ---- */
-  const updateConv = (id, fn) => setStore((s) => ({ ...s, conversations: s.conversations.map((c) => c.id === id ? fn(c) : c) }));
+  const { updateConv, sendMessage, reactMessage, editMessage, deleteMessage, pinMessage } = useStoreActionsDM(setStore);
   const openThread = (c, from) => {
     updateConv(c.id, (x) => ({ ...x, unread: 0 }));
     setRoute({ name: "thread", id: c.id, from: from || route.name });
@@ -1891,20 +2639,6 @@ function MessagesAppDM() {
     setStore((s) => ({ ...s, conversations: [c].concat(s.conversations) }));
     setRoute({ name: "thread", id: c.id, from: "list" });
   };
-  const sendMessage = (id, m) => updateConv(id, (c) => ({ ...c, messages: c.messages.concat([{ id: midDM(), from: m.from, text: m.text || "", image: m.image || null, video: m.video || null, sticker: m.sticker || null, gif: m.gif || null, ts: Date.now(), reactions: {} }]) }));
-  const reactMessage = (id, mid, emoji) => updateConv(id, (c) => ({
-    ...c, messages: c.messages.map((m) => {
-      if (m.id !== mid) return m;
-      const r = { ...(m.reactions || {}) };
-      const list = (r[emoji] || []).slice();
-      const i = list.indexOf("me");
-      if (i >= 0) list.splice(i, 1); else list.push("me");
-      if (list.length) r[emoji] = list; else delete r[emoji];
-      return { ...m, reactions: r };
-    })
-  }));
-  const editMessage = (id, mid, text) => updateConv(id, (c) => ({ ...c, messages: c.messages.map((m) => m.id === mid ? { ...m, text, edited: true } : m) }));
-  const deleteMessage = (id, mid) => updateConv(id, (c) => ({ ...c, messages: c.messages.map((m) => m.id === mid ? { ...m, deleted: true, reactions: {} } : m) }));
 
   const togglePin = (c) => { updateConv(c.id, (x) => ({ ...x, pinned: !x.pinned })); toast(c.pinned ? "Unpinned" : "Pinned to top"); };
   const toggleArchive = (c) => { updateConv(c.id, (x) => ({ ...x, archived: !x.archived, pinned: false })); toast(c.archived ? "Moved back to chats" : "Chat archived"); };
@@ -1955,9 +2689,37 @@ function MessagesAppDM() {
     setAddMembersFor(null);
   };
 
+  /* ---- voice conference ---- */
+  const confSel = route.name === "conf" ? rooms.find((r) => r.id === route.id) || null : null;
+  const openConf = (c) => { setTab("conference"); setRoute({ name: "conf", id: c.id }); };
+  const joinConf = (c) => {
+    const host = confGetDM(peopleCtx)(c.hostId);
+    callApiDM().start({ id: c.id, name: c.name, hostId: c.hostId, hostName: c.mine ? ME_DM.name : (host ? host.name : ""), hostAvatar: c.mine ? ME_DM.avatar : (host ? host.avatar : null),
+      link: c.link, count: c.count, mine: !!c.mine, startedAt: confStartedAtDM(c), muted: confSettings.joinMuted !== false });
+    toast(c.mine ? "Your room is live" : "Joined " + c.name);
+  };
+  const leaveConf = () => {
+    const live = call; if (!live) return;
+    const room = rooms.find((r) => r.id === live.id);
+    callApiDM().end();
+    if (room && room.mine) {
+      setRooms((rs) => rs.map((r) => r.id !== room.id ? r : { ...r, live: false, ended: true, when: fmtConfDateDM(room.startedAt), duration: Date.now() - room.startedAt }));
+      toast("Room ended");
+    } else toast("You left " + live.name);
+  };
+  const createRoom = ({ name, desc, scope }) => {
+    const room = { id: "r-" + Date.now().toString(36), name, desc, scope, hostId: "me", mine: true, live: true, startedAt: Date.now(), count: 1, speakerIds: [], attendeeIds: [],
+      link: "profinity.app/voice/" + Math.random().toString(36).slice(2, 8) };
+    setRooms((rs) => [room].concat(rs));
+    setHostOpen(null);
+    joinConf(room);
+    openConf(room);
+  };
+
   /* ---- navigation ---- */
-  const goTab = (t) => { setTab(t); setRoute({ name: "list" }); };
+  const goTab = (t) => { setTab(t); if (t === "conference" && call) setRoute({ name: "conf", id: call.id }); else setRoute({ name: "list" }); };
   const back = () => {
+    if (route.name === "conf") { setRoute({ name: "list" }); return; }
     if (route.name === "profile") { setRoute({ name: "thread", id: route.id, from: route.from }); return; }
     if (route.name === "thread") {
       const from = route.from;
@@ -1969,50 +2731,72 @@ function MessagesAppDM() {
     setRoute({ name: "list" });
   };
 
-  const showDock = route.name !== "thread" && route.name !== "profile" && route.name !== "compose";
+  const showDock = route.name !== "thread" && route.name !== "profile" && route.name !== "compose" && !(route.name === "conf" && confSel);
   const counts = { requests: store.requests.length, archived: archived.length, deleted: store.deleted.length, groups: active.filter((c) => c.kind === "group").length };
 
-  let view = null;
-  if (route.name === "thread" && current) {
-    view = <ThreadViewDM key={current.id} c={current} onBack={back} onProfile={() => setRoute({ name: "profile", id: current.id, from: route.from })}
-      onSend={sendMessage} onReact={reactMessage} onEdit={editMessage} onDelete={deleteMessage}
-      onMenu={() => setRowActions(current)} toast={toast} searchOpen={threadSearch} onCloseSearch={() => setThreadSearch(false)} />;
-  } else if (route.name === "profile" && current) {
-    view = <ProfileViewDM c={current} onBack={back} onToggleMute={() => toggleMute(current)} onAddMembers={() => setAddMembersFor(current)}
-      onLeave={() => setConfirm({ kind: "leave", c: current })} onOpenThreadWith={(id) => openThreadWith(id)} toast={toast} />;
-  } else if (route.name === "compose") {
-    view = <ComposeViewDM people={allPeople} onBack={() => setRoute({ name: "list" })} onCreate={createConversation} />;
-  } else if (route.name === "archived") {
-    view = <ListViewDM title="Archived chats" sub={archived.length ? archived.length + " archived" : null} onBack={back} convs={archived} onScroll={onScroll}
+  /* The detail (thread / profile) and the list it sits over are built apart so
+     the desktop layout can show both at once; the phone shows one or the other. */
+  const detail =
+    route.name === "conf" && confSel ?
+      <ConferenceStageDM key={confSel.id} c={confSel} call={call} onJoin={() => joinConf(confSel)} onLeave={leaveConf}
+        onToggleMute={() => callApiDM().toggleMute()} onToggleHand={() => callApiDM().toggleHand()} onClose={back}
+        onParticipants={() => DM_WEB ? setInfoOpen((v) => !v) : setPeopleOpen(true)} reminded={!!reminders[confSel.id]}
+        onRemind={() => { setReminders((r) => ({ ...r, [confSel.id]: !r[confSel.id] })); toast(reminders[confSel.id] ? "Reminder removed" : "We'll remind you"); }}
+        toast={toast} onHostAgain={() => setHostOpen({ preset: confSel })} /> :
+    route.name === "thread" && current ?
+      <ThreadViewDM key={current.id} c={current} onBack={back} onProfile={() => DM_WEB ? setInfoOpen((v) => !v) : setRoute({ name: "profile", id: current.id, from: route.from })}
+        onSend={sendMessage} onReact={reactMessage} onEdit={editMessage} onDelete={deleteMessage} onPin={pinMessage}
+        onMenu={() => setRowActions(current)} toast={toast} searchOpen={threadSearch} onCloseSearch={() => setThreadSearch(false)}
+        onInfo={() => setInfoOpen((v) => !v)} infoOpen={infoOpen} /> :
+    route.name === "profile" && current ?
+      <ProfileViewDM c={current} onBack={back} onToggleMute={() => toggleMute(current)} onAddMembers={() => setAddMembersFor(current)}
+        onLeave={() => setConfirm({ kind: "leave", c: current })} onOpenThreadWith={(id) => openThreadWith(id)} toast={toast} /> :
+    null;
+  const listViewFor = (name, t) => {
+    if (name === "compose") return <ComposeViewDM people={allPeople} onBack={() => setRoute({ name: "list" })} onCreate={createConversation} />;
+    if (name === "archived") return <ListViewDM title="Archived chats" sub={archived.length ? archived.length + " archived" : null} onBack={back} convs={archived} onScroll={onScroll}
       onOpen={(c) => openThread(c, "archived")} onActions={setRowActions} emptyIcon="lucide:archive" emptyTitle="No archived chats" emptyBody="Hold a conversation and choose Archive to tuck it away here." />;
-  } else if (route.name === "groups") {
-    view = <ListViewDM title="Group chats" sub={counts.groups + " groups"} onBack={back} convs={active.filter((c) => c.kind === "group")} onScroll={onScroll}
+    if (name === "groups") return <ListViewDM title="Group chats" sub={counts.groups + " groups"} onBack={back} convs={active.filter((c) => c.kind === "group")} onScroll={onScroll}
       onOpen={(c) => openThread(c, "groups")} onActions={setRowActions} emptyIcon="lucide:users" emptyTitle="No group chats" emptyBody="Pick two or more people from the compose button to start one." />;
-  } else if (route.name === "requests") {
-    view = <RequestsViewDM requests={store.requests} onBack={back} onAccept={acceptRequest} onDecline={declineRequest} onScroll={onScroll} />;
-  } else if (route.name === "deleted") {
-    view = <DeletedViewDM deleted={store.deleted} onBack={back} onRestore={restoreConv} onScroll={onScroll} />;
-  } else if (tab === "people") {
-    view = <PeopleViewDM people={allPeople} onOpenThreadWith={(id) => { openThreadWith(id); setRoute((r) => ({ ...r, from: "people" })); }} onScroll={onScroll} />;
-  } else if (tab === "conference") {
-    view = <ConferenceViewDM onScroll={onScroll} toast={toast} />;
-  } else if (tab === "menu") {
-    view = <MenuViewDM counts={counts} onNav={(k) => setRoute({ name: k })} onScroll={onScroll} onTestPush={() => { setTab("chats"); setRoute({ name: "list" }); window.setTimeout(firePush, 350); }} />;
-  } else {
-    view = <ChatsViewDM convs={active} archivedCount={archived.length} requestsCount={store.requests.length}
+    if (name === "requests") return <RequestsViewDM requests={store.requests} onBack={back} onAccept={acceptRequest} onDecline={declineRequest} onScroll={onScroll} />;
+    if (name === "deleted") return <DeletedViewDM deleted={store.deleted} onBack={back} onRestore={restoreConv} onScroll={onScroll} />;
+    if (t === "people") return <PeopleViewDM people={allPeople} onOpenThreadWith={(id) => { openThreadWith(id); setRoute((r) => ({ ...r, from: "people" })); }} onScroll={onScroll} />;
+    if (t === "conference") return <ConferenceViewDM rooms={rooms} call={call} selectedId={route.name === "conf" ? route.id : null} onOpen={openConf}
+      onHost={() => setHostOpen({})} onSettings={() => setConfSettingsOpen(true)} onScroll={onScroll} />;
+    if (t === "menu") return <MenuViewDM counts={counts} onNav={(k) => setRoute({ name: k })} onScroll={onScroll} onTestPush={() => { setTab("chats"); setRoute({ name: "list" }); window.setTimeout(firePush, 350); }} />;
+    return <ChatsViewDM convs={active} archivedCount={archived.length} requestsCount={store.requests.length}
       onOpen={(c) => openThread(c, "list")} onOpenPerson={(id) => openThreadWith(id)} onActions={setRowActions} onCompose={() => setRoute({ name: "compose" })}
       onArchived={() => setRoute({ name: "archived" })} onRequests={() => setRoute({ name: "requests" })} onScroll={onScroll} />;
-  }
+  };
+  const view = detail || listViewFor(route.name, tab);
+  /* desktop: the list column stays put while a thread is open beside it — it
+     shows whichever list the thread was opened from */
+  const inDetail = route.name === "thread" || route.name === "profile" || (route.name === "conf" && !!confSel);
+  const showInfo = DM_WEB && infoOpen && ((route.name === "thread" && !!current) || (route.name === "conf" && !!confSel && !confSel.ended));
+  const sideView = !inDetail ? view :
+    listViewFor(["archived", "groups", "requests", "deleted"].includes(route.from) ? route.from : "list", route.from === "people" ? "people" : tab);
 
   const ra = rowActions ? convs.find((c) => c.id === rowActions.id) : null;
   const addFor = addMembersFor ? convs.find((c) => c.id === addMembersFor.id) : null;
 
   return (
     <PeopleCtxDM.Provider value={peopleCtx}>
-      <div className={"dm-screen" + (showDock ? " has-dock" : "")} data-screen-label="Messages (mobile)">
-        {MobileChromeDM && <MobileChromeDM />}
-        <div className="dm-main">{view}</div>
-        {showDock && <DockDM tab={tab} compact={compact} unread={unreadTotal} onTab={goTab} />}
+    <ActiveConvCtxDM.Provider value={inDetail ? route.id : null}>
+      <div className={"dm-screen" + (DM_WEB ? " dm-web" + (detail ? " has-detail" : "") + (showInfo ? " has-info" : "") : (showDock ? " has-dock" : "")) + (route.name === "conf" && confSel ? " has-stage" : "")} data-screen-label={DM_WEB ? "Messages (web)" : "Messages (mobile)"}>
+        {!DM_WEB && MobileChromeDM && <MobileChromeDM />}
+        {DM_WEB ?
+          <>
+            <RailDM tab={tab} unread={unreadTotal} requests={store.requests.length} onTab={goTab} />
+            <section className="dm-web-side" aria-label="Conversations"><div className="dm-main">{sideView}</div></section>
+            <section className="dm-web-main" aria-label="Conversation"><div className="dm-main">{detail || (tab === "conference" ? <ConfEmptyPaneDM onHost={() => setHostOpen({})} /> : <EmptyPaneDM onCompose={() => setRoute({ name: "compose" })} />)}</div></section>
+            {showInfo && route.name === "conf" && <ConfParticipantsDM key={confSel.id} c={confSel} call={call} />}
+            {showInfo && route.name === "thread" &&
+              <InfoPanelDM key={current.id} c={current} onToggleMute={() => toggleMute(current)} onSearch={() => setThreadSearch(true)} onMore={() => setRowActions(current)}
+                onCustomize={(patch) => updateConv(current.id, (c) => ({ ...c, ...patch }))} onOpenThreadWith={(id) => openThreadWith(id)} onAddMembers={() => setAddMembersFor(current)}
+                onLeave={() => setConfirm({ kind: "leave", c: current })} onDelete={() => setConfirm({ kind: "delete", c: current })} toast={toast} />}
+          </> :
+          <div className="dm-main">{view}</div>}
+        {!DM_WEB && showDock && <DockDM tab={tab} compact={compact} unread={unreadTotal} onTab={goTab} />}
 
         {/* conversation long-press actions */}
         <SheetDM open={!!ra} onClose={() => setRowActions(null)} label={route.name === "thread" ? "Conversation settings" : "Conversation options"}>
@@ -2060,10 +2844,18 @@ function MessagesAppDM() {
             </>}
         </SheetDM>
 
+        {/* voice conference sheets */}
+        <HostRoomSheetDM open={!!hostOpen} preset={hostOpen && hostOpen.preset} onClose={() => setHostOpen(null)} onCreate={createRoom} />
+        <ConfSettingsSheetDM open={confSettingsOpen} onClose={() => setConfSettingsOpen(false)} settings={confSettings} onChange={setConfSettings} />
+        <SheetDM open={peopleOpen && !!confSel} onClose={() => setPeopleOpen(false)} label="Participants" className="dm-sheet-tall dm-vc-peoplesheet">
+          {confSel && <ConfParticipantsDM c={confSel} call={call} onClose={() => setPeopleOpen(false)} />}
+        </SheetDM>
+
         <ToastDM toast={toastState} />
         {push && <PushBannerDM key={push.id} push={push} onClose={() => setPush(null)}
           onOpen={() => { const c = store.conversations.find((x) => x.id === push.convId); setPush(null); setTab("chats"); if (c) openThread(c, "list"); else openThreadWith(push.from); }} />}
       </div>
+    </ActiveConvCtxDM.Provider>
     </PeopleCtxDM.Provider>);
 }
 
@@ -2093,6 +2885,17 @@ function MessagesPageDM() {
   const mobile = useIsMobileDM();
   const scale = useDeviceScaleDM();
   const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
+  if (DM_WEB) {
+    /* Desktop: DS TopNav, then the messenger as a full-height three-column card */
+    return (
+      <div className="app dm-web-app" style={vars}>
+        <DSDM.TopNav active="Messages" user={{ name: ME_DM.name, role: ME_DM.role, avatar: ME_DM.avatar }} logoSrc="assets/profinity-icon-purple-gold.png" onNavigate={navigateWebDM}
+          style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />
+        <div className="dm-web-page">
+          <div className="dm-web-card"><MessagesAppDM /></div>
+        </div>
+      </div>);
+  }
   if (mobile) return <div className="app dm-app" style={vars}><MessagesAppDM /></div>;
   return (
     <div className="app device-stage dm-app" style={vars}>
@@ -2102,4 +2905,179 @@ function MessagesPageDM() {
     </div>);
 }
 
-ReactDOM.createRoot(document.getElementById("pf-root")).render(<MessagesPageDM />);
+/* ---------------------------------------------------------------------------
+   Header chrome for every other desktop page. web-messages-chrome.js loads
+   this bundle lazily with PF_DM_NO_MOUNT + PF_DM_WEB and calls
+   PFMessagesDM.mountChrome(): the TopNav chat button's "Chats" dropdown and
+   Messenger-style floating chat popups, on the same store as the page.
+   --------------------------------------------------------------------------- */
+const DROP_TABS_DM = [{ key: "all", label: "All" }, { key: "unread", label: "Unread" }, { key: "groups", label: "Groups" }];
+
+function DropRowDM({ c, onOpen }) {
+  const people = usePeopleDM();
+  const last = lastMsgDM(c);
+  const name = convNameDM(c, people);
+  return (
+    <button type="button" className={"dm-dd-row" + (c.unread ? " unread" : "")} onClick={() => onOpen(c)} aria-label={"Open chat with " + name + (c.unread ? ", " + c.unread + " unread" : "")}>
+      <ConvAvatarDM c={c} size={52} />
+      <span className="dm-dd-main">
+        <span className="dm-dd-name">{name}</span>
+        <span className="dm-dd-sub"><span className="dm-dd-preview">{previewDM(c, people)}</span>{last && <span className="dm-dd-time"> · {fmtListTimeDM(last.ts)}</span>}</span>
+      </span>
+      {c.muted ? <DSDM.IconifyIcon name="lucide:bell-off" size={16} color="var(--gray-400)" /> : c.unread > 0 ? <span className="dm-dd-dot" aria-hidden="true" /> : null}
+    </button>);
+}
+
+function ChatsDropdownDM({ store, onOpen, onClose, onMarkAllRead }) {
+  const people = usePeopleDM();
+  const [tab, setTab] = useStateDM("all");
+  const [q, setQ] = useStateDM("");
+  const [menu, setMenu] = useStateDM(false);
+  const ref = useRefDM(null);
+  useEffectDM(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target) && !(e.target.closest && e.target.closest("#pf-msg-btn"))) onClose(); };
+    document.addEventListener("keydown", onKey); document.addEventListener("mousedown", onDoc);
+    return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("mousedown", onDoc); };
+  }, []);
+  const active = store.conversations.filter((c) => !c.archived);
+  const list = sortConvsDM(active.filter((c) => (tab !== "unread" || c.unread) && (tab !== "groups" || c.kind === "group") && (!q || convNameDM(c, people).toLowerCase().includes(q.toLowerCase()))));
+  const reqs = store.requests;
+  const reqNames = reqs.map((r) => stripHonorificDM((people.get(r.personId) || {}).name || "Someone").split(" ")[0]);
+  const counts = { all: active.length, unread: active.filter((c) => c.unread > 0).length, groups: active.filter((c) => c.kind === "group").length };
+  return (
+    <div className="dm-dd" role="dialog" aria-label="Chats" ref={ref}>
+      <div className="dm-dd-head">
+        <h2>Chats</h2>
+        <span className="dm-dd-tools">
+          <span className="dm-dd-menuwrap">
+            <button type="button" className="dm-iconbtn sm" aria-label="More options" aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
+              <DSDM.IconifyIcon name="lucide:more-horizontal" size={20} color="var(--text-heading)" />
+            </button>
+            {menu &&
+              <div className="dm-dd-menu" role="menu">
+                <button type="button" role="menuitem" onClick={() => { onMarkAllRead(); setMenu(false); }}>Mark all as read</button>
+                <button type="button" role="menuitem" onClick={() => goDM("MessagesWeb.html?view=archived")}>Archived chats</button>
+                <button type="button" role="menuitem" onClick={() => goDM("MessagesWeb.html?view=requests")}>Message requests</button>
+                <button type="button" role="menuitem" onClick={() => goDM("NotificationSettingsWeb.html")}>Message settings</button>
+              </div>}
+          </span>
+          <button type="button" className="dm-iconbtn sm" aria-label="See all in Messages" onClick={() => goDM("MessagesWeb.html")}>
+            <DSDM.IconifyIcon name="lucide:maximize-2" size={18} color="var(--text-heading)" />
+          </button>
+          <button type="button" className="dm-iconbtn sm" aria-label="New message" onClick={() => goDM("MessagesWeb.html?compose=1")}>
+            <DSDM.IconifyIcon name="lucide:square-pen" size={19} color="var(--text-heading)" />
+          </button>
+        </span>
+      </div>
+      <SearchDM value={q} onChange={setQ} placeholder="Search Messages" />
+      <div className="dm-dd-tabs" role="tablist" aria-label="Filter chats">
+        {DROP_TABS_DM.map((t) =>
+          <button key={t.key} type="button" role="tab" aria-selected={tab === t.key} className={"dm-dd-tab" + (tab === t.key ? " on" : "")} onClick={() => setTab(t.key)}>
+            {t.label}{t.key !== "all" && counts[t.key] > 0 && <span className="dm-dd-tab-n">{counts[t.key]}</span>}
+          </button>)}
+      </div>
+      <div className="dm-dd-list">
+        {reqs.length > 0 && !q && tab === "all" &&
+          <button type="button" className="dm-dd-row dm-dd-req" onClick={() => goDM("MessagesWeb.html?view=requests")}>
+            <span className="dm-dd-reqic"><DSDM.IconifyIcon name="lucide:mail-plus" size={22} color="var(--text-heading)" /></span>
+            <span className="dm-dd-main">
+              <span className="dm-dd-name">New message requests</span>
+              <span className="dm-dd-sub"><b>From {reqNames[0]}{reqNames.length > 1 ? " and " + (reqNames.length - 1) + " more" : ""}</b></span>
+            </span>
+            <DSDM.IconifyIcon name="lucide:chevron-right" size={18} color="var(--gray-500)" />
+          </button>}
+        {list.map((c) => <DropRowDM key={c.id} c={c} onOpen={onOpen} />)}
+        {list.length === 0 &&
+          <div className="dm-empty"><b>{q ? "No conversations match" : tab === "unread" ? "You're all caught up" : "No group chats yet"}</b></div>}
+      </div>
+      <a className="dm-dd-foot" href="MessagesWeb.html" onClick={(e) => { e.preventDefault(); goDM("MessagesWeb.html"); }}>See all in Messages</a>
+    </div>);
+}
+
+function ChatPopupDM({ c, index, actions, toast, onMinimize, onClose }) {
+  const people = usePeopleDM();
+  const name = convNameDM(c, people);
+  const expand = () => goDM("MessagesWeb.html?t=" + c.id);
+  return (
+    <div className="dm-popup" style={{ right: 88 + index * 344 }} role="dialog" aria-label={"Chat with " + name}>
+      <div className="dm-screen dm-web dm-popup-screen">
+        <div className="dm-main">
+          <ThreadViewDM key={c.id} c={c} popup onBack={onClose} onProfile={expand} onMenu={expand}
+            onSend={actions.sendMessage} onReact={actions.reactMessage} onEdit={actions.editMessage} onDelete={actions.deleteMessage} onPin={actions.pinMessage}
+            toast={toast} searchOpen={false} onMinimize={onMinimize} onClose={onClose} />
+        </div>
+      </div>
+    </div>);
+}
+
+function MessagesChromeDM({ api, initialOpen }) {
+  const [store, setStore] = useStateDM(loadStoreDM);
+  const [open, setOpen] = useStateDM(!!initialOpen);
+  const [popups, setPopups] = useStateDM([]); // [{ id, min }], newest first, max 3
+  const [toastState, setToastState] = useStateDM(null);
+  const toastTimer = useRefDM(null);
+  const actions = useStoreActionsDM(setStore);
+  useEffectDM(() => saveStoreDM(store), [store]);
+  useEffectDM(() => {
+    const onStorage = (e) => { if (!e.key || e.key === STORE_KEY_DM) setStore(loadStoreDM()); };
+    window.addEventListener("storage", onStorage);
+    return () => { window.removeEventListener("storage", onStorage); if (toastTimer.current) window.clearTimeout(toastTimer.current); };
+  }, []);
+  const allPeople = useMemoDM(() => {
+    const map = new Map();
+    PEOPLE_SEED_DM.concat(store.people).forEach((p) => map.set(p.id, map.has(p.id) ? { ...map.get(p.id), ...p } : p));
+    return Array.from(map.values());
+  }, [store.people]);
+  const peopleCtx = useMemoDM(() => {
+    const map = {}; allPeople.forEach((p) => { map[p.id] = p; }); map.me = ME_DM;
+    return { get: (id) => map[id] || null, all: allPeople };
+  }, [allPeople]);
+  const toast = useCallbackDM((text) => {
+    setToastState({ text, id: Date.now() });
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToastState(null), 1900);
+  }, []);
+  const openPopup = useCallbackDM((c) => {
+    actions.markRead(c.id);
+    setPopups((all) => [{ id: c.id, min: false }].concat(all.filter((p) => p.id !== c.id)).slice(0, 3));
+    setOpen(false);
+  }, [actions]);
+  useEffectDM(() => {
+    api.current = {
+      toggle: () => setOpen((v) => !v), open: () => setOpen(true), close: () => setOpen(false),
+      openThread: (id) => { const c = store.conversations.find((x) => x.id === id); if (c) openPopup(c); }
+    };
+  });
+  const setMin = (id, min) => setPopups((all) => all.map((p) => p.id === id ? { ...p, min } : p));
+  const closePopup = (id) => setPopups((all) => all.filter((p) => p.id !== id));
+  const markAllRead = () => { setStore((s) => ({ ...s, conversations: s.conversations.map((c) => c.unread ? { ...c, unread: 0 } : c) })); toast("All caught up"); };
+  const shown = popups.filter((p) => !p.min), mins = popups.filter((p) => p.min);
+  const convOf = (id) => store.conversations.find((x) => x.id === id);
+  return (
+    <PeopleCtxDM.Provider value={peopleCtx}>
+      {open && <ChatsDropdownDM store={store} onOpen={openPopup} onClose={() => setOpen(false)} onMarkAllRead={markAllRead} />}
+      {shown.map((p, i) => { const c = convOf(p.id); return c ? <ChatPopupDM key={p.id} c={c} index={i} actions={actions} toast={toast} onMinimize={() => setMin(p.id, true)} onClose={() => closePopup(p.id)} /> : null; })}
+      {mins.length > 0 &&
+        <div className="dm-popup-mins" aria-label="Minimised chats">
+          {mins.map((p) => { const c = convOf(p.id); if (!c) return null; return (
+            <span key={p.id} className="dm-popup-min">
+              <button type="button" className="dm-popup-min-btn" aria-label={"Open chat with " + convNameDM(c, peopleCtx)} onClick={() => setMin(p.id, false)}>
+                <ConvAvatarDM c={c} size={48} dot={false} />
+              </button>
+              <button type="button" className="dm-popup-min-x" aria-label="Close chat" onClick={() => closePopup(p.id)}><DSDM.IconifyIcon name="lucide:x" size={12} color="#fff" /></button>
+            </span>); })}
+        </div>}
+      <div className="dm-screen dm-web dm-chrome-toast" aria-hidden={!toastState}><ToastDM toast={toastState} /></div>
+    </PeopleCtxDM.Provider>);
+}
+
+function mountChromeDM(el, opts) {
+  const api = { current: null };
+  ReactDOM.createRoot(el).render(<MessagesChromeDM api={api} initialOpen={!!(opts && opts.open)} />);
+  const call = (k) => (arg) => { if (api.current) api.current[k](arg); };
+  return { toggle: call("toggle"), open: call("open"), close: call("close"), openThread: call("openThread") };
+}
+window.PFMessagesDM = { mountChrome: mountChromeDM, load: loadStoreDM, save: saveStoreDM, STORE_KEY: STORE_KEY_DM, SEED_VERSION: SEED_VERSION_DM };
+
+if (!window.PF_DM_NO_MOUNT) ReactDOM.createRoot(document.getElementById("pf-root")).render(<MessagesPageDM />);

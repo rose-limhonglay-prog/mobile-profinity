@@ -42,7 +42,6 @@ const CS_WEB_HREFS = {
   "PaymentsMobile.html": "AccountSettingsWeb.html",
   "InvoicesMobile.html": "AccountSettingsWeb.html",
   "LearningMobile.html": "MyLearning.html",
-  "WaysToEarn.html": "RewardsWeb.html",
   "MyRewards.html": "RewardsWeb.html"
 };
 function hrefCS(href) {
@@ -155,9 +154,6 @@ const CS_TOPICS = [{
   icon: "lucide:gift",
   reply: "Points normally land within a minute of an action. If something's missing, tell me what you did and roughly when — I'll check the ledger.",
   links: [{
-    label: "Ways to earn",
-    href: "WaysToEarn.html"
-  }, {
     label: "My rewards",
     href: "MyRewards.html"
   }]

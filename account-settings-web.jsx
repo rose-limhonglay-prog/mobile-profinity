@@ -35,7 +35,8 @@ function useDarkModeASW() {
 const ASW_ITEMS_BEFORE = [
   { label: "Edit Profile", icon: "lucide:user", desc: "Update your photo, bio and credentials.", href: "Profile.html" },
   { label: "My Saved", icon: "lucide:bookmark", desc: "Posts, lessons and events you've bookmarked.", href: null },
-  { label: "Notifications", icon: "lucide:bell", desc: "Choose what updates you receive and how.", href: "NotificationSettingsWeb.html" }
+  { label: "Notifications", icon: "lucide:bell", desc: "Choose what updates you receive and how.", href: "NotificationSettingsWeb.html" },
+  { label: "Payments", icon: "lucide:credit-card", desc: "Subscription, saved cards and invoices.", href: "PaymentsWeb.html" }
 ];
 
 const ASW_ITEMS_AFTER = [

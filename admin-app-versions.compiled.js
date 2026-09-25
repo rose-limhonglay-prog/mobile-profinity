@@ -86,9 +86,15 @@ const APV_NAV = [{
   icon: "lucide:badge-check",
   label: "Badges"
 }, {
+  icon: "lucide:clipboard-list",
+  label: "Quizzes & Surveys"
+}, {
   icon: "lucide:trophy",
   label: "Loyalty & Gamification",
   chevron: true
+}, {
+  icon: "lucide:scroll-text",
+  label: "Points Ledger"
 }, {
   icon: "lucide:receipt-text",
   label: "Transactions",
@@ -116,7 +122,9 @@ const APV_NAV_LINKS = {
   "App Versions": "AdminAppVersions.html",
   "Push Notification": "AdminPushNotifications.html",
   "Badges": "AdminBadges.html",
+  "Quizzes & Surveys": "AdminQuizEditor.html",
   "Loyalty & Gamification": "AdminActionsEditor.html",
+  "Points Ledger": "AdminAuditLedger.html",
   "Transactions": "AdminTransactions.html",
   "Courses": "AdminCourses.html",
   "Community": "AdminCommunity.html"

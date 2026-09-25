@@ -60,7 +60,7 @@ body { background: var(--surface-page); -webkit-font-smoothing: antialiased; tex
 .apv-user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
 .apv-header > iconify-icon { color: var(--gray-500); font-size: 20px; cursor: pointer; }
 
-.apv-content { padding: 32px; display: flex; flex-direction: column; gap: 32px; max-width: 1180px; }
+.apv-content { padding: 32px; display: flex; flex-direction: column; gap: 32px; }
 
 /* --------------------------------------------------------------- topbar row */
 .apv-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }

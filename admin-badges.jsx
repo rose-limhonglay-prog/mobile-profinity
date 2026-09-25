@@ -7,6 +7,15 @@
    =========================================================================== */
 const { useState: useStateBDG, useMemo: useMemoBDG } = React;
 
+function AdmInfo({ text }) {
+  return (
+    <span className="adm-info" tabIndex={0} role="img" aria-label={text}>
+      <iconify-icon icon="lucide:info"></iconify-icon>
+      <span className="adm-info-tip" aria-hidden="true">{text}</span>
+    </span>
+  );
+}
+
 function goBDG(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
 
 /* ------------------------------------------------------------- sidebar */
@@ -24,7 +33,9 @@ const BDG_NAV = [
   { icon: "lucide:smartphone", label: "App Versions" },
   { icon: "lucide:bell", label: "Push Notification" },
   { icon: "lucide:badge-check", label: "Badges", active: true },
+  { icon: "lucide:clipboard-list", label: "Quizzes & Surveys" },
   { icon: "lucide:trophy", label: "Loyalty & Gamification", chevron: true },
+  { icon: "lucide:scroll-text", label: "Points Ledger" },
   { icon: "lucide:receipt-text", label: "Transactions", chevron: true },
   { icon: "lucide:table-2", label: "Courses", chevron: true },
   { icon: "lucide:users", label: "Community", chevron: true },
@@ -43,7 +54,9 @@ const BDG_NAV_LINKS = {
   "Analytics": "AdminAnalytics.html",
   "App Versions": "AdminAppVersions.html",
   "Push Notification": "AdminPushNotifications.html",
+  "Quizzes & Surveys": "AdminQuizEditor.html",
   "Loyalty & Gamification": "AdminActionsEditor.html",
+  "Points Ledger": "AdminAuditLedger.html",
   "Transactions": "AdminTransactions.html",
   "Courses": "AdminCourses.html",
   "Community": "AdminCommunity.html",
@@ -311,9 +324,9 @@ function BDGToast({ message }) {
 /* ------------------------------------------------------------- dashboard */
 function BDGDashboardView({ badges, assignments, rules, openCreate, openDetail, goLibrary }) {
   const stats = [
-    { label: "Total Badges", value: badges.length, icon: "lucide:award", color: "var(--brand-navy)", bg: "var(--gray-100)" },
-    { label: "Active Rules", value: rules.filter((r) => r.active).length, icon: "lucide:zap", color: "var(--success)", bg: "var(--success-bg)" },
-    { label: "Total Assignments", value: assignments.filter((a) => a.status === "Active").length, icon: "lucide:users", color: "var(--ai-purple)", bg: "var(--ai-purple-100)" },
+    { label: "Total Badges", tip: "Every badge that exists in the catalogue, whether or not anyone has earned it yet.", value: badges.length, icon: "lucide:award", color: "var(--brand-navy)", bg: "var(--gray-100)" },
+    { label: "Active Rules", tip: "Automated rules currently switched on. Each one awards its badge as soon as a member meets the criteria.", value: rules.filter((r) => r.active).length, icon: "lucide:zap", color: "var(--success)", bg: "var(--success-bg)" },
+    { label: "Total Assignments", tip: "Badges currently held by members, counting manual awards and automated ones.", value: assignments.filter((a) => a.status === "Active").length, icon: "lucide:users", color: "var(--ai-purple)", bg: "var(--ai-purple-100)" },
   ];
 
   const recent = useMemoBDG(() => {
@@ -339,7 +352,7 @@ function BDGDashboardView({ badges, assignments, rules, openCreate, openDetail, 
               <iconify-icon icon={s.icon}></iconify-icon>
             </span>
             <div className="bdg-stat-body">
-              <div className="bdg-stat-label">{s.label}</div>
+              <div className="bdg-stat-label">{s.label}{s.tip && <AdmInfo text={s.tip} />}</div>
               <div className="bdg-stat-value" style={s.label === "Active Rules" ? { color: "var(--success)" } : undefined}>{s.value}</div>
             </div>
           </div>
@@ -584,15 +597,15 @@ function BDGDetailView({ badge, assignments, rules, onBack, onRevoke, onEdit }) 
       <div className="bdg-stat-grid bdg-stat-grid-3">
         <div className="bdg-stat-card">
           <span className="bdg-stat-icon" style={{ background: "var(--gray-100)", color: "var(--brand-navy)" }}><iconify-icon icon="lucide:users"></iconify-icon></span>
-          <div className="bdg-stat-body"><div className="bdg-stat-label">Total Awarded</div><div className="bdg-stat-value">{active.length}</div></div>
+          <div className="bdg-stat-body"><div className="bdg-stat-label">Total Awarded<AdmInfo text="Members who currently hold this badge." /></div><div className="bdg-stat-value">{active.length}</div></div>
         </div>
         <div className="bdg-stat-card">
           <span className="bdg-stat-icon" style={{ background: "var(--brand-gold-100)", color: "var(--brand-gold)" }}><iconify-icon icon="lucide:hand"></iconify-icon></span>
-          <div className="bdg-stat-body"><div className="bdg-stat-label">Manual</div><div className="bdg-stat-value">{manualCount}</div></div>
+          <div className="bdg-stat-body"><div className="bdg-stat-label">Manual<AdmInfo text="Awards of this badge given by hand by an admin." /></div><div className="bdg-stat-value">{manualCount}</div></div>
         </div>
         <div className="bdg-stat-card">
           <span className="bdg-stat-icon" style={{ background: "var(--ai-purple-100)", color: "var(--ai-purple)" }}><iconify-icon icon="lucide:zap"></iconify-icon></span>
-          <div className="bdg-stat-body"><div className="bdg-stat-label">Automated</div><div className="bdg-stat-value">{autoCount}</div></div>
+          <div className="bdg-stat-body"><div className="bdg-stat-label">Automated<AdmInfo text="Awards of this badge granted automatically by a rule." /></div><div className="bdg-stat-value">{autoCount}</div></div>
         </div>
       </div>
 

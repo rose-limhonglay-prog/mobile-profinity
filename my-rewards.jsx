@@ -1,6 +1,7 @@
 /* ===========================================================================
    PROfinity — Katy · My Rewards · iPhone 17 Pro Max
-   Every reward Katy has redeemed in the Rewards Store, newest first: course
+   Every course discount Katy holds (unlocked along the Milestone Path; the
+   Rewards Store was removed 2026-09-24), newest first: course
    thumbnail, discount, voucher code with one-tap copy, redeemed date and a
    Ready / Used status (Used once the course shows up in pf-purchased-courses).
    Tapping a row opens a detail sheet with the full code, copy, and "Use it
@@ -108,7 +109,7 @@ function MyRewardsScreen() {
       <div className="ml-top">
         <button className="ml-back" aria-label="Back" onClick={() => goMR("RewardsDashboard.html")}><DSMR.IconifyIcon name="lucide:chevron-left" size={24} color="var(--gray-900)" /></button>
         <h1>My Rewards</h1>
-        <button className="ml-top-action" aria-label="Rewards Store" onClick={() => goMR("RewardsStore.html")}><DSMR.IconifyIcon name="lucide:shopping-bag" size={18} color="var(--gray-900)" /></button>
+        <button className="ml-top-action" aria-label="Milestone Path" onClick={() => goMR("MilestonePath.html?ret=MyRewards.html")}><DSMR.IconifyIcon name="lucide:milestone" size={18} color="var(--gray-900)" /></button>
       </div>
       <div className="ml-scroll mr-scroll">
         {rows.length > 0 && (
@@ -122,8 +123,8 @@ function MyRewardsScreen() {
           <div className="mr-empty">
             <span className="mr-empty-ic"><DSMR.IconifyIcon name="lucide:ticket" size={30} color="var(--brand-navy)" /></span>
             <h2>No rewards yet</h2>
-            <p>Redeem your Spendable Credits for course discounts and they'll show up here with their codes.</p>
-            <button className="ml-btn mr-btn mr-btn-primary" type="button" style={{ width: "auto" }} onClick={() => goMR("RewardsStore.html")}>Browse the Rewards Store</button>
+            <p>Course credits and discounts unlock as your Lifetime Points climb the Milestone Path — they'll show up here with their codes.</p>
+            <button className="ml-btn mr-btn mr-btn-primary" type="button" style={{ width: "auto" }} onClick={() => goMR("MilestonePath.html?ret=MyRewards.html")}>See your Milestone Path</button>
           </div>
         ) : (
           <div className="mr-list">

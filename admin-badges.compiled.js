@@ -9,6 +9,21 @@ const {
   useState: useStateBDG,
   useMemo: useMemoBDG
 } = React;
+function AdmInfo({
+  text
+}) {
+  return /*#__PURE__*/React.createElement("span", {
+    className: "adm-info",
+    tabIndex: 0,
+    role: "img",
+    "aria-label": text
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:info"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "adm-info-tip",
+    "aria-hidden": "true"
+  }, text));
+}
 function goBDG(url) {
   (window.pfGo || function (u) {
     window.location.href = u;
@@ -57,9 +72,15 @@ const BDG_NAV = [{
   label: "Badges",
   active: true
 }, {
+  icon: "lucide:clipboard-list",
+  label: "Quizzes & Surveys"
+}, {
   icon: "lucide:trophy",
   label: "Loyalty & Gamification",
   chevron: true
+}, {
+  icon: "lucide:scroll-text",
+  label: "Points Ledger"
 }, {
   icon: "lucide:receipt-text",
   label: "Transactions",
@@ -86,7 +107,9 @@ const BDG_NAV_LINKS = {
   "Analytics": "AdminAnalytics.html",
   "App Versions": "AdminAppVersions.html",
   "Push Notification": "AdminPushNotifications.html",
+  "Quizzes & Surveys": "AdminQuizEditor.html",
   "Loyalty & Gamification": "AdminActionsEditor.html",
+  "Points Ledger": "AdminAuditLedger.html",
   "Transactions": "AdminTransactions.html",
   "Courses": "AdminCourses.html",
   "Community": "AdminCommunity.html"
@@ -812,18 +835,21 @@ function BDGDashboardView({
 }) {
   const stats = [{
     label: "Total Badges",
+    tip: "Every badge that exists in the catalogue, whether or not anyone has earned it yet.",
     value: badges.length,
     icon: "lucide:award",
     color: "var(--brand-navy)",
     bg: "var(--gray-100)"
   }, {
     label: "Active Rules",
+    tip: "Automated rules currently switched on. Each one awards its badge as soon as a member meets the criteria.",
     value: rules.filter(r => r.active).length,
     icon: "lucide:zap",
     color: "var(--success)",
     bg: "var(--success-bg)"
   }, {
     label: "Total Assignments",
+    tip: "Badges currently held by members, counting manual awards and automated ones.",
     value: assignments.filter(a => a.status === "Active").length,
     icon: "lucide:users",
     color: "var(--ai-purple)",
@@ -859,7 +885,9 @@ function BDGDashboardView({
     className: "bdg-stat-body"
   }, /*#__PURE__*/React.createElement("div", {
     className: "bdg-stat-label"
-  }, s.label), /*#__PURE__*/React.createElement("div", {
+  }, s.label, s.tip && /*#__PURE__*/React.createElement(AdmInfo, {
+    text: s.tip
+  })), /*#__PURE__*/React.createElement("div", {
     className: "bdg-stat-value",
     style: s.label === "Active Rules" ? {
       color: "var(--success)"
@@ -1218,7 +1246,9 @@ function BDGDetailView({
     className: "bdg-stat-body"
   }, /*#__PURE__*/React.createElement("div", {
     className: "bdg-stat-label"
-  }, "Total Awarded"), /*#__PURE__*/React.createElement("div", {
+  }, "Total Awarded", /*#__PURE__*/React.createElement(AdmInfo, {
+    text: "Members who currently hold this badge."
+  })), /*#__PURE__*/React.createElement("div", {
     className: "bdg-stat-value"
   }, active.length))), /*#__PURE__*/React.createElement("div", {
     className: "bdg-stat-card"
@@ -1234,7 +1264,9 @@ function BDGDetailView({
     className: "bdg-stat-body"
   }, /*#__PURE__*/React.createElement("div", {
     className: "bdg-stat-label"
-  }, "Manual"), /*#__PURE__*/React.createElement("div", {
+  }, "Manual", /*#__PURE__*/React.createElement(AdmInfo, {
+    text: "Awards of this badge given by hand by an admin."
+  })), /*#__PURE__*/React.createElement("div", {
     className: "bdg-stat-value"
   }, manualCount))), /*#__PURE__*/React.createElement("div", {
     className: "bdg-stat-card"
@@ -1250,7 +1282,9 @@ function BDGDetailView({
     className: "bdg-stat-body"
   }, /*#__PURE__*/React.createElement("div", {
     className: "bdg-stat-label"
-  }, "Automated"), /*#__PURE__*/React.createElement("div", {
+  }, "Automated", /*#__PURE__*/React.createElement(AdmInfo, {
+    text: "Awards of this badge granted automatically by a rule."
+  })), /*#__PURE__*/React.createElement("div", {
     className: "bdg-stat-value"
   }, autoCount)))), linkedRules.length > 0 && /*#__PURE__*/React.createElement("div", {
     className: "bdg-card"

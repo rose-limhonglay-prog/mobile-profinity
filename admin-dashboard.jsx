@@ -21,7 +21,9 @@ const DASH_NAV = [
   { icon: "lucide:smartphone", label: "App Versions" },
   { icon: "lucide:bell", label: "Push Notification" },
   { icon: "lucide:badge-check", label: "Badges" },
+  { icon: "lucide:clipboard-list", label: "Quizzes & Surveys" },
   { icon: "lucide:trophy", label: "Loyalty & Gamification", chevron: true },
+  { icon: "lucide:scroll-text", label: "Points Ledger" },
   { icon: "lucide:receipt-text", label: "Transactions", chevron: true },
   { icon: "lucide:table-2", label: "Courses", chevron: true },
   { icon: "lucide:users", label: "Community", chevron: true },
@@ -41,7 +43,9 @@ const DASH_NAV_LINKS = {
   "App Versions": "AdminAppVersions.html",
   "Push Notification": "AdminPushNotifications.html",
   "Badges": "AdminBadges.html",
+  "Quizzes & Surveys": "AdminQuizEditor.html",
   "Loyalty & Gamification": "AdminActionsEditor.html",
+  "Points Ledger": "AdminAuditLedger.html",
   "Transactions": "AdminTransactions.html",
   "Courses": "AdminCourses.html",
   "Community": "AdminCommunity.html",
@@ -103,13 +107,13 @@ function DashHeader({ title }) {
 
 /* ---------------------------------------------------------------- data */
 const DASH_STATS = [
-  { label: "Total Users", value: "0", icon: "lucide:users", color: "var(--info)", bg: "var(--info-bg)" },
-  { label: "Active Subscriptions", value: "0", icon: "lucide:star", color: "var(--warning)", bg: "var(--warning-bg)" },
-  { label: "Patient Profiles", value: "0", icon: "lucide:contact", color: "var(--success)", bg: "var(--success-bg)" },
-  { label: "Total Clinicians", value: "0", icon: "lucide:briefcase-medical", color: "var(--success)", bg: "var(--success-bg)" },
-  { label: "Total Posts", value: "338", icon: "lucide:file-text", color: "var(--ai-purple)", bg: "var(--ai-purple-100)" },
-  { label: "Flagged Posts", value: "0", icon: "lucide:flag", color: "var(--error)", bg: "var(--error-bg)" },
-  { label: "Flagged Comments", value: "0", icon: "lucide:message-square", color: "var(--warning)", bg: "var(--warning-bg)" },
+  { label: "Total Users", tip: "Everyone with a PROfinity account, across all tiers, including clinicians and patients.", value: "0", icon: "lucide:users", color: "var(--info)", bg: "var(--info-bg)" },
+  { label: "Active Subscriptions", tip: "Members currently on a paid tier with a subscription in good standing.", value: "0", icon: "lucide:star", color: "var(--warning)", bg: "var(--warning-bg)" },
+  { label: "Patient Profiles", tip: "Accounts registered as patients rather than clinicians.", value: "0", icon: "lucide:contact", color: "var(--success)", bg: "var(--success-bg)" },
+  { label: "Total Clinicians", tip: "Accounts registered as practising clinicians, verified or awaiting verification.", value: "0", icon: "lucide:briefcase-medical", color: "var(--success)", bg: "var(--success-bg)" },
+  { label: "Total Posts", tip: "All posts published to the newsfeed and community channels since launch.", value: "338", icon: "lucide:file-text", color: "var(--ai-purple)", bg: "var(--ai-purple-100)" },
+  { label: "Flagged Posts", tip: "Posts reported by members or caught by moderation rules that still need a decision.", value: "0", icon: "lucide:flag", color: "var(--error)", bg: "var(--error-bg)" },
+  { label: "Flagged Comments", tip: "Comments reported or auto-flagged that are waiting for moderation.", value: "0", icon: "lucide:message-square", color: "var(--warning)", bg: "var(--warning-bg)" },
 ];
 
 const DASH_QUICK_ACTIONS = [
@@ -119,6 +123,15 @@ const DASH_QUICK_ACTIONS = [
 ];
 
 /* ---------------------------------------------------------------- view */
+function AdmInfo({ text }) {
+  return (
+    <span className="adm-info" tabIndex={0} role="img" aria-label={text}>
+      <iconify-icon icon="lucide:info"></iconify-icon>
+      <span className="adm-info-tip" aria-hidden="true">{text}</span>
+    </span>
+  );
+}
+
 function DashStatCard({ stat }) {
   return (
     <div className="dash-stat-card">
@@ -126,7 +139,7 @@ function DashStatCard({ stat }) {
         <iconify-icon icon={stat.icon}></iconify-icon>
       </span>
       <div className="dash-stat-body">
-        <div className="dash-stat-label">{stat.label}</div>
+        <div className="dash-stat-label">{stat.label}{stat.tip && <AdmInfo text={stat.tip} />}</div>
         <div className="dash-stat-value">{stat.value}</div>
       </div>
     </div>

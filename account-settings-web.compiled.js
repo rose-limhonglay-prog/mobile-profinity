@@ -66,6 +66,11 @@ const ASW_ITEMS_BEFORE = [{
   icon: "lucide:bell",
   desc: "Choose what updates you receive and how.",
   href: "NotificationSettingsWeb.html"
+}, {
+  label: "Payments",
+  icon: "lucide:credit-card",
+  desc: "Subscription, saved cards and invoices.",
+  href: "PaymentsWeb.html"
 }];
 const ASW_ITEMS_AFTER = [{
   label: "Privacy & Security",

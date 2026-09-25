@@ -434,7 +434,7 @@ function CWShareModal({ item, course, url, onClose, onDone }) {
   const tiles = [
     { k: "copy", label: "Copy link", icon: "lucide:link", run: () => { CD.copyText(url); onDone("Lesson link copied"); } },
     { k: "feed", label: "Newsfeed", icon: "lucide:newspaper", run: () => onDone("Shared to your newsfeed") },
-    { k: "dm", label: "Messages", icon: "lucide:message-circle", run: () => goCW("Messages.html") },
+    { k: "dm", label: "Messages", icon: "lucide:message-circle", run: () => goCW("MessagesWeb.html") },
     { k: "more", label: "More", icon: "lucide:more-horizontal", run: shareNative }];
   return (
     <div className="cd-share" role="dialog" aria-modal="true" aria-label="Share lesson" data-screen-label="Share lesson">

@@ -414,6 +414,9 @@
 /* Rewards Dashboard league card: keep the soft tint subtle on dark surfaces */
 [data-theme="dark"] .rdb-league { background: linear-gradient(135deg, var(--surface-card), color-mix(in srgb, var(--lg-accent) 18%, var(--surface-card))); }
 [data-theme="dark"] .rdb-league-tx b, [data-theme="dark"] .rdb-league-cta { color: var(--lg-accent); }
+[data-theme="dark"] .rdb-feat, [data-theme="dark"] .rw-feat { background: var(--surface-card); border-color: var(--border-default); box-shadow: none; }
+[data-theme="dark"] .rdb-feat-tx b, [data-theme="dark"] .rw-feat-tx b { color: var(--text-primary); }
+[data-theme="dark"] .rdb-feat:hover, [data-theme="dark"] .rw-feat:hover { border-color: var(--brand-gold); }
 
 /* ============================================================
    My Learning — mobile (learning-mobile.css)
@@ -447,3 +450,79 @@
 [data-theme="dark"] .pf-shs-contact.sent .av .ck { color: #fff; }
 [data-theme="dark"] .pf-shq { background: linear-gradient(180deg, var(--surface-card), var(--surface-sunken)); }
 [data-theme="dark"] .pf-shq-img b { background: rgba(0, 0, 0, .55); }
+
+/* ===== Milestone Path (mobile drill-in) ===== */
+[data-theme="dark"] .mp-help-ic { background: color-mix(in srgb, #B7C3E6 12%, var(--surface-card)); }
+[data-theme="dark"] .mp-help-close { background: color-mix(in srgb, #B7C3E6 12%, var(--surface-card)); }
+[data-theme="dark"] .mp-help-sheet { border-top: 1px solid var(--border-default); }
+[data-theme="dark"] .mp-help-ok { background: #3F4E86; }
+[data-theme="dark"] .mp-rw-row { background: var(--surface-sunken, var(--surface-card)); }
+[data-theme="dark"] .mp-rw-status { border-color: var(--gray-600); }
+[data-theme="dark"] .mp-rw-head-tx h2, [data-theme="dark"] .mp-rw-status-tx b, [data-theme="dark"] .mp-rw-row b { color: var(--text-primary); }
+[data-theme="dark"] .mp-rw-league, [data-theme="dark"] .mp-rw-status.on .mp-rw-status-tx b { color: var(--lg-accent, #B7C3E6); }
+[data-theme="dark"] .mp-benefit-row:hover { border-color: var(--lg-accent, #B7C3E6); box-shadow: none; }
+[data-theme="dark"] .mp-next-note b, [data-theme="dark"] .mp-node-pts, [data-theme="dark"] .mp-node-tag-current, [data-theme="dark"] .mp-foot-link { color: #B7C3E6; }
+[data-theme="dark"] .mp-node-dot-current { background: #3F4E86; box-shadow: 0 0 0 4px rgba(183, 195, 230, .18); }
+[data-theme="dark"] .mp-node-dot-locked { background: var(--gray-600); }
+[data-theme="dark"] .mp-node-league .mp-node-dot-passed, [data-theme="dark"] .mp-node-league .mp-node-line-passed { background: var(--lg-accent); }
+[data-theme="dark"] .mp-node-league .mp-node-dot-current { background: var(--lg-accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lg-accent) 24%, transparent); }
+[data-theme="dark"] .mp-node-league .mp-node-name, [data-theme="dark"] .mp-node-league .mp-node-pts,
+[data-theme="dark"] .mp-node-league .mp-node-tag-current, [data-theme="dark"] .mp-node-league .mp-node-tag-passed { color: var(--lg-accent); }
+[data-theme="dark"] .mp-node-league.mp-node-locked .mp-node-name, [data-theme="dark"] .mp-node-league.mp-node-locked .mp-node-pts { color: var(--gray-400); }
+[data-theme="dark"] .mp-node-line-current, [data-theme="dark"] .mp-node-line-locked { background: var(--gray-700); }
+[data-theme="dark"] .mp-node-locked .mp-benefit-row { background: var(--surface-sunken, var(--surface-card)); }
+[data-theme="dark"] .mp-benefit-delivery { background: color-mix(in srgb, var(--brand-gold) 22%, var(--surface-card)); color: #FCC25D; }
+[data-theme="dark"] .mp-node-locked .mp-benefit-delivery { background: color-mix(in srgb, var(--gray-500) 22%, var(--surface-card)); color: var(--gray-400); }
+
+/* Feed Quiz post-answer panel: dark card, gold CTA */
+[data-theme="dark"] .pf-quiz-after{background:var(--surface-card);border-color:var(--gray-200);box-shadow:none}
+[data-theme="dark"] .pf-quiz-after-course{background:var(--surface-sunken);border-color:var(--gray-200)}
+[data-theme="dark"] .pf-quiz-after-course-title,[data-theme="dark"] .pf-quiz-after-meta{color:var(--text-primary)}
+[data-theme="dark"] .pf-quiz-after-cta{background:var(--brand-gold);color:#131126}
+[data-theme="dark"] .pf-quiz-foot-pts{color:var(--brand-gold)}
+[data-theme="dark"] .pf-quiz-letter{background:var(--gray-200)}
+[data-theme="dark"] .pf-quiz-letter.correct{background:var(--success);color:#fff}
+[data-theme="dark"] .pf-quiz-letter.incorrect{background:var(--error);color:#fff}
+[data-theme="dark"] .pf-quiz-after-chip{background:var(--brand-gold-100);color:var(--brand-gold)}
+/* Poll card (quiz-simulator style): sunken card, option rows on card surface,
+   letter circles need a step lighter than the row, gold chip on dark tint */
+[data-theme="dark"] .pf-poll-letter{background:var(--gray-200)}
+[data-theme="dark"] .pf-poll-opt.selected{background:color-mix(in srgb, var(--brand-gold) 10%, var(--surface-card));border-color:var(--brand-gold)}
+[data-theme="dark"] .pf-poll-opt.selected .pf-poll-letter{background:var(--brand-gold);color:#131126}
+[data-theme="dark"] .pf-poll-opt.selected .pf-poll-fill{background:color-mix(in srgb, var(--brand-gold) 14%, transparent)}
+[data-theme="dark"] .pf-poll-fill{background:color-mix(in srgb, var(--brand-gold) 8%, transparent)}
+[data-theme="dark"] .pf-poll{--pf-poll-accent:var(--brand-gold)}
+[data-theme="dark"] .pf-poll-opt.leading .pf-poll-pct,[data-theme="dark"] .pf-poll-opt.selected .pf-poll-pct{color:var(--brand-gold)}
+[data-theme="dark"] .pf-poll-foot b,[data-theme="dark"] .pf-poll-chip{color:var(--brand-gold)}
+
+/* ============================================================
+   Payments + Invoices (web) (payments-web.css)
+   ============================================================ */
+[data-theme="dark"] .pyw-substate.cancelled { background: rgba(220,60,60,.16); }
+[data-theme="dark"] .pyw-cardic { background: rgba(124,118,217,.18); }
+[data-theme="dark"] .pyw-add:hover { background: rgba(124,118,217,.12); }
+[data-theme="dark"] .pyw-toast { background: var(--brand-navy); }
+[data-theme="dark"] .pyw-btn-danger:hover { background: rgba(220,60,60,.16); }
+[data-theme="dark"] .pyw-showall,
+[data-theme="dark"] .pyw-link-btn,
+[data-theme="dark"] .pyw-add { color: var(--text-secondary); border-color: var(--border-default); }
+[data-theme="dark"] .ivw-foot-note a { color: var(--text-secondary); }
+[data-theme="dark"] .ivw-hero:not(.refund),
+[data-theme="dark"] .pyw-plan:not([class*="tier-"]) { background: linear-gradient(135deg, #292569 0%, #3d3a8c 100%); }
+
+/* Rewards page embeds (rewards-milestone-embed.css): league rail + inline Milestone Path */
+[data-theme="dark"] .rme-help-btn { background: var(--surface-card); }
+[data-theme="dark"] .rme-next-track { background: var(--surface-sunken, var(--gray-800)); }
+[data-theme="dark"] .rme-next-note b, [data-theme="dark"] .rme-node-pts, [data-theme="dark"] .rme-node-tag-current, [data-theme="dark"] .rme-node-tag-passed { color: var(--lg-accent, #B7C3E6); }
+[data-theme="dark"] .rme-node-league .rme-node-name { color: var(--lg-accent); }
+[data-theme="dark"] .rme-node-locked .rme-node-name, [data-theme="dark"] .rme-node-locked .rme-node-pts { color: var(--gray-400); }
+[data-theme="dark"] .rme-node-dot-current { background: var(--lg-accent, #3F4E86); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lg-accent, #B7C3E6) 24%, transparent); }
+[data-theme="dark"] .rme-node-dot-locked { background: var(--gray-600); }
+[data-theme="dark"] .rme-node-line-current, [data-theme="dark"] .rme-node-line-locked { background: var(--gray-700); }
+[data-theme="dark"] .rme-node-locked .rme-benefit { background: var(--surface-sunken, var(--surface-card)); }
+[data-theme="dark"] .rme-benefit-delivery { background: color-mix(in srgb, var(--brand-gold) 22%, var(--surface-card)); color: #FCC25D; }
+[data-theme="dark"] .rme-node-locked .rme-benefit-delivery { background: color-mix(in srgb, var(--gray-500) 22%, var(--surface-card)); color: var(--gray-400); }
+[data-theme="dark"] .rme-help-ic, [data-theme="dark"] .rme-help-close { background: color-mix(in srgb, #B7C3E6 12%, var(--surface-card)); }
+[data-theme="dark"] .rme-help { border: 1px solid var(--border-default); }
+[data-theme="dark"] .rme-help-ok { background: #3F4E86; }
+[data-theme="dark"] .rme-rail-lock { background: rgba(0,0,0,.7); }

@@ -78,3 +78,8 @@ img { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   .cc-hero, .cc-kicker, .cc-title, .cc-sub, .cc-card, .cc-strip, .cc-foot { animation: none; opacity: 1; transform: none; }
 }
+
+/* Major Celebration Splash (single reward): the one card gets more room */
+.cc-screen.is-major .cc-card { padding: 16px 14px; }
+.cc-screen.is-major .cc-card-title { font-size: 20px; white-space: normal; }
+.cc-screen.is-major .cc-tile { width: 52px; height: 52px; }

@@ -13,7 +13,11 @@
     useState: useStateS
   } = React;
   const DSS = window.ProfinityDesignSystem_c2b5cc;
-  const QUESTIONS = [{
+
+  /* Defaults — the Admin · Quiz Questions page (AdminQuizEditor.html) can
+     replace these through localStorage "pf-business-survey"; readSurveyQuestions
+     falls back here whenever nothing valid is saved. */
+  const DEFAULT_QUESTIONS = [{
     q: "Which stage are you currently at in aesthetics?",
     opts: ["Just exploring aesthetics", "Training / beginner injector", "Building part-time", "Full-time injector", "Clinic owner"]
   }, {
@@ -44,16 +48,44 @@
     q: "Which type of content helps you MOST?",
     opts: ["Short tutorials", "Full masterclasses", "Live Q&As", "Case breakdowns", "Business training"]
   }];
-  const TOTAL = QUESTIONS.length;
   const pad2 = n => n < 10 ? "0" + n : String(n);
+  function readSurveyQuestions() {
+    try {
+      const sv = JSON.parse(localStorage.getItem("pf-business-survey"));
+      const qs = sv && Array.isArray(sv.questions) ? sv.questions : null;
+      if (qs && qs.length && qs.every(x => x && typeof x.q === "string" && Array.isArray(x.opts))) {
+        return qs.map(x => ({
+          q: x.q,
+          opts: x.opts.filter(o => String(o || "").trim())
+        })).filter(x => x.opts.length);
+      }
+    } catch (e) {}
+    return DEFAULT_QUESTIONS;
+  }
+  function readSurveyMeta() {
+    const d = {
+      title: "Let's personalise your experience",
+      sub: "Help us tailor content and connections that matter most to you."
+    };
+    try {
+      const sv = JSON.parse(localStorage.getItem("pf-business-survey"));
+      if (sv && typeof sv === "object") return {
+        title: String(sv.title || d.title),
+        sub: String(sv.sub || d.sub)
+      };
+    } catch (e) {}
+    return d;
+  }
   function SurveyMobile({
     open,
     onClose,
     onComplete
   }) {
     const [step, setStep] = useStateS(0);
-    const [answers, setAnswers] = useStateS(() => QUESTIONS.map(() => null));
-    if (!open) return null;
+    const [answers, setAnswers] = useStateS(() => []);
+    const QUESTIONS = React.useMemo(readSurveyQuestions, [open]);
+    const TOTAL = QUESTIONS.length;
+    if (!open || !TOTAL) return null;
     const done = step >= TOTAL;
     const pct = Math.round((step + 1) / TOTAL * 100);
     const cur = QUESTIONS[step];
@@ -67,14 +99,14 @@
     /* hand the option labels to the caller and keep them (pf-survey-answers) so the
        Free Resources page can put the best-fitting downloads first */
     const finish = () => {
-      const labels = answers.map((a, i) => a == null ? null : QUESTIONS[i].opts[a]);
+      const labels = QUESTIONS.map((Q, i) => answers[i] == null ? null : Q.opts[answers[i]]);
       try {
         localStorage.setItem("pf-survey-answers", JSON.stringify(labels));
       } catch (e) {}
       onComplete && onComplete(labels);
       onClose && onClose();
     };
-    const answered = answers.filter(a => a != null).length;
+    const answered = QUESTIONS.filter((_, i) => answers[i] != null).length;
     return /*#__PURE__*/React.createElement("div", {
       className: "sv-overlay",
       role: "dialog",
@@ -151,9 +183,9 @@
       className: "sv-eyebrow"
     }, /*#__PURE__*/React.createElement("i", null), " Personalise"), /*#__PURE__*/React.createElement("h2", {
       className: "sv-title"
-    }, "Let's personalise your experience"), /*#__PURE__*/React.createElement("p", {
+    }, readSurveyMeta().title), /*#__PURE__*/React.createElement("p", {
       className: "sv-sub"
-    }, "Help us tailor content and connections that matter most to you."), /*#__PURE__*/React.createElement("div", {
+    }, readSurveyMeta().sub), /*#__PURE__*/React.createElement("div", {
       className: "sv-progress",
       role: "progressbar",
       "aria-valuemin": 0,

@@ -170,21 +170,29 @@ function pwPillarScore(pillarKey, assessState) {
   return Math.min(100, Math.round(seval * 0.6 + scourse));
 }
 
-/* "Track your goals" is gated behind the 4 scored pillar assessments (not
-   Dream & Vision, which never touches a pillar score). */
+/* "Track your goals" opens as soon as ONE scored pillar assessment is done
+   (user, 2026-09-24 — previously all four; twin of profile-mobile.jsx).
+   Dream & Vision never counts. The answered pillar becomes the starting
+   goal; the other three join the Spiral / Targets as they're assessed. */
 const PW_FORECAST_PILLARS = PW_PILLARS.map((p) => p.key);
+const PW_FORECAST_MIN = 1;
+function pwAssessed(assessState, key) { return !!(assessState[key] && assessState[key].status === "completed"); }
 function pwForecastDone(assessState) {
-  return PW_FORECAST_PILLARS.filter((k) => assessState[k] && assessState[k].status === "completed").length;
+  return PW_FORECAST_PILLARS.filter((k) => pwAssessed(assessState, k)).length;
+}
+function pwNextUnassessed(assessState) {
+  return PW_FORECAST_PILLARS.find((k) => !pwAssessed(assessState, k)) || null;
 }
 
-/* Dynamic Goal Focus — lowest-scoring pillar, tie-break in this order. */
+/* Dynamic Goal Focus — lowest-scoring ASSESSED pillar, tie-break in this
+   order. Assessed pillars rank first; unassessed trail with assessed:false. */
 const PW_GOAL_TIEBREAK = ["Clinical Skills", "Business Systems", "Sales", "Marketing"];
-function pwLowestPillar(assessState) {
-  const scored = PW_PILLARS.map((p) => ({ key: p.key, score: pwPillarScore(p.key, assessState) }));
-  const lowest = Math.min(...scored.map((s) => s.score));
-  const tied = scored.filter((s) => s.score === lowest).map((s) => s.key);
-  return PW_GOAL_TIEBREAK.find((k) => tied.includes(k)) || tied[0];
+function pwRankedPillars(assessState) {
+  return PW_PILLARS.
+  map((p) => ({ ...p, score: pwPillarScore(p.key, assessState), assessed: pwAssessed(assessState, p.key) })).
+  sort((a, b) => (b.assessed - a.assessed) || a.score - b.score || PW_GOAL_TIEBREAK.indexOf(a.key) - PW_GOAL_TIEBREAK.indexOf(b.key));
 }
+function pwLowestPillar(assessState) { return pwRankedPillars(assessState)[0].key; }
 const PW_GOAL_REASONING = {
   "Sales": "Your consultations and follow-up are the fastest lever right now — tightening how you convert the patients already reaching out will move this pillar quickest.",
   "Marketing": "You need visibility. Better, more consistent lead generation is the fastest way to fill your books.",
@@ -222,7 +230,7 @@ function PWSpiralHelpModal({ open, onClose }) {
           <p>Your Spiral Score is simply a snapshot of how balanced your business is across four areas every successful clinic needs: <b>Sales</b>, <b>Marketing</b>, <b>Clinical Skills</b> and <b>Business Systems</b>.</p>
           <p>Each pillar's number goes up when you take actions that build it — finishing a lesson, completing a Today's Target, posting a case study, following up with a patient. There's no trick to it: the more consistently you show up in a pillar, the faster it climbs.</p>
           <p>A weak pillar isn't a bad grade — it's just where Ava recommends you focus next, because the fastest way to grow your clinic is usually to strengthen your lowest pillar first.</p>
-          <button type="button" className="pf-coach-link pw-help-coach" data-coach="Explain how my Spiral Score is calculated and what I can do this week to raise it." onClick={onClose}>
+          <button type="button" className="pf-coach-link pw-help-coach" onClick={() => { onClose(); pwAskAva("Explain how my Spiral Score is calculated and what I can do this week to raise it."); }}>
             <IconifyIconPW name="lucide:sparkles" size={14} color="var(--ai-purple)" />Ask Ava to explain mine
           </button>
         </div>
@@ -231,12 +239,14 @@ function PWSpiralHelpModal({ open, onClose }) {
 
 }
 
-function PWSpiralCard({ assessState }) {
+function PWSpiralCard({ assessState, onOpenHub }) {
   const [helpOpen, setHelpOpen] = useStatePW(false);
-  const scored = PW_PILLARS.map((g) => ({ ...g, score: pwPillarScore(g.key, assessState) }));
-  const avg = Math.round(scored.reduce((sum, p) => sum + p.score, 0) / scored.length);
-  const strongest = scored.reduce((a, b) => (b.score > a.score ? b : a));
-  const weakest = scored.reduce((a, b) => (b.score < a.score ? b : a));
+  const ranked = pwRankedPillars(assessState);
+  const scored = ranked.filter((p) => p.assessed);
+  const remaining = ranked.length - scored.length;
+  const avg = scored.length ? Math.round(scored.reduce((sum, p) => sum + p.score, 0) / scored.length) : 0;
+  const strongest = scored[scored.length - 1];
+  const weakest = scored[0];
   return (
     <section className="pw-card" id="prosperity-spiral">
       <div className="pw-card-hd">
@@ -253,11 +263,20 @@ function PWSpiralCard({ assessState }) {
           <span className="lbl">balance</span>
         </div>
         <p className="pw-spiral-sentence">
-          Your clinic is strongest in <b>{strongest.key}</b>. Lift <b>{weakest.key}</b> to bring the spiral into balance.
+          {remaining > 0 ?
+          <><b>{weakest.key}</b> is your starting point. Answer the other {remaining === 1 ? "pillar" : remaining + " pillars"} to complete your Spiral.</> :
+          <>Your clinic is strongest in <b>{strongest.key}</b>. Lift <b>{weakest.key}</b> to bring the spiral into balance.</>}
         </p>
       </div>
       <div className="pw-spiral-rows">
-        {scored.map((g) =>
+        {ranked.map((g) => !g.assessed ?
+        <button key={g.key} type="button" className="pw-spiral-row unassessed" onClick={() => onOpenHub(g.key)}
+          aria-label={g.key + " — not assessed yet. Answer its questions, about 3 minutes"}>
+            <span className="dot" aria-hidden="true" />
+            <span className="label">{g.key}</span>
+            <span className="bar" aria-hidden="true"><span style={{ width: 0 }} /></span>
+            <span className="pw-spiral-assess"><IconifyIconPW name="lucide:compass" size={12} color="currentColor" />Assess</span>
+          </button> :
         <button key={g.key} type="button" className={"pw-spiral-row" + (g.key === weakest.key ? " lowest" : "")} onClick={() => goPW("MyLearning.html")}>
             <span className="dot" style={{ background: g.color }} aria-hidden="true" />
             <span className="label">{g.key}</span>
@@ -274,16 +293,22 @@ function PWSpiralCard({ assessState }) {
 }
 
 /* "Let's work on your goal" — auto-picks the lowest-scoring pillar. */
-function PWGoalFocusCard({ assessState }) {
-  const pillarKey = pwLowestPillar(assessState);
-  const score = pwPillarScore(pillarKey, assessState);
+function PWGoalFocusCard({ assessState, onOpenHub }) {
+  const ranked = pwRankedPillars(assessState);
+  const pillarKey = ranked[0].key;
+  const score = ranked[0].score;
+  const assessedCount = ranked.filter((p) => p.assessed).length;
+  const remaining = ranked.length - assessedCount;
+  const note = remaining === 0 ? "Your lowest-scoring pillar right now — Ava recommends focusing here next." :
+  assessedCount === 1 ? "The pillar you've answered so far — Ava starts your journey here." :
+  "Your lowest-scoring assessed pillar — Ava recommends focusing here next.";
   return (
     <section className="pw-card pw-goal-card">
       <div className="pw-goal-top">
         <div className="pw-goal-main">
           <span className="eyebrow"><IconifyIconPW name="lucide:trophy" size={13} color="var(--premium-orange)" />Let's work on your goal</span>
           <div className="ti">{pillarKey}</div>
-          <p className="note">Your lowest-scoring pillar right now — Ava recommends focusing here next.</p>
+          <p className="note">{note}</p>
         </div>
         <div className="pw-goal-ring" style={{ "--pct": score }} role="img" aria-label={score + " progress"}>
           <span className="n">{score}</span>
@@ -294,11 +319,78 @@ function PWGoalFocusCard({ assessState }) {
       <button type="button" className="pw-goal-cta" onClick={() => goPW("MyLearning.html")}>
         Work on your goal<IconifyIconPW name="lucide:arrow-up-right" size={17} color="#fff" />
       </button>
+      {remaining > 0 &&
+      <button type="button" className="pw-goal-more" onClick={() => onOpenHub(pwNextUnassessed(assessState))}>
+          <IconifyIconPW name="lucide:compass" size={15} color="var(--ai-purple)" />
+          Assess {remaining} more pillar{remaining === 1 ? "" : "s"} to compare
+          <IconifyIconPW name="lucide:chevron-right" size={15} color="var(--ai-purple)" />
+        </button>}
     </section>);
 
 }
 
-function PWTargetsCard() {
+/* Daily picks (user, 2026-09-22) — desktop twin of profile-mobile.jsx's
+   PMDailyPicks: one FREE PDF download + one PAID course CTA per calendar
+   day, picked and tracked by daily-targets.js (window.PFDailyTargets). */
+function usePWDailyPicks() {
+  const T = window.PFDailyTargets;
+  const [picks, setPicks] = useStatePW(() => T ? T.view() : null);
+  useEffectPW(() => {
+    if (!T) return;
+    const sync = () => setPicks(Object.assign({}, T.get()));
+    window.addEventListener("pf:daily-targets", sync);
+    return () => window.removeEventListener("pf:daily-targets", sync);
+  }, []);
+  return picks;
+}
+
+function PWDailyPicks() {
+  const T = window.PFDailyTargets;
+  const picks = usePWDailyPicks();
+  if (!T || !picks) return null;
+  const free = picks.free, paid = picks.paid;
+  const price = "£" + Number(paid.price || 0).toLocaleString("en-GB");
+  function download() { T.tapFree(); T.downloadFree(); }
+  function buy() { T.tapPaid("buy"); goPW(T.paidCheckoutUrl(true, "Profile.html")); }
+  function viewCourse() { T.tapPaid("detail"); goPW(T.paidDetailUrl(true)); }
+  return (
+    <div className="pw-picks" role="group" aria-label="Today's free download and course pick">
+      <div className={"pw-pick pw-pick-free" + (free.done ? " done" : "")}>
+        <span className="pw-pick-badge" aria-hidden="true">Free</span>
+        <button type="button" className="pw-pick-main" onClick={download}
+          aria-label={(free.done ? "Downloaded: " : "Download the free PDF: ") + free.title}>
+          <span className="pw-pick-icon"><IconifyIconPW name={free.done ? "lucide:file-check-2" : "lucide:file-down"} size={20} color="#1E7A5C" /></span>
+          <span className="pw-pick-copy">
+            <span className="tx">{free.title}</span>
+            <span className="cap">PDF guide · {free.pages} pages · +{free.pts} pts</span>
+          </span>
+        </button>
+        <button type="button" className={"pw-pick-cta" + (free.done ? " is-done" : "")} onClick={download}>
+          {free.done ? <><IconifyIconPW name="lucide:check" size={14} color="#1E7A5C" />Saved</> : <><IconifyIconPW name="lucide:download" size={15} color="#fff" />Download</>}
+        </button>
+      </div>
+      <div className={"pw-pick pw-pick-paid" + (paid.purchased ? " done" : "")}>
+        <span className="pw-pick-badge pw-pick-badge-paid" aria-hidden="true">Course</span>
+        <button type="button" className="pw-pick-main" onClick={viewCourse}
+          aria-label={(paid.purchased ? "Enrolled: " : "View course: ") + paid.title + ", " + price}>
+          <span className="pw-pick-icon"><IconifyIconPW name="lucide:graduation-cap" size={20} color="var(--brand-gold-700, #8A5303)" /></span>
+          <span className="pw-pick-copy">
+            <span className="tx">{paid.title}</span>
+            <span className="cap">{paid.purchased ? "Enrolled · +" + paid.pts + " pts earned" : "Course · " + price + " · +" + paid.pts + " pts when you enrol"}</span>
+          </span>
+        </button>
+        {paid.purchased ?
+        <button type="button" className="pw-pick-cta is-done" onClick={viewCourse}><IconifyIconPW name="lucide:check" size={14} color="#1E7A5C" />Owned</button> :
+        <button type="button" className="pw-pick-cta pw-pick-cta-buy" onClick={buy} aria-label={"Buy " + paid.title + " for " + price}>Buy {price}</button>}
+      </div>
+      <p className="pw-picks-note">New free download and course pick every day</p>
+    </div>);
+}
+
+/* Only assessed pillars get a target, ordered by Spiral rank (weakest
+   assessed first); a "Next up" row points at the next pillar to answer. */
+const PW_TAG_PILLAR = { MKT: "Marketing", CLIN: "Clinical Skills", SALE: "Sales", SYS: "Business Systems" };
+function PWTargetsCard({ assessState, onOpenHub }) {
   const [extra, setExtra] = useStatePW([]);
   useEffectPW(() => {
     try {
@@ -306,15 +398,16 @@ function PWTargetsCard() {
       setExtra(stored.map((t) => ({ text: t.text, tag: null })));
     } catch (e) {}
   }, []);
-  const all = PW_TARGETS.concat(extra);
-  const [done, setDone] = useStatePW([]);
-  const toggle = (i) => setDone((s) => {
-    const next = s.slice();
-    while (next.length <= i) next.push(false);
-    next[i] = !next[i];
-    return next;
-  });
-  const doneCount = done.filter(Boolean).length;
+  const order = pwRankedPillars(assessState || {}).map((p) => p.key);
+  const nextKey = pwNextUnassessed(assessState || {});
+  const remaining = PW_FORECAST_PILLARS.filter((k) => !pwAssessed(assessState || {}, k)).length;
+  const base = PW_TARGETS.filter((t) => pwAssessed(assessState || {}, PW_TAG_PILLAR[t.tag])).
+  sort((a, b) => order.indexOf(PW_TAG_PILLAR[a.tag]) - order.indexOf(PW_TAG_PILLAR[b.tag]));
+  const all = base.concat(extra);
+  /* keyed by text, not index — the list grows as pillars are answered */
+  const [done, setDone] = useStatePW({});
+  const toggle = (text) => setDone((s) => ({ ...s, [text]: !s[text] }));
+  const doneCount = all.filter((t) => done[t.text]).length;
   const pct = all.length ? Math.round((doneCount / all.length) * 100) : 0;
   return (
     <section className="pw-card">
@@ -324,13 +417,24 @@ function PWTargetsCard() {
           <span className="pw-targets-pill">{doneCount}/{all.length}</span>
         </span>
       </div>
+      <PWDailyPicks />
+      {nextKey &&
+      <button type="button" className="pw-target-assess" onClick={() => onOpenHub(nextKey)}
+        aria-label={"Answer the " + nextKey + " questions in Get to know you to add it to your Spiral. About 3 minutes"}>
+          <span className="pw-target-assess-ic" aria-hidden="true"><IconifyIconPW name="lucide:compass" size={18} color="var(--ai-purple)" /></span>
+          <span className="pw-target-assess-copy">
+            <span className="tx">Answer the {nextKey} questions</span>
+            <span className="cap">Get to know you · {remaining} pillar{remaining === 1 ? "" : "s"} still to assess · ~3 mins</span>
+          </span>
+          <span className="pw-target-assess-cta">Start</span>
+        </button>}
       <div className="pw-targets-track" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
         <span className="pw-targets-fill" style={{ width: pct + "%" }}></span>
       </div>
       <div className="pw-target-rows">
-        {all.map((t, i) =>
-        <button key={i} type="button" className={"pw-target-row" + (done[i] ? " done" : "")} onClick={() => toggle(i)} role="checkbox" aria-checked={!!done[i]}>
-            <span className="circle">{done[i] && <IconifyIconPW name="lucide:check" size={12} color="#fff" />}</span>
+        {all.map((t) =>
+        <button key={t.text} type="button" className={"pw-target-row" + (done[t.text] ? " done" : "")} onClick={() => toggle(t.text)} role="checkbox" aria-checked={!!done[t.text]}>
+            <span className="circle">{done[t.text] && <IconifyIconPW name="lucide:check" size={12} color="#fff" />}</span>
             {t.tag && <span className="pw-target-tag" style={{ background: PW_TARGET_TAGS[t.tag].color }}>{PW_TARGET_TAGS[t.tag].label}</span>}
             <span className="tx">{t.text}</span>
           </button>
@@ -355,8 +459,8 @@ function PWGoalsGateCard({ doneCount, onOpenHub }) {
         <IconifyIconPW name="lucide:compass" size={28} color="#fff" />
       </span>
       <h3>{heading}</h3>
-      <p>Your forecast unlocks once all four pillar assessments — Marketing, Sales, Clinical Skills and Business Systems — are complete.</p>
-      <button type="button" className="pw-goals-gate-cta" onClick={onOpenHub}>
+      <p>Answer just <b>one</b> pillar — Marketing, Sales, Clinical Skills or Business Systems — and your goal tracking starts there. Add the other three whenever you like to complete your Spiral.</p>
+      <button type="button" className="pw-goals-gate-cta" onClick={() => onOpenHub()}>
         Get to know you<IconifyIconPW name="lucide:arrow-up-right" size={17} color="#fff" />
       </button>
     </section>);
@@ -368,13 +472,13 @@ function PWGoalsGateCard({ doneCount, onOpenHub }) {
    desktop has the room to just show it). */
 function PWGoalsSection({ assessState, onOpenHub }) {
   const doneCount = pwForecastDone(assessState);
-  const unlocked = doneCount === PW_FORECAST_PILLARS.length;
+  const unlocked = doneCount >= PW_FORECAST_MIN;
   if (!unlocked) return <PWGoalsGateCard doneCount={doneCount} onOpenHub={onOpenHub} />;
   return (
     <>
-      <PWGoalFocusCard assessState={assessState} />
-      <PWSpiralCard assessState={assessState} />
-      <PWTargetsCard />
+      <PWGoalFocusCard assessState={assessState} onOpenHub={onOpenHub} />
+      <PWSpiralCard assessState={assessState} onOpenHub={onOpenHub} />
+      <PWTargetsCard assessState={assessState} onOpenHub={onOpenHub} />
     </>);
 
 }
@@ -784,7 +888,7 @@ function PWAssessHelpModal({ open, onClose }) {
           <p>That score becomes the starting point for your personalised journey plan — it's how Ava (and your mentor) know where to focus your coaching first.</p>
           <p>It also feeds directly into your Prosperity Spiral: your self-assessment sets the baseline for each pillar, and completing courses can carry it the rest of the way to 100%.</p>
           <p>Dream &amp; Vision works differently — it's never scored. It simply helps us understand your goals so we can build your journey around them.</p>
-          <button type="button" className="pw-help-coach pf-coach-link" data-coach="Explain how my self-assessment scores work and how they feed my Prosperity Spiral." onClick={onClose}>
+          <button type="button" className="pw-help-coach pf-coach-link" onClick={() => { onClose(); pwAskAva("Explain how my self-assessment scores work and how they feed my Prosperity Spiral."); }}>
             <IconifyIconPW name="lucide:sparkles" size={14} color="var(--ai-purple)" />Ask Ava
           </button>
         </div>
@@ -793,9 +897,42 @@ function PWAssessHelpModal({ open, onClose }) {
 
 }
 
+/* "Why Ava asks" — the old intro card on the hub, now behind a small Ava
+   help pill. Details + an Ask Ava CTA that redirects to Ava's quick chat. */
+function PWWhyAvaModal({ open, onClose }) {
+  usePWEscClose(open, onClose);
+  if (!open) return null;
+  return (
+    <div className="pw-modal-overlay" onClick={onClose}>
+      <div className="pw-modal-card pw-help-card" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Why Ava asks">
+        <div className="pw-help-hd">
+          <span className="pw-help-icon"><IconifyIconPW name="lucide:sparkles" size={18} color="var(--ai-purple)" /></span>
+          <h3>Why Ava asks</h3>
+          <button type="button" className="pw-help-x" aria-label="Close" onClick={onClose}>
+            <IconifyIconPW name="lucide:x" size={20} color="var(--gray-500)" />
+          </button>
+        </div>
+        <div className="pw-help-body">
+          <p>Your answers set your Prosperity Spiral and shape every target Ava suggests.</p>
+          <p>Answer <b>one</b> pillar to start tracking your goals — the rest can wait. Four short assessments, about 3 minutes each.</p>
+          <div className="pw-help-chips">
+            <span><IconifyIconPW name="lucide:lock" size={12} color="var(--ai-purple)" />Private to you</span>
+            <span><IconifyIconPW name="lucide:refresh-cw" size={12} color="var(--ai-purple)" />Retake anytime</span>
+          </div>
+          <button type="button" className="pw-help-coach pf-coach-link" onClick={() => { onClose(); pwAskAva(PW_WHY_AVA_PROMPT); }}>
+            <IconifyIconPW name="lucide:sparkles" size={14} color="var(--ai-purple)" />Ask Ava
+          </button>
+        </div>
+      </div>
+    </div>);
+}
+
 function PWAssessHub({ assessState, onOpenAssess, onClose }) {
-  usePWEscClose(true, onClose);
   const [helpOpen, setHelpOpen] = useStatePW(false);
+  const [whyOpen, setWhyOpen] = useStatePW(false);
+  /* Esc closes the topmost dialog only — while an explainer is open, the
+     hub's own Esc handler stands down so one keypress doesn't shut both. */
+  usePWEscClose(!helpOpen && !whyOpen, onClose);
   return (
     <div className="pw-modal-overlay" role="dialog" aria-modal="true" aria-label="Get to know you">
       <div className="pw-modal-card pw-hub-card">
@@ -807,13 +944,16 @@ function PWAssessHub({ assessState, onOpenAssess, onClose }) {
           </button>
         </div>
         <div className="pw-wiz-body pw-hub-body">
-          <div className="pw-hub-intro">
-            <IconifyIconPW name="lucide:sparkles" size={18} color="var(--ai-purple)" />
-            <p>We use these to get to know you — your strengths, your gaps, and your dreams for your clinic — so Ava can guide your journey and your Prosperity Spiral reflects where you really are.</p>
+          <div className="pw-hub-helps">
+            <button type="button" className="pw-hub-why" aria-haspopup="dialog" onClick={() => setWhyOpen(true)}>
+              <span className="pw-hub-why-ic" aria-hidden="true"><IconifyIconPW name="lucide:sparkles" size={15} color="var(--ai-purple)" /></span>
+              Why Ava asks
+              <IconifyIconPW name="lucide:circle-help" size={15} color="#4A40D6" />
+            </button>
+            <button type="button" className="pw-hub-help" onClick={() => setHelpOpen(true)}>
+              <IconifyIconPW name="lucide:circle-help" size={15} color="var(--gray-500)" />How it works
+            </button>
           </div>
-          <button type="button" className="pw-hub-help" onClick={() => setHelpOpen(true)}>
-            <IconifyIconPW name="lucide:circle-help" size={15} color="var(--gray-500)" />How it works
-          </button>
           <div className="pw-hub-grid">
             {PW_ASSESS_ORDER.map((key) =>
             <PWAssessHubTile key={key} assessKey={key} def={pwAssessDef(key)} entry={assessState[key]} onOpen={onOpenAssess} />
@@ -822,11 +962,21 @@ function PWAssessHub({ assessState, onOpenAssess, onClose }) {
         </div>
       </div>
       <PWAssessHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <PWWhyAvaModal open={whyOpen} onClose={() => setWhyOpen(false)} />
     </div>);
 
 }
 
 function goPW(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
+
+/* Ava's quick chat only mounts on My Learning (coach.js bails elsewhere), so
+   every "Ask Ava" on Profile redirects there with the question in ?ava=;
+   if Ava ever is on this page, open her inline instead. */
+function pwAskAva(prompt) {
+  if (window.PFAva && window.PFAva.open) { window.PFAva.open(prompt); return; }
+  goPW("MyLearning.html?ava=" + encodeURIComponent(prompt || "1"));
+}
+const PW_WHY_AVA_PROMPT = "Why do you ask me to complete the four self-assessments, and how do my answers shape my Prosperity Spiral and the targets you suggest?";
 
 function pfTagActiveNavPW(activeLabel) {
   document.querySelectorAll("#pf-root nav > button").forEach((b) => {
@@ -1761,7 +1911,7 @@ function PWOtherProfileMain({ user }) {
   const [avatarOpen, setAvatarOpen] = useStatePW(() => pwQuery("avatar") === "1");
   const [qrOpen, setQrOpen] = useStatePW(() => pwQuery("qr") === "1");
   const [shareOpen, setShareOpen] = useStatePW(() => pwQuery("share") === "1");
-  /* Message → that member's DM thread (DirectMessage.html), not the inbox.
+  /* Message → that member's thread in the web Messages page, not the inbox.
      Same query contract as the mobile twin: id/name/avatar/role build or
      resolve the thread, ?from= returns to this profile. */
   const openMessages = () => {
@@ -1772,7 +1922,7 @@ function PWOtherProfileMain({ user }) {
     if (user.avatar) q.set("avatar", user.avatar);
     if (user.role) q.set("role", user.role);
     try { q.set("from", (window.location.pathname.split("/").pop() || "Profile.html") + (window.location.search || "")); } catch (e) { q.set("from", "Profile.html"); }
-    goPW("DirectMessage.html?" + q.toString());
+    goPW("MessagesWeb.html?" + q.toString());
   };
   const services = user.services || [], experience = user.experience || [], education = user.education || [];
   const languages = user.languages || [], licenses = user.licenses || [];
@@ -2278,7 +2428,7 @@ function PWShareProfileModal({ user, own, link, onClose, onQr }) {
   function go(k) {
     const u = encodeURIComponent(link), t = encodeURIComponent(shareText);
     switch (k) {
-      case "messages": goPW("Messages.html?share=" + u); return;
+      case "messages": goPW("MessagesWeb.html?share=" + u); return;
       case "copy": copyLink(); return;
       case "whatsapp": openOut("https://wa.me/?text=" + t + "%20" + u); return;
       case "facebook": openOut("https://www.facebook.com/sharer/sharer.php?u=" + u); return;
@@ -2719,7 +2869,8 @@ function ProfileWebApp() {
       <TopNavPW active="Profile" user={PW_ME} logoSrc="assets/profinity-icon-purple-gold.png"
         onNavigate={navigatePW}
         style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />
-      <ProfileMain assessState={assessState} onOpenHub={() => setHubOpen(true)}
+      <ProfileMain assessState={assessState}
+        onOpenHub={(key) => { if (typeof key === "string" && PW_PILLAR_ASSESSMENTS[key]) { setHubOpen(false); setOpenAssessKey(key); } else setHubOpen(true); }}
         profile={profile} banners={banners} conn={conn}
         onEdit={() => { setEditBanners(false); setEditOpen(true); }}
         onShare={() => setShareOpen(true)}

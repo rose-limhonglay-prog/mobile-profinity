@@ -69,9 +69,9 @@ function RedemptionSuccessScreen() {
   if (!voucher) {
     return (
       <div className="ml-screen rsc-screen" data-screen-label="Redemption Success (empty)">
-        <div className="ml-top"><button className="ml-back" aria-label="Back" onClick={() => goRSC("RewardsStore.html")}><DSRSC.IconifyIcon name="lucide:chevron-left" size={24} color="var(--gray-900)" /></button><h1>Redemption</h1><span /></div>
-        <div className="ml-empty"><DSRSC.IconifyIcon name="lucide:gift" size={28} color="var(--gray-400)" /><p>No redemption yet — visit the Rewards Store to redeem your first course discount.</p>
-          <button className="ml-btn ml-btn-navy ml-btn-sm" type="button" onClick={() => goRSC("RewardsStore.html")}>Go to Rewards Store</button>
+        <div className="ml-top"><button className="ml-back" aria-label="Back" onClick={() => goRSC("RewardsDashboard.html")}><DSRSC.IconifyIcon name="lucide:chevron-left" size={24} color="var(--gray-900)" /></button><h1>Redemption</h1><span /></div>
+        <div className="ml-empty"><DSRSC.IconifyIcon name="lucide:gift" size={28} color="var(--gray-400)" /><p>No discount yet — course credits unlock as your Lifetime Points climb the Milestone Path.</p>
+          <button className="ml-btn ml-btn-navy ml-btn-sm" type="button" onClick={() => goRSC("MilestonePath.html")}>See your Milestone Path</button>
         </div>
       </div>
     );
@@ -88,7 +88,7 @@ function RedemptionSuccessScreen() {
 
   return (
     <div className="ml-screen rsc-screen" data-screen-label="Redemption Success" ref={screenRef}>
-      <button className="ml-back rsc-close" aria-label="Close" onClick={() => goRSC("RewardsStore.html")}><DSRSC.IconifyIcon name="lucide:x" size={20} color="var(--gray-900)" /></button>
+      <button className="ml-back rsc-close" aria-label="Close" onClick={() => goRSC("RewardsDashboard.html")}><DSRSC.IconifyIcon name="lucide:x" size={20} color="var(--gray-900)" /></button>
       <div className="ml-scroll rsc-scroll">
         <div className="rsc-hero">
           <span className="rsc-glow" aria-hidden="true" />

@@ -340,4 +340,29 @@
     open: function (prompt) { if (prompt) { sendMessage(prompt); } else { openSheet(); } },
     close: closeSheet
   };
+
+  /* ?ava=<prompt> deep link — screens where Ava isn't mounted (Profile's
+     "Why Ava asks" / "Ask Ava" CTAs) redirect to My Learning with the
+     question in the URL. Open the quick chat once the host screen exists,
+     send the prompt (bare ?ava=1 just opens the sheet) and drop the param so
+     a refresh doesn't replay it. */
+  (function () {
+    var prompt = null;
+    try { prompt = new URLSearchParams(window.location.search).get("ava"); } catch (e) {}
+    if (prompt == null) return;
+    try {
+      var u = new URL(window.location.href);
+      u.searchParams.delete("ava");
+      history.replaceState(null, "", u.pathname + u.search + u.hash);
+    } catch (e) {}
+    var tries = 0;
+    var wait = setInterval(function () {
+      tries++;
+      if (!ensureMounted() && tries < 120) return;
+      clearInterval(wait);
+      setTimeout(function () {
+        if (prompt && prompt !== "1") sendMessage(prompt); else openSheet();
+      }, reduceMotion ? 0 : 450);
+    }, 150);
+  })();
 })();

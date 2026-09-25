@@ -1,7 +1,9 @@
 /* ===========================================================================
    PROfinity — Katy · Rewards Dashboard · iPhone 17 Pro Max
    Primary hub for the Loyalty & Gamification feature — 6th tab alongside
-   Home / Profile / My Learning / Community / Agent. Reuses the same
+   Home / Profile / My Learning / Community / Agent. Points-only since
+   2026-09-24: no Spendable Credits, no Rewards Store — the league badge
+   (PFLeague, points-based via the Milestone Path) is the headline. Reuses the same
    .app/.lm-screen/.lm-scroll/.lm-tabs device-frame conventions as the other
    primary tab screens (see learning-mobile.css) so the tab bar and status
    bar look identical. Classes prefixed rdb- to avoid clashes with other pages.
@@ -86,51 +88,6 @@ function RdbTabBar({
   }, t.dot)), /*#__PURE__*/React.createElement("span", {
     className: "lbl"
   }, t.label))));
-}
-function WalletDropdown({
-  state,
-  open,
-  onClose
-}) {
-  if (!open) return null;
-  const recent = state.ledger.slice().sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 5);
-  return /*#__PURE__*/React.createElement("div", {
-    className: "rdb-wallet-scrim",
-    onClick: onClose
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "rdb-wallet-dd",
-    onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "rdb-wallet-dd-head"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "rdb-wallet-dd-label"
-  }, "Spendable Credits"), /*#__PURE__*/React.createElement("div", {
-    className: "rdb-wallet-dd-value"
-  }, PF_RDB.formatNumber(state.spendableCredits))), /*#__PURE__*/React.createElement("div", {
-    className: "rdb-wallet-dd-divider"
-  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "rdb-wallet-dd-label"
-  }, "Lifetime Earned"), /*#__PURE__*/React.createElement("div", {
-    className: "rdb-wallet-dd-value rdb-wallet-dd-value-sm"
-  }, PF_RDB.formatNumber(state.lifetimePoints)))), /*#__PURE__*/React.createElement("div", {
-    className: "rdb-wallet-dd-list"
-  }, recent.map(t => /*#__PURE__*/React.createElement("div", {
-    key: t.id,
-    className: "rdb-wallet-dd-row"
-  }, /*#__PURE__*/React.createElement("span", null, t.label), /*#__PURE__*/React.createElement("span", {
-    className: "rdb-wallet-dd-amt",
-    style: {
-      color: t.creditsDelta >= 0 ? "var(--success)" : "var(--error)"
-    }
-  }, t.creditsDelta >= 0 ? "+" : "", t.creditsDelta, " cr")))), /*#__PURE__*/React.createElement("button", {
-    className: "ml-btn ml-btn-gold",
-    type: "button",
-    onClick: () => goRDB("RewardsStore.html")
-  }, "Go to Rewards Store", /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
-    name: "lucide:arrow-right",
-    size: 16,
-    color: "#3D2A00"
-  }))));
 }
 function NotificationPreview({
   hoursLabel,
@@ -322,11 +279,8 @@ function RdbBeaker() {
 }
 function RdbHeader({
   state,
-  tier,
-  onOpenWallet
+  tier
 }) {
-  const hour = new Date().getHours();
-  const greet = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
   const LG = window.PFLeague;
   const p = LG ? LG.getProgress() : null;
   const cur = p ? p.current : null,
@@ -334,15 +288,11 @@ function RdbHeader({
   const pct = p ? p.pct : 0;
   return /*#__PURE__*/React.createElement("div", {
     className: "rdb-head"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "rdb-head-row"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "rdb-head-greet"
-  }, greet, ", ", state.user.name, "!")), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "rdb-progress-card rdb-progress-league",
     onClick: () => goRDB("Leaderboard.html"),
-    "aria-label": cur ? cur.name + " League, " + (next ? p.need + " more milestones to " + next.name : "highest badge") + ". Open the leaderboard" : "Open the leaderboard",
+    "aria-label": cur ? cur.name + " League, " + (next ? PF_RDB.formatNumber(p.need) + " more points to " + next.name : "highest badge") + ". Open the leaderboard" : "Open the leaderboard",
     style: cur ? {
       "--lg-accent": cur.accent,
       "--lg-deep": cur.deep,
@@ -376,13 +326,13 @@ function RdbHeader({
     }
   })), /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-scale"
-  }, /*#__PURE__*/React.createElement("span", null, p ? p.done + " of " + (next ? next.requires : p.total) + " milestones" : ""), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, p ? PF_RDB.formatNumber(p.points) + (next ? " of " + PF_RDB.formatNumber(next.requires) : "") + " pts" : ""), /*#__PURE__*/React.createElement("span", {
     style: {
       color: "var(--nx-deep)"
     }
-  }, next ? "Unlocks at " + next.requires : "Complete")), /*#__PURE__*/React.createElement("div", {
+  }, next ? "Unlocks at " + PF_RDB.formatNumber(next.requires) + " pts" : "Complete")), /*#__PURE__*/React.createElement("div", {
     className: "rdb-progress-note"
-  }, next ? p.need + " more milestone" + (p.need === 1 ? "" : "s") + " to " + next.name + " League" : "You've earned the highest badge!")), /*#__PURE__*/React.createElement("span", {
+  }, next ? PF_RDB.formatNumber(p.need) + " more pts to " + next.name + " League" : "You've earned the highest badge!")), /*#__PURE__*/React.createElement("span", {
     className: "rdb-progress-gem next" + (next ? " locked" : "")
   }, (next || cur) && /*#__PURE__*/React.createElement(RdbLeagueLottie, {
     src: (next || cur).lottie,
@@ -403,42 +353,16 @@ function RdbEngagementCards({
   }, /*#__PURE__*/React.createElement("div", {
     className: "ml-card rdb-eng-card"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "rdb-eng-lottie",
+    className: "rdb-eng-lottie rdb-eng-lottie--face",
     "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("iframe", {
-    src: "https://lottie.host/embed/c7c98875-fe8d-4de8-95c1-3e12acf7ad0a/fpeaeGfS64.json",
-    title: "",
-    scrolling: "no",
-    style: {
-      width: "34px",
-      height: "34px",
-      border: "none",
-      background: "transparent"
-    }
+  }, /*#__PURE__*/React.createElement(RdbLeagueLottie, {
+    src: RDB_MASCOT_SRC,
+    size: 38
   })), /*#__PURE__*/React.createElement("div", {
     className: "rdb-eng-value"
   }, PF_RDB.formatNumber(state.lifetimePoints)), /*#__PURE__*/React.createElement("div", {
     className: "rdb-eng-label"
-  }, "Lifetime Points")), /*#__PURE__*/React.createElement("div", {
-    className: "ml-card rdb-eng-card"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "rdb-eng-lottie",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement("iframe", {
-    src: "https://lottie.host/embed/1470432e-8f5e-4eb4-a73c-75e6b6972d46/qk3KaEmMpz.json",
-    title: "",
-    scrolling: "no",
-    style: {
-      width: "52px",
-      height: "52px",
-      border: "none",
-      background: "transparent"
-    }
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "rdb-eng-value"
-  }, PF_RDB.formatNumber(state.spendableCredits)), /*#__PURE__*/React.createElement("div", {
-    className: "rdb-eng-label"
-  }, "Spendable Credits")), /*#__PURE__*/React.createElement("button", {
+  }, "Lifetime Points")), /*#__PURE__*/React.createElement("button", {
     className: "ml-card rdb-eng-card rdb-eng-link",
     type: "button",
     onClick: () => goRDB("CheckInStreak.html"),
@@ -510,12 +434,40 @@ function RdbLeagueLottie({
     "aria-hidden": "true"
   });
 }
-function RdbLeagueCard() {
+/* Leaderboard snapshot: only the member's own league — her gem, her rank in
+   that board (same 30-day rolling points the Leaderboard page ranks on) and
+   who's just ahead. Tapping opens the full leaderboard. */
+function rdbStandings(state) {
+  const LG = window.PFLeague;
+  if (!LG || !LG.getStandings) return null;
+  try {
+    const me = {
+      name: (state.user && state.user.name ? state.user.name : "Katy") + " (You)",
+      avatar: "assets/avatar-katy.jpg",
+      points: state.rollingPoints30 || 0
+    };
+    return LG.getStandings(me);
+  } catch (e) {
+    return null;
+  }
+}
+function RdbLeagueCard({
+  state
+}) {
   const LG = window.PFLeague;
   if (!LG) return null;
-  const p = LG.getProgress();
-  const cur = p.current,
-    next = p.next;
+  const st = rdbStandings(state);
+  if (!st || !st.me) return null;
+  const cur = st.league,
+    me = st.me,
+    above = st.above;
+  const total = st.rows.length;
+  const gap = above ? above.points - me.points : 0;
+  const ordinal = n => {
+    const s = ["th", "st", "nd", "rd"],
+      v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  };
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "rdb-league",
@@ -525,8 +477,8 @@ function RdbLeagueCard() {
       "--lg-soft": cur.soft
     },
     onClick: () => goRDB("Leaderboard.html"),
-    "aria-label": cur.name + " League. Open the leaderboard",
-    "data-screen-label": "Your league"
+    "aria-label": "Leaderboard. You're " + ordinal(me.rank) + " of " + total + " in the " + cur.name + " League with " + PF_RDB.formatNumber(me.points) + " points. Open the leaderboard",
+    "data-screen-label": "Leaderboard snapshot"
   }, /*#__PURE__*/React.createElement("span", {
     className: "rdb-league-gem"
   }, /*#__PURE__*/React.createElement(RdbLeagueLottie, {
@@ -536,65 +488,257 @@ function RdbLeagueCard() {
     className: "rdb-league-tx"
   }, /*#__PURE__*/React.createElement("span", {
     className: "rdb-league-eyebrow"
-  }, "Your league"), /*#__PURE__*/React.createElement("b", null, cur.name, " League"), /*#__PURE__*/React.createElement("i", null, next ? p.need + " more milestone" + (p.need === 1 ? "" : "s") + " to " + next.name : "Highest badge earned")), /*#__PURE__*/React.createElement("span", {
+  }, "Leaderboard · ", cur.name, " League"), /*#__PURE__*/React.createElement("b", null, /*#__PURE__*/React.createElement("span", {
+    className: "rdb-league-rank"
+  }, "#", me.rank), " of ", total), /*#__PURE__*/React.createElement("i", null, PF_RDB.formatNumber(me.points), " pts", above ? " · " + PF_RDB.formatNumber(gap) + " behind " + above.name.split(" ")[0] : " · You lead the league!")), /*#__PURE__*/React.createElement("span", {
     className: "rdb-league-cta"
-  }, "Leaderboard", /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
+  }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
     name: "lucide:chevron-right",
-    size: 16,
+    size: 18,
     color: "var(--lg-deep)"
   })));
 }
-function RdbQuickNav() {
-  let redeemed = 0;
+
+/* Two simple buttons under the stat tiles (user, 2026-09-24 "make both
+   buttons simple"): navy icon, label, one-line note, chevron. No league
+   name, gem, tint or progress bar. */
+function RdbFeatureTiles({
+  state
+}) {
+  let milestone = null;
   try {
-    redeemed = (PF_RDB.getState().redeemedVouchers || []).length;
+    milestone = PF_RDB.getMilestoneProgress ? PF_RDB.getMilestoneProgress(state) : null;
   } catch (e) {}
+  const mpNote = milestone ? milestone.next ? PF_RDB.formatNumber(milestone.remaining) + " pts to go" : "Every badge earned" : "Badges & benefits";
+  const vouchers = (state.redeemedVouchers || []).length;
+  const mrNote = vouchers ? vouchers + " unlocked" : "Course discounts";
   const items = [{
-    label: "Rewards Store",
-    icon: "lucide:shopping-bag",
-    href: "RewardsStore.html",
-    dot: true
+    label: "Milestone Path",
+    note: mpNote,
+    icon: "lucide:milestone",
+    href: "MilestonePath.html"
   }, {
     label: "My Rewards",
+    note: mrNote,
     icon: "lucide:ticket",
-    href: "MyRewards.html",
-    note: redeemed > 0 ? String(redeemed) : null
-  }, {
-    label: "Leaderboard",
-    icon: "lucide:bar-chart-3",
-    href: "Leaderboard.html",
-    note: window.PFLeague ? window.PFLeague.getCurrent().name : null
-  }, {
-    label: "Ways to Earn",
-    icon: "lucide:sparkles",
-    href: "WaysToEarn.html"
+    href: "MyRewards.html"
   }];
   return /*#__PURE__*/React.createElement("div", {
-    className: "rdb-quicknav"
+    className: "rdb-feats"
   }, items.map(it => /*#__PURE__*/React.createElement("button", {
     key: it.label,
-    className: "rdb-quicknav-item",
     type: "button",
-    onClick: () => goRDB(it.href)
+    className: "rdb-feat",
+    onClick: () => goRDB(it.href),
+    "aria-label": it.label + ". " + it.note
   }, /*#__PURE__*/React.createElement("span", {
-    className: "rdb-quicknav-icon"
+    className: "rdb-feat-ic",
+    "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
     name: it.icon,
     size: 20,
     color: "#fff"
-  }), it.dot ? /*#__PURE__*/React.createElement("span", {
-    className: "rdb-quicknav-dot",
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "rdb-feat-tx"
+  }, /*#__PURE__*/React.createElement("b", null, it.label), /*#__PURE__*/React.createElement("i", null, it.note)), /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 16,
+    color: "var(--gray-400)"
+  }))));
+}
+
+/* ?new=1 → show the page as a brand-new member (PFLoyalty.resetNewMember),
+   then drop the flag so a refresh keeps whatever they earn afterwards */
+function rdbApplyNewMemberFlag() {
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get("new") !== "1") return;
+    PF_RDB.resetNewMember();
+    try {
+      localStorage.removeItem(RDB_WELCOME_SEEN);
+    } catch (e) {}
+    q.delete("new");
+    history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q.toString() : "") + location.hash);
+  } catch (e) {}
+}
+function rdbIsNewMember(state) {
+  return !state.lifetimePoints && !(state.ledger || []).length;
+}
+
+/* First-visit welcome modal (user, 2026-09-24): shown once, over the page,
+   while the member has no points yet; dismissing remembers it in
+   localStorage (pf-rewards-welcome-seen). ?new=1 clears the flag. */
+const RDB_WELCOME_SEEN = "pf-rewards-welcome-seen";
+/* ?welcome=earn opens the modal straight on step 2 (demo / QA) */
+function rdbWelcomeStep() {
+  try {
+    return new URLSearchParams(location.search).get("welcome") === "earn" ? 2 : 1;
+  } catch (e) {
+    return 1;
+  }
+}
+function rdbWelcomeSeen() {
+  try {
+    return localStorage.getItem(RDB_WELCOME_SEEN) === "1";
+  } catch (e) {
+    return true;
+  }
+}
+function rdbMarkWelcomeSeen() {
+  try {
+    localStorage.setItem(RDB_WELCOME_SEEN, "1");
+  } catch (e) {}
+}
+/* step 2 of the welcome: the quickest starter wins, points shown at the
+   member's tier multiplier */
+const RDB_STARTERS = [{
+  id: "evt_mobile_checkin",
+  label: "Check in every day",
+  icon: "lucide:calendar-check"
+}, {
+  id: "evt_profile_complete",
+  label: "Complete your profile",
+  icon: "lucide:user-check"
+}, {
+  id: "evt_create_post",
+  label: "Post in the community",
+  icon: "lucide:pen-line"
+}, {
+  id: "evt_module_complete",
+  label: "Finish a lesson module",
+  icon: "lucide:book-open"
+}, {
+  id: "evt_follow_peer",
+  label: "Connect with a peer",
+  icon: "lucide:user-plus"
+}];
+function rdbStarterRows(state) {
+  let actions = [];
+  try {
+    actions = PF_RDB.getConfig().actions || [];
+  } catch (e) {}
+  const tier = state.user && state.user.membershipTier;
+  return RDB_STARTERS.map(st => {
+    const a = actions.find(x => x.id === st.id);
+    let pts = a ? a.basePoints : 0;
+    try {
+      if (a && tier) pts = Math.round(a.basePoints * PF_RDB.tierMultiplierFor(a, tier));
+    } catch (e) {}
+    return Object.assign({}, st, {
+      pts
+    });
+  }).filter(r => r.pts > 0);
+}
+function RdbWelcomeModal({
+  state,
+  onClose,
+  initialStep
+}) {
+  const [step, setStep] = useStateRDB(initialStep || 1);
+  let next = null;
+  try {
+    const p = window.PFLeague ? window.PFLeague.getProgress() : null;
+    next = p ? p.next : null;
+  } catch (e) {}
+  const first = (state.user && state.user.name ? state.user.name : "there").split(" ")[0];
+  const tier = state.user && state.user.membershipTier;
+  useEffectRDB(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "rdb-welcome-scrim",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "rdb-welcome" + (step === 2 ? " rdb-welcome-earn" : ""),
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-labelledby": "rdb-welcome-title",
+    onClick: e => e.stopPropagation()
+  }, step === 1 ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "rdb-welcome-doc",
     "aria-hidden": "true"
-  }) : null), /*#__PURE__*/React.createElement("span", null, it.label, it.note ? /*#__PURE__*/React.createElement("i", {
-    className: "rdb-quicknav-note"
-  }, it.note) : null, it.dot ? /*#__PURE__*/React.createElement("span", {
-    className: "sr-only"
-  }, " — new rewards available") : null))));
+  }, /*#__PURE__*/React.createElement(RdbLeagueLottie, {
+    src: "assets/lottie/checkin-welcome.json",
+    size: 176
+  })), /*#__PURE__*/React.createElement("b", {
+    id: "rdb-welcome-title"
+  }, "Welcome to Rewards, ", first, "!"), /*#__PURE__*/React.createElement("p", null, "Every check-in, post and lesson earns points. ", next ? /*#__PURE__*/React.createElement(React.Fragment, null, "Reach ", /*#__PURE__*/React.createElement("strong", null, PF_RDB.formatNumber(next.requires), " pts"), " to move up to ", /*#__PURE__*/React.createElement("strong", null, next.name, " League"), " and unlock your first benefit bundle.") : null), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rdb-welcome-btn",
+    onClick: () => setStep(2)
+  }, "See ways to earn", /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
+    name: "lucide:arrow-right",
+    size: 14,
+    color: "#3D2A00"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rdb-welcome-skip",
+    onClick: onClose
+  }, "Explore my Rewards")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rdb-welcome-back",
+    "aria-label": "Back",
+    onClick: () => setStep(1)
+  }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
+    name: "lucide:chevron-left",
+    size: 20,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "rdb-welcome-steps",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", {
+    className: "on"
+  })), /*#__PURE__*/React.createElement("b", {
+    id: "rdb-welcome-title"
+  }, "Ways to earn points"), /*#__PURE__*/React.createElement("p", null, "Your quickest wins", tier ? " as a " + tier + " member" : "", " — points land the moment you do them."), /*#__PURE__*/React.createElement("ul", {
+    className: "rdb-welcome-list"
+  }, rdbStarterRows(state).map(r => /*#__PURE__*/React.createElement("li", {
+    key: r.id
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
+    name: r.icon,
+    size: 17,
+    color: "#FCC25D"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lb"
+  }, r.label), /*#__PURE__*/React.createElement("span", {
+    className: "pt"
+  }, "+", PF_RDB.formatNumber(r.pts), " pts")))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rdb-welcome-btn",
+    onClick: onClose
+  }, "Let's start", /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
+    name: "lucide:arrow-right",
+    size: 14,
+    color: "#3D2A00"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "rdb-welcome-skip",
+    onClick: () => {
+      onClose();
+      goRDB("WaysToEarn.html");
+    }
+  }, "See all ways to earn"))));
 }
 function RdbRecentActivity({
   state
 }) {
   const rows = state.ledger.slice().sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 6);
+  if (!rows.length) {
+    return /*#__PURE__*/React.createElement("div", {
+      className: "ml-card rdb-activity-empty"
+    }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
+      name: "lucide:sparkles",
+      size: 22,
+      color: "var(--gray-400)"
+    }), /*#__PURE__*/React.createElement("p", null, "No activity yet — check in today to earn your first points."));
+  }
   return /*#__PURE__*/React.createElement("div", {
     className: "ml-card"
   }, rows.map(t => /*#__PURE__*/React.createElement("div", {
@@ -608,42 +752,18 @@ function RdbRecentActivity({
     className: "rdb-activity-amt" + (t.pointsDelta > 0 ? "" : " is-spend")
   }, t.pointsDelta > 0 ? "+" + t.pointsDelta + " pts" : "—"))));
 }
-function RdbNextReward({
-  state,
-  config
-}) {
-  const affordable = config.storeItems.filter(i => i.cost <= state.spendableCredits + 500).sort((a, b) => a.cost - b.cost)[0] || config.storeItems[0];
-  return /*#__PURE__*/React.createElement("button", {
-    className: "ml-card rdb-next-reward",
-    type: "button",
-    onClick: () => goRDB("RewardsStore.html")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "rdb-next-reward-icon"
-  }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
-    name: "lucide:gift",
-    size: 22,
-    color: "#561F22"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "rdb-next-reward-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ti"
-  }, "Next Available Reward"), /*#__PURE__*/React.createElement("span", {
-    className: "su"
-  }, affordable.name, " · ", PF_RDB.formatNumber(affordable.cost), " credits")), /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 18,
-    color: "var(--gray-400)"
-  }));
-}
 function RewardsDashboardHome() {
-  const [state, setState] = useStateRDB(() => PF_RDB.getState());
-  const [config, setConfig] = useStateRDB(() => PF_RDB.getConfig());
-  const [walletOpen, setWalletOpen] = useStateRDB(false);
+  const [state, setState] = useStateRDB(() => {
+    rdbApplyNewMemberFlag();
+    return PF_RDB.getState();
+  });
   const [toast, setToast] = useStateRDB(null);
-  const refresh = () => {
-    setState(PF_RDB.getState());
-    setConfig(PF_RDB.getConfig());
-  };
+  const refresh = () => setState(PF_RDB.getState());
+  const [welcomeOpen, setWelcomeOpen] = useStateRDB(() => rdbIsNewMember(PF_RDB.getState()) && !rdbWelcomeSeen());
+  const closeWelcome = React.useCallback(() => {
+    rdbMarkWelcomeSeen();
+    setWelcomeOpen(false);
+  }, []);
   const flash = m => {
     setToast(m);
     setTimeout(() => setToast(null), 2400);
@@ -659,24 +779,29 @@ function RewardsDashboardHome() {
   }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement("div", {
     className: "lm-scroll",
     ref: scrollRef
-  }, /*#__PURE__*/React.createElement(RdbHeader, {
-    state: state,
-    tier: state.user.membershipTier,
-    onOpenWallet: () => setWalletOpen(true)
-  }), /*#__PURE__*/React.createElement(StreakRiskBanner, {
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      padding: "0 20px"
+    }
+  }, window.PFRewardsEmbed ? /*#__PURE__*/React.createElement(window.PFRewardsEmbed.LeagueRail, {
+    href: "Leaderboard.html"
+  }) : null, /*#__PURE__*/React.createElement(RdbLeagueCard, {
+    state: state
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12
+    }
+  }, /*#__PURE__*/React.createElement(RdbEngagementCards, {
+    state: state
+  })), /*#__PURE__*/React.createElement(RdbFeatureTiles, {
+    state: state
+  })), /*#__PURE__*/React.createElement(StreakRiskBanner, {
     state: state
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: "0 20px"
     }
-  }, /*#__PURE__*/React.createElement(RdbEngagementCards, {
-    state: state
-  }), /*#__PURE__*/React.createElement(RdbLeagueCard, null), /*#__PURE__*/React.createElement("div", {
-    className: "ml-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Jump back in")), /*#__PURE__*/React.createElement(RdbQuickNav, null), /*#__PURE__*/React.createElement(RdbNextReward, {
-    state: state,
-    config: config
-  }), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "ml-sec-h"
   }, /*#__PURE__*/React.createElement("h2", null, "Recent Activity")), /*#__PURE__*/React.createElement(RdbRecentActivity, {
     state: state
@@ -708,6 +833,10 @@ function RewardsDashboardHome() {
   }, "Demo: daily goal reached"), /*#__PURE__*/React.createElement("button", {
     className: "ml-demo-btn",
     type: "button",
+    onClick: () => goRDB("RewardsDashboard.html?new=1&checkin=0")
+  }, "Demo: new member view"), /*#__PURE__*/React.createElement("button", {
+    className: "ml-demo-btn",
+    type: "button",
     onClick: () => {
       PF_RDB.resetDemo();
       refresh();
@@ -719,10 +848,10 @@ function RewardsDashboardHome() {
     }
   })), /*#__PURE__*/React.createElement(RdbTabBar, {
     compact: chromeHidden
-  }), /*#__PURE__*/React.createElement(WalletDropdown, {
+  }), welcomeOpen && /*#__PURE__*/React.createElement(RdbWelcomeModal, {
     state: state,
-    open: walletOpen,
-    onClose: () => setWalletOpen(false)
+    onClose: closeWelcome,
+    initialStep: rdbWelcomeStep()
   }), toast && /*#__PURE__*/React.createElement("div", {
     className: "ml-toast"
   }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {

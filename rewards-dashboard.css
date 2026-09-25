@@ -48,8 +48,6 @@ img { max-width: 100%; }
 
 /* -------------------------------------------------------------- header */
 .rdb-head { padding: 4px 20px 18px; }
-.rdb-head-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-.rdb-head-greet { font-size: 22px; font-weight: 800; color: var(--brand-navy); }
 .rdb-wallet-chip { position: relative; overflow: hidden; flex-shrink: 0; display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 16px;
   border-radius: 999px; border: none; cursor: pointer; color: #3D2A00; font-family: inherit; font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums;
   background: linear-gradient(135deg, #FDD98F, #FCC25D 55%, #E8A63A);
@@ -116,7 +114,7 @@ img { max-width: 100%; }
 .rdb-notif-text { font-size: 13px; margin-top: 3px; color: var(--gray-600); line-height: 1.45; }
 
 /* ---------------------------------------------------------- engagement */
-.rdb-eng-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.rdb-eng-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .rdb-eng-card { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 0; padding: 14px; }
 .rdb-eng-lottie { display: flex; align-items: center; justify-content: flex-start; height: 34px; pointer-events: none; overflow: visible; }
 .rdb-eng-value { font-size: 17px; font-weight: 800; color: var(--gray-900); font-variant-numeric: tabular-nums; }
@@ -137,6 +135,50 @@ img { max-width: 100%; }
 .rdb-league-tx b { font-size: 16px; font-weight: 800; color: var(--lg-deep); letter-spacing: -.01em; }
 .rdb-league-tx i { font-style: normal; font-size: 12px; color: var(--gray-600); }
 .rdb-league-cta { flex: none; display: inline-flex; align-items: center; gap: 2px; font-size: 12.5px; font-weight: 800; color: var(--lg-deep); }
+.rdb-league-rank { font-size: 24px; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+/* Milestone Path button under the leaderboard snapshot */
+/* first-visit welcome modal (new member, shown once) — scrim is absolute so it stays inside the device frame */
+.rdb-welcome-scrim { position: absolute; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 24px; background: rgba(12,14,40,.55); backdrop-filter: blur(3px); animation: rdb-fade .22s ease; }
+.rdb-welcome { position: relative; width: 100%; max-width: 340px; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 26px 22px 20px; border-radius: 22px; text-align: center; color: #fff;
+  background: linear-gradient(150deg, var(--brand-navy), #3F4E86); box-shadow: 0 28px 70px rgba(12,14,40,.45), inset 0 1px 0 rgba(255,255,255,.12); animation: rdb-welcome-pop .32s cubic-bezier(.34,1.56,.64,1); }
+.rdb-welcome-doc { position: relative; width: 176px; height: 176px; margin: -10px 0 0; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 50% 45%, rgba(252,194,93,.28), rgba(252,194,93,0) 70%); }
+.rdb-welcome-doc::before { content: ""; position: absolute; inset: 14px; border-radius: 50%; background: rgba(255,255,255,.10); box-shadow: inset 0 1px 0 rgba(255,255,255,.18); }
+.rdb-welcome-doc > span { position: relative; }
+.rdb-welcome-doc svg { display: block; }
+.rdb-welcome b { font-size: 19px; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; }
+.rdb-welcome p { margin: 0; font-size: 13px; line-height: 1.55; color: rgba(255,255,255,.84); text-wrap: pretty; }
+.rdb-welcome p strong { color: #FCC25D; font-weight: 800; }
+.rdb-welcome-btn { margin-top: 8px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 44px; padding: 0 16px; border-radius: 14px; border: 0; cursor: pointer;
+  background: linear-gradient(135deg, #FDD07A, #E8A63A); color: #3D2A00; font: inherit; font-size: 13.5px; font-weight: 800; box-shadow: 0 8px 18px rgba(232,166,58,.35); }
+.rdb-welcome-btn:active { transform: scale(.97); }
+.rdb-welcome-skip { border: 0; background: none; padding: 6px 10px; cursor: pointer; font: inherit; font-size: 12.5px; font-weight: 700; color: rgba(255,255,255,.72); }
+.rdb-welcome-skip:hover { color: #fff; }
+.rdb-welcome-back { position: absolute; left: 10px; top: 10px; width: 34px; height: 34px; border-radius: 50%; border: 0; background: rgba(255,255,255,.12); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.rdb-welcome-steps { display: flex; gap: 5px; margin-bottom: 2px; }
+.rdb-welcome-steps i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.3); }
+.rdb-welcome-steps i.on { width: 18px; border-radius: 999px; background: #FCC25D; }
+.rdb-welcome-earn { padding-top: 22px; }
+.rdb-welcome-list { list-style: none; margin: 6px 0 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.rdb-welcome-list li { display: flex; align-items: center; gap: 10px; padding: 9px 10px 9px 9px; border-radius: 13px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.08); }
+.rdb-welcome-list .ic { flex: none; width: 32px; height: 32px; border-radius: 10px; background: rgba(252,194,93,.16); display: flex; align-items: center; justify-content: center; }
+.rdb-welcome-list .lb { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; color: #fff; }
+.rdb-welcome-list .pt { flex: none; font-size: 12px; font-weight: 800; color: #FCC25D; font-variant-numeric: tabular-nums; }
+@keyframes rdb-welcome-pop { from { transform: translateY(18px) scale(.94); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .rdb-welcome, .rdb-welcome-scrim { animation: none; } }
+.rdb-activity-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px 20px; text-align: center; }
+.rdb-activity-empty p { margin: 0; font-size: 12.5px; color: var(--gray-500); }
+
+/* two simple buttons: Milestone Path + My Rewards */
+.rdb-feats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 18px; }
+.rdb-feat { display: flex; align-items: center; gap: 10px; padding: 12px 10px 12px 12px; border-radius: 16px; text-align: left; cursor: pointer; font-family: inherit;
+  background: var(--surface-card); border: 1px solid var(--border-default); box-shadow: 0 1px 3px rgba(12,12,13,.04); transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease; -webkit-tap-highlight-color: transparent; }
+.rdb-feat:hover { border-color: var(--brand-navy); box-shadow: 0 8px 22px rgba(41,37,105,.12); transform: translateY(-2px); }
+.rdb-feat:active { transform: scale(.98); }
+.rdb-feat-ic { flex: none; width: 38px; height: 38px; border-radius: 11px; background: var(--brand-navy); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(41,37,105,.26), inset 0 1px 0 rgba(255,255,255,.18); }
+.rdb-feat-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.rdb-feat-tx b { font-size: 13.5px; font-weight: 800; color: var(--gray-900); letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rdb-feat-tx i { font-style: normal; font-size: 11.5px; color: var(--gray-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
 .rdb-quicknav { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
 .rdb-quicknav-item { position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
   text-align: left; padding: 14px; min-height: 96px; border-radius: 16px; border: 1px solid var(--border-default); background: var(--surface-card);
@@ -146,6 +188,8 @@ img { max-width: 100%; }
 .rdb-quicknav-item:hover { border-color: var(--brand-navy); box-shadow: 0 8px 22px rgba(41,37,105,.13); transform: translateY(-2px); }
 .rdb-quicknav-item:hover::after { opacity: 1; }
 .rdb-quicknav-icon { position: relative; width: 42px; height: 42px; border-radius: 12px; background: var(--brand-navy); box-shadow: 0 4px 12px rgba(41,37,105,.28), inset 0 1px 0 rgba(255,255,255,.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.rdb-quicknav-item-wide { grid-column: 1 / -1; flex-direction: row; align-items: center; }
+.rdb-quicknav-item-wide > span:last-child { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 0; }
 .rdb-quicknav-dot { position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; border-radius: 50%; background: var(--error); box-shadow: 0 0 0 2px var(--surface-card); }
 .rdb-quicknav-note { font-style: normal; margin-left: 6px; padding: 2px 7px; border-radius: 999px; background: color-mix(in srgb, var(--brand-navy) 12%, transparent); color: var(--brand-navy); font-weight: 800; font-size: 11px; font-variant-numeric: tabular-nums; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
@@ -188,8 +232,10 @@ img { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   .rdb-wallet-chip, .rdb-wallet-chip::after, .rdb-wallet-chip iconify-icon { animation: none; transition: none; }
   .rdb-progress-card .ml-progress-fill::after, .rdb-progress-marker { animation: none; }
-  .rdb-quicknav-item, .rdb-next-reward, .rdb-league, .rdb-progress-league { transition: none; }
+  .rdb-quicknav-item, .rdb-next-reward, .rdb-league, .rdb-progress-league, .rdb-feat { transition: none; }
 }
 
 /* Lip-filler coral accent (matches the progress-card Lottie #FCC25D) */
 .rdb-screen .ml-btn-gold, .rdb-wallet-dd .ml-btn-gold { background: linear-gradient(135deg, #FDD07A 0%, #E8A63A 100%); color: #3D2A00; }
+/* Lifetime Points tile: header-pill smiley (lottie-web), nudged up like .m-pts-ic-anim */
+.rdb-eng-lottie--face svg { display: block; transform: scale(1.22); transform-origin: 50% 50%; overflow: visible; }

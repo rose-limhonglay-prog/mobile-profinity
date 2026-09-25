@@ -13,6 +13,18 @@ function goPM(url) {
   })(url);
 }
 
+/* Ava's quick chat only mounts on My Learning (coach.js bails elsewhere), so
+   every "Ask Ava" on Profile redirects there with the question in ?ava=;
+   if Ava ever is on this page, open her inline instead. */
+function pmAskAva(prompt) {
+  if (window.PFAva && window.PFAva.open) {
+    window.PFAva.open(prompt);
+    return;
+  }
+  goPM("LearningMobile.html?ava=" + encodeURIComponent(prompt || "1"));
+}
+const PM_WHY_AVA_PROMPT = "Why do you ask me to complete the four self-assessments, and how do my answers shape my Prosperity Spiral and the targets you suggest?";
+
 /* Standalone badge image with a hover/tap tooltip explaining what it means
    (mastery + skinfluencer badges aren't part of DSPM.VerificationSeals). */
 function PMSealBadge({
@@ -239,22 +251,35 @@ function pmPillarScore(pillarKey, assessState) {
   return Math.min(100, Math.round(seval * 0.6 + scourse));
 }
 
-/* "Track your goals" is gated behind the 4 scored pillar assessments (not
-   Dream & Vision, which never touches a pillar score) — the forecast has
-   nothing to show until every pillar has a real baseline. */
+/* "Track your goals" opens as soon as ONE scored pillar assessment is done
+   (user, 2026-09-24 — previously all four). Dream & Vision never counts: it
+   doesn't touch a pillar score. The answered pillar becomes the starting
+   goal; the other three join the Spiral / Targets as they're assessed. */
 const PM_FORECAST_PILLARS = PM_PILLARS.map(p => p.key);
+const PM_FORECAST_MIN = 1;
+function pmAssessed(assessState, key) {
+  return !!(assessState[key] && assessState[key].status === "completed");
+}
 function pmForecastDone(assessState) {
-  return PM_FORECAST_PILLARS.filter(k => assessState[k] && assessState[k].status === "completed").length;
+  return PM_FORECAST_PILLARS.filter(k => pmAssessed(assessState, k)).length;
+}
+/* Next pillar to answer, in hub order — null once all four are in. */
+function pmNextUnassessed(assessState) {
+  return PM_FORECAST_PILLARS.find(k => !pmAssessed(assessState, k)) || null;
 }
 
 /* Pillars scored and ranked weakest → strongest (tie-break order below is
    the Goal Focus rule from PRD 3.3). */
 const PM_GOAL_TIEBREAK = ["Clinical Skills", "Business Systems", "Sales", "Marketing"];
+/* Assessed pillars rank first (weakest → strongest); unassessed ones trail
+   with `assessed:false` so the cards can render them as "answer me" tiles
+   rather than pretend a course-only number is a real baseline. */
 function pmRankedPillars(assessState) {
   return PM_PILLARS.map(p => ({
     ...p,
-    score: pmPillarScore(p.key, assessState)
-  })).sort((a, b) => a.score - b.score || PM_GOAL_TIEBREAK.indexOf(a.key) - PM_GOAL_TIEBREAK.indexOf(b.key)).map(p => ({
+    score: pmPillarScore(p.key, assessState),
+    assessed: pmAssessed(assessState, p.key)
+  })).sort((a, b) => b.assessed - a.assessed || a.score - b.score || PM_GOAL_TIEBREAK.indexOf(a.key) - PM_GOAL_TIEBREAK.indexOf(b.key)).map(p => ({
     ...p,
     band: pmBand(p.score)
   }));
@@ -337,8 +362,10 @@ function PMInfoModal({
   }, children, coach && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pf-coach-link pm-help-coach",
-    "data-coach": coach,
-    onClick: onClose
+    onClick: () => {
+      onClose();
+      pmAskAva(coach);
+    }
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:sparkles",
     size: 14,
@@ -401,8 +428,12 @@ function PMGoalFocusCard({
   assessState
 }) {
   const [info, setInfo] = useStatePM(false);
-  const weakest = pmRankedPillars(assessState)[0];
+  const ranked = pmRankedPillars(assessState);
+  const weakest = ranked[0];
   const band = weakest.band;
+  const assessedCount = ranked.filter(p => p.assessed).length;
+  const remaining = PM_FORECAST_PILLARS.length - assessedCount;
+  const note = remaining === 0 ? "Your weakest pillar right now — Ava recommends starting here." : assessedCount === 1 ? "The pillar you've answered so far — Ava starts your journey here." : "Your weakest assessed pillar — Ava recommends starting here.";
   return /*#__PURE__*/React.createElement(PMPaneCard, {
     title: "Let's work on your goal",
     infoLabel: "How your goal is chosen",
@@ -422,7 +453,7 @@ function PMGoalFocusCard({
     className: "ti"
   }, weakest.key), /*#__PURE__*/React.createElement("p", {
     className: "note"
-  }, "Your weakest pillar right now — Ava recommends starting here.")), /*#__PURE__*/React.createElement("div", {
+  }, note)), /*#__PURE__*/React.createElement("div", {
     className: "pm-goal-ring",
     style: {
       "--pct": weakest.score,
@@ -443,6 +474,18 @@ function PMGoalFocusCard({
     name: "lucide:arrow-up-right",
     size: 17,
     color: "#fff"
+  })), remaining > 0 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-goal-more",
+    onClick: () => pmOpenAssessHub(pmNextUnassessed(assessState))
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:compass",
+    size: 15,
+    color: "var(--ai-purple)"
+  }), "Assess ", remaining, " more pillar", remaining === 1 ? "" : "s", " to compare", /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 15,
+    color: "var(--ai-purple)"
   })), /*#__PURE__*/React.createElement(PMInfoModal, {
     open: info,
     onClose: () => setInfo(false),
@@ -450,7 +493,7 @@ function PMGoalFocusCard({
     icon: "lucide:trophy",
     coach: "Why is " + weakest.key + " my goal focus right now, and what should I do first?",
     coachLabel: "Ask Ava about this goal"
-  }, /*#__PURE__*/React.createElement("p", null, "Your goal is always your ", /*#__PURE__*/React.createElement("b", null, "lowest-scoring pillar"), ". Each pillar's score is your ", /*#__PURE__*/React.createElement("b", null, "Get to know you"), " baseline (worth up to 60%) plus the course progress you've made in that area."), /*#__PURE__*/React.createElement("p", null, "The dial's colour is its band: ", /*#__PURE__*/React.createElement("b", null, "Expert"), ", ", /*#__PURE__*/React.createElement("b", null, "Growing strong"), ", ", /*#__PURE__*/React.createElement("b", null, "Building momentum"), " or ", /*#__PURE__*/React.createElement("b", null, "Just getting started"), ". When this pillar overtakes another, your goal switches automatically.")));
+  }, /*#__PURE__*/React.createElement("p", null, "Your goal is always your ", /*#__PURE__*/React.createElement("b", null, "lowest-scoring pillar"), ". Each pillar's score is your ", /*#__PURE__*/React.createElement("b", null, "Get to know you"), " baseline (worth up to 60%) plus the course progress you've made in that area."), /*#__PURE__*/React.createElement("p", null, "You only need to answer ", /*#__PURE__*/React.createElement("b", null, "one pillar"), " to start — your goal is then the lowest pillar you've assessed so far. Pillars you haven't answered yet aren't scored, so they can't be your goal until you do."), /*#__PURE__*/React.createElement("p", null, "The dial's colour is its band: ", /*#__PURE__*/React.createElement("b", null, "Expert"), ", ", /*#__PURE__*/React.createElement("b", null, "Growing strong"), ", ", /*#__PURE__*/React.createElement("b", null, "Building momentum"), " or ", /*#__PURE__*/React.createElement("b", null, "Just getting started"), ". When this pillar overtakes another, your goal switches automatically.")));
 }
 
 /* The Prosperity Spiral — a 2×2 grid of pillar tiles ordered weakest →
@@ -472,17 +515,39 @@ function PMSpiralCard({
   const [tim, setTim] = useStatePM(false);
   const ranked = pmRankedPillars(assessState);
   const weakest = ranked[0];
+  const remaining = ranked.filter(p => !p.assessed).length;
   return /*#__PURE__*/React.createElement(PMPaneCard, {
     id: "prosperity-spiral",
     title: "The Prosperity Spiral",
     stacked: true,
-    sub: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, weakest.key), " is carrying the least weight. Lift it and the whole spiral rises."),
+    sub: remaining > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, weakest.key), " is your starting point. Answer the other ", remaining === 1 ? "pillar" : remaining + " pillars", " to complete your Spiral.") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, weakest.key), " is carrying the least weight. Lift it and the whole spiral rises."),
     infoLabel: "How the Prosperity Spiral works",
     onInfo: () => setInfo(true),
     defaultOpen: window.location.hash === "#prosperity-spiral"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-spiral-grid"
   }, ranked.map(p => {
+    if (!p.assessed) return /*#__PURE__*/React.createElement("button", {
+      key: p.key,
+      type: "button",
+      className: "pm-spiral-tile unassessed",
+      "aria-label": p.key + " — not assessed yet. Tap to answer its questions, about 3 minutes",
+      onClick: () => pmOpenAssessHub(p.key)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "pm-spiral-ring",
+      style: {
+        "--pct": 0
+      },
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "n q"
+    }, "?")), /*#__PURE__*/React.createElement("span", {
+      className: "pm-spiral-tile-name"
+    }, p.key), /*#__PURE__*/React.createElement("span", {
+      className: "pm-spiral-tile-chip assess"
+    }, "Assess"), /*#__PURE__*/React.createElement("span", {
+      className: "pm-spiral-tile-avg"
+    }, "Tap to answer · ~3 mins"));
     const lowest = p.key === weakest.key;
     const diff = p.score - PM_PILLAR_AVERAGE;
     const chip = lowest ? "Start here" : PM_BAND_CHIP[p.band.key];
@@ -574,7 +639,7 @@ function PMSpiralCard({
    (high / medium / low / low), plus any Ava-suggested extras from the coach. */
 function pmBuildTargets(ranked, rounds, extras) {
   const prio = ["high", "medium", "low", "low"];
-  const list = ranked.map((p, i) => {
+  const list = ranked.filter(p => p.assessed !== false).map((p, i) => {
     const pool = PM_TARGET_POOL[p.key];
     const idx = (rounds[p.key] || 0) % pool.length;
     return {
@@ -607,7 +672,7 @@ function pmLoadTodayTargets(ranked) {
   } catch (e) {}
   try {
     const saved = JSON.parse(localStorage.getItem(PM_TARGETS_KEY));
-    if (saved && saved.date === pmTodayStamp() && Array.isArray(saved.targets)) return saved;
+    if (saved && saved.date === pmTodayStamp() && Array.isArray(saved.targets)) return pmReconcileTargets(saved, ranked);
   } catch (e) {}
   return {
     date: pmTodayStamp(),
@@ -615,12 +680,200 @@ function pmLoadTodayTargets(ranked) {
     targets: pmBuildTargets(ranked, {}, extras)
   };
 }
+
+/* A pillar answered mid-day joins today's set on the spot: append its task
+   (priority by its rank) rather than waiting for tomorrow's rebuild. */
+function pmReconcileTargets(state, ranked) {
+  const have = new Set(state.targets.map(t => t.pillar));
+  const missing = ranked.filter(p => p.assessed && !have.has(p.key));
+  if (!missing.length) return state;
+  const prio = ["high", "medium", "low", "low"];
+  const added = missing.map(p => {
+    const pool = PM_TARGET_POOL[p.key];
+    const idx = ((state.rounds || {})[p.key] || 0) % pool.length;
+    return {
+      id: p.key + ":" + idx,
+      text: pool[idx],
+      pillar: p.key,
+      priority: prio[ranked.indexOf(p)] || "low",
+      done: false,
+      added: true
+    };
+  });
+  return {
+    ...state,
+    targets: state.targets.concat(added)
+  };
+}
+
+/* "Next up" row at the top of Today's Targets while pillars are still
+   unanswered — opens that pillar's questions directly. Not part of the
+   ticked set: it completes itself when the assessment does. */
+function PMAssessNudgeRow({
+  pillarKey,
+  remaining
+}) {
+  const open = () => pmOpenAssessHub(pillarKey);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-target-row pm-target-assess"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-target-assess-ic",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:compass",
+    size: 18,
+    color: "var(--ai-purple)"
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-target-main",
+    onClick: open,
+    "aria-label": "Answer the " + pillarKey + " questions in Get to know you to add it to your Spiral. About 3 minutes"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-target-copy"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, "Answer the ", pillarKey, " questions"), /*#__PURE__*/React.createElement("span", {
+    className: "cap"
+  }, "Get to know you · ", remaining, " pillar", remaining === 1 ? "" : "s", " still to assess · ~3 mins"))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-pick-cta pm-target-assess-cta",
+    onClick: open
+  }, "Start"));
+}
+
+/* Daily picks (user, 2026-09-22): every day's set must also carry one FREE
+   download (a PDF from the free library) and one PAID course CTA. Both are
+   chosen per calendar day by daily-targets.js (window.PFDailyTargets), which
+   also records the funnel (shown → tapped → downloaded / bought) and the
+   revenue the paid pick drives. Rendered at the top of Today's Targets. */
+function usePMDailyPicks(view) {
+  const T = window.PFDailyTargets;
+  const [picks, setPicks] = useStatePM(() => T ? view ? T.view() : T.get() : null);
+  useEffectPM(() => {
+    if (!T) return;
+    const sync = () => setPicks(Object.assign({}, T.get()));
+    window.addEventListener("pf:daily-targets", sync);
+    return () => window.removeEventListener("pf:daily-targets", sync);
+  }, []);
+  return picks;
+}
+
+/* Collapsed-preview rows for the two picks (open ones only). */
+function pmPickPreviewRows(picks) {
+  if (!picks) return [];
+  const rows = [];
+  if (!picks.free.done) rows.push({
+    id: "pick:free",
+    text: "Free download: " + picks.free.title,
+    priority: "high"
+  });
+  if (!picks.paid.purchased) rows.push({
+    id: "pick:paid",
+    text: "Course pick: " + picks.paid.title,
+    priority: "high"
+  });
+  return rows;
+}
+function PMDailyPicks() {
+  const T = window.PFDailyTargets;
+  const picks = usePMDailyPicks(true);
+  if (!T || !picks) return null;
+  const free = picks.free,
+    paid = picks.paid;
+  const price = "£" + Number(paid.price || 0).toLocaleString("en-GB");
+  function download() {
+    T.tapFree();
+    T.downloadFree();
+  }
+  function buy() {
+    T.tapPaid("buy");
+    goPM(T.paidCheckoutUrl(false));
+  }
+  function viewCourse() {
+    T.tapPaid("detail");
+    goPM(T.paidDetailUrl(false));
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-picks",
+    role: "group",
+    "aria-label": "Today's free download and course pick"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-target-row pm-pick pm-pick-free" + (free.done ? " done" : "")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-pick-badge",
+    "aria-hidden": "true"
+  }, "Free"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-target-main",
+    onClick: download,
+    "aria-label": (free.done ? "Downloaded: " : "Download the free PDF: ") + free.title
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-pick-icon"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: free.done ? "lucide:file-check-2" : "lucide:file-down",
+    size: 18,
+    color: "var(--pm-pick-free, #1E7A5C)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pm-target-copy"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, free.title), /*#__PURE__*/React.createElement("span", {
+    className: "cap"
+  }, "PDF guide · ", free.pages, " pages · +", free.pts, " pts"))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-pick-cta" + (free.done ? " is-done" : ""),
+    onClick: download
+  }, free.done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:check",
+    size: 13,
+    color: "#1E7A5C"
+  }), "Saved") : "Download")), /*#__PURE__*/React.createElement("div", {
+    className: "pm-target-row pm-pick pm-pick-paid" + (paid.purchased ? " done" : "")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-pick-badge pm-pick-badge-paid",
+    "aria-hidden": "true"
+  }, "Course"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-target-main",
+    onClick: viewCourse,
+    "aria-label": (paid.purchased ? "Enrolled: " : "View course: ") + paid.title + ", " + price
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-pick-icon"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:graduation-cap",
+    size: 18,
+    color: "var(--brand-gold-700, #8A5303)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pm-target-copy"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, paid.title), /*#__PURE__*/React.createElement("span", {
+    className: "cap"
+  }, paid.purchased ? "Enrolled · +" + paid.pts + " pts earned" : "Course · " + price + " · +" + paid.pts + " pts when you enrol"))), paid.purchased ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-pick-cta is-done",
+    onClick: viewCourse
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:check",
+    size: 13,
+    color: "#1E7A5C"
+  }), "Owned") : /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-pick-cta pm-pick-cta-buy",
+    onClick: buy,
+    "aria-label": "Buy " + paid.title + " for " + price
+  }, "Buy ", price)), /*#__PURE__*/React.createElement("p", {
+    className: "pm-picks-note"
+  }, "New free download and course pick every day"));
+}
 function PMTargetsCard({
   assessState
 }) {
   const [info, setInfo] = useStatePM(false);
   const ranked = pmRankedPillars(assessState);
   const weakest = ranked[0];
+  const nextKey = pmNextUnassessed(assessState);
+  const remaining = ranked.filter(p => !p.assessed).length;
 
   /* Persisted per day: tick state, per-pillar pool cursors and any task that
      arrived after the set was finished. A new date starts a fresh set. */
@@ -630,6 +883,11 @@ function PMTargetsCard({
       localStorage.setItem(PM_TARGETS_KEY, JSON.stringify(state));
     } catch (e) {}
   }, [state]);
+  /* Another pillar answered while this card is mounted (the hub is a
+     sibling overlay) → its task joins today's set immediately. */
+  useEffectPM(() => {
+    setState(s => pmReconcileTargets(s, ranked));
+  }, [assessState]);
   const [fresh, setFresh] = useStatePM(null); // id of the row animating in
   const [settling, setSettling] = useStatePM(null); // id of the row just ticked
 
@@ -726,7 +984,10 @@ function PMTargetsCard({
     })), "Completing these will move your Prosperity Spiral forward"),
     infoLabel: "How targets and points work",
     onInfo: () => setInfo(true)
-  }, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(PMDailyPicks, null), nextKey && /*#__PURE__*/React.createElement(PMAssessNudgeRow, {
+    pillarKey: nextKey,
+    remaining: remaining
+  }), /*#__PURE__*/React.createElement("div", {
     className: "pm-target-rows"
   }, rows.map(t => {
     const pr = PM_PRIORITY[t.priority];
@@ -790,7 +1051,7 @@ function PMTargetsCard({
     icon: "lucide:list-checks",
     coach: "What should I tackle first from today's targets, and why?",
     coachLabel: "Ask Ava where to start"
-  }, /*#__PURE__*/React.createElement("p", null, "Ava picks one small action per pillar each day and orders them by priority — ", /*#__PURE__*/React.createElement("b", null, "red double chevron"), " for your weakest pillar, ", /*#__PURE__*/React.createElement("b", null, "gold single"), " for the next, ", /*#__PURE__*/React.createElement("b", null, "grey dash"), " for the rest."), /*#__PURE__*/React.createElement("p", null, "Ticking a target earns its points (", /*#__PURE__*/React.createElement("b", null, "+150 / +100 / +50"), ") and nudges that pillar's score. Tap the row itself to open the pillar's goal page; the circle is just the tick."), /*#__PURE__*/React.createElement("p", null, "Finish the set and a new target appears — completed ones stay where they are so you can see the day's work.")));
+  }, /*#__PURE__*/React.createElement("p", null, "Ava picks one small action per ", /*#__PURE__*/React.createElement("b", null, "assessed"), " pillar each day and orders them by priority — ", /*#__PURE__*/React.createElement("b", null, "red double chevron"), " for your weakest pillar, ", /*#__PURE__*/React.createElement("b", null, "gold single"), " for the next, ", /*#__PURE__*/React.createElement("b", null, "grey dash"), " for the rest."), /*#__PURE__*/React.createElement("p", null, "Ticking a target earns its points (", /*#__PURE__*/React.createElement("b", null, "+150 / +100 / +50"), ") and nudges that pillar's score. Tap the row itself to open the pillar's goal page; the circle is just the tick."), /*#__PURE__*/React.createElement("p", null, "Finish the set and a new target appears — completed ones stay where they are so you can see the day's work."), /*#__PURE__*/React.createElement("p", null, "Pillars you haven't answered yet don't get targets — the ", /*#__PURE__*/React.createElement("b", null, "Next up"), " row takes you straight to their questions, and their tasks join the list the moment you finish."), /*#__PURE__*/React.createElement("p", null, "Every day also brings a ", /*#__PURE__*/React.createElement("b", null, "free PDF download"), " (+50 pts) and a ", /*#__PURE__*/React.createElement("b", null, "course pick"), " (+150 pts when you enrol). Both refresh daily.")));
 }
 
 /* Gate card shown in place of Goal Focus / Prosperity Spiral / Today's
@@ -799,8 +1060,14 @@ function PMTargetsCard({
    (never as empty or zeroed states). The CTA opens "Get to know you", which
    lives inside ProfileSteps — not a prop we have here — so it's reached by
    dispatching a DOM event ProfileSteps listens for. */
-function pmOpenAssessHub() {
-  window.dispatchEvent(new CustomEvent("pf-open-assess-hub"));
+/* Pass a pillar key to land straight on that pillar's questions; anything
+   else (including a click event) opens the hub. */
+function pmOpenAssessHub(key) {
+  window.dispatchEvent(new CustomEvent("pf-open-assess-hub", {
+    detail: {
+      key: typeof key === "string" ? key : null
+    }
+  }));
 }
 function PMGoalsGateCard({
   doneCount
@@ -815,7 +1082,7 @@ function PMGoalsGateCard({
     name: "lucide:compass",
     size: 26,
     color: "#fff"
-  })), /*#__PURE__*/React.createElement("h3", null, heading), /*#__PURE__*/React.createElement("p", null, "Your forecast unlocks once all four pillar assessments — Marketing, Sales, Clinical Skills and Business Systems — are complete."), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("h3", null, heading), /*#__PURE__*/React.createElement("p", null, "Answer just ", /*#__PURE__*/React.createElement("b", null, "one"), " pillar — Marketing, Sales, Clinical Skills or Business Systems — and your goal tracking starts there. Add the other three whenever you like to complete your Spiral."), /*#__PURE__*/React.createElement("div", {
     className: "pm-goals-gate-dots",
     "aria-label": doneCount + " of 4 assessments done"
   }, PM_FORECAST_PILLARS.map((k, i) => /*#__PURE__*/React.createElement("span", {
@@ -1026,16 +1293,17 @@ function PMGoalsMenu({
     if (window.location.hash === "#prosperity-spiral") setExpanded(true);
   }, []);
   const doneCount = pmForecastDone(assessState);
-  const unlocked = doneCount === PM_FORECAST_PILLARS.length;
+  const unlocked = doneCount >= PM_FORECAST_MIN;
   const ranked = unlocked ? pmRankedPillars(assessState) : [];
 
   /* Collapsed preview: the day's open targets in priority order, first two
      shown, the rest counted. Re-read on every render so ticks made in the
      expanded pane show once the user slides back. */
-  const openTargets = unlocked ? pmLoadTodayTargets(ranked).targets.map((t, i) => ({
+  const picks = usePMDailyPicks(false);
+  const openTargets = unlocked ? pmPickPreviewRows(picks).concat(pmLoadTodayTargets(ranked).targets.map((t, i) => ({
     ...t,
     i
-  })).filter(t => !t.done).sort((a, b) => PM_PRIORITY_ORDER[a.priority] - PM_PRIORITY_ORDER[b.priority] || a.i - b.i) : [];
+  })).filter(t => !t.done).sort((a, b) => PM_PRIORITY_ORDER[a.priority] - PM_PRIORITY_ORDER[b.priority] || a.i - b.i)) : [];
   const previewTargets = openTargets.slice(0, 2);
   const moreCount = openTargets.length - previewTargets.length;
   function tapCollapsed() {
@@ -1091,7 +1359,7 @@ function PMGoalsMenu({
     color: "var(--brand-gold)"
   }), "Assessment required"), /*#__PURE__*/React.createElement("p", {
     className: "pm-goals-preview-empty"
-  }, "Complete ‘Get to know you’ to unlock your forecast — tap to start")))), /*#__PURE__*/React.createElement("div", {
+  }, "Answer one pillar in ‘Get to know you’ to start tracking — tap to begin")))), /*#__PURE__*/React.createElement("div", {
     className: "pm-goals-pane pm-goals-expanded" + (expanded ? "" : " is-offstage"),
     "aria-hidden": !expanded
   }, /*#__PURE__*/React.createElement("div", {
@@ -2421,15 +2689,15 @@ const DM_THREADS_SEED_PM = [{
   }]
 }];
 const VOICE_CONFS_SEED_PM = [{
-  id: "vc1",
-  name: "Clinical Case Review",
-  who: "Dr Tim Pearce, Dr Sarah Kim +3",
-  t: "Today, 4:00 PM",
+  id: "c1",
+  name: "Case Study Discussion",
+  who: "Dr Tim Pearce, Dr Rachel Adams +98",
+  t: "Live now · 100 participants",
   live: true
 }, {
-  id: "vc2",
+  id: "c2",
   name: "Business Growth Sync",
-  who: "Miranda Pearce, Dr Alex Chen",
+  who: "Miranda Pearce, Mark Ellis",
   t: "Tomorrow, 10:00 AM",
   live: false
 }];
@@ -2610,8 +2878,11 @@ function NewConversationScreenPM({
 function VoiceConfRowPM({
   v
 }) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "mp-row mp-vc-row"
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mp-row mp-vc-row",
+    onClick: () => goPM("Messages.html?tab=conference&conf=" + v.id),
+    "aria-label": v.name + (v.live ? ", live now" : "")
   }, /*#__PURE__*/React.createElement("span", {
     className: "mp-av mp-vc-icon"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
@@ -3401,8 +3672,70 @@ function PMAssessHelpModal({
   }, /*#__PURE__*/React.createElement("p", null, "Each pillar assessment gives you a score based on your real-world experience and honest self-evaluation — there are no wrong answers, just an honest snapshot of where your clinic is today."), /*#__PURE__*/React.createElement("p", null, "That score becomes the starting point for your personalised journey plan — it's how Ava (and your mentor) know where to focus your coaching first."), /*#__PURE__*/React.createElement("p", null, "It also feeds directly into your Prosperity Spiral: your self-assessment sets the baseline for each pillar, and completing courses can carry it the rest of the way to 100%."), /*#__PURE__*/React.createElement("p", null, "Dream & Vision works differently — it's never scored. It simply helps us understand your goals so we can build your journey around them."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-help-coach pf-coach-link",
-    "data-coach": "Explain how my self-assessment scores work and how they feed my Prosperity Spiral.",
+    onClick: () => {
+      onClose();
+      pmAskAva("Explain how my self-assessment scores work and how they feed my Prosperity Spiral.");
+    }
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 14,
+    color: "var(--ai-purple)"
+  }), "Ask Ava"))));
+}
+
+/* "Why Ava asks" — the old intro card on the hub, now behind a small Ava
+   help pill. Details + an Ask Ava CTA that redirects to Ava's quick chat. */
+function PMWhyAvaModal({
+  open,
+  onClose
+}) {
+  usePMEscClose(open, onClose);
+  if (!open) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-help-overlay",
     onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-help-card",
+    onClick: e => e.stopPropagation(),
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Why Ava asks"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-help-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-help-icon"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 18,
+    color: "var(--ai-purple)"
+  })), /*#__PURE__*/React.createElement("h3", null, "Why Ava asks"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-help-x",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:x",
+    size: 20,
+    color: "var(--gray-500)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-help-body"
+  }, /*#__PURE__*/React.createElement("p", null, "Your answers set your Prosperity Spiral and shape every target Ava suggests."), /*#__PURE__*/React.createElement("p", null, "Answer ", /*#__PURE__*/React.createElement("b", null, "one"), " pillar to start tracking your goals — the rest can wait. Four short assessments, about 3 minutes each."), /*#__PURE__*/React.createElement("div", {
+    className: "pm-help-chips"
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:lock",
+    size: 12,
+    color: "var(--ai-purple)"
+  }), "Private to you"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:refresh-cw",
+    size: 12,
+    color: "var(--ai-purple)"
+  }), "Retake anytime")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-help-coach pf-coach-link",
+    onClick: () => {
+      onClose();
+      pmAskAva(PM_WHY_AVA_PROMPT);
+    }
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:sparkles",
     size: 14,
@@ -3415,9 +3748,10 @@ function PMAssessHub({
   onClose
 }) {
   const [helpOpen, setHelpOpen] = useStatePM(false);
-  /* Esc closes the topmost sheet only — while the ? explainer is open, the
+  const [whyOpen, setWhyOpen] = useStatePM(false);
+  /* Esc closes the topmost sheet only — while an explainer is open, the
      hub's own Esc handler stands down so one keypress doesn't shut both. */
-  usePMEscClose(!helpOpen, onClose);
+  usePMEscClose(!helpOpen && !whyOpen, onClose);
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-wiz-overlay",
     role: "dialog",
@@ -3451,28 +3785,25 @@ function PMAssessHub({
     color: "var(--gray-700)"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "pm-wiz-body pm-hub-body"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-hub-intro"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-hub-why",
+    "aria-haspopup": "dialog",
+    onClick: () => setWhyOpen(true)
   }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-hub-intro-ic",
+    className: "pm-hub-why-ic",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:sparkles",
-    size: 18,
+    size: 15,
     color: "var(--ai-purple)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pm-hub-why-tx"
+  }, "Why Ava asks"), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:circle-help",
+    size: 16,
+    color: "#4A40D6"
   })), /*#__PURE__*/React.createElement("div", {
-    className: "pm-hub-intro-copy"
-  }, /*#__PURE__*/React.createElement("b", null, "Why Ava asks"), /*#__PURE__*/React.createElement("p", null, "Your answers set your Prosperity Spiral and shape every target Ava suggests. Four short assessments — about 3 minutes each."), /*#__PURE__*/React.createElement("div", {
-    className: "pm-hub-intro-chips"
-  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:lock",
-    size: 12,
-    color: "var(--ai-purple)"
-  }), "Private to you"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:refresh-cw",
-    size: 12,
-    color: "var(--ai-purple)"
-  }), "Retake anytime")))), /*#__PURE__*/React.createElement("div", {
     className: "pm-hub-grid"
   }, PM_ASSESS_ORDER.map(key => /*#__PURE__*/React.createElement(PMAssessHubTile, {
     key: key,
@@ -3483,6 +3814,9 @@ function PMAssessHub({
   }))))), /*#__PURE__*/React.createElement(PMAssessHelpModal, {
     open: helpOpen,
     onClose: () => setHelpOpen(false)
+  }), /*#__PURE__*/React.createElement(PMWhyAvaModal, {
+    open: whyOpen,
+    onClose: () => setWhyOpen(false)
   }));
 }
 
@@ -4436,9 +4770,13 @@ function ProfileSteps({
      shared parent state, so it reaches the hub here via a DOM event rather
      than a prop. */
   useEffectPM(() => {
-    function openHub() {
+    function openHub(e) {
       setExpanded(true);
-      setHubOpen(true);
+      const key = e && e.detail && e.detail.key;
+      if (key && PM_PILLAR_ASSESSMENTS[key]) {
+        setHubOpen(false);
+        setOpenAssessKey(key);
+      } else setHubOpen(true);
     }
     window.addEventListener("pf-open-assess-hub", openHub);
     return () => window.removeEventListener("pf-open-assess-hub", openHub);
@@ -5907,7 +6245,7 @@ function pmTabForPage(from) {
   if (/^CommunityMobile/i.test(page)) return "Community";
   if (/^(LearningMobile|Lesson|CourseDetail|MyCourses|AllCourses|Module|SubModule|CourseCheckout|MyLearning)/i.test(page)) return "Learning";
   if (/^Agent/i.test(page)) return "Agent";
-  if (/^(Rewards|Leaderboard|WaysToEarn|Badge|CheckInStreak|MyRewards|RedemptionSuccess|DailyGoal)/i.test(page)) return "Rewards";
+  if (/^(Rewards|Leaderboard|Badge|CheckInStreak|MyRewards|RedemptionSuccess|DailyGoal)/i.test(page)) return "Rewards";
   if (/^Profile/i.test(page)) return "Profile";
   return "Home";
 }

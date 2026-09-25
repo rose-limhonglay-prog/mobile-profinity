@@ -183,9 +183,17 @@
 
 /* hub grid — two columns on desktop (wider dialog) */
 .pw-hub-body{padding-top:20px}
-.pw-hub-intro{display:flex;gap:12px;align-items:flex-start;padding:16px 18px;margin-bottom:20px;
-  background:#F4F3FF;border-radius:var(--r-md)}
-.pw-hub-intro p{margin:0;font-family:var(--font-sans);font-size:14.5px;line-height:1.55;color:var(--gray-600)}
+/* "Why Ava asks" help pill (opens the explainer) beside "How it works" */
+.pw-hub-helps{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;margin-bottom:18px}
+.pw-hub-helps .pw-hub-help{margin:0}
+.pw-hub-why{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:5px 13px 5px 6px;border:1px solid #E2DEFB;border-radius:100px;
+  background:#F4F3FF;cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13.5px;color:#3F37B8;transition:background .15s ease}
+.pw-hub-why:hover{background:#ECE9FF}
+.pw-hub-why-ic{flex:none;width:26px;height:26px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 1px 3px rgba(108,99,255,.18)}
+.pw-help-chips{display:flex;flex-wrap:wrap;gap:6px;margin:-7px 0 20px}
+.pw-help-chips span{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:100px;background:#F4F3FF;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px;color:#4A40D6}
 .pw-hub-help{display:inline-flex;align-items:center;gap:6px;min-height:32px;margin:-6px 0 12px;border:none;background:none;
   cursor:pointer;padding:0;font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:13.5px;color:var(--gray-500)}
 .pw-hub-help:hover{color:var(--brand-navy)}
@@ -737,3 +745,48 @@
 .pw-cac-input i{position:absolute;left:14px;font-style:normal;font-size:15px;color:var(--gray-500)}
 .pw-cac-input input{width:100%;box-sizing:border-box;height:42px;padding:0 14px;border-radius:12px;border:1px solid var(--brand-navy);background:var(--surface-card);font-family:var(--font-sans);font-size:15px;color:var(--text-heading);outline:none}
 .pw-cac-input i+input{padding-left:30px}
+
+/* ===== Today's Targets — daily picks (free PDF download + paid course CTA, daily-targets.js) ===== */
+.pw-picks{display:flex;flex-direction:column;gap:10px;margin:0 0 18px}
+.pw-pick{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;box-sizing:border-box;padding:10px 14px 10px 12px;border-radius:14px;
+  border:1px solid color-mix(in srgb,#1E7A5C 30%,var(--border-default));background:var(--surface-card)}
+.pw-pick-paid{border-color:color-mix(in srgb,var(--brand-gold) 50%,var(--border-default));background:color-mix(in srgb,var(--brand-gold) 7%,var(--surface-card))}
+.pw-pick.done{border-color:transparent;background:var(--surface-sunken)}
+.pw-pick-badge{flex:none;padding:4px 9px;border-radius:6px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;background:#EAF6F0;color:#1E7A5C}
+.pw-pick-badge-paid{background:var(--brand-gold-100,#f7efe3);color:var(--brand-gold-700,#8A5303)}
+.pw-pick-main{flex:1;min-width:0;display:flex;align-items:center;gap:12px;border:none;background:none;padding:0;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.pw-pick-main:hover .tx{text-decoration:underline}
+.pw-pick-icon{flex:none;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--surface-sunken)}
+.pw-pick-paid .pw-pick-icon{background:color-mix(in srgb,var(--brand-gold) 18%,var(--surface-card))}
+.pw-pick-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pw-pick-copy .tx{font-family:var(--font-sans);font-weight:var(--fw-medium);font-size:15.5px;line-height:1.3;color:var(--text-primary)}
+.pw-pick-copy .cap{font-family:var(--font-sans);font-size:12.5px;color:var(--gray-500)}
+.pw-pick.done .pw-pick-copy .tx{color:var(--gray-500)}
+.pw-pick-cta{flex:none;display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 16px;border-radius:100px;border:none;cursor:pointer;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13.5px;background:var(--brand-navy);color:#fff;white-space:nowrap}
+.pw-pick-cta:hover{filter:brightness(1.08)}
+.pw-pick-cta-buy{background:var(--brand-gold);color:var(--brand-navy)}
+.pw-pick-cta.is-done{background:#EAF6F0;color:#1E7A5C}
+.pw-picks-note{margin:0;font-family:var(--font-sans);font-size:13px;color:var(--gray-500)}
+
+/* ===== One-pillar start (2026-09-24) — desktop twin of profile-mobile.css:
+   unassessed Spiral rows, Goal Focus "assess more" link, Targets "Next up" row. ===== */
+.pw-spiral-row.unassessed .dot{background:var(--gray-300)}
+.pw-spiral-row.unassessed .label{color:var(--gray-500)}
+.pw-spiral-row.unassessed .bar{background:repeating-linear-gradient(90deg,var(--gray-150) 0 8px,transparent 8px 13px)}
+.pw-spiral-assess{flex:none;display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:100px;background:#EDEBFF;color:#4A40D6;
+  font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.pw-goal-more{display:flex;width:max-content;align-items:center;gap:6px;margin-top:12px;padding:0;border:none;background:none;cursor:pointer;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14.5px;color:var(--ai-purple)}
+.pw-goal-more:hover{text-decoration:underline}
+.pw-target-assess{display:flex;align-items:center;gap:12px;width:100%;min-height:60px;box-sizing:border-box;margin-bottom:14px;padding:8px 10px 8px 12px;
+  text-align:left;cursor:pointer;border-radius:var(--r-md);
+  border:1px solid color-mix(in srgb,var(--ai-purple) 32%,var(--border-default));background:color-mix(in srgb,var(--ai-purple) 6%,var(--surface-card));
+  transition:background .15s ease}
+.pw-target-assess:hover{background:color-mix(in srgb,var(--ai-purple) 11%,var(--surface-card))}
+.pw-target-assess-ic{flex:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--surface-card)}
+.pw-target-assess-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pw-target-assess-copy .tx{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px;color:var(--brand-navy)}
+.pw-target-assess-copy .cap{font-family:var(--font-sans);font-size:12.5px;color:var(--gray-500)}
+.pw-target-assess-cta{flex:none;display:inline-flex;align-items:center;height:36px;padding:0 16px;border-radius:100px;background:var(--ai-purple);color:#fff;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px}

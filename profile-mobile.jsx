@@ -7,6 +7,15 @@ const DSPM = window.ProfinityDesignSystem_c2b5cc;
 
 function goPM(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
 
+/* Ava's quick chat only mounts on My Learning (coach.js bails elsewhere), so
+   every "Ask Ava" on Profile redirects there with the question in ?ava=;
+   if Ava ever is on this page, open her inline instead. */
+function pmAskAva(prompt) {
+  if (window.PFAva && window.PFAva.open) { window.PFAva.open(prompt); return; }
+  goPM("LearningMobile.html?ava=" + encodeURIComponent(prompt || "1"));
+}
+const PM_WHY_AVA_PROMPT = "Why do you ask me to complete the four self-assessments, and how do my answers shape my Prosperity Spiral and the targets you suggest?";
+
 /* Standalone badge image with a hover/tap tooltip explaining what it means
    (mastery + skinfluencer badges aren't part of DSPM.VerificationSeals). */
 function PMSealBadge({ src, alt, label, width, height, style }) {
@@ -140,21 +149,31 @@ function pmPillarScore(pillarKey, assessState) {
   return Math.min(100, Math.round(seval * 0.6 + scourse));
 }
 
-/* "Track your goals" is gated behind the 4 scored pillar assessments (not
-   Dream & Vision, which never touches a pillar score) — the forecast has
-   nothing to show until every pillar has a real baseline. */
+/* "Track your goals" opens as soon as ONE scored pillar assessment is done
+   (user, 2026-09-24 — previously all four). Dream & Vision never counts: it
+   doesn't touch a pillar score. The answered pillar becomes the starting
+   goal; the other three join the Spiral / Targets as they're assessed. */
 const PM_FORECAST_PILLARS = PM_PILLARS.map((p) => p.key);
+const PM_FORECAST_MIN = 1;
+function pmAssessed(assessState, key) { return !!(assessState[key] && assessState[key].status === "completed"); }
 function pmForecastDone(assessState) {
-  return PM_FORECAST_PILLARS.filter((k) => assessState[k] && assessState[k].status === "completed").length;
+  return PM_FORECAST_PILLARS.filter((k) => pmAssessed(assessState, k)).length;
+}
+/* Next pillar to answer, in hub order — null once all four are in. */
+function pmNextUnassessed(assessState) {
+  return PM_FORECAST_PILLARS.find((k) => !pmAssessed(assessState, k)) || null;
 }
 
 /* Pillars scored and ranked weakest → strongest (tie-break order below is
    the Goal Focus rule from PRD 3.3). */
 const PM_GOAL_TIEBREAK = ["Clinical Skills", "Business Systems", "Sales", "Marketing"];
+/* Assessed pillars rank first (weakest → strongest); unassessed ones trail
+   with `assessed:false` so the cards can render them as "answer me" tiles
+   rather than pretend a course-only number is a real baseline. */
 function pmRankedPillars(assessState) {
   return PM_PILLARS.
-  map((p) => ({ ...p, score: pmPillarScore(p.key, assessState) })).
-  sort((a, b) => a.score - b.score || PM_GOAL_TIEBREAK.indexOf(a.key) - PM_GOAL_TIEBREAK.indexOf(b.key)).
+  map((p) => ({ ...p, score: pmPillarScore(p.key, assessState), assessed: pmAssessed(assessState, p.key) })).
+  sort((a, b) => (b.assessed - a.assessed) || a.score - b.score || PM_GOAL_TIEBREAK.indexOf(a.key) - PM_GOAL_TIEBREAK.indexOf(b.key)).
   map((p) => ({ ...p, band: pmBand(p.score) }));
 }
 function pmLowestPillar(assessState) { return pmRankedPillars(assessState)[0].key; }
@@ -206,7 +225,7 @@ function PMInfoModal({ open, onClose, title, icon, children, coach, coachLabel }
         <div className="pm-help-body">
           {children}
           {coach &&
-          <button type="button" className="pf-coach-link pm-help-coach" data-coach={coach} onClick={onClose}>
+          <button type="button" className="pf-coach-link pm-help-coach" onClick={() => { onClose(); pmAskAva(coach); }}>
               <DSPM.IconifyIcon name="lucide:sparkles" size={14} color="var(--ai-purple)" />{coachLabel || "Ask Ava"}
             </button>}
         </div>
@@ -240,15 +259,21 @@ function PMPaneCard({ id, title, sub, infoLabel, onInfo, className, children, de
    inside, naming the weakest pillar. */
 function PMGoalFocusCard({ assessState }) {
   const [info, setInfo] = useStatePM(false);
-  const weakest = pmRankedPillars(assessState)[0];
+  const ranked = pmRankedPillars(assessState);
+  const weakest = ranked[0];
   const band = weakest.band;
+  const assessedCount = ranked.filter((p) => p.assessed).length;
+  const remaining = PM_FORECAST_PILLARS.length - assessedCount;
+  const note = remaining === 0 ? "Your weakest pillar right now — Ava recommends starting here." :
+  assessedCount === 1 ? "The pillar you've answered so far — Ava starts your journey here." :
+  "Your weakest assessed pillar — Ava recommends starting here.";
   return (
     <PMPaneCard title="Let's work on your goal" infoLabel="How your goal is chosen" onInfo={() => setInfo(true)} className="pm-goal-card" defaultOpen={false}>
       <div className="pm-goal-top">
         <div className="pm-goal-main">
           <span className="eyebrow" style={{ color: band.text }}>{band.label}</span>
           <div className="ti">{weakest.key}</div>
-          <p className="note">Your weakest pillar right now — Ava recommends starting here.</p>
+          <p className="note">{note}</p>
         </div>
         <div className="pm-goal-ring" style={{ "--pct": weakest.score, "--band": band.color, "--band-text": band.text }}
           role="img" aria-label={weakest.key + " " + weakest.score + " percent — " + band.label}>
@@ -259,9 +284,16 @@ function PMGoalFocusCard({ assessState }) {
       <button type="button" className="pm-goal-cta" onClick={() => goPM(pmGoalUrl(weakest.key))}>
         Work on {weakest.key}<DSPM.IconifyIcon name="lucide:arrow-up-right" size={17} color="#fff" />
       </button>
+      {remaining > 0 &&
+      <button type="button" className="pm-goal-more" onClick={() => pmOpenAssessHub(pmNextUnassessed(assessState))}>
+          <DSPM.IconifyIcon name="lucide:compass" size={15} color="var(--ai-purple)" />
+          Assess {remaining} more pillar{remaining === 1 ? "" : "s"} to compare
+          <DSPM.IconifyIcon name="lucide:chevron-right" size={15} color="var(--ai-purple)" />
+        </button>}
       <PMInfoModal open={info} onClose={() => setInfo(false)} title="How your goal is chosen" icon="lucide:trophy"
         coach={"Why is " + weakest.key + " my goal focus right now, and what should I do first?"} coachLabel="Ask Ava about this goal">
         <p>Your goal is always your <b>lowest-scoring pillar</b>. Each pillar's score is your <b>Get to know you</b> baseline (worth up to 60%) plus the course progress you've made in that area.</p>
+        <p>You only need to answer <b>one pillar</b> to start — your goal is then the lowest pillar you've assessed so far. Pillars you haven't answered yet aren't scored, so they can't be your goal until you do.</p>
         <p>The dial's colour is its band: <b>Expert</b>, <b>Growing strong</b>, <b>Building momentum</b> or <b>Just getting started</b>. When this pillar overtakes another, your goal switches automatically.</p>
       </PMInfoModal>
     </PMPaneCard>);
@@ -280,12 +312,24 @@ function PMSpiralCard({ assessState }) {
   const [tim, setTim] = useStatePM(false);
   const ranked = pmRankedPillars(assessState);
   const weakest = ranked[0];
+  const remaining = ranked.filter((p) => !p.assessed).length;
   return (
     <PMPaneCard id="prosperity-spiral" title="The Prosperity Spiral" stacked
-      sub={<><b>{weakest.key}</b> is carrying the least weight. Lift it and the whole spiral rises.</>}
+      sub={remaining > 0 ?
+      <><b>{weakest.key}</b> is your starting point. Answer the other {remaining === 1 ? "pillar" : remaining + " pillars"} to complete your Spiral.</> :
+      <><b>{weakest.key}</b> is carrying the least weight. Lift it and the whole spiral rises.</>}
       infoLabel="How the Prosperity Spiral works" onInfo={() => setInfo(true)} defaultOpen={window.location.hash === "#prosperity-spiral"}>
       <div className="pm-spiral-grid">
         {ranked.map((p) => {
+          if (!p.assessed) return (
+            <button key={p.key} type="button" className="pm-spiral-tile unassessed"
+              aria-label={p.key + " — not assessed yet. Tap to answer its questions, about 3 minutes"}
+              onClick={() => pmOpenAssessHub(p.key)}>
+                <span className="pm-spiral-ring" style={{ "--pct": 0 }} aria-hidden="true"><span className="n q">?</span></span>
+                <span className="pm-spiral-tile-name">{p.key}</span>
+                <span className="pm-spiral-tile-chip assess">Assess</span>
+                <span className="pm-spiral-tile-avg">Tap to answer · ~3 mins</span>
+              </button>);
           const lowest = p.key === weakest.key;
           const diff = p.score - PM_PILLAR_AVERAGE;
           const chip = lowest ? "Start here" : PM_BAND_CHIP[p.band.key];
@@ -336,7 +380,7 @@ function PMSpiralCard({ assessState }) {
    (high / medium / low / low), plus any Ava-suggested extras from the coach. */
 function pmBuildTargets(ranked, rounds, extras) {
   const prio = ["high", "medium", "low", "low"];
-  const list = ranked.map((p, i) => {
+  const list = ranked.filter((p) => p.assessed !== false).map((p, i) => {
     const pool = PM_TARGET_POOL[p.key];
     const idx = (rounds[p.key] || 0) % pool.length;
     return { id: p.key + ":" + idx, text: pool[idx], pillar: p.key, priority: prio[i] || "low", done: false };
@@ -353,15 +397,131 @@ function pmLoadTodayTargets(ranked) {
   try { extras = (JSON.parse(localStorage.getItem("pf-coach-targets")) || []).map((t) => ({ text: t.text })); } catch (e) {}
   try {
     const saved = JSON.parse(localStorage.getItem(PM_TARGETS_KEY));
-    if (saved && saved.date === pmTodayStamp() && Array.isArray(saved.targets)) return saved;
+    if (saved && saved.date === pmTodayStamp() && Array.isArray(saved.targets)) return pmReconcileTargets(saved, ranked);
   } catch (e) {}
   return { date: pmTodayStamp(), rounds: {}, targets: pmBuildTargets(ranked, {}, extras) };
+}
+
+/* A pillar answered mid-day joins today's set on the spot: append its task
+   (priority by its rank) rather than waiting for tomorrow's rebuild. */
+function pmReconcileTargets(state, ranked) {
+  const have = new Set(state.targets.map((t) => t.pillar));
+  const missing = ranked.filter((p) => p.assessed && !have.has(p.key));
+  if (!missing.length) return state;
+  const prio = ["high", "medium", "low", "low"];
+  const added = missing.map((p) => {
+    const pool = PM_TARGET_POOL[p.key];
+    const idx = ((state.rounds || {})[p.key] || 0) % pool.length;
+    return { id: p.key + ":" + idx, text: pool[idx], pillar: p.key, priority: prio[ranked.indexOf(p)] || "low", done: false, added: true };
+  });
+  return { ...state, targets: state.targets.concat(added) };
+}
+
+/* "Next up" row at the top of Today's Targets while pillars are still
+   unanswered — opens that pillar's questions directly. Not part of the
+   ticked set: it completes itself when the assessment does. */
+function PMAssessNudgeRow({ pillarKey, remaining }) {
+  const open = () => pmOpenAssessHub(pillarKey);
+  return (
+    <div className="pm-target-row pm-target-assess">
+      <span className="pm-target-assess-ic" aria-hidden="true"><DSPM.IconifyIcon name="lucide:compass" size={18} color="var(--ai-purple)" /></span>
+      <button type="button" className="pm-target-main" onClick={open}
+        aria-label={"Answer the " + pillarKey + " questions in Get to know you to add it to your Spiral. About 3 minutes"}>
+        <span className="pm-target-copy">
+          <span className="tx">Answer the {pillarKey} questions</span>
+          <span className="cap">Get to know you · {remaining} pillar{remaining === 1 ? "" : "s"} still to assess · ~3 mins</span>
+        </span>
+      </button>
+      <button type="button" className="pm-pick-cta pm-target-assess-cta" onClick={open}>Start</button>
+    </div>);
+}
+
+/* Daily picks (user, 2026-09-22): every day's set must also carry one FREE
+   download (a PDF from the free library) and one PAID course CTA. Both are
+   chosen per calendar day by daily-targets.js (window.PFDailyTargets), which
+   also records the funnel (shown → tapped → downloaded / bought) and the
+   revenue the paid pick drives. Rendered at the top of Today's Targets. */
+function usePMDailyPicks(view) {
+  const T = window.PFDailyTargets;
+  const [picks, setPicks] = useStatePM(() => T ? (view ? T.view() : T.get()) : null);
+  useEffectPM(() => {
+    if (!T) return;
+    const sync = () => setPicks(Object.assign({}, T.get()));
+    window.addEventListener("pf:daily-targets", sync);
+    return () => window.removeEventListener("pf:daily-targets", sync);
+  }, []);
+  return picks;
+}
+
+/* Collapsed-preview rows for the two picks (open ones only). */
+function pmPickPreviewRows(picks) {
+  if (!picks) return [];
+  const rows = [];
+  if (!picks.free.done) rows.push({ id: "pick:free", text: "Free download: " + picks.free.title, priority: "high" });
+  if (!picks.paid.purchased) rows.push({ id: "pick:paid", text: "Course pick: " + picks.paid.title, priority: "high" });
+  return rows;
+}
+
+function PMDailyPicks() {
+  const T = window.PFDailyTargets;
+  const picks = usePMDailyPicks(true);
+  if (!T || !picks) return null;
+  const free = picks.free, paid = picks.paid;
+  const price = "£" + Number(paid.price || 0).toLocaleString("en-GB");
+
+  function download() { T.tapFree(); T.downloadFree(); }
+  function buy() { T.tapPaid("buy"); goPM(T.paidCheckoutUrl(false)); }
+  function viewCourse() { T.tapPaid("detail"); goPM(T.paidDetailUrl(false)); }
+
+  return (
+    <div className="pm-picks" role="group" aria-label="Today's free download and course pick">
+      <div className={"pm-target-row pm-pick pm-pick-free" + (free.done ? " done" : "")}>
+        <span className="pm-pick-badge" aria-hidden="true">Free</span>
+        <button type="button" className="pm-target-main" onClick={download}
+          aria-label={(free.done ? "Downloaded: " : "Download the free PDF: ") + free.title}>
+          <span className="pm-pick-icon">
+            <DSPM.IconifyIcon name={free.done ? "lucide:file-check-2" : "lucide:file-down"} size={18} color="var(--pm-pick-free, #1E7A5C)" />
+          </span>
+          <span className="pm-target-copy">
+            <span className="tx">{free.title}</span>
+            <span className="cap">PDF guide · {free.pages} pages · +{free.pts} pts</span>
+          </span>
+        </button>
+        <button type="button" className={"pm-pick-cta" + (free.done ? " is-done" : "")} onClick={download}>
+          {free.done ? <><DSPM.IconifyIcon name="lucide:check" size={13} color="#1E7A5C" />Saved</> : "Download"}
+        </button>
+      </div>
+
+      <div className={"pm-target-row pm-pick pm-pick-paid" + (paid.purchased ? " done" : "")}>
+        <span className="pm-pick-badge pm-pick-badge-paid" aria-hidden="true">Course</span>
+        <button type="button" className="pm-target-main" onClick={viewCourse}
+          aria-label={(paid.purchased ? "Enrolled: " : "View course: ") + paid.title + ", " + price}>
+          <span className="pm-pick-icon">
+            <DSPM.IconifyIcon name="lucide:graduation-cap" size={18} color="var(--brand-gold-700, #8A5303)" />
+          </span>
+          <span className="pm-target-copy">
+            <span className="tx">{paid.title}</span>
+            <span className="cap">{paid.purchased ? "Enrolled · +" + paid.pts + " pts earned" : "Course · " + price + " · +" + paid.pts + " pts when you enrol"}</span>
+          </span>
+        </button>
+        {paid.purchased ?
+        <button type="button" className="pm-pick-cta is-done" onClick={viewCourse}>
+            <DSPM.IconifyIcon name="lucide:check" size={13} color="#1E7A5C" />Owned
+          </button> :
+        <button type="button" className="pm-pick-cta pm-pick-cta-buy" onClick={buy} aria-label={"Buy " + paid.title + " for " + price}>
+            Buy {price}
+          </button>}
+      </div>
+      <p className="pm-picks-note">New free download and course pick every day</p>
+    </div>);
 }
 
 function PMTargetsCard({ assessState }) {
   const [info, setInfo] = useStatePM(false);
   const ranked = pmRankedPillars(assessState);
   const weakest = ranked[0];
+  const nextKey = pmNextUnassessed(assessState);
+  const remaining = ranked.filter((p) => !p.assessed).length;
 
   /* Persisted per day: tick state, per-pillar pool cursors and any task that
      arrived after the set was finished. A new date starts a fresh set. */
@@ -369,6 +529,9 @@ function PMTargetsCard({ assessState }) {
   useEffectPM(() => {
     try { localStorage.setItem(PM_TARGETS_KEY, JSON.stringify(state)); } catch (e) {}
   }, [state]);
+  /* Another pillar answered while this card is mounted (the hub is a
+     sibling overlay) → its task joins today's set immediately. */
+  useEffectPM(() => { setState((s) => pmReconcileTargets(s, ranked)); }, [assessState]);
 
   const [fresh, setFresh] = useStatePM(null);     // id of the row animating in
   const [settling, setSettling] = useStatePM(null); // id of the row just ticked
@@ -424,6 +587,8 @@ function PMTargetsCard({ assessState }) {
     <PMPaneCard title="Today's Targets"
       sub={<><span className="pm-target-date">{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}</span>Completing these will move your Prosperity Spiral forward</>}
       infoLabel="How targets and points work" onInfo={() => setInfo(true)}>
+      <PMDailyPicks />
+      {nextKey && <PMAssessNudgeRow pillarKey={nextKey} remaining={remaining} />}
       <div className="pm-target-rows">
         {rows.map((t) => {
           const pr = PM_PRIORITY[t.priority];
@@ -456,9 +621,11 @@ function PMTargetsCard({ assessState }) {
 
       <PMInfoModal open={info} onClose={() => setInfo(false)} title="How targets and points work" icon="lucide:list-checks"
         coach="What should I tackle first from today's targets, and why?" coachLabel="Ask Ava where to start">
-        <p>Ava picks one small action per pillar each day and orders them by priority — <b>red double chevron</b> for your weakest pillar, <b>gold single</b> for the next, <b>grey dash</b> for the rest.</p>
+        <p>Ava picks one small action per <b>assessed</b> pillar each day and orders them by priority — <b>red double chevron</b> for your weakest pillar, <b>gold single</b> for the next, <b>grey dash</b> for the rest.</p>
         <p>Ticking a target earns its points (<b>+150 / +100 / +50</b>) and nudges that pillar's score. Tap the row itself to open the pillar's goal page; the circle is just the tick.</p>
         <p>Finish the set and a new target appears — completed ones stay where they are so you can see the day's work.</p>
+        <p>Pillars you haven't answered yet don't get targets — the <b>Next up</b> row takes you straight to their questions, and their tasks join the list the moment you finish.</p>
+        <p>Every day also brings a <b>free PDF download</b> (+50 pts) and a <b>course pick</b> (+150 pts when you enrol). Both refresh daily.</p>
       </PMInfoModal>
     </PMPaneCard>);
 }
@@ -469,7 +636,11 @@ function PMTargetsCard({ assessState }) {
    (never as empty or zeroed states). The CTA opens "Get to know you", which
    lives inside ProfileSteps — not a prop we have here — so it's reached by
    dispatching a DOM event ProfileSteps listens for. */
-function pmOpenAssessHub() { window.dispatchEvent(new CustomEvent("pf-open-assess-hub")); }
+/* Pass a pillar key to land straight on that pillar's questions; anything
+   else (including a click event) opens the hub. */
+function pmOpenAssessHub(key) {
+  window.dispatchEvent(new CustomEvent("pf-open-assess-hub", { detail: { key: typeof key === "string" ? key : null } }));
+}
 
 function PMGoalsGateCard({ doneCount }) {
   const heading = doneCount === 0 ? "Start with ‘Get to know you’" : `Keep going — ${doneCount} of 4 done`;
@@ -479,7 +650,7 @@ function PMGoalsGateCard({ doneCount }) {
         <DSPM.IconifyIcon name="lucide:compass" size={26} color="#fff" />
       </span>
       <h3>{heading}</h3>
-      <p>Your forecast unlocks once all four pillar assessments — Marketing, Sales, Clinical Skills and Business Systems — are complete.</p>
+      <p>Answer just <b>one</b> pillar — Marketing, Sales, Clinical Skills or Business Systems — and your goal tracking starts there. Add the other three whenever you like to complete your Spiral.</p>
       <div className="pm-goals-gate-dots" aria-label={doneCount + " of 4 assessments done"}>
         {PM_FORECAST_PILLARS.map((k, i) => <span key={k} className={i < doneCount ? "on" : ""} />)}
       </div>
@@ -591,16 +762,17 @@ function PMGoalsMenu({ assessState }) {
   }, []);
 
   const doneCount = pmForecastDone(assessState);
-  const unlocked = doneCount === PM_FORECAST_PILLARS.length;
+  const unlocked = doneCount >= PM_FORECAST_MIN;
   const ranked = unlocked ? pmRankedPillars(assessState) : [];
 
   /* Collapsed preview: the day's open targets in priority order, first two
      shown, the rest counted. Re-read on every render so ticks made in the
      expanded pane show once the user slides back. */
-  const openTargets = unlocked ? pmLoadTodayTargets(ranked).targets.
+  const picks = usePMDailyPicks(false);
+  const openTargets = unlocked ? pmPickPreviewRows(picks).concat(pmLoadTodayTargets(ranked).targets.
   map((t, i) => ({ ...t, i })).
   filter((t) => !t.done).
-  sort((a, b) => PM_PRIORITY_ORDER[a.priority] - PM_PRIORITY_ORDER[b.priority] || a.i - b.i) : [];
+  sort((a, b) => PM_PRIORITY_ORDER[a.priority] - PM_PRIORITY_ORDER[b.priority] || a.i - b.i)) : [];
   const previewTargets = openTargets.slice(0, 2);
   const moreCount = openTargets.length - previewTargets.length;
 
@@ -639,7 +811,7 @@ function PMGoalsMenu({ assessState }) {
                 <span className="pm-goals-preview-h">
                   <DSPM.IconifyIcon name="lucide:lock" size={16} color="var(--brand-gold)" />Assessment required
                 </span>
-                <p className="pm-goals-preview-empty">Complete ‘Get to know you’ to unlock your forecast — tap to start</p>
+                <p className="pm-goals-preview-empty">Answer one pillar in ‘Get to know you’ to start tracking — tap to begin</p>
               </>}
           </div>
         </button>
@@ -1233,8 +1405,8 @@ const DM_THREADS_SEED_PM = [
 
 
 const VOICE_CONFS_SEED_PM = [
-{ id: "vc1", name: "Clinical Case Review", who: "Dr Tim Pearce, Dr Sarah Kim +3", t: "Today, 4:00 PM", live: true },
-{ id: "vc2", name: "Business Growth Sync", who: "Miranda Pearce, Dr Alex Chen", t: "Tomorrow, 10:00 AM", live: false }];
+  { id: "c1", name: "Case Study Discussion", who: "Dr Tim Pearce, Dr Rachel Adams +98", t: "Live now · 100 participants", live: true },
+  { id: "c2", name: "Business Growth Sync", who: "Miranda Pearce, Mark Ellis", t: "Tomorrow, 10:00 AM", live: false }];
 
 const PF_GROUPS_KEY = "pf-dm-groups";
 
@@ -1347,7 +1519,7 @@ function NewConversationScreenPM({ contacts, picked, onToggle, query, onQuery, g
 
 function VoiceConfRowPM({ v }) {
   return (
-    <div className="mp-row mp-vc-row">
+    <button type="button" className="mp-row mp-vc-row" onClick={() => goPM("Messages.html?tab=conference&conf=" + v.id)} aria-label={v.name + (v.live ? ", live now" : "")}>
       <span className="mp-av mp-vc-icon">
         <DSPM.IconifyIcon name="lucide:phone-call" size={22} color="var(--brand-navy)" />
       </span>
@@ -1361,7 +1533,7 @@ function VoiceConfRowPM({ v }) {
         </span>
         <span className="mp-vc-time">{v.t}</span>
       </span>
-    </div>);
+    </button>);
 
 }
 
@@ -1945,7 +2117,37 @@ function PMAssessHelpModal({ open, onClose }) {
           <p>That score becomes the starting point for your personalised journey plan — it's how Ava (and your mentor) know where to focus your coaching first.</p>
           <p>It also feeds directly into your Prosperity Spiral: your self-assessment sets the baseline for each pillar, and completing courses can carry it the rest of the way to 100%.</p>
           <p>Dream &amp; Vision works differently — it's never scored. It simply helps us understand your goals so we can build your journey around them.</p>
-          <button type="button" className="pm-help-coach pf-coach-link" data-coach="Explain how my self-assessment scores work and how they feed my Prosperity Spiral." onClick={onClose}>
+          <button type="button" className="pm-help-coach pf-coach-link" onClick={() => { onClose(); pmAskAva("Explain how my self-assessment scores work and how they feed my Prosperity Spiral."); }}>
+            <DSPM.IconifyIcon name="lucide:sparkles" size={14} color="var(--ai-purple)" />Ask Ava
+          </button>
+        </div>
+      </div>
+    </div>);
+}
+
+/* "Why Ava asks" — the old intro card on the hub, now behind a small Ava
+   help pill. Details + an Ask Ava CTA that redirects to Ava's quick chat. */
+function PMWhyAvaModal({ open, onClose }) {
+  usePMEscClose(open, onClose);
+  if (!open) return null;
+  return (
+    <div className="pm-help-overlay" onClick={onClose}>
+      <div className="pm-help-card" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Why Ava asks">
+        <div className="pm-help-hd">
+          <span className="pm-help-icon"><DSPM.IconifyIcon name="lucide:sparkles" size={18} color="var(--ai-purple)" /></span>
+          <h3>Why Ava asks</h3>
+          <button type="button" className="pm-help-x" aria-label="Close" onClick={onClose}>
+            <DSPM.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" />
+          </button>
+        </div>
+        <div className="pm-help-body">
+          <p>Your answers set your Prosperity Spiral and shape every target Ava suggests.</p>
+          <p>Answer <b>one</b> pillar to start tracking your goals — the rest can wait. Four short assessments, about 3 minutes each.</p>
+          <div className="pm-help-chips">
+            <span><DSPM.IconifyIcon name="lucide:lock" size={12} color="var(--ai-purple)" />Private to you</span>
+            <span><DSPM.IconifyIcon name="lucide:refresh-cw" size={12} color="var(--ai-purple)" />Retake anytime</span>
+          </div>
+          <button type="button" className="pm-help-coach pf-coach-link" onClick={() => { onClose(); pmAskAva(PM_WHY_AVA_PROMPT); }}>
             <DSPM.IconifyIcon name="lucide:sparkles" size={14} color="var(--ai-purple)" />Ask Ava
           </button>
         </div>
@@ -1955,9 +2157,10 @@ function PMAssessHelpModal({ open, onClose }) {
 
 function PMAssessHub({ assessState, onOpenAssess, onClose }) {
   const [helpOpen, setHelpOpen] = useStatePM(false);
-  /* Esc closes the topmost sheet only — while the ? explainer is open, the
+  const [whyOpen, setWhyOpen] = useStatePM(false);
+  /* Esc closes the topmost sheet only — while an explainer is open, the
      hub's own Esc handler stands down so one keypress doesn't shut both. */
-  usePMEscClose(!helpOpen, onClose);
+  usePMEscClose(!helpOpen && !whyOpen, onClose);
   return (
     <div className="pm-wiz-overlay" role="dialog" aria-modal="true" aria-label="Get to know you">
       <div className="pm-wiz-card">
@@ -1974,17 +2177,11 @@ function PMAssessHub({ assessState, onOpenAssess, onClose }) {
           </button>
         </div>
         <div className="pm-wiz-body pm-hub-body">
-          <div className="pm-hub-intro">
-            <span className="pm-hub-intro-ic" aria-hidden="true"><DSPM.IconifyIcon name="lucide:sparkles" size={18} color="var(--ai-purple)" /></span>
-            <div className="pm-hub-intro-copy">
-              <b>Why Ava asks</b>
-              <p>Your answers set your Prosperity Spiral and shape every target Ava suggests. Four short assessments — about 3 minutes each.</p>
-              <div className="pm-hub-intro-chips">
-                <span><DSPM.IconifyIcon name="lucide:lock" size={12} color="var(--ai-purple)" />Private to you</span>
-                <span><DSPM.IconifyIcon name="lucide:refresh-cw" size={12} color="var(--ai-purple)" />Retake anytime</span>
-              </div>
-            </div>
-          </div>
+          <button type="button" className="pm-hub-why" aria-haspopup="dialog" onClick={() => setWhyOpen(true)}>
+            <span className="pm-hub-why-ic" aria-hidden="true"><DSPM.IconifyIcon name="lucide:sparkles" size={15} color="var(--ai-purple)" /></span>
+            <span className="pm-hub-why-tx">Why Ava asks</span>
+            <DSPM.IconifyIcon name="lucide:circle-help" size={16} color="#4A40D6" />
+          </button>
           <div className="pm-hub-grid">
             {PM_ASSESS_ORDER.map((key) =>
             <PMAssessHubTile key={key} assessKey={key} def={pmAssessDef(key)} entry={assessState[key]} onOpen={onOpenAssess} />
@@ -1993,6 +2190,7 @@ function PMAssessHub({ assessState, onOpenAssess, onClose }) {
         </div>
       </div>
       <PMAssessHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <PMWhyAvaModal open={whyOpen} onClose={() => setWhyOpen(false)} />
     </div>);
 }
 
@@ -2507,7 +2705,11 @@ function ProfileSteps({ assessState, onAssessPatch }) {
      shared parent state, so it reaches the hub here via a DOM event rather
      than a prop. */
   useEffectPM(() => {
-    function openHub() { setExpanded(true); setHubOpen(true); }
+    function openHub(e) {
+      setExpanded(true);
+      const key = e && e.detail && e.detail.key;
+      if (key && PM_PILLAR_ASSESSMENTS[key]) { setHubOpen(false); setOpenAssessKey(key); } else setHubOpen(true);
+    }
     window.addEventListener("pf-open-assess-hub", openHub);
     return () => window.removeEventListener("pf-open-assess-hub", openHub);
   }, []);
@@ -3472,7 +3674,7 @@ function pmTabForPage(from) {
   if (/^CommunityMobile/i.test(page)) return "Community";
   if (/^(LearningMobile|Lesson|CourseDetail|MyCourses|AllCourses|Module|SubModule|CourseCheckout|MyLearning)/i.test(page)) return "Learning";
   if (/^Agent/i.test(page)) return "Agent";
-  if (/^(Rewards|Leaderboard|WaysToEarn|Badge|CheckInStreak|MyRewards|RedemptionSuccess|DailyGoal)/i.test(page)) return "Rewards";
+  if (/^(Rewards|Leaderboard|Badge|CheckInStreak|MyRewards|RedemptionSuccess|DailyGoal)/i.test(page)) return "Rewards";
   if (/^Profile/i.test(page)) return "Profile";
   return "Home";
 }

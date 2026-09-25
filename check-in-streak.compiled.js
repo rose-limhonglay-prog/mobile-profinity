@@ -109,6 +109,82 @@ function buildSlotsCIS(streak) {
   }
   return slots;
 }
+
+/* Streak-at-risk banner — same card as the Rewards dashboard's StreakRiskBanner
+   (rewards-dashboard.jsx). The streak lapses 24h after the last check-in, so it
+   shows once the member hasn't checked in for 12h+ and counts down live; an
+   explicit riskDeadline (demo button / server nudge) wins. Checking in or
+   freezing clears riskDeadline in the engine, which hides it. */
+const CIS_STREAK_WINDOW_MS = 24 * 3600000;
+const CIS_STREAK_WARN_MS = 12 * 3600000;
+function cisStreakDeadline(streak) {
+  if (!streak || !streak.current || streak.frozen) return null;
+  if (streak.riskDeadline) return new Date(streak.riskDeadline).getTime();
+  const last = streak.lastCheckIn ? new Date(streak.lastCheckIn).getTime() : 0;
+  if (!last || Date.now() - last < CIS_STREAK_WARN_MS) return null;
+  return last + CIS_STREAK_WINDOW_MS;
+}
+function fmtClockCIS(ms) {
+  if (ms <= 0) return "00:00:00";
+  const h = Math.floor(ms / 3600000),
+    m = Math.floor(ms % 3600000 / 60000),
+    s = Math.floor(ms % 60000 / 1000);
+  return [h, m, s].map(n => String(n).padStart(2, "0")).join(":");
+}
+function CisNotifPreview({
+  hoursLabel,
+  body
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cis-notif-preview",
+    role: "note"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cis-notif-icon"
+  }, /*#__PURE__*/React.createElement(DSCIS.IconifyIcon, {
+    name: "lucide:bell-ring",
+    size: 16,
+    color: "#292569"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "cis-notif-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cis-notif-title"
+  }, "PROfinity ", /*#__PURE__*/React.createElement("span", null, hoursLabel)), /*#__PURE__*/React.createElement("div", {
+    className: "cis-notif-text"
+  }, body)));
+}
+function CisStreakRiskBanner({
+  streak
+}) {
+  const [now, setNow] = useStateCIS(() => Date.now());
+  useEffectCIS(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  const deadline = cisStreakDeadline(streak);
+  if (!deadline) return null;
+  const days = streak.current;
+  return /*#__PURE__*/React.createElement("section", {
+    className: "cis-risk-banner",
+    "aria-label": "Your " + days + "-day streak is at risk"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cis-risk-head"
+  }, /*#__PURE__*/React.createElement(DSCIS.IconifyIcon, {
+    name: "lucide:flame",
+    size: 22,
+    color: "#3D2A00"
+  }), /*#__PURE__*/React.createElement("span", null, "Your ", days, "-Day Streak is at Risk!")), /*#__PURE__*/React.createElement("div", {
+    className: "cis-risk-clock",
+    "aria-live": "off"
+  }, "Expires in ", fmtClockCIS(deadline - now)), /*#__PURE__*/React.createElement("div", {
+    className: "cis-notif-stack"
+  }, /*#__PURE__*/React.createElement(CisNotifPreview, {
+    hoursLabel: "· 6h before",
+    body: "Don't lose your " + days + "-day streak — check in before it expires!"
+  }), /*#__PURE__*/React.createElement(CisNotifPreview, {
+    hoursLabel: "· 2h before",
+    body: "Last call! Your streak expires in 2 hours."
+  })));
+}
 function CheckInStreakScreen() {
   const [config] = useStateCIS(() => PF_CIS.getConfig());
   const [state, setState] = useStateCIS(() => PF_CIS.getState());
@@ -269,7 +345,9 @@ function CheckInStreakScreen() {
     className: "cis-cta-pts"
   }, "· +", projected, " pts")), /*#__PURE__*/React.createElement("p", {
     className: "cis-cta-note"
-  }, checkedInToday ? "Your streak is safe until tomorrow." : "Check in once a day to keep the row growing."), /*#__PURE__*/React.createElement("div", {
+  }, checkedInToday ? "Your streak is safe until tomorrow." : "Check in once a day to keep the row growing."), /*#__PURE__*/React.createElement(CisStreakRiskBanner, {
+    streak: streak
+  }), /*#__PURE__*/React.createElement("div", {
     className: "cis-stats"
   }, /*#__PURE__*/React.createElement("div", {
     className: "ml-card cis-stat"
@@ -400,6 +478,13 @@ function CheckInStreakScreen() {
       refresh();
     }
   }, "Demo: 5 in a row"), /*#__PURE__*/React.createElement("button", {
+    className: "ml-demo-btn",
+    type: "button",
+    onClick: () => {
+      PF_CIS.setStreakAtRisk(6);
+      refresh();
+    }
+  }, "Demo: streak at risk"), /*#__PURE__*/React.createElement("button", {
     className: "ml-demo-btn",
     type: "button",
     onClick: () => {

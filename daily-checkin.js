@@ -134,29 +134,31 @@
     } else {
       sub.innerHTML = "Points for simply showing up. Come back tomorrow to <b>start a streak</b>.";
     }
-    /* 7-day streak row: lit for each day of the current run (this week’s slice) */
+    /* Mon→Sun streak row for the current calendar week only: earlier days of
+       this week that belong to the running streak arrive lit, today checks
+       itself in a beat later, days still to come this week stay empty. */
     var dots = el.querySelector(".pf-dci-dots");
     dots.innerHTML = "";
-    var lit = streak > 0 ? ((streak - 1) % WEEK) + 1 : 0;
     var todayDot = null;
-    /* weekday initial under each dot: dot j sits (j - todayIndex) days from today */
-    var DOW = ["S", "M", "T", "W", "T", "F", "S"];
-    var todayIdx = lit > 0 ? lit - 1 : 0, now = new Date();
+    var DOW = ["M", "T", "W", "T", "F", "S", "S"];
+    var now = new Date();
+    var todayIdx = (now.getDay() + 6) % WEEK; /* Monday = 0 … Sunday = 6 */
+    var weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - todayIdx);
     for (var j = 0; j < WEEK; j++) {
       var col = document.createElement("span");
       col.className = "pf-dci-day";
       var d = document.createElement("span");
-      var isToday = j === lit - 1;
-      /* earlier days arrive lit; today's dot arrives empty and checks itself
-         in a beat later (see below) so the new check-in is visibly booked */
-      d.className = "pf-dci-dot" + (j < lit && !isToday ? " is-lit" : "") + (isToday ? " is-today" : "");
+      var isToday = j === todayIdx;
+      /* a past day this week is lit when it falls inside the current run */
+      var wasLit = j < todayIdx && (todayIdx - j) < streak;
+      d.className = "pf-dci-dot" + (wasLit ? " is-lit" : "") + (isToday ? " is-today" : "");
       d.style.setProperty("--d", (220 + j * 80) + "ms");
-      d.innerHTML = j < lit && !isToday ? "<i>✓</i>" : "";
+      d.innerHTML = wasLit ? "<i>✓</i>" : "";
       if (isToday) todayDot = d;
       var lbl = document.createElement("small");
       lbl.className = "pf-dci-dow" + (isToday ? " is-today" : "");
-      var dayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + (j - todayIdx));
-      lbl.textContent = DOW[dayDate.getDay()];
+      var dayDate = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + j);
+      lbl.textContent = DOW[j];
       lbl.setAttribute("aria-label", dayDate.toLocaleDateString(undefined, { weekday: "long" }));
       lbl.style.setProperty("--d", (220 + j * 80) + "ms");
       col.appendChild(d); col.appendChild(lbl);

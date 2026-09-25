@@ -125,7 +125,7 @@ function RedemptionSuccessScreen() {
     }, /*#__PURE__*/React.createElement("button", {
       className: "ml-back",
       "aria-label": "Back",
-      onClick: () => goRSC("RewardsStore.html")
+      onClick: () => goRSC("RewardsDashboard.html")
     }, /*#__PURE__*/React.createElement(DSRSC.IconifyIcon, {
       name: "lucide:chevron-left",
       size: 24,
@@ -136,11 +136,11 @@ function RedemptionSuccessScreen() {
       name: "lucide:gift",
       size: 28,
       color: "var(--gray-400)"
-    }), /*#__PURE__*/React.createElement("p", null, "No redemption yet — visit the Rewards Store to redeem your first course discount."), /*#__PURE__*/React.createElement("button", {
+    }), /*#__PURE__*/React.createElement("p", null, "No discount yet — course credits unlock as your Lifetime Points climb the Milestone Path."), /*#__PURE__*/React.createElement("button", {
       className: "ml-btn ml-btn-navy ml-btn-sm",
       type: "button",
-      onClick: () => goRSC("RewardsStore.html")
-    }, "Go to Rewards Store")));
+      onClick: () => goRSC("MilestonePath.html")
+    }, "See your Milestone Path")));
   }
   const item = PF_RSC.getConfig().storeItems.find(i => i.id === voucher.itemId) || null;
   const course = voucher.course || item && item.course || null;
@@ -161,7 +161,7 @@ function RedemptionSuccessScreen() {
   }, /*#__PURE__*/React.createElement("button", {
     className: "ml-back rsc-close",
     "aria-label": "Close",
-    onClick: () => goRSC("RewardsStore.html")
+    onClick: () => goRSC("RewardsDashboard.html")
   }, /*#__PURE__*/React.createElement(DSRSC.IconifyIcon, {
     name: "lucide:x",
     size: 20,

@@ -1,0 +1,115 @@
+/* ===========================================================================
+   PROfinity — Rewards page embeds: league gem rail + inline Milestone Path
+   (rewards-milestone-embed.jsx). Shared by RewardsDashboard.html (mobile,
+   inside .lm-screen) and RewardsWeb.html (desktop, .rw-main). Prefix rme-.
+   =========================================================================== */
+
+/* ---- league rail ---- */
+.rme-league { margin: 18px 0 4px; }
+.rme-league-head { text-align: center; }
+.rme-league-title { margin: 0 0 2px; font-family: var(--font-sans); font-weight: 800; font-size: 24px; letter-spacing: -.01em; }
+.rme-league-sub { margin: 0; font-size: 13px; color: var(--gray-500); }
+.rme-rail { display: flex; align-items: center; justify-content: flex-start; gap: 4px; margin: 4px -20px 0; padding: 14px 20px 6px; overflow-x: auto; scroll-snap-type: x proximity;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.rme-rail::-webkit-scrollbar { display: none; }
+.rme-rail-item { position: relative; flex: none; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 6px 6px;
+  min-width: 44px; min-height: 44px; border: none; background: none; cursor: pointer; scroll-snap-align: center; border-radius: 16px; font-family: inherit;
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1); }
+.rme-rail-item:active { transform: scale(.94); }
+.rme-rail-item:focus-visible { outline: 2px solid var(--lg-accent); outline-offset: 2px; }
+.rme-gem { display: block; flex: none; }
+.rme-rail-gem { position: relative; display: block; filter: drop-shadow(0 6px 10px rgba(12,12,13,.14)); }
+.rme-rail-item.mine .rme-rail-gem { filter: drop-shadow(0 12px 22px color-mix(in srgb, var(--lg-accent) 42%, transparent)); }
+.rme-rail-item.locked .rme-rail-gem > .rme-gem { filter: grayscale(1) brightness(.72) contrast(.85); opacity: .55; }
+.rme-rail-lock { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(30,32,40,.78); border: 2px solid rgba(255,255,255,.7); display: flex; align-items: center; justify-content: center; }
+.rme-rail-you { font-weight: 800; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: var(--lg-accent); border-radius: 999px; padding: 2px 8px; margin-top: -2px; }
+/* desktop: the six gems fit, so centre them and drop the edge bleed */
+.rw-main .rme-league { margin: 0; padding: 22px 20px 12px; background: var(--surface-card); border: 1px solid var(--border-default); border-radius: 18px; }
+.rw-main .rme-rail { justify-content: center; gap: 10px; margin: 6px 0 0; padding: 12px 0 4px; overflow: visible; }
+
+/* ---- milestone path ---- */
+.rme-path { margin-top: 6px; }
+.rme-path-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 22px 0 12px; }
+.rme-path-head h2 { margin: 0; font-size: 16px; font-weight: 700; color: var(--gray-900); flex: 1; }
+.rw-main .rme-path-head { margin: 0 0 14px; }
+.rw-main .rme-path-head h2 { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: var(--fs-h3); color: var(--text-heading); }
+.rme-help-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border-default); background: var(--surface-card); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.rme-help-btn:active { transform: scale(.94); }
+
+.rme-next { padding: 14px 16px; border-radius: 14px; border: 1px solid var(--border-default); background: var(--surface-card); }
+.rme-next-done { display: flex; align-items: center; gap: 10px; }
+.rme-next-top { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; color: var(--gray-500); margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.rme-next-track { height: 8px; border-radius: 999px; background: var(--gray-100); overflow: hidden; margin-bottom: 8px; }
+.rme-next-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--lg-accent, #f4ad3d), var(--lg-deep, #e7820a)); transition: width .6s cubic-bezier(.2,.8,.2,1); }
+.rme-next-note { font-size: 12px; color: var(--gray-600); }
+.rme-next-note b { color: var(--lg-deep, var(--brand-navy)); }
+
+.rme-nodes { padding: 18px 0 4px; }
+.rme-node { display: flex; gap: 12px; }
+.rme-node-rail { display: flex; flex-direction: column; align-items: center; }
+.rme-node-dot { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 8px; }
+.rme-node-dot-passed { background: var(--success); }
+.rme-node-dot-current { background: var(--brand-navy); box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-navy) 14%, transparent); }
+.rme-node-dot-locked { background: var(--gray-350, #b7bec9); }
+.rme-node-league .rme-node-dot-passed, .rme-node-league .rme-node-line-passed { background: var(--lg-accent); }
+.rme-node-league .rme-node-dot-current { background: var(--lg-deep); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lg-accent) 22%, transparent); }
+.rme-node-line { flex: 1; width: 2px; min-height: 22px; margin: 2px 0; }
+.rme-node-line-passed { background: var(--success); }
+.rme-node-line-current, .rme-node-line-locked { background: var(--gray-250, #dde1e8); }
+.rme-node-body { flex: 1; min-width: 0; padding-bottom: 14px; }
+.rme-node:last-child .rme-node-body { padding-bottom: 4px; }
+
+.rme-node-head { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px 8px 6px; border: 0; border-radius: 14px; background: none; text-align: left; cursor: pointer; font-family: inherit; color: inherit; -webkit-tap-highlight-color: transparent; }
+.rme-node-head:hover { background: color-mix(in srgb, var(--lg-accent, var(--brand-navy)) 7%, transparent); }
+.rme-node-head:focus-visible { outline: 2px solid var(--lg-accent, var(--brand-navy)); outline-offset: 2px; }
+.rme-node-head .rme-gem { filter: drop-shadow(0 3px 6px color-mix(in srgb, var(--lg-accent, #000) 35%, transparent)); }
+.rme-node-locked .rme-node-head .rme-gem { filter: grayscale(.85) opacity(.55); }
+.rme-node-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.rme-node-name { font-size: 15px; font-weight: 800; color: var(--gray-900); line-height: 1.2; }
+.rme-node-name small { font-size: 12px; font-weight: 700; color: var(--gray-500); margin-left: 3px; }
+.rme-node-league .rme-node-name { color: var(--lg-deep); }
+.rme-node-locked .rme-node-name, .rme-node-league.rme-node-locked .rme-node-name { color: var(--gray-600); }
+.rme-node-tag { font-size: 11px; font-weight: 700; }
+.rme-node-tag-passed { color: var(--lg-deep, var(--success)); }
+.rme-node-tag-current { color: var(--lg-deep, var(--brand-navy)); }
+.rme-node-tag-locked { color: var(--gray-400); }
+.rme-node-summary { font-size: 11.5px; color: var(--gray-500); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rme-node-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.rme-node-pts { display: flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; color: var(--lg-deep, var(--brand-navy)); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rme-node-locked .rme-node-pts { color: var(--gray-500); }
+.rme-node-chev { display: flex; transition: transform .2s ease; }
+.rme-node.is-open .rme-node-chev { transform: rotate(180deg); }
+
+.rme-benefits { margin: 4px 0 0 6px; display: flex; flex-direction: column; gap: 10px; }
+.rw-main .rme-benefits { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.rme-benefit { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; background: var(--surface-card); border: 1px solid var(--border-default); }
+.rme-node-locked .rme-benefit { background: var(--gray-50, #f5f6f8); }
+.rme-benefit-ic { display: flex; flex-shrink: 0; padding-top: 1px; }
+.rme-benefit-copy { min-width: 0; }
+.rme-benefit-title { font-size: 12.5px; font-weight: 700; color: var(--gray-900); }
+.rme-node-locked .rme-benefit-title { color: var(--gray-600); }
+.rme-benefit-desc { font-size: 11.5px; color: var(--gray-500); margin-top: 2px; line-height: 1.4; }
+.rme-benefit-delivery { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 700; background: color-mix(in srgb, var(--brand-gold) 18%, transparent); color: #6b4a00; }
+.rme-node-locked .rme-benefit-delivery { background: color-mix(in srgb, var(--gray-400) 16%, transparent); color: var(--gray-500); }
+
+/* ---- help sheet: bottom sheet inside the phone, centred dialog on desktop ---- */
+.rme-scrim { position: fixed; inset: 0; z-index: 80; background: rgba(16,24,40,.45); display: flex; align-items: center; justify-content: center; padding: 24px; animation: rme-fade .2s ease both; }
+.lm-screen .rme-scrim { position: absolute; z-index: 60; align-items: flex-end; padding: 0; }
+@keyframes rme-fade { from { opacity: 0; } to { opacity: 1; } }
+.rme-help { width: 100%; max-width: 440px; background: var(--surface-card); border-radius: 22px; padding: 22px 22px 22px; animation: rme-rise .38s cubic-bezier(.2,.8,.2,1) both; box-shadow: 0 24px 60px rgba(16,24,40,.25); }
+.lm-screen .rme-help { max-width: none; border-radius: 26px 26px 0 0; padding: 10px 22px calc(24px + env(safe-area-inset-bottom, 0px)); box-shadow: none; }
+.device-stage .lm-screen .rme-help, [data-ios-device] .rme-help { padding-bottom: 40px; }
+@keyframes rme-rise { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.rme-help-handle { display: none; width: 42px; height: 5px; border-radius: 999px; background: var(--gray-200); margin: 0 auto 16px; }
+.lm-screen .rme-help-handle { display: block; }
+.rme-help-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.rme-help-ic { width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--brand-navy-50, #eef1f8); }
+.rme-help-head h2 { flex: 1; margin: 0; font-size: 17px; font-weight: 800; letter-spacing: -.01em; color: var(--gray-900); }
+.rme-help-close { width: 34px; height: 34px; border-radius: 50%; border: 0; background: var(--gray-100, #f1f3f6); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.rme-help-p { margin: 0 0 8px; font-size: 13.5px; line-height: 1.55; color: var(--gray-600); text-wrap: pretty; }
+.rme-help-ok { width: 100%; height: 44px; margin-top: 10px; border: 0; border-radius: 12px; background: var(--brand-navy); color: #fff; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.rme-help-ok:hover { background: var(--brand-navy-700); }
+.rme-help-ok:active { transform: scale(.98); }
+
+@media (prefers-reduced-motion: reduce) { .rme-scrim, .rme-help, .rme-rail-item, .rme-node-chev, .rme-next-fill { animation: none; transition: none; } }

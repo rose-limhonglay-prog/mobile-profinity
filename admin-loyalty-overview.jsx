@@ -24,15 +24,16 @@ const ADL_NAV_TOP = [
   { icon: "lucide:smartphone", label: "App Versions", href: "AdminAppVersions.html" },
   { icon: "lucide:bell", label: "Push Notification", href: "AdminPushNotifications.html" },
   { icon: "lucide:badge-check", label: "Badges", href: "AdminBadges.html" },
+  { icon: "lucide:clipboard-list", label: "Quizzes & Surveys", href: "AdminQuizEditor.html" },
   { icon: "lucide:receipt-text", label: "Transactions", href: "AdminTransactions.html", chevron: true },
   { icon: "lucide:table-2", label: "Courses", href: "AdminCourses.html", chevron: true },
   { icon: "lucide:users", label: "Community", href: "AdminCommunity.html", chevron: true }
 ];
 const ADL_LOYALTY_SUBNAV = [
-  { key: "actions", label: "Actions Editor", href: "AdminActionsEditor.html" },
+  { key: "actions", label: "Ways to Earn", href: "AdminActionsEditor.html" },
   { key: "tiers", label: "Tier Multipliers", href: "AdminTierMultipliers.html" },
   { key: "rewards", label: "Reward Editor", href: "AdminRewardEditor.html" },
-  { key: "ledger", label: "Audit Ledger", href: "AdminAuditLedger.html" },
+  { key: "ledger", label: "Points Ledger", href: "AdminAuditLedger.html" },
   { key: "users", label: "User Diagnostics", href: "AdminUserDiagnostics.html" },
   { key: "overview", label: "System Overview", href: "AdminLoyaltyOverview.html" }
 ];
@@ -85,11 +86,20 @@ const OVW_DISPUTES = [
   { id: "DT-2277", user: "Sofia Alarcón", topic: "Voucher code not working", status: "Resolved", opened: "6 days ago" }
 ];
 
-function OvwStat({ label, value, sub, tone }) {
+function OvwInfo({ text }) {
+  return (
+    <span className="adl-info is-left" tabIndex={0} role="img" aria-label={text}>
+      <iconify-icon icon="lucide:info"></iconify-icon>
+      <span className="adl-info-tip" aria-hidden="true">{text}</span>
+    </span>
+  );
+}
+
+function OvwStat({ label, value, sub, tone, tip }) {
   return (
     <div className="adl-stat-card">
       <div className="adl-stat-body">
-        <div className="adl-stat-label">{label}</div>
+        <div className="adl-stat-label">{label}{tip && <OvwInfo text={tip} />}</div>
         <div className="adl-stat-value" style={tone ? { color: tone } : undefined}>{value}</div>
         {sub && <div className="ovw-stat-sub">{sub}</div>}
       </div>
@@ -120,10 +130,10 @@ function OverviewView() {
       {toast && <div className="adl-banner adl-banner-info"><iconify-icon icon="lucide:check-circle"></iconify-icon><span>{toast}</span></div>}
 
       <div className="adl-stat-grid">
-        <OvwStat label="Daily Active Users" value="8,214" sub="+3.2% vs. last week" />
-        <OvwStat label="Points Inflation Rate" value={inflationRate + "%"} sub="Share of attempts silently capped" tone={inflationRate > 15 ? "var(--error)" : undefined} />
-        <OvwStat label="Overall Redemption Rate" value={redemptionRate + "%"} sub="Credits spent vs. credits earned" />
-        <OvwStat label="Open Dispute Tickets" value={OVW_DISPUTES.filter((d) => d.status !== "Resolved").length} />
+        <OvwStat label="Daily Active Users" value="8,214" sub="+3.2% vs. last week" tip="Members who opened the app or website at least once in the last 24 hours." />
+        <OvwStat label="Points Inflation Rate" value={inflationRate + "%"} sub="Share of attempts silently capped" tip="How often members hit a daily or weekly points cap. A high rate means points are being handed out faster than the rules intend." tone={inflationRate > 15 ? "var(--error)" : undefined} />
+        <OvwStat label="Overall Redemption Rate" value={redemptionRate + "%"} sub="Credits spent vs. credits earned" tip="Share of all credits earned that members have gone on to spend in the Rewards Store. Low means credits are piling up unused." />
+        <OvwStat label="Open Dispute Tickets" value={OVW_DISPUTES.filter((d) => d.status !== "Resolved").length} tip="Members currently disputing a points or credit balance that still need a reply or a manual adjustment." />
       </div>
 
       <div className="adl-card">
