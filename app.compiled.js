@@ -11275,7 +11275,9 @@ function slimSharedPost(post) {
     document: post.document ? {
       name: post.document.name,
       title: post.document.title
-    } : undefined
+    } : undefined,
+    sharedConference: post.sharedConference || undefined,
+    sharedProfile: post.sharedProfile || undefined
   };
 }
 /* Pages that host each share destination, per surface (PF_EMBED = mobile). */
@@ -11311,6 +11313,49 @@ function SharedProfileCard({
     name: "lucide:chevron-right",
     size: 15,
     color: "var(--brand-navy)"
+  })));
+}
+
+/* Join card for a voice conference shared to the feed from the Messages
+   Conference stage (post.sharedConference = { id, name, desc, live, when,
+   hostName, hostAvatar, count, link }). Tapping opens the room on the
+   Messages page of the same surface. */
+function SharedConferenceCard({
+  conf
+}) {
+  const page = (window.PF_EMBED ? "Messages.html" : "MessagesWeb.html") + "?tab=conference&conf=" + encodeURIComponent(conf.id);
+  const go = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    (window.pfGo || (u => {
+      window.location.href = u;
+    }))(page);
+  };
+  const meta = [conf.live ? "Live now" : conf.when || "Scheduled", "Hosted by " + (conf.hostName || "PROfinity")].concat(conf.count ? [conf.count + " in the room"] : []).join(" · ");
+  return /*#__PURE__*/React.createElement("a", {
+    className: "pf-shared-conf" + (conf.live ? " live" : ""),
+    href: page,
+    onClick: go
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-shared-conf-ic"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:audio-lines",
+    size: 20,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pf-shared-conf-tx"
+  }, /*#__PURE__*/React.createElement("b", null, conf.name, conf.live && /*#__PURE__*/React.createElement("span", {
+    className: "pf-shared-conf-live"
+  }, /*#__PURE__*/React.createElement("i", null), "Live")), /*#__PURE__*/React.createElement("i", null, meta), /*#__PURE__*/React.createElement("u", null, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:mic",
+    size: 12,
+    color: "currentColor"
+  }), "Voice conference · PROfinity")), /*#__PURE__*/React.createElement("span", {
+    className: "pf-shared-conf-cta"
+  }, conf.live ? "Join" : "View", /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 15,
+    color: "currentColor"
   })));
 }
 
@@ -11508,6 +11553,9 @@ function SharePostQuote({
   } : post.sharedProfile ? {
     icon: "lucide:user",
     label: "Profile · " + post.sharedProfile.name
+  } : post.sharedConference ? {
+    icon: "lucide:audio-lines",
+    label: "Voice conference · " + post.sharedConference.name
   } : null;
   const showKind = kind && (!post.body || shown.length === 0);
   return /*#__PURE__*/React.createElement("div", {
@@ -12623,6 +12671,8 @@ function FeedPost({
       doc: post.document
     })), post.sharedProfile && /*#__PURE__*/React.createElement(SharedProfileCard, {
       profile: post.sharedProfile
+    }), post.sharedConference && /*#__PURE__*/React.createElement(SharedConferenceCard, {
+      conf: post.sharedConference
     }), post.sharedPost && /*#__PURE__*/React.createElement("div", {
       className: "pf-repost"
     }, /*#__PURE__*/React.createElement(SharePostQuote, {
@@ -13875,7 +13925,7 @@ function readUserPosts() {
        still-running background upload (a media post shared with no caption
        used to be dropped here — so its upload card never appeared on the
        feed, its marker was never cleared and its reward never booked). */
-    return list.filter(p => p && p.author && p.author.name && (p.body || p.sharedPost || p.media && p.media.length || p.video || p.sample || p.uploading)).map(p =>
+    return list.filter(p => p && p.author && p.author.name && (p.body || p.sharedPost || p.sharedProfile || p.sharedConference || p.media && p.media.length || p.video || p.sample || p.uploading)).map(p =>
     /* CreatePostMobile stores its clip as `video: { src, cover, ratio }`;
        a video-only post renders through `sample`, so map one to the other.
        A post carrying photos *and* a clip keeps both and renders them as

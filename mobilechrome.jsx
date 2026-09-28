@@ -10,34 +10,75 @@
   function goC(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
 
   /* Same "pf-subscription-tier" key the newsfeed/community/membership pages
-     read and write — this file doesn't load app.jsx, so it keeps its own
-     tiny copy rather than depending on window.PFApp. */
+     read and write. A shell that pins a variant (window.PF_TIER, set before
+     the app scripts load) wins; then PFApp.getUserTier() when app.jsx is on
+     the page; then the stored key. The legacy "inner" slug maps to
+     "sovereign" — same rule as smReadTierM in mobile.jsx. */
   const PF_TIER_KEY_C = "pf-subscription-tier";
-  /* A shell that pins a variant (window.PF_TIER, set before the app scripts
-     load) wins over the stored tier — same rule as learning-mobile.jsx. */
   function getUserTierC() {
-    if (window.PF_TIER) return window.PF_TIER;
-    try { return localStorage.getItem(PF_TIER_KEY_C) || "free"; } catch (e) { return "free"; }
+    let t = "free";
+    if (window.PF_TIER) t = window.PF_TIER;
+    else {
+      try {
+        if (window.PFApp && window.PFApp.getUserTier) t = window.PFApp.getUserTier() || "free";
+        else t = localStorage.getItem(PF_TIER_KEY_C) || "free";
+      } catch (e) { t = "free"; }
+    }
+    return t === "inner" ? "sovereign" : t;
   }
   const ME_C = { name: "Katy Wilson", avatar: "assets/avatar-katy.jpg" };
+  /* The signed-in member — PFApp.ME when app.jsx is on the page, else the seed. */
+  function meC() { return (window.PFApp && window.PFApp.ME) || ME_C; }
 
-  /* Membership ladder — the upgrade banner should point at the next rung up,
-     not repeat the tier the viewer already holds. A free viewer (no tier,
-     indexOf === -1) points at the first rung rather than reading as "top". */
-  const SM_TIER_LADDER_C = ["confidence", "mastery", "freedom", "inner"];
+  /* ---- drawer data: a straight copy of the newsfeed's (mobile.jsx) so every
+     mobile page's side menu reads the same. Edit mobile.jsx first, then port. */
+  const SM_TIER_LADDER_C = ["confidence", "mastery", "freedom", "sovereign"];
   const SM_TIER_META_C = {
     confidence: { name: "Confidence" },
     mastery:    { name: "Mastery" },
     freedom:    { name: "Freedom" },
-    inner:      { name: "Inner Circle" }
+    sovereign:  { name: "Sovereign" }
   };
+
+  /* Tiers that get the single "My Membership" summary card + dedicated chat
+     card in the drawer, as opposed to sovereign's stacked tier-card ladder
+     (SmTierCardC), which shows every tier a sovereign viewer has unlocked. */
+  const SM_MEMBERSHIP_TIERS_C = ["confidence", "mastery", "freedom"];
+
+  /* Rows inside the "My Membership" card — identical across confidence/mastery/
+     freedom; freedom appends one extra row (SM_FREEDOM_LECTURE_ROW_C). */
+  const SM_MEMBERSHIP_ROWS_C = [
+  { label: "Membership Training", icon: "lucide:graduation-cap", href: "LearningMobile.html" },
+  { label: "Technique Tuesday",   icon: "lucide:calendar-check", href: "EventsMobile.html" },
+  { label: "Complications Help",  icon: "lucide:shield-alert",   href: "DirectMessage.html" },
+  { label: "AI Coach",            icon: "lucide:sparkles",       href: "LearningMobile.html" }];
+  const SM_FREEDOM_LECTURE_ROW_C = { label: "Freedom Path Lectures", icon: "lucide:presentation", href: "LearningMobile.html" };
+
+  /* Upgrade-CTA label keyed by the viewer's CURRENT tier — not derivable from
+     the next tier's own display name, since mastery's target reads "Freedom
+     Path" while freedom's target reads plain "Sovereign". */
+  const SM_UPGRADE_LABEL_C = { free: "Confidence", confidence: "Mastery", mastery: "Freedom Path", freedom: "Sovereign" };
+
+  /* Metal keyed by the viewer's CURRENT tier — which metal the upgrade CTA
+     (next rung up) renders in. Bronze by default; silver once the next rung
+     is Mastery; gold for Freedom Path / Sovereign. */
+  const SM_UPGRADE_METAL_C = { free: "bronze", confidence: "silver", mastery: "gold", freedom: "gold" };
+  /* Metal keyed by a viewer's OWN tier — drives the "My Membership" ribbon. */
+  const SM_TIER_METAL_C = { confidence: "bronze", mastery: "silver", freedom: "gold" };
+  const SM_METAL_ICON_COLOR_C = { bronze: "#fff", silver: "#3F4650", gold: "#5A3A00" };
+
+  /* Accent color per tier, used for the tier-card "YOUR TIER" pill. */
+  const SM_TIER_COLOR_C = { confidence: "var(--info)", mastery: "var(--level-intermediate)", freedom: "var(--ai-purple)", sovereign: "var(--premium-gold-deep)" };
+
+  /* Chat-card label per tier — always routes to CommunityMobile.html. Rendered
+     as the first row inside SmMembershipCardC, not a separate card. */
+  const SM_CHAT_LABEL_C = { confidence: "Community Chat", mastery: "Mastery Chat", freedom: "Freedom Path Chat" };
+  /* Unread-count badge for that same chat row. Mastery/freedom reuse the counts
+     already spec'd for their SM_TIER_RESOURCES_C lounge/circle equivalents. */
+  const SM_CHAT_BADGE_C = { confidence: "10+", mastery: 6, freedom: "10+" };
+
   const SM_TIER_RESOURCES_C = {
-    confidence: [
-    { label: "Community Chat",       icon: "lucide:message-circle", href: "CommunityMobile.html" },
-    { label: "Membership Training",  icon: "lucide:graduation-cap", href: "LearningMobile.html" },
-    { label: "Technique Tuesday",    icon: "lucide:calendar-check", href: "EventsMobile.html" },
-    { label: "Complications Help",   icon: "lucide:shield-alert",   href: "DirectMessage.html" },
-    { label: "AI Coach",             icon: "lucide:sparkles",       href: "LearningMobile.html" }],
+    confidence: SM_MEMBERSHIP_ROWS_C,
 
     mastery: [
     { label: "Mastery lounge",          icon: "lucide:message-circle", n: 6,  href: "CommunityMobile.html" },
@@ -50,20 +91,22 @@
     { label: "Business playbooks",   icon: "lucide:graduation-cap", n: 7, href: "LearningMobile.html" },
     { label: "1:1 mentor sessions",  icon: "lucide:calendar",       n: 1, href: "EventsMobile.html" }],
 
-    inner: [
-    { label: "Inner Circle roundtable", icon: "lucide:message-circle", n: 4, href: "CommunityMobile.html" },
-    { label: "Executive mentorship",    icon: "lucide:calendar",       n: 1, href: "EventsMobile.html" },
-    { label: "Legacy case archive",     icon: "lucide:file-text",      n: 9, href: "LearningMobile.html" },
-    { label: "Founder office hours",    icon: "lucide:calendar",       n: 2, href: "EventsMobile.html" }]
+    sovereign: [
+    { label: "Sovereign roundtable",   icon: "lucide:message-circle", n: 4, href: "CommunityMobile.html" },
+    { label: "Executive mentorship",   icon: "lucide:calendar",       n: 1, href: "EventsMobile.html" },
+    { label: "Legacy case archive",    icon: "lucide:file-text",      n: 9, href: "LearningMobile.html" },
+    { label: "Founder office hours",   icon: "lucide:calendar",       n: 2, href: "EventsMobile.html" }]
 
   };
+
   /* Tiers unlocked by a viewer on `tier`, highest first. Free (no match) unlocks none. */
   function smUnlockedTiersC(tier) {
     const i = SM_TIER_LADDER_C.indexOf(tier);
     if (i === -1) return [];
     return SM_TIER_LADDER_C.slice(0, i + 1).reverse();
   }
-  /* The next rung up from `tier` — null once at the top of the ladder. */
+  /* The next rung up from `tier` — null once at the top of the ladder. A free
+     viewer (tier not on the ladder, i === -1) points at the first rung. */
   function smNextTierC(tier) {
     const i = SM_TIER_LADDER_C.indexOf(tier);
     if (i === SM_TIER_LADDER_C.length - 1) return null;
@@ -313,7 +356,7 @@
     return state;
   }
 
-  function MTopBarC({ onMenu, onBell, onMessages, dark }) {
+  function MTopBarC({ onMenu, onBell, onMessages }) {
     return (
       <header className="m-top">
         <button className="m-burger" aria-label="Menu" onClick={onMenu}><DSC.IconifyIcon name="lucide:menu" size={24} color="var(--gray-700)" /></button>
@@ -333,18 +376,19 @@
   }
 
   const SM_EVENTS_C = [
-    { d: "30", m: "JUN", label: "Technique Tuesday Webinar", t: "8:00 PM", access: "open" },
-    { d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM", access: "members" },
-    { d: "12", m: "JUL", label: "Business Growth Workshop", t: "7:00 PM", access: "members" }];
-  const SM_PROFILE_C = [
-    { label: "Edit Profile", icon: "lucide:book-open", href: "ProfileMobile.html" },
-    { label: "Account Settings", icon: "lucide:settings", href: null },
-    { label: "Payments", icon: "lucide:credit-card", href: "PaymentsMobile.html" },
-    { label: "My Saved", icon: "lucide:bookmark", href: "MySaved.html" },
-    { label: "Notifications", icon: "lucide:calendar", href: "NotificationSettings.html" },
-    { label: "Privacy & Security", icon: "lucide:book-open", href: null },
-    { label: "Chat Support", icon: "lucide:headset", href: "ChatSupport.html" },
-    { label: "Display Settings", icon: "lucide:cpu", href: "DisplaySettings.html" }];
+  { d: "30", m: "JUN", label: "Technique Tuesday Webinar", t: "8:00 PM", access: "open",
+    hosts: [{ name: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png" }, { name: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg" }] },
+  { d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM", access: "members" }];
+
+  const SM_PROFILE_BEFORE_C = [
+  { label: "Edit Profile",       icon: "lucide:book-open",       href: "ProfileMobile.html" },
+  { label: "Account Settings",   icon: "lucide:settings",  href: null },
+  { label: "Payments",           icon: "lucide:credit-card",     href: "PaymentsMobile.html" },
+  { label: "My Saved",           icon: "lucide:bookmark",        href: "MySaved.html" },
+  { label: "Notifications",      icon: "lucide:calendar",        href: "NotificationSettings.html" },
+  { label: "Privacy & Security", icon: "lucide:book-open",       href: null },
+  { label: "Chat Support",       icon: "lucide:headset",         href: "ChatSupport.html" },
+  { label: "Display Settings",   icon: "lucide:cpu",             href: "DisplaySettings.html" }];
 
   const NT_BADGE_C = {
     comment: { icon: "fluent:chat-16-filled", bg: "var(--brand-navy)" },
@@ -756,20 +800,53 @@ function readDmGroupsC() {
       </div>);
   }
 
-  function SmSectionC({ title }) { return <div className="sm-sec-h">{title}</div>; }
+  function useDarkModeC() {
+    const [dark, setDark] = useStateC(() => {
+      try { return localStorage.getItem('pf-theme') === 'dark'; } catch(e) { return false; }
+    });
+    function toggle() {
+      const next = !dark;
+      setDark(next);
+      try {
+        localStorage.setItem('pf-theme', next ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
+      } catch(e) {}
+    }
+    return [dark, toggle];
+  }
 
-  function DisplayToggleC({ dark, onToggle }) {
+  function SmDarkSwitchC({ on, onToggle }) {
     return (
-      <div className="sm-display">
-        <div className="sm-display-main">
-          <span className="sm-display-title">Display</span>
-          <span className="sm-display-sub">Adjust the appearance of the app to reduce glare and give your eyes a break</span>
+      <button
+        className={"sm-switch" + (on ? " on" : "")}
+        onClick={onToggle}
+        role="switch"
+        aria-checked={on}
+        aria-label={on ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        <span className="sm-knob">
+          <DSC.IconifyIcon name={on ? "lucide:moon" : "lucide:sun"} size={13} color={on ? "#1A1736" : "var(--gray-450)"} />
+        </span>
+      </button>
+    );
+  }
+
+  function SmDisplayCardC({ dark, onToggle }) {
+    return (
+      <div className="sm-display-card">
+        <div className="sm-display-top">
+          <span className="sm-display-label">Display</span>
+          <SmDarkSwitchC on={dark} onToggle={onToggle} />
         </div>
-        <button className={"sm-display-toggle" + (dark ? " on" : "")} role="switch" aria-checked={dark} aria-label="Toggle dark mode" onClick={onToggle}>
-          <span className="knob"><DSC.IconifyIcon name={dark ? "lucide:moon" : "lucide:sun"} size={13} color={dark ? "var(--brand-navy)" : "var(--premium-orange)"} /></span>
-        </button>
+        <p className="sm-display-desc">
+          Adjust the appearance of the app to reduce glare and give your eyes a break
+        </p>
       </div>
     );
+  }
+
+  function SmSectionC({ title }) {
+    return <div className="sm-sec-h">{title}</div>;
   }
 
   function SmTierResourceRowC({ r }) {
@@ -777,41 +854,87 @@ function readDmGroupsC() {
       <button className="smt-resource" onClick={() => goC(r.href)}>
         <DSC.IconifyIcon name={r.icon} size={20} color="var(--gray-900)" />
         <span className="smt-resource-label">{r.label}</span>
+        {r.n != null && <span className="smt-badge">{r.n}</span>}
         <DSC.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
       </button>);
+
   }
 
   function SmTierCardC({ tierKey, isOwn }) {
     const resources = SM_TIER_RESOURCES_C[tierKey];
+    const color = SM_TIER_COLOR_C[tierKey];
     return (
       <div className="smt-card">
         <div className="smt-head">
           <span className="smt-top">
             <span className="smt-name">{SM_TIER_META_C[tierKey].name} Path</span>
-            {!isOwn && <span className="smt-pill">INCLUDED</span>}
           </span>
+          {isOwn ?
+          <span className="smt-pill smt-pill-yours" style={{ color, borderColor: color }}>YOUR TIER</span> :
+          <span className="smt-pill">INCLUDED</span>
+          }
         </div>
         <div className="smt-resources">
           {resources.map((r) => <SmTierResourceRowC key={r.label} r={r} />)}
         </div>
       </div>);
+
   }
 
-  function SideMenuC({ open, onClose, dark, onToggleDark }) {
+  function SmMembershipCardC({ tier }) {
+    const chatRow = { label: SM_CHAT_LABEL_C[tier], icon: "lucide:message-circle", href: "CommunityMobile.html", n: SM_CHAT_BADGE_C[tier] };
+    const rows = tier === "freedom" ?
+    [SM_FREEDOM_LECTURE_ROW_C, chatRow, ...SM_MEMBERSHIP_ROWS_C] :
+    [chatRow, ...SM_MEMBERSHIP_ROWS_C];
+    const metal = SM_TIER_METAL_C[tier];
+    return (
+      <div className="smt-card sm-membership-card">
+        <div className="smt-head sm-membership-head">
+          <span className="sm-membership-title">MY MEMBERSHIP</span>
+          <span className={"sm-memb-ribbon sm-memb-ribbon-" + metal}>
+            <span className="sm-memb-ribbon-text">{SM_TIER_META_C[tier].name} Path</span>
+          </span>
+        </div>
+        <div className="smt-resources">
+          {rows.map((r) => <SmTierResourceRowC key={r.label} r={r} />)}
+        </div>
+      </div>);
+
+  }
+
+  /* `dark` / `onToggleDark` are optional — pinned-dark shells (the Confidence
+     My Learning / All Courses pages) drive them; everywhere else the drawer
+     follows pf-theme itself, exactly like the newsfeed. */
+  function SideMenuC({ open, onClose, dark: darkProp, onToggleDark }) {
+    const [darkOwn, toggleDarkOwn] = useDarkModeC();
+    const dark = darkProp != null ? darkProp : darkOwn;
+    const toggleDark = onToggleDark || toggleDarkOwn;
     const tier = getUserTierC();
     const unlockedTiers = smUnlockedTiersC(tier);
     const nextTier = smNextTierC(tier);
-    const showUpgrade = tier === "free" || tier === "confidence" || tier === "mastery";
-    /* Bronze by default; silver once the next rung is Mastery; gold for
-       Freedom / Inner Circle. */
-    const upgradeMetal = nextTier === "mastery" ? "silver" : nextTier === "freedom" || nextTier === "inner" ? "gold" : "bronze";
-    const upgradeIconColor = upgradeMetal === "silver" ? "#3F4650" : upgradeMetal === "gold" ? "#5A3A00" : "#fff";
+    const showMyMembership = SM_MEMBERSHIP_TIERS_C.includes(tier);
+    const showTierCards = !showMyMembership && unlockedTiers.length > 0;
+    const burgerRefM = React.useRef(null);
+
+    useEffectC(() => {
+      if (!open) return;
+      burgerRefM.current = document.querySelector('.m-burger');
+      const onKey = (e) => {
+        if (e.key === "Escape") { onClose(); }
+      };
+      document.addEventListener("keydown", onKey);
+      return () => {
+        document.removeEventListener("keydown", onKey);
+        burgerRefM.current && burgerRefM.current.focus();
+      };
+    }, [open]);
+
     return (
       <div className={"m-drawer-wrap" + (open ? " open" : "")} aria-hidden={!open}>
         <div className="m-drawer-scrim" onClick={onClose} />
-        <aside className={"m-drawer" + (dark ? " sm-dark" : "")} role="dialog" aria-modal="true" aria-label="Menu">
+        <aside className={"m-drawer" + (darkProp ? " sm-dark" : "")} role="dialog" aria-modal="true" aria-label="Menu">
           <button className="m-drawer-profile" onClick={() => goC("ProfileMobile.html")}>
-            <DSC.Avatar name={ME_C.name} src={ME_C.avatar} size={56} />
+            <DSC.Avatar name={meC().name} src={meC().avatar} size={56} />
             <span className="m-dp-main">
               <span className="m-dp-name">Katy Wilson
                 <DSC.IconifyIcon name="lucide:badge-check" size={18} color="var(--reaction-like)" />
@@ -820,29 +943,40 @@ function readDmGroupsC() {
             </span>
             <DSC.IconifyIcon name="lucide:chevron-right" size={22} color="var(--gray-800)" />
           </button>
+
           <div className="sm-body">
-            {showUpgrade && nextTier &&
-            <button className={"sm-upgrade metal-" + upgradeMetal} onClick={() => goC("MembershipTier.html")}>
-                <span className="sm-upgrade-icon">
-                  <DSC.IconifyIcon name="lucide:gem" size={20} color={upgradeIconColor} />
-                </span>
-                <span className="sm-upgrade-main">
-                  <span className="sm-upgrade-title">Upgrade to {SM_TIER_META_C[nextTier].name}</span>
-                  <span className="sm-upgrade-sub">Unlock more premium channels &amp; courses</span>
-                </span>
-                <DSC.IconifyIcon name="lucide:chevron-right" size={20} color={upgradeIconColor} />
-              </button>
+            {nextTier &&
+            (() => {
+              const upgradeMetal = SM_UPGRADE_METAL_C[tier] || "bronze";
+              const upgradeIconColor = SM_METAL_ICON_COLOR_C[upgradeMetal];
+              return (
+                <button className={"sm-upgrade metal-" + upgradeMetal} onClick={() => goC("MembershipTier.html")}>
+                  <span className="sm-upgrade-icon">
+                    <DSC.IconifyIcon name="lucide:gem" size={20} color={upgradeIconColor} />
+                  </span>
+                  <span className="sm-upgrade-main">
+                    <span className="sm-upgrade-title">Upgrade to {SM_UPGRADE_LABEL_C[tier]}</span>
+                    <span className="sm-upgrade-sub">Unlock more premium channels &amp; courses</span>
+                  </span>
+                  <DSC.IconifyIcon name="lucide:chevron-right" size={20} color={upgradeIconColor} />
+                </button>);
+
+            })()
             }
 
-            {unlockedTiers.length > 0 &&
-            <React.Fragment>
-                <SmSectionC title="My Membership" />
-                <div className="smt-list">
-                  {unlockedTiers.map((tKey) =>
+            {showMyMembership &&
+            <SmMembershipCardC tier={tier} />
+            }
+
+            {showTierCards &&
+            <>
+              <SmSectionC title="My Membership" />
+              <div className="smt-list">
+                {unlockedTiers.map((tKey) =>
                 <SmTierCardC key={tKey} tierKey={tKey} isOwn={tKey === tier} />
                 )}
-                </div>
-              </React.Fragment>
+              </div>
+            </>
             }
 
             <button className="sm-primary-card" onClick={() => goC("LearningMobile.html")}>
@@ -856,27 +990,20 @@ function readDmGroupsC() {
               <DSC.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
             </button>
 
-            {unlockedTiers.includes("freedom") &&
-            <button className="sm-primary-card" onClick={() => goC("FreedomPathChat.html")}>
-              <span className="sm-primary-icon">
-                <DSC.IconifyIcon name="lucide:rocket" size={22} color="var(--brand-navy)" />
-              </span>
-              <span className="sm-primary-main">
-                <span className="sm-primary-title">Freedom Path Chat</span>
-                <span className="sm-primary-sub">Business, scaling &amp; mentorship</span>
-              </span>
-              <DSC.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
-            </button>
-            }
-
             <SmSectionC title="Upcoming Events" />
             <div className="sm-events">
-              {SM_EVENTS_C.slice(0, 2).map((e) =>
-                <button key={e.label} className="sm-event" onClick={() => goC("EventsMobile.html")}>
+              {SM_EVENTS_C.map((e) =>
+              <button key={e.label} className="sm-event" onClick={() => goC("EventsMobile.html")}>
                   <span className="sm-date"><b>{e.d}</b><i>{e.m}</i></span>
                   <span className="sm-event-main">
                     <span className="sm-event-name">{e.label}</span>
                     <span className="sm-event-time">{e.t}</span>
+                    {e.hosts &&
+                    <span className="sm-event-hosts">
+                      <GroupAvatarStackC members={e.hosts} size={26} />
+                      <span className="sm-event-hosts-label">Dr Tim Pearce &amp; Miranda Pearce</span>
+                    </span>
+                    }
                   </span>
                   <span className={"sm-event-access" + (e.access === "members" ? " sm-event-access-members" : " sm-event-access-open")}>
                     {e.access === "members" ? "Members only" : "Open to all"}
@@ -884,23 +1011,25 @@ function readDmGroupsC() {
                 </button>
               )}
             </div>
+
             <SmSectionC title="My Profile" />
             <button className="sm-row sm-verify" onClick={() => goC("ProfileMobile.html")}>
               <DSC.IconifyIcon name="lucide:book-open" size={23} color="var(--premium-orange)" />
               <span className="sm-row-label">Verify Profile</span>
-              <span className="sm-verify-pill" style={{ backgroundColor: "rgb(206, 153, 87)" }}>Not Verified</span>
+              <span className="sm-verify-pill">Not Verified</span>
             </button>
             <nav className="sm-list">
-              {SM_PROFILE_C.map((c) =>
-                c.label === "Display Settings"
-                  ? <DisplayToggleC key={c.label} dark={dark} onToggle={onToggleDark} />
-                  : <button key={c.label} className="sm-row" onClick={() => goC(c.href)}>
-                    <DSC.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
-                    <span className="sm-row-label">{c.label}</span>
-                    <DSC.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
-                  </button>
+              {SM_PROFILE_BEFORE_C.map((c) =>
+              c.label === "Display Settings" ?
+              <SmDisplayCardC key={c.label} dark={dark} onToggle={toggleDark} /> :
+              <button key={c.label} className="sm-row" onClick={() => c.href && goC(c.href)}>
+                  <DSC.IconifyIcon name={c.icon} size={23} color="var(--gray-900)" />
+                  <span className="sm-row-label">{c.label}</span>
+                  <DSC.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-450)" />
+                </button>
               )}
             </nav>
+
             <button className="m-drawer-logout" onClick={() => goC("AuthMobile.html?view=signin")}>
               <DSC.IconifyIcon name="lucide:log-out" size={22} color="var(--error)" />
               Logout
@@ -908,34 +1037,17 @@ function readDmGroupsC() {
           </div>
         </aside>
       </div>);
+
   }
 
   function MobileChromeC() {
     const [menuOpen, setMenuOpen] = useStateC(false);
     const [notifOpen, setNotifOpen] = useStateC(false);
     const [msgOpen, setMsgOpen] = useStateC(false);
-    /* Follows the app-wide theme (pf-theme + <html data-theme>) like the
-       newsfeed / community / profile drawers do — the old private
-       "pf-mobile-dark" flag left this drawer dark on light-mode pages. */
-    const readDarkC = () => { try { return localStorage.getItem("pf-theme") === "dark" || document.documentElement.getAttribute("data-theme") === "dark"; } catch (e) { return false; } };
-    const [dark, setDark] = useStateC(readDarkC);
-    useEffectC(() => {
-      try { localStorage.removeItem("pf-mobile-dark"); } catch (e) {}
-      const sync = () => setDark(readDarkC());
-      window.addEventListener("storage", sync);
-      const mo = new MutationObserver(sync);
-      mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-      return () => { window.removeEventListener("storage", sync); mo.disconnect(); };
-    }, []);
-    const toggleDark = () => {
-      const next = !dark;
-      setDark(next);
-      try { localStorage.setItem("pf-theme", next ? "dark" : "light"); document.documentElement.setAttribute("data-theme", next ? "dark" : "light"); } catch (e) {}
-    };
     return (
       <React.Fragment>
-        <MTopBarC onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} onMessages={() => setMsgOpen(true)} dark={dark} />
-        <SideMenuC open={menuOpen} onClose={() => setMenuOpen(false)} dark={dark} onToggleDark={toggleDark} />
+        <MTopBarC onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} onMessages={() => setMsgOpen(true)} />
+        <SideMenuC open={menuOpen} onClose={() => setMenuOpen(false)} />
         <NotificationsPanelC open={notifOpen} onClose={() => setNotifOpen(false)} />
         <MessagesPanelC open={msgOpen} onClose={() => setMsgOpen(false)} />
       </React.Fragment>);

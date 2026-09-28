@@ -876,7 +876,7 @@ const LX_TABS = [
 { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
 { key: "Learning", label: "Learning", icon: "lucide:book-open", href: LX_LEARNING_URL },
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
-{ key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" },
+{ key: "Agent", label: "Agents", icon: "lucide:sparkles", href: "AgentMobile.html" },
 { key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" }];
 
 function LXTabBar({ compact }) {

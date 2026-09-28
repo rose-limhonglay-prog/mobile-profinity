@@ -44,7 +44,7 @@ const RDB_TABS = [{
   href: "ProfileMobile.html"
 }, {
   key: "Agent",
-  label: "Agent",
+  label: "Agents",
   icon: "lucide:sparkles",
   href: "AgentMobile.html"
 }, {

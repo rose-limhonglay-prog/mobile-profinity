@@ -4,7 +4,7 @@
    (with Live Chat). Composed on the bound DS bundle. Suffixed -EV to avoid
    global-scope clashes.
    =========================================================================== */
-const { useState: useStateEV, useEffect: useEffectEV } = React;
+const { useState: useStateEV, useEffect: useEffectEV, useRef: useRefEV } = React;
 const DSEV = window.ProfinityDesignSystem_c2b5cc;
 const PFAEV = window.PFApp;
 
@@ -71,6 +71,22 @@ const EVENTS_LIST = [
     date: "June 12, 2026", time: "21:00 BST", primary: false, state: "attending", going: "212", membersOnly: true },
   { id: "tl1", title: "Technique Library Webinar", host: "Dr Tim Pearce", banner: null,
     date: "September 24, 2026", time: "20:00 BST", primary: false, state: "upcoming", going: "96", membersOnly: true },
+  /* Example Zoom-link event: joined in the Zoom app rather than the in-app
+     live stage, so the detail page shows a Zoom meeting card (link, ID,
+     passcode) and the calendar entry carries the join URL as its location. */
+  { id: "zm", title: "Clinic Growth Q&A on Zoom", host: "Dr Tim Pearce", banner: null,
+    date: "October 8, 2026", time: "19:00 BST", primary: false, state: "upcoming", going: "156", membersOnly: true,
+    platform: "zoom",
+    zoom: { url: "https://us02web.zoom.us/j/84512345678?pwd=PROfinity2026", id: "845 1234 5678", passcode: "PRO2026" },
+    about: "A relaxed, camera-optional Q&A hosted on Zoom. Bring your clinic growth questions — pricing, patient retention, team and marketing — and Dr Tim will work through them live. Join from the Zoom app or your browser using the meeting link below.",
+    learn: ["How to price for profit without losing patients", "The retention system behind a full diary", "Simple marketing that works for solo clinics", "Live answers to your questions"],
+    status: [
+      { icon: "lucide:calendar", t: "8 October 2026" },
+      { icon: "lucide:clock", t: "19:00 BST | 14:00 ET" },
+      { icon: "lucide:timer", t: "45 minutes" },
+      { icon: "lucide:video", t: "Zoom Meeting" },
+      { icon: "lucide:star", t: "Members Event" },
+    ] },
   { id: "tl2", title: "Live Replay Technique Library Webinar", host: "Dr Tim Pearce", banner: null,
     date: "October 4, 2026", time: "19:00 BST", primary: false, state: "upcoming", going: "64", membersOnly: true },
   { id: "ht1", title: "High Ticket Webinar", host: "Dr Tim Pearce", banner: null,
@@ -110,6 +126,7 @@ const EV_TABS = [
   { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
   { key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
   { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
+  { key: "Agent", label: "Agents", icon: "lucide:sparkles", href: "AgentMobile.html" },
   { key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" },
 ];
 
@@ -244,20 +261,48 @@ function lsProductStats(p) {
   return { clicks, cart, sold };
 }
 
-function EvTabBar({ active }) {
+function EvTabBar({ active, compact }) {
   return (
-    <nav className="ev-tabs" aria-label="Primary">
+    <nav className={"ev-tabs" + (compact ? " ev-tabs-compact" : "")} aria-label="Primary">
       {EV_TABS.map((t) => (
         <button key={t.key} className={"ev-tab" + (t.key === active ? " on" : "")} onClick={() => t.href && goEV(t.href)}>
           <span className="ic">
             <DSEV.IconifyIcon name={t.icon} size={23} color={t.key === active ? "#fff" : "var(--gray-450)"} />
             {t.dot && <span className="dot">{t.dot}</span>}
           </span>
-          {t.label}
+          <span className="lbl">{t.label}</span>
         </button>
       ))}
     </nav>
   );
+}
+
+/* Header + dock scroll effects (same thresholds as the newsfeed's
+   useHeaderHideM): past 40px the header floats over the content with glass
+   chips, scrolling down hides it and collapses the dock to icons only,
+   scrolling back up brings both back. */
+function useHeaderHideEV(scrollRef) {
+  const [state, setState] = useStateEV({ hidden: false, floating: false });
+  useEffectEV(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let lastY = el.scrollTop;
+    const onScroll = () => {
+      const y = el.scrollTop;
+      const dy = y - lastY;
+      setState((prev) => {
+        let hidden = prev.hidden;
+        if (y < 40) hidden = false;
+        else if (dy > 6) hidden = true;
+        else if (dy < -6) hidden = false;
+        return { hidden, floating: y > 40 };
+      });
+      lastY = y;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+  return state;
 }
 
 /* ---- per-event join / calendar state (persisted, shared by both views) ---- */
@@ -372,14 +417,16 @@ function EvCalendar({ onOpen, cur, setCur }) {
 /* ---- screen 1a: events list ---- */
 function EventsList({ onBack, onOpen, view, setView, cur, setCur }) {
   const statusMap = useEvStatus();
+  const scrollRef = useRefEV(null);
+  const { hidden: chromeHidden, floating: chromeFloat } = useHeaderHideEV(scrollRef);
   return (
-    <div className="ev-screen" data-screen-label="Upcoming Events">
+    <div className={"ev-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="Upcoming Events">
       <header className="ev-head">
         <button className="ev-back" aria-label="Back" onClick={onBack}><DSEV.IconifyIcon name="lucide:arrow-left" size={22} color="var(--brand-navy)" /></button>
         <span className="ev-title">Upcoming Events</span>
         <span className="spacer" />
       </header>
-      <div className="ev-scroll">
+      <div className="ev-scroll" ref={scrollRef}>
         <div className="ev-searchrow">
           <label className="ev-search"><DSEV.Icon name="search" size={20} color="var(--gray-450)" />
             <input placeholder="Search events…" aria-label="Search events" />
@@ -418,6 +465,7 @@ function EventsList({ onBack, onOpen, view, setView, cur, setCur }) {
               <div className="meta">
                 <span className="ev-chip"><DSEV.IconifyIcon name="lucide:calendar" size={16} color="var(--brand-gold)" />{e.date}</span>
                 <span className="ev-chip"><DSEV.IconifyIcon name="lucide:clock" size={16} color="var(--brand-gold)" />{e.time}</span>
+                {e.zoom && <span className="ev-chip zoom"><DSEV.IconifyIcon name="logos:zoom-icon" size={14} />Zoom</span>}
               </div>
               <button className={"ev-cta" + (i === 0 ? "" : " ghost")} onClick={(ev) => { ev.stopPropagation(); onOpen(e); }}>
                 View Event<DSEV.IconifyIcon name="lucide:arrow-right" size={17} color={i === 0 ? "#fff" : "var(--brand-navy)"} />
@@ -427,7 +475,7 @@ function EventsList({ onBack, onOpen, view, setView, cur, setCur }) {
           </div>);
         })}
       </div>
-      <EvTabBar active="Home" />
+      <EvTabBar active="Home" compact={chromeHidden} />
     </div>
   );
 }
@@ -544,6 +592,173 @@ function InviteSheet({ title, event, onClose }) {
   );
 }
 
+/* ---- Add to Calendar: Google Calendar template link, plus a generated
+   .ics for Apple Calendar / Outlook. Times are converted to UTC from the
+   event's zone label (GMT / BST / ET); "All day" and date ranges become
+   all-day entries. ---- */
+const EV_TZ_OFFSET = { GMT: 0, UTC: 0, BST: 1, CET: 1, CEST: 2, ET: -4, EST: -5, EDT: -4, PT: -7, PST: -8, PDT: -7 };
+function evCalSpan(d) {
+  const p = evParse(d.date || "");
+  if (isNaN(p.d) || isNaN(p.y) || p.m < 0) return null;
+  const pad = (n) => String(n).padStart(2, "0");
+  const ymd = (y, m, day) => y + pad(m + 1) + pad(day);
+  const range = (d.date || "").match(/(\d+)\s*[–-]\s*(\d+),/);
+  const t = (d.time || "").trim();
+  const tm = t.match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?\s*([A-Z]{2,4})?$/i);
+  if (!tm || /all day/i.test(t)) {
+    const endDay = new Date(p.y, p.m, (range ? parseInt(range[2], 10) : p.d) + 1);
+    return { allDay: true, start: ymd(p.y, p.m, p.d), end: ymd(endDay.getFullYear(), endDay.getMonth(), endDay.getDate()) };
+  }
+  let h = parseInt(tm[1], 10); const min = parseInt(tm[2] || "0", 10);
+  if (tm[3]) { const pm = tm[3].toUpperCase() === "PM"; if (pm && h < 12) h += 12; if (!pm && h === 12) h = 0; }
+  const off = EV_TZ_OFFSET[(tm[4] || "GMT").toUpperCase()] || 0;
+  const dur = parseInt((((d.status || []).find((s) => s.icon === "lucide:timer") || {}).t || "60"), 10) || 60;
+  const start = new Date(Date.UTC(p.y, p.m, p.d, h - off, min));
+  const end = new Date(start.getTime() + dur * 60000);
+  const z = (x) => x.getUTCFullYear() + pad(x.getUTCMonth() + 1) + pad(x.getUTCDate()) + "T" + pad(x.getUTCHours()) + pad(x.getUTCMinutes()) + "00Z";
+  return { allDay: false, start: z(start), end: z(end) };
+}
+function evCalMeta(d) {
+  const link = (typeof window !== "undefined" ? window.location.href.split("#")[0] : "") + "#event";
+  const zoom = d.zoom && d.zoom.url;
+  const location = zoom ? d.zoom.url : "PROfinity Academy — live in the app";
+  const details = (d.about || "") + "\n\nHosted by " + d.host + (d.cohost ? " and " + d.cohost : "") + "." +
+    (zoom ? "\n\nJoin Zoom Meeting: " + d.zoom.url + "\nMeeting ID: " + d.zoom.id + "\nPasscode: " + d.zoom.passcode : "") +
+    "\n\nEvent page: " + link;
+  return { link, location, details };
+}
+function evGoogleCalUrl(d) {
+  const span = evCalSpan(d); const m = evCalMeta(d);
+  const q = new URLSearchParams({ action: "TEMPLATE", text: d.title, details: m.details, location: m.location });
+  if (span) q.set("dates", span.start + "/" + span.end);
+  return "https://calendar.google.com/calendar/render?" + q.toString();
+}
+function evIcs(d) {
+  const span = evCalSpan(d); const m = evCalMeta(d);
+  const esc = (s) => String(s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  const stamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//PROfinity Academy//Events//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VEVENT",
+    "UID:" + (d.id || "event") + "@profinity.app", "DTSTAMP:" + stamp];
+  if (span && span.allDay) lines.push("DTSTART;VALUE=DATE:" + span.start, "DTEND;VALUE=DATE:" + span.end);
+  else if (span) lines.push("DTSTART:" + span.start, "DTEND:" + span.end);
+  lines.push("SUMMARY:" + esc(d.title), "DESCRIPTION:" + esc(m.details), "LOCATION:" + esc(m.location), "URL:" + (d.zoom && d.zoom.url ? d.zoom.url : m.link),
+    "END:VEVENT", "END:VCALENDAR");
+  return lines.join("\r\n");
+}
+function evDownloadIcs(d) {
+  const blob = new Blob([evIcs(d)], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = (d.title || "event").replace(/[^\w]+/g, "-").toLowerCase() + ".ics";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+const EV_CAL_APPS = [
+  { k: "google", l: "Google Calendar", s: "Opens calendar.google.com with the event filled in", i: "logos:google-calendar" },
+  { k: "apple", l: "Apple Calendar", s: "Downloads a .ics you can open on iPhone or Mac", i: "lucide:calendar-days" },
+  { k: "outlook", l: "Outlook", s: "Opens Outlook on the web with the event filled in", i: "logos:microsoft-icon" },
+  { k: "ics", l: "Other calendar (.ics)", s: "Works with any calendar app", i: "lucide:download" },
+];
+function evOutlookUrl(d) {
+  const span = evCalSpan(d); const m = evCalMeta(d);
+  const iso = (s) => s.length === 8 ? s.slice(0, 4) + "-" + s.slice(4, 6) + "-" + s.slice(6, 8) : s.replace(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/, "$1-$2-$3T$4:$5:$6Z");
+  const q = new URLSearchParams({ path: "/calendar/action/compose", rru: "addevent", subject: d.title, body: m.details, location: m.location });
+  if (span) { q.set("startdt", iso(span.start)); q.set("enddt", iso(span.end)); if (span.allDay) q.set("allday", "true"); }
+  return "https://outlook.live.com/calendar/0/action/compose?" + q.toString();
+}
+function CalendarSheet({ event, onClose, onAdded }) {
+  const [done, setDone] = useStateEV(null);
+  useEffectEV(() => {
+    const esc = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  const pick = (k) => {
+    try {
+      if (k === "google") window.open(evGoogleCalUrl(event), "_blank", "noopener");
+      else if (k === "outlook") window.open(evOutlookUrl(event), "_blank", "noopener");
+      else evDownloadIcs(event);
+    } catch (e) {}
+    setDone(k);
+    if (onAdded) onAdded(k);
+  };
+  return (
+    <div className="ev-sheet" role="dialog" aria-modal="true" aria-label="Add to calendar">
+      <button className="ev-sheet-scrim" aria-label="Close" onClick={onClose} />
+      <div className="ev-sheet-card">
+        <span className="ev-sheet-grab" />
+        <div className="ev-sheet-hd">
+          <div>
+            <h3 className="ev-sheet-ttl">Add to calendar</h3>
+            <p className="ev-sheet-p">Choose where to save this event.</p>
+          </div>
+          <button className="ev-sheet-x" aria-label="Close" onClick={onClose}>
+            <DSEV.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" />
+          </button>
+        </div>
+        <div className="ev-invite-ev">
+          <span className="ic"><DSEV.IconifyIcon name={event.zoom ? "logos:zoom-icon" : "lucide:calendar-days"} size={22} color="var(--brand-navy)" /></span>
+          <span className="tx">
+            <span className="t">{event.title}</span>
+            {event.date && <span className="s">{event.date} · {event.time}{event.zoom ? " · Zoom" : ""}</span>}
+          </span>
+        </div>
+        <div className="ev-cal-apps">
+          {EV_CAL_APPS.map((a) => (
+            <button key={a.k} className={"ev-cal-app" + (done === a.k ? " done" : "")} onClick={() => pick(a.k)}>
+              <span className="ic"><DSEV.IconifyIcon name={done === a.k ? "lucide:check" : a.i} size={24} color={done === a.k ? "var(--success)" : "var(--brand-navy)"} /></span>
+              <span className="tx"><span className="l">{a.l}</span><span className="s">{done === a.k ? "Added — check your calendar app" : a.s}</span></span>
+              <DSEV.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---- Zoom meeting card: join link, meeting ID and passcode for events
+   hosted on Zoom rather than the in-app live stage. ---- */
+function ZoomCard({ d, onGate }) {
+  const [copied, setCopied] = useStateEV(null);
+  const copy = (k, v) => {
+    try { if (navigator.clipboard) navigator.clipboard.writeText(v); } catch (e) {}
+    setCopied(k); setTimeout(() => setCopied(null), 1800);
+  };
+  const open = () => {
+    if (onGate && onGate()) return;
+    try { window.open(d.zoom.url, "_blank", "noopener"); } catch (e) {}
+  };
+  return (
+    <div className="ev-zoom">
+      <div className="ev-zoom-hd">
+        <span className="ic"><DSEV.IconifyIcon name="logos:zoom-icon" size={26} /></span>
+        <span className="tx">
+          <span className="t">Hosted on Zoom</span>
+          <span className="s">Join from the Zoom app or your browser</span>
+        </span>
+      </div>
+      <button className="ev-zoom-join" onClick={open}>
+        <DSEV.IconifyIcon name="lucide:video" size={18} color="#fff" />Open Zoom meeting
+      </button>
+      <div className="ev-zoom-rows">
+        <button className="ev-zoom-row" onClick={() => copy("url", d.zoom.url)}>
+          <span className="k">Link</span><span className="v">{d.zoom.url.replace(/^https?:\/\//, "")}</span>
+          <span className="c">{copied === "url" ? "Copied" : "Copy"}</span>
+        </button>
+        <button className="ev-zoom-row" onClick={() => copy("id", d.zoom.id)}>
+          <span className="k">Meeting ID</span><span className="v">{d.zoom.id}</span>
+          <span className="c">{copied === "id" ? "Copied" : "Copy"}</span>
+        </button>
+        <button className="ev-zoom-row" onClick={() => copy("pw", d.zoom.passcode)}>
+          <span className="k">Passcode</span><span className="v">{d.zoom.passcode}</span>
+          <span className="c">{copied === "pw" ? "Copied" : "Copy"}</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 /* ---- screen 2: event detail (open to everyone; gate fires on action) ---- */
 function EventDetail({ onBack, onJoin, event }) {
   const d = Object.assign({}, EV_DETAIL, event || {});
@@ -551,6 +766,7 @@ function EventDetail({ onBack, onJoin, event }) {
   const [inCal, setInCal] = useStateEV(() => evStatusOf(d, evStore()).calendar);
   const [gate, setGate] = useStateEV(false);
   const [invite, setInvite] = useStateEV(false);
+  const [calSheet, setCalSheet] = useStateEV(false);
   const [toast, setToast] = useStateEV(false);
   useEffectEV(() => {
     if (!toast) return undefined;
@@ -570,27 +786,35 @@ function EventDetail({ onBack, onJoin, event }) {
   };
   const act = () => {
     if (d.membersOnly && evIsFree() && !attending) { setGate(true); return; }
-    if (d.state === "live") { onJoin(); return; }
+    if (d.state === "live") {
+      /* Zoom events are joined in Zoom, not the in-app live stage. */
+      if (d.zoom && d.zoom.url) { try { window.open(d.zoom.url, "_blank", "noopener"); } catch (e) {} return; }
+      onJoin(); return;
+    }
     register();
   };
-  const addToCalendar = () => {
-    setInCal((v) => { const nv = !v; if (d.id) evMark(d.id, { calendar: nv }); return nv; });
-  };
+  /* Opens the calendar picker (Google Calendar, Apple, Outlook, .ics);
+     the button flips to "Added" once any option is chosen. */
+  const addToCalendar = () => setCalSheet(true);
+  const calAdded = () => { setInCal(true); if (d.id) evMark(d.id, { calendar: true }); };
+  const zoomGate = () => { if (d.membersOnly && evIsFree() && !attending) { setGate(true); return true; } return false; };
   const findStatus = (icon) => { const s = (d.status || []).find((s) => s.icon === icon); return s ? s.t : null; };
+  const scrollRef = useRefEV(null);
+  const { hidden: chromeHidden, floating: chromeFloat } = useHeaderHideEV(scrollRef);
   return (
-    <div className="ev-screen" data-screen-label="Event Details" key={d.title + d.date}>
+    <div className={"ev-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="Event Details" key={d.title + d.date}>
       <header className="ev-head">
         <button className="ev-back" aria-label="Back" onClick={onBack}><DSEV.IconifyIcon name="lucide:arrow-left" size={22} color="var(--brand-navy)" /></button>
         <span className="ev-title">Event Details</span>
         <span className="spacer" />
       </header>
-      <div className="ev-scroll">
+      <div className="ev-scroll" ref={scrollRef}>
         {d.banner
           ? <div className="ev-hero" style={{ backgroundImage: "url(" + d.banner + ")" }} />
           : <div className="ev-hero ev-hero-ph" role="img" aria-label={d.title + " — thumbnail coming soon"} />}
         <div className="ev-detail-body">
           <span className={"ev-live-badge" + (d.state === "live" ? " live" : "")}>
-            {d.state === "live" ? <React.Fragment><span className="pulse" />Live now · started 4 min ago</React.Fragment> : "Live Event"}
+            {d.state === "live" ? <React.Fragment><span className="pulse" />Live now · started 4 min ago</React.Fragment> : (d.zoom ? "Live on Zoom" : "Live Event")}
           </span>
           <h1 className="ttl">{d.title}</h1>
           {d.membersOnly &&
@@ -629,6 +853,7 @@ function EventDetail({ onBack, onJoin, event }) {
               <DSEV.IconifyIcon name={inCal ? "lucide:calendar-check" : "lucide:calendar"} size={22} color={inCal ? "var(--success)" : "var(--brand-navy)"} />{inCal ? "Added to Calendar" : "Add to Calendar"}
             </button>
           </div>
+          {d.zoom && <ZoomCard d={d} onGate={zoomGate} />}
 
           <h2 className="ev-sec-h">About this event</h2>
           <p className="ev-sec-p">{d.about}</p>
@@ -663,9 +888,10 @@ function EventDetail({ onBack, onJoin, event }) {
           </button>
         </div>
       </div>
-      <EvTabBar active="Home" />
+      <EvTabBar active="Home" compact={chromeHidden} />
       {gate && <MembersGate onClose={() => setGate(false)} onUpgrade={() => goEV("MembershipTier.html")} />}
       {invite && <InviteSheet title={d.title} event={d} onClose={() => setInvite(false)} />}
+      {calSheet && <CalendarSheet event={d} onClose={() => setCalSheet(false)} onAdded={calAdded} />}
       {toast &&
       <div className="ev-toast" role="status">
         <DSEV.IconifyIcon name="lucide:check-circle-2" size={20} color="var(--success)" />

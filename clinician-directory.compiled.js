@@ -51,7 +51,7 @@ const CD_TABS = [{
   href: "ProfileMobile.html"
 }, {
   key: "Agent",
-  label: "Ava",
+  label: "Agents",
   icon: "lucide:sparkles",
   href: "Agent.html"
 }, {

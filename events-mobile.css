@@ -16,7 +16,20 @@ img{max-width:100%}
 
 /* ===== shared header ===== */
 .ev-head{flex:none;z-index:5;background:var(--surface-card);border-bottom:1px solid var(--border-default);
-  padding:54px 16px 12px;display:flex;align-items:center;gap:14px}
+  padding:54px 16px 12px;display:flex;align-items:center;gap:14px;
+  transition:transform .34s cubic-bezier(.4,0,.2,1),opacity .34s cubic-bezier(.4,0,.2,1),background-color .2s ease,border-color .2s ease}
+/* scroll effects (match the newsfeed header): once the page has scrolled the
+   header lifts out of the flow and goes transparent, the back button and the
+   title become frosted glass chips; scrolling down slides it away entirely */
+.ev-screen.chrome-float .ev-head{position:absolute;top:0;left:0;right:0;z-index:20;background:transparent;border-bottom-color:transparent}
+.ev-screen.chrome-float .ev-scroll{padding-top:calc(54px + 44px + 12px)}
+.ev-screen.chrome-float .ev-back{background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(12px) saturate(180%);backdrop-filter:blur(12px) saturate(180%);
+  border:1px solid rgba(255,255,255,.6);box-shadow:0 2px 8px rgba(16,24,40,.1)}
+.ev-screen.chrome-float .ev-title{flex:none;margin:0 auto;padding:8px 16px;border-radius:var(--r-pill,999px);font-size:16px;
+  background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(12px) saturate(180%);backdrop-filter:blur(12px) saturate(180%);
+  border:1px solid rgba(255,255,255,.6);box-shadow:0 2px 8px rgba(16,24,40,.1)}
+.ev-screen.chrome-hidden .ev-head{transform:translateY(-100%);opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.ev-head{transition:none}}
 .ev-back{width:44px;height:44px;border:none;background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--brand-navy);border-radius:50%}
 .ev-back:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
 .ev-title{flex:1;text-align:center;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:19px;color:var(--brand-navy)}
@@ -307,7 +320,17 @@ img{max-width:100%}
 .ev-tab.on .ic{background:var(--brand-navy);box-shadow:0 4px 12px rgba(41,37,105,.34),inset 0 1px 0 rgba(255,255,255,.28)}
 .ev-tab:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
 .ev-tab:active{transform:scale(.9)}
-@media (prefers-reduced-motion:reduce){.ev-tab,.ev-tab .ic{transition:none}}
+/* compact dock while scrolling down (matches the newsfeed) — narrower pill, icons only */
+.ev-tabs{transition:left .32s cubic-bezier(.22,1,.36,1),right .32s cubic-bezier(.22,1,.36,1),padding .28s cubic-bezier(.22,1,.36,1)}
+.ev-tabs.ev-tabs-compact{left:13%;right:13%;padding:4px 6px}
+.ev-tab{transition:color .25s ease,transform .25s cubic-bezier(.34,1.56,.64,1),padding .28s cubic-bezier(.22,1,.36,1),gap .28s ease}
+.ev-tabs.ev-tabs-compact .ev-tab{padding:3px 0;gap:0}
+.ev-tab .lbl{transition:font-size .28s ease,opacity .2s ease,margin-top .28s ease;overflow:hidden}
+.ev-tabs.ev-tabs-compact .ev-tab .lbl{font-size:0;opacity:0;margin-top:-2px}
+.ev-tab .ic{transition:background .28s ease,box-shadow .28s ease,width .32s cubic-bezier(.34,1.56,.64,1),height .32s cubic-bezier(.34,1.56,.64,1)}
+.ev-tabs.ev-tabs-compact .ev-tab .ic{width:38px;height:26px}
+.ev-tabs.ev-tabs-compact .ev-tab .ic svg,.ev-tabs.ev-tabs-compact .ev-tab .ic iconify-icon{width:20px;height:20px}
+@media (prefers-reduced-motion:reduce){.ev-tab,.ev-tab .ic,.ev-tabs,.ev-tab .lbl{transition:none}}
 
 /* ===== live stream: audience view ===== */
 .ls-screen{height:100%;display:flex;flex-direction:column;background:#0d0f16;position:relative;overflow:hidden}
@@ -668,3 +691,39 @@ img{max-width:100%}
   background:transparent;color:rgba(255,255,255,.7);font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:11px}
 .ls-roleswitch button.on{background:var(--brand-gold);color:var(--brand-navy)}
 .ls-roleswitch button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* ---- Add to Calendar picker (Google / Apple / Outlook / .ics) ---- */
+.ev-cal-apps{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+.ev-cal-app{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;min-height:64px;padding:10px 12px 10px 10px;
+  border:1px solid var(--border-default);border-radius:14px;background:var(--surface-card);transition:border-color .15s ease,background .15s ease}
+.ev-cal-app:hover{border-color:var(--brand-navy);background:var(--surface-sunken)}
+.ev-cal-app:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+.ev-cal-app .ic{flex:none;width:44px;height:44px;border-radius:11px;background:var(--surface-sunken);display:flex;align-items:center;justify-content:center}
+.ev-cal-app .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ev-cal-app .l{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px;color:var(--brand-navy)}
+.ev-cal-app .s{font-family:var(--font-sans);font-size:12.5px;line-height:1.35;color:var(--gray-500)}
+.ev-cal-app.done{border-color:var(--success)}
+.ev-cal-app.done .ic{background:var(--success-bg)}
+.ev-cal-app.done .s{color:var(--success)}
+
+/* ---- Zoom meeting card on the event detail ---- */
+.ev-chip.zoom{color:var(--brand-navy);font-weight:var(--fw-semibold)}
+.ev-zoom{margin:14px 0 6px;border:1px solid var(--border-default);border-radius:16px;background:var(--surface-card);padding:14px;
+  display:flex;flex-direction:column;gap:12px}
+.ev-zoom-hd{display:flex;align-items:center;gap:12px}
+.ev-zoom-hd .ic{flex:none;width:46px;height:46px;border-radius:12px;background:#EAF1FF;display:flex;align-items:center;justify-content:center}
+.ev-zoom-hd .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.ev-zoom-hd .t{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;color:var(--brand-navy)}
+.ev-zoom-hd .s{font-family:var(--font-sans);font-size:13px;color:var(--gray-500)}
+.ev-zoom-join{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:48px;border:none;border-radius:var(--r-pill);cursor:pointer;
+  background:#0B5CFF;color:#fff;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px}
+.ev-zoom-join:hover{background:#0A4FDB}
+.ev-zoom-join:focus-visible{outline:2px solid var(--brand-navy);outline-offset:2px}
+.ev-zoom-rows{display:flex;flex-direction:column;border:1px solid var(--border-default);border-radius:12px;overflow:hidden}
+.ev-zoom-row{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:8px 12px;border:none;border-bottom:1px solid var(--border-default);
+  background:var(--surface-sunken);cursor:pointer;text-align:left;font-family:var(--font-sans)}
+.ev-zoom-row:last-child{border-bottom:none}
+.ev-zoom-row .k{flex:none;width:82px;font-size:12.5px;color:var(--gray-500)}
+.ev-zoom-row .v{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13.5px;font-weight:var(--fw-medium);color:var(--text-primary)}
+.ev-zoom-row .c{flex:none;font-size:12.5px;font-weight:var(--fw-semibold);color:var(--brand-navy)}
+.ev-zoom-row:focus-visible{outline:2px solid var(--brand-navy);outline-offset:-2px}

@@ -316,8 +316,7 @@ function CombinedCelebrationScreen() {
     onClick: () => goCC(ret)
   }, /*#__PURE__*/React.createElement(DSCC.IconifyIcon, {
     name: "lucide:x",
-    size: 20,
-    color: "#fff"
+    size: 20
   })), /*#__PURE__*/React.createElement("div", {
     className: "cc-body"
   }, /*#__PURE__*/React.createElement("div", {
@@ -371,7 +370,7 @@ function CombinedCelebrationScreen() {
   }, /*#__PURE__*/React.createElement(DSCC.IconifyIcon, {
     name: "lucide:coins",
     size: 15,
-    color: "#fdc35d"
+    color: "var(--cc-coin)"
   }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, shownToday), " pts today")), /*#__PURE__*/React.createElement("span", {
     className: "cc-strip-dot",
     "aria-hidden": "true"
@@ -417,8 +416,25 @@ function useIsMobileCC() {
   }, []);
   return mobile;
 }
+
+/* App-wide theme: dark-mode-init.js stamps data-theme on <html> from pf-theme;
+   follow it so the device frame's status bar / home indicator flip too. */
+function useIsDarkCC() {
+  const read = () => document.documentElement.getAttribute("data-theme") === "dark";
+  const [dark, setDark] = useStateCC(read);
+  useEffectCC(() => {
+    const mo = new MutationObserver(() => setDark(read()));
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"]
+    });
+    return () => mo.disconnect();
+  }, []);
+  return dark;
+}
 function CombinedCelebrationApp() {
   const mobile = useIsMobileCC();
+  const dark = useIsDarkCC();
   const scale = useDeviceScaleCC();
   const vars = {
     "--action-primary": "var(--brand-navy)",
@@ -428,7 +444,7 @@ function CombinedCelebrationApp() {
     className: "app",
     style: {
       ...vars,
-      background: "#1b1848"
+      background: "var(--cc-solid)"
     }
   }, /*#__PURE__*/React.createElement(CombinedCelebrationScreen, null));
   return /*#__PURE__*/React.createElement("div", {
@@ -444,7 +460,8 @@ function CombinedCelebrationApp() {
     }
   }, /*#__PURE__*/React.createElement(IOSDevice, {
     width: 440,
-    height: 956
+    height: 956,
+    dark: dark
   }, /*#__PURE__*/React.createElement(CombinedCelebrationScreen, null))));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(CombinedCelebrationApp, null));

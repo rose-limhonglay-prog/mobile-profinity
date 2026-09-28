@@ -1,10 +1,33 @@
 /* ===========================================================================
    PROfinity — Katy · Combined Celebration · iPhone 17 Pro Max
    Full-page celebration for several major rewards from one action (see
-   combined-celebration.jsx / reward-router.js). Fixed navy palette — the
-   same family as Daily Goal and the check-in takeover — so it reads the same
-   in light and dark mode. Classes prefixed cc- to avoid clashes.
+   combined-celebration.jsx / reward-router.js). Follows the app theme
+   (pf-theme → data-theme on <html>): white / cream in light mode, the navy
+   gradient shared with Daily Goal + the check-in takeover in dark mode, gold
+   accents in both. Classes prefixed cc- to avoid clashes.
    =========================================================================== */
+:root {
+  --cc-bg: radial-gradient(120% 90% at 50% 0%, #fff6e6 0%, #ffffff 52%, #f3f1fa 100%);
+  --cc-solid: #f3f1fa;
+  --cc-ink: #1a1736; --cc-muted: #5f5e78; --cc-kicker: #b8874a; --cc-title: #b8874a; --cc-accent: #a07640;
+  --cc-glow: rgba(253, 195, 93, .34);
+  --cc-close-bg: rgba(26, 23, 54, .08); --cc-close-ink: #1a1736;
+  --cc-card-bg: #ffffff; --cc-card-bd: rgba(26, 23, 54, .10); --cc-card-shadow: rgba(26, 23, 54, .10);
+  --cc-card-title: #1a1736; --cc-card-sub: #5f5e78;
+  --cc-strip-bg: rgba(26, 23, 54, .06); --cc-strip-ink: #5f5e78; --cc-strip-b: #1a1736; --cc-strip-dot: rgba(26, 23, 54, .25); --cc-coin: #c98a12;
+  --cc-ghost-bg: rgba(26, 23, 54, .08); --cc-ghost-ink: #1a1736;
+}
+[data-theme="dark"] {
+  --cc-bg: radial-gradient(120% 90% at 50% 0%, #3a3480 0%, #292569 55%, #1b1848 100%);
+  --cc-solid: #1b1848;
+  --cc-ink: #ffffff; --cc-muted: rgba(255,255,255,.8); --cc-kicker: #e7a769; --cc-title: #fdc35d; --cc-accent: #fdc35d;
+  --cc-glow: rgba(253, 195, 93, .42);
+  --cc-close-bg: rgba(255,255,255,.14); --cc-close-ink: #ffffff;
+  --cc-card-bg: rgba(255,255,255,.10); --cc-card-bd: rgba(255,255,255,.16); --cc-card-shadow: rgba(9, 7, 40, .28);
+  --cc-card-title: #ffffff; --cc-card-sub: rgba(255,255,255,.72);
+  --cc-strip-bg: rgba(0,0,0,.18); --cc-strip-ink: rgba(255,255,255,.82); --cc-strip-b: #ffffff; --cc-strip-dot: rgba(255,255,255,.4); --cc-coin: #fdc35d;
+  --cc-ghost-bg: rgba(255,255,255,.14); --cc-ghost-ink: #ffffff;
+}
 html, body { margin: 0; padding: 0; }
 *, *::before, *::after { box-sizing: border-box; }
 body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
@@ -14,14 +37,14 @@ img { max-width: 100%; }
 .app:not(.device-stage) { min-height: 100vh; min-height: 100dvh; }
 .app:not(.device-stage) .cc-screen { min-height: 100vh; min-height: 100dvh; }
 
-.cc-screen { position: relative; height: 100%; display: flex; flex-direction: column; overflow: hidden; text-align: center; color: #fff;
+.cc-screen { position: relative; height: 100%; display: flex; flex-direction: column; overflow: hidden; text-align: center; color: var(--cc-ink);
   font-family: var(--font-sans);
-  background: radial-gradient(120% 90% at 50% 0%, #3a3480 0%, #292569 55%, #1b1848 100%); }
+  background: var(--cc-bg); }
 .cc-glow { position: absolute; left: 50%; top: 24%; width: 340px; height: 260px; transform: translate(-50%, -50%); border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(253, 195, 93, .42), rgba(253, 195, 93, 0)); pointer-events: none; }
+  background: radial-gradient(closest-side, var(--cc-glow), rgba(253, 195, 93, 0)); pointer-events: none; }
 
 .cc-close { position: absolute; top: 62px; right: 20px; width: 38px; height: 38px; border-radius: 50%; z-index: 5;
-  background: rgba(255,255,255,.14); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  background: var(--cc-close-bg); color: var(--cc-close-ink); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .app:not(.device-stage) .cc-close { top: calc(env(safe-area-inset-top, 0px) + 14px); }
 
 /* confetti: lottie.host burst, over the content but never catching taps */
@@ -35,17 +58,17 @@ img { max-width: 100%; }
 .cc-hero { position: relative; width: 196px; height: 147px; margin: 0 auto 2px; animation: ccPop .7s cubic-bezier(.2, 1.4, .4, 1) both .05s; }
 .cc-lottie { display: block; width: 100%; height: 100%; }
 .cc-lottie svg { display: block; width: 100% !important; height: 100% !important; }
-.cc-kicker { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #e7a769;
+.cc-kicker { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--cc-kicker);
   margin-bottom: 6px; animation: ccRise .5s ease both .25s; }
-.cc-title { margin: 0; font-size: 30px; line-height: 1.05; font-weight: 800; letter-spacing: -.02em; color: #fdc35d; animation: ccRise .5s ease both .3s; }
-.cc-sub { margin: 8px auto 0; font-size: 13.5px; line-height: 1.5; color: rgba(255,255,255,.8); max-width: 320px; animation: ccRise .5s ease both .38s; }
-.cc-sub b { color: #fdc35d; font-weight: 800; }
+.cc-title { margin: 0; font-size: 30px; line-height: 1.05; font-weight: 800; letter-spacing: -.02em; color: var(--cc-title); animation: ccRise .5s ease both .3s; }
+.cc-sub { margin: 8px auto 0; font-size: 13.5px; line-height: 1.5; color: var(--cc-muted); max-width: 320px; animation: ccRise .5s ease both .38s; }
+.cc-sub b { color: var(--cc-accent); font-weight: 800; }
 
 /* the reward stack — cards deal in one after another */
 .cc-stack { list-style: none; margin: 18px 0 0; padding: 0; width: 100%; max-width: 352px; display: flex; flex-direction: column; gap: 10px; }
 .cc-card { display: flex; align-items: center; gap: 12px; text-align: left; padding: 12px 12px 12px 12px; border-radius: 18px;
-  background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.16); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  box-shadow: 0 10px 28px rgba(9, 7, 40, .28); opacity: 0; transform: translateY(18px) scale(.96);
+  background: var(--cc-card-bg); border: 1px solid var(--cc-card-bd); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 10px 28px var(--cc-card-shadow); opacity: 0; transform: translateY(18px) scale(.96);
   animation: ccDeal .55s cubic-bezier(.2, 1.2, .4, 1) both; }
 .cc-tile { flex: none; width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center;
   background: var(--cc-tile, #d9a21b); box-shadow: 0 6px 16px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.28); }
@@ -53,23 +76,23 @@ img { max-width: 100%; }
 .cc-card.is-gold .cc-tile { --cc-tile: #d9a21b; }
 .cc-card.is-level .cc-tile, .cc-card.is-league .cc-tile { --cc-tile: var(--cc-tile, #5b6b8c); }
 .cc-card-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.cc-card-title { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -.01em; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cc-card-sub { font-size: 12.5px; color: rgba(255,255,255,.72); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-card-title { font-size: 15px; font-weight: 800; color: var(--cc-card-title); letter-spacing: -.01em; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cc-card-sub { font-size: 12.5px; color: var(--cc-card-sub); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cc-tag { flex: none; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #1b1848;
   background: #fdc35d; border-radius: 999px; padding: 5px 9px; }
 
 /* today strip */
 .cc-strip { display: inline-flex; align-items: center; gap: 12px; margin-top: 16px; padding: 8px 14px; border-radius: 999px;
-  background: rgba(0,0,0,.18); font-size: 12.5px; color: rgba(255,255,255,.82); animation: ccRise .5s ease both 1.2s; }
+  background: var(--cc-strip-bg); font-size: 12.5px; color: var(--cc-strip-ink); animation: ccRise .5s ease both 1.2s; }
 .cc-strip-item { display: inline-flex; align-items: center; gap: 6px; }
-.cc-strip-item b { color: #fff; font-weight: 800; }
-.cc-strip-dot { width: 4px; height: 4px; border-radius: 50%; background: rgba(255,255,255,.4); }
+.cc-strip-item b { color: var(--cc-strip-b); font-weight: 800; }
+.cc-strip-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--cc-strip-dot); }
 
 /* footer */
 .cc-foot { position: relative; z-index: 2; width: 100%; padding: 8px 22px 34px; display: flex; flex-direction: column; gap: 10px; animation: ccRise .5s ease both 1.35s; }
 .app:not(.device-stage) .cc-foot { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 22px); }
 .cc-btn { width: 100%; height: 52px; border-radius: 16px; font-size: 15px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-.cc-btn-ghost { background: rgba(255,255,255,.14); color: #fff; }
+.cc-btn-ghost { background: var(--cc-ghost-bg); color: var(--cc-ghost-ink); }
 
 @keyframes ccPop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
 @keyframes ccRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

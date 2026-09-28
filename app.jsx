@@ -6042,7 +6042,8 @@ function slimSharedPost(post) {
     media: (post.media || []).slice(0, 10), sample, video, liveNow: post.liveNow ? { viewers: post.liveNow.viewers, frame: post.liveNow.frame } : undefined,
     poll: post.poll ? { question: post.poll.question, options: (post.poll.options || []).map((o) => ({ label: o.label, pct: o.pct })), votes: post.poll.votes || 0 } : undefined,
     questionnaire: post.questionnaire ? { question: post.questionnaire.question, options: (post.questionnaire.options || []).map((o) => ({ label: o.label, correct: !!o.correct })) } : undefined,
-    document: post.document ? { name: post.document.name, title: post.document.title } : undefined };
+    document: post.document ? { name: post.document.name, title: post.document.title } : undefined,
+    sharedConference: post.sharedConference || undefined, sharedProfile: post.sharedProfile || undefined };
 }
 /* Pages that host each share destination, per surface (PF_EMBED = mobile). */
 function sharePageFor(channelKey, embed) {
@@ -6062,6 +6063,27 @@ function SharedProfileCard({ profile }) {
         <u>{profile.handle} · PROfinity</u>
       </span>
       <span className="pf-shared-profile-cta">View profile<IconifyIcon name="lucide:chevron-right" size={15} color="var(--brand-navy)" /></span>
+    </a>
+  );
+}
+
+/* Join card for a voice conference shared to the feed from the Messages
+   Conference stage (post.sharedConference = { id, name, desc, live, when,
+   hostName, hostAvatar, count, link }). Tapping opens the room on the
+   Messages page of the same surface. */
+function SharedConferenceCard({ conf }) {
+  const page = (window.PF_EMBED ? "Messages.html" : "MessagesWeb.html") + "?tab=conference&conf=" + encodeURIComponent(conf.id);
+  const go = (e) => { e.preventDefault(); e.stopPropagation(); (window.pfGo || ((u) => { window.location.href = u; }))(page); };
+  const meta = [conf.live ? "Live now" : (conf.when || "Scheduled"), "Hosted by " + (conf.hostName || "PROfinity")].concat(conf.count ? [conf.count + " in the room"] : []).join(" · ");
+  return (
+    <a className={"pf-shared-conf" + (conf.live ? " live" : "")} href={page} onClick={go}>
+      <span className="pf-shared-conf-ic"><IconifyIcon name="lucide:audio-lines" size={20} color="#fff" /></span>
+      <span className="pf-shared-conf-tx">
+        <b>{conf.name}{conf.live && <span className="pf-shared-conf-live"><i />Live</span>}</b>
+        <i>{meta}</i>
+        <u><IconifyIcon name="lucide:mic" size={12} color="currentColor" />Voice conference · PROfinity</u>
+      </span>
+      <span className="pf-shared-conf-cta">{conf.live ? "Join" : "View"}<IconifyIcon name="lucide:chevron-right" size={15} color="currentColor" /></span>
     </a>
   );
 }
@@ -6161,7 +6183,8 @@ function SharePostQuote({ post, full }) {
     post.questionnaire ? { icon: "lucide:help-circle", label: "Quiz · " + (post.questionnaire.question || "") } :
     post.sample && sample.type !== "gallery" ? { icon: "lucide:play-circle", label: sample.type === "vertical" ? "Reel" : "Video" + (sample.duration ? " · " + sample.duration : ""), thumb: sample.poster || sample.image } :
     post.document ? { icon: "lucide:file-text", label: post.document.name || post.document.title || "Document" } :
-    post.sharedProfile ? { icon: "lucide:user", label: "Profile · " + post.sharedProfile.name } : null;
+    post.sharedProfile ? { icon: "lucide:user", label: "Profile · " + post.sharedProfile.name } :
+    post.sharedConference ? { icon: "lucide:audio-lines", label: "Voice conference · " + post.sharedConference.name } : null;
   const showKind = kind && (!post.body || shown.length === 0);
   return (
     <div className="pf-shq" aria-label={"Post by " + post.author.name}>
@@ -6798,6 +6821,7 @@ function FeedPost({ post, st, hideTags, pinned, canPin, onPin, pinScope, onToggl
         : (post.media && post.media.length > 0) ? <MediaCarousel images={post.media} video={post.video} aspect={post.aspect} onLoveReact={handleDoubleTapLove} /> : null}
         {post.document && <div className="pf-doc-inset"><DocAttachment doc={post.document} /></div>}
         {post.sharedProfile && <SharedProfileCard profile={post.sharedProfile} />}
+        {post.sharedConference && <SharedConferenceCard conf={post.sharedConference} />}
         {post.sharedPost && <div className="pf-repost"><SharePostQuote post={post.sharedPost} full /></div>}
         {isReel &&
         <ReelActionsRow likes={st.likes} comments={st.commentsCount} shares={st.shares}
@@ -7551,7 +7575,7 @@ function readUserPosts() {
        still-running background upload (a media post shared with no caption
        used to be dropped here — so its upload card never appeared on the
        feed, its marker was never cleared and its reward never booked). */
-    return list.filter((p) => p && p.author && p.author.name && (p.body || p.sharedPost || (p.media && p.media.length) || p.video || p.sample || p.uploading)).map((p) =>
+    return list.filter((p) => p && p.author && p.author.name && (p.body || p.sharedPost || p.sharedProfile || p.sharedConference || (p.media && p.media.length) || p.video || p.sample || p.uploading)).map((p) =>
       /* CreatePostMobile stores its clip as `video: { src, cover, ratio }`;
          a video-only post renders through `sample`, so map one to the other.
          A post carrying photos *and* a clip keeps both and renders them as

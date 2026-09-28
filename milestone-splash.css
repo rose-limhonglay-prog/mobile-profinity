@@ -1,7 +1,30 @@
 /* ===========================================================================
    PROfinity — Katy · Milestone Splash · iPhone 17 Pro Max
-   Classes prefixed spl- to avoid clashes with other pages.
+   Classes prefixed spl- to avoid clashes with other pages. Follows the app
+   theme (pf-theme → data-theme on <html>): white / cream in light mode, navy
+   gradient in dark mode — same tokens as the in-page Reward Splash overlay
+   in reward-router.js (pf-rsp).
    =========================================================================== */
+:root {
+  --spl-bg: radial-gradient(120% 90% at 50% 0%, #fff6e6 0%, #ffffff 52%, #f3f1fa 100%);
+  --spl-solid: #f3f1fa;
+  --spl-ink: #1a1736; --spl-muted: #5f5e78; --spl-kicker: #b8874a; --spl-points: #b8874a; --spl-points-unit: #a07640;
+  --spl-glow: rgba(253, 195, 93, .34);
+  --spl-close-bg: rgba(26, 23, 54, .08); --spl-close-ink: #1a1736;
+  --spl-medal-bd: #ffffff; --spl-medal-shadow: rgba(26, 23, 54, .22);
+  --spl-perks-bg: #ffffff; --spl-perks-bd: rgba(26, 23, 54, .10);
+  --spl-ghost-bg: rgba(26, 23, 54, .08); --spl-ghost-ink: #1a1736;
+}
+[data-theme="dark"] {
+  --spl-bg: radial-gradient(120% 90% at 50% 0%, #3a3480 0%, #292569 55%, #1b1848 100%);
+  --spl-solid: #1b1848;
+  --spl-ink: #ffffff; --spl-muted: rgba(255,255,255,.78); --spl-kicker: #e7a769; --spl-points: #fdc35d; --spl-points-unit: #f0c98a;
+  --spl-glow: rgba(253, 195, 93, .40);
+  --spl-close-bg: rgba(255,255,255,.14); --spl-close-ink: #ffffff;
+  --spl-medal-bd: #292569; --spl-medal-shadow: rgba(0,0,0,.35);
+  --spl-perks-bg: rgba(255,255,255,.08); --spl-perks-bd: rgba(255,255,255,.16);
+  --spl-ghost-bg: rgba(255,255,255,.14); --spl-ghost-ink: #ffffff;
+}
 html, body { margin: 0; padding: 0; }
 *, *::before, *::after { box-sizing: border-box; }
 body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
@@ -11,10 +34,10 @@ img { max-width: 100%; }
 
 .spl-screen { position: relative; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
   overflow: hidden; padding: 40px 28px 34px; text-align: center;
-  background: radial-gradient(120% 90% at 50% 0%, #3a3480 0%, var(--brand-navy) 55%, var(--brand-navy-900) 100%); color: #fff; }
+  background: var(--spl-bg); color: var(--spl-ink); }
 
 .spl-close { position: absolute; top: 22px; right: 20px; width: 38px; height: 38px; border-radius: 50%;
-  background: rgba(255,255,255,.14); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; }
+  background: var(--spl-close-bg); color: var(--spl-close-ink); border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; }
 
 /* lottie.host confetti burst (SplConfetti): plays twice over the content,
    never catches taps, then fades out */
@@ -22,7 +45,7 @@ img { max-width: 100%; }
 .spl-confetti.is-done { opacity: 0; }
 .spl-confetti svg { display: block; width: 100% !important; height: 100% !important; }
 .spl-glow { position: absolute; left: 50%; top: 32%; width: 320px; height: 240px; transform: translate(-50%, -50%); border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(253, 195, 93, .40), rgba(253, 195, 93, 0)); pointer-events: none; }
+  background: radial-gradient(closest-side, var(--spl-glow), rgba(253, 195, 93, 0)); pointer-events: none; }
 
 .spl-body { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
 /* the winking check-in doctor (4:3 Lottie) with the reward's medal tucked at his shoulder */
@@ -31,20 +54,23 @@ img { max-width: 100%; }
 .spl-lottie { display: block; width: 100%; height: 100%; }
 .spl-lottie svg { display: block; width: 100% !important; height: 100% !important; }
 .spl-medal { position: absolute; right: 42px; bottom: 6px; width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  border: 3px solid #292569; box-shadow: 0 10px 24px rgba(0,0,0,.35); }
+  border: 3px solid var(--spl-medal-bd); box-shadow: 0 10px 24px var(--spl-medal-shadow); }
 @keyframes splPop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
 /* the big rolling "+100" on the sign-up splash */
-.spl-points { display: flex; align-items: baseline; justify-content: center; gap: 8px; margin: 4px 0 10px; line-height: 1; color: var(--brand-gold);
+.spl-points { display: flex; align-items: baseline; justify-content: center; gap: 8px; margin: 4px 0 10px; line-height: 1; color: var(--spl-points);
   animation: splRise .5s ease both .2s; }
 .spl-points b { font-size: 40px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; text-shadow: 0 4px 18px rgba(253, 195, 93, .35); }
-.spl-points i { font-style: normal; font-size: 15px; font-weight: 700; color: var(--brand-gold-soft); }
+.spl-points i { font-style: normal; font-size: 15px; font-weight: 700; color: var(--spl-points-unit); }
 @keyframes splRise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.spl-kicker { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brand-gold-soft); margin-bottom: 8px; }
+.spl-kicker { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--spl-kicker); margin-bottom: 8px; }
 .spl-body h1 { margin: 0 0 10px; font-size: 26px; font-weight: 800; }
-.spl-sub { margin: 0 0 24px; font-size: 14px; color: rgba(255,255,255,.78); max-width: 300px; }
+.spl-sub { margin: 0 0 24px; font-size: 14px; color: var(--spl-muted); max-width: 300px; }
 
-.spl-perks { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 12px; background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.16); border-radius: 16px; padding: 16px 18px; }
+.spl-perks { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 12px; background: var(--spl-perks-bg);
+  border: 1px solid var(--spl-perks-bd); border-radius: 16px; padding: 16px 18px; }
 .spl-perk-row { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; text-align: left; }
 
 .spl-foot { position: relative; z-index: 2; width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 10px; margin-top: 28px; }
+
+/* ghost button (was inline in milestone-splash.jsx) */
+.spl-btn-ghost { background: var(--spl-ghost-bg) !important; color: var(--spl-ghost-ink) !important; }

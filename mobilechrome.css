@@ -85,7 +85,8 @@
 .m-pts-tally .m-pts-delta{right:auto;left:calc(100% + 6px);top:14px;text-shadow:none}
 @media (prefers-reduced-motion:reduce){.m-pts-tally,.m-pts-tally.on{transition:none;animation:none}.m-pts-tally .m-pts.earn{animation:none}}
 
-/* ===== left slide-in side menu ===== */
+/* ===== left slide-in side menu — a straight copy of mobile.css (newsfeed);
+   edit there first, then port, so every page's drawer reads the same ===== */
 .m-drawer-wrap{position:absolute;inset:0;z-index:200;pointer-events:none;overflow:hidden}
 .m-drawer-wrap.open{pointer-events:auto}
 .m-drawer-scrim{position:absolute;inset:0;background:rgba(16,24,40,.4);opacity:0;transition:opacity .25s ease}
@@ -99,13 +100,17 @@
 .m-dp-name{display:flex;align-items:center;gap:7px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:21px;color:var(--text-heading)}
 .m-dp-role{font-family:var(--font-sans);font-size:15px;color:var(--gray-500)}
 
+/* scrollable body */
 .sm-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 18px 28px}
 .sm-body::-webkit-scrollbar{width:0}
+
+/* section header */
 .sm-sec-h{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px;letter-spacing:.08em;
   text-transform:uppercase;color:var(--gray-400);margin:22px 2px 12px}
 
-/* metal upgrade CTA — bronze by default, silver/gold once the next rung up
-   is Mastery / Freedom / Inner Circle. Drifting gradient + sweeping sheen +
+/* metal upgrade CTA — top of drawer, hidden once a viewer is at the top tier.
+   Bronze by default; silver/gold once the next rung up is Mastery / Freedom
+   Path / Sovereign (SM_UPGRADE_METAL_M). Drifting gradient + sweeping sheen +
    pulsing icon signal "premium", opted out under reduced motion. */
 .sm-upgrade{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
   position:relative;overflow:hidden;border:none;border-radius:14px;
@@ -152,7 +157,33 @@
 .smt-top{display:flex;align-items:center;gap:10px;min-width:0}
 .smt-name{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--text-heading)}
 .smt-pill{flex:none;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:10px;letter-spacing:.04em;
-  color:#8A6321;background:rgba(206,153,87,.12);border:1.5px solid var(--brand-gold);border-radius:var(--r-pill);padding:4px 10px}
+  color:var(--brand-gold);background:rgba(206,153,87,.12);border:1.5px solid var(--brand-gold);border-radius:var(--r-pill);padding:4px 10px}
+/* "YOUR TIER" pill — color/border set inline per tier (SM_TIER_COLOR_M), no gold tint background */
+.smt-pill-yours{background:transparent}
+
+/* "My Membership" summary card (confidence/mastery/freedom) — replaces the
+   stacked tier-card ladder those viewers would otherwise see for themselves.
+   Carries its own title, so it renders without an .sm-sec-h divider above it. */
+.sm-membership-card{margin:16px 0 6px}
+.smt-head.sm-membership-head{flex-direction:row;align-items:center;justify-content:flex-start;flex-wrap:nowrap;gap:10px}
+.sm-membership-title{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:16px;letter-spacing:.02em;
+  text-transform:uppercase;color:var(--brand-navy);white-space:nowrap;flex:none}
+
+/* metal ribbon banner — takes its chevron shape from assets/ribbon-bronze.png's
+   alpha channel via a mask, then fills it with the same metal gradients used
+   on the drawer's .sm-upgrade CTA, so all three tiers read as clean metal
+   instead of the raw (over-saturated) bronze bitmap. */
+.sm-memb-ribbon{position:relative;display:inline-flex;align-items:center;justify-content:center;
+  flex:none;min-width:0}
+.sm-memb-ribbon::before{content:"";position:absolute;inset:0;
+  background-image:linear-gradient(100deg,#6B3F1C,#B87333 50%,#7C4A22);background-size:100% 100%;
+  -webkit-mask-image:url('assets/ribbon-bronze.png');-webkit-mask-size:100% 100%;-webkit-mask-repeat:no-repeat;
+  mask-image:url('assets/ribbon-bronze.png');mask-size:100% 100%;mask-repeat:no-repeat}
+.sm-memb-ribbon-silver::before{background-image:linear-gradient(100deg,#7C848E,#EDF0F2 52%,#A8AEB6)}
+.sm-memb-ribbon-gold::before{background-image:linear-gradient(100deg,#976A00,#E9B01F 50%,#CE9957)}
+.sm-memb-ribbon-text{position:relative;font-family:var(--font-sans);font-weight:var(--fw-bold);
+  font-size:12px;white-space:nowrap;padding:5px 34px;color:#fff}
+.sm-memb-ribbon-silver .sm-memb-ribbon-text{color:#3F4650}
 
 /* indented resource rows, revealed on expand */
 .smt-resources{display:flex;flex-direction:column;padding:2px 18px 14px}
@@ -160,6 +191,9 @@
   background:none;border:none;padding:10px 4px}
 .smt-resource:active{background:var(--surface-sunken);border-radius:9px}
 .smt-resource-label{flex:1;min-width:0;font-family:var(--font-sans);font-weight:500;font-size:16px;color:var(--text-heading)}
+.smt-badge{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;
+  padding:0 7px;border-radius:var(--r-pill);font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;
+  background:var(--gray-200);color:var(--gray-600)}
 
 /* My Learning — primary destination card, same weight as tier cards */
 .sm-primary-card{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
@@ -171,18 +205,7 @@
 .sm-primary-title{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:17px;color:var(--brand-navy)}
 .sm-primary-sub{font-family:var(--font-sans);font-size:14px;color:var(--gray-500)}
 
-.sm-tier{display:flex;flex-direction:column;gap:5px;width:100%;text-align:left;cursor:pointer;
-  background:var(--surface-card);border:1px solid var(--border-default);border-radius:14px;padding:18px 18px 16px;margin-bottom:6px;
-  box-shadow:0 1px 3px rgba(12,12,13,.05)}
-.sm-tier-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.sm-tier-name{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--text-heading)}
-.sm-tier-pill{flex:none;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:10px;letter-spacing:.04em;
-  color:var(--premium-orange);border:1.5px solid var(--premium-orange);border-radius:var(--r-pill);padding:4px 10px}
-.sm-tier-pill-yours{color:var(--ai-purple);border-color:var(--ai-purple)}
-.sm-tier-sub{font-family:var(--font-sans);font-size:14px;color:var(--gray-500)}
-.sm-tier-new{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:15px;color:var(--premium-orange);margin-top:2px}
-.sm-tier-new-yours{color:var(--ai-purple)}
-
+/* list rows */
 .sm-list{display:flex;flex-direction:column}
 .sm-row{display:flex;align-items:center;gap:16px;width:100%;text-align:left;cursor:pointer;
   background:none;border:none;padding:14px 6px}
@@ -193,16 +216,7 @@
 .sm-badge-red{background:#8C2A20;color:#fff}
 .sm-badge-gray{background:var(--gray-200);color:var(--gray-600)}
 
-.sm-courses{display:flex;flex-direction:column;gap:18px;padding:2px 0}
-.sm-course{display:flex;flex-direction:column;gap:9px;width:100%;text-align:left;cursor:pointer;background:none;border:none;padding:0}
-.sm-course-top{display:flex;align-items:center;gap:13px}
-.sm-course-thumb{flex:none;width:42px;height:42px;border-radius:9px;background:var(--gray-150);
-  display:flex;align-items:center;justify-content:center}
-.sm-course-name{flex:1;min-width:0;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:16px;color:#000}
-.sm-progress{height:7px;border-radius:var(--r-pill);background:var(--gray-200);overflow:hidden}
-.sm-progress-fill{display:block;height:100%;border-radius:var(--r-pill);background:var(--brand-navy)}
-.sm-course-pct{font-family:var(--font-sans);font-size:13px;color:var(--gray-500)}
-
+/* events */
 .sm-events{display:flex;flex-direction:column;gap:12px}
 .sm-event{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;
   background:var(--surface-card);border:1px solid var(--border-default);border-radius:13px;padding:13px 14px;
@@ -213,8 +227,10 @@
 .sm-event-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .sm-event-name{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:16px;color:#000}
 .sm-event-time{font-family:var(--font-sans);font-size:14px;color:var(--gray-500)}
-.sm-event-tag{flex:none;align-self:flex-start;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:10px;letter-spacing:.04em;
-  color:var(--premium-orange);border:1.5px solid var(--premium-orange);border-radius:var(--r-pill);padding:3px 9px}
+/* co-host avatars (e.g. Technique Tuesday) — reuses the Messages group-avatar stack */
+.sm-event-hosts{display:flex;align-items:center;gap:8px;margin-top:2px;min-width:0}
+.sm-event-hosts-label{flex:1;min-width:0;font-family:var(--font-sans);font-size:12px;color:var(--gray-450);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sm-event-access{flex:none;align-self:flex-start;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:10px;letter-spacing:.04em;
   border-radius:var(--r-pill);padding:3px 9px;border:1.5px solid var(--border-strong)}
 .sm-event-access-open{color:var(--gray-500);border-color:var(--gray-300)}
@@ -222,54 +238,54 @@
 
 .sm-verify{background:#FCF4E4;border-radius:11px;border-left:4px solid var(--premium-orange);
   padding:14px 14px;margin-bottom:4px}
-.sm-verify .sm-row-label,
-.m-drawer.sm-dark .sm-verify .sm-row-label{color:#1F1F1F !important}
 .sm-verify-pill{flex:none;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px;
   color:#fff;background:var(--premium-orange);border-radius:var(--r-pill);padding:6px 12px}
 
 .m-drawer-logout{display:flex;align-items:center;gap:16px;padding:24px 6px 8px;background:none;border:none;cursor:pointer;
   font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--error)}
+/* ===== sidebar display (dark mode) toggle card ===== */
+.sm-display-card{border:1px solid var(--border-default);border-radius:14px;padding:16px 18px 18px;margin:14px 6px 0}
+.sm-display-top{display:flex;align-items:center;justify-content:space-between}
+.sm-display-label{font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:16px;color:var(--text-heading)}
+.sm-display-desc{margin:8px 0 0;font-family:var(--font-sans);font-size:13px;color:var(--gray-500);line-height:1.5}
 
-.sm-display{display:flex;align-items:center;gap:14px;padding:16px;
-  background:#fff;border:1px solid var(--border-default);border-radius:14px;margin:2px 0}
-.sm-display-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
-.sm-display-title{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--brand-navy)}
-.sm-display-sub{font-family:var(--font-sans);font-size:13.5px;line-height:1.4;color:var(--gray-500)}
-.sm-display-toggle{flex:none;width:52px;height:30px;border-radius:100px;border:none;cursor:pointer;
-  background:var(--gray-200);position:relative;transition:background .2s ease;padding:0}
-.sm-display-toggle.on{background:var(--brand-navy)}
-.sm-display-toggle .knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;
-  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;
-  transition:transform .2s ease}
-.sm-display-toggle.on .knob{transform:translateX(22px)}
+.sm-switch{position:relative;width:52px;height:30px;border-radius:var(--r-pill);
+  background:var(--gray-300);border:none;cursor:pointer;transition:background .18s ease;flex:none}
+.sm-switch.on{background:var(--brand-gold)}
+.sm-knob{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(16,24,40,.3);transition:transform .18s ease;pointer-events:none;
+  display:flex;align-items:center;justify-content:center}
+.sm-switch.on .sm-knob{transform:translateX(22px)}
 
-/* ===== side-menu DARK MODE ===== */
+/* ===== side-menu DARK MODE — pinned-dark shells that don't load dark-mode.css
+   (SideMenuC adds .sm-dark only when a page passes dark={true}) ===== */
 .m-drawer.sm-dark{background:#161527;color:#E7E7F0}
 .m-drawer.sm-dark .m-dp-name{color:#F5F5FA}
 .m-drawer.sm-dark .m-dp-role{color:#9A9AB5}
 .m-drawer.sm-dark .sm-sec-h{color:#7E7E9C}
 .m-drawer.sm-dark .sm-row-label,
-.m-drawer.sm-dark .sm-course-name,
 .m-drawer.sm-dark .sm-event-name,
-.m-drawer.sm-dark .sm-tier-name,
+.m-drawer.sm-dark .smt-name,
+.m-drawer.sm-dark .smt-resource-label,
+.m-drawer.sm-dark .sm-display-label,
 .m-drawer.sm-dark .sm-date b{color:#F0F0F7 !important}
-.m-drawer.sm-dark .sm-tier-sub,
-.m-drawer.sm-dark .sm-course-pct,
 .m-drawer.sm-dark .sm-event-time,
+.m-drawer.sm-dark .sm-event-hosts-label,
+.m-drawer.sm-dark .sm-primary-sub,
+.m-drawer.sm-dark .sm-display-desc,
 .m-drawer.sm-dark .sm-date i{color:#9A9AB5}
-.m-drawer.sm-dark .sm-row:active{background:#232241}
-.m-drawer.sm-dark .sm-tier{background:#221F3B;border-color:#332F55}
-.m-drawer.sm-dark .sm-event{background:#1E1D33;border-color:#302E4D;box-shadow:none}
-.m-drawer.sm-dark .sm-course-thumb{background:#2A2846}
-.m-drawer.sm-dark .sm-progress{background:#302E4D}
-.m-drawer.sm-dark .sm-progress-fill{background:var(--brand-gold)}
-.m-drawer.sm-dark .sm-badge-gray{background:#302E4D;color:#C7C7DE}
-.m-drawer.sm-dark .sm-display{background:#1E1D33;border-color:#302E4D}
-.m-drawer.sm-dark .sm-display-title{color:#F5F5FA}
-.m-drawer.sm-dark .sm-display-sub{color:#9A9AB5}
-.m-drawer.sm-dark .sm-display-toggle.on{background:var(--brand-gold)}
+.m-drawer.sm-dark .sm-row:active,.m-drawer.sm-dark .smt-resource:active{background:#232241}
+.m-drawer.sm-dark .smt-card,
+.m-drawer.sm-dark .sm-primary-card,
+.m-drawer.sm-dark .sm-event,
+.m-drawer.sm-dark .sm-display-card{background:#1E1D33;border-color:#302E4D;box-shadow:none}
+.m-drawer.sm-dark .sm-primary-icon{background:#2A2846}
+.m-drawer.sm-dark .sm-primary-title,.m-drawer.sm-dark .sm-membership-title{color:#F5F5FA}
+.m-drawer.sm-dark .smt-badge,.m-drawer.sm-dark .sm-badge-gray{background:#302E4D;color:#C7C7DE}
+.m-drawer.sm-dark .sm-verify .sm-row-label{color:#1F1F1F !important}
 .m-drawer.sm-dark .m-drawer-profile iconify-icon,
-.m-drawer.sm-dark .sm-row iconify-icon{color:#C7C7DE !important}
+.m-drawer.sm-dark .sm-row iconify-icon,
+.m-drawer.sm-dark .smt-resource iconify-icon{color:#C7C7DE !important}
 
 /* ===== notifications panel (slides in from right) ===== */
 .nt-panel{padding:54px 0 0;left:auto;right:0;transform:translateX(100%);

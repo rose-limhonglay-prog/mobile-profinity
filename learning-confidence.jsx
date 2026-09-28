@@ -143,7 +143,7 @@ const LC_TABS = [
 { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
 { key: "Learning", label: "Learning", icon: "lucide:book-open", href: null },
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
-{ key: "Agent", label: "Ava", icon: "lucide:sparkles", href: "AgentMobile.html" },
+{ key: "Agent", label: "Agents", icon: "lucide:sparkles", href: "AgentMobile.html" },
 { key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" }];
 
 function lessonUrlLC(idx) {

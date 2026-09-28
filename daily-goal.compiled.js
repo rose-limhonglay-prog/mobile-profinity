@@ -706,8 +706,7 @@ function DailyGoalScreen() {
     onClick: () => goDG(ret)
   }, /*#__PURE__*/React.createElement(DSDG.IconifyIcon, {
     name: "lucide:x",
-    size: 20,
-    color: "#fff"
+    size: 20
   })), /*#__PURE__*/React.createElement("div", {
     className: "dg-body"
   }, /*#__PURE__*/React.createElement("div", {
@@ -820,8 +819,25 @@ function useIsMobileDG() {
   }, []);
   return mobile;
 }
+
+/* App-wide theme: dark-mode-init.js stamps data-theme on <html> from pf-theme;
+   follow it so the device frame's status bar / home indicator flip too. */
+function useIsDarkDG() {
+  const read = () => document.documentElement.getAttribute("data-theme") === "dark";
+  const [dark, setDark] = useStateDG(read);
+  useEffectDG(() => {
+    const mo = new MutationObserver(() => setDark(read()));
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"]
+    });
+    return () => mo.disconnect();
+  }, []);
+  return dark;
+}
 function DailyGoalApp() {
   const mobile = useIsMobileDG();
+  const dark = useIsDarkDG();
   const scale = useDeviceScaleDG();
   const vars = {
     "--action-primary": "var(--brand-navy)",
@@ -831,7 +847,7 @@ function DailyGoalApp() {
     className: "app",
     style: {
       ...vars,
-      background: "#1b1848"
+      background: "var(--dg-solid)"
     }
   }, /*#__PURE__*/React.createElement(DailyGoalScreen, null));
   return /*#__PURE__*/React.createElement("div", {
@@ -848,7 +864,7 @@ function DailyGoalApp() {
   }, /*#__PURE__*/React.createElement(IOSDevice, {
     width: 440,
     height: 956,
-    dark: true
+    dark: dark
   }, /*#__PURE__*/React.createElement(DailyGoalScreen, null))));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(DailyGoalApp, null));

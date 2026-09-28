@@ -1314,18 +1314,11 @@ function PWAssessHub({
     className: "pw-hub-why",
     "aria-haspopup": "dialog",
     onClick: () => setWhyOpen(true)
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pw-hub-why-ic",
-    "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(IconifyIconPW, {
     name: "lucide:sparkles",
-    size: 15,
-    color: "var(--ai-purple)"
-  })), "Why Ava asks", /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:circle-help",
-    size: 15,
-    color: "#4A40D6"
-  })), /*#__PURE__*/React.createElement("button", {
+    size: 16,
+    color: "#fff"
+  }), "Why Ava asks"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-hub-help",
     onClick: () => setHelpOpen(true)

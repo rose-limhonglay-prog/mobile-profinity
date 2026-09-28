@@ -391,7 +391,7 @@ function DailyGoalScreen() {
     <div className="dg-screen" data-screen-label="Daily Goal Reached">
       <DgConfetti />
       <span className="dg-glow" aria-hidden="true" />
-      <button className="dg-close" type="button" aria-label="Close" onClick={() => goDG(ret)}><DSDG.IconifyIcon name="lucide:x" size={20} color="#fff" /></button>
+      <button className="dg-close" type="button" aria-label="Close" onClick={() => goDG(ret)}><DSDG.IconifyIcon name="lucide:x" size={20} /></button>
 
       <div className="dg-body">
         <div className="dg-hero">
@@ -445,16 +445,30 @@ function useIsMobileDG() {
   return mobile;
 }
 
+/* App-wide theme: dark-mode-init.js stamps data-theme on <html> from pf-theme;
+   follow it so the device frame's status bar / home indicator flip too. */
+function useIsDarkDG() {
+  const read = () => document.documentElement.getAttribute("data-theme") === "dark";
+  const [dark, setDark] = useStateDG(read);
+  useEffectDG(() => {
+    const mo = new MutationObserver(() => setDark(read()));
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => mo.disconnect();
+  }, []);
+  return dark;
+}
+
 function DailyGoalApp() {
   const mobile = useIsMobileDG();
+  const dark = useIsDarkDG();
   const scale = useDeviceScaleDG();
   const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
-  if (mobile) return <div className="app" style={{ ...vars, background: "#1b1848" }}><DailyGoalScreen /></div>;
+  if (mobile) return <div className="app" style={{ ...vars, background: "var(--dg-solid)" }}><DailyGoalScreen /></div>;
   return (
     <div className="app device-stage" style={{ ...vars, backgroundColor: "rgb(217, 218, 225)" }}>
       <div style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
         {/* the screen is navy in both themes, so the frame's status bar is always the light-on-dark one */}
-        <IOSDevice width={440} height={956} dark={true}><DailyGoalScreen /></IOSDevice>
+        <IOSDevice width={440} height={956} dark={dark}><DailyGoalScreen /></IOSDevice>
       </div>
     </div>
   );

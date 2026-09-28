@@ -152,7 +152,10 @@
       var handle = e.target.closest("[data-drag]");
       if (!handle || e.target.closest("button:not([data-drag])")) return;
       var r = el.getBoundingClientRect();
-      dragging = { on: true, moved: false, sx: e.clientX, sy: e.clientY, ox: r.left, oy: r.top, id: e.pointerId };
+      /* remember what was pressed: with pointer capture the trailing click lands on the
+         root, not the bubble, so a plain tap on the bubble is handled on pointerup */
+      var act = e.target.closest("[data-act]");
+      dragging = { on: true, moved: false, sx: e.clientX, sy: e.clientY, ox: r.left, oy: r.top, id: e.pointerId, tap: act ? act.getAttribute("data-act") : null };
       el.classList.add("is-dragging");
       try { root.setPointerCapture(e.pointerId); } catch (err) {}
     });
@@ -172,6 +175,11 @@
         var b = bounds(), r = el.getBoundingClientRect();
         savePos({ x: (r.left - b.left) / Math.max(1, b.width - r.width), y: (r.top - b.top) / Math.max(1, b.height - r.height) });
         /* let the trailing click be swallowed, then clear */
+        window.setTimeout(function () { dragging.moved = false; }, 0);
+      } else if (dragging.tap === "open" && collapsed) {
+        /* tap on the collapsed bubble → back to the movable card */
+        collapsed = false; render();
+        dragging.moved = true;
         window.setTimeout(function () { dragging.moved = false; }, 0);
       }
     };

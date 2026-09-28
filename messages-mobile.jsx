@@ -1929,6 +1929,77 @@ function confGetDM(people) {
   return (id) => people.get(id) || CONF_PEOPLE_DM.find((p) => p.id === id) || null;
 }
 function pluralDM(n, word) { return n + " " + (n === 1 ? word : word + "s"); }
+/* who's talking right now — while a room is live the floor rotates through the
+   host and the speakers every few seconds (the seed has no real audio), so the
+   stage grid, the participants list and the mini card all agree */
+function confSpeakingIdsDM(c, now) {
+  if (!c || !c.live) return [];
+  const pool = [c.mine ? "me" : c.hostId].concat(c.speakerIds || []).filter(Boolean);
+  if (!pool.length) return [];
+  const idx = Math.floor(now / 3500);
+  const out = [pool[idx % pool.length]];
+  if (pool.length > 2 && idx % 2 === 0) out.push(pool[(idx + 1) % pool.length]);
+  return out;
+}
+const confFirstNameDM = (p) => p.id === "me" ? "You" : stripHonorificDM(p.name).split(" ")[0];
+
+/* ---- room grid (phone stage): the host on their own row, then every face in
+   the room with a name; whoever is speaking gets a pulsing ring + equaliser ---- */
+function ConfRoomGridDM({ c, call, speaking, onMore }) {
+  const people = usePeopleDM();
+  const get = confGetDM(people);
+  const inCall = !!call && call.id === c.id;
+  const host = c.mine ? ME_DM : get(c.hostId);
+  const speakers = (c.speakerIds || []).map(get).filter(Boolean);
+  const attendeesRaw = (c.attendeeIds || []).map((id) => id === "me" ? ME_DM : get(id)).filter(Boolean);
+  const attendees = (inCall || c.mine || attendeesRaw.some((p) => p.id === "me")) ? [ME_DM].concat(attendeesRaw.filter((p) => p.id !== "me")) : attendeesRaw;
+  const room = speakers.concat(attendees).filter((p) => !host || p.id !== host.id).filter((p, i, arr) => arr.findIndex((x) => x.id === p.id) === i);
+  const extra = Math.max(0, (c.count || 0) - room.length - (host ? 1 : 0));
+  const isSpeaking = (p) => speaking.indexOf(p.id) !== -1 && !(p.id === "me" && inCall && call.muted);
+  const meMuted = (p) => p.id === "me" && inCall && call.muted;
+  const meHand = (p) => p.id === "me" && inCall && call.hand;
+  const Face = ({ p, size }) => (
+    <span className={"dm-vc-tile-av" + (isSpeaking(p) ? " speaking" : "")}>
+      <DMFace name={p.name} src={p.avatar} size={size} />
+      {isSpeaking(p) && <span className="dm-vc-tile-eq" aria-hidden="true"><i /><i /><i /></span>}
+      {meMuted(p) && <span className="dm-vc-tile-mute" aria-hidden="true"><DSDM.IconifyIcon name="lucide:mic-off" size={11} color="#fff" /></span>}
+      {meHand(p) && <span className="dm-vc-tile-hand" aria-hidden="true"><DSDM.IconifyIcon name="lucide:hand" size={11} color="#fff" /></span>}
+    </span>);
+  return (
+    <section className="dm-vc-room" aria-label="In the room">
+      <header className="dm-vc-room-head">
+        <b>In the room</b>
+        <button type="button" className="dm-vc-room-all" onClick={onMore}>{c.count || room.length + 1}<DSDM.IconifyIcon name="lucide:chevron-right" size={16} color="currentColor" /></button>
+      </header>
+      {host &&
+        <>
+          <span className="dm-vc-room-sec">Host</span>
+          <button type="button" className={"dm-vc-hostrow" + (isSpeaking(host) ? " speaking" : "")} onClick={onMore} aria-label={host.name + ", host" + (isSpeaking(host) ? ", speaking" : "")}>
+            <Face p={host} size={50} />
+            <span className="dm-vc-hostrow-main">
+              <b>{c.mine ? "You" : host.name}<span className="dm-vc-role-chip">Host</span></b>
+              <span className={"dm-vc-hostrow-sub" + (isSpeaking(host) ? " on" : "")}>{isSpeaking(host) ? "Speaking now" : (c.live ? "Listening" : host.role || "Host")}</span>
+            </span>
+          </button>
+        </>}
+      <span className="dm-vc-room-sec">{c.live ? "Participants" : "Going"} <em>{room.length + extra}</em></span>
+      <div className="dm-vc-grid" role="list">
+        {room.map((p) => (
+          <button key={p.id} type="button" role="listitem" className={"dm-vc-tile" + (isSpeaking(p) ? " speaking" : "")} onClick={onMore}
+            aria-label={p.name + (isSpeaking(p) ? ", speaking" : "")}>
+            <Face p={p} size={52} />
+            <span className="dm-vc-tile-name">{confFirstNameDM(p)}</span>
+            <span className={"dm-vc-tile-sub" + (isSpeaking(p) ? " on" : "")}>{isSpeaking(p) ? "Speaking" : (speakers.some((x) => x.id === p.id) ? "Speaker" : "\u00a0")}</span>
+          </button>))}
+        {extra > 0 &&
+          <button type="button" role="listitem" className="dm-vc-tile more" onClick={onMore} aria-label={"See all " + c.count + " participants"}>
+            <span className="dm-vc-tile-av"><span className="dm-vc-tile-plus">+{extra}</span></span>
+            <span className="dm-vc-tile-name">More</span>
+            <span className="dm-vc-tile-sub">{"\u00a0"}</span>
+          </button>}
+      </div>
+    </section>);
+}
 function confStartedAtDM(c) { return c.startedAt || (NOW_DM - (c.startedAgo || 0) * 1000); }
 function fmtDurationDM(ms) {
   const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
@@ -2087,7 +2158,7 @@ function ConfWaveDM({ quiet }) {
 }
 
 /* ---- the stage: navy card + control bar ---- */
-function ConferenceStageDM({ c, call, onJoin, onLeave, onToggleMute, onToggleHand, onClose, onParticipants, onRemind, reminded, toast, onHostAgain }) {
+function ConferenceStageDM({ c, call, onJoin, onLeave, onToggleMute, onToggleHand, onClose, onParticipants, onRemind, reminded, toast, onHostAgain, onShareInMessages }) {
   const people = usePeopleDM();
   const get = confGetDM(people);
   const host = get(c.hostId);
@@ -2104,10 +2175,9 @@ function ConferenceStageDM({ c, call, onJoin, onLeave, onToggleMute, onToggleHan
     const done = () => toast("Link copied");
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText("https://" + link).then(done, done); else done();
   };
-  const share = () => {
-    if (navigator.share) navigator.share({ title: c.name, text: "Join my voice conference on PROfinity", url: "https://" + link }).catch(() => {});
-    else copy();
-  };
+  const [shareOpen, setShareOpen] = useStateDM(false);
+  const share = () => setShareOpen(true);
+  const speaking = confSpeakingIdsDM(c, now);
   const react = (e) => {
     const id = Date.now() + Math.random();
     setBursts((b) => b.concat([{ id, e, x: 20 + Math.random() * 60 }]));
@@ -2120,13 +2190,6 @@ function ConferenceStageDM({ c, call, onJoin, onLeave, onToggleMute, onToggleHan
   };
   const elapsed = c.live ? fmtDurationDM(now - confStartedAtDM(c)) : c.ended && c.duration ? fmtDurationDM(c.duration) : null;
   const leave = () => { setConfirmLeave(false); onLeave(); };
-  /* phone: a peek at who's in the room sits between the card and the controls
-     (desktop shows the full participants column instead) */
-  const roomPeople = [c.mine ? ME_DM : host].concat((c.speakerIds || []).map(get), (c.attendeeIds || []).map((id) => id === "me" ? ME_DM : get(id))).filter(Boolean)
-    .filter((p, i, arr) => arr.findIndex((x) => x.id === p.id) === i);
-  const speakingNames = (c.speakerIds || []).map(get).filter(Boolean).slice(0, 2).map((p) => stripHonorificDM(p.name).split(" ")[0]);
-  const roomLine = c.live ? (speakingNames.length ? speakingNames.join(" & ") + (speakingNames.length === 1 ? " is" : " are") + " speaking" : (c.mine ? "Waiting for people to join" : "Listening in")) :
-    (host ? "Hosted by " + (c.mine ? "you" : host.name) : "") + " · " + pluralDM(c.count, "person") .replace("persons", "people") + " going";
   return (
     <div className={"dm-view dm-vc-stage-view" + (inCall ? " in-call" : "")} data-screen-label={"Conference · " + c.name}>
       <div className="dm-vc-stage-scroll">
@@ -2166,13 +2229,7 @@ function ConferenceStageDM({ c, call, onJoin, onLeave, onToggleMute, onToggleHan
           {bursts.map((b) => <span key={b.id} className="dm-vc-burst" style={{ left: b.x + "%" }}>{b.e}</span>)}
         </div>
 
-        {!DM_WEB && !c.ended &&
-          <button type="button" className="dm-vc-roomstrip" onClick={onParticipants} aria-label="Show all participants">
-            <span className="dm-faces">{roomPeople.slice(0, 4).map((p) => <DMFace key={p.id} name={p.name} src={p.avatar} size={34} />)}</span>
-            <span className="dm-vc-roomstrip-main"><b>In the room</b><span>{roomLine}</span></span>
-            <span className="dm-vc-roomstrip-n">{c.count}</span>
-            <DSDM.IconifyIcon name="lucide:chevron-right" size={18} color="var(--gray-400)" />
-          </button>}
+        {!DM_WEB && !c.ended && <ConfRoomGridDM c={c} call={call} speaking={speaking} onMore={onParticipants} />}
 
         {/* below the card */}
         {inCall ?
@@ -2200,11 +2257,11 @@ function ConferenceStageDM({ c, call, onJoin, onLeave, onToggleMute, onToggleHan
             </div>
           </div> :
           <div className="dm-vc-joinwrap">
-            {c.live && <button type="button" className="dm-btn dm-btn-navy dm-btn-grow dm-vc-join" onClick={onJoin}><DSDM.IconifyIcon name="lucide:mic" size={18} color="#fff" />Join conference</button>}
+            {c.live && <button type="button" className="dm-btn dm-btn-navy dm-btn-grow dm-vc-join" onClick={onJoin}><DSDM.IconifyIcon name="lucide:mic" size={18} color="var(--brand-navy)" />Join conference</button>}
             {c.live && <span className="dm-vc-joinnote">{call ? "You'll leave your current room" : "You'll join muted"} · {c.count} in the room</span>}
             {!c.live && !c.ended &&
               <button type="button" className={"dm-btn dm-btn-grow " + (reminded ? "dm-btn-ghost on" : "dm-btn-navy")} aria-pressed={!!reminded} onClick={onRemind}>
-                <DSDM.IconifyIcon name={reminded ? "lucide:bell-ring" : "lucide:bell"} size={18} color={reminded ? "var(--brand-navy)" : "#fff"} />{reminded ? "Reminder set" : "Remind me"}
+                <DSDM.IconifyIcon name={reminded ? "lucide:bell-ring" : "lucide:bell"} size={18} color={reminded ? "#fff" : "var(--brand-navy)"} />{reminded ? "Reminder set" : "Remind me"}
               </button>}
             {c.ended &&
               <>
@@ -2236,6 +2293,9 @@ function ConferenceStageDM({ c, call, onJoin, onLeave, onToggleMute, onToggleHan
         </form>
       </SheetDM>
 
+      {/* share: PROfinity newsfeed or outside apps */}
+      <ConfShareSheetDM c={c} host={host} link={link} open={shareOpen} onClose={() => setShareOpen(false)} toast={toast} onMessages={onShareInMessages} />
+
       {/* host ends the room */}
       <SheetDM open={confirmLeave} onClose={() => setConfirmLeave(false)} label="End room" className="dm-sheet-confirm">
         <h3 className="dm-sheet-title">End the room for everyone?</h3>
@@ -2261,12 +2321,18 @@ function ConfParticipantsDM({ c, call, onClose }) {
   const match = (p) => !q || p.name.toLowerCase().includes(q.toLowerCase());
   const shown = 1 + speakers.length + attendees.length;
   const extra = Math.max(0, (c.count || shown) - shown);
+  const now = useNowDM(!!c.live);
+  const speaking = confSpeakingIdsDM(c, now);
+  const talking = (p) => speaking.indexOf(p.id) !== -1 && !(p.id === "me" && inCall && call.muted);
   const Row = ({ p, role, mic, hand }) => (
-    <div className="dm-member dm-vc-member" role="listitem">
-      <DMFace name={p.name} src={p.avatar} size={40} />
+    <div className={"dm-member dm-vc-member" + (talking(p) ? " speaking" : "")} role="listitem">
+      <span className={"dm-vc-tile-av" + (talking(p) ? " speaking" : "")}>
+        <DMFace name={p.name} src={p.avatar} size={40} />
+        {talking(p) && <span className="dm-vc-tile-eq sm" aria-hidden="true"><i /><i /><i /></span>}
+      </span>
       <span className="dm-member-main">
         <span className="dm-member-name">{p.name}{p.id === "me" && <span className="dm-vc-you">(You)</span>}</span>
-        <span className="dm-member-sub">{p.role}</span>
+        <span className={"dm-member-sub" + (talking(p) ? " dm-vc-speaking" : "")}>{talking(p) ? "Speaking now" : p.role}</span>
       </span>
       {hand && <span className="dm-vc-handic" aria-label="Hand raised"><DSDM.IconifyIcon name="lucide:hand" size={16} color="#fff" /></span>}
       {role && <span className={"dm-role" + (role === "Host" ? " admin" : " mod")}>{role}</span>}
@@ -2284,7 +2350,7 @@ function ConfParticipantsDM({ c, call, onClose }) {
         <div className="dm-vc-people-sec">Speaker</div>
         <div role="list">
           {host && match(host) && <Row p={host} role="Host" mic={c.mine ? meMic : c.live} hand={c.mine && meHand} />}
-          {speakers.filter(match).map((p, i) => <Row key={p.id} p={p} role="Speaker" mic={c.live && i < 2} />)}
+          {speakers.filter(match).map((p) => <Row key={p.id} p={p} role="Speaker" mic={c.live} />)}
         </div>
         <div className="dm-vc-people-sec">Other Attendees</div>
         <div role="list">
@@ -2298,6 +2364,108 @@ function ConfParticipantsDM({ c, call, onClose }) {
           </div>}
       </div>
     </div>);
+}
+
+/* ---- share a conference: post it to the PROfinity newsfeed (a link card
+   post app.jsx renders as SharedConferenceCard) or send the link out to
+   Messages, WhatsApp, Facebook, X, LinkedIn, email, or the OS share sheet ---- */
+const CONF_SHARE_TARGETS_DM = [
+  { k: "messages", label: "Messages", icon: "lucide:message-circle", color: "var(--brand-navy)", bg: "var(--surface-sunken)" },
+  { k: "copy", label: "Copy link", icon: "lucide:link", color: "var(--brand-navy)", bg: "var(--surface-sunken)" },
+  { k: "whatsapp", label: "WhatsApp", icon: "mdi:whatsapp", color: "#fff", bg: "#25D366" },
+  { k: "facebook", label: "Facebook", icon: "mdi:facebook", color: "#fff", bg: "#1877F2" },
+  { k: "twitter", label: "X", icon: "mdi:twitter", color: "#fff", bg: "#111" },
+  { k: "linkedin", label: "LinkedIn", icon: "mdi:linkedin", color: "#fff", bg: "#0A66C2" },
+  { k: "email", label: "Email", icon: "lucide:mail", color: "var(--brand-navy)", bg: "var(--surface-sunken)" },
+  { k: "more", label: "More", icon: "lucide:ellipsis", color: "var(--brand-navy)", bg: "var(--surface-sunken)" }];
+const CONF_USER_POSTS_KEY_DM = "pf-newsfeed-user-posts";
+
+function ConfShareSheetDM({ c, host, link, open, onClose, toast, onMessages }) {
+  const url = "https://" + link;
+  const hostName = c.mine ? ME_DM.name : (host ? host.name : "PROfinity");
+  const defaultCaption = () => c.live
+    ? "We're live now in “" + c.name + "” — join the voice conference on PROfinity 🎙️"
+    : "Join me for “" + c.name + "”" + (c.when ? " · " + c.when : "") + " — a voice conference on PROfinity 🎙️";
+  const [caption, setCaption] = useStateDM(defaultCaption);
+  const [posted, setPosted] = useStateDM(false);
+  useEffectDM(() => { if (open) { setCaption(defaultCaption()); setPosted(false); } }, [open]);
+  const shareText = (c.live ? "Join my live voice conference “" : "Join my voice conference “") + c.name + "” on PROfinity";
+  const copyLink = () => {
+    const done = () => toast("Link copied");
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, done); else done();
+  };
+  const openOut = (u) => { try { window.open(u, "_blank", "noopener"); } catch (e) { window.location.href = u; } };
+  const go = (k) => {
+    const u = encodeURIComponent(url), t = encodeURIComponent(shareText);
+    switch (k) {
+      case "messages": copyLink(); onClose(); onMessages && onMessages(); return;
+      case "copy": copyLink(); return;
+      case "whatsapp": openOut("https://wa.me/?text=" + t + "%20" + u); return;
+      case "facebook": openOut("https://www.facebook.com/sharer/sharer.php?u=" + u + "&quote=" + t); return;
+      case "twitter": openOut("https://twitter.com/intent/tweet?text=" + t + "&url=" + u); return;
+      case "linkedin": openOut("https://www.linkedin.com/sharing/share-offsite/?url=" + u); return;
+      case "email": window.location.href = "mailto:?subject=" + t + "&body=" + t + "%0A" + u; return;
+      case "more":
+        if (navigator.share) navigator.share({ title: c.name, text: shareText, url }).catch(() => {}); else copyLink();
+        return;
+      default: return;
+    }
+  };
+  const postToFeed = () => {
+    if (posted) return;
+    const post = {
+      id: "u" + Date.now(),
+      author: { name: ME_DM.name, avatar: ME_DM.avatar, seals: ME_DM.seals || ["gb", "verified"] },
+      time: "Just now", hashtags: [], categories: [], media: [], body: caption.trim(), bg: null, video: null, live: false,
+      sharedConference: { id: c.id, name: c.name, desc: c.desc || "", live: !!c.live, when: c.when || "", scope: c.scope || "public",
+        hostName, hostAvatar: c.mine ? ME_DM.avatar : (host ? host.avatar : ""), count: c.count || 0, link: url },
+      likes: "0", comments: "0", shares: "0", commentList: [] };
+    try {
+      const existing = JSON.parse(localStorage.getItem(CONF_USER_POSTS_KEY_DM)) || [];
+      localStorage.setItem(CONF_USER_POSTS_KEY_DM, JSON.stringify([post, ...existing]));
+      sessionStorage.setItem("pf-post-reward", JSON.stringify({ amount: 75, label: "Shared a conference", actionId: "evt_create_post", ts: Date.now() }));
+    } catch (e) {}
+    setPosted(true);
+    toast("Shared to your Newsfeed");
+    window.setTimeout(() => goDM((DM_WEB ? "NewsfeedWeb.html" : "NewsfeedMobile.html") + "?post=" + post.id), 700);
+  };
+  return (
+    <SheetDM open={open} onClose={onClose} label="Share conference" className="dm-vc-sharesheet">
+      <header className="dm-vc-shp-hd">
+        <h3 className="dm-sheet-title">Share conference</h3>
+        <button type="button" className="dm-iconbtn sm" aria-label="Close" onClick={onClose}><DSDM.IconifyIcon name="lucide:x" size={20} color="var(--text-heading)" /></button>
+      </header>
+      <div className="dm-vc-shp-scroll">
+        <div className="dm-vc-shp-card">
+          <span className="dm-vc-shp-ic"><DSDM.IconifyIcon name="lucide:audio-lines" size={20} color="#fff" /></span>
+          <span className="dm-vc-shp-main">
+            <b>{c.name}{c.live && <ConfLiveDM small />}</b>
+            <span>{c.live ? "Live now" : (c.when || "Scheduled")} · Hosted by {c.mine ? "you" : hostName}{c.count ? " · " + pluralDM(c.count, "participant") : ""}</span>
+            <u>{link}</u>
+          </span>
+        </div>
+
+        <section className="dm-vc-shp-feed">
+          <div className="dm-vc-shp-feed-hd">
+            <span className="dm-vc-shp-feed-ic"><DSDM.IconifyIcon name="lucide:rss" size={17} color="#fff" /></span>
+            <div><b>Share to Newsfeed</b><i>Posts a join card to everyone who follows you</i></div>
+          </div>
+          <textarea className="dm-vc-shp-caption" rows={2} value={caption} placeholder="Say something about this conference…" onChange={(e) => setCaption(e.target.value)} />
+          <button type="button" className={"dm-vc-shp-post" + (posted ? " done" : "")} onClick={postToFeed} disabled={posted}>
+            <DSDM.IconifyIcon name={posted ? "lucide:check" : "lucide:send"} size={17} color="#fff" />{posted ? "Shared" : "Post to Newsfeed"}
+          </button>
+        </section>
+
+        <div className="dm-vc-shp-lb">Share to</div>
+        <div className="dm-vc-shp-rail">
+          {CONF_SHARE_TARGETS_DM.map((t) => (
+            <button key={t.k} type="button" className="dm-vc-shp-tile" onClick={() => go(t.k)}>
+              <span className="dm-vc-shp-tile-ic" style={{ background: t.bg }}><DSDM.IconifyIcon name={t.icon} size={24} color={t.color} /></span>
+              <span className="dm-vc-shp-tile-lb">{t.label}</span>
+            </button>))}
+        </div>
+      </div>
+    </SheetDM>);
 }
 
 /* ---- host a room ---- */
@@ -2742,7 +2910,8 @@ function MessagesAppDM() {
         onToggleMute={() => callApiDM().toggleMute()} onToggleHand={() => callApiDM().toggleHand()} onClose={back}
         onParticipants={() => DM_WEB ? setInfoOpen((v) => !v) : setPeopleOpen(true)} reminded={!!reminders[confSel.id]}
         onRemind={() => { setReminders((r) => ({ ...r, [confSel.id]: !r[confSel.id] })); toast(reminders[confSel.id] ? "Reminder removed" : "We'll remind you"); }}
-        toast={toast} onHostAgain={() => setHostOpen({ preset: confSel })} /> :
+        toast={toast} onHostAgain={() => setHostOpen({ preset: confSel })}
+        onShareInMessages={() => { setTab("chats"); setRoute({ name: "compose" }); }} /> :
     route.name === "thread" && current ?
       <ThreadViewDM key={current.id} c={current} onBack={back} onProfile={() => DM_WEB ? setInfoOpen((v) => !v) : setRoute({ name: "profile", id: current.id, from: route.from })}
         onSend={sendMessage} onReact={reactMessage} onEdit={editMessage} onDelete={deleteMessage} onPin={pinMessage}

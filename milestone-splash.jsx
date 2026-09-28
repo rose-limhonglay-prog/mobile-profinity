@@ -242,7 +242,7 @@ function MilestoneSplashScreen() {
   return (
     <div className="spl-screen" data-screen-label="Reward Splash">
       <button className="spl-close" type="button" aria-label="Close" onClick={() => goSPL(ret)}>
-        <DSSPL.IconifyIcon name="lucide:x" size={20} color="#fff" />
+        <DSSPL.IconifyIcon name="lucide:x" size={20} />
       </button>
       <span className="spl-glow" aria-hidden="true" />
       <SplConfetti />
@@ -274,7 +274,7 @@ function MilestoneSplashScreen() {
       </div>
       <div className="spl-foot">
         <button className="ml-btn ml-btn-gold" type="button" onClick={onPrimary || (() => goSPL(primaryTo))}>{primary}</button>
-        {ghost && <button className="ml-btn ml-btn-ghost" style={{ background: "rgba(255,255,255,.14)", color: "#fff" }} type="button" onClick={() => goSPL(ret)}>{ghost}</button>}
+        {ghost && <button className="ml-btn ml-btn-ghost spl-btn-ghost" type="button" onClick={() => goSPL(ret)}>{ghost}</button>}
       </div>
     </div>
   );
@@ -292,15 +292,29 @@ function useIsMobileSPL() {
   return mobile;
 }
 
+/* App-wide theme: dark-mode-init.js stamps data-theme on <html> from pf-theme;
+   follow it so the device frame's status bar / home indicator flip too. */
+function useIsDarkSPL() {
+  const read = () => document.documentElement.getAttribute("data-theme") === "dark";
+  const [dark, setDark] = useStateSPL(read);
+  useEffectSPL(() => {
+    const mo = new MutationObserver(() => setDark(read()));
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => mo.disconnect();
+  }, []);
+  return dark;
+}
+
 function MilestoneSplashApp() {
   const mobile = useIsMobileSPL();
+  const dark = useIsDarkSPL();
   const scale = useDeviceScaleSPL();
   const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
-  if (mobile) return <div className="app" style={{ ...vars, background: "var(--brand-navy)" }}><MilestoneSplashScreen /></div>;
+  if (mobile) return <div className="app" style={{ ...vars, background: "var(--spl-solid)" }}><MilestoneSplashScreen /></div>;
   return (
     <div className="app device-stage" style={{ ...vars, backgroundColor: "rgb(217, 218, 225)" }}>
       <div style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
-        <IOSDevice width={440} height={956}><MilestoneSplashScreen /></IOSDevice>
+        <IOSDevice width={440} height={956} dark={dark}><MilestoneSplashScreen /></IOSDevice>
       </div>
     </div>
   );

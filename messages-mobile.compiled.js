@@ -4542,6 +4542,131 @@ function confGetDM(people) {
 function pluralDM(n, word) {
   return n + " " + (n === 1 ? word : word + "s");
 }
+/* who's talking right now — while a room is live the floor rotates through the
+   host and the speakers every few seconds (the seed has no real audio), so the
+   stage grid, the participants list and the mini card all agree */
+function confSpeakingIdsDM(c, now) {
+  if (!c || !c.live) return [];
+  const pool = [c.mine ? "me" : c.hostId].concat(c.speakerIds || []).filter(Boolean);
+  if (!pool.length) return [];
+  const idx = Math.floor(now / 3500);
+  const out = [pool[idx % pool.length]];
+  if (pool.length > 2 && idx % 2 === 0) out.push(pool[(idx + 1) % pool.length]);
+  return out;
+}
+const confFirstNameDM = p => p.id === "me" ? "You" : stripHonorificDM(p.name).split(" ")[0];
+
+/* ---- room grid (phone stage): the host on their own row, then every face in
+   the room with a name; whoever is speaking gets a pulsing ring + equaliser ---- */
+function ConfRoomGridDM({
+  c,
+  call,
+  speaking,
+  onMore
+}) {
+  const people = usePeopleDM();
+  const get = confGetDM(people);
+  const inCall = !!call && call.id === c.id;
+  const host = c.mine ? ME_DM : get(c.hostId);
+  const speakers = (c.speakerIds || []).map(get).filter(Boolean);
+  const attendeesRaw = (c.attendeeIds || []).map(id => id === "me" ? ME_DM : get(id)).filter(Boolean);
+  const attendees = inCall || c.mine || attendeesRaw.some(p => p.id === "me") ? [ME_DM].concat(attendeesRaw.filter(p => p.id !== "me")) : attendeesRaw;
+  const room = speakers.concat(attendees).filter(p => !host || p.id !== host.id).filter((p, i, arr) => arr.findIndex(x => x.id === p.id) === i);
+  const extra = Math.max(0, (c.count || 0) - room.length - (host ? 1 : 0));
+  const isSpeaking = p => speaking.indexOf(p.id) !== -1 && !(p.id === "me" && inCall && call.muted);
+  const meMuted = p => p.id === "me" && inCall && call.muted;
+  const meHand = p => p.id === "me" && inCall && call.hand;
+  const Face = ({
+    p,
+    size
+  }) => /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-tile-av" + (isSpeaking(p) ? " speaking" : "")
+  }, /*#__PURE__*/React.createElement(DMFace, {
+    name: p.name,
+    src: p.avatar,
+    size: size
+  }), isSpeaking(p) && /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-tile-eq",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null)), meMuted(p) && /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-tile-mute",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:mic-off",
+    size: 11,
+    color: "#fff"
+  })), meHand(p) && /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-tile-hand",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:hand",
+    size: 11,
+    color: "#fff"
+  })));
+  return /*#__PURE__*/React.createElement("section", {
+    className: "dm-vc-room",
+    "aria-label": "In the room"
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "dm-vc-room-head"
+  }, /*#__PURE__*/React.createElement("b", null, "In the room"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "dm-vc-room-all",
+    onClick: onMore
+  }, c.count || room.length + 1, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 16,
+    color: "currentColor"
+  }))), host && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-room-sec"
+  }, "Host"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "dm-vc-hostrow" + (isSpeaking(host) ? " speaking" : ""),
+    onClick: onMore,
+    "aria-label": host.name + ", host" + (isSpeaking(host) ? ", speaking" : "")
+  }, /*#__PURE__*/React.createElement(Face, {
+    p: host,
+    size: 50
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-hostrow-main"
+  }, /*#__PURE__*/React.createElement("b", null, c.mine ? "You" : host.name, /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-role-chip"
+  }, "Host")), /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-hostrow-sub" + (isSpeaking(host) ? " on" : "")
+  }, isSpeaking(host) ? "Speaking now" : c.live ? "Listening" : host.role || "Host")))), /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-room-sec"
+  }, c.live ? "Participants" : "Going", " ", /*#__PURE__*/React.createElement("em", null, room.length + extra)), /*#__PURE__*/React.createElement("div", {
+    className: "dm-vc-grid",
+    role: "list"
+  }, room.map(p => /*#__PURE__*/React.createElement("button", {
+    key: p.id,
+    type: "button",
+    role: "listitem",
+    className: "dm-vc-tile" + (isSpeaking(p) ? " speaking" : ""),
+    onClick: onMore,
+    "aria-label": p.name + (isSpeaking(p) ? ", speaking" : "")
+  }, /*#__PURE__*/React.createElement(Face, {
+    p: p,
+    size: 52
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-tile-name"
+  }, confFirstNameDM(p)), /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-tile-sub" + (isSpeaking(p) ? " on" : "")
+  }, isSpeaking(p) ? "Speaking" : speakers.some(x => x.id === p.id) ? "Speaker" : "\u00a0"))), extra > 0 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    role: "listitem",
+    className: "dm-vc-tile more",
+    onClick: onMore,
+    "aria-label": "See all " + c.count + " participants"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-tile-av"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-tile-plus"
+  }, "+", extra)), /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-tile-name"
+  }, "More"), /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-tile-sub"
+  }, "\u00a0"))));
+}
 function confStartedAtDM(c) {
   return c.startedAt || NOW_DM - (c.startedAgo || 0) * 1000;
 }
@@ -4877,7 +5002,8 @@ function ConferenceStageDM({
   onRemind,
   reminded,
   toast,
-  onHostAgain
+  onHostAgain,
+  onShareInMessages
 }) {
   const people = usePeopleDM();
   const get = confGetDM(people);
@@ -4898,13 +5024,9 @@ function ConferenceStageDM({
     const done = () => toast("Link copied");
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText("https://" + link).then(done, done);else done();
   };
-  const share = () => {
-    if (navigator.share) navigator.share({
-      title: c.name,
-      text: "Join my voice conference on PROfinity",
-      url: "https://" + link
-    }).catch(() => {});else copy();
-  };
+  const [shareOpen, setShareOpen] = useStateDM(false);
+  const share = () => setShareOpen(true);
+  const speaking = confSpeakingIdsDM(c, now);
   const react = e => {
     const id = Date.now() + Math.random();
     setBursts(b => b.concat([{
@@ -4930,11 +5052,6 @@ function ConferenceStageDM({
     setConfirmLeave(false);
     onLeave();
   };
-  /* phone: a peek at who's in the room sits between the card and the controls
-     (desktop shows the full participants column instead) */
-  const roomPeople = [c.mine ? ME_DM : host].concat((c.speakerIds || []).map(get), (c.attendeeIds || []).map(id => id === "me" ? ME_DM : get(id))).filter(Boolean).filter((p, i, arr) => arr.findIndex(x => x.id === p.id) === i);
-  const speakingNames = (c.speakerIds || []).map(get).filter(Boolean).slice(0, 2).map(p => stripHonorificDM(p.name).split(" ")[0]);
-  const roomLine = c.live ? speakingNames.length ? speakingNames.join(" & ") + (speakingNames.length === 1 ? " is" : " are") + " speaking" : c.mine ? "Waiting for people to join" : "Listening in" : (host ? "Hosted by " + (c.mine ? "you" : host.name) : "") + " · " + pluralDM(c.count, "person").replace("persons", "people") + " going";
   return /*#__PURE__*/React.createElement("div", {
     className: "dm-view dm-vc-stage-view" + (inCall ? " in-call" : ""),
     "data-screen-label": "Conference · " + c.name
@@ -5026,27 +5143,12 @@ function ConferenceStageDM({
     style: {
       left: b.x + "%"
     }
-  }, b.e))), !DM_WEB && !c.ended && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "dm-vc-roomstrip",
-    onClick: onParticipants,
-    "aria-label": "Show all participants"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "dm-faces"
-  }, roomPeople.slice(0, 4).map(p => /*#__PURE__*/React.createElement(DMFace, {
-    key: p.id,
-    name: p.name,
-    src: p.avatar,
-    size: 34
-  }))), /*#__PURE__*/React.createElement("span", {
-    className: "dm-vc-roomstrip-main"
-  }, /*#__PURE__*/React.createElement("b", null, "In the room"), /*#__PURE__*/React.createElement("span", null, roomLine)), /*#__PURE__*/React.createElement("span", {
-    className: "dm-vc-roomstrip-n"
-  }, c.count), /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 18,
-    color: "var(--gray-400)"
-  })), inCall ? /*#__PURE__*/React.createElement("div", {
+  }, b.e))), !DM_WEB && !c.ended && /*#__PURE__*/React.createElement(ConfRoomGridDM, {
+    c: c,
+    call: call,
+    speaking: speaking,
+    onMore: onParticipants
+  }), inCall ? /*#__PURE__*/React.createElement("div", {
     className: "dm-vc-ctlwrap"
   }, emojiOpen && /*#__PURE__*/React.createElement("div", {
     className: "dm-vc-emojis",
@@ -5118,7 +5220,7 @@ function ConferenceStageDM({
   }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
     name: "lucide:mic",
     size: 18,
-    color: "#fff"
+    color: "var(--brand-navy)"
   }), "Join conference"), c.live && /*#__PURE__*/React.createElement("span", {
     className: "dm-vc-joinnote"
   }, call ? "You'll leave your current room" : "You'll join muted", " · ", c.count, " in the room"), !c.live && !c.ended && /*#__PURE__*/React.createElement("button", {
@@ -5129,7 +5231,7 @@ function ConferenceStageDM({
   }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
     name: reminded ? "lucide:bell-ring" : "lucide:bell",
     size: 18,
-    color: reminded ? "var(--brand-navy)" : "#fff"
+    color: reminded ? "#fff" : "var(--brand-navy)"
   }), reminded ? "Reminder set" : "Remind me"), c.ended && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "dm-vc-endstats"
   }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, c.count), "Participants"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, c.duration ? Math.round(c.duration / 60000) + "m" : "—"), "Duration"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, c.scope === "invited" ? "Invited" : "Public"), "Room")), /*#__PURE__*/React.createElement("button", {
@@ -5185,7 +5287,15 @@ function ConferenceStageDM({
     name: "lucide:arrow-up",
     size: 18,
     color: "#fff"
-  })))), /*#__PURE__*/React.createElement(SheetDM, {
+  })))), /*#__PURE__*/React.createElement(ConfShareSheetDM, {
+    c: c,
+    host: host,
+    link: link,
+    open: shareOpen,
+    onClose: () => setShareOpen(false),
+    toast: toast,
+    onMessages: onShareInMessages
+  }), /*#__PURE__*/React.createElement(SheetDM, {
     open: confirmLeave,
     onClose: () => setConfirmLeave(false),
     label: "End room",
@@ -5227,27 +5337,35 @@ function ConfParticipantsDM({
   const match = p => !q || p.name.toLowerCase().includes(q.toLowerCase());
   const shown = 1 + speakers.length + attendees.length;
   const extra = Math.max(0, (c.count || shown) - shown);
+  const now = useNowDM(!!c.live);
+  const speaking = confSpeakingIdsDM(c, now);
+  const talking = p => speaking.indexOf(p.id) !== -1 && !(p.id === "me" && inCall && call.muted);
   const Row = ({
     p,
     role,
     mic,
     hand
   }) => /*#__PURE__*/React.createElement("div", {
-    className: "dm-member dm-vc-member",
+    className: "dm-member dm-vc-member" + (talking(p) ? " speaking" : ""),
     role: "listitem"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-tile-av" + (talking(p) ? " speaking" : "")
   }, /*#__PURE__*/React.createElement(DMFace, {
     name: p.name,
     src: p.avatar,
     size: 40
-  }), /*#__PURE__*/React.createElement("span", {
+  }), talking(p) && /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-tile-eq sm",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null))), /*#__PURE__*/React.createElement("span", {
     className: "dm-member-main"
   }, /*#__PURE__*/React.createElement("span", {
     className: "dm-member-name"
   }, p.name, p.id === "me" && /*#__PURE__*/React.createElement("span", {
     className: "dm-vc-you"
   }, "(You)")), /*#__PURE__*/React.createElement("span", {
-    className: "dm-member-sub"
-  }, p.role)), hand && /*#__PURE__*/React.createElement("span", {
+    className: "dm-member-sub" + (talking(p) ? " dm-vc-speaking" : "")
+  }, talking(p) ? "Speaking now" : p.role)), hand && /*#__PURE__*/React.createElement("span", {
     className: "dm-vc-handic",
     "aria-label": "Hand raised"
   }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
@@ -5295,11 +5413,11 @@ function ConfParticipantsDM({
     role: "Host",
     mic: c.mine ? meMic : c.live,
     hand: c.mine && meHand
-  }), speakers.filter(match).map((p, i) => /*#__PURE__*/React.createElement(Row, {
+  }), speakers.filter(match).map(p => /*#__PURE__*/React.createElement(Row, {
     key: p.id,
     p: p,
     role: "Speaker",
-    mic: c.live && i < 2
+    mic: c.live
   }))), /*#__PURE__*/React.createElement("div", {
     className: "dm-vc-people-sec"
   }, "Other Attendees"), /*#__PURE__*/React.createElement("div", {
@@ -5323,6 +5441,257 @@ function ConfParticipantsDM({
   }))), /*#__PURE__*/React.createElement("span", {
     className: "dm-vc-more-n"
   }, "+", extra))));
+}
+
+/* ---- share a conference: post it to the PROfinity newsfeed (a link card
+   post app.jsx renders as SharedConferenceCard) or send the link out to
+   Messages, WhatsApp, Facebook, X, LinkedIn, email, or the OS share sheet ---- */
+const CONF_SHARE_TARGETS_DM = [{
+  k: "messages",
+  label: "Messages",
+  icon: "lucide:message-circle",
+  color: "var(--brand-navy)",
+  bg: "var(--surface-sunken)"
+}, {
+  k: "copy",
+  label: "Copy link",
+  icon: "lucide:link",
+  color: "var(--brand-navy)",
+  bg: "var(--surface-sunken)"
+}, {
+  k: "whatsapp",
+  label: "WhatsApp",
+  icon: "mdi:whatsapp",
+  color: "#fff",
+  bg: "#25D366"
+}, {
+  k: "facebook",
+  label: "Facebook",
+  icon: "mdi:facebook",
+  color: "#fff",
+  bg: "#1877F2"
+}, {
+  k: "twitter",
+  label: "X",
+  icon: "mdi:twitter",
+  color: "#fff",
+  bg: "#111"
+}, {
+  k: "linkedin",
+  label: "LinkedIn",
+  icon: "mdi:linkedin",
+  color: "#fff",
+  bg: "#0A66C2"
+}, {
+  k: "email",
+  label: "Email",
+  icon: "lucide:mail",
+  color: "var(--brand-navy)",
+  bg: "var(--surface-sunken)"
+}, {
+  k: "more",
+  label: "More",
+  icon: "lucide:ellipsis",
+  color: "var(--brand-navy)",
+  bg: "var(--surface-sunken)"
+}];
+const CONF_USER_POSTS_KEY_DM = "pf-newsfeed-user-posts";
+function ConfShareSheetDM({
+  c,
+  host,
+  link,
+  open,
+  onClose,
+  toast,
+  onMessages
+}) {
+  const url = "https://" + link;
+  const hostName = c.mine ? ME_DM.name : host ? host.name : "PROfinity";
+  const defaultCaption = () => c.live ? "We're live now in “" + c.name + "” — join the voice conference on PROfinity 🎙️" : "Join me for “" + c.name + "”" + (c.when ? " · " + c.when : "") + " — a voice conference on PROfinity 🎙️";
+  const [caption, setCaption] = useStateDM(defaultCaption);
+  const [posted, setPosted] = useStateDM(false);
+  useEffectDM(() => {
+    if (open) {
+      setCaption(defaultCaption());
+      setPosted(false);
+    }
+  }, [open]);
+  const shareText = (c.live ? "Join my live voice conference “" : "Join my voice conference “") + c.name + "” on PROfinity";
+  const copyLink = () => {
+    const done = () => toast("Link copied");
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, done);else done();
+  };
+  const openOut = u => {
+    try {
+      window.open(u, "_blank", "noopener");
+    } catch (e) {
+      window.location.href = u;
+    }
+  };
+  const go = k => {
+    const u = encodeURIComponent(url),
+      t = encodeURIComponent(shareText);
+    switch (k) {
+      case "messages":
+        copyLink();
+        onClose();
+        onMessages && onMessages();
+        return;
+      case "copy":
+        copyLink();
+        return;
+      case "whatsapp":
+        openOut("https://wa.me/?text=" + t + "%20" + u);
+        return;
+      case "facebook":
+        openOut("https://www.facebook.com/sharer/sharer.php?u=" + u + "&quote=" + t);
+        return;
+      case "twitter":
+        openOut("https://twitter.com/intent/tweet?text=" + t + "&url=" + u);
+        return;
+      case "linkedin":
+        openOut("https://www.linkedin.com/sharing/share-offsite/?url=" + u);
+        return;
+      case "email":
+        window.location.href = "mailto:?subject=" + t + "&body=" + t + "%0A" + u;
+        return;
+      case "more":
+        if (navigator.share) navigator.share({
+          title: c.name,
+          text: shareText,
+          url
+        }).catch(() => {});else copyLink();
+        return;
+      default:
+        return;
+    }
+  };
+  const postToFeed = () => {
+    if (posted) return;
+    const post = {
+      id: "u" + Date.now(),
+      author: {
+        name: ME_DM.name,
+        avatar: ME_DM.avatar,
+        seals: ME_DM.seals || ["gb", "verified"]
+      },
+      time: "Just now",
+      hashtags: [],
+      categories: [],
+      media: [],
+      body: caption.trim(),
+      bg: null,
+      video: null,
+      live: false,
+      sharedConference: {
+        id: c.id,
+        name: c.name,
+        desc: c.desc || "",
+        live: !!c.live,
+        when: c.when || "",
+        scope: c.scope || "public",
+        hostName,
+        hostAvatar: c.mine ? ME_DM.avatar : host ? host.avatar : "",
+        count: c.count || 0,
+        link: url
+      },
+      likes: "0",
+      comments: "0",
+      shares: "0",
+      commentList: []
+    };
+    try {
+      const existing = JSON.parse(localStorage.getItem(CONF_USER_POSTS_KEY_DM)) || [];
+      localStorage.setItem(CONF_USER_POSTS_KEY_DM, JSON.stringify([post, ...existing]));
+      sessionStorage.setItem("pf-post-reward", JSON.stringify({
+        amount: 75,
+        label: "Shared a conference",
+        actionId: "evt_create_post",
+        ts: Date.now()
+      }));
+    } catch (e) {}
+    setPosted(true);
+    toast("Shared to your Newsfeed");
+    window.setTimeout(() => goDM((DM_WEB ? "NewsfeedWeb.html" : "NewsfeedMobile.html") + "?post=" + post.id), 700);
+  };
+  return /*#__PURE__*/React.createElement(SheetDM, {
+    open: open,
+    onClose: onClose,
+    label: "Share conference",
+    className: "dm-vc-sharesheet"
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "dm-vc-shp-hd"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "dm-sheet-title"
+  }, "Share conference"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "dm-iconbtn sm",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:x",
+    size: 20,
+    color: "var(--text-heading)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "dm-vc-shp-scroll"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "dm-vc-shp-card"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-shp-ic"
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:audio-lines",
+    size: 20,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-shp-main"
+  }, /*#__PURE__*/React.createElement("b", null, c.name, c.live && /*#__PURE__*/React.createElement(ConfLiveDM, {
+    small: true
+  })), /*#__PURE__*/React.createElement("span", null, c.live ? "Live now" : c.when || "Scheduled", " · Hosted by ", c.mine ? "you" : hostName, c.count ? " · " + pluralDM(c.count, "participant") : ""), /*#__PURE__*/React.createElement("u", null, link))), /*#__PURE__*/React.createElement("section", {
+    className: "dm-vc-shp-feed"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "dm-vc-shp-feed-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-shp-feed-ic"
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:rss",
+    size: 17,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Share to Newsfeed"), /*#__PURE__*/React.createElement("i", null, "Posts a join card to everyone who follows you"))), /*#__PURE__*/React.createElement("textarea", {
+    className: "dm-vc-shp-caption",
+    rows: 2,
+    value: caption,
+    placeholder: "Say something about this conference…",
+    onChange: e => setCaption(e.target.value)
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "dm-vc-shp-post" + (posted ? " done" : ""),
+    onClick: postToFeed,
+    disabled: posted
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: posted ? "lucide:check" : "lucide:send",
+    size: 17,
+    color: "#fff"
+  }), posted ? "Shared" : "Post to Newsfeed")), /*#__PURE__*/React.createElement("div", {
+    className: "dm-vc-shp-lb"
+  }, "Share to"), /*#__PURE__*/React.createElement("div", {
+    className: "dm-vc-shp-rail"
+  }, CONF_SHARE_TARGETS_DM.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.k,
+    type: "button",
+    className: "dm-vc-shp-tile",
+    onClick: () => go(t.k)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-shp-tile-ic",
+    style: {
+      background: t.bg
+    }
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: t.icon,
+    size: 24,
+    color: t.color
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "dm-vc-shp-tile-lb"
+  }, t.label))))));
 }
 
 /* ---- host a room ---- */
@@ -6408,7 +6777,13 @@ function MessagesAppDM() {
     toast: toast,
     onHostAgain: () => setHostOpen({
       preset: confSel
-    })
+    }),
+    onShareInMessages: () => {
+      setTab("chats");
+      setRoute({
+        name: "compose"
+      });
+    }
   }) : route.name === "thread" && current ? /*#__PURE__*/React.createElement(ThreadViewDM, {
     key: current.id,
     c: current,

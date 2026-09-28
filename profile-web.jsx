@@ -946,9 +946,8 @@ function PWAssessHub({ assessState, onOpenAssess, onClose }) {
         <div className="pw-wiz-body pw-hub-body">
           <div className="pw-hub-helps">
             <button type="button" className="pw-hub-why" aria-haspopup="dialog" onClick={() => setWhyOpen(true)}>
-              <span className="pw-hub-why-ic" aria-hidden="true"><IconifyIconPW name="lucide:sparkles" size={15} color="var(--ai-purple)" /></span>
+              <IconifyIconPW name="lucide:sparkles" size={16} color="#fff" />
               Why Ava asks
-              <IconifyIconPW name="lucide:circle-help" size={15} color="#4A40D6" />
             </button>
             <button type="button" className="pw-hub-help" onClick={() => setHelpOpen(true)}>
               <IconifyIconPW name="lucide:circle-help" size={15} color="var(--gray-500)" />How it works

@@ -15,7 +15,7 @@ const AG_TABS = [
 { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
 { key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
 { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
-{ key: "Agent", label: "Ava", icon: "lucide:sparkles", href: null },
+{ key: "Agent", label: "Agents", icon: "lucide:sparkles", href: null },
 { key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" }];
 
 const AG_AGENTS = [

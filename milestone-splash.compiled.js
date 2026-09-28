@@ -409,8 +409,7 @@ function MilestoneSplashScreen() {
     onClick: () => goSPL(ret)
   }, /*#__PURE__*/React.createElement(DSSPL.IconifyIcon, {
     name: "lucide:x",
-    size: 20,
-    color: "#fff"
+    size: 20
   })), /*#__PURE__*/React.createElement("span", {
     className: "spl-glow",
     "aria-hidden": "true"
@@ -453,11 +452,7 @@ function MilestoneSplashScreen() {
     type: "button",
     onClick: onPrimary || (() => goSPL(primaryTo))
   }, primary), ghost && /*#__PURE__*/React.createElement("button", {
-    className: "ml-btn ml-btn-ghost",
-    style: {
-      background: "rgba(255,255,255,.14)",
-      color: "#fff"
-    },
+    className: "ml-btn ml-btn-ghost spl-btn-ghost",
     type: "button",
     onClick: () => goSPL(ret)
   }, ghost)));
@@ -482,8 +477,25 @@ function useIsMobileSPL() {
   }, []);
   return mobile;
 }
+
+/* App-wide theme: dark-mode-init.js stamps data-theme on <html> from pf-theme;
+   follow it so the device frame's status bar / home indicator flip too. */
+function useIsDarkSPL() {
+  const read = () => document.documentElement.getAttribute("data-theme") === "dark";
+  const [dark, setDark] = useStateSPL(read);
+  useEffectSPL(() => {
+    const mo = new MutationObserver(() => setDark(read()));
+    mo.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"]
+    });
+    return () => mo.disconnect();
+  }, []);
+  return dark;
+}
 function MilestoneSplashApp() {
   const mobile = useIsMobileSPL();
+  const dark = useIsDarkSPL();
   const scale = useDeviceScaleSPL();
   const vars = {
     "--action-primary": "var(--brand-navy)",
@@ -493,7 +505,7 @@ function MilestoneSplashApp() {
     className: "app",
     style: {
       ...vars,
-      background: "var(--brand-navy)"
+      background: "var(--spl-solid)"
     }
   }, /*#__PURE__*/React.createElement(MilestoneSplashScreen, null));
   return /*#__PURE__*/React.createElement("div", {
@@ -509,7 +521,8 @@ function MilestoneSplashApp() {
     }
   }, /*#__PURE__*/React.createElement(IOSDevice, {
     width: 440,
-    height: 956
+    height: 956,
+    dark: dark
   }, /*#__PURE__*/React.createElement(MilestoneSplashScreen, null))));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(MilestoneSplashApp, null));

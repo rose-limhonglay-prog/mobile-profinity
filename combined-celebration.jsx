@@ -175,7 +175,7 @@ function CombinedCelebrationScreen() {
       <div className="cc-glow" aria-hidden="true" />
       <CcConfetti />
       <button className="cc-close" type="button" aria-label="Close" onClick={() => goCC(ret)}>
-        <DSCC.IconifyIcon name="lucide:x" size={20} color="#fff" />
+        <DSCC.IconifyIcon name="lucide:x" size={20} />
       </button>
 
       <div className="cc-body">
@@ -202,7 +202,7 @@ function CombinedCelebrationScreen() {
         </ol>
 
         <div className="cc-strip" aria-label="Today">
-          <span className="cc-strip-item"><DSCC.IconifyIcon name="lucide:coins" size={15} color="#fdc35d" /><span><b>{shownToday}</b> pts today</span></span>
+          <span className="cc-strip-item"><DSCC.IconifyIcon name="lucide:coins" size={15} color="var(--cc-coin)" /><span><b>{shownToday}</b> pts today</span></span>
           <span className="cc-strip-dot" aria-hidden="true" />
           <span className="cc-strip-item"><DSCC.IconifyIcon name="lucide:flame" size={15} color="#f4894a" /><span><b>{streak}</b>-day streak</span></span>
         </div>
@@ -228,15 +228,29 @@ function useIsMobileCC() {
   return mobile;
 }
 
+/* App-wide theme: dark-mode-init.js stamps data-theme on <html> from pf-theme;
+   follow it so the device frame's status bar / home indicator flip too. */
+function useIsDarkCC() {
+  const read = () => document.documentElement.getAttribute("data-theme") === "dark";
+  const [dark, setDark] = useStateCC(read);
+  useEffectCC(() => {
+    const mo = new MutationObserver(() => setDark(read()));
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => mo.disconnect();
+  }, []);
+  return dark;
+}
+
 function CombinedCelebrationApp() {
   const mobile = useIsMobileCC();
+  const dark = useIsDarkCC();
   const scale = useDeviceScaleCC();
   const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
-  if (mobile) return <div className="app" style={{ ...vars, background: "#1b1848" }}><CombinedCelebrationScreen /></div>;
+  if (mobile) return <div className="app" style={{ ...vars, background: "var(--cc-solid)" }}><CombinedCelebrationScreen /></div>;
   return (
     <div className="app device-stage" style={{ ...vars, backgroundColor: "rgb(217, 218, 225)" }}>
       <div style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
-        <IOSDevice width={440} height={956}><CombinedCelebrationScreen /></IOSDevice>
+        <IOSDevice width={440} height={956} dark={dark}><CombinedCelebrationScreen /></IOSDevice>
       </div>
     </div>
   );

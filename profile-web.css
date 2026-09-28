@@ -183,14 +183,12 @@
 
 /* hub grid — two columns on desktop (wider dialog) */
 .pw-hub-body{padding-top:20px}
-/* "Why Ava asks" help pill (opens the explainer) beside "How it works" */
+/* "Why Ava asks" — solid button (opens the explainer) beside "How it works" */
 .pw-hub-helps{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;margin-bottom:18px}
 .pw-hub-helps .pw-hub-help{margin:0}
-.pw-hub-why{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:5px 13px 5px 6px;border:1px solid #E2DEFB;border-radius:100px;
-  background:#F4F3FF;cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13.5px;color:#3F37B8;transition:background .15s ease}
-.pw-hub-why:hover{background:#ECE9FF}
-.pw-hub-why-ic{flex:none;width:26px;height:26px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;
-  box-shadow:0 1px 3px rgba(108,99,255,.18)}
+.pw-hub-why{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:10px 20px;border:none;border-radius:var(--r-md);
+  background:var(--ai-purple,#4A40D6);cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14.5px;color:#fff;transition:filter .15s ease}
+.pw-hub-why:hover{filter:brightness(1.08)}
 .pw-help-chips{display:flex;flex-wrap:wrap;gap:6px;margin:-7px 0 20px}
 .pw-help-chips span{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:100px;background:#F4F3FF;
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px;color:#4A40D6}

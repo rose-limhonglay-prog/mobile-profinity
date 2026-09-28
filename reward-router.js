@@ -214,7 +214,8 @@
   }
 
   /* ---- Reward Splash overlay (level / achievement / league) ----
-     Same look as MilestoneSplash.html — navy gradient, the winking doctor
+     Same look as MilestoneSplash.html — follows the app theme (white / cream
+     in light mode, navy gradient in dark mode), the winking doctor
      with the reward's medal at his shoulder, kicker, title, one line — but
      rendered inside the phone frame, no buttons, and gone again after
      SPLASH_MS (tap anywhere to dismiss sooner). Plays the milestone fanfare
@@ -259,26 +260,32 @@
     return { kicker: "Milestone reached", title: m.title || ((b.name || "Level") + " unlocked"), sub: m.sub || "", icon: "lucide:gem", color: m.color || b.color || "#d9a21b" };
   }
   var SPLASH_CSS =
-    ".pf-rsp{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 28px;color:#fff;font-family:var(--font-sans,system-ui);cursor:pointer;" +
-      "background:radial-gradient(120% 90% at 50% 0%,#3a3480 0%,#292569 55%,#1b1848 100%);opacity:0;transition:opacity .32s ease}" +
+    /* light (default) tokens — white page, navy ink, deep-gold accents */
+    ".pf-rsp{--rsp-bg:radial-gradient(120% 90% at 50% 0%,#fff6e6 0%,#ffffff 52%,#f3f1fa 100%);--rsp-ink:#1a1736;--rsp-muted:#5f5e78;--rsp-kicker:#b8874a;--rsp-points:#b8874a;--rsp-unit:#a07640;" +
+      "--rsp-glow:rgba(253,195,93,.34);--rsp-medal-bd:#ffffff;--rsp-medal-shadow:rgba(26,23,54,.22);--rsp-pts-shadow:rgba(253,195,93,.25)}" +
+    /* dark — the navy gradient shared with DailyGoal / CombinedCelebration */
+    "[data-theme=dark] .pf-rsp{--rsp-bg:radial-gradient(120% 90% at 50% 0%,#3a3480 0%,#292569 55%,#1b1848 100%);--rsp-ink:#ffffff;--rsp-muted:rgba(255,255,255,.78);--rsp-kicker:#f0c98a;--rsp-points:#fdc35d;--rsp-unit:#f0c98a;" +
+      "--rsp-glow:rgba(253,195,93,.4);--rsp-medal-bd:#292569;--rsp-medal-shadow:rgba(0,0,0,.35);--rsp-pts-shadow:rgba(253,195,93,.35)}" +
+    ".pf-rsp{position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 28px;color:var(--rsp-ink);font-family:var(--font-sans,system-ui);cursor:pointer;" +
+      "background:var(--rsp-bg);opacity:0;transition:opacity .32s ease}" +
     "[data-ios-device] .pf-rsp{border-radius:inherit;overflow:hidden}" +
     "body>.pf-rsp{position:fixed}" +
     ".pf-rsp.is-in{opacity:1}" +
-    ".pf-rsp-glow{position:absolute;left:50%;top:34%;width:320px;height:240px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;background:radial-gradient(closest-side,rgba(253,195,93,.4),rgba(253,195,93,0))}" +
+    ".pf-rsp-glow{position:absolute;left:50%;top:34%;width:320px;height:240px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;background:radial-gradient(closest-side,var(--rsp-glow),rgba(253,195,93,0))}" +
     ".pf-rsp-hero{position:relative;width:272px;height:204px;margin:0 auto 6px;transform:scale(.6);opacity:0;transition:transform .55s cubic-bezier(.2,1.4,.4,1) .05s,opacity .3s ease .05s}" +
     ".pf-rsp-hero.is-square{width:236px;height:236px;margin-bottom:10px}" +
     ".pf-rsp-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3;transition:opacity .6s ease}" +
     ".pf-rsp-confetti.is-done{opacity:0}.pf-rsp-confetti svg{display:block;width:100%!important;height:100%!important}" +
-    ".pf-rsp-pts{position:relative;display:flex;align-items:baseline;justify-content:center;gap:8px;margin:0 0 8px;line-height:1;color:#fdc35d}" +
-    ".pf-rsp-pts b{font-size:40px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-shadow:0 4px 18px rgba(253,195,93,.35)}" +
-    ".pf-rsp-pts i{font-style:normal;font-size:15px;font-weight:700;color:#f0c98a}" +
+    ".pf-rsp-pts{position:relative;display:flex;align-items:baseline;justify-content:center;gap:8px;margin:0 0 8px;line-height:1;color:var(--rsp-points)}" +
+    ".pf-rsp-pts b{font-size:40px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-shadow:0 4px 18px var(--rsp-pts-shadow)}" +
+    ".pf-rsp-pts i{font-style:normal;font-size:15px;font-weight:700;color:var(--rsp-unit)}" +
     ".pf-rsp.is-in .pf-rsp-hero{transform:scale(1);opacity:1}" +
     ".pf-rsp-lottie,.pf-rsp-lottie svg{display:block;width:100%!important;height:100%!important}" +
-    ".pf-rsp-medal{position:absolute;right:42px;bottom:6px;width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #292569;box-shadow:0 10px 24px rgba(0,0,0,.35)}" +
+    ".pf-rsp-medal{position:absolute;right:42px;bottom:6px;width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid var(--rsp-medal-bd);box-shadow:0 10px 24px var(--rsp-medal-shadow)}" +
     ".pf-rsp-medal iconify-icon{color:#fff;font-size:26px}" +
-    ".pf-rsp-k{position:relative;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#f0c98a;margin:6px 0 8px}" +
+    ".pf-rsp-k{position:relative;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--rsp-kicker);margin:6px 0 8px}" +
     ".pf-rsp-t{position:relative;margin:0 0 10px;font-size:26px;line-height:1.1;font-weight:800}" +
-    ".pf-rsp-s{position:relative;margin:0;font-size:14px;color:rgba(255,255,255,.78);max-width:300px}" +
+    ".pf-rsp-s{position:relative;margin:0;font-size:14px;color:var(--rsp-muted);max-width:300px}" +
     ".pf-rsp-k,.pf-rsp-t,.pf-rsp-s,.pf-rsp-pts{opacity:0;transform:translateY(8px);transition:opacity .4s ease .2s,transform .4s ease .2s}" +
     ".pf-rsp.is-in .pf-rsp-k,.pf-rsp.is-in .pf-rsp-t,.pf-rsp.is-in .pf-rsp-s,.pf-rsp.is-in .pf-rsp-pts{opacity:1;transform:none}" +
     "@media (prefers-reduced-motion:reduce){.pf-rsp,.pf-rsp *{transition:none!important}}";

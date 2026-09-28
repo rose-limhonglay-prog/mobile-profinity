@@ -329,15 +329,17 @@ body:has(.dm-web-app) { background: var(--surface-page); }
 .dm-web .dm-vc-viewall:hover { text-decoration: underline; }
 .dm-web .dm-vc-stage-view { align-items: center; }
 .dm-web .dm-vc-stage-scroll { width: 100%; max-width: 440px; padding: 28px 20px 28px; gap: 18px; justify-content: center; }
-.dm-web .dm-vc-card-stage { border-radius: 24px; padding: 18px 18px 20px; }
+.dm-web .dm-vc-card-stage { border-radius: 0; padding: 0; }
 .dm-web .dm-vc-stage-x:hover, .dm-web .dm-vc-stage-host:hover { background: rgba(255,255,255,.12); }
 .dm-web .dm-vc-copy:hover, .dm-web .dm-vc-sharerow:hover { filter: brightness(.96); }
 .dm-web .dm-vc-ctlwrap { position: static; margin-top: 0; }
-.dm-web .dm-vc-btn:hover { background: var(--gray-150); }
-.dm-web .dm-vc-btn.on:hover { background: var(--brand-navy-700, #1f1b57); }
+.dm-web .dm-vc-btn:hover { background: rgba(255,255,255,.24); }
+.dm-web .dm-vc-btn.on:hover { background: rgba(255,255,255,.88); }
 .dm-web .dm-vc-btn.mic.off:hover { background: #fbd7d9; }
 .dm-web .dm-vc-btn.end:hover { background: #cf3b40; }
-.dm-web .dm-vc-emojis button:hover { background: var(--gray-100); }
+.dm-web .dm-vc-emojis button:hover { background: rgba(255,255,255,.16); }
+.dm-web .dm-vc-joinwrap .dm-btn-navy:hover { filter: brightness(.95); }
+.dm-web .dm-vc-joinwrap .dm-btn-ghost:hover { background: rgba(255,255,255,.2); }
 .dm-web .dm-vc-joinwrap { margin-top: 0; }
 /* participants take the chat-info column */
 .dm-web .dm-vc-people { border-left: 1px solid var(--border-default); background: var(--surface-card); padding: 16px 16px 0; min-height: 0; }
@@ -347,6 +349,10 @@ body:has(.dm-web-app) { background: var(--surface-page); }
 .dm-web .dm-vc-people-scroll { padding: 0 0 16px; scrollbar-width: thin; scrollbar-color: var(--gray-300) transparent; }
 .dm-web .dm-vc-member:hover { background: none; }
 .dm-web .dm-vc-hostsheet { max-width: 480px; }
+.dm-web .dm-vc-sharesheet { max-width: 480px; max-height: min(720px, calc(100% - 48px)); }
+.dm-web .dm-vc-shp-rail { flex-wrap: wrap; overflow: visible; }
+.dm-web .dm-vc-shp-tile:hover .dm-vc-shp-tile-ic { filter: brightness(.95); }
+.dm-web .dm-vc-shp-post:hover { filter: brightness(.95); }
 .dm-web .dm-vc-chatsheet { height: min(600px, calc(100% - 48px)); }
 .dm-web .dm-vc-seg button:hover:not(.on) { background: rgba(255,255,255,.5); }
 [data-theme="dark"] .dm-web .dm-vc-seg button:hover:not(.on) { background: rgba(255,255,255,.08); }

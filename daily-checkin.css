@@ -1,15 +1,26 @@
 /* ===========================================================================
    PROfinity — daily check-in "Welcome back" full-screen takeover
    (plain JS, see daily-checkin.js). Fills the phone frame on desktop / the
-   screen root on a real phone. Fixed dark-navy palette (same gradient as the
-   Daily Goal page) so it reads the same in light and dark mode. pf-dci-*.
+   screen root on a real phone. Follows the app theme (pf-theme → data-theme
+   on <html>): white / cream in light mode, the Daily Goal navy gradient in
+   dark mode. Same gold accents in both. pf-dci-*.
    =========================================================================== */
 .pf-dci-root { position: absolute; inset: 0; z-index: 720; font-family: var(--font-sans, Poppins, system-ui, sans-serif);
+  /* light (default): white page with a soft gold-to-lavender wash, navy ink */
+  --dci-bg: radial-gradient(120% 90% at 50% 0%, #fff6e6 0%, #ffffff 52%, #f3f1fa 100%);
+  --dci-ink: #1a1736; --dci-muted: #5f5e78; --dci-kicker: #b8874a; --dci-accent: #a07640; --dci-amber: #fdc35d; --dci-amber-deep: #e7a64a;
+  --dci-dot-bg: rgba(26, 23, 54, .06); --dci-dot-bd: rgba(26, 23, 54, .16); --dci-dot-ink: #5f5e78;
+  --dci-ghost-bg: rgba(26, 23, 54, .08); --dci-ghost-ink: #1a1736;
+  --dci-close-bg: rgba(26, 23, 54, .08); --dci-close-ink: #1a1736;
+  --dci-glow: rgba(253, 195, 93, .34); --dci-pts-shadow: rgba(253, 195, 93, .38); }
+/* dark: the navy gradient shared with DailyGoal / CombinedCelebration */
+[data-theme="dark"] .pf-dci-root {
   --dci-bg: radial-gradient(120% 90% at 50% 0%, #3a3480 0%, #292569 55%, #1b1848 100%);
-  --dci-ink: #ffffff; --dci-muted: rgba(255,255,255,.78); --dci-kicker: #e7a769; --dci-amber: #fdc35d; --dci-amber-deep: #e7a64a;
-  --dci-dot-bg: rgba(255,255,255,.10); --dci-dot-bd: rgba(255,255,255,.22); --dci-ghost-bg: rgba(255,255,255,.14); --dci-ghost-ink: #ffffff;
-  --dci-close-bg: rgba(255,255,255,.14); --dci-close-ink: #ffffff; }
-/* dark mode uses the same navy on purpose — no separate variant */
+  --dci-ink: #ffffff; --dci-muted: rgba(255,255,255,.78); --dci-kicker: #e7a769; --dci-accent: #fdc35d;
+  --dci-dot-bg: rgba(255,255,255,.10); --dci-dot-bd: rgba(255,255,255,.22); --dci-dot-ink: rgba(255,255,255,.85);
+  --dci-ghost-bg: rgba(255,255,255,.14); --dci-ghost-ink: #ffffff;
+  --dci-close-bg: rgba(255,255,255,.14); --dci-close-ink: #ffffff;
+  --dci-glow: rgba(253, 195, 93, .40); --dci-pts-shadow: rgba(253, 195, 93, .30); }
 .pf-dci-root--fixed { position: fixed; }
 
 /* the page */
@@ -25,7 +36,7 @@
 /* centred body */
 .pf-dci-body { position: relative; z-index: 2; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 0; }
 .pf-dci-glow { position: absolute; left: 50%; top: 24%; width: 320px; height: 240px; transform: translate(-50%, -50%); border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(253, 195, 93, .40), rgba(253, 195, 93, 0)); pointer-events: none; }
+  background: radial-gradient(closest-side, var(--dci-glow), rgba(253, 195, 93, 0)); pointer-events: none; }
 .pf-dci-lottie { position: relative; z-index: 2; width: 230px; height: 190px; margin: 0 auto 4px; display: block;
   animation: pfDciPop .6s cubic-bezier(.2, 1.4, .4, 1) both .08s; }
 .pf-dci-lottie svg { width: 100% !important; height: 100% !important; display: block; }
@@ -33,12 +44,12 @@
 .pf-dci-title { margin: 0; font-size: 36px; line-height: 1.05; font-weight: 800; letter-spacing: -.02em; color: var(--dci-ink); }
 .pf-dci-pts { margin: 16px auto 0; display: inline-flex; align-items: baseline; gap: 5px; padding: 10px 22px; border-radius: 999px;
   font-size: 32px; line-height: 1; font-weight: 800; letter-spacing: -.02em; color: #1a1736; font-variant-numeric: tabular-nums;
-  background: linear-gradient(135deg, var(--dci-amber), var(--dci-amber-deep)); box-shadow: 0 12px 28px rgba(253, 195, 93, .30); }
+  background: linear-gradient(135deg, var(--dci-amber), var(--dci-amber-deep)); box-shadow: 0 12px 28px var(--dci-pts-shadow); }
 .pf-dci-pts small { font-size: 15px; font-weight: 800; letter-spacing: 0; }
 .pf-dci-pts.is-settled { animation: pfDciSettle .42s cubic-bezier(.2, 1.4, .4, 1); }
 @keyframes pfDciSettle { 0% { transform: scale(1); } 40% { transform: scale(1.08); } 100% { transform: scale(1); } }
 .pf-dci-sub { margin: 18px auto 0; font-size: 15px; line-height: 1.5; color: var(--dci-muted); max-width: 310px; }
-.pf-dci-sub b { color: var(--dci-amber); font-weight: 800; }
+.pf-dci-sub b { color: var(--dci-accent); font-weight: 800; }
 .pf-dci-dots { display: flex; justify-content: center; align-items: flex-start; gap: 9px; margin: 22px 0 0; }
 .pf-dci-day { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .pf-dci-dow { font: 600 11px/1 var(--font-sans, Poppins, system-ui, sans-serif); letter-spacing: .04em; color: var(--dci-muted); opacity: 0;
@@ -46,7 +57,7 @@
 .pf-dci-dow.is-today { color: var(--dci-kicker); }
 @keyframes pfDciDowIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .pf-dci-dot { width: 36px; height: 36px; border-radius: 50%; background: var(--dci-dot-bg); border: 1.5px solid var(--dci-dot-bd);
-  display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,.85); font-size: 14px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; color: var(--dci-dot-ink); font-size: 14px; font-weight: 800;
   animation: pfDciPop .5s cubic-bezier(.2, 1.4, .4, 1) both; animation-delay: var(--d, 0ms); }
 .pf-dci-dot { position: relative; transition: background .35s ease, border-color .35s ease, box-shadow .35s ease; }
 .pf-dci-dot.is-lit { background: linear-gradient(135deg, var(--dci-amber), var(--dci-amber-deep)); border-color: transparent; color: #1a1736; }
@@ -63,6 +74,9 @@
 /* bottom actions */
 .pf-dci-actions { position: relative; z-index: 2; flex: none; display: flex; flex-direction: column; gap: 10px; padding-top: 18px; }
 .pf-dci-btn { height: 52px; border-radius: 16px; border: none; cursor: pointer; font-family: inherit; font-size: 16px; font-weight: 700; width: 100%; }
+/* the script focuses Keep going on open — no navy focus ring on the takeover (user request 2026-09-28) */
+#pf-root .pf-dci-btn:focus, #pf-root .pf-dci-btn:focus-visible, .pf-dci-btn:focus, .pf-dci-btn:focus-visible { outline: none; box-shadow: none; }
+.pf-dci-btn-gold:focus, .pf-dci-btn-gold:focus-visible { box-shadow: 0 10px 24px rgba(231, 130, 10, .28); }
 .pf-dci-btn-gold { background: linear-gradient(135deg, #f4ad3d 0%, #e7820a 100%); color: #fff; box-shadow: 0 10px 24px rgba(231, 130, 10, .28); }
 .pf-dci-btn-ghost { background: var(--dci-ghost-bg); color: var(--dci-ghost-ink); }
 

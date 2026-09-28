@@ -2128,7 +2128,7 @@ const PM_TABS = [{
   href: null
 }, {
   key: "Agent",
-  label: "Ava",
+  label: "Agents",
   icon: "lucide:sparkles",
   href: "AgentMobile.html"
 }, {
@@ -2137,397 +2137,25 @@ const PM_TABS = [{
   icon: "lucide:gift",
   href: "RewardsDashboard.html"
 }];
-const SM_TIER_RESOURCES_PM = {
-  Confidence: [{
-    label: "Community Chat",
-    icon: "lucide:message-circle",
-    href: "CommunityMobile.html"
-  }, {
-    label: "Membership Training",
-    icon: "lucide:graduation-cap",
-    href: "LearningMobile.html"
-  }, {
-    label: "Technique Tuesday",
-    icon: "lucide:calendar-check",
-    href: "EventsMobile.html"
-  }, {
-    label: "Complications Help",
-    icon: "lucide:shield-alert",
-    href: "DirectMessage.html"
-  }, {
-    label: "AI Coach",
-    icon: "lucide:sparkles",
-    href: "LearningMobile.html"
-  }],
-  Mastery: [{
-    label: "Mastery lounge",
-    icon: "lucide:message-circle",
-    href: "CommunityMobile.html"
-  }, {
-    label: "Advanced masterclasses",
-    icon: "lucide:graduation-cap",
-    href: "LearningMobile.html"
-  }, {
-    label: "Complication library",
-    icon: "lucide:file-text",
-    href: "LearningMobile.html"
-  }, {
-    label: "Live case reviews",
-    icon: "lucide:calendar",
-    href: "EventsMobile.html"
-  }],
-  Freedom: [{
-    label: "Freedom circle",
-    icon: "lucide:message-circle",
-    href: "CommunityMobile.html"
-  }, {
-    label: "Business playbooks",
-    icon: "lucide:graduation-cap",
-    href: "LearningMobile.html"
-  }, {
-    label: "1:1 mentor sessions",
-    icon: "lucide:calendar",
-    href: "EventsMobile.html"
-  }],
-  "Inner Circle": [{
-    label: "Inner Circle roundtable",
-    icon: "lucide:message-circle",
-    href: "CommunityMobile.html"
-  }, {
-    label: "Executive mentorship",
-    icon: "lucide:calendar",
-    href: "EventsMobile.html"
-  }, {
-    label: "Legacy case archive",
-    icon: "lucide:file-text",
-    href: "LearningMobile.html"
-  }, {
-    label: "Founder office hours",
-    icon: "lucide:calendar",
-    href: "EventsMobile.html"
-  }]
-};
-const SM_COURSES_PM = [{
-  label: "Face Anatomy Masterclass",
-  pct: 72
-}, {
-  label: "Lip Filler Techniques",
-  pct: 45
-}, {
-  label: "Advanced Botox Training",
-  pct: 20
-}];
-const SM_EVENTS_PM = [{
-  d: "30",
-  m: "JUN",
-  label: "Technique Tuesday Webinar",
-  t: "8:00 PM",
-  tag: "NEW"
-}, {
-  d: "5",
-  m: "JUL",
-  label: "Confidence Masterclass",
-  t: "6:00 PM"
-}, {
-  d: "12",
-  m: "JUL",
-  label: "Business Growth Workshop",
-  t: "7:00 PM"
-}];
-const SM_PROFILE_BEFORE_PM = [{
-  label: "Edit Profile",
-  icon: "lucide:book-open",
-  href: "ProfileMobile.html"
-}, {
-  label: "Account Settings",
-  icon: "lucide:settings",
-  href: "AccountSettings.html"
-}, {
-  label: "Payments",
-  icon: "lucide:credit-card",
-  href: "PaymentsMobile.html"
-}, {
-  label: "My Saved",
-  icon: "lucide:bookmark",
-  href: "MySaved.html"
-}, {
-  label: "Notifications",
-  icon: "lucide:calendar",
-  href: "NotificationSettings.html"
-}, {
-  label: "Privacy & Security",
-  icon: "lucide:book-open",
-  href: null
-}, {
-  label: "Chat Support",
-  icon: "lucide:headset",
-  href: "ChatSupport.html"
-}];
-function useDarkModePM() {
-  const [dark, setDark] = useStatePM(() => {
-    try {
-      return localStorage.getItem('pf-theme') === 'dark';
-    } catch (e) {
-      return false;
-    }
-  });
-  function toggle() {
-    const next = !dark;
-    setDark(next);
-    try {
-      localStorage.setItem('pf-theme', next ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
-    } catch (e) {}
-  }
-  return [dark, toggle];
+
+/* Side menu, Notifications and Messages come from the shared mobile chrome
+   (mobilechrome.jsx — a copy of the newsfeed's), so every page reads the same.
+   Resolved at render so script order doesn't matter. */
+function SideMenuPM(p) {
+  const C = window.PFSideMenuC;
+  return C ? /*#__PURE__*/React.createElement(C, p) : null;
 }
-function SmDarkSwitchPM({
-  on,
-  onToggle
-}) {
-  return /*#__PURE__*/React.createElement("button", {
-    className: "sm-switch" + (on ? " on" : ""),
-    onClick: onToggle,
-    role: "switch",
-    "aria-checked": on,
-    "aria-label": on ? "Switch to light mode" : "Switch to dark mode"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-knob"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: on ? "lucide:moon" : "lucide:sun",
-    size: 13,
-    color: on ? "#1A1736" : "var(--gray-450)"
-  })));
+function NotificationsPanelPM(p) {
+  const C = window.PFNotificationsPanelC;
+  return C ? /*#__PURE__*/React.createElement(C, p) : null;
 }
-function SmDisplayCardPM({
-  dark,
-  onToggle
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "sm-display-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "sm-display-top"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-display-label"
-  }, "Display"), /*#__PURE__*/React.createElement(SmDarkSwitchPM, {
-    on: dark,
-    onToggle: onToggle
-  })), /*#__PURE__*/React.createElement("p", {
-    className: "sm-display-desc"
-  }, "Adjust the appearance of the app to reduce glare and give your eyes a break"));
-}
-function SmSectionPM({
-  title
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "sm-sec-h"
-  }, title);
-}
-function SmTierResourceRowPM({
-  r
-}) {
-  return /*#__PURE__*/React.createElement("button", {
-    className: "smt-resource",
-    onClick: () => r.href && goPM(r.href)
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: r.icon,
-    size: 20,
-    color: "var(--gray-900)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "smt-resource-label"
-  }, r.label), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 20,
-    color: "var(--gray-450)"
-  }));
-}
-function SmTierCardPM({
-  tierName,
-  isOwn
-}) {
-  const resources = SM_TIER_RESOURCES_PM[tierName] || [];
-  return /*#__PURE__*/React.createElement("div", {
-    className: "smt-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "smt-head"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "smt-top"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "smt-name"
-  }, tierName, " Path"), !isOwn && /*#__PURE__*/React.createElement("span", {
-    className: "smt-pill"
-  }, "INCLUDED"))), /*#__PURE__*/React.createElement("div", {
-    className: "smt-resources"
-  }, resources.map(r => /*#__PURE__*/React.createElement(SmTierResourceRowPM, {
-    key: r.label,
-    r: r
-  }))));
-}
-function SideMenuPM({
-  open,
-  onClose
-}) {
-  const [dark, toggleDark] = useDarkModePM();
-  return /*#__PURE__*/React.createElement("div", {
-    className: "m-drawer-wrap" + (open ? " open" : ""),
-    "aria-hidden": !open
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "m-drawer-scrim",
-    onClick: onClose
-  }), /*#__PURE__*/React.createElement("aside", {
-    className: "m-drawer",
-    role: "dialog",
-    "aria-modal": "true",
-    "aria-label": "Menu"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "m-drawer-profile",
-    onClick: () => goPM("ProfileMobile.html")
-  }, /*#__PURE__*/React.createElement(DSPM.Avatar, {
-    name: PM_ME.name,
-    src: PM_ME.avatar,
-    size: 56
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "m-dp-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "m-dp-name"
-  }, PM_ME.name, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:badge-check",
-    size: 18,
-    color: "var(--reaction-like)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "m-dp-role"
-  }, PM_ME.role)), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 22,
-    color: "var(--gray-800)"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "sm-body"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "sm-upgrade",
-    onClick: () => goPM("MembershipTier.html")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-upgrade-icon"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:gem",
-    size: 20,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "sm-upgrade-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-upgrade-title"
-  }, smNextTierPM(PM_ME.tier) ? "Upgrade to " + smNextTierPM(PM_ME.tier) : "You're at the top tier"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-upgrade-sub"
-  }, "Unlock premium channels & courses")), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 20,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement(SmSectionPM, {
-    title: "My Membership"
-  }), PM_ME.tier ? /*#__PURE__*/React.createElement("div", {
-    className: "smt-list"
-  }, smIncludedTiersPM(PM_ME.tier).map((t, i) => /*#__PURE__*/React.createElement(SmTierCardPM, {
-    key: t,
-    tierName: t,
-    isOwn: i === 0
-  }))) : /*#__PURE__*/React.createElement("button", {
-    className: "sm-tier",
-    onClick: () => goPM("CommunityMobile.html")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-top"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-name"
-  }, "No active plan"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-pill"
-  }, "FREE")), /*#__PURE__*/React.createElement("span", {
-    className: "sm-tier-sub"
-  }, "Subscribe to unlock a channel")), /*#__PURE__*/React.createElement(SmSectionPM, {
-    title: "My Courses"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "sm-courses"
-  }, SM_COURSES_PM.map(c => /*#__PURE__*/React.createElement("button", {
-    key: c.label,
-    className: "sm-course",
-    onClick: () => goPM("LearningMobile.html")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-course-top"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-course-thumb"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:image",
-    size: 20,
-    color: "var(--gray-400)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "sm-course-name"
-  }, c.label)), /*#__PURE__*/React.createElement("span", {
-    className: "sm-progress"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-progress-fill",
-    style: {
-      width: c.pct + "%"
-    }
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "sm-course-pct"
-  }, c.pct, "% complete")))), /*#__PURE__*/React.createElement(SmSectionPM, {
-    title: "Upcoming Events"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "sm-events"
-  }, SM_EVENTS_PM.slice(0, 2).map(e => /*#__PURE__*/React.createElement("button", {
-    key: e.label,
-    className: "sm-event",
-    onClick: () => goPM("EventsMobile.html")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-date"
-  }, /*#__PURE__*/React.createElement("b", null, e.d), /*#__PURE__*/React.createElement("i", null, e.m)), /*#__PURE__*/React.createElement("span", {
-    className: "sm-event-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-event-name"
-  }, e.label), /*#__PURE__*/React.createElement("span", {
-    className: "sm-event-time"
-  }, e.t)), e.tag && /*#__PURE__*/React.createElement("span", {
-    className: "sm-event-tag"
-  }, e.tag)))), /*#__PURE__*/React.createElement(SmSectionPM, {
-    title: "My Profile"
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "sm-row sm-verify",
-    onClick: () => goPM("ProfileMobile.html")
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:book-open",
-    size: 23,
-    color: "var(--premium-orange)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "sm-row-label"
-  }, "Verify Profile"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-verify-pill"
-  }, "Not Verified")), /*#__PURE__*/React.createElement("nav", {
-    className: "sm-list"
-  }, SM_PROFILE_BEFORE_PM.map(c => /*#__PURE__*/React.createElement("button", {
-    key: c.label,
-    className: "sm-row",
-    onClick: () => c.href && goPM(c.href)
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: c.icon,
-    size: 23,
-    color: "var(--gray-900)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "sm-row-label"
-  }, c.label), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 20,
-    color: "var(--gray-450)"
-  })))), /*#__PURE__*/React.createElement(SmDisplayCardPM, {
-    dark: dark,
-    onToggle: toggleDark
-  }), /*#__PURE__*/React.createElement("button", {
-    className: "m-drawer-logout",
-    onClick: () => goPM("AuthMobile.html?view=signin")
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:log-out",
-    size: 22,
-    color: "var(--error)"
-  }), "Logout"))));
+function MessagesPanelPM(p) {
+  const C = window.PFMessagesPanelC;
+  return C ? /*#__PURE__*/React.createElement(C, p) : null;
 }
 function PMTopBar({
   onMenu,
+  onBell,
   onMessages
 }) {
   /* Shared header points pill from mobilechrome.jsx (lifetime points, taps
@@ -2550,14 +2178,16 @@ function PMTopBar({
     className: "grow"
   }), PointsPill && /*#__PURE__*/React.createElement(PointsPill, null), /*#__PURE__*/React.createElement("button", {
     className: "pm-iconbtn",
-    "aria-label": "Search"
+    "aria-label": "Search",
+    onClick: () => goPM("SearchMobile.html")
   }, /*#__PURE__*/React.createElement(DSPM.Icon, {
     name: "search",
     size: 21,
     color: "var(--brand-navy)"
   })), /*#__PURE__*/React.createElement("button", {
     className: "pm-iconbtn",
-    "aria-label": "Notifications"
+    "aria-label": "Notifications",
+    onClick: () => onBell && onBell()
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:bell",
     size: 21,
@@ -2576,492 +2206,6 @@ function PMTopBar({
     className: "dot"
   }, "12")));
 }
-const DM_THREADS_SEED_PM = [{
-  id: "tim",
-  name: "Dr Tim Pearce",
-  avatar: "assets/avatar-drtim.png",
-  online: true,
-  unread: 2,
-  messages: [{
-    me: false,
-    text: "Hey Katy! I saw your post about the full-face rejuvenation case.",
-    t: "10:12 AM"
-  }, {
-    me: true,
-    text: "Thank you! It was a great result, patient was thrilled.",
-    t: "10:20 AM"
-  }, {
-    me: false,
-    text: "Do you mind if I share it with my team as a reference?",
-    t: "10:25 AM"
-  }, {
-    me: true,
-    text: "Of course, go ahead — sharing the write-up now.",
-    t: "10:28 AM"
-  }, {
-    me: false,
-    text: "Thanks for sharing the case study. Really helpful!",
-    t: "10:30 AM"
-  }]
-}, {
-  id: "sarah",
-  name: "Dr Sarah Kim",
-  avatar: null,
-  online: true,
-  unread: 1,
-  messages: [{
-    me: false,
-    text: "Are you free to go over the Q3 protocol updates this week?",
-    t: "9:40 AM"
-  }, {
-    me: true,
-    text: "Yes, Thursday afternoon works for me.",
-    t: "9:52 AM"
-  }, {
-    me: false,
-    text: "Looking forward to our next meeting!",
-    t: "11:00 AM"
-  }]
-}, {
-  id: "emily",
-  name: "Dr Emily Tran",
-  avatar: null,
-  online: false,
-  unread: 3,
-  messages: [{
-    me: false,
-    text: "Just finished reviewing the patient satisfaction data.",
-    t: "10:50 AM"
-  }, {
-    me: false,
-    text: "There's a trend worth flagging in the 45+ age group.",
-    t: "11:05 AM"
-  }, {
-    me: false,
-    text: "I have some additional insights to share.",
-    t: "11:15 AM"
-  }]
-}, {
-  id: "james",
-  name: "Dr James Brown",
-  avatar: null,
-  online: false,
-  unread: 0,
-  muted: true,
-  messages: [{
-    me: true,
-    text: "Sent over the full results deck this morning.",
-    t: "11:05 AM"
-  }, {
-    me: false,
-    text: "Can we discuss the implications of the results?",
-    t: "11:30 AM"
-  }]
-}, {
-  id: "alex",
-  name: "Dr Alex Chen",
-  avatar: null,
-  online: true,
-  unread: 0,
-  messages: [{
-    me: false,
-    text: "The dosing charts you put together are excellent.",
-    t: "11:40 AM"
-  }, {
-    me: false,
-    text: "Great work on the data analysis!",
-    t: "11:45 AM"
-  }]
-}, {
-  id: "miranda",
-  name: "Miranda Pearce",
-  avatar: "assets/avatar-miranda.jpg",
-  online: false,
-  unread: 0,
-  messages: [{
-    me: true,
-    text: "Sharing the confidence-score writeup with you now.",
-    t: "11:50 AM"
-  }, {
-    me: false,
-    text: "Perfect, thank you — this is exactly what I needed.",
-    t: "12:00 PM"
-  }]
-}];
-const VOICE_CONFS_SEED_PM = [{
-  id: "c1",
-  name: "Case Study Discussion",
-  who: "Dr Tim Pearce, Dr Rachel Adams +98",
-  t: "Live now · 100 participants",
-  live: true
-}, {
-  id: "c2",
-  name: "Business Growth Sync",
-  who: "Miranda Pearce, Mark Ellis",
-  t: "Tomorrow, 10:00 AM",
-  live: false
-}];
-const PF_GROUPS_KEY = "pf-dm-groups";
-function readDmGroupsPM() {
-  try {
-    return JSON.parse(localStorage.getItem(PF_GROUPS_KEY)) || [];
-  } catch (e) {
-    return [];
-  }
-}
-function groupDisplayNamePM(members) {
-  const names = members.map(m => m.name.replace(/^Dr\s+/, ""));
-  return names.length > 2 ? names.slice(0, 2).join(", ") + " +" + (names.length - 2) : names.join(", ");
-}
-function createDmGroupPM(members, customName) {
-  const hasCustomName = !!(customName || "").trim();
-  const group = {
-    id: "group-" + Date.now(),
-    isGroup: true,
-    customName: hasCustomName,
-    name: hasCustomName ? customName.trim() : groupDisplayNamePM(members),
-    members,
-    messages: []
-  };
-  const groups = readDmGroupsPM();
-  groups.unshift(group);
-  try {
-    localStorage.setItem(PF_GROUPS_KEY, JSON.stringify(groups));
-  } catch (e) {}
-  return group;
-}
-function GroupAvatarStackPM({
-  members,
-  size
-}) {
-  const s = size || 52;
-  return /*#__PURE__*/React.createElement("span", {
-    className: "mp-group-av",
-    style: {
-      width: s,
-      height: s
-    }
-  }, members.slice(0, 2).map((m, i) => /*#__PURE__*/React.createElement("span", {
-    className: "mp-group-av-item",
-    key: m.id || i
-  }, /*#__PURE__*/React.createElement(DSPM.Avatar, {
-    name: m.name,
-    src: m.avatar,
-    size: Math.round(s * 0.68)
-  }))));
-}
-function MessagesRowPM({
-  c,
-  onOpen
-}) {
-  const last = c.messages && c.messages.length ? c.messages[c.messages.length - 1] : null;
-  return /*#__PURE__*/React.createElement("button", {
-    className: "mp-row",
-    onClick: onOpen
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-av"
-  }, c.isGroup ? /*#__PURE__*/React.createElement(GroupAvatarStackPM, {
-    members: c.members
-  }) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DSPM.Avatar, {
-    name: c.name,
-    src: c.avatar,
-    size: 52
-  }), c.online && /*#__PURE__*/React.createElement("span", {
-    className: "dm-online-dot"
-  }))), /*#__PURE__*/React.createElement("span", {
-    className: "mp-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-row-top"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-name"
-  }, c.name), /*#__PURE__*/React.createElement("span", {
-    className: "mp-time"
-  }, last ? last.t : "")), /*#__PURE__*/React.createElement("span", {
-    className: "mp-row-bottom"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-preview"
-  }, last ? last.text : c.isGroup ? c.members.length + " members" : ""), c.muted ? /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:bell-off",
-    size: 16,
-    color: "var(--gray-450)"
-  }) : c.unread > 0 && /*#__PURE__*/React.createElement("span", {
-    className: "mp-badge"
-  }, c.unread))));
-}
-function NewConversationScreenPM({
-  contacts,
-  picked,
-  onToggle,
-  query,
-  onQuery,
-  groupName,
-  onGroupName,
-  onBack,
-  onCreate
-}) {
-  const filtered = contacts.filter(c => c.name.toLowerCase().includes(query.toLowerCase()));
-  const count = picked.length;
-  return /*#__PURE__*/React.createElement("div", {
-    className: "mp-new",
-    "data-screen-label": "New Conversation"
-  }, /*#__PURE__*/React.createElement("header", {
-    className: "nt-head"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "nt-back",
-    "aria-label": "Back to messages",
-    onClick: onBack
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:arrow-left",
-    size: 24,
-    color: "var(--gray-900)"
-  })), /*#__PURE__*/React.createElement("h2", {
-    style: {
-      fontSize: "20px",
-      fontWeight: "700"
-    }
-  }, "New Conversation")), /*#__PURE__*/React.createElement("div", {
-    className: "nt-search mp-search"
-  }, /*#__PURE__*/React.createElement(DSPM.Icon, {
-    name: "search",
-    size: 20,
-    color: "var(--gray-450)"
-  }), /*#__PURE__*/React.createElement("input", {
-    type: "text",
-    placeholder: "Search people",
-    "aria-label": "Search people",
-    value: query,
-    onChange: e => onQuery(e.target.value)
-  })), count > 1 && /*#__PURE__*/React.createElement("div", {
-    className: "mp-new-namewrap"
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "text",
-    className: "mp-new-nameinput",
-    placeholder: "Name this group (optional)",
-    "aria-label": "Group name",
-    value: groupName,
-    onChange: e => onGroupName(e.target.value)
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "mp-new-list"
-  }, filtered.map(c => {
-    const on = picked.includes(c.id);
-    return /*#__PURE__*/React.createElement("button", {
-      key: c.id,
-      className: "mp-new-row" + (on ? " on" : ""),
-      onClick: () => onToggle(c.id)
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "mp-av"
-    }, /*#__PURE__*/React.createElement(DSPM.Avatar, {
-      name: c.name,
-      src: c.avatar,
-      size: 44
-    })), /*#__PURE__*/React.createElement("span", {
-      className: "mp-new-name"
-    }, c.name), /*#__PURE__*/React.createElement("span", {
-      className: "mp-new-check" + (on ? " on" : "")
-    }, on && /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-      name: "lucide:check",
-      size: 13,
-      color: "#fff"
-    })));
-  }), filtered.length === 0 && /*#__PURE__*/React.createElement("div", {
-    className: "mp-new-empty"
-  }, "No people found.")), /*#__PURE__*/React.createElement("div", {
-    className: "mp-new-footer"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-new-count"
-  }, count, " selected"), /*#__PURE__*/React.createElement("button", {
-    className: "mp-new-create",
-    disabled: count === 0,
-    onClick: onCreate
-  }, count > 1 ? "Create Group" : "Start Chat")));
-}
-function VoiceConfRowPM({
-  v
-}) {
-  return /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mp-row mp-vc-row",
-    onClick: () => goPM("Messages.html?tab=conference&conf=" + v.id),
-    "aria-label": v.name + (v.live ? ", live now" : "")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-av mp-vc-icon"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:phone-call",
-    size: 22,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "mp-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-row-top"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-name"
-  }, v.name), v.live && /*#__PURE__*/React.createElement("span", {
-    className: "mp-vc-live"
-  }, "LIVE")), /*#__PURE__*/React.createElement("span", {
-    className: "mp-row-bottom"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-preview"
-  }, v.who)), /*#__PURE__*/React.createElement("span", {
-    className: "mp-vc-time"
-  }, v.t)));
-}
-function MessagesPanelPM({
-  open,
-  onClose
-}) {
-  const [tab, setTab] = useStatePM("messages");
-  const [query, setQuery] = useStatePM("");
-  const [screen, setScreen] = useStatePM("list");
-  const [groups, setGroups] = useStatePM([]);
-  const [picked, setPicked] = useStatePM([]);
-  const [ncQuery, setNcQuery] = useStatePM("");
-  const [groupName, setGroupName] = useStatePM("");
-  useEffectPM(() => {
-    if (!open) {
-      setQuery("");
-      setScreen("list");
-      setPicked([]);
-      setNcQuery("");
-      setGroupName("");
-    } else {
-      setGroups(readDmGroupsPM());
-    }
-  }, [open]);
-  const allThreads = [...groups, ...DM_THREADS_SEED_PM];
-  const filtered = allThreads.filter(t => t.name.toLowerCase().includes(query.toLowerCase()));
-  const unreadTotal = DM_THREADS_SEED_PM.reduce((n, t) => n + (t.unread || 0), 0);
-  function openThread(id) {
-    goPM("DirectMessage.html?id=" + id + "&from=ProfileMobile.html");
-  }
-  function togglePick(id) {
-    setPicked(all => all.includes(id) ? all.filter(x => x !== id) : [...all, id]);
-  }
-  function handleCreate() {
-    if (picked.length === 0) return;
-    if (picked.length === 1) {
-      openThread(picked[0]);
-      return;
-    }
-    const members = DM_THREADS_SEED_PM.filter(c => picked.includes(c.id)).map(c => ({
-      id: c.id,
-      name: c.name,
-      avatar: c.avatar
-    }));
-    const group = createDmGroupPM(members, groupName);
-    openThread(group.id);
-  }
-  if (screen === "new") {
-    return /*#__PURE__*/React.createElement("div", {
-      className: "m-drawer-wrap" + (open ? " open" : ""),
-      "aria-hidden": !open
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "m-drawer-scrim",
-      onClick: onClose
-    }), /*#__PURE__*/React.createElement("aside", {
-      className: "m-drawer nt-panel mp-panel",
-      role: "dialog",
-      "aria-modal": "true",
-      "aria-label": "New Conversation"
-    }, /*#__PURE__*/React.createElement(NewConversationScreenPM, {
-      contacts: DM_THREADS_SEED_PM,
-      picked: picked,
-      onToggle: togglePick,
-      query: ncQuery,
-      onQuery: setNcQuery,
-      groupName: groupName,
-      onGroupName: setGroupName,
-      onBack: () => setScreen("list"),
-      onCreate: handleCreate
-    })));
-  }
-  return /*#__PURE__*/React.createElement("div", {
-    className: "m-drawer-wrap" + (open ? " open" : ""),
-    "aria-hidden": !open
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "m-drawer-scrim",
-    onClick: onClose
-  }), /*#__PURE__*/React.createElement("aside", {
-    className: "m-drawer nt-panel mp-panel",
-    role: "dialog",
-    "aria-modal": "true",
-    "aria-label": "Messages"
-  }, /*#__PURE__*/React.createElement("header", {
-    className: "nt-head"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "nt-back",
-    "aria-label": "Close",
-    onClick: onClose
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:arrow-left",
-    size: 24,
-    color: "var(--gray-900)"
-  })), /*#__PURE__*/React.createElement("h2", {
-    style: {
-      fontSize: "26px",
-      fontWeight: "700"
-    }
-  }, "Messages"), /*#__PURE__*/React.createElement("button", {
-    className: "mp-compose",
-    "aria-label": "New message",
-    onClick: () => setScreen("new")
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:square-pen",
-    size: 20,
-    color: "var(--gray-900)"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "mp-tabs",
-    role: "tablist",
-    "aria-label": "Messages or voice conference"
-  }, /*#__PURE__*/React.createElement("button", {
-    role: "tab",
-    "aria-selected": tab === "messages",
-    className: "mp-tab" + (tab === "messages" ? " on" : ""),
-    onClick: () => setTab("messages")
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:message-circle",
-    size: 16,
-    color: tab === "messages" ? "var(--brand-navy)" : "var(--gray-450)"
-  }), "Messages", unreadTotal > 0 && /*#__PURE__*/React.createElement("span", {
-    className: "mp-tab-badge"
-  }, unreadTotal)), /*#__PURE__*/React.createElement("button", {
-    role: "tab",
-    "aria-selected": tab === "voice",
-    className: "mp-tab" + (tab === "voice" ? " on" : ""),
-    onClick: () => setTab("voice")
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:phone",
-    size: 16,
-    color: tab === "voice" ? "var(--brand-navy)" : "var(--gray-450)"
-  }), "Voice Conference", /*#__PURE__*/React.createElement("span", {
-    className: "mp-tab-badge"
-  }, VOICE_CONFS_SEED_PM.length))), /*#__PURE__*/React.createElement("div", {
-    className: "nt-search mp-search"
-  }, /*#__PURE__*/React.createElement(DSPM.Icon, {
-    name: "search",
-    size: 20,
-    color: "var(--gray-450)"
-  }), /*#__PURE__*/React.createElement("input", {
-    type: "text",
-    placeholder: "Search messages",
-    "aria-label": "Search messages",
-    value: query,
-    onChange: e => setQuery(e.target.value)
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "nt-body mp-body"
-  }, tab === "messages" ? filtered.map(c => /*#__PURE__*/React.createElement(MessagesRowPM, {
-    key: c.id,
-    c: c,
-    onOpen: () => openThread(c.id)
-  })) : VOICE_CONFS_SEED_PM.map(v => /*#__PURE__*/React.createElement(VoiceConfRowPM, {
-    key: v.id,
-    v: v
-  })))));
-}
-
-/* `active` defaults to Profile (the owner's page). Viewing someone else's
-   profile passes the tab of the page they came from — Home when tapped from
-   the newsfeed, Community from a channel… — so the footer doesn't jump to
-   Profile just because the URL is ProfileMobile.html. */
 const PMTabBar = React.forwardRef(function PMTabBar({
   compact,
   active = "Profile"
@@ -3536,39 +2680,24 @@ function PMAssessResult({
   }, "Back to assessments"));
 }
 
-/* Per-tile presentation: a large emoji icon (fluent-emoji-flat — every name
-   below verified against the Iconify collection index) and a pastel wash
-   with a matching hairline. */
+/* Per-tile presentation: a one-line blurb under the pillar name. Tiles are
+   plain white cards now (the emoji icon + pastel wash per pillar were
+   removed at the user's request, Sept 2026). */
 const PM_HUB_META = {
   "Marketing": {
-    icon: "fluent-emoji-flat:megaphone",
-    blurb: "How you attract and convert new patients",
-    wash: "#FFF1E8",
-    line: "#F3CDB3"
+    blurb: "How you attract and convert new patients"
   },
   "Sales": {
-    icon: "fluent-emoji-flat:money-bag",
-    blurb: "Consultations, follow-up and closing the plan",
-    wash: "#EAF7EF",
-    line: "#B9E2C8"
+    blurb: "Consultations, follow-up and closing the plan"
   },
   "Clinical Skills": {
-    icon: "fluent-emoji-flat:syringe",
-    blurb: "Technique, safety and your treatment range",
-    wash: "#F1EEFF",
-    line: "#D2CBF7"
+    blurb: "Technique, safety and your treatment range"
   },
   "Business Systems": {
-    icon: "fluent-emoji-flat:gear",
-    blurb: "Pricing, operations and financial tracking",
-    wash: "#EAF3FF",
-    line: "#BFD8F7"
+    blurb: "Pricing, operations and financial tracking"
   },
   "dreamVision": {
-    icon: "fluent-emoji-flat:crystal-ball",
-    blurb: "Where you want your clinic to go — not scored",
-    wash: "#FFEDF3",
-    line: "#F5C3D3"
+    blurb: "Where you want your clinic to go — not scored"
   }
 };
 function PMAssessHubTile({
@@ -3582,26 +2711,12 @@ function PMAssessHubTile({
   const meta = PM_HUB_META[assessKey];
   const scorePct = status === "completed" && scored ? Math.round(entry.rawPoints / (def.questions.length * 4) * 100) : null;
   const done = status === "completed";
-  const style = done ? {
-    "--wash": "#EAF6F0",
-    "--line": "#B9E2C8"
-  } : {
-    "--wash": meta.wash,
-    "--line": meta.line
-  };
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-hub-tile pm-hub-tile--" + status,
-    style: style,
     onClick: () => onOpen(assessKey),
     "aria-label": def.label + " — " + PM_ASSESS_STATUS_LABEL[status] + (scorePct != null ? ", " + scorePct + " percent" : "") + ". About " + def.timeMin + " minutes"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-hub-ic",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: meta.icon,
-    size: 34
-  })), /*#__PURE__*/React.createElement("span", {
     className: "pm-hub-copy"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ti"
@@ -3790,20 +2905,13 @@ function PMAssessHub({
     className: "pm-hub-why",
     "aria-haspopup": "dialog",
     onClick: () => setWhyOpen(true)
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-hub-why-ic",
-    "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:sparkles",
-    size: 15,
-    color: "var(--ai-purple)"
-  })), /*#__PURE__*/React.createElement("span", {
+    size: 17,
+    color: "#fff"
+  }), /*#__PURE__*/React.createElement("span", {
     className: "pm-hub-why-tx"
-  }, "Why Ava asks"), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:circle-help",
-    size: 16,
-    color: "#4A40D6"
-  })), /*#__PURE__*/React.createElement("div", {
+  }, "Why Ava asks")), /*#__PURE__*/React.createElement("div", {
     className: "pm-hub-grid"
   }, PM_ASSESS_ORDER.map(key => /*#__PURE__*/React.createElement(PMAssessHubTile, {
     key: key,
@@ -7588,6 +6696,7 @@ function PMScreen() {
   }));
   const m = profile;
   const [msgOpen, setMsgOpen] = useStatePM(false);
+  const [notifOpen, setNotifOpen] = useStatePM(false);
   const [menuOpen, setMenuOpen] = useStatePM(false);
   const [editOpen, setEditOpen] = useStatePM(() => {
     try {
@@ -7695,6 +6804,7 @@ function PMScreen() {
     "data-screen-label": "Profile (mobile)"
   }, /*#__PURE__*/React.createElement(PMTopBar, {
     onMenu: () => setMenuOpen(true),
+    onBell: () => setNotifOpen(true),
     onMessages: () => setMsgOpen(true)
   }), avatarOpen && /*#__PURE__*/React.createElement(PMAvatarViewer, {
     user: m,
@@ -7873,12 +6983,15 @@ function PMScreen() {
     color: "var(--error)"
   }), "Logout")), /*#__PURE__*/React.createElement(PMTabBar, {
     compact: chromeHidden
-  }), /*#__PURE__*/React.createElement(MessagesPanelPM, {
-    open: msgOpen,
-    onClose: () => setMsgOpen(false)
   }), /*#__PURE__*/React.createElement(SideMenuPM, {
     open: menuOpen,
     onClose: () => setMenuOpen(false)
+  }), /*#__PURE__*/React.createElement(NotificationsPanelPM, {
+    open: notifOpen,
+    onClose: () => setNotifOpen(false)
+  }), /*#__PURE__*/React.createElement(MessagesPanelPM, {
+    open: msgOpen,
+    onClose: () => setMsgOpen(false)
   }));
 }
 function ProfileMobileApp() {
