@@ -1,7 +1,8 @@
 /* ===========================================================================
-   PROfinity — Agents (mobile) · iPhone 17 Pro Max · layout
-   Full-bleed AI-purple→coral hero under the shared mobile chrome header, plus
-   a vertical stack of agent catalogue cards on a faint lavender canvas.
+   PROfinity — Agents (mobile) · iPhone 17 Pro Max · layout · ag-
+   Editorial single-column version of Agent.html: shared mobile chrome header,
+   serif header, two "available now" spotlights, filter chips, agent cards,
+   how-it-works, suggest-an-agent. Component styles live in agents-ui.css.
    =========================================================================== */
 html, body { margin: 0; padding: 0; }
 *, *::before, *::after { box-sizing: border-box; }
@@ -10,49 +11,67 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
   font-family: var(--font-sans); color: var(--text-primary); }
 img { max-width: 100%; }
 
-.ag-screen { height: 100%; display: flex; flex-direction: column; background: var(--surface-card); position: relative; }
+.ag-screen { height: 100%; width: 100%; max-width: 100%; display: flex; flex-direction: column; background: var(--agx-bg); position: relative; overflow: hidden; }
 
 /* scroll area */
-.ag-scroll { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
-  background: color-mix(in srgb, var(--ai-purple) 5%, var(--white));
+.ag-scroll { flex: 1; min-height: 0; min-width: 0; width: 100%; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; background: var(--agx-bg);
   padding-bottom: calc(110px + env(safe-area-inset-bottom,0px)); }
 .ag-scroll::-webkit-scrollbar { width: 0; }
 /* the header leaves the flow once scrolled (see mobilechrome.css) — keep the status-bar inset */
 .ag-screen.chrome-float .ag-scroll { padding-top: 52px; }
 
-/* hero */
-.ag-hero { background: var(--agent-hero-gradient); padding: 32px 24px 40px; color: var(--white); }
-.ag-hero h1 { margin: 0; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 30px; line-height: 1.15; letter-spacing: var(--ls-tight); }
-.ag-hero p { margin: 12px 0 0; font-family: var(--font-sans); font-size: 15px; line-height: var(--lh-normal); color: rgba(255,255,255,.92); }
-.ag-hero-coach { margin-top: 16px; background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.4); color: #fff; }
-.ag-hero-coach:hover { background: rgba(255,255,255,.22); }
+/* header */
+.ag-head { padding: 22px 20px 4px; }
+.ag-head .agx-h1 { font-size: 34px; margin-top: 8px; }
+.ag-head .agx-lede { font-size: 14.5px; margin-top: 10px; }
 
-/* card list */
-.ag-list { display: flex; flex-direction: column; gap: 20px; padding: 24px 20px 8px; }
+/* spotlights */
+.ag-spots { display: flex; flex-direction: column; gap: 14px; padding: 18px 16px 8px; }
+.ag-spots .agx-spot { flex-direction: column; border-radius: 22px; }
+.ag-spots .agx-spot-body { padding: 22px 20px 22px; }
+.ag-spots .agx-spot-title { font-size: 30px; }
+.ag-spots .agx-ava-row .agx-spot-title { font-size: 24px; }
+.ag-spots .agx-spot-tag { font-size: 14.5px; }
+.ag-spots .agx-spot-list li { font-size: 13.5px; }
+.ag-spots .agx-spot-actions { margin-top: 18px; }
+.ag-spots .agx-primary, .ag-spots .agx-ghost { min-height: 42px; font-size: 14px; }
+.ag-spots .agx-spot-art { order: -1; width: 100%; height: 170px; padding: 0; }
+.ag-spots .agx-face { width: 140px; height: 140px; }
+.ag-spots .agx-face-line.l1 { top: 46px; } .ag-spots .agx-face-line.l2 { top: 70px; } .ag-spots .agx-face-line.l3 { top: 94px; }
+.ag-spots .agx-face-pt.p1 { top: 42px; left: 44px; } .ag-spots .agx-face-pt.p2 { top: 42px; right: 44px; } .ag-spots .agx-face-pt.p3 { top: 67px; }
+.ag-spots .agx-face-pt.p4 { top: 91px; left: 54px; } .ag-spots .agx-face-pt.p5 { top: 91px; right: 54px; }
+.ag-spots .agx-face-chip.c1 { top: 18px; right: 16px; } .ag-spots .agx-face-chip.c2 { bottom: 18px; left: 16px; }
+.ag-spots .agx-ava-chips button { font-size: 12.5px; padding: 7px 11px; }
 
-.ag-card { display: flex; flex-direction: column; gap: 14px; background: var(--surface-card);
-  border: 1px solid var(--border-default); border-radius: var(--r-lg); box-shadow: 0 1px 3px rgba(12,12,13,.05); padding: 20px; }
+/* catalogue */
+.ag-cat { padding: 4px 0 0; }
+.ag-cat-h { padding: 0 20px; }
+.ag-cat-h .agx-h2 { font-size: 26px; }
+.ag-filters { padding: 14px 0 0; }
+.ag-filters .agx-filters { flex-direction: column; align-items: stretch; gap: 10px; }
+.ag-filters .agx-filters, .ag-filters .agx-chips { min-width: 0; width: 100%; }
+.ag-filters .agx-chips { flex-wrap: nowrap; overflow-x: auto; padding: 2px 20px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.ag-filters .agx-chips::-webkit-scrollbar { display: none; }
+.ag-filters .agx-chip { flex: none; }
+.ag-list { display: flex; flex-direction: column; gap: 14px; padding: 14px 16px 4px; }
+.ag-list .agx-card { padding: 18px 18px 16px; border-radius: 18px; }
+.ag-list .agx-card-title { font-size: 21px; }
+.ag-list .agx-card-desc { -webkit-line-clamp: 2; }
+.ag-empty { padding: 36px 20px; text-align: center; border-radius: 18px; border: 1px dashed #C9C4E0; font-family: var(--font-sans); font-size: 14px; color: var(--agx-mute); }
 
-.ag-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.ag-icon { flex: none; width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-.ag-badge { flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--premium-badge);
-  color: var(--white); border-radius: var(--r-pill); font-family: var(--font-sans); font-size: 12px; font-weight: var(--fw-semibold); white-space: nowrap; }
+/* lower sections */
+.ag-how { padding: 26px 16px 0; }
+.ag-how .agx-sec-h { padding: 0 4px; }
+.ag-how .agx-h2 { font-size: 24px; }
+.ag-how .agx-steps { grid-template-columns: 1fr; gap: 10px; margin-top: 16px; }
+.ag-how .agx-step { padding: 16px; }
+.ag-request { padding: 18px 16px 0; }
+.ag-request .agx-request { flex-direction: column; align-items: flex-start; padding: 22px 20px; border-radius: 18px; }
+.ag-request .agx-primary { width: 100%; }
 
-.ag-title-row { display: flex; align-items: center; gap: 8px; }
-.ag-title-row h3 { margin: 0; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 20px; color: var(--ai-purple); }
-.ag-media { flex: none; width: 22px; height: 22px; border-radius: 6px; background: var(--ai-purple);
-  display: inline-flex; align-items: center; justify-content: center; }
-
-.ag-desc { margin: 0; font-family: var(--font-sans); font-size: 14.5px; line-height: var(--lh-normal); color: var(--gray-600); }
-
-.ag-card-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px;
-  border-top: 1px solid var(--border-default); padding-top: 14px; }
-.ag-notify { flex: none; display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border: none; cursor: pointer;
-  background: var(--ai-purple); color: var(--white); border-radius: var(--r-sm);
-  font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; }
-.ag-notify:active { filter: brightness(1.12); }
-.ag-notify:disabled { background: var(--surface-sunken); color: var(--ai-purple); border: 1px solid var(--border-default); opacity: 1; cursor: default; }
-.ag-soon { flex: none; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-sans); font-size: 14px; color: var(--gray-500); }
+/* detail sheet sits inside the device frame */
+.ag-screen .agx-scrim.is-sheet { position: absolute; z-index: 60; }
+.ag-screen .agx-toast { position: absolute; bottom: calc(100px + env(safe-area-inset-bottom,0px)); }
 
 /* floating glass navigation dock (shared shape with other mobile screens) */
 .ag-tabs { position: absolute; left: 18px; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom,0px)); z-index: 20;
@@ -85,7 +104,8 @@ img { max-width: 100%; }
 
 /* real-mobile fullscreen */
 @media (max-width: 768px) {
-  body { background: var(--surface-card); }
+  html, body { height: 100%; overflow: hidden; margin: 0; padding: 0; background: var(--agx-bg); }
   .app.device-stage { padding: 0; }
-  .ag-screen { min-height: 100vh; overflow: hidden; overflow: clip; }
+  .app:not(.device-stage) { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+  .app:not(.device-stage) .ag-screen { height: 100vh; height: 100dvh; overflow: hidden; }
 }

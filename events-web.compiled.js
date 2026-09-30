@@ -113,6 +113,17 @@ const EVENTS_LIST = [...ewTuesdaysBetween(new Date(2026, 7, 4), new Date(2026, 1
   state: "upcoming",
   going: "96",
   membersOnly: true
+}, {
+  id: "tl2",
+  title: "Live Replay Technique Library Webinar",
+  host: "Dr Tim Pearce",
+  banner: null,
+  date: "October 4, 2026",
+  time: "19:00 BST",
+  primary: false,
+  state: "upcoming",
+  going: "64",
+  membersOnly: true
 },
 /* Example Zoom-link event: joined in the Zoom app rather than the in-app
    live stage, so the detail page shows a Zoom meeting card (link, ID,
@@ -152,17 +163,6 @@ const EVENTS_LIST = [...ewTuesdaysBetween(new Date(2026, 7, 4), new Date(2026, 1
     icon: "lucide:star",
     t: "Members Event"
   }]
-}, {
-  id: "tl2",
-  title: "Live Replay Technique Library Webinar",
-  host: "Dr Tim Pearce",
-  banner: null,
-  date: "October 4, 2026",
-  time: "19:00 BST",
-  primary: false,
-  state: "upcoming",
-  going: "64",
-  membersOnly: true
 }, {
   id: "ht1",
   title: "High Ticket Webinar",
@@ -673,7 +673,8 @@ function EwStatusPill({
 }
 function EwStatusBtn({
   e,
-  st
+  st,
+  onCal
 }) {
   if (st.registered) return /*#__PURE__*/React.createElement("span", {
     className: "ev-attpill"
@@ -687,6 +688,12 @@ function EwStatusBtn({
     "aria-pressed": st.calendar,
     onClick: ev => {
       ev.stopPropagation();
+      /* Not yet added → open the calendar picker (Google / Apple / Outlook / .ics);
+         already added → tapping again removes it. */
+      if (!st.calendar && onCal) {
+        onCal(e);
+        return;
+      }
       ewMark(e.id, {
         calendar: !st.calendar
       });
@@ -804,6 +811,7 @@ function EventsList({
   setCur
 }) {
   const statusMap = useEwStatus();
+  const [calFor, setCalFor] = useStateEW(null);
   return /*#__PURE__*/React.createElement("div", {
     className: "ev-screen",
     "data-screen-label": "Upcoming Events"
@@ -930,9 +938,16 @@ function EventsList({
       color: i === 0 ? "#fff" : "var(--brand-navy)"
     })), /*#__PURE__*/React.createElement(EwStatusBtn, {
       e: e,
-      st: ewStatusOf(e, statusMap)
+      st: ewStatusOf(e, statusMap),
+      onCal: setCalFor
     })));
-  })));
+  })), calFor && /*#__PURE__*/React.createElement(CalendarSheet, {
+    event: calFor,
+    onClose: () => setCalFor(null),
+    onAdded: () => ewMark(calFor.id, {
+      calendar: true
+    })
+  }));
 }
 
 /* Free members can read everything; the members-only gate fires on action.

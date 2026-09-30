@@ -116,6 +116,17 @@ const EVENTS_LIST = [...evTuesdaysBetween(new Date(2026, 7, 4), new Date(2026, 1
   state: "upcoming",
   going: "96",
   membersOnly: true
+}, {
+  id: "tl2",
+  title: "Live Replay Technique Library Webinar",
+  host: "Dr Tim Pearce",
+  banner: null,
+  date: "October 4, 2026",
+  time: "19:00 BST",
+  primary: false,
+  state: "upcoming",
+  going: "64",
+  membersOnly: true
 },
 /* Example Zoom-link event: joined in the Zoom app rather than the in-app
    live stage, so the detail page shows a Zoom meeting card (link, ID,
@@ -155,17 +166,6 @@ const EVENTS_LIST = [...evTuesdaysBetween(new Date(2026, 7, 4), new Date(2026, 1
     icon: "lucide:star",
     t: "Members Event"
   }]
-}, {
-  id: "tl2",
-  title: "Live Replay Technique Library Webinar",
-  host: "Dr Tim Pearce",
-  banner: null,
-  date: "October 4, 2026",
-  time: "19:00 BST",
-  primary: false,
-  state: "upcoming",
-  going: "64",
-  membersOnly: true
 }, {
   id: "ht1",
   title: "High Ticket Webinar",
@@ -775,7 +775,8 @@ function EvStatusPill({
 }
 function EvStatusBtn({
   e,
-  st
+  st,
+  onCal
 }) {
   if (st.registered) return /*#__PURE__*/React.createElement("span", {
     className: "ev-attpill"
@@ -789,6 +790,12 @@ function EvStatusBtn({
     "aria-pressed": st.calendar,
     onClick: ev => {
       ev.stopPropagation();
+      /* Not yet added → open the calendar picker (Google / Apple / Outlook / .ics);
+         already added → tapping again removes it. */
+      if (!st.calendar && onCal) {
+        onCal(e);
+        return;
+      }
       evMark(e.id, {
         calendar: !st.calendar
       });
@@ -906,6 +913,7 @@ function EventsList({
   setCur
 }) {
   const statusMap = useEvStatus();
+  const [calFor, setCalFor] = useStateEV(null);
   const scrollRef = useRefEV(null);
   const {
     hidden: chromeHidden,
@@ -1038,11 +1046,18 @@ function EventsList({
       color: i === 0 ? "#fff" : "var(--brand-navy)"
     })), /*#__PURE__*/React.createElement(EvStatusBtn, {
       e: e,
-      st: evStatusOf(e, statusMap)
+      st: evStatusOf(e, statusMap),
+      onCal: setCalFor
     })));
   })), /*#__PURE__*/React.createElement(EvTabBar, {
     active: "Home",
     compact: chromeHidden
+  }), calFor && /*#__PURE__*/React.createElement(CalendarSheet, {
+    event: calFor,
+    onClose: () => setCalFor(null),
+    onAdded: () => evMark(calFor.id, {
+      calendar: true
+    })
   }));
 }
 

@@ -1,0 +1,54 @@
+/* ===========================================================================
+   PROfinity — Minute Taker (mobile) · Clinical Note Review
+   Builds on minute-taker-mobile.css (mt- atoms). Classes prefixed mtnrm-.
+   =========================================================================== */
+.mtnrm-head { display: flex; align-items: center; gap: 12px; padding: 6px 4px 0; }
+.mtnrm-name { font-size: 17px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.01em; }
+.mtnrm-meta { margin-top: 2px; font-size: 12.5px; color: var(--mt-mute); }
+.mtnrm-ai { display: flex; align-items: flex-start; gap: 7px; margin: 12px 0 0; padding: 10px 12px; border-radius: 14px; background: var(--mt-accent-soft); color: var(--mt-accent-ink);
+  font-size: 12.5px; font-weight: 600; line-height: 1.4; }
+.mtnrm-ai iconify-icon, .mtnrm-ai svg { flex: none; margin-top: 2px; }
+
+/* segmented control with sliding thumb */
+.mtnrm-seg { position: relative; display: grid; grid-template-columns: repeat(var(--n), 1fr); margin: 14px 0; padding: 4px; border-radius: 14px; background: var(--mt-sunken); }
+.mtnrm-seg-thumb { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / var(--n)); border-radius: 11px; background: var(--mt-card);
+  box-shadow: 0 1px 3px rgba(12,25,40,.12), 0 4px 12px rgba(12,25,40,.08); transform: translateX(calc(var(--i) * 100%)); transition: transform .22s cubic-bezier(.2,.8,.2,1); }
+.mtnrm-seg-btn { position: relative; z-index: 1; height: 38px; border: none; background: none; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--mt-mute); cursor: pointer;
+  border-radius: 11px; -webkit-tap-highlight-color: transparent; transition: color .18s ease; }
+.mtnrm-seg-btn.is-on { color: var(--mt-ink); }
+
+/* lettered sections */
+.mtnrm-fields { display: flex; flex-direction: column; gap: 12px; animation: mt-fade .28s ease both; }
+.mtnrm-field { padding: 14px 14px 12px; }
+.mtnrm-field-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.mtnrm-letter { width: 30px; height: 30px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; letter-spacing: 0; }
+.mtnrm-field-label { flex: 1; font-size: 14.5px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.01em; }
+.mtnrm-count { font-size: 11px; font-weight: 600; color: var(--mt-faint); }
+.mtnrm-field textarea { width: 100%; border: 1px solid transparent; border-radius: 12px; background: transparent; padding: 8px 10px; margin: 0 -10px; width: calc(100% + 20px);
+  font-family: inherit; font-size: 14.5px; line-height: 1.55; color: var(--mt-ink); resize: none; outline: none; overflow: hidden; transition: background .14s ease, border-color .14s ease; }
+.mtnrm-field textarea:focus { background: var(--mt-sunken); border-color: var(--mt-line); }
+
+/* transcript */
+.mtnrm-transcript-toggle { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 14px; padding: 12px 14px; border-radius: 16px; text-align: left;
+  border: 1px dashed var(--mt-line); background: var(--mt-card); color: var(--mt-ink); font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mtnrm-transcript-toggle.is-open { border-style: solid; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; }
+.mtnrm-transcript-toggle .mt-ti { flex: none; width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: var(--mt-accent-soft); color: var(--mt-accent-ink); }
+.mtnrm-transcript-toggle small { display: block; font-size: 11.5px; font-weight: 500; color: var(--mt-mute); margin-top: 1px; }
+.mtnrm-transcript-toggle > iconify-icon, .mtnrm-transcript-toggle > svg { color: var(--mt-faint); }
+.mtnrm-transcript { margin-top: 6px; border-top-left-radius: 6px; border-top-right-radius: 6px; display: flex; flex-direction: column; gap: 12px; }
+.mtnrm-turn { display: flex; gap: 10px; }
+.mtnrm-turn-t { flex: none; width: 38px; padding-top: 2px; font-size: 11px; font-weight: 600; color: var(--mt-faint); font-variant-numeric: tabular-nums; }
+.mtnrm-turn-who { font-size: 11px; font-weight: 700; color: var(--mt-mute); margin-bottom: 2px; }
+.mtnrm-turn.patient .mtnrm-turn-who { color: var(--mt-accent-ink); }
+.mtnrm-turn-text { font-size: 13.5px; line-height: 1.45; color: var(--mt-ink); }
+
+/* discard sheet */
+.mtnrm-scrim { position: absolute; inset: 0; z-index: 30; background: rgba(12,25,40,.45); display: flex; align-items: flex-end; animation: mt-fade .18s ease both; }
+.mtnrm-sheet { width: 100%; padding: 10px 20px calc(var(--mt-bottom-inset) + 16px); border-radius: 28px 28px 0 0; background: var(--mt-card); box-shadow: var(--mt-shadow-lift);
+  display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; animation: mtnrm-up .26s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes mtnrm-up { from { transform: translateY(40px); opacity: .6; } to { transform: none; opacity: 1; } }
+.mtnrm-sheet-grab { width: 40px; height: 5px; border-radius: 5px; background: var(--mt-line); margin-bottom: 10px; }
+.mtnrm-sheet-icon { width: 52px; height: 52px; border-radius: 50%; background: var(--mt-danger-bg); color: var(--mt-danger); display: flex; align-items: center; justify-content: center; }
+.mtnrm-sheet h3 { margin: 6px 0 0; font-size: 18px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.01em; }
+.mtnrm-sheet p { margin: 0 0 10px; font-size: 13.5px; line-height: 1.5; color: var(--mt-mute); }
+.mtnrm-sheet .mt-btn-ghost { height: 50px; border-radius: 16px; font-size: 15px; }

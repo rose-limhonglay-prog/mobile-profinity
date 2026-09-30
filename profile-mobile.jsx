@@ -14,7 +14,6 @@ function pmAskAva(prompt) {
   if (window.PFAva && window.PFAva.open) { window.PFAva.open(prompt); return; }
   goPM("LearningMobile.html?ava=" + encodeURIComponent(prompt || "1"));
 }
-const PM_WHY_AVA_PROMPT = "Why do you ask me to complete the four self-assessments, and how do my answers shape my Prosperity Spiral and the targets you suggest?";
 
 /* Standalone badge image with a hover/tap tooltip explaining what it means
    (mastery + skinfluencer badges aren't part of DSPM.VerificationSeals). */
@@ -1655,42 +1654,11 @@ function PMAssessHelpModal({ open, onClose }) {
     </div>);
 }
 
-/* "Why Ava asks" — the old intro card on the hub, now behind a small Ava
-   help pill. Details + an Ask Ava CTA that redirects to Ava's quick chat. */
-function PMWhyAvaModal({ open, onClose }) {
-  usePMEscClose(open, onClose);
-  if (!open) return null;
-  return (
-    <div className="pm-help-overlay" onClick={onClose}>
-      <div className="pm-help-card" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Why Ava asks">
-        <div className="pm-help-hd">
-          <span className="pm-help-icon"><DSPM.IconifyIcon name="lucide:sparkles" size={18} color="var(--ai-purple)" /></span>
-          <h3>Why Ava asks</h3>
-          <button type="button" className="pm-help-x" aria-label="Close" onClick={onClose}>
-            <DSPM.IconifyIcon name="lucide:x" size={20} color="var(--gray-500)" />
-          </button>
-        </div>
-        <div className="pm-help-body">
-          <p>Your answers set your Prosperity Spiral and shape every target Ava suggests.</p>
-          <p>Answer <b>one</b> pillar to start tracking your goals — the rest can wait. Four short assessments, about 3 minutes each.</p>
-          <div className="pm-help-chips">
-            <span><DSPM.IconifyIcon name="lucide:lock" size={12} color="var(--ai-purple)" />Private to you</span>
-            <span><DSPM.IconifyIcon name="lucide:refresh-cw" size={12} color="var(--ai-purple)" />Retake anytime</span>
-          </div>
-          <button type="button" className="pm-help-coach pf-coach-link" onClick={() => { onClose(); pmAskAva(PM_WHY_AVA_PROMPT); }}>
-            <DSPM.IconifyIcon name="lucide:sparkles" size={14} color="var(--ai-purple)" />Ask Ava
-          </button>
-        </div>
-      </div>
-    </div>);
-}
-
 function PMAssessHub({ assessState, onOpenAssess, onClose }) {
   const [helpOpen, setHelpOpen] = useStatePM(false);
-  const [whyOpen, setWhyOpen] = useStatePM(false);
   /* Esc closes the topmost sheet only — while an explainer is open, the
      hub's own Esc handler stands down so one keypress doesn't shut both. */
-  usePMEscClose(!helpOpen && !whyOpen, onClose);
+  usePMEscClose(!helpOpen, onClose);
   return (
     <div className="pm-wiz-overlay" role="dialog" aria-modal="true" aria-label="Get to know you">
       <div className="pm-wiz-card">
@@ -1707,10 +1675,6 @@ function PMAssessHub({ assessState, onOpenAssess, onClose }) {
           </button>
         </div>
         <div className="pm-wiz-body pm-hub-body">
-          <button type="button" className="pm-hub-why" aria-haspopup="dialog" onClick={() => setWhyOpen(true)}>
-            <DSPM.IconifyIcon name="lucide:sparkles" size={17} color="#fff" />
-            <span className="pm-hub-why-tx">Why Ava asks</span>
-          </button>
           <div className="pm-hub-grid">
             {PM_ASSESS_ORDER.map((key) =>
             <PMAssessHubTile key={key} assessKey={key} def={pmAssessDef(key)} entry={assessState[key]} onOpen={onOpenAssess} />
@@ -1719,7 +1683,6 @@ function PMAssessHub({ assessState, onOpenAssess, onClose }) {
         </div>
       </div>
       <PMAssessHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
-      <PMWhyAvaModal open={whyOpen} onClose={() => setWhyOpen(false)} />
     </div>);
 }
 

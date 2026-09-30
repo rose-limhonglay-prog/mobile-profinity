@@ -57,6 +57,8 @@ const EVENTS_LIST = [
     date: "June 12, 2026", time: "21:00 BST", primary: false, state: "attending", going: "212", membersOnly: true },
   { id: "tl1", title: "Technique Library Webinar", host: "Dr Tim Pearce", banner: null,
     date: "September 24, 2026", time: "20:00 BST", primary: false, state: "upcoming", going: "96", membersOnly: true },
+  { id: "tl2", title: "Live Replay Technique Library Webinar", host: "Dr Tim Pearce", banner: null,
+    date: "October 4, 2026", time: "19:00 BST", primary: false, state: "upcoming", going: "64", membersOnly: true },
   /* Example Zoom-link event: joined in the Zoom app rather than the in-app
      live stage, so the detail page shows a Zoom meeting card (link, ID,
      passcode) and the calendar entry carries the join URL as its location. */
@@ -73,8 +75,6 @@ const EVENTS_LIST = [
       { icon: "lucide:video", t: "Zoom Meeting" },
       { icon: "lucide:star", t: "Members Event" },
     ] },
-  { id: "tl2", title: "Live Replay Technique Library Webinar", host: "Dr Tim Pearce", banner: null,
-    date: "October 4, 2026", time: "19:00 BST", primary: false, state: "upcoming", going: "64", membersOnly: true },
   { id: "ht1", title: "High Ticket Webinar", host: "Dr Tim Pearce", banner: null,
     date: "October 15, 2026", time: "20:00 BST", primary: false, state: "upcoming", going: "410", membersOnly: false },
   { id: "tl3", title: "Live Replay Technique Library Webinar", host: "Dr Tim Pearce", banner: null,
@@ -269,14 +269,20 @@ function EwStatusPill({ st }) {
   return <span className="ev-dotstat off"><span className="d" />Not added</span>;
 }
 
-function EwStatusBtn({ e, st }) {
+function EwStatusBtn({ e, st, onCal }) {
   if (st.registered) return (
     <span className="ev-attpill"><DSEW.IconifyIcon name="lucide:check-circle-2" size={16} color="var(--success)" />Attending</span>
   );
   return (
     <button className={"ev-statusbtn" + (st.calendar ? " done" : "")}
       aria-pressed={st.calendar}
-      onClick={(ev) => { ev.stopPropagation(); ewMark(e.id, { calendar: !st.calendar }); }}>
+      onClick={(ev) => {
+        ev.stopPropagation();
+        /* Not yet added → open the calendar picker (Google / Apple / Outlook / .ics);
+           already added → tapping again removes it. */
+        if (!st.calendar && onCal) { onCal(e); return; }
+        ewMark(e.id, { calendar: !st.calendar });
+      }}>
       <DSEW.IconifyIcon name={st.calendar ? "lucide:calendar-check" : "lucide:calendar-plus"} size={16} color={st.calendar ? "var(--success)" : "var(--brand-navy)"} />
       {st.calendar ? "Added to calendar" : "Add to calendar"}
     </button>
@@ -344,6 +350,7 @@ function EwCalendar({ onOpen, cur, setCur }) {
 /* ---- screen 1a: events list ---- */
 function EventsList({ onBack, onOpen, view, setView, cur, setCur }) {
   const statusMap = useEwStatus();
+  const [calFor, setCalFor] = useStateEW(null);
   return (
     <div className="ev-screen" data-screen-label="Upcoming Events">
       <header className="ev-head">
@@ -395,11 +402,12 @@ function EventsList({ onBack, onOpen, view, setView, cur, setCur }) {
               <button className={"ev-cta" + (i === 0 ? "" : " ghost")} onClick={(ev) => { ev.stopPropagation(); onOpen(e); }}>
                 View Event<DSEW.IconifyIcon name="lucide:arrow-right" size={17} color={i === 0 ? "#fff" : "var(--brand-navy)"} />
               </button>
-              <EwStatusBtn e={e} st={ewStatusOf(e, statusMap)} />
+              <EwStatusBtn e={e} st={ewStatusOf(e, statusMap)} onCal={setCalFor} />
             </div>
           </div>);
         })}
       </div>
+      {calFor && <CalendarSheet event={calFor} onClose={() => setCalFor(null)} onAdded={() => ewMark(calFor.id, { calendar: true })} />}
     </div>
   );
 }

@@ -5785,53 +5785,10 @@ function HostRoomSheetDM({
   }), "Start room")));
 }
 
-/* ---- settings (gear) ---- */
-function ConfSettingsSheetDM({
-  open,
-  onClose,
-  settings,
-  onChange
-}) {
-  const rows = [{
-    key: "noise",
-    label: "Noise suppression",
-    sub: "Filter clinic background noise from your mic"
-  }, {
-    key: "joinMuted",
-    label: "Join rooms muted",
-    sub: "Turn your mic on when you're ready to speak"
-  }, {
-    key: "chime",
-    label: "Join & leave chimes",
-    sub: "A soft tone when people come and go"
-  }];
-  return /*#__PURE__*/React.createElement(SheetDM, {
-    open: open,
-    onClose: onClose,
-    label: "Conference settings",
-    title: "Conference settings"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "dm-vc-settings"
-  }, rows.map(r => /*#__PURE__*/React.createElement("div", {
-    key: r.key,
-    className: "dm-vc-setrow"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "dm-vc-setrow-main"
-  }, /*#__PURE__*/React.createElement("b", null, r.label), /*#__PURE__*/React.createElement("span", null, r.sub)), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    role: "switch",
-    "aria-checked": !!settings[r.key],
-    "aria-label": r.label,
-    className: "dm-vc-switch" + (settings[r.key] ? " on" : ""),
-    onClick: () => onChange({
-      ...settings,
-      [r.key]: !settings[r.key]
-    })
-  }, /*#__PURE__*/React.createElement("i", null))))), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "dm-sheet-cancel",
-    onClick: onClose
-  }, "Done"));
+/* ---- settings (gear) — opens the Conference Settings page ---- */
+function confSettingsUrlDM() {
+  const ret = (DM_WEB ? "MessagesWeb.html" : "Messages.html") + "?tab=conference";
+  return (DM_WEB ? "ConferenceSettingsWeb.html" : "ConferenceSettings.html") + "?ret=" + encodeURIComponent(ret);
 }
 
 /* desktop right pane when the Conference tab has nothing selected */
@@ -6290,16 +6247,10 @@ function MessagesAppDM() {
   const call = useVoiceCallDM();
   const [rooms, setRooms] = useStateDM(loadRoomsDM);
   const [hostOpen, setHostOpen] = useStateDM(null); // { preset? } while the Host a room sheet is up
-  const [confSettingsOpen, setConfSettingsOpen] = useStateDM(false);
-  const [confSettings, setConfSettings] = useStateDM(loadConfSettingsDM);
+  const confSettings = loadConfSettingsDM(); // written by ConferenceSettings(.Web).html
   const [reminders, setReminders] = useStateDM({});
   const [peopleOpen, setPeopleOpen] = useStateDM(false); // mobile participants sheet
   useEffectDM(() => saveRoomsDM(rooms), [rooms]);
-  useEffectDM(() => {
-    try {
-      localStorage.setItem(CONF_SETTINGS_KEY_DM, JSON.stringify(confSettings));
-    } catch (e) {}
-  }, [confSettings]);
   useEffectDM(() => {
     if (route.name !== "thread") setThreadSearch(false);
   }, [route.name, route.id]);
@@ -6878,7 +6829,7 @@ function MessagesAppDM() {
       selectedId: route.name === "conf" ? route.id : null,
       onOpen: openConf,
       onHost: () => setHostOpen({}),
-      onSettings: () => setConfSettingsOpen(true),
+      onSettings: () => goDM(confSettingsUrlDM()),
       onScroll: onScroll
     });
     if (t === "menu") return /*#__PURE__*/React.createElement(MenuViewDM, {
@@ -7102,11 +7053,6 @@ function MessagesAppDM() {
     preset: hostOpen && hostOpen.preset,
     onClose: () => setHostOpen(null),
     onCreate: createRoom
-  }), /*#__PURE__*/React.createElement(ConfSettingsSheetDM, {
-    open: confSettingsOpen,
-    onClose: () => setConfSettingsOpen(false),
-    settings: confSettings,
-    onChange: setConfSettings
   }), /*#__PURE__*/React.createElement(SheetDM, {
     open: peopleOpen && !!confSel,
     onClose: () => setPeopleOpen(false),

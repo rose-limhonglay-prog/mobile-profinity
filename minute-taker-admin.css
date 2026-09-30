@@ -1,0 +1,90 @@
+/* ===========================================================================
+   PROfinity — Minute Taker · Admin Dashboard
+   Classes prefixed mtad- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--surface-page); -webkit-font-smoothing: antialiased; }
+
+.mtad-shell { display: flex; min-height: 100vh; background: var(--surface-page);
+  font-family: var(--font-sans); color: var(--text-primary); }
+.mtad-shell ::-webkit-scrollbar { width: 10px; height: 10px; }
+.mtad-shell ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 8px; border: 2px solid var(--gray-50); }
+
+.mtad-sidebar { width: 248px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--border-default);
+  padding: 22px 16px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0;
+  align-self: flex-start; height: 100vh; overflow-y: auto; }
+.mtad-logo { display: flex; align-items: center; gap: 10px; padding: 2px 8px 22px; font-size: 19px; font-weight: 700; color: var(--ai-purple); }
+.mtad-logo-icon { font-size: 22px; }
+.mtad-navitem { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px;
+  color: var(--gray-600); font-weight: 500; font-size: 15px; cursor: pointer; border: none; background: none;
+  width: 100%; text-align: left; font-family: inherit; }
+.mtad-navitem iconify-icon { font-size: 20px; flex-shrink: 0; }
+.mtad-navitem:hover { background: var(--gray-50); color: var(--brand-navy); }
+.mtad-navitem.is-active { background: var(--ai-purple); color: #fff; font-weight: 600; }
+.mtad-nav-scope { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--gray-450); padding: 4px 14px 8px; }
+.mtad-navitem-back { color: var(--ai-purple); margin-bottom: 10px; border-bottom: 1px solid var(--border-default);
+  border-radius: 10px 10px 0 0; padding-bottom: 16px; }
+
+.mtad-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mtad-header { display: flex; align-items: center; gap: 22px; padding: 16px 32px; border-bottom: 1px solid var(--border-default);
+  background: var(--white); position: sticky; top: 0; z-index: 5; }
+.mtad-header-title { font-size: 16px; font-weight: 600; color: var(--brand-navy); }
+.mtad-spacer { flex: 1; }
+.mtad-user { text-align: right; line-height: 1.25; margin-left: 6px; }
+.mtad-user-name { font-weight: 600; font-size: 15px; color: var(--brand-navy); }
+.mtad-user-role { font-size: 13px; color: var(--gray-500); }
+.mtad-user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+
+.mtad-view { padding: 28px 32px; display: flex; flex-direction: column; gap: 20px; }
+.mtad-page-head h1 { margin: 0 0 6px; font-size: 26px; font-weight: 700; color: var(--brand-navy); }
+.mtad-page-head p { margin: 0; font-size: 14.5px; color: var(--gray-500); }
+
+.mtad-status-banner { display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  background: var(--info-bg); border: 1px solid #bfe3fb; border-radius: 14px; padding: 18px 22px; }
+.mtad-status-banner.is-halted { background: var(--error-bg); border-color: #f3c6cb; }
+.mtad-status-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; color: var(--info); margin-bottom: 4px; }
+.mtad-status-banner.is-halted .mtad-status-title { color: var(--error); }
+.mtad-status-banner p { margin: 0; font-size: 13.5px; color: var(--gray-600); max-width: 620px; }
+.mtad-global-toggle { display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 700; color: var(--gray-700); flex-shrink: 0; }
+
+.mtad-toggle { width: 44px; height: 26px; border-radius: 999px; border: none; background: var(--gray-300);
+  position: relative; cursor: pointer; flex-shrink: 0; transition: background .15s ease; }
+.mtad-toggle.is-on { background: var(--ai-purple); }
+.mtad-toggle.is-disabled { opacity: .45; cursor: not-allowed; }
+.mtad-toggle-knob { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+  background: #fff; transition: transform .15s ease; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.mtad-toggle.is-on .mtad-toggle-knob { transform: translateX(18px); }
+
+.mtad-content-grid { display: grid; grid-template-columns: 1.7fr 1fr; gap: 20px; align-items: start; }
+.mtad-card { background: var(--white); border: 1px solid var(--border-default); border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(12,12,13,.05); padding: 20px; }
+.mtad-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.mtad-card-title-text { font-size: 16px; font-weight: 700; color: var(--brand-navy); }
+.mtad-count-tag { font-size: 12.5px; font-weight: 700; color: var(--gray-500); }
+
+.mtad-row-grid { display: grid; grid-template-columns: 1.5fr .9fr .8fr 1fr .7fr; align-items: center; gap: 8px; }
+.mtad-thead .mtad-th { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--gray-450); padding-bottom: 10px; }
+.mtad-trow { padding: 13px 0; border-bottom: 1px solid var(--border-default); font-size: 13.5px; }
+.mtad-trow:last-child { border-bottom: none; }
+.mtad-name-cell { font-weight: 700; color: var(--gray-900); }
+.mtad-muted { color: var(--gray-500); }
+.mtad-status-pill { display: inline-flex; width: fit-content; padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.mtad-status-pill.success { background: var(--success-bg); color: var(--success); }
+.mtad-status-pill.danger { background: var(--error-bg); color: var(--error); }
+
+.mtad-audit-list { display: flex; flex-direction: column; gap: 14px; }
+.mtad-audit-item { border-bottom: 1px solid var(--border-default); padding-bottom: 12px; }
+.mtad-audit-item:last-child { border-bottom: none; padding-bottom: 0; }
+.mtad-audit-title { font-size: 13.5px; font-weight: 700; color: var(--gray-900); }
+.mtad-audit-detail { font-size: 12.5px; color: var(--gray-500); margin-top: 2px; }
+.mtad-audit-when { font-size: 11.5px; color: var(--gray-400); margin-top: 3px; }
+
+@media (max-width: 1080px) {
+  .mtad-content-grid { grid-template-columns: 1fr; }
+  .mtad-row-grid { grid-template-columns: 1fr 1fr; row-gap: 6px; }
+  .mtad-thead { display: none; }
+  .mtad-status-banner { flex-direction: column; align-items: flex-start; }
+}

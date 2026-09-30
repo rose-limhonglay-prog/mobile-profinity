@@ -1,0 +1,116 @@
+/* ===========================================================================
+   PROfinity — Minute Taker · Patient Context & Profile
+   Classes prefixed mtp- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--surface-page); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+.mtp-shell { display: flex; min-height: 100vh; background: var(--surface-page);
+  font-family: var(--font-sans); color: var(--text-primary); }
+.mtp-shell input::placeholder, .mtp-shell textarea::placeholder { color: var(--gray-400); }
+.mtp-shell ::-webkit-scrollbar { width: 10px; height: 10px; }
+.mtp-shell ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 8px; border: 2px solid var(--gray-50); }
+
+.mtp-sidebar { width: 248px; flex-shrink: 0; background: var(--white);
+  border-right: 1px solid var(--border-default); padding: 22px 16px;
+  display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0;
+  align-self: flex-start; height: 100vh; overflow-y: auto; }
+.mtp-logo { display: flex; align-items: center; gap: 10px; padding: 2px 8px 22px;
+  font-size: 19px; font-weight: 700; color: var(--ai-purple); }
+.mtp-logo-icon { font-size: 22px; }
+.mtp-navitem { display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border-radius: 10px; color: var(--gray-600); font-weight: 500; font-size: 15px;
+  cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: inherit; }
+.mtp-navitem iconify-icon { font-size: 20px; flex-shrink: 0; }
+.mtp-navitem:hover { background: var(--gray-50); color: var(--brand-navy); }
+.mtp-navitem.is-active { background: var(--ai-purple); color: #fff; font-weight: 600; }
+
+.mtp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mtp-header { display: flex; align-items: center; gap: 22px; padding: 16px 32px;
+  border-bottom: 1px solid var(--border-default); background: var(--white); position: sticky; top: 0; z-index: 5; }
+.mtp-header-title { font-size: 16px; font-weight: 600; color: var(--brand-navy); }
+.mtp-spacer { flex: 1; }
+.mtp-user { text-align: right; line-height: 1.25; margin-left: 6px; }
+.mtp-user-name { font-weight: 600; font-size: 15px; color: var(--brand-navy); }
+.mtp-user-role { font-size: 13px; color: var(--gray-500); }
+.mtp-user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+
+.mtp-view { padding: 32px; display: flex; flex-direction: column; gap: 16px; max-width: 1180px; position: relative; }
+
+.mtp-back { display: flex; align-items: center; gap: 8px; width: fit-content; border: none; background: none;
+  color: var(--gray-500); font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; padding: 0; }
+.mtp-back:hover { color: var(--brand-navy); }
+
+.mtp-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.mtp-patient-idtag { font-size: 12.5px; font-weight: 600; color: var(--gray-450); letter-spacing: .02em; }
+.mtp-page-head h1 { margin: 4px 0 0; font-size: 26px; font-weight: 700; color: var(--brand-navy); }
+.mtp-page-head-actions { display: flex; gap: 10px; flex-shrink: 0; }
+
+.mtp-btn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; padding: 0 20px;
+  border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; border: none; white-space: nowrap; }
+.mtp-btn-sm { height: 36px; padding: 0 14px; font-size: 13.5px; }
+.mtp-btn iconify-icon { font-size: 18px; }
+.mtp-btn-primary { background: var(--ai-purple); color: #fff; }
+.mtp-btn-primary:hover { background: var(--ai-purple-600); }
+.mtp-btn-primary:disabled { background: var(--gray-200); color: var(--gray-450); cursor: not-allowed; }
+.mtp-btn-ghost { background: var(--white); color: var(--gray-800); border: 1px solid var(--border-default); }
+.mtp-btn-ghost:hover { background: var(--gray-50); border-color: var(--border-strong); }
+
+.mtp-grid { display: grid; grid-template-columns: 1fr 1.25fr; gap: 20px; align-items: start; margin-top: 8px; }
+.mtp-side-col { display: flex; flex-direction: column; gap: 20px; }
+
+.mtp-card { background: var(--white); border: 1px solid var(--border-default); border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(12, 12, 13, .05); padding: 22px; }
+.mtp-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.mtp-card-title-text { font-size: 17px; font-weight: 700; color: var(--brand-navy); }
+
+.mtp-patient-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.mtp-patient-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--ai-purple-100);
+  color: var(--ai-purple); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+.mtp-patient-name { font-size: 19px; font-weight: 700; color: var(--gray-900); }
+.mtp-patient-meta { font-size: 13.5px; color: var(--gray-500); }
+
+.mtp-section-label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--gray-450); margin-bottom: 12px; }
+
+.mtp-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.mtp-field:last-child { margin-bottom: 0; }
+.mtp-field span { font-size: 13px; font-weight: 600; color: var(--gray-600); }
+.mtp-field input { height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border-default);
+  background: var(--gray-50); font-family: inherit; font-size: 14px; color: var(--text-primary); outline: none; }
+.mtp-field input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--focus-ring); background: var(--white); }
+.mtp-field select.mtp-select { height: 44px; padding: 0 14px; border-radius: 10px; border: 1px solid var(--border-default);
+  background: var(--gray-50); font-family: inherit; font-size: 14px; font-weight: 600; color: var(--text-primary); outline: none; cursor: pointer; }
+.mtp-field select.mtp-select:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--focus-ring); background: var(--white); }
+.mtp-consent-card { border: 1px solid var(--ai-purple-200, var(--border-default)); background: var(--ai-purple-50, var(--gray-50)); }
+.mtp-consent-checkbox { color: var(--gray-800); align-items: flex-start; }
+.mtp-consent-checkbox input { margin-top: 2px; flex-shrink: 0; }
+
+.mtp-snapshot-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.mtp-snapshot-label { font-size: 12.5px; font-weight: 700; color: var(--gray-500); margin-bottom: 10px; }
+.mtp-pill-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.mtp-pill { display: inline-flex; padding: 6px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 700; }
+.mtp-pill-danger { background: var(--error-bg); color: var(--error); }
+.mtp-pill-success { background: var(--success-bg); color: var(--success); }
+.mtp-pill-neutral { background: var(--gray-100); color: var(--gray-600); }
+
+.mtp-primer-hint { margin: 0 0 12px; font-size: 13.5px; color: var(--gray-500); }
+.mtp-primer-box { width: 100%; border-radius: 12px; border: 1px solid var(--border-default); background: var(--gray-50);
+  font-family: inherit; font-size: 14px; color: var(--text-primary); padding: 14px; resize: vertical; outline: none; line-height: 1.5; }
+.mtp-primer-box:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--focus-ring); background: var(--white); }
+.mtp-checkbox { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 13.5px; font-weight: 600; color: var(--ai-purple); cursor: pointer; }
+.mtp-checkbox input { width: 16px; height: 16px; accent-color: var(--ai-purple); }
+
+.mtp-toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--gray-900);
+  color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  animation: mtp-toast-in .2s ease; z-index: 20; }
+@keyframes mtp-toast-in { from { opacity: 0; transform: translate(-50%, 8px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+@media (max-width: 1000px) {
+  .mtp-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .mtp-snapshot-cols { grid-template-columns: 1fr; }
+  .mtp-page-head { flex-direction: column; }
+}

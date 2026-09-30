@@ -183,12 +183,9 @@
 
 /* hub grid — two columns on desktop (wider dialog) */
 .pw-hub-body{padding-top:20px}
-/* "Why Ava asks" — solid button (opens the explainer) beside "How it works" */
+/* "How it works" link row above the hub grid */
 .pw-hub-helps{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;margin-bottom:18px}
 .pw-hub-helps .pw-hub-help{margin:0}
-.pw-hub-why{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:10px 20px;border:none;border-radius:var(--r-md);
-  background:var(--ai-purple,#4A40D6);cursor:pointer;font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:14.5px;color:#fff;transition:filter .15s ease}
-.pw-hub-why:hover{filter:brightness(1.08)}
 .pw-help-chips{display:flex;flex-wrap:wrap;gap:6px;margin:-7px 0 20px}
 .pw-help-chips span{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:100px;background:#F4F3FF;
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px;color:#4A40D6}

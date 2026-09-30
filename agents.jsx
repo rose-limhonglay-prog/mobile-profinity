@@ -1,74 +1,17 @@
 /* ===========================================================================
-   PROfinity Academy — Agents page
-   Composed from the bound Profinity Design System bundle (AgentHero + AgentCard).
+   PROfinity Academy — Agents page (web)
+   Editorial catalogue of Profinity's AI agents: serif header, two "available
+   now" spotlights (Assess Pro + Ava), filterable card grid, how-it-works and a
+   suggest-an-agent card. Shared pieces come from agents-ui.jsx (PFAgentsUI)
+   and the catalogue from agents-data.js (PFAgents).
    =========================================================================== */
-const { useState: useStateA, useEffect: useEffectA } = React;
+const { useState: useStateA, useEffect: useEffectA, useMemo: useMemoA } = React;
 const DS = window.ProfinityDesignSystem_c2b5cc;
-const { TopNav, AgentHero, AgentCard } = DS;
+const { TopNav } = DS;
+const PFA_W = window.PFAgents;
+const UI = window.PFAgentsUI;
 
 const ME = { name: "Katy Wilson", role: "Nurse Practitioner", avatar: "assets/avatar-katy.jpg" };
-
-const AGENTS = [
-  {
-    icon: "assets/agent-assesspro.png", badge: "Included in Artcodes",
-    title: "Assess Pro", locked: true,
-    description: "A cutting-edge tool for detailed facial analysis, emotion recognition, and identity verification. Perfect for security, healthcare, and personalised marketing applications.",
-    status: "", cta: "Learn More", ctaIcon: "lucide:arrow-right", available: true,
-  },
-  {
-    icon: "assets/avatar-drtim.png", badge: "Included in Premium",
-    title: "Profinity Coach Agent",
-    description: "A versatile baseline assistant for general inquiries, scheduling, and basic data retrieval tasks. Perfect for getting started with automation.",
-  },
-  {
-    badge: "Included in Premium",
-    title: "Lumina Patients Receptionist",
-    description: "An intelligent assistant specialised in data visualisation, statistical analysis, and generating insightful reports. Ideal for making informed decisions based on data.",
-  },
-  {
-    badge: "Included in Premium",
-    title: "Treatment Plan Generator",
-    description: "An advanced tool for optimising schedules, meetings, and reminders. Ideal for users looking to enhance their organisational skills.",
-  },
-  {
-    badge: "Included in Premium",
-    title: "Minute Taker",
-    description: "An advanced tool for optimising schedules, meetings, and reminders. Ideal for users looking to enhance their organisational skills.",
-  },
-  {
-    icon: "assets/avatar-katy.jpg", badge: "Included in Premium",
-    title: "Profinity Marketing Assistant",
-    description: "An advanced AI tool focused on enhancing creativity for design projects, offering suggestions for layouts, colour palettes, and typography.",
-  },
-  {
-    badge: "Included in Premium",
-    title: "AI Phone Receptionist",
-    description: "An advanced AI tool designed for comprehensive data interpretation, insightful research, and proactive strategy development. Ideal for seasoned experts seeking data-driven results.",
-    waitlisted: true,
-  },
-  {
-    badge: "Included in Premium",
-    title: "Finance",
-    description: "An intelligent chatbot designed to handle customer inquiries, complaints, and feedback efficiently. Perfect for businesses seeking to improve their customer service.",
-  },
-];
-
-function AgentTile({ a }) {
-  const [waitlisted, setWaitlisted] = useStateA(!!a.waitlisted);
-  if (a.available) {
-    return <AgentCard {...a} onCta={() => {}} />;
-  }
-  return (
-    <AgentCard
-      icon={a.icon} badge={a.badge} title={a.title} description={a.description}
-      status="Coming Soon"
-      cta={waitlisted ? "You're On The Waitlist" : "Notify Me"}
-      ctaIcon={waitlisted ? "lucide:check" : "lucide:bell"}
-      ctaDisabled={waitlisted}
-      onCta={() => setWaitlisted(true)}
-    />
-  );
-}
 
 function pfTagActiveNav(activeLabel) {
   document.querySelectorAll("#pf-root nav > button").forEach((b) => {
@@ -88,19 +31,63 @@ function navigate(label) {
   if (u) (window.pfGo || function (x) { window.location.href = x; })(u);
 }
 
+/* Order: Ava, Minute Taker, Assess Pro, then the rest (user, 2026-09-29) */
+function orderAgents(agents) {
+  const FIRST = ["coach", "minutes", "assess-pro"];
+  const head = FIRST.map((id) => agents.find((a) => a.id === id)).filter(Boolean);
+  return head.concat(agents.filter((a) => FIRST.indexOf(a.id) === -1));
+}
+
 function AgentsApp() {
   useEffectA(() => pfTagActiveNav("Agent"));
+  const wl = UI.useWaitlistAX();
+  const toast = UI.useToastAX();
+  const [detail, setDetail] = useStateA(null); // { agent, mode }
+
+  const agents = PFA_W.AGENTS;
+  const list = orderAgents(agents);
+
+  const open = (agent, mode) => setDetail({ agent, mode: mode || "info" });
+  const onJoin = (a) => toast.show("We'll email you the day " + a.name + " goes live.");
+
+  // waitlist joins anywhere on the page surface a toast
+  useEffectA(() => {
+    const h = (e) => {
+      const ids = (e.detail && e.detail.ids) || [];
+      const last = ids[ids.length - 1];
+      if (last && wl.ids.indexOf(last) === -1) { const a = PFA_W.byId(last); if (a) onJoin(a); }
+    };
+    window.addEventListener("pf:agent-waitlist", h);
+    return () => window.removeEventListener("pf:agent-waitlist", h);
+  }, [wl.ids]);
+
   return (
-    <div className="app wa-screen" style={{ "--action-primary": "var(--ai-purple)", "--action-primary-hover": "var(--ai-purple-hover)" }}>
+    <div className="app wa-screen agx" style={{ "--action-primary": "var(--ai-purple)", "--action-primary-hover": "var(--ai-purple-600)" }}>
       <TopNav active="Agent" user={ME} logoSrc="assets/profinity-icon-purple-gold.png"
         onNavigate={navigate}
         style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />
-      <div className="agent-hero-wrap">
-        <AgentHero />
-      </div>
-      <div className="agents-grid" data-screen-label="Agents catalogue">
-        {AGENTS.map((a, i) => <AgentTile key={i} a={a} />)}
-      </div>
+
+      <main className="agw-wrap" data-screen-label="Agents catalogue">
+        <header className="agw-head">
+          <div className="agw-head-tx">
+            <span className="agx-eyebrow">Profinity Agents</span>
+            <h1 className="agx-h1">Your clinic's <em>AI team.</em></h1>
+            <p className="agx-lede">Specialised assistants that answer the phone, reply to patients, write the plans and read the numbers, so you can stay in the treatment room. Three are live today. The rest are on their way.</p>
+          </div>
+        </header>
+
+        <section className="agw-cat" aria-label="All agents">
+          <div className="agw-grid">
+            {list.map((a) => <UI.AgentCardAX key={a.id} agent={a} wl={wl} onOpen={open} />)}
+          </div>
+        </section>
+
+        <div className="agw-how"><UI.HowItWorks /></div>
+        <div className="agw-request"><UI.RequestCard /></div>
+      </main>
+
+      <UI.AgentDetail agent={detail && detail.agent} mode={detail && detail.mode} wl={wl} onClose={() => setDetail(null)} />
+      {toast.node}
     </div>
   );
 }

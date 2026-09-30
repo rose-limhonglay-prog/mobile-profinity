@@ -1,0 +1,49 @@
+/* ===========================================================================
+   PROfinity — Minute Taker · Patient Consent Form
+   Classes prefixed mtc- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--surface-page); -webkit-font-smoothing: antialiased; }
+
+.mtc-screen { min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 40px 20px; font-family: var(--font-sans); color: var(--text-primary); }
+
+.mtc-card { width: 100%; max-width: 560px; background: var(--white); border: 1px solid var(--border-default);
+  border-radius: 20px; box-shadow: 0 8px 32px rgba(12,12,13,.08); padding: 40px 36px; text-align: center; }
+
+.mtc-secure-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--info-bg); color: var(--info);
+  font-size: 12px; font-weight: 700; letter-spacing: .06em; padding: 6px 14px; border-radius: 999px; margin-bottom: 18px; }
+.mtc-secure-badge iconify-icon { font-size: 15px; }
+
+.mtc-card h1 { margin: 0 0 12px; font-size: 26px; font-weight: 700; color: var(--brand-navy); }
+.mtc-sub { margin: 0 0 26px; font-size: 14.5px; color: var(--gray-500); line-height: 1.5; }
+
+.mtc-sections { display: flex; flex-direction: column; gap: 14px; text-align: left; margin-bottom: 28px; }
+.mtc-section { display: flex; gap: 14px; background: var(--gray-50); border: 1px solid var(--border-default);
+  border-radius: 14px; padding: 16px 18px; }
+.mtc-section-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--ai-purple-100); color: var(--ai-purple);
+  display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.mtc-section-title { font-size: 15px; font-weight: 700; color: var(--gray-900); margin-bottom: 4px; }
+.mtc-section-body { font-size: 13.5px; color: var(--gray-500); line-height: 1.5; }
+
+.mtc-actions { display: flex; gap: 12px; }
+.mtc-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; height: 50px;
+  border-radius: 12px; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; border: none; }
+.mtc-btn-primary { background: var(--ai-purple); color: #fff; }
+.mtc-btn-primary:hover { background: var(--ai-purple-600); }
+.mtc-btn-ghost { background: var(--white); color: var(--gray-700); border: 1px solid var(--border-default); }
+.mtc-btn-ghost:hover { background: var(--gray-50); border-color: var(--border-strong); }
+
+.mtc-status { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 24px 0 8px; }
+.mtc-status p { margin: 0; font-size: 15px; font-weight: 600; color: var(--gray-600); }
+.mtc-status iconify-icon { font-size: 40px; color: var(--gray-400); }
+.mtc-status-success iconify-icon { color: var(--success); }
+.mtc-spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--gray-200);
+  border-top-color: var(--ai-purple); animation: mtc-spin .8s linear infinite; }
+@keyframes mtc-spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 480px) {
+  .mtc-card { padding: 30px 20px; }
+  .mtc-actions { flex-direction: column-reverse; }
+}

@@ -1,0 +1,86 @@
+/* ===========================================================================
+   PROfinity — Minute Taker (mobile) · Live Session
+   Builds on minute-taker-mobile.css (mt- atoms). Classes prefixed mtsem-.
+   =========================================================================== */
+.mtsem-rec { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 999px; background: var(--mt-danger-bg); color: var(--mt-danger);
+  font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mtsem-rec.is-paused { background: var(--mt-warn-bg); color: var(--mt-warn); }
+.mtsem-rec-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: mtsem-blink 1.1s ease-in-out infinite; }
+.mtsem-rec.is-paused .mtsem-rec-dot { animation: none; opacity: .6; }
+@keyframes mtsem-blink { 0%, 100% { opacity: 1; } 50% { opacity: .2; } }
+
+.mtsem-patient { flex: none; display: flex; align-items: center; gap: 10px; margin: 0 16px; padding: 10px 12px; border-radius: 16px; background: var(--mt-card);
+  border: 1px solid var(--mt-line); box-shadow: var(--mt-shadow); }
+.mtsem-pname { font-size: 14px; font-weight: 700; color: var(--mt-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mtsem-pmeta { font-size: 11.5px; color: var(--mt-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------------------------------------------------------------- ready */
+.mtsem-ready { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: 26px; }
+.mtsem-mic { position: relative; width: 168px; height: 168px; border: none; background: none; padding: 0; cursor: pointer; margin: 8px 0 12px; -webkit-tap-highlight-color: transparent;
+  display: flex; align-items: center; justify-content: center; }
+.mtsem-ring { position: absolute; inset: 0; border-radius: 50%; border: 1.5px solid rgba(108,99,255,.35); animation: mtsem-ripple 2.8s ease-out infinite; }
+.mtsem-ring.r2 { animation-delay: .9s; }
+.mtsem-ring.r3 { animation-delay: 1.8s; }
+@keyframes mtsem-ripple { 0% { transform: scale(.55); opacity: 0; } 30% { opacity: .9; } 100% { transform: scale(1.05); opacity: 0; } }
+.mtsem-mic-core { position: relative; width: 104px; height: 104px; border-radius: 50%; color: #fff; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(120% 120% at 30% 25%, #8B84FF 0%, var(--mt-accent) 45%, #4A40D6 100%);
+  box-shadow: 0 18px 40px rgba(108,99,255,.45), inset 0 1px 0 rgba(255,255,255,.35); transition: transform .14s ease; }
+.mtsem-mic:active .mtsem-mic-core { transform: scale(.94); }
+.mtsem-ready-title { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -.02em; color: var(--mt-ink); }
+.mtsem-ready-sub { margin: 8px 12px 0; font-size: 13.5px; line-height: 1.5; color: var(--mt-mute); max-width: 340px; }
+.mtsem-tips { list-style: none; margin: 22px 0 0; padding: 4px 0; width: 100%; display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.mtsem-tips li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 14px; background: var(--mt-card); border: 1px solid var(--mt-line);
+  font-size: 13.5px; font-weight: 500; color: var(--mt-ink-2); }
+.mtsem-tips .mt-ti { flex: none; width: 30px; height: 30px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: var(--mt-accent-soft); color: var(--mt-accent-ink); }
+.mtsem-primer { width: 100%; margin-top: 14px; padding: 14px 16px; border-radius: 16px; text-align: left; background: var(--mt-accent-soft); border: 1px solid rgba(108,99,255,.25); }
+.mtsem-primer .mt-eyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--mt-accent-ink); }
+.mtsem-primer p { margin: 8px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--mt-ink); }
+
+/* ---------------------------------------------------------------- live */
+.mtsem-wave-card { flex: none; margin: 12px 16px 0; padding: 14px 16px 12px; border-radius: 18px; background: var(--mt-card); border: 1px solid var(--mt-line); box-shadow: var(--mt-shadow); }
+.mtsem-wave { display: flex; align-items: center; justify-content: center; gap: 4px; height: 44px; }
+.mtsem-wave i { display: block; width: 4px; border-radius: 4px; background: linear-gradient(180deg, #8B84FF, var(--mt-accent)); transform-origin: center;
+  animation: mtsem-bar 1.2s ease-in-out infinite; }
+.mtsem-wave.is-paused i { animation-play-state: paused; transform: scaleY(.25); background: var(--mt-line); transition: transform .3s ease, background .3s ease; }
+@keyframes mtsem-bar { 0%, 100% { transform: scaleY(.35); } 50% { transform: scaleY(1); } }
+.mtsem-wave-label { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; font-size: 12px; font-weight: 600; color: var(--mt-mute); }
+.mtsem-live { width: 8px; height: 8px; border-radius: 50%; background: var(--mt-danger); box-shadow: 0 0 0 3px var(--mt-danger-bg); animation: mtsem-blink 1.1s ease-in-out infinite; }
+
+.mtsem-transcript { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 16px 0; display: flex; flex-direction: column; gap: 12px; scrollbar-width: none; }
+.mtsem-transcript::-webkit-scrollbar { width: 0; }
+.mtsem-meta { text-align: center; font-size: 11.5px; font-weight: 500; color: var(--mt-faint); }
+.mtsem-line { display: flex; align-items: flex-end; gap: 8px; }
+.mtsem-line.patient { flex-direction: row-reverse; }
+.mtsem-line-avatar { flex: none; width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+.mtsem-bubble { max-width: 80%; padding: 10px 13px; border-radius: 18px; background: var(--mt-card); border: 1px solid var(--mt-line); box-shadow: var(--mt-shadow); }
+.mtsem-line.clinician .mtsem-bubble { border-bottom-left-radius: 6px; }
+.mtsem-line.patient .mtsem-bubble { border-bottom-right-radius: 6px; background: var(--mt-accent-soft); border-color: transparent; }
+.mtsem-bubble-head { font-size: 11px; font-weight: 700; color: var(--mt-mute); margin-bottom: 3px; }
+.mtsem-line.patient .mtsem-bubble-head { color: var(--mt-accent-ink); }
+.mtsem-bubble-text { font-size: 14px; line-height: 1.45; color: var(--mt-ink); }
+.mtsem-typing { display: inline-flex; gap: 4px; padding: 10px 13px; border-radius: 18px; background: var(--mt-card); border: 1px solid var(--mt-line); width: fit-content; margin-left: 38px; }
+.mtsem-typing i { width: 6px; height: 6px; border-radius: 50%; background: var(--mt-faint); animation: mtsem-dot 1.2s ease-in-out infinite; }
+.mtsem-typing i:nth-child(2) { animation-delay: .15s; }
+.mtsem-typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes mtsem-dot { 0%, 60%, 100% { transform: translateY(0); opacity: .5; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+.mtsem-controls { display: flex; gap: 10px; }
+.mtsem-pause { height: 52px; border-radius: 16px; padding: 0 18px; font-size: 15px; }
+
+/* ---------------------------------------------------------------- ending overlay */
+.mtsem-overlay { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: rgba(245,244,250,.82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: mt-fade .2s ease both; }
+[data-theme="dark"] .mtsem-overlay { background: rgba(13,12,29,.82); }
+.mtsem-overlay-card { width: 100%; max-width: 320px; padding: 26px 22px 20px; border-radius: 24px; background: var(--mt-card); border: 1px solid var(--mt-line); box-shadow: var(--mt-shadow-lift);
+  display: flex; flex-direction: column; align-items: center; text-align: center; }
+.mtsem-spinner { position: relative; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--mt-accent-ink); background: var(--mt-accent-soft); }
+.mtsem-spinner::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 3px solid var(--mt-line-2); border-top-color: var(--mt-accent); animation: mt-spin .9s linear infinite; }
+.mtsem-overlay-card h3 { margin: 16px 0 0; font-size: 18px; font-weight: 700; letter-spacing: -.01em; color: var(--mt-ink); }
+.mtsem-overlay-card p { margin: 4px 0 0; font-size: 12.5px; color: var(--mt-mute); }
+.mtsem-steps { list-style: none; margin: 18px 0 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.mtsem-steps li { display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 600; color: var(--mt-faint); transition: color .2s ease; }
+.mtsem-steps li.is-active { color: var(--mt-ink); }
+.mtsem-steps li.is-done { color: var(--mt-ok); }
+.mtsem-step-dot { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--mt-line); display: inline-flex; align-items: center; justify-content: center; color: #fff; }
+.mtsem-steps li.is-active .mtsem-step-dot { border-color: var(--mt-accent); box-shadow: 0 0 0 3px rgba(108,99,255,.18); }
+.mtsem-steps li.is-done .mtsem-step-dot { background: var(--mt-ok); border-color: var(--mt-ok); }

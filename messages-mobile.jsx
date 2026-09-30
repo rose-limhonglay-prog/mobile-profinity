@@ -2493,23 +2493,10 @@ function HostRoomSheetDM({ open, onClose, onCreate, preset }) {
     </SheetDM>);
 }
 
-/* ---- settings (gear) ---- */
-function ConfSettingsSheetDM({ open, onClose, settings, onChange }) {
-  const rows = [
-    { key: "noise", label: "Noise suppression", sub: "Filter clinic background noise from your mic" },
-    { key: "joinMuted", label: "Join rooms muted", sub: "Turn your mic on when you're ready to speak" },
-    { key: "chime", label: "Join & leave chimes", sub: "A soft tone when people come and go" }];
-  return (
-    <SheetDM open={open} onClose={onClose} label="Conference settings" title="Conference settings">
-      <div className="dm-vc-settings">
-        {rows.map((r) =>
-          <div key={r.key} className="dm-vc-setrow">
-            <span className="dm-vc-setrow-main"><b>{r.label}</b><span>{r.sub}</span></span>
-            <button type="button" role="switch" aria-checked={!!settings[r.key]} aria-label={r.label} className={"dm-vc-switch" + (settings[r.key] ? " on" : "")} onClick={() => onChange({ ...settings, [r.key]: !settings[r.key] })}><i /></button>
-          </div>)}
-      </div>
-      <button type="button" className="dm-sheet-cancel" onClick={onClose}>Done</button>
-    </SheetDM>);
+/* ---- settings (gear) — opens the Conference Settings page ---- */
+function confSettingsUrlDM() {
+  const ret = (DM_WEB ? "MessagesWeb.html" : "Messages.html") + "?tab=conference";
+  return (DM_WEB ? "ConferenceSettingsWeb.html" : "ConferenceSettings.html") + "?ret=" + encodeURIComponent(ret);
 }
 
 /* desktop right pane when the Conference tab has nothing selected */
@@ -2722,12 +2709,10 @@ function MessagesAppDM() {
   const call = useVoiceCallDM();
   const [rooms, setRooms] = useStateDM(loadRoomsDM);
   const [hostOpen, setHostOpen] = useStateDM(null);            // { preset? } while the Host a room sheet is up
-  const [confSettingsOpen, setConfSettingsOpen] = useStateDM(false);
-  const [confSettings, setConfSettings] = useStateDM(loadConfSettingsDM);
+  const confSettings = loadConfSettingsDM(); // written by ConferenceSettings(.Web).html
   const [reminders, setReminders] = useStateDM({});
   const [peopleOpen, setPeopleOpen] = useStateDM(false);        // mobile participants sheet
   useEffectDM(() => saveRoomsDM(rooms), [rooms]);
-  useEffectDM(() => { try { localStorage.setItem(CONF_SETTINGS_KEY_DM, JSON.stringify(confSettings)); } catch (e) {} }, [confSettings]);
   useEffectDM(() => { if (route.name !== "thread") setThreadSearch(false); }, [route.name, route.id]);
   const pushSeq = useRefDM(0);
 
@@ -2931,7 +2916,7 @@ function MessagesAppDM() {
     if (name === "deleted") return <DeletedViewDM deleted={store.deleted} onBack={back} onRestore={restoreConv} onScroll={onScroll} />;
     if (t === "people") return <PeopleViewDM people={allPeople} onOpenThreadWith={(id) => { openThreadWith(id); setRoute((r) => ({ ...r, from: "people" })); }} onScroll={onScroll} />;
     if (t === "conference") return <ConferenceViewDM rooms={rooms} call={call} selectedId={route.name === "conf" ? route.id : null} onOpen={openConf}
-      onHost={() => setHostOpen({})} onSettings={() => setConfSettingsOpen(true)} onScroll={onScroll} />;
+      onHost={() => setHostOpen({})} onSettings={() => goDM(confSettingsUrlDM())} onScroll={onScroll} />;
     if (t === "menu") return <MenuViewDM counts={counts} onNav={(k) => setRoute({ name: k })} onScroll={onScroll} onTestPush={() => { setTab("chats"); setRoute({ name: "list" }); window.setTimeout(firePush, 350); }} />;
     return <ChatsViewDM convs={active} archivedCount={archived.length} requestsCount={store.requests.length}
       onOpen={(c) => openThread(c, "list")} onOpenPerson={(id) => openThreadWith(id)} onActions={setRowActions} onCompose={() => setRoute({ name: "compose" })}
@@ -3015,7 +3000,6 @@ function MessagesAppDM() {
 
         {/* voice conference sheets */}
         <HostRoomSheetDM open={!!hostOpen} preset={hostOpen && hostOpen.preset} onClose={() => setHostOpen(null)} onCreate={createRoom} />
-        <ConfSettingsSheetDM open={confSettingsOpen} onClose={() => setConfSettingsOpen(false)} settings={confSettings} onChange={setConfSettings} />
         <SheetDM open={peopleOpen && !!confSel} onClose={() => setPeopleOpen(false)} label="Participants" className="dm-sheet-tall dm-vc-peoplesheet">
           {confSel && <ConfParticipantsDM c={confSel} call={call} onClose={() => setPeopleOpen(false)} />}
         </SheetDM>

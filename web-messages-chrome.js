@@ -25,7 +25,7 @@
   var MESSAGES_URL = "MessagesWeb.html";
   var STORE_KEY = "pf-messages-v1";
   var SEED_UNREAD = 10; // sum of CONVERSATIONS_SEED_DM[].unread in messages-mobile.jsx
-  var BUNDLE = "messages-mobile.compiled.js?v=32";
+  var BUNDLE = "messages-mobile.compiled.js?v=33";
   var SHEETS = ["messages-mobile.css?v=31", "messages-web.css?v=5"];
 
   function go(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }

@@ -897,42 +897,11 @@ function PWAssessHelpModal({ open, onClose }) {
 
 }
 
-/* "Why Ava asks" — the old intro card on the hub, now behind a small Ava
-   help pill. Details + an Ask Ava CTA that redirects to Ava's quick chat. */
-function PWWhyAvaModal({ open, onClose }) {
-  usePWEscClose(open, onClose);
-  if (!open) return null;
-  return (
-    <div className="pw-modal-overlay" onClick={onClose}>
-      <div className="pw-modal-card pw-help-card" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Why Ava asks">
-        <div className="pw-help-hd">
-          <span className="pw-help-icon"><IconifyIconPW name="lucide:sparkles" size={18} color="var(--ai-purple)" /></span>
-          <h3>Why Ava asks</h3>
-          <button type="button" className="pw-help-x" aria-label="Close" onClick={onClose}>
-            <IconifyIconPW name="lucide:x" size={20} color="var(--gray-500)" />
-          </button>
-        </div>
-        <div className="pw-help-body">
-          <p>Your answers set your Prosperity Spiral and shape every target Ava suggests.</p>
-          <p>Answer <b>one</b> pillar to start tracking your goals — the rest can wait. Four short assessments, about 3 minutes each.</p>
-          <div className="pw-help-chips">
-            <span><IconifyIconPW name="lucide:lock" size={12} color="var(--ai-purple)" />Private to you</span>
-            <span><IconifyIconPW name="lucide:refresh-cw" size={12} color="var(--ai-purple)" />Retake anytime</span>
-          </div>
-          <button type="button" className="pw-help-coach pf-coach-link" onClick={() => { onClose(); pwAskAva(PW_WHY_AVA_PROMPT); }}>
-            <IconifyIconPW name="lucide:sparkles" size={14} color="var(--ai-purple)" />Ask Ava
-          </button>
-        </div>
-      </div>
-    </div>);
-}
-
 function PWAssessHub({ assessState, onOpenAssess, onClose }) {
   const [helpOpen, setHelpOpen] = useStatePW(false);
-  const [whyOpen, setWhyOpen] = useStatePW(false);
   /* Esc closes the topmost dialog only — while an explainer is open, the
      hub's own Esc handler stands down so one keypress doesn't shut both. */
-  usePWEscClose(!helpOpen && !whyOpen, onClose);
+  usePWEscClose(!helpOpen, onClose);
   return (
     <div className="pw-modal-overlay" role="dialog" aria-modal="true" aria-label="Get to know you">
       <div className="pw-modal-card pw-hub-card">
@@ -945,10 +914,6 @@ function PWAssessHub({ assessState, onOpenAssess, onClose }) {
         </div>
         <div className="pw-wiz-body pw-hub-body">
           <div className="pw-hub-helps">
-            <button type="button" className="pw-hub-why" aria-haspopup="dialog" onClick={() => setWhyOpen(true)}>
-              <IconifyIconPW name="lucide:sparkles" size={16} color="#fff" />
-              Why Ava asks
-            </button>
             <button type="button" className="pw-hub-help" onClick={() => setHelpOpen(true)}>
               <IconifyIconPW name="lucide:circle-help" size={15} color="var(--gray-500)" />How it works
             </button>
@@ -961,7 +926,6 @@ function PWAssessHub({ assessState, onOpenAssess, onClose }) {
         </div>
       </div>
       <PWAssessHelpModal open={helpOpen} onClose={() => setHelpOpen(false)} />
-      <PWWhyAvaModal open={whyOpen} onClose={() => setWhyOpen(false)} />
     </div>);
 
 }
@@ -975,7 +939,6 @@ function pwAskAva(prompt) {
   if (window.PFAva && window.PFAva.open) { window.PFAva.open(prompt); return; }
   goPW("MyLearning.html?ava=" + encodeURIComponent(prompt || "1"));
 }
-const PW_WHY_AVA_PROMPT = "Why do you ask me to complete the four self-assessments, and how do my answers shape my Prosperity Spiral and the targets you suggest?";
 
 function pfTagActiveNavPW(activeLabel) {
   document.querySelectorAll("#pf-root nav > button").forEach((b) => {

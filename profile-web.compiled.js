@@ -1212,76 +1212,15 @@ function PWAssessHelpModal({
     color: "var(--ai-purple)"
   }), "Ask Ava"))));
 }
-
-/* "Why Ava asks" — the old intro card on the hub, now behind a small Ava
-   help pill. Details + an Ask Ava CTA that redirects to Ava's quick chat. */
-function PWWhyAvaModal({
-  open,
-  onClose
-}) {
-  usePWEscClose(open, onClose);
-  if (!open) return null;
-  return /*#__PURE__*/React.createElement("div", {
-    className: "pw-modal-overlay",
-    onClick: onClose
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pw-modal-card pw-help-card",
-    onClick: e => e.stopPropagation(),
-    role: "dialog",
-    "aria-modal": "true",
-    "aria-label": "Why Ava asks"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pw-help-hd"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pw-help-icon"
-  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:sparkles",
-    size: 18,
-    color: "var(--ai-purple)"
-  })), /*#__PURE__*/React.createElement("h3", null, "Why Ava asks"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pw-help-x",
-    "aria-label": "Close",
-    onClick: onClose
-  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:x",
-    size: 20,
-    color: "var(--gray-500)"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "pw-help-body"
-  }, /*#__PURE__*/React.createElement("p", null, "Your answers set your Prosperity Spiral and shape every target Ava suggests."), /*#__PURE__*/React.createElement("p", null, "Answer ", /*#__PURE__*/React.createElement("b", null, "one"), " pillar to start tracking your goals — the rest can wait. Four short assessments, about 3 minutes each."), /*#__PURE__*/React.createElement("div", {
-    className: "pw-help-chips"
-  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:lock",
-    size: 12,
-    color: "var(--ai-purple)"
-  }), "Private to you"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:refresh-cw",
-    size: 12,
-    color: "var(--ai-purple)"
-  }), "Retake anytime")), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pw-help-coach pf-coach-link",
-    onClick: () => {
-      onClose();
-      pwAskAva(PW_WHY_AVA_PROMPT);
-    }
-  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:sparkles",
-    size: 14,
-    color: "var(--ai-purple)"
-  }), "Ask Ava"))));
-}
 function PWAssessHub({
   assessState,
   onOpenAssess,
   onClose
 }) {
   const [helpOpen, setHelpOpen] = useStatePW(false);
-  const [whyOpen, setWhyOpen] = useStatePW(false);
   /* Esc closes the topmost dialog only — while an explainer is open, the
      hub's own Esc handler stands down so one keypress doesn't shut both. */
-  usePWEscClose(!helpOpen && !whyOpen, onClose);
+  usePWEscClose(!helpOpen, onClose);
   return /*#__PURE__*/React.createElement("div", {
     className: "pw-modal-overlay",
     role: "dialog",
@@ -1311,15 +1250,6 @@ function PWAssessHub({
     className: "pw-hub-helps"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "pw-hub-why",
-    "aria-haspopup": "dialog",
-    onClick: () => setWhyOpen(true)
-  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:sparkles",
-    size: 16,
-    color: "#fff"
-  }), "Why Ava asks"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
     className: "pw-hub-help",
     onClick: () => setHelpOpen(true)
   }, /*#__PURE__*/React.createElement(IconifyIconPW, {
@@ -1337,9 +1267,6 @@ function PWAssessHub({
   }))))), /*#__PURE__*/React.createElement(PWAssessHelpModal, {
     open: helpOpen,
     onClose: () => setHelpOpen(false)
-  }), /*#__PURE__*/React.createElement(PWWhyAvaModal, {
-    open: whyOpen,
-    onClose: () => setWhyOpen(false)
   }));
 }
 function goPW(url) {
@@ -1358,7 +1285,6 @@ function pwAskAva(prompt) {
   }
   goPW("MyLearning.html?ava=" + encodeURIComponent(prompt || "1"));
 }
-const PW_WHY_AVA_PROMPT = "Why do you ask me to complete the four self-assessments, and how do my answers shape my Prosperity Spiral and the targets you suggest?";
 function pfTagActiveNavPW(activeLabel) {
   document.querySelectorAll("#pf-root nav > button").forEach(b => {
     const label = b.textContent.replace(/[0-9]/g, "").trim();

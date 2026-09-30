@@ -112,46 +112,6 @@ function LBLeagueRail({ leagues, myIndex, selected, onSelect }) {
   );
 }
 
-/* League path: the six badges as points thresholds (Milestone Path), with the
-   member's progress toward the next one. */
-function LBLeaguePath({ progress }) {
-  const { current, next, need, pct, points, leagues, index } = progress;
-  const lg = next || current;
-  return (
-    <div className="lb-ms" data-screen-label="League path">
-      <div className="lb-ms-head">
-        <span className="lb-ms-gem"><LBLottie src={lg.lottie} size={54} play={false} /></span>
-        <span className="tx">
-          <b>{next ? "Next badge: " + next.name : "Highest badge earned"}</b>
-          <i>{next ? PF_LB.formatNumber(need) + " pts to unlock · " + PF_LB.formatNumber(points) + " of " + PF_LB.formatNumber(next.requires) + " lifetime pts"
-                   : "You've reached the top of the Milestone Path."}</i>
-        </span>
-        <span className="lb-ms-pct" style={{ color: lg.deep }}>{pct}%</span>
-      </div>
-      <div className="lb-ms-bar" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
-        <span style={{ width: pct + "%", background: lg.accent }} />
-      </div>
-      <ul className="lb-ms-list">
-        {leagues.map((l, i) => {
-          const done = i <= index;
-          return (
-            <li key={l.key} className={done ? "done" : ""}>
-              <span className="ic" style={{ background: done ? l.soft : null }}>
-                <LBLottie src={l.lottie} size={30} play={false} />
-              </span>
-              <span className="lb" style={done ? { color: l.deep } : null}>{l.name} League</span>
-              <span className="ct" style={done ? { color: l.deep } : null}>{done ? (l.requires > 0 ? "Earned" : "Start") : PF_LB.formatNumber(l.requires) + " pts"}</span>
-            </li>
-          );
-        })}
-      </ul>
-      <button type="button" className="lb-ms-link" onClick={() => goLB("MilestonePath.html?ret=Leaderboard.html")}>
-        See what each badge unlocks<DSLB.IconifyIcon name="lucide:chevron-right" size={14} color="var(--brand-navy)" />
-      </button>
-    </div>
-  );
-}
-
 function prizeForLB(config, rank) {
   const p = config.leaderboardPrizes.find((pr) => {
     if (pr.rank.includes("–") || pr.rank.includes("-")) {
@@ -217,7 +177,6 @@ function LeaderboardScreen() {
   const [toast, setToast] = useStateLB(null);
   const scrollRef = useRefLB(null);
   const meRef = useRefLB(null);
-  const msRef = useRefLB(null);
 
   /* another tab / demo API changed the counters */
   useEffectLB(() => {
@@ -263,12 +222,6 @@ function LeaderboardScreen() {
   const me = ranked.find((r) => r.isKaty);
   const ahead = me ? ranked.find((r) => r.rank === me.rank - 1) : null;
   const needFor = (idx) => Math.max(0, leagues[idx].requires - progress.points);
-  const goMilestones = () => {
-    const sc = scrollRef.current, el = msRef.current;
-    if (!sc || !el) return;
-    const top = el.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop - 12;
-    sc.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
-  };
 
   const vars = { "--lg-accent": league.accent, "--lg-deep": league.deep, "--lg-soft": league.soft };
 
@@ -310,7 +263,7 @@ function LeaderboardScreen() {
               <b>Unlock {league.name} League</b>
               <i>Earn {PF_LB.formatNumber(needFor(selected))} more lifetime pts to unlock this badge</i>
             </span>
-            <button type="button" className="lb-you-cta" onClick={goMilestones}>See the path</button>
+            <button type="button" className="lb-you-cta" onClick={() => goLB("MilestonePath.html?ret=Leaderboard.html")}>See the path</button>
           </div>
         )}
         {!isMine && !locked && (
@@ -329,11 +282,6 @@ function LeaderboardScreen() {
         </div>
         <div className="lb-table">
           {ranked.map((r) => <LBRow key={r.name} r={r} meRef={meRef} prizeFor={prizeFor} />)}
-        </div>
-
-        <div className="lb-ms-wrap" ref={msRef}>
-          <div className="ml-sec-h"><h2>League path</h2></div>
-          <LBLeaguePath progress={progress} />
         </div>
 
         <p className="lb-foot">Points shown are earned in the last 30 days, so the board reflects

@@ -1,0 +1,107 @@
+/* ===========================================================================
+   PROfinity — Minute Taker · Pricing & Usage Dashboard
+   Classes prefixed mtu- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--surface-page); -webkit-font-smoothing: antialiased; }
+
+.mtu-shell { display: flex; min-height: 100vh; background: var(--surface-page);
+  font-family: var(--font-sans); color: var(--text-primary); }
+.mtu-shell ::-webkit-scrollbar { width: 10px; height: 10px; }
+.mtu-shell ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 8px; border: 2px solid var(--gray-50); }
+
+.mtu-sidebar { width: 248px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--border-default);
+  padding: 22px 16px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0;
+  align-self: flex-start; height: 100vh; overflow-y: auto; }
+.mtu-logo { display: flex; align-items: center; gap: 10px; padding: 2px 8px 22px; font-size: 19px; font-weight: 700; color: var(--ai-purple); }
+.mtu-logo-icon { font-size: 22px; }
+.mtu-navitem { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px;
+  color: var(--gray-600); font-weight: 500; font-size: 15px; cursor: pointer; border: none; background: none;
+  width: 100%; text-align: left; font-family: inherit; }
+.mtu-navitem iconify-icon { font-size: 20px; flex-shrink: 0; }
+.mtu-navitem:hover { background: var(--gray-50); color: var(--brand-navy); }
+.mtu-navitem.is-active { background: var(--ai-purple); color: #fff; font-weight: 600; }
+.mtu-nav-scope { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--gray-450); padding: 4px 14px 8px; }
+.mtu-navitem-back { color: var(--ai-purple); margin-bottom: 10px; border-bottom: 1px solid var(--border-default);
+  border-radius: 10px 10px 0 0; padding-bottom: 16px; }
+
+.mtu-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mtu-header { display: flex; align-items: center; gap: 22px; padding: 16px 32px; border-bottom: 1px solid var(--border-default);
+  background: var(--white); position: sticky; top: 0; z-index: 5; }
+.mtu-header-title { font-size: 16px; font-weight: 600; color: var(--brand-navy); }
+.mtu-spacer { flex: 1; }
+.mtu-user { text-align: right; line-height: 1.25; margin-left: 6px; }
+.mtu-user-name { font-weight: 600; font-size: 15px; color: var(--brand-navy); }
+.mtu-user-role { font-size: 13px; color: var(--gray-500); }
+.mtu-user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+
+.mtu-view { padding: 28px 32px; display: flex; flex-direction: column; gap: 20px; position: relative; }
+.mtu-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.mtu-page-head h1 { margin: 0 0 6px; font-size: 26px; font-weight: 700; color: var(--brand-navy); }
+.mtu-page-head p { margin: 0; font-size: 14.5px; color: var(--gray-500); }
+
+.mtu-btn { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 18px; border-radius: 10px;
+  font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; border: none; }
+.mtu-btn-ghost { background: var(--white); border: 1px solid var(--border-default); color: var(--gray-800); }
+.mtu-btn-ghost:hover { background: var(--gray-50); border-color: var(--border-strong); }
+
+.mtu-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.mtu-stat-card { background: var(--white); border: 1px solid var(--border-default); border-radius: 14px; padding: 18px 20px;
+  box-shadow: 0 1px 3px rgba(12,12,13,.05); }
+.mtu-stat-label { font-size: 13px; font-weight: 600; color: var(--gray-500); margin-bottom: 8px; }
+.mtu-stat-value { font-size: 24px; font-weight: 700; color: var(--gray-900); line-height: 1.1; margin-bottom: 6px; }
+.mtu-stat-sub { font-size: 12px; color: var(--gray-450); }
+
+.mtu-chart-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: 16px; align-items: stretch; }
+.mtu-card { background: var(--white); border: 1px solid var(--border-default); border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(12,12,13,.05); padding: 20px; }
+.mtu-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.mtu-card-title-text { font-size: 16px; font-weight: 700; color: var(--brand-navy); }
+.mtu-cap-note { font-size: 12px; color: var(--gray-450); font-weight: 600; }
+
+.mtu-bar-chart { display: flex; align-items: flex-end; gap: 14px; height: 200px; padding-top: 20px; }
+.mtu-bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 8px; }
+.mtu-bar { width: 100%; max-width: 40px; background: var(--ai-purple); border-radius: 6px 6px 0 0; position: relative;
+  display: flex; align-items: flex-start; justify-content: center; min-height: 4px; }
+.mtu-bar-value { position: absolute; top: -20px; font-size: 11.5px; font-weight: 700; color: var(--gray-600); }
+.mtu-bar-label { font-size: 12px; color: var(--gray-500); font-weight: 600; }
+
+.mtu-donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 8px 0; }
+.mtu-donut { width: 150px; height: 150px; border-radius: 50%; position: relative; }
+.mtu-donut-hole { position: absolute; inset: 22px; background: var(--white); border-radius: 50%; }
+.mtu-donut-legend { display: flex; flex-direction: column; gap: 8px; font-size: 13px; color: var(--gray-600); font-weight: 600; }
+.mtu-donut-legend span { display: flex; align-items: center; gap: 8px; }
+.mtu-donut-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+.mtu-row-grid { display: grid; grid-template-columns: 1.4fr .8fr 1.4fr .8fr .6fr; align-items: center; gap: 10px; }
+.mtu-thead .mtu-th { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--gray-450); padding-bottom: 10px; }
+.mtu-trow { padding: 13px 0; border-bottom: 1px solid var(--border-default); font-size: 13.5px; }
+.mtu-trow:last-child { border-bottom: none; }
+.mtu-name-cell { font-weight: 700; color: var(--gray-900); }
+.mtu-status-pill { display: inline-flex; width: fit-content; padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.mtu-status-pill.warning { background: var(--warning-bg); color: var(--warning); }
+.mtu-status-pill.danger { background: var(--error-bg); color: var(--error); }
+.mtu-usage-cell { display: flex; flex-direction: column; gap: 5px; }
+.mtu-usage-bar { height: 6px; border-radius: 999px; background: var(--gray-150); overflow: hidden; }
+.mtu-usage-fill { display: block; height: 100%; border-radius: 999px; }
+.mtu-usage-fill.warning { background: var(--warning); }
+.mtu-usage-fill.danger { background: var(--error); }
+.mtu-usage-text { font-size: 12px; color: var(--gray-500); font-weight: 600; }
+.mtu-cap-tag { color: var(--ai-purple); font-weight: 700; }
+
+.mtu-toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%); background: var(--gray-900);
+  color: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0,0,0,.2); z-index: 20; }
+
+@media (max-width: 1180px) {
+  .mtu-stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .mtu-chart-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .mtu-stat-grid { grid-template-columns: 1fr; }
+  .mtu-row-grid { grid-template-columns: 1fr 1fr; row-gap: 6px; }
+  .mtu-thead { display: none; }
+}

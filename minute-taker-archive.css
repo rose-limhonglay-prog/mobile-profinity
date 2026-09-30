@@ -1,0 +1,94 @@
+/* ===========================================================================
+   PROfinity — Minute Taker · Archive & Search with AI Copilot
+   Classes prefixed mta- to avoid clashes with other pages.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: var(--surface-page); -webkit-font-smoothing: antialiased; }
+
+.mta-shell { display: flex; min-height: 100vh; background: var(--surface-page);
+  font-family: var(--font-sans); color: var(--text-primary); }
+.mta-shell ::-webkit-scrollbar { width: 10px; height: 10px; }
+.mta-shell ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 8px; border: 2px solid var(--gray-50); }
+
+.mta-sidebar { width: 248px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--border-default);
+  padding: 22px 16px; display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0;
+  align-self: flex-start; height: 100vh; overflow-y: auto; }
+.mta-logo { display: flex; align-items: center; gap: 10px; padding: 2px 8px 22px; font-size: 19px; font-weight: 700; color: var(--ai-purple); }
+.mta-logo-icon { font-size: 22px; }
+.mta-navitem { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px;
+  color: var(--gray-600); font-weight: 500; font-size: 15px; cursor: pointer; border: none; background: none;
+  width: 100%; text-align: left; font-family: inherit; }
+.mta-navitem iconify-icon { font-size: 20px; flex-shrink: 0; }
+.mta-navitem:hover { background: var(--gray-50); color: var(--brand-navy); }
+.mta-navitem.is-active { background: var(--ai-purple); color: #fff; font-weight: 600; }
+
+.mta-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.mta-header { display: flex; align-items: center; gap: 22px; padding: 16px 32px; border-bottom: 1px solid var(--border-default);
+  background: var(--white); position: sticky; top: 0; z-index: 5; }
+.mta-header-title { font-size: 16px; font-weight: 600; color: var(--brand-navy); }
+.mta-spacer { flex: 1; }
+.mta-user { text-align: right; line-height: 1.25; margin-left: 6px; }
+.mta-user-name { font-weight: 600; font-size: 15px; color: var(--brand-navy); }
+.mta-user-role { font-size: 13px; color: var(--gray-500); }
+.mta-user-avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+
+.mta-view { padding: 28px 32px; display: flex; flex-direction: column; gap: 20px; }
+.mta-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.mta-page-head h1 { margin: 0 0 6px; font-size: 26px; font-weight: 700; color: var(--brand-navy); }
+.mta-page-head p { margin: 0; font-size: 14.5px; color: var(--gray-500); }
+
+.mta-btn { display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 20px; border-radius: 10px;
+  font-family: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; border: none; white-space: nowrap; }
+.mta-btn-primary { background: var(--ai-purple); color: #fff; }
+.mta-btn-primary:hover { background: var(--ai-purple-600); }
+.mta-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.mta-content-grid { display: grid; grid-template-columns: 1.7fr 1fr; gap: 20px; align-items: start; }
+
+.mta-filter-bar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.mta-search-wrap { position: relative; flex: 1; min-width: 220px; }
+.mta-search-wrap iconify-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 17px; }
+.mta-search-wrap input { width: 100%; height: 44px; padding: 0 14px 0 40px; border-radius: 10px;
+  border: 1px solid var(--border-default); background: var(--white); font-size: 14px; outline: none; }
+.mta-filter-bar select { height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--border-default);
+  background: var(--white); font-family: inherit; font-size: 13.5px; color: var(--gray-700); outline: none; }
+
+.mta-card { background: var(--white); border: 1px solid var(--border-default); border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(12,12,13,.05); padding: 20px; }
+.mta-row-grid { display: grid; grid-template-columns: 1fr 1.3fr 1.2fr .9fr 1fr .9fr; align-items: center; gap: 8px; }
+.mta-thead .mta-th { font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  color: var(--gray-450); padding-bottom: 10px; }
+.mta-trow { padding: 13px 0; border-bottom: 1px solid var(--border-default); font-size: 13.5px; color: var(--gray-700); }
+.mta-trow:last-child { border-bottom: none; }
+.mta-patient-cell { font-weight: 700; color: var(--gray-900); }
+.mta-status-pill { display: inline-flex; width: fit-content; padding: 4px 11px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.mta-status-pill.success { background: var(--success-bg); color: var(--success); }
+.mta-status-pill.warning { background: var(--warning-bg); color: var(--warning); }
+.mta-view-link { background: none; border: none; color: var(--ai-purple); font-family: inherit; font-size: 13.5px;
+  font-weight: 700; cursor: pointer; width: fit-content; padding: 0; }
+.mta-view-link:hover { color: var(--ai-purple-600); text-decoration: underline; }
+.mta-empty { text-align: center; padding: 30px 0; color: var(--gray-450); font-size: 14px; }
+
+.mta-copilot-card { display: flex; flex-direction: column; position: sticky; top: 90px; }
+.mta-card-title-text { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; color: var(--brand-navy); }
+.mta-card-head { margin-bottom: 8px; }
+.mta-copilot-hint { margin: 0 0 12px; font-size: 13.5px; color: var(--gray-500); }
+.mta-copilot-card textarea { width: 100%; border-radius: 12px; border: 1px solid var(--border-default); background: var(--gray-50);
+  font-size: 13.5px; padding: 12px 14px; line-height: 1.5; resize: vertical; outline: none; margin-bottom: 12px; }
+.mta-copilot-card textarea:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px var(--focus-ring); background: var(--white); }
+.mta-copilot-btn { width: 100%; }
+.mta-copilot-loading { display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 600;
+  color: var(--gray-500); margin-bottom: 12px; }
+.mta-copilot-spinner { width: 16px; height: 16px; border-radius: 50%; border: 2.5px solid var(--gray-200);
+  border-top-color: var(--ai-purple); animation: mta-spin .8s linear infinite; flex-shrink: 0; }
+@keyframes mta-spin { to { transform: rotate(360deg); } }
+.mta-copilot-answer { background: var(--ai-purple-100); border: 1px solid var(--ai-purple-200); border-radius: 12px;
+  padding: 14px 16px; font-size: 13.5px; line-height: 1.55; color: var(--gray-800); margin-bottom: 12px; }
+
+@media (max-width: 1080px) {
+  .mta-content-grid { grid-template-columns: 1fr; }
+  .mta-copilot-card { position: static; }
+  .mta-row-grid { grid-template-columns: 1fr 1fr; row-gap: 4px; }
+  .mta-thead { display: none; }
+}
