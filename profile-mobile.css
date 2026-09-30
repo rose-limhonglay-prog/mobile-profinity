@@ -1274,15 +1274,9 @@ img{max-width:100%}
 .pm-cac-input i+input{padding-left:32px}
 
 /* ===== Today's Targets — daily picks (free PDF download + paid course CTA, daily-targets.js) ===== */
-.pm-picks{display:flex;flex-direction:column;gap:8px;margin:0 0 12px}
-.pm-pick{--pm-pick-free:#1E7A5C;padding-left:10px;gap:8px}
-.pm-pick-free{border-color:color-mix(in srgb,#1E7A5C 28%,var(--border-default))}
-.pm-pick-paid{border-color:color-mix(in srgb,var(--brand-gold) 45%,var(--border-default));background:color-mix(in srgb,var(--brand-gold) 7%,var(--surface-card))}
+.pm-pick{--pm-pick-free:#1E7A5C;padding-left:12px;gap:8px}
 .pm-pick.done{border-color:transparent;background:var(--surface-sunken)}
 .pm-pick .pm-target-main{gap:10px}
-.pm-pick-badge{flex:none;writing-mode:vertical-rl;transform:rotate(180deg);padding:6px 3px;border-radius:6px;font-family:var(--font-sans);font-weight:var(--fw-bold);
-  font-size:10px;letter-spacing:.06em;text-transform:uppercase;line-height:1;background:#EAF6F0;color:#1E7A5C}
-.pm-pick-badge-paid{background:var(--brand-gold-100,#f7efe3);color:var(--brand-gold-700,#8A5303)}
 .pm-pick-icon{flex:none;width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:var(--surface-sunken)}
 .pm-pick-paid .pm-pick-icon{background:color-mix(in srgb,var(--brand-gold) 18%,var(--surface-card))}
 .pm-pick.done .pm-target-copy .tx{text-decoration:none;color:var(--gray-500)}
@@ -1291,7 +1285,6 @@ img{max-width:100%}
 .pm-pick-cta:active{opacity:.8;transform:scale(.97)}
 .pm-pick-cta-buy{background:var(--brand-gold);color:var(--brand-navy)}
 .pm-pick-cta.is-done{background:#EAF6F0;color:#1E7A5C}
-.pm-picks-note{margin:0;font-family:var(--font-sans);font-size:12px;color:var(--gray-500)}
 
 /* ===== One-pillar start (2026-09-24): Track your goals opens after a single
    "Get to know you" pillar. Unassessed Spiral tiles, the Goal Focus "assess

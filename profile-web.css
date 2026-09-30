@@ -742,13 +742,9 @@
 .pw-cac-input i+input{padding-left:30px}
 
 /* ===== Today's Targets — daily picks (free PDF download + paid course CTA, daily-targets.js) ===== */
-.pw-picks{display:flex;flex-direction:column;gap:10px;margin:0 0 18px}
 .pw-pick{display:flex;align-items:center;gap:14px;width:100%;min-height:64px;box-sizing:border-box;padding:10px 14px 10px 12px;border-radius:14px;
-  border:1px solid color-mix(in srgb,#1E7A5C 30%,var(--border-default));background:var(--surface-card)}
-.pw-pick-paid{border-color:color-mix(in srgb,var(--brand-gold) 50%,var(--border-default));background:color-mix(in srgb,var(--brand-gold) 7%,var(--surface-card))}
+  border:1px solid var(--border-default);background:var(--surface-card)}
 .pw-pick.done{border-color:transparent;background:var(--surface-sunken)}
-.pw-pick-badge{flex:none;padding:4px 9px;border-radius:6px;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;background:#EAF6F0;color:#1E7A5C}
-.pw-pick-badge-paid{background:var(--brand-gold-100,#f7efe3);color:var(--brand-gold-700,#8A5303)}
 .pw-pick-main{flex:1;min-width:0;display:flex;align-items:center;gap:12px;border:none;background:none;padding:0;text-align:left;cursor:pointer;font:inherit;color:inherit}
 .pw-pick-main:hover .tx{text-decoration:underline}
 .pw-pick-icon{flex:none;width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:var(--surface-sunken)}
@@ -762,7 +758,6 @@
 .pw-pick-cta:hover{filter:brightness(1.08)}
 .pw-pick-cta-buy{background:var(--brand-gold);color:var(--brand-navy)}
 .pw-pick-cta.is-done{background:#EAF6F0;color:#1E7A5C}
-.pw-picks-note{margin:0;font-family:var(--font-sans);font-size:13px;color:var(--gray-500)}
 
 /* ===== One-pillar start (2026-09-24) — desktop twin of profile-mobile.css:
    unassessed Spiral rows, Goal Focus "assess more" link, Targets "Next up" row. ===== */

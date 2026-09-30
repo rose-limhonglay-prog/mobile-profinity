@@ -634,34 +634,58 @@ function PMSpiralCard({
   }, "2:04")), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, "Dr Tim Pearce"), " · “A clinic that's brilliant at one thing and average at the other three grows slowly. Every patient you win in Marketing leaks out through weak Sales follow-up; every great result you deliver goes unseen without Systems to capture it.”"), /*#__PURE__*/React.createElement("p", null, "“That's why the Spiral rewards balance. Lift your lowest pillar and the other three suddenly work harder for you — that's the spiral effect.”")));
 }
 
-/* Builds the day's set: one task per pillar, weakest first, priority by rank
-   (high / medium / low / low), plus any Ava-suggested extras from the coach. */
+/* Builds the day's set: exactly PM_TARGETS_PER_DAY tasks (user rule,
+   2026-09-30 — five a day, nothing more until tomorrow). Slots are dealt
+   round-robin across the assessed pillars, weakest first, so the weakest
+   pillar leads and picks up any spare slot; priority follows pillar rank
+   (high / medium / low / low). One Ava-suggested extra from the coach may
+   take a slot. `rounds` is each pillar's pool cursor and is carried from day
+   to day so tomorrow's set is a fresh one. */
+const PM_TARGETS_PER_DAY = 5;
+const PM_AVA_EXTRAS_MAX = 1;
 function pmBuildTargets(ranked, rounds, extras) {
   const prio = ["high", "medium", "low", "low"];
-  const list = ranked.filter(p => p.assessed !== false).map((p, i) => {
-    const pool = PM_TARGET_POOL[p.key];
-    const idx = (rounds[p.key] || 0) % pool.length;
-    return {
-      id: p.key + ":" + idx,
-      text: pool[idx],
-      pillar: p.key,
-      priority: prio[i] || "low",
-      done: false
-    };
-  });
-  (extras || []).forEach((t, i) => list.push({
+  const pillars = ranked.filter(p => p.assessed !== false);
+  const ava = (extras || []).slice(0, PM_AVA_EXTRAS_MAX).map((t, i) => ({
     id: "ava:" + i,
     text: t.text,
     pillar: null,
     priority: "low",
     done: false
   }));
-  return list;
+  const want = Math.max(0, PM_TARGETS_PER_DAY - ava.length);
+  const cursor = {
+    ...(rounds || {})
+  };
+  const used = {};
+  const list = [];
+  let pass = 0;
+  while (pillars.length && list.length < want && pass < want) {
+    pillars.forEach((p, i) => {
+      const pool = PM_TARGET_POOL[p.key];
+      if (list.length >= want || (used[p.key] || 0) >= pool.length) return;
+      const idx = (cursor[p.key] || 0) % pool.length;
+      cursor[p.key] = (cursor[p.key] || 0) + 1;
+      used[p.key] = (used[p.key] || 0) + 1;
+      list.push({
+        id: p.key + ":" + idx,
+        text: pool[idx],
+        pillar: p.key,
+        priority: prio[i] || "low",
+        done: false
+      });
+    });
+    pass++;
+  }
+  return {
+    targets: list.concat(ava),
+    rounds: cursor
+  };
 }
 
-/* Today's saved set, or a fresh one for a new day. Shared by the Targets
-   card and the collapsed "Track your goals" preview so both read the same
-   list. */
+/* Today's saved set, or a fresh one for a new day (pool cursors carried
+   over from the last saved day). Shared by the Targets card and the
+   collapsed "Track your goals" preview so both read the same list. */
 function pmLoadTodayTargets(ranked) {
   let extras = [];
   try {
@@ -669,27 +693,37 @@ function pmLoadTodayTargets(ranked) {
       text: t.text
     }));
   } catch (e) {}
+  let prevRounds = {};
   try {
     const saved = JSON.parse(localStorage.getItem(PM_TARGETS_KEY));
     if (saved && saved.date === pmTodayStamp() && Array.isArray(saved.targets)) return pmReconcileTargets(saved, ranked);
+    if (saved && saved.rounds) prevRounds = saved.rounds;
   } catch (e) {}
+  const built = pmBuildTargets(ranked, prevRounds, extras);
   return {
     date: pmTodayStamp(),
-    rounds: {},
-    targets: pmBuildTargets(ranked, {}, extras)
+    rounds: built.rounds,
+    targets: built.targets
   };
 }
 
-/* A pillar answered mid-day joins today's set on the spot: append its task
-   (priority by its rank) rather than waiting for tomorrow's rebuild. */
+/* A pillar answered mid-day joins today's set on the spot — but only while
+   the day still has a free slot (the five-a-day cap holds); otherwise its
+   tasks wait for tomorrow's rebuild. */
 function pmReconcileTargets(state, ranked) {
+  const room = PM_TARGETS_PER_DAY - state.targets.length;
+  if (room <= 0) return state;
   const have = new Set(state.targets.map(t => t.pillar));
   const missing = ranked.filter(p => p.assessed && !have.has(p.key));
   if (!missing.length) return state;
   const prio = ["high", "medium", "low", "low"];
-  const added = missing.map(p => {
+  const rounds = {
+    ...(state.rounds || {})
+  };
+  const added = missing.slice(0, room).map(p => {
     const pool = PM_TARGET_POOL[p.key];
-    const idx = ((state.rounds || {})[p.key] || 0) % pool.length;
+    const idx = (rounds[p.key] || 0) % pool.length;
+    rounds[p.key] = (rounds[p.key] || 0) + 1;
     return {
       id: p.key + ":" + idx,
       text: pool[idx],
@@ -701,6 +735,7 @@ function pmReconcileTargets(state, ranked) {
   });
   return {
     ...state,
+    rounds,
     targets: state.targets.concat(added)
   };
 }
@@ -792,16 +827,9 @@ function PMDailyPicks() {
     T.tapPaid("detail");
     goPM(T.paidDetailUrl(false));
   }
-  return /*#__PURE__*/React.createElement("div", {
-    className: "pm-picks",
-    role: "group",
-    "aria-label": "Today's free download and course pick"
-  }, /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "pm-target-row pm-pick pm-pick-free" + (free.done ? " done" : "")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-pick-badge",
-    "aria-hidden": "true"
-  }, "Free"), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-target-main",
     onClick: download,
@@ -828,10 +856,7 @@ function PMDailyPicks() {
     color: "#1E7A5C"
   }), "Saved") : "Download")), /*#__PURE__*/React.createElement("div", {
     className: "pm-target-row pm-pick pm-pick-paid" + (paid.purchased ? " done" : "")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-pick-badge pm-pick-badge-paid",
-    "aria-hidden": "true"
-  }, "Course"), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-target-main",
     onClick: viewCourse,
@@ -861,21 +886,18 @@ function PMDailyPicks() {
     className: "pm-pick-cta pm-pick-cta-buy",
     onClick: buy,
     "aria-label": "Buy " + paid.title + " for " + price
-  }, "Buy ", price)), /*#__PURE__*/React.createElement("p", {
-    className: "pm-picks-note"
-  }, "New free download and course pick every day"));
+  }, "Buy ", price)));
 }
 function PMTargetsCard({
   assessState
 }) {
   const [info, setInfo] = useStatePM(false);
   const ranked = pmRankedPillars(assessState);
-  const weakest = ranked[0];
   const nextKey = pmNextUnassessed(assessState);
   const remaining = ranked.filter(p => !p.assessed).length;
 
-  /* Persisted per day: tick state, per-pillar pool cursors and any task that
-     arrived after the set was finished. A new date starts a fresh set. */
+  /* Persisted per day: tick state and per-pillar pool cursors. A new date
+     starts a fresh set of five; finishing today's set adds nothing. */
   const [state, setState] = useStatePM(() => pmLoadTodayTargets(ranked));
   useEffectPM(() => {
     try {
@@ -887,7 +909,6 @@ function PMTargetsCard({
   useEffectPM(() => {
     setState(s => pmReconcileTargets(s, ranked));
   }, [assessState]);
-  const [fresh, setFresh] = useStatePM(null); // id of the row animating in
   const [settling, setSettling] = useStatePM(null); // id of the row just ticked
 
   /* Ticking a target pays its priority points once: booked straight into the
@@ -920,50 +941,21 @@ function PMTargetsCard({
     const cur = state.targets.find(t => t.id === id);
     const paying = !!(cur && !cur.done && !cur.awarded);
     if (paying) awardTargetPoints(cur);
-    setState(s => {
-      const targets = s.targets.map(t => t.id === id ? {
+    setState(s => ({
+      ...s,
+      targets: s.targets.map(t => t.id === id ? {
         ...t,
         done: !t.done,
         awarded: t.awarded || paying
-      } : t);
-      const justDone = targets.find(t => t.id === id).done;
-      if (!justDone || !targets.every(t => t.done)) return {
-        ...s,
-        targets
-      };
-      /* Day's set finished — surface the next task from the weakest pillar.
-         It arrives as a fresh high-priority row; completed ones stay put. */
-      const rounds = {
-        ...s.rounds,
-        [weakest.key]: (s.rounds[weakest.key] || 0) + 1
-      };
-      const pool = PM_TARGET_POOL[weakest.key];
-      const idx = rounds[weakest.key] % pool.length;
-      const next = {
-        id: weakest.key + ":" + idx + ":" + Date.now(),
-        text: pool[idx],
-        pillar: weakest.key,
-        priority: "high",
-        done: false,
-        added: true
-      };
-      setFresh(next.id);
-      return {
-        ...s,
-        rounds,
-        targets: targets.concat(next)
-      };
-    });
+      } : t)
+    }));
     setSettling(id);
   }
   useEffectPM(() => {
-    if (!fresh && !settling) return;
-    const t = setTimeout(() => {
-      setFresh(null);
-      setSettling(null);
-    }, 700);
+    if (!settling) return;
+    const t = setTimeout(() => setSettling(null), 700);
     return () => clearTimeout(t);
-  }, [fresh, settling]);
+  }, [settling]);
 
   /* Render order: high → low priority (stable within a priority), so the
      weakest pillar's work always leads. Done rows keep their slot. */
@@ -971,7 +963,14 @@ function PMTargetsCard({
     ...t,
     i
   })).sort((a, b) => PM_PRIORITY_ORDER[a.priority] - PM_PRIORITY_ORDER[b.priority] || a.i - b.i);
-  const doneCount = rows.filter(t => t.done).length;
+  /* The day's two picks (free PDF + course) sit in the same list and count
+     toward the day's total. */
+  const picks = usePMDailyPicks(false);
+  const pickTotal = picks ? 2 : 0;
+  const pickDone = picks ? (picks.free.done ? 1 : 0) + (picks.paid.purchased ? 1 : 0) : 0;
+  const total = rows.length + pickTotal;
+  const doneCount = rows.filter(t => t.done).length + pickDone;
+  const allDone = total > 0 && doneCount === total;
   return /*#__PURE__*/React.createElement(PMPaneCard, {
     title: "Today's Targets",
     sub: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
@@ -983,17 +982,17 @@ function PMTargetsCard({
     })), "Completing these will move your Prosperity Spiral forward"),
     infoLabel: "How targets and points work",
     onInfo: () => setInfo(true)
-  }, /*#__PURE__*/React.createElement(PMDailyPicks, null), nextKey && /*#__PURE__*/React.createElement(PMAssessNudgeRow, {
+  }, nextKey && /*#__PURE__*/React.createElement(PMAssessNudgeRow, {
     pillarKey: nextKey,
     remaining: remaining
   }), /*#__PURE__*/React.createElement("div", {
     className: "pm-target-rows"
-  }, rows.map(t => {
+  }, /*#__PURE__*/React.createElement(PMDailyPicks, null), rows.map(t => {
     const pr = PM_PRIORITY[t.priority];
     const caption = (t.pillar || "Suggested by Ava") + " · " + pr.label;
     return /*#__PURE__*/React.createElement("div", {
       key: t.id,
-      className: "pm-target-row" + (t.done ? " done" : "") + (fresh === t.id ? " is-entering" : "") + (settling === t.id && t.done ? " is-settling" : "")
+      className: "pm-target-row" + (t.done ? " done" : "") + (settling === t.id && t.done ? " is-settling" : "")
     }, /*#__PURE__*/React.createElement("span", {
       className: "pm-target-check",
       role: "checkbox",
@@ -1043,14 +1042,14 @@ function PMTargetsCard({
     }), "+", pr.pts, " pts")));
   })), /*#__PURE__*/React.createElement("p", {
     className: "pm-target-foot"
-  }, doneCount, " of ", rows.length, " done", doneCount === rows.length && rows.length ? " — a new target has been added" : ""), /*#__PURE__*/React.createElement(PMInfoModal, {
+  }, doneCount, " of ", total, " done", allDone ? " — that's today's set. New targets arrive tomorrow" : ""), /*#__PURE__*/React.createElement(PMInfoModal, {
     open: info,
     onClose: () => setInfo(false),
     title: "How targets and points work",
     icon: "lucide:list-checks",
     coach: "What should I tackle first from today's targets, and why?",
     coachLabel: "Ask Ava where to start"
-  }, /*#__PURE__*/React.createElement("p", null, "Ava picks one small action per ", /*#__PURE__*/React.createElement("b", null, "assessed"), " pillar each day and orders them by priority — ", /*#__PURE__*/React.createElement("b", null, "red double chevron"), " for your weakest pillar, ", /*#__PURE__*/React.createElement("b", null, "gold single"), " for the next, ", /*#__PURE__*/React.createElement("b", null, "grey dash"), " for the rest."), /*#__PURE__*/React.createElement("p", null, "Ticking a target earns its points (", /*#__PURE__*/React.createElement("b", null, "+150 / +100 / +50"), ") and nudges that pillar's score. Tap the row itself to open the pillar's goal page; the circle is just the tick."), /*#__PURE__*/React.createElement("p", null, "Finish the set and a new target appears — completed ones stay where they are so you can see the day's work."), /*#__PURE__*/React.createElement("p", null, "Pillars you haven't answered yet don't get targets — the ", /*#__PURE__*/React.createElement("b", null, "Next up"), " row takes you straight to their questions, and their tasks join the list the moment you finish."), /*#__PURE__*/React.createElement("p", null, "Every day also brings a ", /*#__PURE__*/React.createElement("b", null, "free PDF download"), " (+50 pts) and a ", /*#__PURE__*/React.createElement("b", null, "course pick"), " (+150 pts when you enrol). Both refresh daily.")));
+  }, /*#__PURE__*/React.createElement("p", null, "Ava picks ", /*#__PURE__*/React.createElement("b", null, "five"), " small actions a day from your ", /*#__PURE__*/React.createElement("b", null, "assessed"), " pillars, weakest pillar first, and orders them by priority — ", /*#__PURE__*/React.createElement("b", null, "red double chevron"), " for your weakest pillar, ", /*#__PURE__*/React.createElement("b", null, "gold single"), " for the next, ", /*#__PURE__*/React.createElement("b", null, "grey dash"), " for the rest."), /*#__PURE__*/React.createElement("p", null, "Ticking a target earns its points (", /*#__PURE__*/React.createElement("b", null, "+150 / +100 / +50"), ") and nudges that pillar's score. Tap the row itself to open the pillar's goal page; the circle is just the tick."), /*#__PURE__*/React.createElement("p", null, "Five is the day's set. Finish them all and you're done for today — nothing new appears until tomorrow, when a fresh five arrives."), /*#__PURE__*/React.createElement("p", null, "Pillars you haven't answered yet don't get targets — the ", /*#__PURE__*/React.createElement("b", null, "Next up"), " row takes you straight to their questions, and their tasks join the list the moment you finish."), /*#__PURE__*/React.createElement("p", null, "Every day also brings a ", /*#__PURE__*/React.createElement("b", null, "free PDF download"), " (+50 pts) and a ", /*#__PURE__*/React.createElement("b", null, "course pick"), " (+150 pts when you enrol). Both refresh daily.")));
 }
 
 /* Gate card shown in place of Goal Focus / Prosperity Spiral / Today's

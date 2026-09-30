@@ -198,19 +198,125 @@ const PW_TARGET_TAGS = {
     color: "var(--premium-orange)"
   }
 };
-const PW_TARGETS = [{
-  text: "Complete Lesson 4: Lip Anatomy",
-  tag: "CLIN"
-}, {
-  text: "Post 2 before/after case studies",
-  tag: "MKT"
-}, {
-  text: "Follow up with 3 lapsed patients",
-  tag: "SALE"
-}, {
-  text: "Log this week's expenses in your tracker",
-  tag: "SYS"
-}];
+
+/* Daily target pool per pillar — twin of profile-mobile.jsx's PM_TARGET_POOL. */
+const PW_TARGET_POOL = {
+  "Sales": ["Follow up with 3 lapsed patients", "Rehearse your consultation close with Ava", "Send the 2 treatment-plan quotes you've left open", "Call back every enquiry from the last 48 hours"],
+  "Marketing": ["Post 2 before/after case studies", "Reply to every comment on your last post", "Draft next week's Instagram story sequence", "Ask 1 happy patient for a Google review"],
+  "Clinical Skills": ["Complete Lesson 4: Lip Anatomy", "Review the toxin complications checklist", "Watch: mid-face volumising (12 min)", "Photograph today's cases with the 5-angle protocol"],
+  "Business Systems": ["Log this week's expenses in your tracker", "Update your price list for Q4", "Book 15 minutes to review your booking flow", "Reconcile last week's card takings"]
+};
+const PW_PILLAR_TAG = {
+  "Marketing": "MKT",
+  "Clinical Skills": "CLIN",
+  "Sales": "SALE",
+  "Business Systems": "SYS"
+};
+
+/* Same store as mobile (pf-today-targets) so ticks made on the phone show
+   here and vice versa. Five targets a day (user rule, 2026-09-30): dealt
+   round-robin across assessed pillars, weakest first, one Ava extra may take
+   a slot, and finishing the set adds nothing until tomorrow. Twin of
+   pmBuildTargets / pmLoadTodayTargets / pmReconcileTargets. */
+const PW_TARGETS_KEY = "pf-today-targets";
+const PW_TARGETS_PER_DAY = 5;
+const PW_AVA_EXTRAS_MAX = 1;
+function pwTodayStamp() {
+  return new Date().toISOString().slice(0, 10);
+}
+function pwBuildTargets(ranked, rounds, extras) {
+  const prio = ["high", "medium", "low", "low"];
+  const pillars = ranked.filter(p => p.assessed !== false);
+  const ava = (extras || []).slice(0, PW_AVA_EXTRAS_MAX).map((t, i) => ({
+    id: "ava:" + i,
+    text: t.text,
+    pillar: null,
+    priority: "low",
+    done: false
+  }));
+  const want = Math.max(0, PW_TARGETS_PER_DAY - ava.length);
+  const cursor = {
+    ...(rounds || {})
+  };
+  const used = {};
+  const list = [];
+  let pass = 0;
+  while (pillars.length && list.length < want && pass < want) {
+    pillars.forEach((p, i) => {
+      const pool = PW_TARGET_POOL[p.key];
+      if (list.length >= want || (used[p.key] || 0) >= pool.length) return;
+      const idx = (cursor[p.key] || 0) % pool.length;
+      cursor[p.key] = (cursor[p.key] || 0) + 1;
+      used[p.key] = (used[p.key] || 0) + 1;
+      list.push({
+        id: p.key + ":" + idx,
+        text: pool[idx],
+        pillar: p.key,
+        priority: prio[i] || "low",
+        done: false
+      });
+    });
+    pass++;
+  }
+  return {
+    targets: list.concat(ava),
+    rounds: cursor
+  };
+}
+function pwReconcileTargets(state, ranked) {
+  const room = PW_TARGETS_PER_DAY - state.targets.length;
+  if (room <= 0) return state;
+  const have = new Set(state.targets.map(t => t.pillar));
+  const missing = ranked.filter(p => p.assessed && !have.has(p.key));
+  if (!missing.length) return state;
+  const prio = ["high", "medium", "low", "low"];
+  const rounds = {
+    ...(state.rounds || {})
+  };
+  const added = missing.slice(0, room).map(p => {
+    const pool = PW_TARGET_POOL[p.key];
+    const idx = (rounds[p.key] || 0) % pool.length;
+    rounds[p.key] = (rounds[p.key] || 0) + 1;
+    return {
+      id: p.key + ":" + idx,
+      text: pool[idx],
+      pillar: p.key,
+      priority: prio[ranked.indexOf(p)] || "low",
+      done: false,
+      added: true
+    };
+  });
+  return {
+    ...state,
+    rounds,
+    targets: state.targets.concat(added)
+  };
+}
+function pwLoadTodayTargets(ranked) {
+  let extras = [];
+  try {
+    extras = (JSON.parse(localStorage.getItem("pf-coach-targets")) || []).map(t => ({
+      text: t.text
+    }));
+  } catch (e) {}
+  let prevRounds = {};
+  try {
+    const saved = JSON.parse(localStorage.getItem(PW_TARGETS_KEY));
+    if (saved && saved.date === pwTodayStamp() && Array.isArray(saved.targets)) return pwReconcileTargets(saved, ranked);
+    if (saved && saved.rounds) prevRounds = saved.rounds;
+  } catch (e) {}
+  const built = pwBuildTargets(ranked, prevRounds, extras);
+  return {
+    date: pwTodayStamp(),
+    rounds: built.rounds,
+    targets: built.targets
+  };
+}
+const PW_PRIORITY_ORDER = {
+  high: 0,
+  medium: 1,
+  low: 2
+};
 
 /* Course-completion baseline (Scourse) per pillar — see profile-mobile.jsx's
    PM_SCOURSE comment for the full rationale. */
@@ -535,16 +641,9 @@ function PWDailyPicks() {
     T.tapPaid("detail");
     goPW(T.paidDetailUrl(true));
   }
-  return /*#__PURE__*/React.createElement("div", {
-    className: "pw-picks",
-    role: "group",
-    "aria-label": "Today's free download and course pick"
-  }, /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "pw-pick pw-pick-free" + (free.done ? " done" : "")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pw-pick-badge",
-    "aria-hidden": "true"
-  }, "Free"), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-pick-main",
     onClick: download,
@@ -575,10 +674,7 @@ function PWDailyPicks() {
     color: "#fff"
   }), "Download"))), /*#__PURE__*/React.createElement("div", {
     className: "pw-pick pw-pick-paid" + (paid.purchased ? " done" : "")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pw-pick-badge pw-pick-badge-paid",
-    "aria-hidden": "true"
-  }, "Course"), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-pick-main",
     onClick: viewCourse,
@@ -608,46 +704,48 @@ function PWDailyPicks() {
     className: "pw-pick-cta pw-pick-cta-buy",
     onClick: buy,
     "aria-label": "Buy " + paid.title + " for " + price
-  }, "Buy ", price)), /*#__PURE__*/React.createElement("p", {
-    className: "pw-picks-note"
-  }, "New free download and course pick every day"));
+  }, "Buy ", price)));
 }
 
 /* Only assessed pillars get a target, ordered by Spiral rank (weakest
    assessed first); a "Next up" row points at the next pillar to answer. */
-const PW_TAG_PILLAR = {
-  MKT: "Marketing",
-  CLIN: "Clinical Skills",
-  SALE: "Sales",
-  SYS: "Business Systems"
-};
 function PWTargetsCard({
   assessState,
   onOpenHub
 }) {
-  const [extra, setExtra] = useStatePW([]);
-  useEffectPW(() => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("pf-coach-targets")) || [];
-      setExtra(stored.map(t => ({
-        text: t.text,
-        tag: null
-      })));
-    } catch (e) {}
-  }, []);
-  const order = pwRankedPillars(assessState || {}).map(p => p.key);
+  const ranked = pwRankedPillars(assessState || {});
   const nextKey = pwNextUnassessed(assessState || {});
   const remaining = PW_FORECAST_PILLARS.filter(k => !pwAssessed(assessState || {}, k)).length;
-  const base = PW_TARGETS.filter(t => pwAssessed(assessState || {}, PW_TAG_PILLAR[t.tag])).sort((a, b) => order.indexOf(PW_TAG_PILLAR[a.tag]) - order.indexOf(PW_TAG_PILLAR[b.tag]));
-  const all = base.concat(extra);
-  /* keyed by text, not index — the list grows as pillars are answered */
-  const [done, setDone] = useStatePW({});
-  const toggle = text => setDone(s => ({
+
+  /* Persisted per day (shared with mobile): tick state and pool cursors. A
+     new date starts a fresh set of five; finishing today's set adds nothing. */
+  const [state, setState] = useStatePW(() => pwLoadTodayTargets(ranked));
+  useEffectPW(() => {
+    try {
+      localStorage.setItem(PW_TARGETS_KEY, JSON.stringify(state));
+    } catch (e) {}
+  }, [state]);
+  useEffectPW(() => {
+    setState(s => pwReconcileTargets(s, ranked));
+  }, [assessState]);
+  const toggle = id => setState(s => ({
     ...s,
-    [text]: !s[text]
+    targets: s.targets.map(t => t.id === id ? {
+      ...t,
+      done: !t.done
+    } : t)
   }));
-  const doneCount = all.filter(t => done[t.text]).length;
-  const pct = all.length ? Math.round(doneCount / all.length * 100) : 0;
+  const all = state.targets.map((t, i) => ({
+    ...t,
+    i
+  })).sort((a, b) => PW_PRIORITY_ORDER[a.priority] - PW_PRIORITY_ORDER[b.priority] || a.i - b.i);
+  const picks = usePWDailyPicks();
+  const pickTotal = picks ? 2 : 0;
+  const pickDone = picks ? (picks.free.done ? 1 : 0) + (picks.paid.purchased ? 1 : 0) : 0;
+  const total = all.length + pickTotal;
+  const doneCount = all.filter(t => t.done).length + pickDone;
+  const allDone = total > 0 && doneCount === total;
+  const pct = total ? Math.round(doneCount / total * 100) : 0;
   return /*#__PURE__*/React.createElement("section", {
     className: "pw-card"
   }, /*#__PURE__*/React.createElement("div", {
@@ -656,7 +754,7 @@ function PWTargetsCard({
     className: "pw-card-hd-ti"
   }, /*#__PURE__*/React.createElement("h2", null, "Today's Targets"), /*#__PURE__*/React.createElement("span", {
     className: "pw-targets-pill"
-  }, doneCount, "/", all.length))), /*#__PURE__*/React.createElement(PWDailyPicks, null), nextKey && /*#__PURE__*/React.createElement("button", {
+  }, doneCount, "/", total))), nextKey && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-target-assess",
     onClick: () => onOpenHub(nextKey),
@@ -689,31 +787,34 @@ function PWTargetsCard({
     }
   })), /*#__PURE__*/React.createElement("div", {
     className: "pw-target-rows"
-  }, all.map(t => /*#__PURE__*/React.createElement("button", {
-    key: t.text,
-    type: "button",
-    className: "pw-target-row" + (done[t.text] ? " done" : ""),
-    onClick: () => toggle(t.text),
-    role: "checkbox",
-    "aria-checked": !!done[t.text]
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "circle"
-  }, done[t.text] && /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:check",
-    size: 12,
-    color: "#fff"
-  })), t.tag && /*#__PURE__*/React.createElement("span", {
-    className: "pw-target-tag",
-    style: {
-      background: PW_TARGET_TAGS[t.tag].color
-    }
-  }, PW_TARGET_TAGS[t.tag].label), /*#__PURE__*/React.createElement("span", {
-    className: "tx"
-  }, t.text)))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(PWDailyPicks, null), all.map(t => {
+    const tag = t.pillar ? PW_PILLAR_TAG[t.pillar] : null;
+    return /*#__PURE__*/React.createElement("button", {
+      key: t.id,
+      type: "button",
+      className: "pw-target-row" + (t.done ? " done" : ""),
+      onClick: () => toggle(t.id),
+      role: "checkbox",
+      "aria-checked": !!t.done
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "circle"
+    }, t.done && /*#__PURE__*/React.createElement(IconifyIconPW, {
+      name: "lucide:check",
+      size: 12,
+      color: "#fff"
+    })), tag && /*#__PURE__*/React.createElement("span", {
+      className: "pw-target-tag",
+      style: {
+        background: PW_TARGET_TAGS[tag].color
+      }
+    }, PW_TARGET_TAGS[tag].label), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, t.text));
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pw-target-divider"
   }), /*#__PURE__*/React.createElement("p", {
     className: "pw-target-note"
-  }, "Completing these will move your Prosperity Spiral forward."));
+  }, allDone ? "That's today's set complete — new targets arrive tomorrow." : "Completing these will move your Prosperity Spiral forward."));
 }
 
 /* Gate card shown in place of Goal Focus / Prosperity Spiral / Today's
