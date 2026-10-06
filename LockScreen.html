@@ -181,7 +181,7 @@
         screen.style.transition = 'transform .38s cubic-bezier(.22,.61,.36,1), opacity .38s ease';
         screen.style.transform = 'translateY(-100%)';
         screen.style.opacity = '0';
-        setTimeout(function(){ window.location.href = 'NewsfeedMobile.html'; }, 360);
+        setTimeout(function(){ window.location.href = window.PF_LOCK_TARGET || 'NewsfeedMobile.html'; }, 360);
       }
       function springBack(){
         screen.style.transition = 'transform .32s cubic-bezier(.22,.61,.36,1)';
@@ -232,5 +232,8 @@
     })();
   </script>
 
+  <!-- Success Path push mock: LockScreen.html?push=sp -->
+  <script src="success-path.js?v=20260930a"></script>
+  <script src="success-path-nudge.js?v=20260930a"></script>
 </body>
 </html>

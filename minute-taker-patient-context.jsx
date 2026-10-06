@@ -1,10 +1,11 @@
 /* ===========================================================================
    PROfinity — Minute Taker · Patient Context & Profile
    Pre-session priming: demographics, clinical snapshot alerts, editable AI
-   session primer. PRD Screen 2 (Sec. 3.2 / MT-K02).
+   session primer. PRD Screen 2 (Sec. 3.2 / MT-K02). New patients are created
+   through the "New patient" modal (user, 2026-10-01), never inline.
    Classes prefixed mtp- to avoid clashes with other pages.
    =========================================================================== */
-const { useState: useStateMTP } = React;
+const { useState: useStateMTP, useEffect: useEffectMTP, useRef: useRefMTP } = React;
 
 function goMTP(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
 function getParamMTP(name) {
@@ -33,6 +34,8 @@ const MTP_PATIENTS = {
 const MTP_PATIENT_NAMES = Object.keys(MTP_PATIENTS);
 const MTP_NEW_KEY = "__new__";
 const MTP_BLANK_PATIENT = { id: null, gender: "-", age: "-", dob: "", phone: "", email: "", allergies: [], conditions: [], primer: "" };
+const MTP_BLANK_DRAFT = { firstName: "", lastName: "", dob: "", phone: "", email: "", allergies: [], conditions: [] };
+const MTP_SEVERITIES = ["Mild", "Moderate", "Severe"];
 
 function mtpSaveContext(data) {
   try { sessionStorage.setItem("mtSession", JSON.stringify(data)); } catch (e) {}
@@ -113,12 +116,46 @@ function MTPView() {
   const [useContext, setUseContext] = useStateMTP(true);
   const [consentGiven, setConsentGiven] = useStateMTP(false);
   const [toast, setToast] = useStateMTP(null);
+  // "New patient" modal — null = closed, otherwise the draft being typed.
+  // ?patient=__new__ (dashboard "New patient" row) opens it straight away.
+  const [draft, setDraft] = useStateMTP(() => (isNewPatient ? { ...MTP_BLANK_DRAFT, target: MTP_NEW_KEY } : null));
+  // per-patient edits made through the details modal this visit (keyed by patient / __new__):
+  // demographics live in `form`, the clinical snapshot lives here (user, 2026-10-02)
+  const [edits, setEdits] = useStateMTP({});
+  const snap = edits[selectedPatient] || base;
 
+  const hasTypedName = !!(form.firstName.trim() || form.lastName.trim());
   const patientName = isNewPatient
     ? (form.firstName.trim() || form.lastName.trim() ? (form.firstName + " " + form.lastName).trim() : "New Patient")
-    : selectedPatient;
+    : ((form.firstName + " " + form.lastName).trim() || selectedPatient);
+
+  /* details modal — "new" starts a blank record; "edit" opens the selected patient (new or on file) prefilled */
+  function openNewPatient(prefill) {
+    setDraft({ ...MTP_BLANK_DRAFT, target: MTP_NEW_KEY, ...(prefill || {}) });
+  }
+  function openEditPatient() {
+    setDraft({ ...MTP_BLANK_DRAFT, target: selectedPatient, ...form, allergies: snap.allergies.slice(), conditions: snap.conditions.slice() });
+  }
+  function cancelNewPatient() {
+    setDraft(null);
+    // backed out of a brand-new record with nothing typed → fall back to the first patient on file
+    if (isNewPatient && !hasTypedName) handlePatientPick(MTP_PATIENT_NAMES[0]);
+  }
+  function confirmNewPatient() {
+    if (!draft || !draft.firstName.trim()) return;
+    const clean = { firstName: draft.firstName.trim(), lastName: draft.lastName.trim(), dob: draft.dob.trim(), phone: draft.phone.trim(), email: draft.email.trim() };
+    const editingExisting = draft.target !== MTP_NEW_KEY;
+    const editingNew = !editingExisting && isNewPatient && hasTypedName;
+    if (!editingExisting) setSelectedPatient(MTP_NEW_KEY);
+    setForm(clean);
+    setEdits((m) => ({ ...m, [draft.target]: { allergies: draft.allergies.slice(), conditions: draft.conditions.slice() } }));
+    if (!editingExisting && !editingNew) { setPrimer(""); setConsentGiven(false); }
+    setDraft(null);
+    flashToast(editingExisting || editingNew ? "Details updated." : (clean.firstName + " " + clean.lastName).trim() + " added as a new patient.");
+  }
 
   function handlePatientPick(value) {
+    if (value === MTP_NEW_KEY) { if (isNewPatient) openEditPatient(); else openNewPatient(); return; }
     setSelectedPatient(value);
     const next = value === MTP_NEW_KEY ? MTP_BLANK_PATIENT : (MTP_PATIENTS[value] || MTP_BLANK_PATIENT);
     const [fn, ln] = mtpSplitName(value === MTP_NEW_KEY ? "" : value);
@@ -178,10 +215,13 @@ function MTPView() {
 
           <div className="mtp-patient-header">
             <div className="mtp-patient-avatar"><iconify-icon icon={isNewPatient ? "lucide:user-plus" : "lucide:user"}></iconify-icon></div>
-            <div>
+            <div className="mtp-patient-header-text">
               <div className="mtp-patient-name">{patientName || "New Patient"}</div>
               <div className="mtp-patient-meta">{isNewPatient ? "No prior visits on file" : base.gender + ", " + base.age + " yrs"}</div>
             </div>
+            <button className="mtp-btn mtp-btn-ghost mtp-btn-sm" type="button" onClick={openEditPatient}>
+              <iconify-icon icon="lucide:pencil"></iconify-icon>Edit
+            </button>
           </div>
           <div className="mtp-section-label">Demographics</div>
           <label className="mtp-field">
@@ -210,25 +250,32 @@ function MTPView() {
           <div className="mtp-card">
             <div className="mtp-card-head">
               <span className="mtp-card-title-text">Clinical Snapshot</span>
-              <button className="mtp-btn mtp-btn-ghost mtp-btn-sm" type="button" onClick={() => flashToast("EHR sync requested.")}>
-                <iconify-icon icon="lucide:refresh-cw"></iconify-icon>Sync EHR
-              </button>
+              <div className="mtp-card-head-actions">
+                <button className="mtp-btn mtp-btn-ghost mtp-btn-sm" type="button" onClick={openEditPatient}>
+                  <iconify-icon icon="lucide:pencil"></iconify-icon>Edit
+                </button>
+                {!isNewPatient && (
+                  <button className="mtp-btn mtp-btn-ghost mtp-btn-sm" type="button" onClick={() => flashToast("EHR sync requested.")}>
+                    <iconify-icon icon="lucide:refresh-cw"></iconify-icon>Sync EHR
+                  </button>
+                )}
+              </div>
             </div>
             <div className="mtp-snapshot-cols">
               <div>
                 <div className="mtp-snapshot-label">Alerts &amp; Allergies</div>
                 <div className="mtp-pill-row">
-                  {base.allergies.length === 0 && <span className="mtp-pill mtp-pill-neutral">No records on file</span>}
-                  {base.allergies.map((a) => (
-                    <span key={a.label} className={"mtp-pill" + (a.severe ? " mtp-pill-danger" : " mtp-pill-neutral")}>{a.label}</span>
+                  {snap.allergies.length === 0 && <span className="mtp-pill mtp-pill-neutral">{isNewPatient ? "Not recorded yet" : "No records on file"}</span>}
+                  {snap.allergies.map((a) => (
+                    <span key={a.label} className={"mtp-pill" + (a.severe || a.severity ? " mtp-pill-danger" : " mtp-pill-neutral")}>{a.label}{a.severity ? " (" + a.severity + ")" : ""}</span>
                   ))}
                 </div>
               </div>
               <div>
                 <div className="mtp-snapshot-label">Active Conditions</div>
                 <div className="mtp-pill-row">
-                  {base.conditions.length === 0 && <span className="mtp-pill mtp-pill-neutral">No records on file</span>}
-                  {base.conditions.map((c) => <span key={c} className="mtp-pill mtp-pill-success">{c}</span>)}
+                  {snap.conditions.length === 0 && <span className="mtp-pill mtp-pill-neutral">{isNewPatient ? "Not recorded yet" : "No records on file"}</span>}
+                  {snap.conditions.map((c) => <span key={c} className="mtp-pill mtp-pill-success">{c}</span>)}
                 </div>
               </div>
             </div>
@@ -261,7 +308,107 @@ function MTPView() {
         </div>
       </div>
 
+      {draft && <MTPNewPatientModal draft={draft} setDraft={setDraft} mode={draft.target !== MTP_NEW_KEY ? "existing" : (isNewPatient && hasTypedName ? "new-edit" : "new")} onCancel={cancelNewPatient} onConfirm={confirmNewPatient} />}
       <MTPToast text={toast} />
+    </div>
+  );
+}
+
+/* chip-style list input used for the new-record clinical snapshot (user, 2026-10-02) */
+function MTPTagInput({ label, placeholder, tone, withSeverity, items, onChange, quick }) {
+  const [text, setText] = useStateMTP("");
+  const [severity, setSeverity] = useStateMTP("Severe");
+  const isObj = !!withSeverity;
+  const keyOf = (it) => (isObj ? it.label : it);
+  const has = (k) => items.some((it) => keyOf(it).toLowerCase() === k.toLowerCase());
+  function add() {
+    const v = text.trim();
+    if (!v || has(v)) { setText(""); return; }
+    onChange(items.filter((it) => !(isObj && it.label === "NKDA")).concat(isObj ? [{ label: v, severity }] : [v]));
+    setText("");
+  }
+  function remove(k) { onChange(items.filter((it) => keyOf(it) !== k)); }
+  const quickOn = quick && has(keyOf(quick.value));
+  return (
+    <div className="mtp-tags">
+      <div className="mtp-tags-label">{label}</div>
+      <div className="mtp-tags-row">
+        <input value={text} placeholder={placeholder} autoComplete="off" onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }} />
+        {withSeverity && (
+          <select value={severity} onChange={(e) => setSeverity(e.target.value)} aria-label="Severity">
+            {MTP_SEVERITIES.map((sv) => <option key={sv} value={sv}>{sv}</option>)}
+          </select>
+        )}
+        <button type="button" className="mtp-tags-add" onClick={add} disabled={!text.trim()} aria-label={"Add " + label}><iconify-icon icon="lucide:plus"></iconify-icon></button>
+      </div>
+      {(items.length > 0 || quick) && (
+        <div className="mtp-pill-row mtp-tags-pills">
+          {items.map((it) => {
+            const k = keyOf(it);
+            const cls = isObj ? (it.severity || it.severe ? "mtp-pill-danger" : "mtp-pill-neutral") : "mtp-pill-" + tone;
+            return (
+              <span key={k} className={"mtp-pill " + cls}>
+                {k}{isObj && it.severity ? " (" + it.severity + ")" : ""}
+                <button type="button" className="mtp-tag-x" onClick={() => remove(k)} aria-label={"Remove " + k}><iconify-icon icon="lucide:x"></iconify-icon></button>
+              </span>
+            );
+          })}
+          {quick && !quickOn && items.length === 0 && (
+            <button type="button" className="mtp-pill mtp-pill-neutral mtp-tag-quick" onClick={() => onChange([quick.value])}><iconify-icon icon="lucide:check"></iconify-icon>{quick.label}</button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* "New patient" modal — the only place a new record gets created (user, 2026-10-01) */
+function MTPNewPatientModal({ draft, setDraft, mode, onCancel, onConfirm }) {
+  const editing = mode !== "new";
+  const existing = mode === "existing";
+  const firstRef = useRefMTP(null);
+  useEffectMTP(() => {
+    const t = setTimeout(() => { if (firstRef.current) firstRef.current.focus(); }, 40);
+    const onKey = (e) => { if (e.key === "Escape") onCancel(); };
+    window.addEventListener("keydown", onKey);
+    return () => { clearTimeout(t); window.removeEventListener("keydown", onKey); };
+  }, []);
+  const canSave = !!draft.firstName.trim();
+  const set = (key) => (e) => setDraft({ ...draft, [key]: e.target.value });
+  const submit = (e) => { e.preventDefault(); if (canSave) onConfirm(); };
+  return (
+    <div className="mtp-modal-scrim" onClick={onCancel}>
+      <form className="mtp-modal" role="dialog" aria-modal="true" aria-labelledby="mtp-new-title" onClick={(e) => e.stopPropagation()} onSubmit={submit}>
+        <div className="mtp-modal-head">
+          <div className="mtp-patient-avatar mtp-modal-avatar"><iconify-icon icon={existing ? "lucide:user" : "lucide:user-plus"}></iconify-icon></div>
+          <div className="mtp-modal-head-text">
+            <h2 id="mtp-new-title">{editing ? "Edit patient details" : "New patient"}</h2>
+            <p>{existing ? "Changes apply to " + draft.target.split(" ")[0] + "'s record for this session." : editing ? "Update the record for this first visit." : "Start a blank record for someone not yet on file."}</p>
+          </div>
+          <button type="button" className="mtp-modal-x" onClick={onCancel} aria-label="Close"><iconify-icon icon="lucide:x"></iconify-icon></button>
+        </div>
+        <div className="mtp-modal-grid">
+          <label className="mtp-field"><span>First Name</span><input ref={firstRef} value={draft.firstName} placeholder="First" autoComplete="off" onChange={set("firstName")} /></label>
+          <label className="mtp-field"><span>Last Name</span><input value={draft.lastName} placeholder="Last" autoComplete="off" onChange={set("lastName")} /></label>
+          <label className="mtp-field"><span>Date of Birth</span><input value={draft.dob} placeholder="YYYY-MM-DD" autoComplete="off" onChange={set("dob")} /></label>
+          <label className="mtp-field"><span>Phone</span><input value={draft.phone} placeholder="(555) 000-0000" inputMode="tel" autoComplete="off" onChange={set("phone")} /></label>
+          <label className="mtp-field mtp-modal-span"><span>Email</span><input value={draft.email} placeholder="name@example.com" inputMode="email" autoComplete="off" onChange={set("email")} /></label>
+        </div>
+        <div className="mtp-modal-sub"><iconify-icon icon="lucide:heart-pulse"></iconify-icon>Clinical snapshot<span>Optional</span></div>
+        <MTPTagInput label="Alerts & Allergies" placeholder="e.g. Penicillin" tone="danger" withSeverity
+          items={draft.allergies} onChange={(allergies) => setDraft({ ...draft, allergies })}
+          quick={{ label: "No known allergies", value: { label: "NKDA" } }} />
+        <MTPTagInput label="Active Conditions" placeholder="e.g. Hypertension" tone="success"
+          items={draft.conditions} onChange={(conditions) => setDraft({ ...draft, conditions })} />
+        <p className="mtp-modal-note"><iconify-icon icon="lucide:info"></iconify-icon>Anything you add here is shown as an alert during the session and in the note.</p>
+        <div className="mtp-modal-actions">
+          <button type="button" className="mtp-btn mtp-btn-ghost" onClick={onCancel}>Cancel</button>
+          <button type="submit" className="mtp-btn mtp-btn-primary" disabled={!canSave}>
+            <iconify-icon icon={editing ? "lucide:check" : "lucide:user-plus"}></iconify-icon>{editing ? "Save details" : "Add patient"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

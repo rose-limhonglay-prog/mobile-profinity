@@ -19,11 +19,15 @@
   <!-- the Confidence course reader. No PF_LC_LIGHT pin here: the variant
        follows the app theme (pf-theme → data-theme) or ?theme=light|dark. -->
   <link rel="stylesheet" href="lesson-confidence.css" />
+  <link rel="stylesheet" href="success-path.css?v=20261007e" />
   <link rel="stylesheet" href="comment-share-prompt.css" />
   <link rel="stylesheet" href="coach.css" />
   <link rel="stylesheet" href="tour.css" />
   <link rel="stylesheet" href="upload-tracker.css" />
   <link rel="stylesheet" href="voice-call.css" />
+  <!-- real phone browser mode (mobile-web host / ?realdevice=1): no bezel, safe-area insets -->
+  <script src="real-device.js?v=20261007b"></script>
+  <link rel="stylesheet" href="real-device.css?v=20261007b" />
 </head>
 <body>
   <div id="pf-root"></div>
@@ -46,7 +50,10 @@
   <script src="mobilechrome.compiled.js?v=20260928a"></script>
   <script src="comment-share-prompt.compiled.js"></script>
   <script src="learning-shared.js"></script>
-  <script src="lesson-confidence.compiled.js"></script>
+  <script src="points-sound.js"></script>
+  <script src="success-path.js?v=20261007b"></script>
+  <script src="success-path-ui.compiled.js?v=20261007b"></script>
+  <script src="lesson-confidence.compiled.js?v=20260930a"></script>
   <script src="coach.js"></script>
   <script src="tour.js"></script>
 

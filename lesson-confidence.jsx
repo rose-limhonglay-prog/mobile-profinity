@@ -18,6 +18,10 @@
    =========================================================================== */
 const { useState: useStateLX, useEffect: useEffectLX, useRef: useRefLX, useMemo: useMemoLX } = React;
 const DSLX = window.ProfinityDesignSystem_c2b5cc;
+/* Success Path POC (success-path.js + success-path-ui.compiled.js) — absent on shells that don't load it */
+const SPUI_LX = window.PFSuccessPathUI || null;
+const SPE_LX = window.PFSuccessPath || null;
+function spOnLX(slug) { return !!(SPUI_LX && SPE_LX && SPE_LX.has(slug)); }
 
 function goLX(url) {(window.pfGo || function (u) {window.location.href = u;})(url);}
 /* Member → profile links (profile-link.js); inert pass-through if the script is absent. */
@@ -1221,7 +1225,7 @@ function LXCourseProgress({ course, flat, done, onOpen }) {
     </div>);
 }
 
-function LXPlayer({ course, flat, idx, done, onClose, onSelect, onMarkDone, onToast, onShare }) {
+function LXPlayer({ course, flat, idx, done, onClose, onSelect, onMarkDone, onToast, onShare, onOpenPath }) {
   const item = flat[idx];
   const next = flat[idx + 1] || null;
   const isDone = done.indexOf(item.name) !== -1;
@@ -1311,6 +1315,9 @@ function LXPlayer({ course, flat, idx, done, onClose, onSelect, onMarkDone, onTo
           </ul>
         </section>
 
+        {/* Success Path — placement option B: the skill this lesson builds towards */}
+        {spOnLX(course.slug) && <SPUI_LX.LessonCard slug={course.slug} lessonName={item.name} variant="mobile" onOpenPath={onOpenPath} />}
+
         {nextMod &&
         <section data-screen-label="Up next">
             <div className="lc-sec"><h2>Up next</h2></div>
@@ -1346,8 +1353,19 @@ function LXPlayer({ course, flat, idx, done, onClose, onSelect, onMarkDone, onTo
 function CourseDetailConfidence() {
   const course = LX_COURSE;
   const flat = useMemoLX(() => flattenLX(course), []);
-  const [done, markDone] = useLessonsDoneLX();
+  const [done, markDoneRaw] = useLessonsDoneLX();
   const purchased = usePurchasedLX();
+  /* Success Path: full-screen path (?sp=path opens it on load) + a toast when a
+     completed lesson unlocks a skill tick */
+  const [spOpen, setSpOpen] = useStateLX(() => LX_PARAMS.get("sp") === "path");
+  const markDone = (name) => {
+    const before = spOnLX(course.slug) ? SPE_LX.compute(course.slug).ready : 0;
+    markDoneRaw(name);
+    if (spOnLX(course.slug)) {
+      const after = SPE_LX.compute(course.slug).ready;
+      if (after > before) setTimeout(() => showToast("New skill ready to tick in your Success Path"), 900);
+    }
+  };
   /* paid course, not bought yet: browse only — nothing plays until checkout */
   const locked = course.price > 0 && purchased.indexOf(course.slug) === -1;
 
@@ -1506,6 +1524,9 @@ function CourseDetailConfidence() {
           </button>
         </div>}
 
+        {/* Success Path — placement option A: course-landing summary */}
+        {!locked && spOnLX(course.slug) && <SPUI_LX.CourseCard slug={course.slug} variant="mobile" onOpen={() => setSpOpen(true)} />}
+
         <section data-screen-label="In this lesson">
           <div className="lc-sec"><h2>In this lesson</h2></div>
           <p className="lc-body">{content.body}</p>
@@ -1536,7 +1557,11 @@ function CourseDetailConfidence() {
 
       {playing && !locked &&
       <LXPlayer course={course} flat={flat} idx={curIdx} done={done} onClose={closePlayer} onSelect={playerSelect}
-      onMarkDone={markDone} onToast={showToast} onShare={shareLesson} />}
+      onMarkDone={markDone} onToast={showToast} onShare={shareLesson} onOpenPath={() => { closePlayer(); setSpOpen(true); }} />}
+
+      {spOpen && spOnLX(course.slug) &&
+      <SPUI_LX.PathSheet slug={course.slug} onClose={() => setSpOpen(false)}
+        onOpenLesson={(n) => { const i = flat.findIndex((l) => l.name === n); if (i !== -1) openPlayer(i); }} />}
 
       {shareOpen && <LXShareSheet item={cur} course={course} url={shareUrl} onClose={() => setShareOpen(false)} onDone={shareDone} />}
 

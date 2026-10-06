@@ -286,6 +286,43 @@ function pmRankedPillars(assessState) {
 function pmLowestPillar(assessState) {
   return pmRankedPillars(assessState)[0].key;
 }
+
+/* ===========================================================================
+   AI Coach focus (coach-focus.js → window.PFCoachFocus). Katie's focus is
+   her CONSTRAINT, found by "Where you are now" (free for every tier) — not
+   simply her lowest pillar score. Pillar deep-dives (Confidence+) only
+   sharpen it: Ava asks before switching. Goal Focus, Today's Targets and
+   the Spiral all lead with this focus.
+   =========================================================================== */
+const PM_CF = window.PFCoachFocus;
+function pmTier() {
+  return PM_CF ? PM_CF.tier() : getUserTierPM();
+}
+function pmIsPaid() {
+  return PM_CF ? PM_CF.isPaid() : getUserTierPM() !== "free";
+}
+function pmFocus(assessState) {
+  return PM_CF ? PM_CF.computeFocus(assessState, {
+    tier: pmTier(),
+    pillarScore: pmPillarScore
+  }) : null;
+}
+function pmHasFocus(assessState) {
+  return !!(assessState.whereNow && assessState.whereNow.status === "completed");
+}
+/* Pillars Today's Targets deals from: the focus first (always "assessed" —
+   Layer A found it), then any other deep-dived pillar weakest → strongest. */
+function pmTargetPillars(assessState) {
+  const ranked = pmRankedPillars(assessState);
+  const focus = pmFocus(assessState);
+  if (!focus) return ranked;
+  const head = ranked.find(p => p.key === focus.domain);
+  return [{
+    ...head,
+    assessed: true,
+    focus: true
+  }].concat(ranked.filter(p => p.key !== focus.domain && p.assessed)).concat(ranked.filter(p => p.key !== focus.domain && !p.assessed));
+}
 const PM_GOAL_REASONING = {
   "Sales": "Your consultations and follow-up are the fastest lever right now — tightening how you convert the patients already reaching out will move this pillar quickest.",
   "Marketing": "You need visibility. Better, more consistent lead generation is the fastest way to fill your books.",
@@ -421,24 +458,22 @@ function PMPaneCard({
   }, children));
 }
 
-/* "Let's work on your goal" — a band-coloured conic dial with the percentage
-   inside, naming the weakest pillar. */
+/* "Your coach focus" — the constraint Ava found from "Where you are now",
+   why she chose it, the next 90-day milestone and the door (course + free
+   resource). Basic sees all of it; chatting with Ava about it is the tease. */
 function PMGoalFocusCard({
   assessState
 }) {
   const [info, setInfo] = useStatePM(false);
-  const ranked = pmRankedPillars(assessState);
-  const weakest = ranked[0];
-  const band = weakest.band;
-  const assessedCount = ranked.filter(p => p.assessed).length;
-  const remaining = PM_FORECAST_PILLARS.length - assessedCount;
-  const note = remaining === 0 ? "Your weakest pillar right now — Ava recommends starting here." : assessedCount === 1 ? "The pillar you've answered so far — Ava starts your journey here." : "Your weakest assessed pillar — Ava recommends starting here.";
+  const UI = window.PFCoachUI;
+  const focus = pmFocus(assessState);
+  if (!focus || !UI) return null;
+  const paid = pmIsPaid();
   return /*#__PURE__*/React.createElement(PMPaneCard, {
-    title: "Let's work on your goal",
-    infoLabel: "How your goal is chosen",
+    title: "Your coach focus",
+    infoLabel: "How Ava chooses your focus",
     onInfo: () => setInfo(true),
-    className: "pm-goal-card",
-    defaultOpen: false
+    className: "pm-goal-card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-goal-top"
   }, /*#__PURE__*/React.createElement("div", {
@@ -446,53 +481,104 @@ function PMGoalFocusCard({
   }, /*#__PURE__*/React.createElement("span", {
     className: "eyebrow",
     style: {
-      color: band.text
+      color: "var(--ai-purple)"
     }
-  }, band.label), /*#__PURE__*/React.createElement("div", {
-    className: "ti"
-  }, weakest.key), /*#__PURE__*/React.createElement("p", {
-    className: "note"
-  }, note)), /*#__PURE__*/React.createElement("div", {
-    className: "pm-goal-ring",
+  }, "Ava recommends starting here"), /*#__PURE__*/React.createElement("div", {
     style: {
-      "--pct": weakest.score,
-      "--band": band.color,
-      "--band-text": band.text
-    },
-    role: "img",
-    "aria-label": weakest.key + " " + weakest.score + " percent — " + band.label
+      margin: "6px 0 4px"
+    }
+  }, /*#__PURE__*/React.createElement(UI.CFFocusChip, {
+    domain: focus.domain
+  })))), /*#__PURE__*/React.createElement("p", {
+    className: "cf-goal-reason"
+  }, focus.reason), focus.confirm && /*#__PURE__*/React.createElement("div", {
+    className: "cf-confirm",
+    style: {
+      marginTop: 12
+    }
   }, /*#__PURE__*/React.createElement("span", {
-    className: "n"
-  }, weakest.score, "%"))), /*#__PURE__*/React.createElement("p", {
-    className: "pm-goal-reasoning"
-  }, PM_GOAL_REASONING[weakest.key]), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pm-goal-cta",
-    onClick: () => goPM(pmGoalUrl(weakest.key))
-  }, "Work on ", weakest.key, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:arrow-up-right",
-    size: 17,
-    color: "#fff"
-  })), remaining > 0 && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pm-goal-more",
-    onClick: () => pmOpenAssessHub(pmNextUnassessed(assessState))
+    className: "cf-confirm-hd"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:compass",
-    size: 15,
+    name: "lucide:message-circle-question",
+    size: 18,
     color: "var(--ai-purple)"
-  }), "Assess ", remaining, " more pillar", remaining === 1 ? "" : "s", " to compare", /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 15,
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "cf-kicker"
+  }, "Ava has a question")), /*#__PURE__*/React.createElement("p", null, "Your ", /*#__PURE__*/React.createElement("b", null, focus.confirm.alt), " deep-dive scored ", focus.confirm.altScore, " — well below ", focus.domain, " (", focus.confirm.focusScore, "). Is ", focus.confirm.alt.toLowerCase(), " what's really holding you back?"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cf-btn cf-btn-ghost",
+    onClick: () => pmAskAva("My " + focus.confirm.alt + " score is lower than my " + focus.domain + " focus. Should I switch my focus?")
+  }, "Ask Ava")), /*#__PURE__*/React.createElement("div", {
+    className: "cf-milestone",
+    style: {
+      margin: "12px 0 4px"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cf-milestone-ic",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:flag",
+    size: 16,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+    className: "cf-kicker"
+  }, "Your next 90 days"), /*#__PURE__*/React.createElement("span", {
+    className: "cf-milestone-ti"
+  }, focus.milestone))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12
+    }
+  }, /*#__PURE__*/React.createElement(UI.CFDoor, {
+    focus: focus,
+    web: false,
+    tier: pmTier()
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: 12
+    }
+  }, paid ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cf-btn cf-btn-ai cf-btn-block",
+    onClick: () => pmAskAva(PM_CF.avaPrompt(focus))
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 16,
     color: "var(--ai-purple)"
-  })), /*#__PURE__*/React.createElement(PMInfoModal, {
+  }), "Ask Ava to plan my week") : /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cf-ava-locked",
+    onClick: () => goPM(PM_CF.upgradeUrl(false))
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:message-circle",
+    size: 18,
+    color: "#4F46C8"
+  }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "Coach with Ava on this plan"), " — weekly plans, check-ins and role-play with Confidence."), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:lock",
+    size: 14,
+    color: "var(--gray-400)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "cf-reveal-foot",
+    style: {
+      marginTop: 10
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cf-checkin"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:calendar-clock",
+    size: 13,
+    color: "var(--gray-500)"
+  }), PM_CF.checkInLabel(focus)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cf-link",
+    onClick: () => pmOpenAssessHub("whereNow")
+  }, "Check in now")), /*#__PURE__*/React.createElement(PMInfoModal, {
     open: info,
     onClose: () => setInfo(false),
-    title: "How your goal is chosen",
-    icon: "lucide:trophy",
-    coach: "Why is " + weakest.key + " my goal focus right now, and what should I do first?",
-    coachLabel: "Ask Ava about this goal"
-  }, /*#__PURE__*/React.createElement("p", null, "Your goal is always your ", /*#__PURE__*/React.createElement("b", null, "lowest-scoring pillar"), ". Each pillar's score is your ", /*#__PURE__*/React.createElement("b", null, "Get to know you"), " baseline (worth up to 60%) plus the course progress you've made in that area."), /*#__PURE__*/React.createElement("p", null, "You only need to answer ", /*#__PURE__*/React.createElement("b", null, "one pillar"), " to start — your goal is then the lowest pillar you've assessed so far. Pillars you haven't answered yet aren't scored, so they can't be your goal until you do."), /*#__PURE__*/React.createElement("p", null, "The dial's colour is its band: ", /*#__PURE__*/React.createElement("b", null, "Expert"), ", ", /*#__PURE__*/React.createElement("b", null, "Growing strong"), ", ", /*#__PURE__*/React.createElement("b", null, "Building momentum"), " or ", /*#__PURE__*/React.createElement("b", null, "Just getting started"), ". When this pillar overtakes another, your goal switches automatically.")));
+    title: "How Ava chooses your focus",
+    icon: "lucide:compass",
+    coach: paid ? "Why is " + focus.domain + " my focus right now, and what should I do first?" : null,
+    coachLabel: "Ask Ava about my focus"
+  }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, "“The goal doesn't dictate the content — the constraint does.”"), " Your goal is where you're heading; your focus is the one thing holding you back right now."), /*#__PURE__*/React.createElement("p", null, "Ava reads your ", /*#__PURE__*/React.createElement("b", null, "Where you are now"), " answers in order: if you're new to injecting or your blocker is clinical confidence or complications, she starts with ", /*#__PURE__*/React.createElement("b", null, "Clinical Skills"), " — everything else is built on it. Otherwise your ", /*#__PURE__*/React.createElement("b", null, "biggest blocker"), " decides the focus."), /*#__PURE__*/React.createElement("p", null, "With Confidence, your pillar deep-dives sharpen the call: if another pillar scores much lower, Ava asks you before switching. Check in any time your situation changes — or when Ava nudges you in 30 days.")));
 }
 
 /* The Prosperity Spiral — a 2×2 grid of pillar tiles ordered weakest →
@@ -513,13 +599,33 @@ function PMSpiralCard({
   const [info, setInfo] = useStatePM(false);
   const [tim, setTim] = useStatePM(false);
   const ranked = pmRankedPillars(assessState);
-  const weakest = ranked[0];
+  const focus = pmFocus(assessState);
+  const weakest = focus ? ranked.find(p => p.key === focus.domain) : ranked[0];
   const remaining = ranked.filter(p => !p.assessed).length;
+  /* Basic: the Spiral is a Confidence feature — show its shape (blurred,
+     focus marked) with the upgrade, never an empty/zeroed state. */
+  if (!pmIsPaid() && window.PFCoachUI) return /*#__PURE__*/React.createElement(PMPaneCard, {
+    id: "prosperity-spiral",
+    title: "The Prosperity Spiral",
+    stacked: true,
+    sub: /*#__PURE__*/React.createElement(React.Fragment, null, "Your focus is ", /*#__PURE__*/React.createElement("b", null, weakest.key), ". Score all four pillars to see the whole picture."),
+    infoLabel: "How the Prosperity Spiral works",
+    onInfo: () => setInfo(true),
+    defaultOpen: true
+  }, /*#__PURE__*/React.createElement(window.PFCoachUI.CFLockedSpiral, {
+    web: false,
+    focus: focus
+  }), /*#__PURE__*/React.createElement(PMInfoModal, {
+    open: info,
+    onClose: () => setInfo(false),
+    title: "How the Prosperity Spiral works",
+    icon: "lucide:sparkles"
+  }, /*#__PURE__*/React.createElement("p", null, "Your Spiral is a snapshot of how balanced your business is across ", /*#__PURE__*/React.createElement("b", null, "Sales"), ", ", /*#__PURE__*/React.createElement("b", null, "Marketing"), ", ", /*#__PURE__*/React.createElement("b", null, "Clinical Skills"), " and ", /*#__PURE__*/React.createElement("b", null, "Business Systems"), "."), /*#__PURE__*/React.createElement("p", null, "With Confidence you answer a short deep-dive for each pillar, and Ava scores and tracks all four — so you can see your focus improving and know when it's time to move on to the next one.")));
   return /*#__PURE__*/React.createElement(PMPaneCard, {
     id: "prosperity-spiral",
     title: "The Prosperity Spiral",
     stacked: true,
-    sub: remaining > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, weakest.key), " is your starting point. Answer the other ", remaining === 1 ? "pillar" : remaining + " pillars", " to complete your Spiral.") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, weakest.key), " is carrying the least weight. Lift it and the whole spiral rises."),
+    sub: remaining > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, weakest.key), " is your coach focus. Deep-dive ", remaining === 1 ? "1 more pillar" : remaining + " pillars", " to complete your Spiral.") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, weakest.key), " is your coach focus. Lift it and the whole spiral rises."),
     infoLabel: "How the Prosperity Spiral works",
     onInfo: () => setInfo(true),
     defaultOpen: window.location.hash === "#prosperity-spiral"
@@ -529,7 +635,7 @@ function PMSpiralCard({
     if (!p.assessed) return /*#__PURE__*/React.createElement("button", {
       key: p.key,
       type: "button",
-      className: "pm-spiral-tile unassessed",
+      className: "pm-spiral-tile unassessed" + (p.key === weakest.key ? " lowest" : ""),
       "aria-label": p.key + " — not assessed yet. Tap to answer its questions, about 3 minutes",
       onClick: () => pmOpenAssessHub(p.key)
     }, /*#__PURE__*/React.createElement("span", {
@@ -543,13 +649,13 @@ function PMSpiralCard({
     }, "?")), /*#__PURE__*/React.createElement("span", {
       className: "pm-spiral-tile-name"
     }, p.key), /*#__PURE__*/React.createElement("span", {
-      className: "pm-spiral-tile-chip assess"
-    }, "Assess"), /*#__PURE__*/React.createElement("span", {
+      className: "pm-spiral-tile-chip " + (p.key === weakest.key ? "start" : "assess")
+    }, p.key === weakest.key ? "Your focus" : "Assess"), /*#__PURE__*/React.createElement("span", {
       className: "pm-spiral-tile-avg"
     }, "Tap to answer · ~3 mins"));
     const lowest = p.key === weakest.key;
     const diff = p.score - PM_PILLAR_AVERAGE;
-    const chip = lowest ? "Start here" : PM_BAND_CHIP[p.band.key];
+    const chip = lowest ? "Your focus" : PM_BAND_CHIP[p.band.key];
     return /*#__PURE__*/React.createElement("button", {
       key: p.key,
       type: "button",
@@ -611,7 +717,7 @@ function PMSpiralCard({
     icon: "lucide:sparkles",
     coach: "Explain how my Spiral Score is calculated and what I can do this week to raise it.",
     coachLabel: "Ask Ava to explain mine"
-  }, /*#__PURE__*/React.createElement("p", null, "Your Spiral is a snapshot of how balanced your business is across the four areas every successful clinic needs: ", /*#__PURE__*/React.createElement("b", null, "Sales"), ", ", /*#__PURE__*/React.createElement("b", null, "Marketing"), ", ", /*#__PURE__*/React.createElement("b", null, "Clinical Skills"), " and ", /*#__PURE__*/React.createElement("b", null, "Business Systems"), "."), /*#__PURE__*/React.createElement("p", null, "Each ring is coloured by its band — green ", /*#__PURE__*/React.createElement("b", null, "Strong"), ", gold ", /*#__PURE__*/React.createElement("b", null, "Growing"), ", orange ", /*#__PURE__*/React.createElement("b", null, "Building"), ", red ", /*#__PURE__*/React.createElement("b", null, "Starting out"), " — and “vs average” compares you with other PROfinity clinics. A pillar climbs when you act on it: finishing a lesson, completing a target, posting a case study, following up with a patient."), /*#__PURE__*/React.createElement("p", null, "A weak pillar isn't a bad grade — it's where Ava recommends you start, because the fastest way to grow a clinic is usually to lift its lowest pillar first.")), /*#__PURE__*/React.createElement(PMInfoModal, {
+  }, /*#__PURE__*/React.createElement("p", null, "Your Spiral is a snapshot of how balanced your business is across the four areas every successful clinic needs: ", /*#__PURE__*/React.createElement("b", null, "Sales"), ", ", /*#__PURE__*/React.createElement("b", null, "Marketing"), ", ", /*#__PURE__*/React.createElement("b", null, "Clinical Skills"), " and ", /*#__PURE__*/React.createElement("b", null, "Business Systems"), "."), /*#__PURE__*/React.createElement("p", null, "Each ring is coloured by its band — green ", /*#__PURE__*/React.createElement("b", null, "Strong"), ", gold ", /*#__PURE__*/React.createElement("b", null, "Growing"), ", orange ", /*#__PURE__*/React.createElement("b", null, "Building"), ", red ", /*#__PURE__*/React.createElement("b", null, "Starting out"), " — and “vs average” compares you with other PROfinity clinics. A pillar climbs when you act on it: finishing a lesson, completing a target, posting a case study, following up with a patient."), /*#__PURE__*/React.createElement("p", null, "A weak pillar isn't a bad grade. Ava's ", /*#__PURE__*/React.createElement("b", null, "coach focus"), " comes from what's holding you back right now (your Where you are now answers); the Spiral scores help her confirm it — if another pillar is much lower, she'll ask before switching.")), /*#__PURE__*/React.createElement(PMInfoModal, {
     open: tim,
     onClose: () => setTim(false),
     title: "Why balance beats brilliance",
@@ -745,7 +851,8 @@ function pmReconcileTargets(state, ranked) {
    ticked set: it completes itself when the assessment does. */
 function PMAssessNudgeRow({
   pillarKey,
-  remaining
+  remaining,
+  locked
 }) {
   const open = () => pmOpenAssessHub(pillarKey);
   return /*#__PURE__*/React.createElement("div", {
@@ -754,25 +861,25 @@ function PMAssessNudgeRow({
     className: "pm-target-assess-ic",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:compass",
+    name: locked ? "lucide:lock" : "lucide:compass",
     size: 18,
     color: "var(--ai-purple)"
   })), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-target-main",
     onClick: open,
-    "aria-label": "Answer the " + pillarKey + " questions in Get to know you to add it to your Spiral. About 3 minutes"
+    "aria-label": (locked ? "Preview the " : "Answer the ") + pillarKey + " deep-dive in Get to know you. About 3 minutes"
   }, /*#__PURE__*/React.createElement("span", {
     className: "pm-target-copy"
   }, /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, "Answer the ", pillarKey, " questions"), /*#__PURE__*/React.createElement("span", {
+  }, "Sharpen your plan: ", pillarKey, " deep-dive"), /*#__PURE__*/React.createElement("span", {
     className: "cap"
-  }, "Get to know you · ", remaining, " pillar", remaining === 1 ? "" : "s", " still to assess · ~3 mins"))), /*#__PURE__*/React.createElement("button", {
+  }, locked ? "Get to know you · Confidence · ~3 mins" : "Get to know you · " + remaining + " pillar" + (remaining === 1 ? "" : "s") + " still to deep-dive · ~3 mins"))), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-pick-cta pm-target-assess-cta",
     onClick: open
-  }, "Start"));
+  }, locked ? "Preview" : "Start"));
 }
 
 /* Daily picks (user, 2026-09-22): every day's set must also carry one FREE
@@ -892,9 +999,14 @@ function PMTargetsCard({
   assessState
 }) {
   const [info, setInfo] = useStatePM(false);
-  const ranked = pmRankedPillars(assessState);
-  const nextKey = pmNextUnassessed(assessState);
-  const remaining = ranked.filter(p => !p.assessed).length;
+  const ranked = pmTargetPillars(assessState);
+  const focus = pmFocus(assessState);
+  const paid = pmIsPaid();
+  const weakest = ranked[0]; // focus first (pmTargetPillars)
+  /* Next deep-dive to suggest: the focus pillar first (it confirms Ava's
+     call), then the rest in hub order. Basic sees it as a locked preview. */
+  const nextKey = focus && !pmAssessed(assessState, focus.domain) ? focus.domain : pmNextUnassessed(assessState);
+  const remaining = PM_FORECAST_PILLARS.filter(k => !pmAssessed(assessState, k)).length;
 
   /* Persisted per day: tick state and per-pillar pool cursors. A new date
      starts a fresh set of five; finishing today's set adds nothing. */
@@ -984,12 +1096,13 @@ function PMTargetsCard({
     onInfo: () => setInfo(true)
   }, nextKey && /*#__PURE__*/React.createElement(PMAssessNudgeRow, {
     pillarKey: nextKey,
-    remaining: remaining
+    remaining: remaining,
+    locked: !paid
   }), /*#__PURE__*/React.createElement("div", {
     className: "pm-target-rows"
   }, /*#__PURE__*/React.createElement(PMDailyPicks, null), rows.map(t => {
     const pr = PM_PRIORITY[t.priority];
-    const caption = (t.pillar || "Suggested by Ava") + " · " + pr.label;
+    const caption = (t.pillar ? focus && t.pillar === focus.domain ? "Your focus · " + t.pillar : t.pillar : "Suggested by Ava") + " · " + pr.label;
     return /*#__PURE__*/React.createElement("div", {
       key: t.id,
       className: "pm-target-row" + (t.done ? " done" : "") + (settling === t.id && t.done ? " is-settling" : "")
@@ -1049,7 +1162,7 @@ function PMTargetsCard({
     icon: "lucide:list-checks",
     coach: "What should I tackle first from today's targets, and why?",
     coachLabel: "Ask Ava where to start"
-  }, /*#__PURE__*/React.createElement("p", null, "Ava picks ", /*#__PURE__*/React.createElement("b", null, "five"), " small actions a day from your ", /*#__PURE__*/React.createElement("b", null, "assessed"), " pillars, weakest pillar first, and orders them by priority — ", /*#__PURE__*/React.createElement("b", null, "red double chevron"), " for your weakest pillar, ", /*#__PURE__*/React.createElement("b", null, "gold single"), " for the next, ", /*#__PURE__*/React.createElement("b", null, "grey dash"), " for the rest."), /*#__PURE__*/React.createElement("p", null, "Ticking a target earns its points (", /*#__PURE__*/React.createElement("b", null, "+150 / +100 / +50"), ") and nudges that pillar's score. Tap the row itself to open the pillar's goal page; the circle is just the tick."), /*#__PURE__*/React.createElement("p", null, "Five is the day's set. Finish them all and you're done for today — nothing new appears until tomorrow, when a fresh five arrives."), /*#__PURE__*/React.createElement("p", null, "Pillars you haven't answered yet don't get targets — the ", /*#__PURE__*/React.createElement("b", null, "Next up"), " row takes you straight to their questions, and their tasks join the list the moment you finish."), /*#__PURE__*/React.createElement("p", null, "Every day also brings a ", /*#__PURE__*/React.createElement("b", null, "free PDF download"), " (+50 pts) and a ", /*#__PURE__*/React.createElement("b", null, "course pick"), " (+150 pts when you enrol). Both refresh daily.")));
+  }, /*#__PURE__*/React.createElement("p", null, "Ava picks ", /*#__PURE__*/React.createElement("b", null, "five"), " small actions a day, led by your ", /*#__PURE__*/React.createElement("b", null, "coach focus"), ", then any other pillar you've deep-dived — ", /*#__PURE__*/React.createElement("b", null, "red double chevron"), " for your focus, ", /*#__PURE__*/React.createElement("b", null, "gold single"), " for the next, ", /*#__PURE__*/React.createElement("b", null, "grey dash"), " for the rest."), /*#__PURE__*/React.createElement("p", null, "Ticking a target earns its points (", /*#__PURE__*/React.createElement("b", null, "+150 / +100 / +50"), ") and nudges that pillar's score. Tap the row itself to open the pillar's goal page; the circle is just the tick."), /*#__PURE__*/React.createElement("p", null, "Five is the day's set. Finish them all and you're done for today — nothing new appears until tomorrow, when a fresh five arrives."), /*#__PURE__*/React.createElement("p", null, "Pillars you haven't deep-dived yet don't get targets — the ", /*#__PURE__*/React.createElement("b", null, "Next up"), " row takes you to their questions", paid ? "" : " (Confidence)", ", and their tasks join the list the moment you finish."), /*#__PURE__*/React.createElement("p", null, "Every day also brings a ", /*#__PURE__*/React.createElement("b", null, "free PDF download"), " (+50 pts) and a ", /*#__PURE__*/React.createElement("b", null, "course pick"), " (+150 pts when you enrol). Both refresh daily.")));
 }
 
 /* Gate card shown in place of Goal Focus / Prosperity Spiral / Today's
@@ -1061,36 +1174,31 @@ function PMTargetsCard({
 /* Pass a pillar key to land straight on that pillar's questions; anything
    else (including a click event) opens the hub. */
 function pmOpenAssessHub(key) {
+  const k = typeof key === "string" ? key : null;
+  /* The hub lives in ProfileSteps, which may not be mounted yet (e.g. right
+     after leaving Edit Profile) — park the request so it opens on mount. */
+  window.__pfPendingAssessKey = k || "hub";
   window.dispatchEvent(new CustomEvent("pf-open-assess-hub", {
     detail: {
-      key: typeof key === "string" ? key : null
+      key: k
     }
   }));
 }
-function PMGoalsGateCard({
-  doneCount
-}) {
-  const heading = doneCount === 0 ? "Start with ‘Get to know you’" : `Keep going — ${doneCount} of 4 done`;
+function PMGoalsGateCard() {
   return /*#__PURE__*/React.createElement("section", {
     className: "pm-sec pm-card pm-goals-gate"
   }, /*#__PURE__*/React.createElement("span", {
     className: "pm-goals-gate-icon",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:compass",
+    name: "lucide:sparkles",
     size: 26,
     color: "#fff"
-  })), /*#__PURE__*/React.createElement("h3", null, heading), /*#__PURE__*/React.createElement("p", null, "Answer just ", /*#__PURE__*/React.createElement("b", null, "one"), " pillar — Marketing, Sales, Clinical Skills or Business Systems — and your goal tracking starts there. Add the other three whenever you like to complete your Spiral."), /*#__PURE__*/React.createElement("div", {
-    className: "pm-goals-gate-dots",
-    "aria-label": doneCount + " of 4 assessments done"
-  }, PM_FORECAST_PILLARS.map((k, i) => /*#__PURE__*/React.createElement("span", {
-    key: k,
-    className: i < doneCount ? "on" : ""
-  }))), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("h3", null, "Let Ava find your focus"), /*#__PURE__*/React.createElement("p", null, "Answer ", /*#__PURE__*/React.createElement("b", null, "Where you are now"), " — seven quick taps, about 2 minutes, free on every plan. Ava works out what's holding you back right now and puts you at the door: the one course and free resource to start with."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-goals-gate-cta",
-    onClick: pmOpenAssessHub
-  }, doneCount === 0 ? "Get to know you" : "Continue ‘Get to know you’", /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    onClick: () => pmOpenAssessHub("whereNow")
+  }, "Find my focus", /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:arrow-up-right",
     size: 17,
     color: "#fff"
@@ -1290,9 +1398,8 @@ function PMGoalsMenu({
   useEffectPM(() => {
     if (window.location.hash === "#prosperity-spiral") setExpanded(true);
   }, []);
-  const doneCount = pmForecastDone(assessState);
-  const unlocked = doneCount >= PM_FORECAST_MIN;
-  const ranked = unlocked ? pmRankedPillars(assessState) : [];
+  const unlocked = pmHasFocus(assessState);
+  const ranked = unlocked ? pmTargetPillars(assessState) : [];
 
   /* Collapsed preview: the day's open targets in priority order, first two
      shown, the rest counted. Re-read on every render so ticks made in the
@@ -1306,7 +1413,7 @@ function PMGoalsMenu({
   const moreCount = openTargets.length - previewTargets.length;
   function tapCollapsed() {
     setExpanded(true);
-    if (!unlocked) pmOpenAssessHub();
+    if (!unlocked) pmOpenAssessHub("whereNow");
   }
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-goals-viewport"
@@ -1317,7 +1424,7 @@ function PMGoalsMenu({
     className: "pm-goals-pane pm-goals-collapsed" + (expanded ? " is-offstage" : ""),
     "aria-hidden": expanded,
     tabIndex: expanded ? -1 : 0,
-    "aria-label": unlocked ? "Track your goals — tap to view" : "Track your goals — assessment required, tap to start",
+    "aria-label": unlocked ? "Track your goals — tap to view" : "Track your goals — answer Where you are now to start",
     onClick: tapCollapsed
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-goals-collapsed-top"
@@ -1333,7 +1440,7 @@ function PMGoalsMenu({
     color: "var(--gray-400)"
   })), /*#__PURE__*/React.createElement("p", {
     className: "pm-steps-sub"
-  }, "Goal Focus, Prosperity Spiral & Today's Targets"), /*#__PURE__*/React.createElement("div", {
+  }, "Coach focus, Today's Targets & Prosperity Spiral"), /*#__PURE__*/React.createElement("div", {
     className: "pm-goals-preview"
   }, unlocked ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
     className: "pm-goals-preview-h"
@@ -1352,12 +1459,12 @@ function PMGoalsMenu({
   }, "+", moreCount, " more")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
     className: "pm-goals-preview-h"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:lock",
+    name: "lucide:sparkles",
     size: 16,
     color: "var(--brand-gold)"
-  }), "Assessment required"), /*#__PURE__*/React.createElement("p", {
+  }), "Find your focus"), /*#__PURE__*/React.createElement("p", {
     className: "pm-goals-preview-empty"
-  }, "Answer one pillar in ‘Get to know you’ to start tracking — tap to begin")))), /*#__PURE__*/React.createElement("div", {
+  }, "Answer ‘Where you are now’ (2 mins, free) and Ava shows you where to start — tap to begin")))), /*#__PURE__*/React.createElement("div", {
     className: "pm-goals-pane pm-goals-expanded" + (expanded ? "" : " is-offstage"),
     "aria-hidden": !expanded
   }, /*#__PURE__*/React.createElement("div", {
@@ -1375,15 +1482,13 @@ function PMGoalsMenu({
     name: "lucide:target",
     size: 22,
     color: "var(--brand-gold)"
-  }), "Track your goals")), unlocked ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PMTargetsCard, {
+  }), "Track your goals")), unlocked ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PMGoalFocusCard, {
     assessState: assessState
-  }), /*#__PURE__*/React.createElement(PMGoalFocusCard, {
+  }), /*#__PURE__*/React.createElement(PMTargetsCard, {
     assessState: assessState
   }), /*#__PURE__*/React.createElement(PMLeagueCard, null), /*#__PURE__*/React.createElement(PMSpiralCard, {
     assessState: assessState
-  })) : /*#__PURE__*/React.createElement(PMGoalsGateCard, {
-    doneCount: doneCount
-  }))));
+  })) : /*#__PURE__*/React.createElement(PMGoalsGateCard, null))));
 }
 const TIER_DISPLAY_NAME_PM = {
   confidence: "Confidence",
@@ -2465,10 +2570,28 @@ const PM_ARCHETYPES = {
 
 /* Order the hub renders tiles in — Dream & Vision always last since it's the
    "bonus" non-scoring assessment. */
-const PM_ASSESS_ORDER = ["Marketing", "Sales", "Clinical Skills", "Business Systems", "dreamVision"];
+/* Hub order — coach-focus.js is the source of truth: "Where you are now"
+   (Layer A, free) first, the four pillar deep-dives, Dream & Vision, then
+   Personal Goals (moved here from Edit Profile). Each is its own
+   questionnaire; everything after Layer A is Confidence+. */
+const PM_ASSESS_ORDER = PM_CF ? PM_CF.ORDER : ["Marketing", "Sales", "Clinical Skills", "Business Systems", "dreamVision"];
 function pmAssessDef(key) {
-  return key === "dreamVision" ? PM_DREAM_VISION : PM_PILLAR_ASSESSMENTS[key];
+  if (key === "dreamVision") return PM_DREAM_VISION;
+  if (PM_CF && key === "whereNow") return PM_CF.LAYER_A;
+  if (PM_CF && key === "personalGoals") return PM_CF.PERSONAL_GOALS;
+  return PM_PILLAR_ASSESSMENTS[key];
 }
+/* scored (pillar) · vision (Dream & Vision archetype) · profile (Layer A —
+   finds the coach focus) · text (Personal Goals, open answers). */
+function pmAssessKind(key) {
+  if (key === "dreamVision") return "vision";
+  const d = pmAssessDef(key);
+  return d && d.kind ? d.kind : "scored";
+}
+function pmAssessLocked(key) {
+  return PM_CF ? PM_CF.isLocked(key) : false;
+}
+const PM_OPT_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H"];
 const PM_ASSESS_STATUS_LABEL = {
   not_started: "Not started",
   in_progress: "In progress",
@@ -2477,32 +2600,36 @@ const PM_ASSESS_STATUS_LABEL = {
 function pmAssessStatus(entry) {
   if (!entry) return "not_started";
   if (entry.status === "completed") return "completed";
-  if (entry.answers && entry.answers.some(a => a != null)) return "in_progress";
+  if (entry.answers && entry.answers.some(a => a != null && a !== "")) return "in_progress";
   return "not_started";
 }
 
-/* ---- Question wizard — shared by all 5 assessments. One question per
-   screen, gold selection accents, a segmented progress bar. Pillar
-   assessments score on finish (rawPoints out of 28); Dream & Vision tallies
-   a dominant letter and reveals an archetype instead of a score. ---- */
+/* ---- Question wizard — shared by every questionnaire. One question per
+   screen, gold selection accents, a segmented progress bar. Pillars score
+   on finish (rawPoints out of 28); Dream & Vision reveals an archetype;
+   Where you are now hands off to the coach focus reveal (renderResult);
+   Personal Goals takes free text and every question is optional. ---- */
 function PMAssessWizard({
   assessKey,
   def,
   initialAnswers,
   onProgress,
   onComplete,
-  onClose
+  onClose,
+  renderResult
 }) {
   usePMEscClose(true, onClose);
   const questions = def.questions;
   const total = questions.length;
-  const scored = assessKey !== "dreamVision";
+  const kind = pmAssessKind(assessKey);
+  const scored = kind === "scored";
+  const isText = kind === "text";
   const [step, setStep] = useStatePM(() => {
     const init = initialAnswers || questions.map(() => null);
-    const firstUnanswered = init.findIndex(a => a == null);
+    const firstUnanswered = init.findIndex(a => a == null || a === "");
     return firstUnanswered === -1 ? 0 : firstUnanswered;
   });
-  const [answers, setAnswers] = useStatePM(() => initialAnswers || questions.map(() => null));
+  const [answers, setAnswers] = useStatePM(() => initialAnswers || questions.map(() => isText ? "" : null));
   const [finished, setFinished] = useStatePM(false);
   useEffectPM(() => {
     if (!finished) onProgress(answers);
@@ -2522,6 +2649,10 @@ function PMAssessWizard({
   function goBack() {
     setStep(s => Math.max(0, s - 1));
   }
+  const sub = def.sub || (scored ? "Answer honestly — this sets your baseline. Course progress can still carry this pillar all the way to 100%." : "Non-scored — this just helps us understand your goals so we can build your vision with you.");
+  const UI = window.PFCoachUI;
+  const hasAnswer = isText ? true : answers[step] != null;
+  const lastLabel = kind === "profile" ? "Find my focus" : isText ? "Save for Ava" : "See results";
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-wiz-overlay",
     role: "dialog",
@@ -2535,7 +2666,7 @@ function PMAssessWizard({
     className: "pm-wiz-hd-spacer"
   }), /*#__PURE__*/React.createElement("span", {
     className: "pm-wiz-hd-ti"
-  }, def.label), /*#__PURE__*/React.createElement("button", {
+  }, finished && kind === "profile" ? "Your coach focus" : def.label), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-wiz-close",
     "aria-label": "Close",
@@ -2548,7 +2679,7 @@ function PMAssessWizard({
     className: "pm-wiz-body"
   }, /*#__PURE__*/React.createElement("p", {
     className: "pm-wiz-sub"
-  }, scored ? "Answer honestly — this sets your baseline. Course progress can still carry this pillar all the way to 100%." : "Non-scored — this just helps us understand your goals so we can build your vision with you."), /*#__PURE__*/React.createElement("div", {
+  }, sub), /*#__PURE__*/React.createElement("div", {
     className: "pm-wiz-progress"
   }, /*#__PURE__*/React.createElement("span", {
     className: "pm-wiz-seg",
@@ -2566,7 +2697,13 @@ function PMAssessWizard({
   }, step + 1, " of ", total)), /*#__PURE__*/React.createElement("div", {
     className: "pm-wiz-q",
     key: "q" + step
-  }, cur.q), /*#__PURE__*/React.createElement("div", {
+  }, isText ? /*#__PURE__*/React.createElement("label", {
+    htmlFor: "pm-pg-" + step
+  }, cur.q) : cur.q), isText && UI ? /*#__PURE__*/React.createElement(UI.CFTextAnswer, {
+    id: "pm-pg-" + step,
+    value: answers[step],
+    onChange: v => pick(v)
+  }) : /*#__PURE__*/React.createElement("div", {
     className: "pm-wiz-opts",
     role: "radiogroup",
     "aria-label": cur.q
@@ -2579,7 +2716,7 @@ function PMAssessWizard({
     onClick: () => pick(i)
   }, /*#__PURE__*/React.createElement("span", {
     className: "pm-wiz-opt-letter"
-  }, PM_ARCHETYPE_LETTERS[i]), /*#__PURE__*/React.createElement("span", {
+  }, PM_OPT_LETTERS[i]), /*#__PURE__*/React.createElement("span", {
     className: "pm-wiz-opt-tx"
   }, o)))), /*#__PURE__*/React.createElement("div", {
     className: "pm-wiz-nav"
@@ -2590,9 +2727,11 @@ function PMAssessWizard({
   }, "Back"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-wiz-next",
-    disabled: answers[step] == null,
+    disabled: !hasAnswer,
     onClick: goNext
-  }, step === total - 1 ? "See results" : "Continue"))) : /*#__PURE__*/React.createElement(PMAssessResult, {
+  }, step === total - 1 ? lastLabel : isText && !(answers[step] || "").trim() ? "Skip" : "Continue"))) : renderResult ? /*#__PURE__*/React.createElement("div", {
+    className: "pm-wiz-body"
+  }, renderResult(answers, onClose)) : /*#__PURE__*/React.createElement(PMAssessResult, {
     scored: scored,
     answers: answers,
     onClose: onClose
@@ -2678,10 +2817,9 @@ function PMAssessResult({
   }, "Back to assessments"));
 }
 
-/* Per-tile presentation: a one-line blurb under the pillar name. Tiles are
-   plain white cards now (the emoji icon + pastel wash per pillar were
-   removed at the user's request, Sept 2026). */
-const PM_HUB_META = {
+/* Per-tile presentation: blurbs come from coach-focus.js (PM_CF.META).
+   Tiles are plain white cards (emoji + pastel wash removed, Sept 2026). */
+const PM_HUB_META = PM_CF ? PM_CF.META : {
   "Marketing": {
     blurb: "How you attract and convert new patients"
   },
@@ -2702,25 +2840,30 @@ function PMAssessHubTile({
   assessKey,
   def,
   entry,
-  onOpen
+  onOpen,
+  focus
 }) {
   const status = pmAssessStatus(entry);
-  const scored = assessKey !== "dreamVision";
-  const meta = PM_HUB_META[assessKey];
+  const kind = pmAssessKind(assessKey);
+  const scored = kind === "scored";
+  const locked = pmAssessLocked(assessKey);
+  const meta = PM_HUB_META[assessKey] || {};
   const scorePct = status === "completed" && scored ? Math.round(entry.rawPoints / (def.questions.length * 4) * 100) : null;
   const done = status === "completed";
+  const isStart = assessKey === "whereNow" && !done;
+  const isFocusPillar = focus && focus.domain === assessKey;
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "pm-hub-tile pm-hub-tile--" + status,
+    className: "pm-hub-tile pm-hub-tile--" + status + (locked ? " cf-tile-locked" : "") + (isStart || isFocusPillar && !done ? " cf-tile-start" : ""),
     onClick: () => onOpen(assessKey),
-    "aria-label": def.label + " — " + PM_ASSESS_STATUS_LABEL[status] + (scorePct != null ? ", " + scorePct + " percent" : "") + ". About " + def.timeMin + " minutes"
+    "aria-label": def.label + " — " + (locked ? "unlocks with Confidence, tap to preview" : PM_ASSESS_STATUS_LABEL[status]) + (scorePct != null ? ", " + scorePct + " percent" : "") + ". About " + def.timeMin + " minutes"
   }, /*#__PURE__*/React.createElement("span", {
     className: "pm-hub-copy"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ti"
   }, def.label), /*#__PURE__*/React.createElement("span", {
     className: "bl"
-  }, meta.blurb), /*#__PURE__*/React.createElement("span", {
+  }, isFocusPillar && !done ? "Recommended next — confirms your " + focus.domain + " focus" : meta.blurb), /*#__PURE__*/React.createElement("span", {
     className: "tm"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:clock",
@@ -2728,9 +2871,23 @@ function PMAssessHubTile({
     color: "var(--gray-500)"
   }), "~", def.timeMin, " mins", scorePct != null && /*#__PURE__*/React.createElement("b", {
     className: "pm-hub-score"
-  }, "· ", scorePct, "%"), done && !scored && /*#__PURE__*/React.createElement("b", {
+  }, "· ", scorePct, "%"), done && kind === "vision" && /*#__PURE__*/React.createElement("b", {
     className: "pm-hub-score"
-  }, "· ", PM_ARCHETYPES[entry.archetype] ? PM_ARCHETYPES[entry.archetype].name : "Done"))), /*#__PURE__*/React.createElement("span", {
+  }, "· ", PM_ARCHETYPES[entry.archetype] ? PM_ARCHETYPES[entry.archetype].name : "Done"), done && kind === "profile" && focus && /*#__PURE__*/React.createElement("b", {
+    className: "pm-hub-score"
+  }, "· Focus: ", focus.domain))), locked ? /*#__PURE__*/React.createElement("span", {
+    className: "pm-hub-badge cf-tile-lock"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:lock",
+    size: 11,
+    color: "#8A5303"
+  }), "Confidence") : isStart ? /*#__PURE__*/React.createElement("span", {
+    className: "pm-hub-badge cf-tile-free"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 11,
+    color: "#4F46C8"
+  }), "Free · Start here") : /*#__PURE__*/React.createElement("span", {
     className: "pm-hub-badge pm-hub-badge--" + status
   }, done && /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:check",
@@ -2740,14 +2897,14 @@ function PMAssessHubTile({
     className: "pm-hub-chev",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:chevron-right",
+    name: locked ? "lucide:eye" : "lucide:chevron-right",
     size: 18,
     color: "var(--brand-navy)"
   })));
 }
 
-/* Assessment Selection Screen (PRD 3.1) — 4 pillar tiles + Dream & Vision,
-   opened from the "Get to know you" entry point in Complete Your Profile. */
+/* Assessment Selection Screen — opened from the "Get to know you" entry
+   point in Complete Your Profile. */
 function PMAssessHelpModal({
   open,
   onClose
@@ -2762,7 +2919,7 @@ function PMAssessHelpModal({
     onClick: e => e.stopPropagation(),
     role: "dialog",
     "aria-modal": "true",
-    "aria-label": "How self-assessments work"
+    "aria-label": "How Get to know you works"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-help-hd"
   }, /*#__PURE__*/React.createElement("span", {
@@ -2771,7 +2928,7 @@ function PMAssessHelpModal({
     name: "lucide:compass",
     size: 18,
     color: "var(--ai-purple)"
-  })), /*#__PURE__*/React.createElement("h3", null, "How self-assessments work"), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("h3", null, "How Get to know you works"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-help-x",
     "aria-label": "Close",
@@ -2782,12 +2939,12 @@ function PMAssessHelpModal({
     color: "var(--gray-500)"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "pm-help-body"
-  }, /*#__PURE__*/React.createElement("p", null, "Each pillar assessment gives you a score based on your real-world experience and honest self-evaluation — there are no wrong answers, just an honest snapshot of where your clinic is today."), /*#__PURE__*/React.createElement("p", null, "That score becomes the starting point for your personalised journey plan — it's how Ava (and your mentor) know where to focus your coaching first."), /*#__PURE__*/React.createElement("p", null, "It also feeds directly into your Prosperity Spiral: your self-assessment sets the baseline for each pillar, and completing courses can carry it the rest of the way to 100%."), /*#__PURE__*/React.createElement("p", null, "Dream & Vision works differently — it's never scored. It simply helps us understand your goals so we can build your journey around them."), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, "Where you are now"), " is free on every plan. From your stage, goal and biggest blocker, Ava finds your ", /*#__PURE__*/React.createElement("b", null, "coach focus"), " — the one thing holding you back right now — and shows you the course and free resource to start with."), /*#__PURE__*/React.createElement("p", null, "With ", /*#__PURE__*/React.createElement("b", null, "Confidence"), ", four pillar deep-dives score your Prosperity Spiral and sharpen Ava's call; ", /*#__PURE__*/React.createElement("b", null, "Dream & Vision"), " and ", /*#__PURE__*/React.createElement("b", null, "Personal Goals"), " keep every recommendation pointed at the clinic you want and why you want it."), /*#__PURE__*/React.createElement("p", null, "There are no wrong answers — just an honest snapshot. Update them any time; Ava checks in every 30 days."), pmIsPaid() && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-help-coach pf-coach-link",
     onClick: () => {
       onClose();
-      pmAskAva("Explain how my self-assessment scores work and how they feed my Prosperity Spiral.");
+      pmAskAva("Explain how my Get to know you answers decide my coach focus.");
     }
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:sparkles",
@@ -2795,15 +2952,32 @@ function PMAssessHelpModal({
     color: "var(--ai-purple)"
   }), "Ask Ava"))));
 }
+const PM_HUB_SECTIONS = [{
+  title: "Find your focus",
+  keys: ["whereNow"]
+}, {
+  title: "Pillar deep-dives",
+  keys: ["Marketing", "Sales", "Clinical Skills", "Business Systems"]
+}, {
+  title: "Your vision",
+  keys: ["dreamVision", "personalGoals"]
+}];
 function PMAssessHub({
   assessState,
   onOpenAssess,
+  onOpenFocus,
   onClose
 }) {
   const [helpOpen, setHelpOpen] = useStatePM(false);
   /* Esc closes the topmost sheet only — while an explainer is open, the
      hub's own Esc handler stands down so one keypress doesn't shut both. */
   usePMEscClose(!helpOpen, onClose);
+  const UI = window.PFCoachUI;
+  const focus = pmFocus(assessState);
+  const sections = PM_CF ? PM_HUB_SECTIONS : [{
+    title: "",
+    keys: PM_ASSESS_ORDER
+  }];
   return /*#__PURE__*/React.createElement("div", {
     className: "pm-wiz-overlay",
     role: "dialog",
@@ -2820,7 +2994,7 @@ function PMAssessHub({
   }, "Get to know you", /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-wiz-help",
-    "aria-label": "How self-assessments work",
+    "aria-label": "How Get to know you works",
     onClick: () => setHelpOpen(true)
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:circle-help",
@@ -2837,18 +3011,66 @@ function PMAssessHub({
     color: "var(--gray-700)"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "pm-wiz-body pm-hub-body"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, UI && /*#__PURE__*/React.createElement(UI.CFHubBanner, {
+    focus: focus,
+    onOpenFocus: onOpenFocus,
+    onStart: () => onOpenAssess("whereNow")
+  }), sections.map(sec => /*#__PURE__*/React.createElement(React.Fragment, {
+    key: sec.title
+  }, sec.title && /*#__PURE__*/React.createElement("h4", {
+    className: "cf-hub-section"
+  }, sec.title), /*#__PURE__*/React.createElement("div", {
     className: "pm-hub-grid"
-  }, PM_ASSESS_ORDER.map(key => /*#__PURE__*/React.createElement(PMAssessHubTile, {
+  }, sec.keys.map(key => /*#__PURE__*/React.createElement(PMAssessHubTile, {
     key: key,
     assessKey: key,
     def: pmAssessDef(key),
     entry: assessState[key],
-    onOpen: onOpenAssess
-  }))))), /*#__PURE__*/React.createElement(PMAssessHelpModal, {
+    onOpen: onOpenAssess,
+    focus: focus
+  }))))), UI && !pmIsPaid() && /*#__PURE__*/React.createElement(UI.CFBasicStrip, {
+    web: false
+  }), UI && /*#__PURE__*/React.createElement(UI.CFTierSwitch, null))), /*#__PURE__*/React.createElement(PMAssessHelpModal, {
     open: helpOpen,
     onClose: () => setHelpOpen(false)
   }));
+}
+
+/* Sheet chrome around the shared coach-focus content: the focus reveal
+   (from the hub banner) and the locked-questionnaire preview (Basic). */
+function PMCoachSheet({
+  title,
+  onClose,
+  children
+}) {
+  usePMEscClose(true, onClose);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-wiz-overlay",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": title,
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-wiz-card",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-wiz-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-wiz-hd-spacer"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pm-wiz-hd-ti"
+  }, title), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-wiz-close",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:x",
+    size: 22,
+    color: "var(--gray-700)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-wiz-body"
+  }, children)));
 }
 
 /* ---- Step sheet: Photo ---- */
@@ -3777,6 +3999,33 @@ function usePMSlidePaneHeight(expanded, deps) {
   };
 }
 
+/* Custom wizard results: Where you are now → the coach focus reveal (reads
+   the freshly saved state); Personal Goals → a "saved for Ava" card. */
+function pmCoachResult(key, assessState, openAssess, backToHub) {
+  const UI = window.PFCoachUI;
+  if (!UI) return null;
+  if (key === "whereNow") return () => {
+    const focus = pmFocus(pmHasFocus(assessState) ? assessState : pmLoadAssessState());
+    return focus ? /*#__PURE__*/React.createElement(UI.CFFocusReveal, {
+      focus: focus,
+      web: false,
+      tier: pmTier(),
+      assessState: assessState,
+      onSharpen: openAssess,
+      onPreview: openAssess,
+      onAskAva: pmAskAva,
+      onDone: backToHub
+    }) : null;
+  };
+  if (key === "personalGoals") return answers => /*#__PURE__*/React.createElement(UI.CFPersonalGoalsDone, {
+    answers: answers,
+    paid: pmIsPaid(),
+    onAskAva: pmAskAva,
+    onDone: backToHub
+  });
+  return null;
+}
+
 /* ---- Profile steps card ---- */
 function ProfileSteps({
   assessState,
@@ -3790,6 +4039,8 @@ function ProfileSteps({
   const [exiting, setExiting] = useStatePM(false);
   const [hubOpen, setHubOpen] = useStatePM(false);
   const [openAssessKey, setOpenAssessKey] = useStatePM(null);
+  const [previewKey, setPreviewKey] = useStatePM(null); // Basic: locked questionnaire preview
+  const [focusOpen, setFocusOpen] = useStatePM(false); // coach focus reveal (from the hub banner)
   const [expanded, setExpanded] = useStatePM(false);
   const {
     collapsedRef,
@@ -3797,19 +4048,50 @@ function ProfileSteps({
     height: viewportH
   } = usePMSlidePaneHeight(expanded, [assessState, steps]);
 
-  /* "Track your goals"' gate card lives in a sibling component with no
-     shared parent state, so it reaches the hub here via a DOM event rather
-     than a prop. */
+  /* One router for every way into Get to know you: hub tiles, the Goals
+     cards, Edit Profile's Personal Goals row and the ?assess= deep link.
+     Locked questionnaires (Basic) open their preview instead. */
+  function openAssess(key) {
+    setHubOpen(false);
+    setFocusOpen(false);
+    setPreviewKey(null);
+    if (key === "focus") {
+      if (pmHasFocus(assessState)) setFocusOpen(true);else setOpenAssessKey("whereNow");
+      return;
+    }
+    if (!key || key === "hub" || !pmAssessDef(key)) {
+      setHubOpen(true);
+      return;
+    }
+    if (pmAssessLocked(key)) {
+      setPreviewKey(key);
+      return;
+    }
+    setOpenAssessKey(key);
+  }
+  const openAssessRef = React.useRef(openAssess);
+  openAssessRef.current = openAssess;
+
+  /* "Track your goals"' cards live in a sibling component with no shared
+     parent state, so they reach the hub here via a DOM event; a request made
+     before this mounted is parked on window.__pfPendingAssessKey. */
   useEffectPM(() => {
     function openHub(e) {
+      window.__pfPendingAssessKey = null;
       setExpanded(true);
-      const key = e && e.detail && e.detail.key;
-      if (key && PM_PILLAR_ASSESSMENTS[key]) {
-        setHubOpen(false);
-        setOpenAssessKey(key);
-      } else setHubOpen(true);
+      openAssessRef.current(e && e.detail && e.detail.key);
     }
     window.addEventListener("pf-open-assess-hub", openHub);
+    let deep = null;
+    try {
+      deep = new URLSearchParams(window.location.search).get("assess");
+    } catch (e) {}
+    const pending = window.__pfPendingAssessKey || deep;
+    if (pending) {
+      window.__pfPendingAssessKey = null;
+      setExpanded(true);
+      openAssessRef.current(pending);
+    }
     return () => window.removeEventListener("pf-open-assess-hub", openHub);
   }, []);
 
@@ -3837,10 +4119,14 @@ function ProfileSteps({
      a single binary step, so completing each one nudges the bar forward
      (PRD 3.1: "Profile Percentage... updates sequentially after each
      individual pillar assessment is submitted"). */
-  const assessDone = PM_ASSESS_ORDER.filter(k => assessState[k] && assessState[k].status === "completed").length;
-  const assessFraction = assessDone / PM_ASSESS_ORDER.length;
+  /* Basic counts only what it can actually complete (Where you are now) so
+     the profile can still reach 100% on the free plan. */
+  const assessAvail = PM_ASSESS_ORDER.filter(k => !pmAssessLocked(k));
+  const assessLockedCount = PM_ASSESS_ORDER.length - assessAvail.length;
+  const assessDone = assessAvail.filter(k => assessState[k] && assessState[k].status === "completed").length;
+  const assessFraction = assessDone / assessAvail.length;
   const totalSlices = total + 1;
-  const allDone = done === total && assessDone === PM_ASSESS_ORDER.length;
+  const allDone = done === total && assessDone === assessAvail.length;
   const pct = Math.round((done + assessFraction) / totalSlices * 100);
   const [profilePoints, setProfilePoints] = useStatePM(0);
   useEffectPM(() => {
@@ -3965,6 +4251,14 @@ function ProfileSteps({
     });
   }
   function handleAssessComplete(answers) {
+    if (openAssessKey === "whereNow" || openAssessKey === "personalGoals") {
+      onAssessPatch(openAssessKey, {
+        answers,
+        status: "completed",
+        completedAt: Date.now()
+      });
+      return;
+    }
     if (openAssessKey === "dreamVision") {
       const counts = {
         A: 0,
@@ -3998,7 +4292,7 @@ function ProfileSteps({
       exiting: exiting
     });
   }
-  const assessAllDone = assessDone === PM_ASSESS_ORDER.length;
+  const assessAllDone = assessDone === assessAvail.length;
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "pm-steps-viewport",
     style: viewportH != null ? {
@@ -4070,7 +4364,7 @@ function ProfileSteps({
     className: "ti"
   }, "Get to know you"), /*#__PURE__*/React.createElement("span", {
     className: "su"
-  }, assessDone, " of ", PM_ASSESS_ORDER.length, " assessments complete")), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+  }, assessLockedCount > 0 ? (assessDone ? "Your focus is set" : "Free · Ava finds your focus") + " · " + assessLockedCount + " more with Confidence" : assessDone + " of " + assessAvail.length + " questionnaires complete")), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 18,
     color: "var(--gray-400)"
@@ -4116,12 +4410,11 @@ function ProfileSteps({
     onPending: () => markPending(activeIdx)
   }), hubOpen && /*#__PURE__*/React.createElement(PMAssessHub, {
     assessState: assessState,
-    onOpenAssess: key => {
-      setHubOpen(false);
-      setOpenAssessKey(key);
-    },
+    onOpenAssess: openAssess,
+    onOpenFocus: () => openAssess("focus"),
     onClose: () => setHubOpen(false)
   }), openAssessKey && /*#__PURE__*/React.createElement(PMAssessWizard, {
+    key: openAssessKey,
     assessKey: openAssessKey,
     def: pmAssessDef(openAssessKey),
     initialAnswers: assessState[openAssessKey] && assessState[openAssessKey].answers,
@@ -4130,8 +4423,46 @@ function ProfileSteps({
     onClose: () => {
       setOpenAssessKey(null);
       setHubOpen(true);
+    },
+    renderResult: pmCoachResult(openAssessKey, assessState, openAssess, () => {
+      setOpenAssessKey(null);
+      setHubOpen(true);
+    })
+  }), focusOpen && window.PFCoachUI && pmHasFocus(assessState) && /*#__PURE__*/React.createElement(PMCoachSheet, {
+    title: "Your coach focus",
+    onClose: () => {
+      setFocusOpen(false);
+      setHubOpen(true);
     }
-  }));
+  }, /*#__PURE__*/React.createElement(window.PFCoachUI.CFFocusReveal, {
+    focus: pmFocus(assessState),
+    web: false,
+    tier: pmTier(),
+    assessState: assessState,
+    onSharpen: openAssess,
+    onPreview: openAssess,
+    onRetake: () => openAssess("whereNow"),
+    onAskAva: pmAskAva,
+    onDone: () => {
+      setFocusOpen(false);
+      setHubOpen(true);
+    }
+  })), previewKey && window.PFCoachUI && /*#__PURE__*/React.createElement(PMCoachSheet, {
+    title: "Preview",
+    onClose: () => {
+      setPreviewKey(null);
+      setHubOpen(true);
+    }
+  }, /*#__PURE__*/React.createElement(window.PFCoachUI.CFLockedPreview, {
+    assessKey: previewKey,
+    def: pmAssessDef(previewKey),
+    focus: pmFocus(assessState),
+    web: false,
+    onClose: () => {
+      setPreviewKey(null);
+      setHubOpen(true);
+    }
+  })));
 }
 
 /* ---- Small "just earned points" pill (owl animation), overlaid on the
@@ -5805,7 +6136,6 @@ function PMEditProfileScreen({
     yearsExperience: profile.yearsExperience || "",
     instagram: profile.instagram || ""
   }));
-  const [goals, setGoals] = useStatePM(() => profile.personalGoal || PM_PERSONAL_GOAL_QUESTIONS.map(() => ""));
   const [avatar, setAvatar] = useStatePM(profile.avatar || "");
   const [bannersOpen, setBannersOpen] = useStatePM(() => {
     if (openBanners) return true;
@@ -5822,9 +6152,6 @@ function PMEditProfileScreen({
       ...f,
       [key]: value
     }));
-  }
-  function setGoalAt(i, value) {
-    setGoals(g => g.map((v, gi) => gi === i ? value : v));
   }
   function pickAvatar(e) {
     const f = e.target.files && e.target.files[0];
@@ -5844,8 +6171,7 @@ function PMEditProfileScreen({
       clinicNumber: form.clinicNumber,
       clinicAddress: form.clinicAddress,
       yearsExperience: form.yearsExperience,
-      instagram: form.instagram,
-      personalGoal: goals
+      instagram: form.instagram
     };
     if (avatar && avatar !== profile.avatar) patch.avatar = avatar;
     onSave(patch);
@@ -5961,24 +6287,25 @@ function PMEditProfileScreen({
     size: 22,
     color: "var(--gray-450)"
   }))), /*#__PURE__*/React.createElement("section", {
-    className: "pm-edit-group pm-goalsec"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-goalsec-hd"
-  }, /*#__PURE__*/React.createElement("h2", {
-    className: "pm-edit-group-title"
-  }, "Personal Goal"), /*#__PURE__*/React.createElement("p", {
-    className: "pm-goalsec-sub"
-  }, "A few reflections so Ava can shape your goals around what matters to you.", /*#__PURE__*/React.createElement("span", {
-    className: "pm-goalsec-count"
-  }, goals.filter(g => g && g.trim()).length, " of ", PM_PERSONAL_GOAL_QUESTIONS.length, " answered"))), /*#__PURE__*/React.createElement("div", {
-    className: "pm-goal-list"
-  }, PM_PERSONAL_GOAL_QUESTIONS.map((q, i) => /*#__PURE__*/React.createElement(PMGoalField, {
-    key: i,
-    index: i,
-    question: q,
-    value: goals[i],
-    onChange: v => setGoalAt(i, v)
-  }))))));
+    className: "pm-edit-group"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-edit-navrow",
+    onClick: () => {
+      onCancel();
+      setTimeout(() => pmOpenAssessHub("personalGoals"), 60);
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-edit-navrow-txt"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-edit-navrow-lb"
+  }, "Personal Goals"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-edit-navrow-sub"
+  }, "Now part of Get to know you, with your other questionnaires.")), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 22,
+    color: "var(--gray-450)"
+  })))));
 }
 
 /* ---- Share profile sheet (avatar viewer "Share" / ?share=1) ----

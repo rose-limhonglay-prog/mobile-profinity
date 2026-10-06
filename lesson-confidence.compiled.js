@@ -23,6 +23,12 @@ const {
   useMemo: useMemoLX
 } = React;
 const DSLX = window.ProfinityDesignSystem_c2b5cc;
+/* Success Path POC (success-path.js + success-path-ui.compiled.js) — absent on shells that don't load it */
+const SPUI_LX = window.PFSuccessPathUI || null;
+const SPE_LX = window.PFSuccessPath || null;
+function spOnLX(slug) {
+  return !!(SPUI_LX && SPE_LX && SPE_LX.has(slug));
+}
 function goLX(url) {
   (window.pfGo || function (u) {
     window.location.href = u;
@@ -2226,7 +2232,8 @@ function LXPlayer({
   onSelect,
   onMarkDone,
   onToast,
-  onShare
+  onShare,
+  onOpenPath
 }) {
   const item = flat[idx];
   const next = flat[idx + 1] || null;
@@ -2379,7 +2386,12 @@ function LXPlayer({
     size: 14,
     color: LX_INK.gold,
     strokeWidth: 2.5
-  })), /*#__PURE__*/React.createElement("span", null, p))))), nextMod && /*#__PURE__*/React.createElement("section", {
+  })), /*#__PURE__*/React.createElement("span", null, p))))), spOnLX(course.slug) && /*#__PURE__*/React.createElement(SPUI_LX.LessonCard, {
+    slug: course.slug,
+    lessonName: item.name,
+    variant: "mobile",
+    onOpenPath: onOpenPath
+  }), nextMod && /*#__PURE__*/React.createElement("section", {
     "data-screen-label": "Up next"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lc-sec"
@@ -2429,8 +2441,19 @@ function LXPlayer({
 function CourseDetailConfidence() {
   const course = LX_COURSE;
   const flat = useMemoLX(() => flattenLX(course), []);
-  const [done, markDone] = useLessonsDoneLX();
+  const [done, markDoneRaw] = useLessonsDoneLX();
   const purchased = usePurchasedLX();
+  /* Success Path: full-screen path (?sp=path opens it on load) + a toast when a
+     completed lesson unlocks a skill tick */
+  const [spOpen, setSpOpen] = useStateLX(() => LX_PARAMS.get("sp") === "path");
+  const markDone = name => {
+    const before = spOnLX(course.slug) ? SPE_LX.compute(course.slug).ready : 0;
+    markDoneRaw(name);
+    if (spOnLX(course.slug)) {
+      const after = SPE_LX.compute(course.slug).ready;
+      if (after > before) setTimeout(() => showToast("New skill ready to tick in your Success Path"), 900);
+    }
+  };
   /* paid course, not bought yet: browse only — nothing plays until checkout */
   const locked = course.price > 0 && purchased.indexOf(course.slug) === -1;
 
@@ -2644,7 +2667,11 @@ function CourseDetailConfidence() {
     name: "lucide:share-2",
     size: 17,
     color: LX_INK.outline
-  }), "Share lesson")), /*#__PURE__*/React.createElement("section", {
+  }), "Share lesson")), !locked && spOnLX(course.slug) && /*#__PURE__*/React.createElement(SPUI_LX.CourseCard, {
+    slug: course.slug,
+    variant: "mobile",
+    onOpen: () => setSpOpen(true)
+  }), /*#__PURE__*/React.createElement("section", {
     "data-screen-label": "In this lesson"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lc-sec"
@@ -2694,7 +2721,18 @@ function CourseDetailConfidence() {
     onSelect: playerSelect,
     onMarkDone: markDone,
     onToast: showToast,
-    onShare: shareLesson
+    onShare: shareLesson,
+    onOpenPath: () => {
+      closePlayer();
+      setSpOpen(true);
+    }
+  }), spOpen && spOnLX(course.slug) && /*#__PURE__*/React.createElement(SPUI_LX.PathSheet, {
+    slug: course.slug,
+    onClose: () => setSpOpen(false),
+    onOpenLesson: n => {
+      const i = flat.findIndex(l => l.name === n);
+      if (i !== -1) openPlayer(i);
+    }
   }), shareOpen && /*#__PURE__*/React.createElement(LXShareSheet, {
     item: cur,
     course: course,

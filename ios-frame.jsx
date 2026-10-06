@@ -138,6 +138,51 @@ function IOSNavBar({ title = 'Title', dark = false, trailingIcon = true }) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Mobile Safari chrome (iOS 26 — bottom address pill + tabs button)
+// Shown by IOSDevice when window.PF_MOBILE_WEB is set (mobile-web host or
+// ?mobileweb=1): the screens render as a website in the phone's browser.
+// ─────────────────────────────────────────────────────────────
+const IOS_SAFARI_DOMAIN = 'profinity-mobileweb.vercel.app';
+function IOSSafariBar({ dark = false, domain = IOS_SAFARI_DOMAIN }) {
+  const ink = dark ? '#fff' : '#000';
+  const muted = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
+  const glyph = (d, w = 18, h = 18, vb = '0 0 24 24') => (
+    <svg width={w} height={h} viewBox={vb} fill="none" stroke={ink} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{d}</svg>
+  );
+  return (
+    <div className="ios-safari" data-ios-safari="" style={{
+      flex: 'none', position: 'relative', zIndex: 40, height: 84,
+      display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 12px 0',
+      boxSizing: 'border-box',
+    }}>
+      {/* back · domain · more */}
+      <IOSGlassPill dark={dark} style={{ flex: 1, height: 50, borderRadius: 26, justifyContent: 'stretch' }}>
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '0 6px', gap: 6 }}>
+          <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {glyph(<path d="M15 5l-7 7 7 7" />, 16, 16)}
+          </div>
+          <div className="ios-safari-url" style={{
+            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, minWidth: 0,
+            fontFamily: '-apple-system, "SF Pro", system-ui', fontSize: 16, fontWeight: 500, color: ink,
+            letterSpacing: -0.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}>
+            <svg width="11" height="13" viewBox="0 0 11 13" fill={muted}><rect x="0" y="5" width="11" height="8" rx="2"/><path d="M2.5 5V3.5a3 3 0 016 0V5" stroke={muted} strokeWidth="1.6" fill="none"/></svg>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{domain}</span>
+          </div>
+          <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="20" height="6" viewBox="0 0 22 6"><circle cx="3" cy="3" r="2.4" fill={ink}/><circle cx="11" cy="3" r="2.4" fill={ink}/><circle cx="19" cy="3" r="2.4" fill={ink}/></svg>
+          </div>
+        </div>
+      </IOSGlassPill>
+      {/* tabs */}
+      <IOSGlassPill dark={dark} style={{ width: 50, height: 50, flex: 'none' }}>
+        {glyph(<><rect x="4" y="7" width="13" height="13" rx="2.5" /><path d="M8 4h11a2 2 0 012 2v11" /></>, 20, 20)}
+      </IOSGlassPill>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // Grouped list (inset card, r:26) + row (52px)
 // ─────────────────────────────────────────────────────────────
 function IOSListRow({ title, detail, icon, chevron = true, isLast = false, dark = false }) {
@@ -202,6 +247,26 @@ function IOSDevice({
   children, width = 402, height = 874, dark = false,
   title, keyboard = false,
 }) {
+  // Real phone browser (real-device.js set window.PF_REAL_DEVICE): no bezel,
+  // no fake status bar / Dynamic Island / home indicator — the screen fills
+  // the viewport. Keep data-ios-device: the overlays (check-in, reward router,
+  // splash, upload tracker…) mount into it. real-device.css does the sizing.
+  if (window.PF_REAL_DEVICE) {
+    return (
+      <div data-ios-device="" data-real-device="" className="pf-real-device" style={{
+        width: '100%', height: '100vh', overflow: 'hidden',
+        position: 'relative', background: dark ? '#000' : '#F2F2F7',
+        fontFamily: '-apple-system, system-ui, sans-serif',
+        WebkitFontSmoothing: 'antialiased',
+      }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+          {title !== undefined && <IOSNavBar title={title} dark={dark} />}
+          <div style={{ flex: 1, overflowX: 'hidden', overflowY: 'auto' }}>{children}</div>
+          {keyboard && <IOSKeyboard dark={dark} />}
+        </div>
+      </div>
+    );
+  }
   return (
     <div data-ios-device="" style={{
       width, height, borderRadius: 48, overflow: 'hidden',
@@ -225,8 +290,10 @@ function IOSDevice({
         {/* overflowX hidden: off-canvas drawers (notifications / messages
             panels parked at translateX(100%)) must never give the phone a
             horizontal scrollbar strip under the dock */}
-        <div style={{ flex: 1, overflowX: 'hidden', overflowY: 'auto' }}>{children}</div>
+        <div style={{ flex: 1, overflowX: 'hidden', overflowY: 'auto', position: 'relative' }}>{children}</div>
         {keyboard && <IOSKeyboard dark={dark} />}
+        {/* mobile-web preview: the screen is a website inside Safari */}
+        {!!window.PF_MOBILE_WEB && !keyboard && <IOSSafariBar dark={dark} />}
       </div>
       {/* home indicator — always on top */}
       <div style={{
@@ -347,5 +414,5 @@ function IOSKeyboard({ dark = false }) {
 }
 
 Object.assign(window, {
-  IOSDevice, IOSStatusBar, IOSNavBar, IOSGlassPill, IOSList, IOSListRow, IOSKeyboard,
+  IOSDevice, IOSStatusBar, IOSNavBar, IOSGlassPill, IOSList, IOSListRow, IOSKeyboard, IOSSafariBar,
 });

@@ -1,0 +1,99 @@
+/* ===========================================================================
+   real-device.css — overrides for "real phone browser" mode
+   Active only when real-device.js has set <html data-real-device>. Loaded LAST
+   in <head> on every mobile shell so it wins the cascade.
+
+   The mobile stylesheets assume the IOSDevice bezel: a 440×956 box with a fake
+   status bar (≈50px) painted over the top of the screen and a home indicator
+   over the bottom. In a real browser none of that exists, so:
+     1. the device fills the viewport (no bezel, radius, shadow, gray backdrop)
+     2. every "clears the status bar" inset becomes env(safe-area-inset-top)
+        (0 in Safari/Chrome tabs; the real notch inset when installed to the
+        Home Screen with a translucent status bar) plus a small gap
+     3. the page itself never scrolls — screens scroll inside, like the app
+   =========================================================================== */
+
+html[data-real-device]{
+  --pf-sat:env(safe-area-inset-top,0px);
+  --pf-sab:env(safe-area-inset-bottom,0px);
+  /* replacements for the 52–54px and 60–62px status-bar clearances */
+  --pf-top:calc(var(--pf-sat) + 10px);
+  --pf-top-lg:calc(var(--pf-sat) + 16px);
+  height:100%;overflow:hidden;overscroll-behavior:none;
+  -webkit-text-size-adjust:100%;text-size-adjust:100%;
+}
+html[data-real-device] body{
+  margin:0;padding:0;display:block;min-height:0;height:100%;overflow:hidden;
+  background:var(--surface-page,#F6F3EF);
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;overscroll-behavior:none;
+}
+html[data-real-device][data-theme="dark"] body{background:var(--surface-page,#08071a)}
+html[data-real-device] .device-stage{display:block;height:100%;min-height:0;overflow:hidden}
+
+/* ---- 1. the device fills the viewport ---- */
+html[data-real-device] [data-ios-device]{
+  width:100% !important;height:100% !important;height:100dvh !important;
+  border-radius:0 !important;box-shadow:none !important;
+}
+html[data-real-device] .ios-statusbar{display:none !important}
+
+/* ---- 2. status-bar clearances → safe-area inset ---- */
+/* 52/54px top bars */
+html[data-real-device] :is(
+  .m-top,.cm-top,.pm-top,.ev-head,.cp-top,.ac-head,.acc-top,.acc-cat-top,.lcm-top,.cd-head,.sr-head,
+  .cs-bar,.dm-page-head,.dm-info-head,.pm-edit-hd,.pm-qrs-hd,.ev-lobby-top,.ls-topbar,.cp-cover-picker
+){padding-top:var(--pf-top) !important}
+/* 56–62px top bars */
+html[data-real-device] :is(
+  .as-top,.vs-m-top,.cc-top,.cd-top,.ds-top,.iv-top,.ls-top,.ma-top,.mt-top,.mo-top,.sm-top,.ms-top,.ns-top,
+  .py-top,.sc-top,.lc-top,.lc-ptop,.sp-fs-top,.device-stage .ml-top,.device-stage .bpr-screen .ml-top,
+  .device-stage .lb-screen .ml-top,.device-stage .mr-screen .ml-top
+){padding-top:var(--pf-top-lg) !important}
+/* dm / minute-taker use a token for the inset */
+html[data-real-device] .dm-app{--dm-status:var(--pf-top)}
+html[data-real-device] .mt-app .mt-screen,
+html[data-real-device] .mt-screen{--mt-top-inset:var(--pf-sat);--mt-bottom-inset:var(--pf-sab)}
+/* collapsed headers: the scroller only reserves the status bar now */
+html[data-real-device] :is(
+  .m-screen.chrome-float .m-scroll,.pm-screen.chrome-float .pm-scroll,.lm-screen.chrome-float .lm-scroll,
+  .ag-screen.chrome-float .ag-scroll,.lcm-screen.chrome-float .lcm-scroll,.acc-screen.chrome-float .acc-scroll,
+  .cm-header-wrap.cm-header-hidden .cm-head
+){padding-top:var(--pf-sat) !important}
+/* side drawer + notifications / messages panels */
+html[data-real-device] :is(.m-drawer,.nt-panel){padding-top:calc(var(--pf-sat) + 14px) !important}
+/* floating things anchored under the fake status bar */
+html[data-real-device] .m-pts-tally{top:calc(var(--pf-sat) + 8px) !important}
+html[data-real-device] .m-notif{top:calc(var(--pf-sat) + 54px) !important}
+html[data-real-device] .m-push{top:calc(var(--pf-sat) + 8px) !important}
+html[data-real-device] .dm-push{top:calc(var(--pf-sat) + 8px) !important}
+html[data-real-device] :is(.cc-close,.dg-close,.pf-fsv--m .pf-fsv-topleft,.pf-fsv--m .pf-fsv-frame-top,
+  [data-ios-device] .sp-ss-x,.device-stage .rsc-close){top:calc(var(--pf-sat) + 12px) !important}
+html[data-real-device] :is(.rl-top,.cp-live-back){top:calc(var(--pf-sat) + 8px) !important}
+html[data-real-device] .cp-live-who{top:calc(var(--pf-sat) + 10px) !important}
+html[data-real-device] .dm-sticker-sheet{top:calc(var(--pf-sat) + 12px) !important}
+html[data-real-device] .dm-lightbox-close{top:calc(var(--pf-sat) + 8px) !important}
+html[data-real-device] :is(.au-help,.au-brand){padding-top:calc(var(--pf-sat) + 16px) !important}
+html[data-real-device] .cc-body{padding-top:calc(var(--pf-sat) + 20px) !important}
+html[data-real-device] .rsc-hero{padding-top:calc(var(--pf-sat) + 16px) !important}
+
+/* ---- 3. bottom: the home indicator is the OS's job now ---- */
+html[data-real-device] .device-stage .ml-scroll{padding-bottom:calc(16px + var(--pf-sab)) !important}
+html[data-real-device] [data-ios-device] .sp-ss-foot{padding-bottom:calc(20px + var(--pf-sab)) !important}
+
+/* ---- scrolling feel ---- */
+html[data-real-device] [data-ios-device] *{-webkit-overflow-scrolling:touch}
+html[data-real-device] [data-ios-device] ::-webkit-scrollbar{width:0;height:0}
+
+/* ---- frameless shells (the jsx "mobile" branch ≤768px renders a bare .app
+   root instead of IOSDevice) — give it the viewport box the frame used to ---- */
+html[data-real-device] .app:not(.device-stage){
+  position:relative;min-height:0 !important;height:100% !important;height:100dvh !important;overflow:hidden;
+}
+
+/* the shells scale the 956px-tall bezel to fit the window height
+   (useDeviceScale*: transform:scale(n) on the wrapper) — not when frameless */
+html[data-real-device] .device-stage > div{transform:none !important}
+
+/* ---- mobile-web preview (desktop bezel + Safari chrome, see IOSSafariBar) ---- */
+html[data-mobile-web] [data-ios-device]{background:var(--surface-page,#F2F2F7)}
+[data-theme="dark"] .ios-safari .ios-safari-url{color:#fff}

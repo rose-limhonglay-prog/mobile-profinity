@@ -1283,7 +1283,7 @@ img{max-width:100%}
 .pm-pick-cta{flex:none;align-self:center;margin-right:8px;min-height:34px;padding:0 12px;border-radius:100px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;
   font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:12px;letter-spacing:.01em;background:var(--brand-navy);color:#fff;white-space:nowrap}
 .pm-pick-cta:active{opacity:.8;transform:scale(.97)}
-.pm-pick-cta-buy{background:var(--brand-gold);color:var(--brand-navy)}
+.pm-pick-cta-buy{background:var(--brand-gold);color:#131126}  /* dark text on gold stays legible in dark mode */
 .pm-pick-cta.is-done{background:#EAF6F0;color:#1E7A5C}
 
 /* ===== One-pillar start (2026-09-24): Track your goals opens after a single

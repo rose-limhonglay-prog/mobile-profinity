@@ -7365,6 +7365,13 @@ function PreviewToggle({ label, sub, checked, disabled, onChange }) {
 
 }
 
+/* Dev panels ("Dev — viewing as" composer switch + "Previewing as" persona
+   panel) are hidden from the feed since 2026-10-07; append ?dev=1 to the page
+   URL to bring them back for testing. */
+const PF_SHOW_DEV_PANELS = (() => {
+  try { return new URLSearchParams(window.location.search).get("dev") === "1"; } catch (e) { return false; }
+})();
+
 /* Dev-facing preview panel — lets the team see any persona's actual feed
    (bucket-merged, tier-gated, free-tier teasers) without a real auth/paywall
    backend. Collapsed by default and defaults to Paid · Confidence, so
@@ -8317,9 +8324,9 @@ function Feed({ channel } = {}) {
     <main className="feed" data-screen-label="Home feed">
       {!channel && !window.PF_EMBED && <PostComposer onPost={addPost} superUser={composerSuperUser}
       devRole={composerRole} onDevRole={setComposerRole} lockedAdmin={viewerCurrent.admin} />}
-      {!channel && !window.PF_EMBED &&
+      {!channel && !window.PF_EMBED && PF_SHOW_DEV_PANELS &&
       <ComposerDevToggle role={composerRole} onChange={setComposerRole} lockedAdmin={viewerCurrent.admin} />}
-      {!channel &&
+      {!channel && PF_SHOW_DEV_PANELS &&
       <FeedPreviewPanel persona={viewerPersona} onPersona={setViewerPersona}
       toggles={bucketToggles} onToggle={(k, v) => setBucketToggles((t) => ({ ...t, [k]: v }))} />
       }

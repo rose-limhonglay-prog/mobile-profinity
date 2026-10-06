@@ -219,9 +219,30 @@
           { name: "Consent form templates (PDF)", dur: "PDF", kind: "pdf" }] }]
       }]
     },
-    { title: "Level 3", name: "Perioral Rejuvenation", eyebrow: "Module 5 · Perioral Rejuvenation", sections: [], unlock: "Unlocks when you complete Level 2 — Lip Filler Technique." },
-    { title: "Level 4", name: "Complications & Recovery", eyebrow: "Module 6 · Complications & Recovery", sections: [], unlock: "Unlocks when you complete Level 3 — Perioral Rejuvenation." },
-    { title: "Level 5", name: "Advanced Cases", eyebrow: "Module 7 · Advanced Cases", sections: [], unlock: "Unlocks when you complete Level 4 — Complications & Recovery." },
+    { title: "Level 3", name: "Perioral Rejuvenation", eyebrow: "Module 5 · Perioral Rejuvenation", sections: [
+      { name: "Botulinum Toxin", desc: "Softening the perioral area with toxin — the lip flip and the gummy smile, and when not to use them.", bullets: [], lessons: [
+        { name: "Botulinum Toxin Analysis", dur: "8:25" },
+        { name: "3D Model – Botox Technique", dur: "3D" }] },
+      { name: "Restoration", desc: "Restoring the ageing lip — support, not size.", bullets: [], lessons: [
+        { name: "Restoration Analysis", dur: "17:05" },
+        { name: "3D Model – Restoration Technique", dur: "3D" }] },
+      { name: "Chapter 6: Technique Critique", desc: "Reading a result honestly and deciding what you'd change.", bullets: [], lessons: [
+        { name: "Introduction – Technique Critique", dur: "6:00" }] }] },
+    { title: "Level 4", name: "Complications & Recovery", eyebrow: "Module 6 · Complications & Recovery", sections: [
+      { name: "Chapter 2: Establishing the Patient Risks", desc: "Screening before you book.", bullets: [], lessons: [
+        { name: "Establishing the Patient Risks", dur: "7:51" }] },
+      { name: "Chapter 7: Material Science and Tools", desc: "Choosing the product and the tool for the lip in front of you.", bullets: [], lessons: [
+        { name: "Material Science and Tools", dur: "19:03" }] },
+      { name: "Chapter 8: Decision Making and Consent", desc: "Consent that covers occlusion and what's normal afterwards.", bullets: [], lessons: [
+        { name: "Decision Making and Consent", dur: "21:17" }] }] },
+    { title: "Level 5", name: "Advanced Cases", eyebrow: "Module 7 · Advanced Cases", sections: [
+      { name: "8D Techniques", desc: "Precision definition and the Russian lip — and when to say no.", bullets: [], lessons: [
+        { name: "4mm Analysis", dur: "11:34" },
+        { name: "Russian Lips Analysis", dur: "14:37" }] },
+      { name: "8D Lips Case Studies", desc: "Full cases from proportion to volume.", bullets: [], lessons: [
+        { name: "Patient 1 – Proportion & Symmetry", dur: "5:16" },
+        { name: "Patient 2 – Volume & Projection", dur: "19:01" },
+        { name: "Patient 4 – Proportion & Symmetry", dur: "11:56" }] }] },
     {
       title: "End of Success Path Quiz", name: "Final Assessment", eyebrow: "Final · Success Path Quiz", quiz: true,
       sections: [

@@ -143,6 +143,7 @@ function TweaksPanel({ title, children }) {
       {/* Slide-out tab */}
       <button
         type="button"
+        className="twk-tab"
         onClick={() => setOpen(o => !o)}
         style={tabStyle}
         aria-label={open ? "Close tweaks panel" : "Open tweaks panel"}

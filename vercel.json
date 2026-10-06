@@ -1,5 +1,10 @@
 {
   "rewrites": [
-    { "source": "/", "destination": "/NewsfeedMobile.html" }
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "profinity-mobileweb.vercel.app" }],
+      "destination": "/NewsfeedMobile.html"
+    },
+    { "source": "/", "destination": "/NewsfeedWeb.html" }
   ]
 }

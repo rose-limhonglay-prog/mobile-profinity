@@ -1,0 +1,14 @@
+{
+  "name": "PROfinity",
+  "short_name": "PROfinity",
+  "description": "PROfinity Academy — mobile web",
+  "start_url": "/NewsfeedMobile.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0C1928",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    { "src": "assets/app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

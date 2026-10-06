@@ -1,12 +1,15 @@
 /* ===========================================================================
    PROfinity — Minute Taker (mobile) · Start Session
-   Step 1 of 2: pick the patient (vertical list, or a new patient), check the
-   demographics + clinical snapshot, add an optional AI primer, confirm
-   recording consent, then continue to the live session. Runs on window.PFMT.
+   Step 1 of 2: pick the patient (vertical list, or add a new one through the
+   "New patient" sheet — user, 2026-10-01), check the demographics + clinical
+   snapshot, add an optional AI primer, confirm recording consent, then
+   continue to the live session. Runs on window.PFMT.
    Classes prefixed mtssm-.
    =========================================================================== */
 const {
-  useState: useStateMTSSM
+  useState: useStateMTSSM,
+  useEffect: useEffectMTSSM,
+  useRef: useRefMTSSM
 } = React;
 const MTS = window.PFMT;
 const {
@@ -55,14 +58,33 @@ function MTSSMView() {
   const [useContext, setUseContext] = useStateMTSSM(true);
   const [consent, setConsent] = useStateMTSSM(false);
   const [query, setQuery] = useStateMTSSM("");
+  // "New patient" sheet — null = closed, otherwise the draft being typed. Deep links
+  // (?patient=__new__ or an unknown name) open it straight away, prefilled.
+  const [draft, setDraft] = useStateMTSSM(() => {
+    if (!isNew) return null;
+    const [fn, ln] = mtssmSplit(param && param !== MTSSM_NEW ? param : "");
+    return {
+      target: MTSSM_NEW,
+      firstName: fn,
+      lastName: ln,
+      dob: "",
+      phone: "",
+      allergies: [],
+      conditions: []
+    };
+  });
+  // per-patient edits made through the details sheet this visit (keyed by patient / __new__):
+  // demographics live in `form`, the clinical snapshot lives here (user, 2026-10-02)
+  const [edits, setEdits] = useStateMTSSM({});
+  const snap = edits[selected] || base;
 
   // previous-meeting patients, most recent first; search widens to every patient on file
   const q = query.trim().toLowerCase();
   const recent = MTS.PATIENT_NAMES.slice().sort((a, b) => mtssmRecency(MTS.PATIENTS[a].lastVisit) - mtssmRecency(MTS.PATIENTS[b].lastVisit));
   const shown = q ? recent.filter(n => n.toLowerCase().includes(q) || String(MTS.PATIENTS[n].id).toLowerCase().includes(q)) : recent.slice(0, MTSSM_RECENT_MAX);
   const typedName = (form.firstName + " " + form.lastName).trim();
-  const patientName = isNew ? typedName || "New patient" : selected;
-  const firstName = isNew ? form.firstName.trim() || "the patient" : selected.split(" ")[0];
+  const patientName = isNew ? typedName || "New patient" : typedName || selected;
+  const firstName = form.firstName.trim() || (isNew ? "the patient" : selected.split(" ")[0]);
   function pick(value) {
     setSelected(value);
     const next = value === MTSSM_NEW ? MTS.BLANK_PATIENT : MTS.PATIENTS[value];
@@ -75,6 +97,61 @@ function MTSSMView() {
     });
     setPrimer(next.primer);
     setConsent(false);
+  }
+
+  /* details sheet — "add" starts a blank record; "edit" opens the selected patient (new or on file) prefilled */
+  function openAdd(prefill) {
+    setDraft({
+      target: MTSSM_NEW,
+      firstName: "",
+      lastName: "",
+      dob: "",
+      phone: "",
+      allergies: [],
+      conditions: [],
+      ...(prefill || {})
+    });
+  }
+  function openEdit() {
+    setDraft({
+      target: selected,
+      ...form,
+      allergies: snap.allergies.slice(),
+      conditions: snap.conditions.slice()
+    });
+  }
+  function cancelAdd() {
+    setDraft(null);
+    // backed out of a brand-new record with nothing typed → fall back to the most recent patient
+    if (isNew && !typedName) pick(recent[0]);
+  }
+  function confirmAdd() {
+    if (!draft || !draft.firstName.trim()) return;
+    const clean = {
+      firstName: draft.firstName.trim(),
+      lastName: draft.lastName.trim(),
+      dob: draft.dob.trim(),
+      phone: draft.phone.trim()
+    };
+    const snapshot = {
+      allergies: draft.allergies.slice(),
+      conditions: draft.conditions.slice()
+    };
+    const editingExisting = draft.target !== MTSSM_NEW;
+    const editingNew = !editingExisting && isNew && !!typedName;
+    if (!editingExisting) setSelected(MTSSM_NEW);
+    setForm(clean);
+    setEdits(m => ({
+      ...m,
+      [draft.target]: snapshot
+    }));
+    if (!editingExisting && !editingNew) {
+      setPrimer("");
+      setConsent(false);
+    }
+    setQuery("");
+    setDraft(null);
+    toast.show(editingExisting || editingNew ? "Details updated." : (clean.firstName + " " + clean.lastName).trim() + " added as a new patient.", "ok");
   }
   function start() {
     if (!consent) {
@@ -113,12 +190,13 @@ function MTSSMView() {
     right: /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "mtssm-add" + (isNew ? " is-on" : ""),
-      onClick: () => pick(MTSSM_NEW),
-      "aria-pressed": isNew
+      onClick: () => isNew ? openEdit() : openAdd(),
+      "aria-haspopup": "dialog",
+      "aria-expanded": !!draft
     }, /*#__PURE__*/React.createElement(IcS, {
       name: "lucide:user-plus",
       size: 15
-    }), "Add patient")
+    }), isNew && typedName ? "Edit patient" : "Add patient")
   }), /*#__PURE__*/React.createElement("div", {
     className: "mt-scroll"
   }, /*#__PURE__*/React.createElement("div", {
@@ -149,10 +227,12 @@ function MTSSMView() {
   }, "From previous meetings")), /*#__PURE__*/React.createElement("div", {
     className: "mtssm-list",
     role: "list"
-  }, isNew && /*#__PURE__*/React.createElement("div", {
+  }, isNew && /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "mtssm-row mtssm-row-new is-on",
     role: "listitem",
-    "aria-current": "true"
+    "aria-current": "true",
+    onClick: openEdit
   }, /*#__PURE__*/React.createElement(AvatarS, {
     isNew: true,
     size: 40
@@ -162,7 +242,7 @@ function MTSSMView() {
     className: "mtssm-row-name"
   }, typedName || "New patient"), /*#__PURE__*/React.createElement("span", {
     className: "mtssm-row-meta"
-  }, "New record · fill in the details below")), /*#__PURE__*/React.createElement("span", {
+  }, "New record · tap to edit details")), /*#__PURE__*/React.createElement("span", {
     className: "mtssm-row-check",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(IcS, {
@@ -200,14 +280,11 @@ function MTSSMView() {
     type: "button",
     className: "mt-btn mt-btn-ghost",
     onClick: () => {
-      pick(MTSSM_NEW);
       const [fn, ln] = mtssmSplit(query);
-      setForm(f => ({
-        ...f,
+      openAdd({
         firstName: fn,
         lastName: ln
-      }));
-      setQuery("");
+      });
     }
   }, /*#__PURE__*/React.createElement(IcS, {
     name: "lucide:user-plus",
@@ -218,7 +295,7 @@ function MTSSMView() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "mtssm-patient"
   }, /*#__PURE__*/React.createElement(AvatarS, {
-    name: patientName,
+    name: isNew ? patientName : selected,
     isNew: isNew && !typedName,
     tone: isNew ? "new" : undefined,
     size: 56
@@ -248,7 +325,14 @@ function MTSSMView() {
   }, /*#__PURE__*/React.createElement(IcS, {
     name: "lucide:id-card",
     size: 15
-  })), "Demographics")), /*#__PURE__*/React.createElement("div", {
+  })), "Demographics"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mt-link mtssm-edit-link",
+    onClick: openEdit
+  }, /*#__PURE__*/React.createElement(IcS, {
+    name: "lucide:pencil",
+    size: 13
+  }), "Edit")), /*#__PURE__*/React.createElement("div", {
     className: "mtssm-grid"
   }, field("firstName", "First name", {
     placeholder: "First"
@@ -270,13 +354,20 @@ function MTSSMView() {
   }, /*#__PURE__*/React.createElement(IcS, {
     name: "lucide:heart-pulse",
     size: 15
-  })), "Clinical snapshot")), /*#__PURE__*/React.createElement("div", {
+  })), "Clinical snapshot"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mt-link mtssm-edit-link",
+    onClick: openEdit
+  }, /*#__PURE__*/React.createElement(IcS, {
+    name: "lucide:pencil",
+    size: 13
+  }), "Edit")), /*#__PURE__*/React.createElement("div", {
     className: "mtssm-snap-label"
   }, "Alerts & allergies"), /*#__PURE__*/React.createElement("div", {
     className: "mtssm-pills"
-  }, base.allergies.length === 0 && /*#__PURE__*/React.createElement("span", {
+  }, snap.allergies.length === 0 && /*#__PURE__*/React.createElement("span", {
     className: "mt-pill mt-pill-muted"
-  }, "Nothing on file"), base.allergies.map(a => a.severity ? /*#__PURE__*/React.createElement("span", {
+  }, isNew ? "Not recorded yet" : "Nothing on file"), snap.allergies.map(a => a.severity ? /*#__PURE__*/React.createElement("span", {
     key: a.label,
     className: "mt-pill mt-pill-danger"
   }, /*#__PURE__*/React.createElement(IcS, {
@@ -292,9 +383,9 @@ function MTSSMView() {
     className: "mtssm-snap-label"
   }, "Active conditions"), /*#__PURE__*/React.createElement("div", {
     className: "mtssm-pills"
-  }, base.conditions.length === 0 && /*#__PURE__*/React.createElement("span", {
+  }, snap.conditions.length === 0 && /*#__PURE__*/React.createElement("span", {
     className: "mt-pill mt-pill-muted"
-  }, "None on file"), base.conditions.map(c => /*#__PURE__*/React.createElement("span", {
+  }, isNew ? "Not recorded yet" : "None on file"), snap.conditions.map(c => /*#__PURE__*/React.createElement("span", {
     key: c,
     className: "mt-pill mt-pill-ok"
   }, c))))), /*#__PURE__*/React.createElement("section", {
@@ -370,7 +461,253 @@ function MTSSMView() {
     size: 18
   })), /*#__PURE__*/React.createElement("p", {
     className: "mt-bottom-note"
-  }, consent ? "Recording only starts when you tap the mic on the next screen." : "Confirm consent to continue.")), toast.node);
+  }, consent ? "Recording only starts when you tap the mic on the next screen." : "Confirm consent to continue.")), draft && /*#__PURE__*/React.createElement(MTSSMAddSheet, {
+    draft: draft,
+    setDraft: setDraft,
+    mode: draft.target !== MTSSM_NEW ? "existing" : isNew && typedName ? "new-edit" : "new",
+    onCancel: cancelAdd,
+    onConfirm: confirmAdd
+  }), toast.node);
+}
+
+/* chip-style list input used for the new-record clinical snapshot (user, 2026-10-02) */
+const MTSSM_SEVERITIES = ["Mild", "Moderate", "Severe"];
+function MTSSMTagInput({
+  label,
+  placeholder,
+  tone,
+  withSeverity,
+  items,
+  onChange,
+  quick
+}) {
+  const [text, setText] = useStateMTSSM("");
+  const [severity, setSeverity] = useStateMTSSM("Severe");
+  const isObj = !!withSeverity;
+  const keyOf = it => isObj ? it.label : it;
+  const has = k => items.some(it => keyOf(it).toLowerCase() === k.toLowerCase());
+  function add() {
+    const v = text.trim();
+    if (!v || has(v)) {
+      setText("");
+      return;
+    }
+    onChange(items.filter(it => !(isObj && it.label === "NKDA")).concat(isObj ? [{
+      label: v,
+      severity
+    }] : [v]));
+    setText("");
+  }
+  function remove(k) {
+    onChange(items.filter(it => keyOf(it) !== k));
+  }
+  const quickOn = quick && has(keyOf(quick.value));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-tags"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-tags-label"
+  }, label), /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-tags-row"
+  }, /*#__PURE__*/React.createElement("input", {
+    value: text,
+    placeholder: placeholder,
+    autoComplete: "off",
+    onChange: e => setText(e.target.value),
+    onKeyDown: e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        add();
+      }
+    }
+  }), withSeverity && /*#__PURE__*/React.createElement("select", {
+    value: severity,
+    onChange: e => setSeverity(e.target.value),
+    "aria-label": "Severity"
+  }, MTSSM_SEVERITIES.map(sv => /*#__PURE__*/React.createElement("option", {
+    key: sv,
+    value: sv
+  }, sv))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtssm-tags-add",
+    onClick: add,
+    disabled: !text.trim(),
+    "aria-label": "Add " + label
+  }, /*#__PURE__*/React.createElement(IcS, {
+    name: "lucide:plus",
+    size: 16
+  }))), (items.length > 0 || quick) && /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-pills mtssm-tags-pills"
+  }, items.map(it => {
+    const k = keyOf(it);
+    const cls = isObj ? it.severity ? "mt-pill-danger" : "mt-pill-muted" : "mt-pill-" + tone;
+    return /*#__PURE__*/React.createElement("span", {
+      key: k,
+      className: "mt-pill " + cls
+    }, isObj && it.severity && /*#__PURE__*/React.createElement(IcS, {
+      name: "lucide:triangle-alert",
+      size: 12
+    }), k, isObj && it.severity ? " · " + it.severity : "", /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "mtssm-tag-x",
+      onClick: () => remove(k),
+      "aria-label": "Remove " + k
+    }, /*#__PURE__*/React.createElement(IcS, {
+      name: "lucide:x",
+      size: 11
+    })));
+  }), quick && !quickOn && items.length === 0 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mt-pill mt-pill-muted mtssm-tag-quick",
+    onClick: () => onChange([quick.value])
+  }, /*#__PURE__*/React.createElement(IcS, {
+    name: "lucide:check",
+    size: 12
+  }), quick.label)));
+}
+
+/* "New patient" sheet — the only place a new record gets created (user, 2026-10-01) */
+function MTSSMAddSheet({
+  draft,
+  setDraft,
+  mode,
+  onCancel,
+  onConfirm
+}) {
+  const editing = mode !== "new";
+  const existing = mode === "existing";
+  const firstRef = useRefMTSSM(null);
+  useEffectMTSSM(() => {
+    const t = setTimeout(() => {
+      if (firstRef.current) firstRef.current.focus();
+    }, 60);
+    const onKey = e => {
+      if (e.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, []);
+  const canSave = !!draft.firstName.trim();
+  const set = key => e => setDraft({
+    ...draft,
+    [key]: e.target.value
+  });
+  const submit = e => {
+    e.preventDefault();
+    if (canSave) onConfirm();
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-scrim",
+    onClick: onCancel
+  }, /*#__PURE__*/React.createElement("form", {
+    className: "mtssm-sheet mtssm-sheet-tall",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-labelledby": "mtssm-add-title",
+    onClick: e => e.stopPropagation(),
+    onSubmit: submit
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtssm-sheet-grab",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-sheet-head"
+  }, /*#__PURE__*/React.createElement(AvatarS, {
+    name: existing ? draft.target : undefined,
+    isNew: !existing,
+    size: 44
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mt-grow"
+  }, /*#__PURE__*/React.createElement("h3", {
+    id: "mtssm-add-title"
+  }, editing ? "Edit patient details" : "New patient"), /*#__PURE__*/React.createElement("p", null, existing ? "Changes apply to " + draft.target.split(" ")[0] + "'s record for this session." : editing ? "Update the record for this first visit." : "Start a blank record for someone not yet on file.")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtssm-sheet-x",
+    onClick: onCancel,
+    "aria-label": "Close"
+  }, /*#__PURE__*/React.createElement(IcS, {
+    name: "lucide:x",
+    size: 18
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-grid"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "mt-field"
+  }, /*#__PURE__*/React.createElement("span", null, "First name"), /*#__PURE__*/React.createElement("input", {
+    ref: firstRef,
+    value: draft.firstName,
+    placeholder: "First",
+    autoComplete: "off",
+    onChange: set("firstName")
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "mt-field"
+  }, /*#__PURE__*/React.createElement("span", null, "Last name"), /*#__PURE__*/React.createElement("input", {
+    value: draft.lastName,
+    placeholder: "Last",
+    autoComplete: "off",
+    onChange: set("lastName")
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "mt-field"
+  }, /*#__PURE__*/React.createElement("span", null, "Date of birth"), /*#__PURE__*/React.createElement("input", {
+    value: draft.dob,
+    placeholder: "DD Mon YYYY",
+    autoComplete: "off",
+    onChange: set("dob")
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "mt-field"
+  }, /*#__PURE__*/React.createElement("span", null, "Phone"), /*#__PURE__*/React.createElement("input", {
+    value: draft.phone,
+    placeholder: "07700 …",
+    inputMode: "tel",
+    autoComplete: "off",
+    onChange: set("phone")
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-sheet-sub"
+  }, /*#__PURE__*/React.createElement(IcS, {
+    name: "lucide:heart-pulse",
+    size: 14
+  }), "Clinical snapshot", /*#__PURE__*/React.createElement("span", null, "Optional")), /*#__PURE__*/React.createElement(MTSSMTagInput, {
+    label: "Alerts & allergies",
+    placeholder: "e.g. Penicillin",
+    tone: "danger",
+    withSeverity: true,
+    items: draft.allergies,
+    onChange: allergies => setDraft({
+      ...draft,
+      allergies
+    }),
+    quick: {
+      label: "No known allergies",
+      value: {
+        label: "NKDA"
+      }
+    }
+  }), /*#__PURE__*/React.createElement(MTSSMTagInput, {
+    label: "Active conditions",
+    placeholder: "e.g. Hypertension",
+    tone: "ok",
+    items: draft.conditions,
+    onChange: conditions => setDraft({
+      ...draft,
+      conditions
+    })
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "mtssm-sheet-note"
+  }, /*#__PURE__*/React.createElement(IcS, {
+    name: "lucide:info",
+    size: 13
+  }), "Anything you add here is shown as an alert during the session and in the note."), /*#__PURE__*/React.createElement("button", {
+    type: "submit",
+    className: "mt-btn mt-btn-primary mt-btn-block",
+    disabled: !canSave
+  }, /*#__PURE__*/React.createElement(IcS, {
+    name: editing ? "lucide:check" : "lucide:user-plus",
+    size: 18
+  }), editing ? "Save details" : "Add patient"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mt-btn mt-btn-ghost mt-btn-block",
+    onClick: onCancel
+  }, "Cancel")));
 }
 function MTSSMApp() {
   return /*#__PURE__*/React.createElement(ShellS, {

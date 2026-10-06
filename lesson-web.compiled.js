@@ -36,6 +36,12 @@ const {
 } = DSLW;
 const CDL = window.PFCourseData;
 const PFLW = window.PFLearn;
+/* Success Path POC (success-path.js + success-path-ui.compiled.js) */
+const SPUI_LW = window.PFSuccessPathUI || null;
+const SPE_LW = window.PFSuccessPath || null;
+function spOnLW(slug) {
+  return !!(SPUI_LW && SPE_LW && SPE_LW.has(slug));
+}
 const ME_LW = {
   name: CDL.ME.fullName,
   role: CDL.ME.role,
@@ -1468,7 +1474,14 @@ function LessonWebApp() {
     size: 14,
     color: INK_LW.gold,
     strokeWidth: 2.5
-  })), /*#__PURE__*/React.createElement("span", null, p))))), nextMod && /*#__PURE__*/React.createElement("section", {
+  })), /*#__PURE__*/React.createElement("span", null, p))))), spOnLW(course.slug) && /*#__PURE__*/React.createElement("div", {
+    className: "lw-block"
+  }, /*#__PURE__*/React.createElement(SPUI_LW.LessonCard, {
+    slug: course.slug,
+    lessonName: item.name,
+    variant: "web",
+    onOpenPath: () => goLW(courseHref + (courseHref.indexOf("?") === -1 ? "?" : "&") + "sp=path")
+  })), nextMod && /*#__PURE__*/React.createElement("section", {
     className: "lw-block",
     "data-screen-label": "Up next"
   }, /*#__PURE__*/React.createElement("div", {

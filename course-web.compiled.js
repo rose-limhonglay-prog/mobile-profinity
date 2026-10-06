@@ -33,6 +33,12 @@ const {
 } = DSCW;
 const CD = window.PFCourseData;
 const PFL = window.PFLearn;
+/* Success Path POC (success-path.js + success-path-ui.compiled.js) */
+const SPUI_CW = window.PFSuccessPathUI || null;
+const SPE_CW = window.PFSuccessPath || null;
+function spOnCW(slug) {
+  return !!(SPUI_CW && SPE_CW && SPE_CW.has(slug));
+}
 const ME_CW = {
   name: CD.ME.fullName,
   role: CD.ME.role,
@@ -1047,7 +1053,8 @@ function CWSide({
   next,
   onContinue,
   onBuy,
-  item
+  item,
+  extra
 }) {
   const total = flat.length;
   const doneCount = flat.filter(l => done.indexOf(l.name) !== -1).length;
@@ -1169,7 +1176,7 @@ function CWSide({
     name: it.icon,
     size: 19,
     color: INK_CW.heading
-  }), it.text))))), /*#__PURE__*/React.createElement(CWAvaCard, {
+  }), it.text))))), extra, /*#__PURE__*/React.createElement(CWAvaCard, {
     lessonName: item.name,
     courseTitle: course.title
   }));
@@ -1200,6 +1207,21 @@ function CourseWebApp() {
   const curDone = done.indexOf(cur.name) !== -1;
   const next = flat[curIdx + 1] || null;
   const started = curIdx > 0 || flat.some(l => done.indexOf(l.name) !== -1);
+  /* Success Path — placement option A on the web: a tab beside Course content
+     (?sp=path opens it) + the summary card in the side column */
+  const spState = SPUI_CW ? SPUI_CW.useSP(course.slug) : null;
+  const spOn = spOnCW(course.slug) && !locked;
+  const [spTab, setSpTab] = useStateCW(() => CW_PARAMS.get("sp") === "path" ? "path" : "content");
+  const spTabsRef = useRefCW(null);
+  const openSpTab = () => {
+    setSpTab("path");
+    setTimeout(() => {
+      if (spTabsRef.current) spTabsRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }, 30);
+  };
   const [toast, setToast] = useStateCW(null);
   const toastTimer = useRefCW(null);
   const showToast = msg => {
@@ -1330,7 +1352,36 @@ function CourseWebApp() {
     onBuy: buyCourse
   }), /*#__PURE__*/React.createElement(CWInThisLesson, {
     content: content
-  }), /*#__PURE__*/React.createElement(CWCourseContent, {
+  }), spOn && /*#__PURE__*/React.createElement("div", {
+    className: "sp-cw-tabs",
+    role: "tablist",
+    "aria-label": "Course views",
+    ref: spTabsRef,
+    style: {
+      scrollMarginTop: 90
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    role: "tab",
+    "aria-selected": spTab === "content",
+    className: "sp-cw-tab" + (spTab === "content" ? " on" : ""),
+    onClick: () => setSpTab("content")
+  }, "Course content"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    role: "tab",
+    "aria-selected": spTab === "path",
+    className: "sp-cw-tab" + (spTab === "path" ? " on" : ""),
+    onClick: () => setSpTab("path")
+  }, "Success Path", spState && spState.ready > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "sp-badge"
+  }, spState.ready))), spOn && spTab === "path" ? /*#__PURE__*/React.createElement("section", {
+    className: "cw-card cw-pad sp-hub2 sp-web",
+    "data-screen-label": "Success Path"
+  }, React.createElement(SPUI_CW.PathJourney || SPUI_CW.PathView, {
+    slug: course.slug,
+    variant: "web",
+    onOpenLesson: openByName
+  })) : /*#__PURE__*/React.createElement(CWCourseContent, {
     course: course,
     flat: flat,
     done: done,
@@ -1358,7 +1409,12 @@ function CourseWebApp() {
     next: next,
     onContinue: continueLesson,
     onBuy: buyCourse,
-    item: cur
+    item: cur,
+    extra: spOn ? /*#__PURE__*/React.createElement(SPUI_CW.CourseCard, {
+      slug: course.slug,
+      variant: "web",
+      onOpen: openSpTab
+    }) : null
   }))), shareOpen && /*#__PURE__*/React.createElement(CWShareModal, {
     item: cur,
     course: course,

@@ -24,6 +24,10 @@ const DSCW = window.ProfinityDesignSystem_c2b5cc;
 const { TopNav: TopNavCW, IconifyIcon: IconCW, Avatar: AvatarCW } = DSCW;
 const CD = window.PFCourseData;
 const PFL = window.PFLearn;
+/* Success Path POC (success-path.js + success-path-ui.compiled.js) */
+const SPUI_CW = window.PFSuccessPathUI || null;
+const SPE_CW = window.PFSuccessPath || null;
+function spOnCW(slug) { return !!(SPUI_CW && SPE_CW && SPE_CW.has(slug)); }
 
 const ME_CW = { name: CD.ME.fullName, role: CD.ME.role, avatar: CD.ME.avatar };
 const CW_PARAMS = new URLSearchParams(window.location.search);
@@ -475,7 +479,7 @@ function CWShareModal({ item, course, url, onClose, onDone }) {
 }
 
 /* ---------------------------------------------------------------- sidebar -- */
-function CWSide({ course, flat, done, locked, purchased, started, curDone, next, onContinue, onBuy, item }) {
+function CWSide({ course, flat, done, locked, purchased, started, curDone, next, onContinue, onBuy, item, extra }) {
   const total = flat.length;
   const doneCount = flat.filter((l) => done.indexOf(l.name) !== -1).length;
   const pct = total ? Math.round(doneCount / total * 100) : 0;
@@ -524,6 +528,7 @@ function CWSide({ course, flat, done, locked, purchased, started, curDone, next,
           </div>
         </div>
       </div>
+      {extra}
       <CWAvaCard lessonName={item.name} courseTitle={course.title} />
     </aside>);
 }
@@ -553,6 +558,13 @@ function CourseWebApp() {
   const curDone = done.indexOf(cur.name) !== -1;
   const next = flat[curIdx + 1] || null;
   const started = curIdx > 0 || flat.some((l) => done.indexOf(l.name) !== -1);
+  /* Success Path — placement option A on the web: a tab beside Course content
+     (?sp=path opens it) + the summary card in the side column */
+  const spState = SPUI_CW ? SPUI_CW.useSP(course.slug) : null;
+  const spOn = spOnCW(course.slug) && !locked;
+  const [spTab, setSpTab] = useStateCW(() => CW_PARAMS.get("sp") === "path" ? "path" : "content");
+  const spTabsRef = useRefCW(null);
+  const openSpTab = () => { setSpTab("path"); setTimeout(() => { if (spTabsRef.current) spTabsRef.current.scrollIntoView({ behavior: "smooth", block: "start" }); }, 30); };
 
   const [toast, setToast] = useStateCW(null);
   const toastTimer = useRefCW(null);
@@ -617,14 +629,24 @@ function CourseWebApp() {
             <CWHero course={course} item={cur} content={content} locked={locked} started={started} curDone={curDone} next={next} total={flat.length}
               onOpen={() => openLesson(curIdx)} onContinue={continueLesson} onShare={() => setShareOpen(true)} onBuy={buyCourse} />
             <CWInThisLesson content={content} />
-            <CWCourseContent course={course} flat={flat} done={done} currentName={cur.name} locked={locked} onSelect={selectLesson} onOpen={openByName} />
+            {spOn &&
+              <div className="sp-cw-tabs" role="tablist" aria-label="Course views" ref={spTabsRef} style={{ scrollMarginTop: 90 }}>
+                <button type="button" role="tab" aria-selected={spTab === "content"} className={"sp-cw-tab" + (spTab === "content" ? " on" : "")} onClick={() => setSpTab("content")}>Course content</button>
+                <button type="button" role="tab" aria-selected={spTab === "path"} className={"sp-cw-tab" + (spTab === "path" ? " on" : "")} onClick={() => setSpTab("path")}>
+                  Success Path{spState && spState.ready > 0 && <span className="sp-badge">{spState.ready}</span>}
+                </button>
+              </div>}
+            {spOn && spTab === "path" ?
+              <section className="cw-card cw-pad sp-hub2 sp-web" data-screen-label="Success Path">{React.createElement(SPUI_CW.PathJourney || SPUI_CW.PathView, { slug: course.slug, variant: "web", onOpenLesson: openByName })}</section> :
+              <CWCourseContent course={course} flat={flat} done={done} currentName={cur.name} locked={locked} onSelect={selectLesson} onOpen={openByName} />}
             <CWResources onToast={showToast} locked={locked} onLocked={nudgeBuy} />
             <CWRelated course={course} />
             <CWInstructor />
             <CWComments lessonName={cur.name} courseSlug={course.slug} />
           </div>
           <CWSide course={course} flat={flat} done={done} locked={locked} purchased={isPurchased} started={started} curDone={curDone} next={next}
-            onContinue={continueLesson} onBuy={buyCourse} item={cur} />
+            onContinue={continueLesson} onBuy={buyCourse} item={cur}
+            extra={spOn ? <SPUI_CW.CourseCard slug={course.slug} variant="web" onOpen={openSpTab} /> : null} />
         </div>
       </div>
 

@@ -13632,6 +13632,17 @@ function PreviewToggle({
   })));
 }
 
+/* Dev panels ("Dev — viewing as" composer switch + "Previewing as" persona
+   panel) are hidden from the feed since 2026-10-07; append ?dev=1 to the page
+   URL to bring them back for testing. */
+const PF_SHOW_DEV_PANELS = (() => {
+  try {
+    return new URLSearchParams(window.location.search).get("dev") === "1";
+  } catch (e) {
+    return false;
+  }
+})();
+
 /* Dev-facing preview panel — lets the team see any persona's actual feed
    (bucket-merged, tier-gated, free-tier teasers) without a real auth/paywall
    backend. Collapsed by default and defaults to Paid · Confidence, so
@@ -15175,11 +15186,11 @@ function Feed({
     devRole: composerRole,
     onDevRole: setComposerRole,
     lockedAdmin: viewerCurrent.admin
-  }), !channel && !window.PF_EMBED && /*#__PURE__*/React.createElement(ComposerDevToggle, {
+  }), !channel && !window.PF_EMBED && PF_SHOW_DEV_PANELS && /*#__PURE__*/React.createElement(ComposerDevToggle, {
     role: composerRole,
     onChange: setComposerRole,
     lockedAdmin: viewerCurrent.admin
-  }), !channel && /*#__PURE__*/React.createElement(FeedPreviewPanel, {
+  }), !channel && PF_SHOW_DEV_PANELS && /*#__PURE__*/React.createElement(FeedPreviewPanel, {
     persona: viewerPersona,
     onPersona: setViewerPersona,
     toggles: bucketToggles,

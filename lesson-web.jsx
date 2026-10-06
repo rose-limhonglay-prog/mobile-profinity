@@ -27,6 +27,10 @@ const DSLW = window.ProfinityDesignSystem_c2b5cc;
 const { TopNav: TopNavLW, IconifyIcon: IconLW, Avatar: AvatarLW } = DSLW;
 const CDL = window.PFCourseData;
 const PFLW = window.PFLearn;
+/* Success Path POC (success-path.js + success-path-ui.compiled.js) */
+const SPUI_LW = window.PFSuccessPathUI || null;
+const SPE_LW = window.PFSuccessPath || null;
+function spOnLW(slug) { return !!(SPUI_LW && SPE_LW && SPE_LW.has(slug)); }
 
 const ME_LW = { name: CDL.ME.fullName, role: CDL.ME.role, avatar: CDL.ME.avatar };
 const LW_PARAMS = new URLSearchParams(window.location.search);
@@ -645,6 +649,10 @@ function LessonWebApp() {
                         </li>)}
                     </ul>
                   </section>
+
+                  {/* Success Path — placement option B: the skill this lesson builds towards */}
+                  {spOnLW(course.slug) &&
+                    <div className="lw-block"><SPUI_LW.LessonCard slug={course.slug} lessonName={item.name} variant="web" onOpenPath={() => goLW(courseHref + (courseHref.indexOf("?") === -1 ? "?" : "&") + "sp=path")} /></div>}
 
                   {nextMod &&
                     <section className="lw-block" data-screen-label="Up next">

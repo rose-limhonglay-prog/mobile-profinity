@@ -1,0 +1,31 @@
+/* Admin · Success Paths — on top of admin-courses.css (crs- shell). Prefix asp-. */
+.asp .crs-page-head{align-items:flex-start;gap:16px;flex-wrap:wrap}
+.asp-sub{margin:6px 0 0;color:var(--gray-600);font-size:14px}
+.asp-actions{display:flex;gap:8px;flex-wrap:wrap}
+.asp-ghost{background:var(--white);border:1px solid var(--border-default);color:var(--brand-navy)}
+.asp .crs-btn[disabled]{opacity:.55;cursor:default}
+.asp-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0 16px}
+.asp-stat{background:var(--white);border:1px solid var(--border-default);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:2px}
+.asp-stat b{font-size:22px;color:var(--brand-navy)}.asp-stat span{font-size:13px;color:var(--gray-500)}
+.asp-stat.bad b{color:#B42318}.asp-stat.good b{color:#067647}
+.asp-card{margin-bottom:16px;overflow-x:auto}
+.asp-hint{font-size:13px;color:var(--gray-500)}
+.asp-table{width:100%;border-collapse:collapse;font-size:14px}
+.asp-table th{text-align:left;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--gray-500);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--border-default);white-space:nowrap}
+.asp-table td{padding:8px 12px;border-bottom:1px solid var(--border-default);vertical-align:top;color:var(--text-primary)}
+.asp-table tr.err td{background:#FEF3F2}
+.asp-table input,.asp-table select{width:100%;min-width:120px;height:36px;padding:0 10px;border:1px solid var(--border-default);border-radius:8px;font:inherit;font-size:13.5px;background:var(--white);color:var(--text-primary)}
+.asp-table td:nth-child(2) input{min-width:320px}
+.asp-table input.num{width:72px;min-width:72px}
+.asp-table em{display:block;font-style:normal;font-size:12px;color:#B42318;margin-top:4px}
+.asp-table .mono{font-family:ui-monospace,Menlo,monospace;font-size:12.5px;color:var(--gray-600);white-space:nowrap;padding-top:16px}
+.asp-del{width:34px;height:34px;border-radius:8px;border:1px solid var(--border-default);background:var(--white);color:var(--gray-500);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.asp-foot{font-size:13px;color:var(--gray-500);margin:4px 0 32px}
+.asp-foot code{font-size:12px;background:var(--gray-50);padding:1px 5px;border-radius:5px}
+.asp-modal{position:fixed;inset:0;z-index:100;background:rgba(16,24,40,.5);display:flex;align-items:center;justify-content:center;padding:24px}
+.asp-modal-card{width:100%;max-width:620px;background:var(--white);border-radius:18px;padding:24px;display:flex;flex-direction:column;gap:12px;font-family:var(--font-sans)}
+.asp-modal-card h3{margin:0;font-size:18px;color:var(--brand-navy)}.asp-modal-card p{margin:0;font-size:14px;color:var(--gray-600)}
+.asp-modal-card textarea{height:180px;border:1px solid var(--border-default);border-radius:10px;padding:10px;font:13px ui-monospace,Menlo,monospace}
+.asp-modal-row{display:flex;justify-content:flex-end;gap:8px}
+.asp-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--brand-navy);color:#fff;padding:10px 16px;border-radius:12px;font:600 14px var(--font-sans);z-index:120}
+@media (max-width:900px){.asp-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}

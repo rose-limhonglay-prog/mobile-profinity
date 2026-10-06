@@ -182,7 +182,10 @@ function CrsView() {
 
       <div className="crs-page-head">
         <h2>Courses</h2>
-        <button className="crs-btn crs-btn-navy" type="button"><iconify-icon icon="lucide:plus"></iconify-icon>New Course</button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="crs-btn" type="button" style={{ background: "var(--white)", border: "1px solid var(--border-default)", color: "var(--brand-navy)" }} onClick={() => goCrs("AdminSuccessPaths.html")}><iconify-icon icon="lucide:route"></iconify-icon>Success Paths</button>
+          <button className="crs-btn crs-btn-navy" type="button"><iconify-icon icon="lucide:plus"></iconify-icon>New Course</button>
+        </div>
       </div>
 
       <div className="crs-card">

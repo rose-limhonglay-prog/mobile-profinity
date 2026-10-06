@@ -333,12 +333,28 @@ function CrsView() {
     icon: "lucide:refresh-cw"
   }))), /*#__PURE__*/React.createElement("div", {
     className: "crs-page-head"
-  }, /*#__PURE__*/React.createElement("h2", null, "Courses"), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("h2", null, "Courses"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: "flex",
+      gap: 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "crs-btn",
+    type: "button",
+    style: {
+      background: "var(--white)",
+      border: "1px solid var(--border-default)",
+      color: "var(--brand-navy)"
+    },
+    onClick: () => goCrs("AdminSuccessPaths.html")
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:route"
+  }), "Success Paths"), /*#__PURE__*/React.createElement("button", {
     className: "crs-btn crs-btn-navy",
     type: "button"
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:plus"
-  }), "New Course")), /*#__PURE__*/React.createElement("div", {
+  }), "New Course"))), /*#__PURE__*/React.createElement("div", {
     className: "crs-card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "crs-card-head"
