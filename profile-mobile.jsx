@@ -258,20 +258,58 @@ function PMInfoModal({ open, onClose, title, icon, children, coach, coachLabel }
     </div>);
 }
 
+/* ⓘ with a white popover (user, 2026-10-07: "so many text — put the
+   explanation into the ⓘ"). The explanatory copy that used to sit on the
+   card lives here; tap toggles it, a tap anywhere else closes it. "Read
+   more" hands off to the fuller PMInfoModal when the card has one. */
+function PMInfoTip({ label, children, onMore, moreLabel }) {
+  const [open, setOpen] = useStatePM(false);
+  const [x, setX] = useStatePM(0); // caret x within the header row
+  const host = React.useRef(null);
+  const tipId = React.useId ? React.useId() : undefined;
+  useEffectPM(() => {
+    if (!open) return;
+    try { const b = host.current.querySelector(".pm-pane-info"); setX(b.offsetLeft + b.offsetWidth / 2); } catch (e) {}
+    const onDown = (e) => { if (host.current && !host.current.contains(e.target)) setOpen(false); };
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("pointerdown", onDown, true);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("pointerdown", onDown, true); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+  return (
+    <span className={"pm-tip" + (open ? " is-open" : "")} ref={host}>
+      <button type="button" className="pm-pane-info" aria-label={label} aria-expanded={open} aria-controls={tipId} onClick={() => setOpen((o) => !o)}>
+        <DSPM.IconifyIcon name="lucide:info" size={17} color={open ? "var(--ai-purple)" : "var(--gray-500)"} />
+      </button>
+      {open &&
+        <span className="pm-tip-pop" id={tipId} role="tooltip" style={{ "--tip-x": x + "px" }}>
+          <span className="pm-tip-caret" aria-hidden="true" />
+          <span className="pm-tip-body">{children}</span>
+          {onMore &&
+            <button type="button" className="pm-tip-more" onClick={() => { setOpen(false); onMore(); }}>
+              {moreLabel || "Read more"}<DSPM.IconifyIcon name="lucide:arrow-right" size={13} color="currentColor" />
+            </button>}
+        </span>}
+    </span>);
+}
+
 /* Card shell for the three pane cards: bordered card, a collapse toggle
-   pinned to the top-right corner, and an ⓘ button 12px after the title. */
-function PMPaneCard({ id, title, sub, infoLabel, onInfo, className, children, defaultOpen = true, stacked = false }) {
+   pinned to the top-right corner, and an ⓘ 12px after the title. `sub` and
+   `tip` render inside the ⓘ popover (not on the card); `meta` is the one
+   short line that stays under the title (e.g. today's date). */
+function PMPaneCard({ id, title, sub, tip, meta, infoLabel, onInfo, moreLabel, className, children, defaultOpen = true, stacked = false }) {
   const [open, setOpen] = useStatePM(defaultOpen);
   const bodyId = React.useId ? React.useId() : undefined;
   return (
     <section id={id} className={"pm-sec pm-card pm-pane-card" + (open ? "" : " is-collapsed") + (stacked ? " pm-pane-card--stacked" : "") + (className ? " " + className : "")} data-screen-label={title}>
       <div className="pm-pane-hd">
         <h2>{title}</h2>
-        <button type="button" className="pm-pane-info" aria-label={infoLabel || "About " + title} onClick={onInfo}>
-          <DSPM.IconifyIcon name="lucide:info" size={17} color="var(--gray-500)" />
-        </button>
+        <PMInfoTip label={infoLabel || "About " + title} onMore={onInfo} moreLabel={moreLabel}>
+          {sub && <p>{sub}</p>}
+          {tip}
+        </PMInfoTip>
       </div>
-      {sub && open && <p className="pm-pane-sub">{sub}</p>}
+      {meta && open && <p className="pm-pane-meta">{meta}</p>}
       <button type="button" className="pm-pane-toggle" aria-expanded={open} aria-controls={bodyId}
         aria-label={(open ? "Collapse " : "Expand ") + title} onClick={() => setOpen((o) => !o)}>
         <DSPM.IconifyIcon name="lucide:chevron-up" size={20} color="var(--gray-500)" />
@@ -290,14 +328,18 @@ function PMGoalFocusCard({ assessState }) {
   if (!focus || !UI) return null;
   const paid = pmIsPaid();
   return (
-    <PMPaneCard title="Your coach focus" infoLabel="How Ava chooses your focus" onInfo={() => setInfo(true)} className="pm-goal-card">
+    <PMPaneCard title="Your coach focus" infoLabel="Why this focus" onInfo={() => setInfo(true)} moreLabel="How Ava chooses your focus" className="pm-goal-card"
+      tip={<>
+        <p>{focus.reason}</p>
+        <p><b>Your door</b> — three ways to start on {focus.domain} today. Pick whichever suits you.</p>
+        {!paid && <p>You can buy any course on Basic — no membership needed. Coaching with Ava on this plan (weekly plans, check-ins and role-play) comes with Confidence.</p>}
+      </>}>
       <div className="pm-goal-top">
         <div className="pm-goal-main">
           <span className="eyebrow" style={{ color: "var(--ai-purple)" }}>Ava recommends starting here</span>
-          <div style={{ margin: "6px 0 4px" }}><UI.CFFocusChip domain={focus.domain} /></div>
+          <div style={{ margin: "8px 0 2px" }}><UI.CFFocusChip domain={focus.domain} size="hero" /></div>
         </div>
       </div>
-      <p className="cf-goal-reason">{focus.reason}</p>
       {focus.confirm &&
       <div className="cf-confirm" style={{ marginTop: 12 }}>
           <span className="cf-confirm-hd"><DSPM.IconifyIcon name="lucide:message-circle-question" size={18} color="var(--ai-purple)" /><span className="cf-kicker">Ava has a question</span></span>
@@ -308,7 +350,7 @@ function PMGoalFocusCard({ assessState }) {
         <span className="cf-milestone-ic" aria-hidden="true"><DSPM.IconifyIcon name="lucide:flag" size={16} color="#fff" /></span>
         <span><span className="cf-kicker">Your next 90 days</span><span className="cf-milestone-ti">{focus.milestone}</span></span>
       </div>
-      <div style={{ marginTop: 12 }}><UI.CFDoor focus={focus} web={false} tier={pmTier()} /></div>
+      <div style={{ marginTop: 12 }}><UI.CFDoor focus={focus} web={false} tier={pmTier()} quiet /></div>
       <div style={{ marginTop: 12 }}>
         {paid ?
         <button type="button" className="cf-btn cf-btn-ai cf-btn-block" onClick={() => pmAskAva(PM_CF.avaPrompt(focus))}>
@@ -316,7 +358,7 @@ function PMGoalFocusCard({ assessState }) {
           </button> :
         <button type="button" className="cf-ava-locked" onClick={() => goPM(PM_CF.upgradeUrl(false))}>
             <DSPM.IconifyIcon name="lucide:message-circle" size={18} color="#4F46C8" />
-            <span><b>Coach with Ava on this plan</b> — weekly plans, check-ins and role-play with Confidence.</span>
+            <span><b>Coach with Ava on this plan</b> · Confidence</span>
             <DSPM.IconifyIcon name="lucide:lock" size={14} color="var(--gray-400)" />
           </button>}
       </div>
@@ -603,6 +645,7 @@ function PMTargetsCard({ assessState }) {
   const [state, setState] = useStatePM(() => pmLoadTodayTargets(ranked));
   useEffectPM(() => {
     try { localStorage.setItem(PM_TARGETS_KEY, JSON.stringify(state)); } catch (e) {}
+    try { window.dispatchEvent(new CustomEvent("pm:targets-changed")); } catch (e) {}
   }, [state]);
   /* Another pillar answered while this card is mounted (the hub is a
      sibling overlay) → its task joins today's set immediately. */
@@ -653,9 +696,10 @@ function PMTargetsCard({ assessState }) {
   const allDone = total > 0 && doneCount === total;
 
   return (
-    <PMPaneCard title="Today's Targets"
-      sub={<><span className="pm-target-date">{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}</span>Completing these will move your Prosperity Spiral forward</>}
-      infoLabel="How targets and points work" onInfo={() => setInfo(true)}>
+    <PMPaneCard id="todays-targets" title="Today's Targets"
+      meta={<span className="pm-target-date">{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}</span>}
+      sub="Completing these will move your Prosperity Spiral forward."
+      infoLabel="About Today's Targets" onInfo={() => setInfo(true)} moreLabel="How targets and points work">
       {nextKey && <PMAssessNudgeRow pillarKey={nextKey} remaining={remaining} locked={!paid} />}
       <div className="pm-target-rows">
         <PMDailyPicks />
@@ -787,10 +831,16 @@ function PMLeagueCard() {
   const gap = above ? above.points - me.points : 0;
   const rows = [above, me, below].filter(Boolean);
   return (
-    <section className={"pm-sec pm-card pm-league-card" + (open ? "" : " is-collapsed")} data-screen-label="Your league">
+    <section id="your-league" className={"pm-sec pm-card pm-league-card" + (open ? "" : " is-collapsed")} data-screen-label="Your league">
       <div className="pm-league-hd" style={league ? { "--pm-lg-accent": league.accent, "--pm-lg-deep": league.deep } : null}>
         {league && <span className="pm-league-gem"><PMLeagueGem src={league.lottie} size={46} /></span>}
         <h2>{league ? league.name + " League" : "Your league"}</h2>
+        <PMInfoTip label="About your league">
+          <p>{above ?
+            <>{league ? "Your league · last 30 days" : "Last 30 days"} · <b>{fmt(gap)} pts</b> behind {firstName} — finish today's targets to close it.</> :
+            <>{league ? "Your league · last 30 days" : "Last 30 days"} · you're leading {league ? league.name + " League" : "the league"} — finish today's targets to stay there.</>}
+          </p>
+        </PMInfoTip>
         <span className="pm-goals-rank pm-league-rank" aria-label={"Ranked number " + me.rank}>#{me.rank}</span>
         <button type="button" className="pm-league-toggle" aria-expanded={open} aria-controls={bodyId}
           aria-label={(open ? "Collapse" : "Expand") + " Your league"} onClick={() => setOpen((o) => !o)}>
@@ -799,11 +849,6 @@ function PMLeagueCard() {
       </div>
       {open &&
       <div className="pm-league-body" id={bodyId}>
-          <p className="pm-league-sub">
-            {above ?
-          <>{league ? "Your league · last 30 days" : "Last 30 days"} · <b>{fmt(gap)} pts</b> behind {firstName} — finish today's targets to close it.</> :
-          <>{league ? "Your league · last 30 days" : "Last 30 days"} · you're leading {league ? league.name + " League" : "the league"} — finish today's targets to stay there.</>}
-          </p>
           <div className="pm-league-rows">
             {rows.map((r) =>
           <div key={r.rank} className={"pm-league-row" + (r.isMe ? " me" : "")} aria-current={r.isMe ? "true" : undefined}>
@@ -817,6 +862,89 @@ function PMLeagueCard() {
             See the full leaderboard<DSPM.IconifyIcon name="lucide:arrow-right" size={18} color="currentColor" />
           </button>
         </div>}
+    </section>);
+}
+
+/* ---- "Today's progress" strip (2026-10-07): the pane opens on a glance
+   of the day — targets ring, points today, check-in streak, league rank.
+   Each tile jumps to the card it summarises. ---- */
+function pmPointsToday() {
+  try { if (window.PFDailyGoal && window.PFDailyGoal.today) return window.PFDailyGoal.today(); } catch (e) {}
+  try {
+    const st = window.PFLoyalty && window.PFLoyalty.getState();
+    const k = (d) => d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    const today = k(new Date());
+    let sum = 0;
+    ((st && st.ledger) || []).forEach((t) => { if (t.pointsDelta > 0 && k(new Date(t.ts)) === today && t.actionId !== "evt_mobile_checkin") sum += t.pointsDelta; });
+    return sum;
+  } catch (e) { return 0; }
+}
+function pmStreakDays() {
+  try { const st = window.PFLoyalty && window.PFLoyalty.getState(); return (st && st.streak && st.streak.current) || 0; } catch (e) { return 0; }
+}
+function pmTodayTally(assessState) {
+  const ranked = pmTargetPillars(assessState);
+  const targets = pmLoadTodayTargets(ranked).targets;
+  let picks = null; try { picks = window.PFDailyTargets ? window.PFDailyTargets.get() : null; } catch (e) {}
+  const total = targets.length + (picks ? 2 : 0);
+  const done = targets.filter((t) => t.done).length + (picks ? (picks.free.done ? 1 : 0) + (picks.paid.purchased ? 1 : 0) : 0);
+  return { done, total, pct: total ? Math.round(done / total * 100) : 0 };
+}
+function PMRing({ pct, size = 64, stroke = 6, children }) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  return (
+    <span className="pm-ring" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={"0 0 " + size + " " + size} aria-hidden="true">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--pm-ring-track,#EDE9E3)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--brand-gold)" strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(100, pct) / 100)} transform={"rotate(-90 " + size / 2 + " " + size / 2 + ")"}
+          style={{ transition: "stroke-dashoffset .5s ease" }} />
+      </svg>
+      <span className="pm-ring-tx">{children}</span>
+    </span>);
+}
+const PM_PROG_EVENTS = ["pf:points-earned", "pf:daily-targets", "pm:targets-changed", "storage"];
+function usePMProgressSync() {
+  const [, bump] = useStatePM(0);
+  useEffectPM(() => {
+    const sync = () => bump((x) => x + 1);
+    PM_PROG_EVENTS.forEach((e) => window.addEventListener(e, sync));
+    return () => PM_PROG_EVENTS.forEach((e) => window.removeEventListener(e, sync));
+  }, []);
+}
+function PMProgressStrip({ assessState }) {
+  usePMProgressSync();
+  const { done, total, pct } = pmTodayTally(assessState);
+  const pts = pmPointsToday();
+  const streak = pmStreakDays();
+  const { me, league } = pmLeagueStandings();
+  const left = total - done;
+  const jump = (id) => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); };
+  return (
+    <section className="pm-sec pm-card pm-prog" data-screen-label="Today's progress">
+      <div className="pm-prog-top">
+        <button type="button" className="pm-prog-ringbtn" onClick={() => jump("todays-targets")} aria-label={done + " of " + total + " targets done today — open Today's Targets"}>
+          <PMRing pct={pct} size={66} stroke={7}><b>{done}</b><small>/{total}</small></PMRing>
+        </button>
+        <div className="pm-prog-tx">
+          <span className="pm-prog-k">Today's progress</span>
+          <span className="pm-prog-t">{total === 0 ? "No targets yet" : left === 0 ? "All targets done — nice work" : left === 1 ? "1 target to go" : left + " targets to go"}</span>
+        </div>
+      </div>
+      <div className="pm-prog-stats">
+        <button type="button" className="pm-prog-stat" onClick={() => jump("todays-targets")}>
+          <span className="pm-prog-ic gold"><DSPM.IconifyIcon name="lucide:coins" size={16} color="currentColor" /></span>
+          <b>+{pts.toLocaleString("en-GB")}</b><span>pts today</span>
+        </button>
+        <button type="button" className="pm-prog-stat" onClick={() => goPM("CheckInStreak.html")}>
+          <span className="pm-prog-ic flame"><DSPM.IconifyIcon name="lucide:flame" size={16} color="currentColor" /></span>
+          <b>{streak}</b><span>day streak</span>
+        </button>
+        <button type="button" className="pm-prog-stat" onClick={() => jump("your-league")} style={league ? { "--pm-lg-accent": league.accent } : null}>
+          <span className="pm-prog-ic gem"><DSPM.IconifyIcon name="lucide:gem" size={16} color="currentColor" /></span>
+          <b>#{me.rank}</b><span>{league ? league.name : "League"}</span>
+        </button>
+      </div>
     </section>);
 }
 
@@ -843,6 +971,8 @@ function PMGoalsMenu({ assessState }) {
   sort((a, b) => PM_PRIORITY_ORDER[a.priority] - PM_PRIORITY_ORDER[b.priority] || a.i - b.i)) : [];
   const previewTargets = openTargets.slice(0, 2);
   const moreCount = openTargets.length - previewTargets.length;
+  usePMProgressSync();
+  const tally = unlocked ? pmTodayTally(assessState) : null;
 
   function tapCollapsed() {
     setExpanded(true);
@@ -859,9 +989,12 @@ function PMGoalsMenu({ assessState }) {
             <h3 className="pm-steps-h pm-goals-title">
               <DSPM.IconifyIcon name="lucide:target" size={22} color="var(--brand-gold)" />Track your goals
             </h3>
-            <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
+            <span className="pm-goals-collapsed-right">
+              {tally && tally.total > 0 && <PMRing pct={tally.pct} size={40} stroke={5}><b>{tally.done}</b><small>/{tally.total}</small></PMRing>}
+              <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
+            </span>
           </div>
-          <p className="pm-steps-sub">Coach focus, Today's Targets &amp; Prosperity Spiral</p>
+          <p className="pm-steps-sub">Coach focus · Today's Targets · League · Spiral</p>
           <div className="pm-goals-preview">
             {unlocked ?
             <>
@@ -887,12 +1020,13 @@ function PMGoalsMenu({ assessState }) {
         <div className={"pm-goals-pane pm-goals-expanded" + (expanded ? "" : " is-offstage")} aria-hidden={!expanded}>
           <div className="pm-goals-head">
             <button type="button" className="pm-goals-back" tabIndex={expanded ? 0 : -1} onClick={() => setExpanded(false)}>
-              <DSPM.IconifyIcon name="lucide:chevron-left" size={20} color="var(--text-heading)" />
+              <span className="pm-goals-back-ic" aria-hidden="true"><DSPM.IconifyIcon name="lucide:chevron-left" size={20} color="var(--text-heading)" /></span>
               <DSPM.IconifyIcon name="lucide:target" size={22} color="var(--brand-gold)" />Track your goals
             </button>
           </div>
           {unlocked ?
           <>
+              <PMProgressStrip assessState={assessState} />
               <PMGoalFocusCard assessState={assessState} />
               <PMTargetsCard assessState={assessState} />
               <PMLeagueCard />

@@ -2446,12 +2446,42 @@ function CourseDetailConfidence() {
   /* Success Path: full-screen path (?sp=path opens it on load) + a toast when a
      completed lesson unlocks a skill tick */
   const [spOpen, setSpOpen] = useStateLX(() => LX_PARAMS.get("sp") === "path");
+  /* this page hosts the Success Path itself: a lesson that completes a skill
+     shows the reward splash here, then success-path.js asks us to reopen the
+     path at the next skill (user, 2026-10-07) */
+  const closePlayerRef = React.useRef(null);
+  useEffectLX(() => {
+    if (!spOnLX(course.slug)) return;
+    window.PF_SP_INLINE_PATH = true;
+    const onOpen = () => {
+      if (closePlayerRef.current) closePlayerRef.current();
+      setSpOpen(true);
+    };
+    window.addEventListener("pf-sp-open-path", onOpen);
+    return () => {
+      window.removeEventListener("pf-sp-open-path", onOpen);
+      delete window.PF_SP_INLINE_PATH;
+    };
+  }, []);
+  /* a lesson already watched (video finished or marked complete) completes
+     its skill the moment the path opens: splash, then the path (user, 2026-10-07) */
+  useEffectLX(() => {
+    if (!spOpen || !spOnLX(course.slug)) return;
+    const t = setTimeout(() => {
+      try {
+        SPE_LX.autoComplete(course.slug, {
+          inline: true
+        });
+      } catch (e) {}
+    }, 700);
+    return () => clearTimeout(t);
+  }, [spOpen]);
   const markDone = name => {
     const before = spOnLX(course.slug) ? SPE_LX.compute(course.slug).ready : 0;
     markDoneRaw(name);
     if (spOnLX(course.slug)) {
       const after = SPE_LX.compute(course.slug).ready;
-      if (after > before) setTimeout(() => showToast("New skill ready to tick in your Success Path"), 900);
+      if (after > before && !window.PF_SP_INLINE_PATH) setTimeout(() => showToast("New skill ready to tick in your Success Path"), 900);
     }
   };
   /* paid course, not bought yet: browse only — nothing plays until checkout */
@@ -2551,6 +2581,7 @@ function CourseDetailConfidence() {
     const u = syncUrl(curIdx, false);
     if (u) history.replaceState(history.state, "", u);
   };
+  closePlayerRef.current = closePlayer;
   useEffectLX(() => {
     const onPop = () => {
       pushedRef.current = false;

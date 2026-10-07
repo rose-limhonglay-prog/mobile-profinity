@@ -50,6 +50,8 @@ function useSP(slug) {
   }, [slug]);
   return s;
 }
+/* level numbers in circles read as Roman numerals (user, 2026-10-07) */
+function romanSP(n) { const R = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"]; return R[n] || String(n); }
 function fmtDateSP(iso) { try { return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" }); } catch (e) { return ""; } }
 function fmtN(n) { return (+n || 0).toLocaleString("en-GB"); }
 
@@ -66,7 +68,7 @@ function RingSP({ pct, size = 64, stroke = 6, label }) {
 function LevelPipsSP({ milestones }) {
   return (
     <div className="sp-pips" aria-hidden="true">
-      {milestones.map((m) => <span key={m.id} className={"sp-pip sp-pip-" + m.status} title={"Level " + m.level + " · " + m.title}>{m.status === "achieved" ? <IcSP n="check" s={11} w={3} /> : m.level}</span>)}
+      {milestones.map((m) => <span key={m.id} className={"sp-pip sp-pip-" + m.status} title={"Level " + m.level + " · " + m.title}>{m.status === "achieved" ? <IcSP n="check" s={11} w={3} /> : romanSP(m.level)}</span>)}
     </div>);
 }
 
@@ -179,7 +181,7 @@ function MilestoneSP({ m, open, onToggle, children, isGoal }) {
   return (
     <section className={"sp-ms sp-ms-" + m.status + (open ? " open" : "")}>
       <button type="button" className="sp-ms-hd" aria-expanded={open} onClick={onToggle}>
-        <span className="sp-medal" aria-hidden="true">{m.status === "achieved" ? <IcSP n="trophy" s={20} /> : m.status === "upgrade" ? <IcSP n="lock" s={16} /> : <b>{m.level}</b>}</span>
+        <span className="sp-medal" aria-hidden="true">{m.status === "achieved" ? <IcSP n="trophy" s={20} /> : m.status === "upgrade" ? <IcSP n="lock" s={16} /> : <b>{romanSP(m.level)}</b>}</span>
         <span className="sp-ms-tx">
           <span className="sp-ms-k">Level {m.level} · {m.subStream}{isGoal && <em className="sp-goal-tag"><IcSP n="target" s={11} />Your goal</em>}</span>
           <span className="sp-ms-t">{m.title}</span>
@@ -266,13 +268,14 @@ function CourseCard({ slug, variant = "mobile", onOpen }) {
 
 /* ------------------------------------------ full-screen sheet (mobile) -- */
 function PathSheet({ slug, onClose, onOpenLesson }) {
+  const sheetS = useSP(slug);
   const s = useSP(slug);
   return (
     <div className="sp-root sp-fullsheet" role="dialog" aria-modal="true" aria-label="Success Path" data-screen-label="Success Path (course)">
       <header className="sp-fs-top">
         <button type="button" className="sp-iconbtn" aria-label="Back to course" onClick={onClose}><IcSP n="chevL" s={22} /></button>
-        <h2>Success Path</h2>
-        <a className="sp-iconbtn" href={"SuccessPath.html?course=" + slug} aria-label="Open Success Path hub"><IcSP n="route" s={18} /></a>
+        <h2>Success Path<small className="sp-fs-sub">{sheetS ? sheetS.shortTitle : ""}</small></h2>
+        <span className="sp-iconbtn sp-iconbtn-spacer" aria-hidden="true" />
       </header>
       <div className="sp-fs-scroll">
         {/* same journey UI as the My Learning hub (user, 2026-10-06) */}
@@ -551,38 +554,61 @@ function PathMap({ slug, variant = "mobile", onOpenLesson, onUpgrade, only, next
 function statusPillSP(a) {
   const left = a.lessonsTotal - a.lessonsDone;
   if (a.status === "done") return { cls: "done", text: "Completed" };
-  if (a.status === "ready") return { cls: "ready", text: "Completing…" };
+  if (a.status === "ready") return { cls: "ready", text: "Ready to tick · +" + a.points + " pts" };
   if (a.status === "upgrade") return { cls: "lock", text: "Locked" };
   return { cls: "todo", text: left === 1 ? "1 lesson to watch" : left + " lessons to watch" };
 }
 /* No self-declared tick (user, 2026-10-05): the skill completes on its own
    once its lessons are watched in the course, and Dr Tim's splash takes over. */
-/* 2026-10-07 (user): the card IS the task — eyebrow, the "I can…" statement,
-   status pill and a tick box on the card itself. No body, no lesson rows, no
-   auto-complete note. Tick/untick in place (SPE.tick force, no lesson gate). */
-function JourneySkill({ a, n, total, slug, onUpgrade }) {
+/* 2026-10-07 (user): the card IS the task — eyebrow (chapter = link to the
+   lesson), the "I can…" statement, then state: LOCKED (lock box, "Watch n
+   more lessons to unlock", lesson link + demo chip) until every linked lesson
+   is complete; READY (gold box, tap to tick); DONE (green box, tap to untick).
+   Finishing the lesson in the course completes the skill on its own with the
+   3s reward splash, then the page reopens the path at the next skill. */
+function JourneySkill({ a, n, total, slug, onUpgrade, onOpenLesson }) {
+  const firstLesson = (a.lessons || [])[0];
   const pill = statusPillSP(a);
   const isDone = a.status === "done";
+  const left = a.lessonsTotal - a.lessonsDone;
+  const firstLeft = (a.lessons || []).filter((x) => SPE.readDone().indexOf(x) === -1)[0];
   const tickToggle = (e) => {
     if (isDone) { SPE.untick(slug, a.id); return; }
     if (a.status === "upgrade") { onUpgrade && onUpgrade(); return; }
+    if (a.status === "locked") { if (onOpenLesson && firstLeft) onOpenLesson(firstLeft); return; }
     const box = e.currentTarget;
-    const res = SPE.tick(slug, a.id, { force: true });
+    const res = SPE.tick(slug, a.id);
     if (res && res.points) floatPtsSP(box, res.points);
   };
+  const boxIcon = isDone || a.status === "ready" ? <IcSP n="check" s={14} w={3.2} /> : <IcSP n="lock" s={12} />;
+  const pillEl = (a.status === "ready" || isDone) ? <span className={"sp-j-pill sp-j-pill-" + pill.cls}>{pill.cls === "done" && <IcSP n="check" s={11} w={3} />}{pill.text}</span> : null;
   return (
-    <div id={"sp-a-" + a.id} className={"sp-j-item sp-j-skill sp-j-" + a.status + (isDone ? " done sp-m-done" : "")}>
+    <div id={"sp-a-" + a.id} className={"sp-j-item sp-j-skill sp-j-" + a.status + (isDone ? " done sp-m-done" : a.status === "ready" ? " sp-m-ready" : "")}>
       <span className="sp-j-node" aria-hidden="true">{isDone ? <IcSP n="check" s={18} w={3} /> : a.status === "upgrade" ? <IcSP n="lock" s={14} /> : <b>{n}</b>}</span>
       <div className="sp-j-card">
         <div className="sp-j-head sp-j-head-tick">
-          <button type="button" className="sp-m-box sp-j-box" role="checkbox" aria-checked={isDone} aria-label={(isDone ? "Untick: " : "Tick: ") + a.text} onClick={tickToggle}>
-            {a.status === "upgrade" && !isDone ? <IcSP n="lock" s={16} /> : <IcSP n="check" s={20} w={3} />}
-          </button>
+          {/* top row of the card (user, 2026-10-07): small tick box left, status tag right */}
+          <div className="sp-j-toprow">
+            <button type="button" className={"sp-m-box sp-j-box" + (isDone || a.status === "ready" ? "" : " sp-j-box-locked")} role="checkbox" aria-checked={isDone} aria-disabled={a.status === "locked" || a.status === "upgrade"}
+              aria-label={isDone ? "Untick: " + a.text : a.status === "ready" ? "Tick: " + a.text : "Locked: " + a.text} onClick={tickToggle}>{boxIcon}</button>
+            {pillEl}
+          </div>
           <span className="sp-j-head-tx">
-            <span className="sp-j-meta">Skill {n} of {total} · {a.subCourse}</span>
+            <span className="sp-j-meta">Skill {n} of {total} · {onOpenLesson && firstLesson
+              ? <button type="button" className="sp-j-metalink" onClick={() => onOpenLesson(firstLesson)} aria-label={"Open " + firstLesson + " in the course"}>{a.subCourse}</button>
+              : a.subCourse}</span>
             <span className="sp-j-title">{a.text}</span>
+            {a.status === "locked" && <>
+              <span className="sp-j-lock-hint">Watch {left === 1 ? "1 more lesson" : left + " more lessons"} to unlock · +{a.points} pts</span>
+              {onOpenLesson && firstLeft &&
+                <button type="button" className="sp-j-lessonbtn" onClick={() => onOpenLesson(firstLeft)} aria-label={"Watch the lesson " + firstLeft + " in the course"}>
+                  <span className="sp-j-lessonbtn-ic"><IcSP n="play" s={13} /></span>
+                  <span className="sp-j-lessonbtn-tx"><b>{firstLeft}</b></span>
+                  <IcSP n="arrowR" s={16} />
+                </button>}
+            </>}
+            {a.status === "upgrade" && <span className="sp-j-lock-hint">Part of the full 8D Lip Design path. <button type="button" className="sp-link" onClick={onUpgrade}>Unlock with Mastery</button></span>}
           </span>
-          <span className={"sp-j-pill sp-j-pill-" + pill.cls}>{pill.cls === "done" && <IcSP n="check" s={11} w={3} />}{pill.text}</span>
         </div>
       </div>
     </div>);
@@ -602,7 +628,8 @@ function PathJourney({ slug, variant = "mobile", onOpenLesson, onUpgrade, only }
     const sync = () => bump((x) => x + 1);
     const onEvt = (e) => { sync(); if (e && e.detail && e.detail.type === "go-skill") focusSkill(e.detail.id); };
     window.addEventListener("pf-lessons-done", sync); window.addEventListener(SPE.EVT, onEvt);
-    const want = new URLSearchParams(window.location.search).get("skill");
+    let want = new URLSearchParams(window.location.search).get("skill");
+    try { const f = sessionStorage.getItem("pf-sp-focus"); if (f) { want = f; sessionStorage.removeItem("pf-sp-focus"); } } catch (e) {}
     if (want) setTimeout(() => focusSkill(want), 400);
     return () => { window.removeEventListener("pf-lessons-done", sync); window.removeEventListener(SPE.EVT, onEvt); };
   }, []);
@@ -620,14 +647,10 @@ function PathJourney({ slug, variant = "mobile", onOpenLesson, onUpgrade, only }
   let n = 0;
   return (
     <div className={"sp-root sp-j sp-" + variant}>
-      <div className="sp-j-item sp-j-start done">
-        <span className="sp-j-node sp-j-node-start" aria-hidden="true"><IcSP n="route" s={16} /></span>
-        <p className="sp-j-startline">Start here · work down the path, one skill at a time</p>
-      </div>
       {levels.map((m) =>
         <React.Fragment key={m.id}>
           <div id={"sp-sec-" + m.id} className={"sp-j-item sp-j-level sp-j-level-" + m.status + (m.status === "achieved" ? " done" : "")}>
-            <span className="sp-j-node sp-j-medal" aria-hidden="true">{m.status === "achieved" ? <IcSP n="trophy" s={18} /> : m.status === "upgrade" ? <IcSP n="lock" s={14} /> : <b>{m.level}</b>}</span>
+            <span className="sp-j-node sp-j-medal" aria-hidden="true">{m.status === "achieved" ? <IcSP n="trophy" s={18} /> : m.status === "upgrade" ? <IcSP n="lock" s={14} /> : <b>{romanSP(m.level)}</b>}</span>
             <div className="sp-j-level-tx">
               <p className="sp-eyebrow">Level {m.level} · {m.subStream}</p>
               <h2>{m.title}</h2>
@@ -639,7 +662,7 @@ function PathJourney({ slug, variant = "mobile", onOpenLesson, onUpgrade, only }
             </div>
           </div>
           {m.activities.map((a) => { n += 1; return (
-            <JourneySkill key={a.id} a={a} n={n} total={total} slug={slug} onUpgrade={upgrade} />); })}
+            <JourneySkill key={a.id} a={a} n={n} total={total} slug={slug} onUpgrade={upgrade} onOpenLesson={onOpenLesson} />); })}
         </React.Fragment>)}
       <div className={"sp-j-item sp-j-finish" + (doneN === total ? " done" : "")}>
         <span className="sp-j-node sp-j-node-finish" aria-hidden="true"><IcSP n="trophy" s={20} /></span>
@@ -672,7 +695,7 @@ function LevelStrip({ s, only }) {
       {list.map((m) =>
         <button type="button" role="listitem" key={m.id} className={"sp-lv sp-lv-" + m.status + (current && current.id === m.id ? " is-current" : "")} onClick={() => scrollToSP("sp-sec-" + m.id, "start")} aria-label={"Level " + m.level + " · " + m.title + " · " + m.done + " of " + m.total + " skills"}>
           <span className="sp-lv-top">
-            <span className="sp-lv-medal" aria-hidden="true">{m.status === "achieved" ? <IcSP n="check" s={13} w={3} /> : m.status === "upgrade" ? <IcSP n="lock" s={11} /> : m.level}</span>
+            <span className="sp-lv-medal" aria-hidden="true">{m.status === "achieved" ? <IcSP n="check" s={13} w={3} /> : m.status === "upgrade" ? <IcSP n="lock" s={11} /> : romanSP(m.level)}</span>
             <span className="sp-lv-k">Level {m.level}</span>
           </span>
           <span className="sp-lv-t">{m.title}</span>
@@ -727,7 +750,8 @@ function Hub({ slug = "8d-lip-design", variant = "mobile", onBack }) {
     const flat = cur ? window.PFLearnShared.flatten(cur) : [];
     const l = flat.filter((x) => x.name === name)[0];
     const qs = l ? "&level=" + l.li + "&module=" + l.si + "&lesson=" + l.ni + (l.subIdx != null ? "&sub=" + l.subIdx : "") : "";
-    window.location.href = (variant === "web" ? "LessonWeb.html?course=" : "CourseDetail.html?play=1&course=") + slug + qs;
+    /* from=path: the course page sends the member back here after the skill splash */
+    window.location.href = (variant === "web" ? "LessonWeb.html?course=" : "CourseDetail.html?play=1&course=") + slug + qs + "&from=path";
   };
   const courseUrl = (variant === "web" ? "CourseWeb.html?course=" : "CourseDetail.html?course=") + slug;
   const only = tab === "starter" ? ["M1"] : null;

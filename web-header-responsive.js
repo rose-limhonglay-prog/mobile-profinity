@@ -238,6 +238,49 @@
     header.insertBefore(btn, header.firstChild);
   }
 
+
+  /* ======================================================================
+     "Get the app" banner — iOS Smart-App-Banner style strip ABOVE the header,
+     phone widths only (CSS hides it ≥761px). In normal flow so it scrolls
+     away like Safari's; the sticky header takes over at top:0. Dismiss is
+     remembered in localStorage; ?appbanner=1 forces it back for testing.
+     Store link: window.PF_APP_STORE_URL (set before this script) or the
+     APP_STORE_URL constant below — replace with the real listing.
+     ====================================================================== */
+  var APP_STORE_URL = "https://apps.apple.com/app/profinity-academy/id0000000000";
+  var PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.profinity.academy";
+  var BANNER_KEY = "pf-app-banner-dismissed";
+  function storeUrl() {
+    if (window.PF_APP_STORE_URL) return window.PF_APP_STORE_URL;
+    var ua = navigator.userAgent || "";
+    return /android/i.test(ua) && !window.PF_APP_STORE_IOS_ONLY ? PLAY_STORE_URL : APP_STORE_URL;
+  }
+  function addAppBanner() {
+    if (document.querySelector(".pf-appbn")) return;
+    var force = false;
+    try { force = new URLSearchParams(location.search).get("appbanner") === "1"; } catch (e) {}
+    if (!force) { try { if (localStorage.getItem(BANNER_KEY)) return; } catch (e) {} }
+    var isAndroid = /android/i.test(navigator.userAgent || "");
+    var storeName = window.PF_APP_STORE_URL ? "App Store" : (isAndroid ? "Google Play" : "App Store");
+    var el = document.createElement("div");
+    el.className = "pf-appbn";
+    el.setAttribute("role", "complementary");
+    el.setAttribute("aria-label", "Get the PROfinity app");
+    el.innerHTML =
+      '<button type="button" class="pf-appbn-x" aria-label="Dismiss"><iconify-icon icon="lucide:x" width="16" height="16"></iconify-icon></button>' +
+      '<img class="pf-appbn-ic" src="assets/app-icon-512.png" alt="">' +
+      '<span class="pf-appbn-tx"><span class="pf-appbn-t">PROfinity Academy</span>' +
+      '<span class="pf-appbn-s">Free on the ' + storeName + '</span>' +
+      '<span class="pf-appbn-stars" aria-label="Rated 4.9 out of 5">★★★★★</span></span>' +
+      '<a class="pf-appbn-cta" href="' + storeUrl().replace(/"/g, "&quot;") + '" target="_blank" rel="noopener">Download</a>';
+    el.querySelector(".pf-appbn-x").addEventListener("click", function () {
+      try { localStorage.setItem(BANNER_KEY, String(Date.now())); } catch (e) {}
+      el.classList.add("is-out");
+      setTimeout(function () { el.remove(); }, 220);
+    });
+    document.body.insertBefore(el, document.body.firstChild);
+  }
+
   function findHeader() {
     var header = document.querySelector("header");
     if (!header || !header.querySelector("nav")) return null;
@@ -328,6 +371,7 @@
   }
 
   function start() {
+    addAppBanner();
     var root = document.getElementById("pf-root") || document.body;
     new MutationObserver(schedule).observe(root, { childList: true, subtree: true });
     schedule();

@@ -37,6 +37,7 @@
   var EIGHT_D = {
     slug: "8d-lip-design",
     title: "8D Lip Design",
+    shortTitle: "8D Lips", /* header subtitle (user, 2026-10-07) */
     kicker: "Success Path",
     domain: "Clinical Skills",
     blurb: "Five levels from reading the lip to delivering a full 8D case. Tick each skill the first time it's true in your clinic.",
@@ -170,7 +171,7 @@
     var nextLocked = acts.filter(function (a) { return a.status === "locked"; })[0] || null;
     var goalM = ps.goal ? ms.filter(function (m) { return m.id === ps.goal.milestone; })[0] : null;
     return {
-      slug: slug, title: c.title, kicker: c.kicker, blurb: c.blurb, domain: c.domain,
+      slug: slug, title: c.title, shortTitle: c.shortTitle || c.title, kicker: c.kicker, blurb: c.blurb, domain: c.domain,
       milestones: ms, activities: acts, total: total, done: doneN, ready: readyN,
       pct: total ? Math.round(doneN / total * 100) : 0, earned: earned, possible: possible,
       achieved: achievedN, current: current, nextReady: nextReady, nextLocked: nextLocked,
@@ -324,7 +325,7 @@
     var cols = ["#fdc35d", "#f0c98a", "#8fd3c1", "#b7a9ff", "#ffffff", "#ff9fb2"];
     for (var i = 0; i < 36; i++) conf += '<i style="left:' + (Math.random() * 100).toFixed(1) + "%;background:" + cols[i % cols.length] + ";animation-delay:" + (Math.random() * .6).toFixed(2) + "s;animation-duration:" + (1.8 + Math.random() * 1.2).toFixed(2) + 's"></i>';
     el.innerHTML = '<div class="sp-cel-card"><div class="sp-conf" aria-hidden="true">' + conf + "</div>" +
-      '<div class="sp-cel-medal" aria-hidden="true"><small>Level</small><b>' + esc(m.level) + "</b></div>" +
+      '<div class="sp-cel-medal" aria-hidden="true"><small>Level</small><b>' + esc(["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"][m.level] || m.level) + "</b></div>" +
       '<p class="sp-cel-k">Milestone achieved</p>' +
       '<h2 class="sp-cel-t">Level ' + esc(m.level) + " · " + esc(m.title) + "</h2>" +
       '<p class="sp-cel-s">“' + esc(m.statement) + "”</p>" +
@@ -356,7 +357,7 @@
     ".sp-ss-x{position:absolute;right:18px;top:18px;width:38px;height:38px;border-radius:50%;border:0;background:rgba(16,24,40,.08);color:inherit;font-size:20px;line-height:1;cursor:pointer;z-index:2}" +
     "[data-ios-device] .sp-ss-x{top:62px}[data-theme=dark] .sp-ss-x{background:rgba(255,255,255,.12)}" +
     ".sp-ss-body{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 28px 60px;max-width:460px;margin:0 auto;width:100%;box-sizing:border-box}" +
-    ".sp-ss-avatar{position:relative;width:136px;height:136px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff2d6,#f2d9ae 70%);display:flex;align-items:center;justify-content:center;margin-bottom:22px;box-shadow:0 18px 40px rgba(206,153,87,.3);overflow:hidden;animation:sp-ss-pop .6s cubic-bezier(.2,1.4,.4,1) both}" +
+    ".sp-ss-avatar{position:relative;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff2d6,#f2d9ae 70%);display:flex;align-items:center;justify-content:center;margin-bottom:28px;box-shadow:0 22px 50px rgba(206,153,87,.32);overflow:hidden;animation:sp-ss-pop .6s cubic-bezier(.2,1.4,.4,1) both}" +
     ".sp-ss-lottie{position:absolute;inset:-6%}.sp-ss-lottie svg{width:100%!important;height:100%!important}" +
     ".sp-ss-img{width:100%;height:100%;object-fit:cover;border-radius:50%}.sp-ss-avatar.has-lottie .sp-ss-img{display:none}" +
     "@keyframes sp-ss-pop{0%{transform:scale(.4);opacity:0}100%{transform:none;opacity:1}}" +
@@ -375,7 +376,7 @@
     ".sp-ss-btn.pri{background:#0C1928;color:#fff}[data-theme=dark] .sp-ss-btn.pri{background:#FDC35D;color:#1b1848}" +
     ".sp-ss-btn.sec{background:rgba(16,24,40,.06);color:inherit}[data-theme=dark] .sp-ss-btn.sec{background:rgba(255,255,255,.1)}" +
     "@media (prefers-reduced-motion:reduce){.sp-ss,.sp-ss-avatar{animation:none!important;transition:none!important}}";
-  var SS_MS = 2600;
+  var SS_MS = 5000; /* user, 2026-10-07: reward splash shows for 5s */
   function ensureSsCss() {
     if (document.getElementById("sp-ss-css")) return;
     var st = document.createElement("style"); st.id = "sp-ss-css"; st.textContent = SS_CSS; document.head.appendChild(st);
@@ -389,7 +390,12 @@
       document.head.appendChild(s);
     });
   }
-  function isWebPage() { return /Web\.html/i.test(location.pathname) || !document.querySelector("[data-ios-device]"); }
+  function isWebPage() {
+    var p = location.pathname;
+    if (/Web\.html/i.test(p)) return true;
+    if (/CourseDetail|Mobile|SuccessPath\.html|Lesson\.html/i.test(p)) return false; /* mobile shells, framed or native */
+    return !document.querySelector("[data-ios-device]");
+  }
   function hubUrl(slug, skillId) { return (isWebPage() ? "SuccessPathWeb.html" : "SuccessPath.html") + "?course=" + slug + (skillId ? "&skill=" + encodeURIComponent(skillId) : ""); }
   function memberName() { try { return (window.PFLearnShared && window.PFLearnShared.ME && window.PFLearnShared.ME.name) || "Katy"; } catch (e) { return "Katy"; } }
   function skillSplash(slug, a, onClose) {
@@ -447,9 +453,12 @@
   function onHubPage() { return /SuccessPath/i.test(location.pathname); }
   /* Skills only ever complete on the Success Path page (user, 2026-10-05):
      finishing the lessons elsewhere sends the member back here first. */
-  function autoComplete(slug) {
-    slug = slug || "8d-lip-design";
-    if (autoBusy || window.PF_SP_NO_AUTO || /Admin/i.test(location.pathname) || !onHubPage()) return [];
+  /* opts.inline (course page, 2026-10-07): the page hosts the path itself
+     (window.PF_SP_INLINE_PATH) — complete here, splash, then ask the page to
+     open its Success Path at the skill (pf-sp-open-path + pf-sp-focus). */
+  function autoComplete(slug, opts) {
+    slug = slug || "8d-lip-design"; opts = opts || {};
+    if (autoBusy || window.PF_SP_NO_AUTO || /Admin/i.test(location.pathname) || (!onHubPage() && !opts.inline)) return [];
     var s = compute(slug); if (!s) return [];
     var un = pathState(slug).unticked;
     var ready = s.activities.filter(function (a) { return a.status === "ready" && !un[a.id]; });
@@ -465,7 +474,21 @@
     (function nextSplash() {
       if (i < completed.length) { var a = completed[i++]; setTimeout(function () { skillSplash(slug, a, nextSplash); }, i === 1 ? 350 : 150); return; }
       autoBusy = false;
-      if (milestone) setTimeout(function () { celebrate(slug, milestone, compute(slug)); }, 300);
+      if (opts.inline && completed.length) {
+        var last = completed[completed.length - 1];
+        var after = compute(slug), nxt = null;
+        after.activities.forEach(function (x, i) { if (x.id === last.id) { for (var j = i + 1; j < after.activities.length; j++) if (after.activities[j].status !== "done") { nxt = after.activities[j]; break; } } });
+        var focusId = nxt ? nxt.id : last.id;
+        var fromHub = false; try { fromHub = new URLSearchParams(location.search).get("from") === "path"; } catch (e) {}
+        if (fromHub) {
+          /* opened from the Success Path page → go back there, at the next skill */
+          setTimeout(function () { (window.pfGo || function (u) { location.href = u; })(hubUrl(slug, focusId)); }, 150);
+          return;
+        }
+        try { sessionStorage.setItem("pf-sp-focus", focusId); } catch (e) {}
+        try { window.dispatchEvent(new CustomEvent("pf-sp-open-path", { detail: { slug: slug, id: focusId } })); } catch (e) {}
+      }
+      if (milestone) setTimeout(function () { celebrate(slug, milestone, compute(slug)); }, opts.inline ? 700 : 300);
     })();
     return completed;
   }
@@ -505,6 +528,7 @@
       var s = compute("8d-lip-design"); if (!s) return;
       var ready = s.activities.filter(function (a) { return a.status === "ready"; });
       if (!ready.length) return;
+      if (window.PF_SP_INLINE_PATH) { setTimeout(function () { autoComplete("8d-lip-design", { inline: true }); }, 500); return; }
       setTimeout(function () { (window.pfGo || function (u) { location.href = u; })(hubUrl("8d-lip-design", ready[0].id)); }, 900);
     }, 250);
   });

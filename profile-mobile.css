@@ -1306,3 +1306,87 @@ img{max-width:100%}
 .pm-target-assess-ic{flex:none;width:44px;height:44px;display:flex;align-items:center;justify-content:center}
 .pm-target-assess .pm-target-copy .tx{color:var(--brand-navy);font-weight:var(--fw-semibold)}
 .pm-target-assess-cta{background:var(--ai-purple);color:#fff}
+
+
+/* ===== ⓘ white popover (2026-10-07): the cards' explanation copy moved off
+   the card into a hovering white tip under the ⓘ; one short meta line (the
+   date) may stay under the title. Anchored to the header row; the caret
+   sits under the ⓘ via --tip-x. ===== */
+.pm-pane-hd,.pm-league-hd{position:relative}
+.pm-tip{display:inline-flex;flex:none}
+.pm-tip.is-open .pm-pane-info{background:#F4F3FF}
+.pm-tip-pop{position:absolute;left:0;right:0;top:calc(100% + 10px);z-index:60;display:flex;flex-direction:column;gap:8px;
+  padding:13px 14px 12px;border-radius:14px;background:var(--surface-card,#fff);color:var(--gray-600);
+  border:1px solid var(--border-default);box-shadow:0 14px 34px rgba(16,20,48,.16),0 2px 6px rgba(16,20,48,.06);
+  animation:pm-tip-in .18s cubic-bezier(.22,.61,.36,1);text-align:left;font-weight:var(--fw-regular)}
+@keyframes pm-tip-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.pm-tip-caret{position:absolute;left:var(--tip-x,24px);top:-7px;width:12px;height:12px;margin-left:-6px;transform:rotate(45deg);
+  background:var(--surface-card,#fff);border-left:1px solid var(--border-default);border-top:1px solid var(--border-default)}
+.pm-tip-body{display:block}
+.pm-tip-body p{margin:0 0 8px;font-family:var(--font-sans);font-size:13.5px;line-height:1.5;color:var(--gray-600)}
+.pm-tip-body p:last-child{margin-bottom:0}
+.pm-tip-body b{color:var(--text-heading);font-weight:var(--fw-semibold)}
+.pm-tip-more{align-self:flex-start;display:inline-flex;align-items:center;gap:4px;padding:0;border:none;background:none;cursor:pointer;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13px;color:var(--ai-purple)}
+.pm-pane-meta{margin:4px 0 0;font-family:var(--font-sans);font-size:13px;line-height:1.4;color:var(--gray-500)}
+.pm-pane-meta .pm-target-date{display:inline;margin:0}
+.pm-league-hd .pm-tip{margin-left:-4px}
+[data-theme="dark"] .pm-tip.is-open .pm-pane-info{background:rgba(255,255,255,.1)}
+
+/* ===== Track your goals — UI pass (2026-10-07) ===== */
+/* collapsed card: mini targets ring beside the chevron */
+.pm-goals-collapsed-right{display:inline-flex;align-items:center;gap:8px;flex:none}
+.pm-ring{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;--pm-ring-track:#EDE9E3}
+[data-theme="dark"] .pm-ring{--pm-ring-track:rgba(255,255,255,.12)}
+.pm-ring svg{display:block}
+.pm-ring-tx{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:1px;font-family:var(--font-sans);color:var(--text-heading);line-height:1}
+.pm-ring-tx b{font-weight:var(--fw-bold);font-size:13px}
+.pm-ring-tx small{font-weight:var(--fw-semibold);font-size:10px;color:var(--gray-500)}
+.pm-goals-collapsed .pm-ring-tx b{font-size:12px}
+.pm-goals-collapsed .pm-ring-tx small{font-size:9px}
+
+/* expanded header: round back chip + title */
+.pm-goals-head{margin:0 0 8px 4px}
+.pm-goals-head .pm-goals-back{gap:10px;padding-right:12px;font-size:20px}
+.pm-goals-back-ic{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;
+  background:var(--surface-card);border:1px solid var(--border-default);box-shadow:0 1px 2px rgba(16,20,48,.05)}
+
+/* "Today's progress" strip */
+.pm-prog{padding:16px 16px 14px;background:linear-gradient(180deg,#FFFBF2 0%,var(--surface-card) 70%);border-color:#F2E6CF}
+[data-theme="dark"] .pm-prog{background:linear-gradient(180deg,rgba(253,195,93,.08),var(--surface-card) 70%);border-color:rgba(253,195,93,.2)}
+.pm-prog-top{display:flex;align-items:center;gap:14px}
+.pm-prog-ringbtn{flex:none;padding:0;border:none;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;border-radius:50%}
+.pm-prog-ringbtn .pm-ring-tx b{font-size:19px}
+.pm-prog-ringbtn .pm-ring-tx small{font-size:11px}
+.pm-prog-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pm-prog-k{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--brand-gold-700,#8A5303)}
+.pm-prog-t{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:19px;line-height:1.2;color:var(--text-heading);letter-spacing:-.01em}
+.pm-prog-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.pm-prog-stat{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:76px;padding:10px 10px 9px;border-radius:14px;
+  border:1px solid var(--border-default);background:var(--surface-card);cursor:pointer;text-align:left;font-family:var(--font-sans);
+  -webkit-tap-highlight-color:transparent;transition:transform .15s ease,box-shadow .15s ease}
+.pm-prog-stat:active{transform:scale(.97)}
+.pm-prog-stat b{margin-top:6px;font-weight:var(--fw-bold);font-size:17px;line-height:1.1;color:var(--text-heading);letter-spacing:-.01em}
+.pm-prog-stat span:last-child{font-size:11.5px;line-height:1.2;color:var(--gray-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.pm-prog-ic{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9px}
+.pm-prog-ic.gold{background:#FDF3DC;color:#B4740B}
+.pm-prog-ic.flame{background:#FFECE4;color:#E4572E}
+.pm-prog-ic.gem{background:color-mix(in srgb,var(--pm-lg-accent,#7C4DFF) 14%,#fff);color:var(--pm-lg-accent,#7C4DFF)}
+[data-theme="dark"] .pm-prog-ic.gold{background:rgba(253,195,93,.18);color:#FDC35D}
+[data-theme="dark"] .pm-prog-ic.flame{background:rgba(228,87,46,.2);color:#FF8A65}
+[data-theme="dark"] .pm-prog-ic.gem{background:color-mix(in srgb,var(--pm-lg-accent,#7C4DFF) 22%,transparent)}
+
+/* coach-focus door on this card: number badge tucked top-left so the copy
+   gets the full width (the three entries were wrapping hard at 430px) */
+.pm-goal-card .cf-door-item{position:relative;padding:14px 14px 14px 46px}
+.pm-goal-card .cf-door-num{position:absolute;left:13px;top:15px;margin:0}
+.pm-goal-card .cf-door-thumb{width:60px;height:60px}
+.pm-goal-card .cf-free{align-items:flex-start}
+.pm-goal-card .cf-free-ic{margin-top:2px}
+
+/* door rows 2 + 3 on this card: the action drops under the copy as a full-width
+   pill so the title no longer wraps word-by-word beside it */
+.pm-goal-card .cf-free,.pm-goal-card .cf-track{flex-wrap:wrap;row-gap:10px}
+.pm-goal-card .cf-free-copy,.pm-goal-card .cf-track-copy{flex:1 1 0;min-width:0}
+.pm-goal-card .cf-free .cf-btn-free,.pm-goal-card .cf-track-cta{flex:0 0 100%;width:100%;justify-content:center;text-align:center;box-sizing:border-box}
+.pm-goal-card .cf-track-cta{padding:10px 12px;font-size:13.5px}

@@ -72,7 +72,9 @@
   /* ---------------------------------------------------------------- door -- */
   /* "Ava puts Katie at the door": one course (Basic can buy it directly) +
      one free resource to open today, so nobody leaves empty-handed. */
-  function CFDoor({ focus, web, tier, heading = true, showTrack = true }) {
+  /* quiet (Profile cards, 2026-10-07): no intro line and no Basic-pricing
+     note on the card — that copy lives in the card's ⓘ popover instead. */
+  function CFDoor({ focus, web, tier, heading = true, showTrack = true, quiet = false }) {
     useCoachRefresh();
     if (!focus) return null;
     const course = focus.door.course, free = focus.door.free;
@@ -86,7 +88,7 @@
             <span className="cf-kicker"><Icon name="lucide:door-open" size={14} color="var(--brand-gold)" />Your door</span>
             <span className="cf-door-count">{showTrack ? 3 : 2} ways in</span>
           </div>}
-        {heading && <p className="cf-door-sub">{showTrack ? "Three" : "Two"} ways to start on <b>{focus.domain}</b> today — pick whichever suits you.</p>}
+        {heading && !quiet && <p className="cf-door-sub">{showTrack ? "Three" : "Two"} ways to start on <b>{focus.domain}</b> today — pick whichever suits you.</p>}
         <ol className="cf-door-list">
         <li className="cf-door-item"><span className="cf-door-num" aria-label="Entry 1 of 3">1</span>
         <div className="cf-door-course" style={{ "--cf-dom": dom.color, "--cf-dom-soft": dom.soft, "--cf-dom-text": dom.text }}>
@@ -111,7 +113,7 @@
               </>}
           </div>
           {includedLater && <p className="cf-door-note"><Icon name="lucide:sparkles" size={12} color="var(--ai-purple)" />Included free from {course.includedFrom === "mastery" ? "Mastery" : "Confidence"} membership</p>}
-          {!paid && !course.owned && !includedLater && <p className="cf-door-note"><Icon name="lucide:info" size={12} color="var(--gray-500)" />You can buy any course on Basic — no membership needed.</p>}
+          {!paid && !course.owned && !includedLater && !quiet && <p className="cf-door-note"><Icon name="lucide:info" size={12} color="var(--gray-500)" />You can buy any course on Basic — no membership needed.</p>}
         </div>
         </li>
 
@@ -137,8 +139,8 @@
   function CFFocusChip({ domain, size }) {
     const dom = CF.DOMAINS[domain];
     return (
-      <span className={"cf-focus-chip" + (size === "lg" ? " lg" : "")} style={{ "--cf-dom": dom.color, "--cf-dom-soft": dom.soft, "--cf-dom-text": dom.text }}>
-        <span className="cf-focus-chip-ic"><Icon name={dom.icon} size={size === "lg" ? 20 : 14} color="#fff" /></span>{domain}
+      <span className={"cf-focus-chip" + (size === "lg" ? " lg" : size === "hero" ? " hero" : "")} style={{ "--cf-dom": dom.color, "--cf-dom-soft": dom.soft, "--cf-dom-text": dom.text }}>
+        <span className="cf-focus-chip-ic"><Icon name={dom.icon} size={size === "lg" || size === "hero" ? 20 : 14} color="#fff" /></span>{domain}
       </span>);
   }
 

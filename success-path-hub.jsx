@@ -19,7 +19,7 @@ function SPMobileScreen() {
       <div className="ml-top">
         {/* the path belongs to its course (user, 2026-10-06): back goes to the 8D course page */}
         <button className="ml-back" aria-label="Back to the course" onClick={() => goSH("CourseDetail.html?course=" + SLUG_SH)}><UISH.Icon n="chevL" s={22} /></button>
-        <h1>Success Path</h1>
+        <h1>Success Path<small className="sp-fs-sub">{(window.PFSuccessPath && window.PFSuccessPath.compute(SLUG_SH) || {}).shortTitle || ""}</small></h1>
       </div>
       <div className="ml-scroll sp-hub-scroll">
         <UISH.Hub slug={SLUG_SH} variant="mobile" />

@@ -409,14 +409,92 @@ function PMInfoModal({
   }), coachLabel || "Ask Ava")))));
 }
 
+/* ⓘ with a white popover (user, 2026-10-07: "so many text — put the
+   explanation into the ⓘ"). The explanatory copy that used to sit on the
+   card lives here; tap toggles it, a tap anywhere else closes it. "Read
+   more" hands off to the fuller PMInfoModal when the card has one. */
+function PMInfoTip({
+  label,
+  children,
+  onMore,
+  moreLabel
+}) {
+  const [open, setOpen] = useStatePM(false);
+  const [x, setX] = useStatePM(0); // caret x within the header row
+  const host = React.useRef(null);
+  const tipId = React.useId ? React.useId() : undefined;
+  useEffectPM(() => {
+    if (!open) return;
+    try {
+      const b = host.current.querySelector(".pm-pane-info");
+      setX(b.offsetLeft + b.offsetWidth / 2);
+    } catch (e) {}
+    const onDown = e => {
+      if (host.current && !host.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = e => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown, true);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown, true);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  return /*#__PURE__*/React.createElement("span", {
+    className: "pm-tip" + (open ? " is-open" : ""),
+    ref: host
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-pane-info",
+    "aria-label": label,
+    "aria-expanded": open,
+    "aria-controls": tipId,
+    onClick: () => setOpen(o => !o)
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:info",
+    size: 17,
+    color: open ? "var(--ai-purple)" : "var(--gray-500)"
+  })), open && /*#__PURE__*/React.createElement("span", {
+    className: "pm-tip-pop",
+    id: tipId,
+    role: "tooltip",
+    style: {
+      "--tip-x": x + "px"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-tip-caret",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pm-tip-body"
+  }, children), onMore && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-tip-more",
+    onClick: () => {
+      setOpen(false);
+      onMore();
+    }
+  }, moreLabel || "Read more", /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:arrow-right",
+    size: 13,
+    color: "currentColor"
+  }))));
+}
+
 /* Card shell for the three pane cards: bordered card, a collapse toggle
-   pinned to the top-right corner, and an ⓘ button 12px after the title. */
+   pinned to the top-right corner, and an ⓘ 12px after the title. `sub` and
+   `tip` render inside the ⓘ popover (not on the card); `meta` is the one
+   short line that stays under the title (e.g. today's date). */
 function PMPaneCard({
   id,
   title,
   sub,
+  tip,
+  meta,
   infoLabel,
   onInfo,
+  moreLabel,
   className,
   children,
   defaultOpen = true,
@@ -430,18 +508,13 @@ function PMPaneCard({
     "data-screen-label": title
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-pane-hd"
-  }, /*#__PURE__*/React.createElement("h2", null, title), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pm-pane-info",
-    "aria-label": infoLabel || "About " + title,
-    onClick: onInfo
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:info",
-    size: 17,
-    color: "var(--gray-500)"
-  }))), sub && open && /*#__PURE__*/React.createElement("p", {
-    className: "pm-pane-sub"
-  }, sub), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("h2", null, title), /*#__PURE__*/React.createElement(PMInfoTip, {
+    label: infoLabel || "About " + title,
+    onMore: onInfo,
+    moreLabel: moreLabel
+  }, sub && /*#__PURE__*/React.createElement("p", null, sub), tip)), meta && open && /*#__PURE__*/React.createElement("p", {
+    className: "pm-pane-meta"
+  }, meta), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-pane-toggle",
     "aria-expanded": open,
@@ -471,9 +544,11 @@ function PMGoalFocusCard({
   const paid = pmIsPaid();
   return /*#__PURE__*/React.createElement(PMPaneCard, {
     title: "Your coach focus",
-    infoLabel: "How Ava chooses your focus",
+    infoLabel: "Why this focus",
     onInfo: () => setInfo(true),
-    className: "pm-goal-card"
+    moreLabel: "How Ava chooses your focus",
+    className: "pm-goal-card",
+    tip: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", null, focus.reason), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, "Your door"), " — three ways to start on ", focus.domain, " today. Pick whichever suits you."), !paid && /*#__PURE__*/React.createElement("p", null, "You can buy any course on Basic — no membership needed. Coaching with Ava on this plan (weekly plans, check-ins and role-play) comes with Confidence."))
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-goal-top"
   }, /*#__PURE__*/React.createElement("div", {
@@ -485,13 +560,12 @@ function PMGoalFocusCard({
     }
   }, "Ava recommends starting here"), /*#__PURE__*/React.createElement("div", {
     style: {
-      margin: "6px 0 4px"
+      margin: "8px 0 2px"
     }
   }, /*#__PURE__*/React.createElement(UI.CFFocusChip, {
-    domain: focus.domain
-  })))), /*#__PURE__*/React.createElement("p", {
-    className: "cf-goal-reason"
-  }, focus.reason), focus.confirm && /*#__PURE__*/React.createElement("div", {
+    domain: focus.domain,
+    size: "hero"
+  })))), focus.confirm && /*#__PURE__*/React.createElement("div", {
     className: "cf-confirm",
     style: {
       marginTop: 12
@@ -531,7 +605,8 @@ function PMGoalFocusCard({
   }, /*#__PURE__*/React.createElement(UI.CFDoor, {
     focus: focus,
     web: false,
-    tier: pmTier()
+    tier: pmTier(),
+    quiet: true
   })), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 12
@@ -552,7 +627,7 @@ function PMGoalFocusCard({
     name: "lucide:message-circle",
     size: 18,
     color: "#4F46C8"
-  }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "Coach with Ava on this plan"), " — weekly plans, check-ins and role-play with Confidence."), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+  }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "Coach with Ava on this plan"), " · Confidence"), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:lock",
     size: 14,
     color: "var(--gray-400)"
@@ -1015,6 +1090,9 @@ function PMTargetsCard({
     try {
       localStorage.setItem(PM_TARGETS_KEY, JSON.stringify(state));
     } catch (e) {}
+    try {
+      window.dispatchEvent(new CustomEvent("pm:targets-changed"));
+    } catch (e) {}
   }, [state]);
   /* Another pillar answered while this card is mounted (the hub is a
      sibling overlay) → its task joins today's set immediately. */
@@ -1084,16 +1162,19 @@ function PMTargetsCard({
   const doneCount = rows.filter(t => t.done).length + pickDone;
   const allDone = total > 0 && doneCount === total;
   return /*#__PURE__*/React.createElement(PMPaneCard, {
+    id: "todays-targets",
     title: "Today's Targets",
-    sub: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    meta: /*#__PURE__*/React.createElement("span", {
       className: "pm-target-date"
     }, new Date().toLocaleDateString("en-GB", {
       weekday: "long",
       day: "numeric",
       month: "long"
-    })), "Completing these will move your Prosperity Spiral forward"),
-    infoLabel: "How targets and points work",
-    onInfo: () => setInfo(true)
+    })),
+    sub: "Completing these will move your Prosperity Spiral forward.",
+    infoLabel: "About Today's Targets",
+    onInfo: () => setInfo(true),
+    moreLabel: "How targets and points work"
   }, nextKey && /*#__PURE__*/React.createElement(PMAssessNudgeRow, {
     pillarKey: nextKey,
     remaining: remaining,
@@ -1326,6 +1407,7 @@ function PMLeagueCard() {
   const gap = above ? above.points - me.points : 0;
   const rows = [above, me, below].filter(Boolean);
   return /*#__PURE__*/React.createElement("section", {
+    id: "your-league",
     className: "pm-sec pm-card pm-league-card" + (open ? "" : " is-collapsed"),
     "data-screen-label": "Your league"
   }, /*#__PURE__*/React.createElement("div", {
@@ -1339,7 +1421,9 @@ function PMLeagueCard() {
   }, /*#__PURE__*/React.createElement(PMLeagueGem, {
     src: league.lottie,
     size: 46
-  })), /*#__PURE__*/React.createElement("h2", null, league ? league.name + " League" : "Your league"), /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("h2", null, league ? league.name + " League" : "Your league"), /*#__PURE__*/React.createElement(PMInfoTip, {
+    label: "About your league"
+  }, /*#__PURE__*/React.createElement("p", null, above ? /*#__PURE__*/React.createElement(React.Fragment, null, league ? "Your league · last 30 days" : "Last 30 days", " · ", /*#__PURE__*/React.createElement("b", null, fmt(gap), " pts"), " behind ", firstName, " — finish today's targets to close it.") : /*#__PURE__*/React.createElement(React.Fragment, null, league ? "Your league · last 30 days" : "Last 30 days", " · you're leading ", league ? league.name + " League" : "the league", " — finish today's targets to stay there."))), /*#__PURE__*/React.createElement("span", {
     className: "pm-goals-rank pm-league-rank",
     "aria-label": "Ranked number " + me.rank
   }, "#", me.rank), /*#__PURE__*/React.createElement("button", {
@@ -1356,9 +1440,7 @@ function PMLeagueCard() {
   }))), open && /*#__PURE__*/React.createElement("div", {
     className: "pm-league-body",
     id: bodyId
-  }, /*#__PURE__*/React.createElement("p", {
-    className: "pm-league-sub"
-  }, above ? /*#__PURE__*/React.createElement(React.Fragment, null, league ? "Your league · last 30 days" : "Last 30 days", " · ", /*#__PURE__*/React.createElement("b", null, fmt(gap), " pts"), " behind ", firstName, " — finish today's targets to close it.") : /*#__PURE__*/React.createElement(React.Fragment, null, league ? "Your league · last 30 days" : "Last 30 days", " · you're leading ", league ? league.name + " League" : "the league", " — finish today's targets to stay there.")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "pm-league-rows"
   }, rows.map(r => /*#__PURE__*/React.createElement("div", {
     key: r.rank,
@@ -1387,6 +1469,183 @@ function PMLeagueCard() {
     color: "currentColor"
   }))));
 }
+
+/* ---- "Today's progress" strip (2026-10-07): the pane opens on a glance
+   of the day — targets ring, points today, check-in streak, league rank.
+   Each tile jumps to the card it summarises. ---- */
+function pmPointsToday() {
+  try {
+    if (window.PFDailyGoal && window.PFDailyGoal.today) return window.PFDailyGoal.today();
+  } catch (e) {}
+  try {
+    const st = window.PFLoyalty && window.PFLoyalty.getState();
+    const k = d => d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    const today = k(new Date());
+    let sum = 0;
+    (st && st.ledger || []).forEach(t => {
+      if (t.pointsDelta > 0 && k(new Date(t.ts)) === today && t.actionId !== "evt_mobile_checkin") sum += t.pointsDelta;
+    });
+    return sum;
+  } catch (e) {
+    return 0;
+  }
+}
+function pmStreakDays() {
+  try {
+    const st = window.PFLoyalty && window.PFLoyalty.getState();
+    return st && st.streak && st.streak.current || 0;
+  } catch (e) {
+    return 0;
+  }
+}
+function pmTodayTally(assessState) {
+  const ranked = pmTargetPillars(assessState);
+  const targets = pmLoadTodayTargets(ranked).targets;
+  let picks = null;
+  try {
+    picks = window.PFDailyTargets ? window.PFDailyTargets.get() : null;
+  } catch (e) {}
+  const total = targets.length + (picks ? 2 : 0);
+  const done = targets.filter(t => t.done).length + (picks ? (picks.free.done ? 1 : 0) + (picks.paid.purchased ? 1 : 0) : 0);
+  return {
+    done,
+    total,
+    pct: total ? Math.round(done / total * 100) : 0
+  };
+}
+function PMRing({
+  pct,
+  size = 64,
+  stroke = 6,
+  children
+}) {
+  const r = (size - stroke) / 2,
+    c = 2 * Math.PI * r;
+  return /*#__PURE__*/React.createElement("span", {
+    className: "pm-ring",
+    style: {
+      width: size,
+      height: size
+    }
+  }, /*#__PURE__*/React.createElement("svg", {
+    width: size,
+    height: size,
+    viewBox: "0 0 " + size + " " + size,
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: size / 2,
+    cy: size / 2,
+    r: r,
+    fill: "none",
+    stroke: "var(--pm-ring-track,#EDE9E3)",
+    strokeWidth: stroke
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: size / 2,
+    cy: size / 2,
+    r: r,
+    fill: "none",
+    stroke: "var(--brand-gold)",
+    strokeWidth: stroke,
+    strokeLinecap: "round",
+    strokeDasharray: c,
+    strokeDashoffset: c * (1 - Math.min(100, pct) / 100),
+    transform: "rotate(-90 " + size / 2 + " " + size / 2 + ")",
+    style: {
+      transition: "stroke-dashoffset .5s ease"
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pm-ring-tx"
+  }, children));
+}
+const PM_PROG_EVENTS = ["pf:points-earned", "pf:daily-targets", "pm:targets-changed", "storage"];
+function usePMProgressSync() {
+  const [, bump] = useStatePM(0);
+  useEffectPM(() => {
+    const sync = () => bump(x => x + 1);
+    PM_PROG_EVENTS.forEach(e => window.addEventListener(e, sync));
+    return () => PM_PROG_EVENTS.forEach(e => window.removeEventListener(e, sync));
+  }, []);
+}
+function PMProgressStrip({
+  assessState
+}) {
+  usePMProgressSync();
+  const {
+    done,
+    total,
+    pct
+  } = pmTodayTally(assessState);
+  const pts = pmPointsToday();
+  const streak = pmStreakDays();
+  const {
+    me,
+    league
+  } = pmLeagueStandings();
+  const left = total - done;
+  const jump = id => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  };
+  return /*#__PURE__*/React.createElement("section", {
+    className: "pm-sec pm-card pm-prog",
+    "data-screen-label": "Today's progress"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-prog-top"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-prog-ringbtn",
+    onClick: () => jump("todays-targets"),
+    "aria-label": done + " of " + total + " targets done today — open Today's Targets"
+  }, /*#__PURE__*/React.createElement(PMRing, {
+    pct: pct,
+    size: 66,
+    stroke: 7
+  }, /*#__PURE__*/React.createElement("b", null, done), /*#__PURE__*/React.createElement("small", null, "/", total))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-prog-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-prog-k"
+  }, "Today's progress"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-prog-t"
+  }, total === 0 ? "No targets yet" : left === 0 ? "All targets done — nice work" : left === 1 ? "1 target to go" : left + " targets to go"))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-prog-stats"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-prog-stat",
+    onClick: () => jump("todays-targets")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-prog-ic gold"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:coins",
+    size: 16,
+    color: "currentColor"
+  })), /*#__PURE__*/React.createElement("b", null, "+", pts.toLocaleString("en-GB")), /*#__PURE__*/React.createElement("span", null, "pts today")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-prog-stat",
+    onClick: () => goPM("CheckInStreak.html")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-prog-ic flame"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:flame",
+    size: 16,
+    color: "currentColor"
+  })), /*#__PURE__*/React.createElement("b", null, streak), /*#__PURE__*/React.createElement("span", null, "day streak")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-prog-stat",
+    onClick: () => jump("your-league"),
+    style: league ? {
+      "--pm-lg-accent": league.accent
+    } : null
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-prog-ic gem"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:gem",
+    size: 16,
+    color: "currentColor"
+  })), /*#__PURE__*/React.createElement("b", null, "#", me.rank), /*#__PURE__*/React.createElement("span", null, league ? league.name : "League"))));
+}
 function PMGoalsMenu({
   assessState
 }) {
@@ -1411,6 +1670,8 @@ function PMGoalsMenu({
   })).filter(t => !t.done).sort((a, b) => PM_PRIORITY_ORDER[a.priority] - PM_PRIORITY_ORDER[b.priority] || a.i - b.i)) : [];
   const previewTargets = openTargets.slice(0, 2);
   const moreCount = openTargets.length - previewTargets.length;
+  usePMProgressSync();
+  const tally = unlocked ? pmTodayTally(assessState) : null;
   function tapCollapsed() {
     setExpanded(true);
     if (!unlocked) pmOpenAssessHub("whereNow");
@@ -1434,13 +1695,19 @@ function PMGoalsMenu({
     name: "lucide:target",
     size: 22,
     color: "var(--brand-gold)"
-  }), "Track your goals"), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+  }), "Track your goals"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-goals-collapsed-right"
+  }, tally && tally.total > 0 && /*#__PURE__*/React.createElement(PMRing, {
+    pct: tally.pct,
+    size: 40,
+    stroke: 5
+  }, /*#__PURE__*/React.createElement("b", null, tally.done), /*#__PURE__*/React.createElement("small", null, "/", tally.total)), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 20,
     color: "var(--gray-400)"
-  })), /*#__PURE__*/React.createElement("p", {
+  }))), /*#__PURE__*/React.createElement("p", {
     className: "pm-steps-sub"
-  }, "Coach focus, Today's Targets & Prosperity Spiral"), /*#__PURE__*/React.createElement("div", {
+  }, "Coach focus · Today's Targets · League · Spiral"), /*#__PURE__*/React.createElement("div", {
     className: "pm-goals-preview"
   }, unlocked ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
     className: "pm-goals-preview-h"
@@ -1474,15 +1741,20 @@ function PMGoalsMenu({
     className: "pm-goals-back",
     tabIndex: expanded ? 0 : -1,
     onClick: () => setExpanded(false)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-goals-back-ic",
+    "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:chevron-left",
     size: 20,
     color: "var(--text-heading)"
-  }), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+  })), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:target",
     size: 22,
     color: "var(--brand-gold)"
-  }), "Track your goals")), unlocked ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PMGoalFocusCard, {
+  }), "Track your goals")), unlocked ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PMProgressStrip, {
+    assessState: assessState
+  }), /*#__PURE__*/React.createElement(PMGoalFocusCard, {
     assessState: assessState
   }), /*#__PURE__*/React.createElement(PMTargetsCard, {
     assessState: assessState

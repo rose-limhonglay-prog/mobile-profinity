@@ -32,7 +32,9 @@ function SPMobileScreen() {
   }, /*#__PURE__*/React.createElement(UISH.Icon, {
     n: "chevL",
     s: 22
-  })), /*#__PURE__*/React.createElement("h1", null, "Success Path")), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("h1", null, "Success Path", /*#__PURE__*/React.createElement("small", {
+    className: "sp-fs-sub"
+  }, (window.PFSuccessPath && window.PFSuccessPath.compute(SLUG_SH) || {}).shortTitle || ""))), /*#__PURE__*/React.createElement("div", {
     className: "ml-scroll sp-hub-scroll"
   }, /*#__PURE__*/React.createElement(UISH.Hub, {
     slug: SLUG_SH,

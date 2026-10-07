@@ -358,20 +358,59 @@ function PWInfoModal({ open, onClose, title, icon, children, coach, coachLabel }
     </div>);
 }
 
+/* ⓘ with a white hovering popover (twin of PMInfoTip, 2026-10-07): the
+   card's explanation copy lives here. Opens on hover or focus, click toggles
+   it (touch), click elsewhere / Esc closes. "Read more" opens PWInfoModal. */
+function PWInfoTip({ label, children, onMore, moreLabel }) {
+  const [open, setOpen] = useStatePW(false);
+  const [x, setX] = useStatePW(0); // caret x within the header row
+  const host = React.useRef(null);
+  const tipId = React.useId ? React.useId() : undefined;
+  useEffectPW(() => {
+    if (!open) return;
+    try { const b = host.current.querySelector(".pw-pane-info"); setX(b.offsetLeft + b.offsetWidth / 2); } catch (e) {}
+    const onDown = (e) => { if (host.current && !host.current.contains(e.target)) setOpen(false); };
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("pointerdown", onDown, true);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("pointerdown", onDown, true); document.removeEventListener("keydown", onKey); };
+  }, [open]);
+  return (
+    <span className={"pw-tip" + (open ? " is-open" : "")} ref={host}
+      onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      <button type="button" className="pw-pane-info" aria-label={label} aria-expanded={open} aria-controls={tipId}
+        onClick={() => setOpen((o) => !o)} onFocus={() => setOpen(true)}>
+        <IconifyIconPW name="lucide:info" size={17} color={open ? "var(--ai-purple)" : "var(--gray-500)"} />
+      </button>
+      {open &&
+        <span className="pw-tip-pop" id={tipId} role="tooltip" style={{ "--tip-x": x + "px" }}>
+          <span className="pw-tip-caret" aria-hidden="true" />
+          <span className="pw-tip-body">{children}</span>
+          {onMore &&
+            <button type="button" className="pw-tip-more" onClick={() => { setOpen(false); onMore(); }}>
+              {moreLabel || "Read more"}<IconifyIconPW name="lucide:arrow-right" size={13} color="currentColor" />
+            </button>}
+        </span>}
+    </span>);
+}
+
 /* Card shell for the pane cards: bordered card, a collapse toggle pinned to
-   the top-right corner, and an ⓘ button after the title (twin of PMPaneCard). */
-function PWPaneCard({ id, title, sub, infoLabel, onInfo, className, children, defaultOpen = true, stacked = false }) {
+   the top-right corner, and an ⓘ after the title (twin of PMPaneCard).
+   `sub` and `tip` render inside the ⓘ popover; `meta` is the one short line
+   that stays under the title (e.g. today's date). */
+function PWPaneCard({ id, title, sub, tip, meta, infoLabel, onInfo, moreLabel, className, children, defaultOpen = true, stacked = false }) {
   const [open, setOpen] = useStatePW(defaultOpen);
   const bodyId = React.useId ? React.useId() : undefined;
   return (
     <section id={id} className={"pw-card pw-pane-card" + (open ? "" : " is-collapsed") + (stacked ? " pw-pane-card--stacked" : "") + (className ? " " + className : "")}>
       <div className="pw-pane-hd">
         <h2>{title}</h2>
-        <button type="button" className="pw-pane-info" aria-label={infoLabel || "About " + title} onClick={onInfo}>
-          <IconifyIconPW name="lucide:info" size={17} color="var(--gray-500)" />
-        </button>
+        <PWInfoTip label={infoLabel || "About " + title} onMore={onInfo} moreLabel={moreLabel}>
+          {sub && <p>{sub}</p>}
+          {tip}
+        </PWInfoTip>
       </div>
-      {sub && open && <p className="pw-pane-sub">{sub}</p>}
+      {meta && open && <p className="pw-pane-meta">{meta}</p>}
       <button type="button" className="pw-pane-toggle" aria-expanded={open} aria-controls={bodyId}
         aria-label={(open ? "Collapse " : "Expand ") + title} onClick={() => setOpen((o) => !o)}>
         <IconifyIconPW name="lucide:chevron-up" size={20} color="var(--gray-500)" />
@@ -391,12 +430,17 @@ function PWGoalFocusCard({ assessState, onOpenHub }) {
   if (!focus || !UI) return null;
   const paid = pwIsPaid();
   return (
-    <PWPaneCard title="Your coach focus" infoLabel="How Ava chooses your focus" onInfo={() => setInfo(true)} className="pw-goal-card cf-pw-goal">
+    <PWPaneCard title="Your coach focus" infoLabel="Why this focus" onInfo={() => setInfo(true)} moreLabel="How Ava chooses your focus" className="pw-goal-card cf-pw-goal"
+      tip={<>
+        <p>{focus.reason}</p>
+        {focus.reframe && <p>{focus.reframe}</p>}
+        <p><b>Your door</b> — three ways to start on {focus.domain} today. Pick whichever suits you.</p>
+        {!paid && <p>You can buy any course on Basic — no membership needed. Coaching with Ava on this plan (weekly plans, check-ins and role-play) comes with Confidence.</p>}
+      </>}>
       <div className="cf-pw-goal-grid">
         <div className="cf-pw-goal-left">
           <span className="eyebrow"><IconifyIconPW name="lucide:sparkles" size={13} color="var(--ai-purple)" />Ava recommends starting here</span>
-          <div style={{ margin: "10px 0 8px" }}><UI.CFFocusChip domain={focus.domain} size="lg" /></div>
-          <p className="cf-goal-reason">{focus.reason}</p>
+          <div style={{ margin: "10px 0 8px" }}><UI.CFFocusChip domain={focus.domain} size="hero" /></div>
           {focus.confirm &&
           <div className="cf-confirm" style={{ marginTop: 12 }}>
               <span className="cf-confirm-hd"><IconifyIconPW name="lucide:message-circle-question" size={18} color="var(--ai-purple)" /><span className="cf-kicker">Ava has a question</span></span>
@@ -407,7 +451,7 @@ function PWGoalFocusCard({ assessState, onOpenHub }) {
             <span className="cf-milestone-ic" aria-hidden="true"><IconifyIconPW name="lucide:flag" size={16} color="#fff" /></span>
             <span><span className="cf-kicker">Your next 90 days</span><span className="cf-milestone-ti">{focus.milestone}</span></span>
           </div>
-          <p className="cf-reframe" style={{ marginTop: 10 }}>{focus.reframe}</p>
+          <div className="cf-pw-goal-foot">
           <div style={{ marginTop: 14 }}>
             {paid ?
             <button type="button" className="cf-btn cf-btn-ai" onClick={() => pwAskAva(PW_CF.avaPrompt(focus))}>
@@ -415,7 +459,7 @@ function PWGoalFocusCard({ assessState, onOpenHub }) {
               </button> :
             <button type="button" className="cf-ava-locked" onClick={() => goPW(PW_CF.upgradeUrl(true))}>
                 <IconifyIconPW name="lucide:message-circle" size={18} color="#4F46C8" />
-                <span><b>Coach with Ava on this plan</b> — weekly plans, check-ins and role-play with Confidence.</span>
+                <span><b>Coach with Ava on this plan</b> · Confidence</span>
                 <IconifyIconPW name="lucide:lock" size={14} color="var(--gray-400)" />
               </button>}
           </div>
@@ -423,9 +467,10 @@ function PWGoalFocusCard({ assessState, onOpenHub }) {
             <span className="cf-checkin"><IconifyIconPW name="lucide:calendar-clock" size={13} color="var(--gray-500)" />{PW_CF.checkInLabel(focus)}</span>
             <button type="button" className="cf-link" onClick={() => onOpenHub("whereNow")}>Check in now</button>
           </div>
+          </div>
         </div>
         <div className="cf-pw-goal-right">
-          <UI.CFDoor focus={focus} web={true} tier={pwTier()} />
+          <UI.CFDoor focus={focus} web={true} tier={pwTier()} quiet />
         </div>
       </div>
       <PWInfoModal open={info} onClose={() => setInfo(false)} title="How Ava chooses your focus" icon="lucide:compass"
@@ -630,6 +675,7 @@ function PWTargetsCard({ assessState, onOpenHub }) {
   const [state, setState] = useStatePW(() => pwLoadTodayTargets(ranked));
   useEffectPW(() => {
     try { localStorage.setItem(PW_TARGETS_KEY, JSON.stringify(state)); } catch (e) {}
+    try { window.dispatchEvent(new CustomEvent("pw:targets-changed")); } catch (e) {}
   }, [state]);
   /* Another pillar answered while this card is mounted → its task joins
      today's set immediately. */
@@ -680,9 +726,10 @@ function PWTargetsCard({ assessState, onOpenHub }) {
   const allDone = total > 0 && doneCount === total;
 
   return (
-    <PWPaneCard title="Today's Targets"
-      sub={<><span className="pw-target-date">{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}</span>Completing these will move your Prosperity Spiral forward</>}
-      infoLabel="How targets and points work" onInfo={() => setInfo(true)}>
+    <PWPaneCard id="todays-targets" title="Today's Targets"
+      meta={<span className="pw-target-date">{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}</span>}
+      sub="Completing these will move your Prosperity Spiral forward."
+      infoLabel="About Today's Targets" onInfo={() => setInfo(true)} moreLabel="How targets and points work">
       {nextKey && <PWAssessNudgeRow pillarKey={nextKey} remaining={remaining} onOpenHub={onOpenHub} locked={!paid} />}
       <div className="pw-target-rows">
         <PWDailyPicks />
@@ -796,10 +843,16 @@ function PWLeagueCard() {
   const gap = above ? above.points - me.points : 0;
   const rows = [above, me, below].filter(Boolean);
   return (
-    <section className={"pw-card pw-league-card" + (open ? "" : " is-collapsed")}>
+    <section id="your-league" className={"pw-card pw-league-card" + (open ? "" : " is-collapsed")}>
       <div className="pw-league-hd" style={league ? { "--pw-lg-accent": league.accent, "--pw-lg-deep": league.deep } : null}>
         {league && <span className="pw-league-gem"><PWLeagueGem src={league.lottie} size={46} /></span>}
         <h2>{league ? league.name + " League" : "Your league"}</h2>
+        <PWInfoTip label="About your league">
+          <p>{above ?
+            <>{league ? "Your league · last 30 days" : "Last 30 days"} · <b>{fmt(gap)} pts</b> behind {firstName} — finish today's targets to close it.</> :
+            <>{league ? "Your league · last 30 days" : "Last 30 days"} · you're leading {league ? league.name + " League" : "the league"} — finish today's targets to stay there.</>}
+          </p>
+        </PWInfoTip>
         <span className="pw-goals-rank pw-league-rank" aria-label={"Ranked number " + me.rank}>#{me.rank}</span>
         <button type="button" className="pw-league-toggle" aria-expanded={open} aria-controls={bodyId}
           aria-label={(open ? "Collapse" : "Expand") + " Your league"} onClick={() => setOpen((o) => !o)}>
@@ -808,11 +861,6 @@ function PWLeagueCard() {
       </div>
       {open &&
       <div className="pw-league-body" id={bodyId}>
-          <p className="pw-league-sub">
-            {above ?
-          <>{league ? "Your league · last 30 days" : "Last 30 days"} · <b>{fmt(gap)} pts</b> behind {firstName} — finish today's targets to close it.</> :
-          <>{league ? "Your league · last 30 days" : "Last 30 days"} · you're leading {league ? league.name + " League" : "the league"} — finish today's targets to stay there.</>}
-          </p>
           <div className="pw-league-rows">
             {rows.map((r) =>
           <div key={r.rank} className={"pw-league-row" + (r.isMe ? " me" : "")} aria-current={r.isMe ? "true" : undefined}>
@@ -833,10 +881,89 @@ function PWLeagueCard() {
    "Where you are now" is answered (same order as mobile's expanded "Track
    your goals" pane), or the gate card until then — rendered inline (no mobile-style collapse/expand
    slide-over; desktop has the room to just show it). */
+/* ---- "Today's progress" strip (twin of PMProgressStrip, 2026-10-07):
+   targets ring, points today, check-in streak, league rank; each tile jumps
+   to the card it summarises. ---- */
+function pwPointsToday() {
+  try { if (window.PFDailyGoal && window.PFDailyGoal.today) return window.PFDailyGoal.today(); } catch (e) {}
+  try {
+    const st = window.PFLoyalty && window.PFLoyalty.getState();
+    const k = (d) => d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    const today = k(new Date());
+    let sum = 0;
+    ((st && st.ledger) || []).forEach((t) => { if (t.pointsDelta > 0 && k(new Date(t.ts)) === today && t.actionId !== "evt_mobile_checkin") sum += t.pointsDelta; });
+    return sum;
+  } catch (e) { return 0; }
+}
+function pwStreakDays() {
+  try { const st = window.PFLoyalty && window.PFLoyalty.getState(); return (st && st.streak && st.streak.current) || 0; } catch (e) { return 0; }
+}
+function pwTodayTally(assessState) {
+  const ranked = pwTargetPillars(assessState || {});
+  const targets = pwLoadTodayTargets(ranked).targets;
+  let picks = null; try { picks = window.PFDailyTargets ? window.PFDailyTargets.get() : null; } catch (e) {}
+  const total = targets.length + (picks ? 2 : 0);
+  const done = targets.filter((t) => t.done).length + (picks ? (picks.free.done ? 1 : 0) + (picks.paid.purchased ? 1 : 0) : 0);
+  return { done, total, pct: total ? Math.round(done / total * 100) : 0 };
+}
+function PWRing({ pct, size = 64, stroke = 6, children }) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  return (
+    <span className="pw-ring" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={"0 0 " + size + " " + size} aria-hidden="true">
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--pw-ring-track,#EDE9E3)" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--brand-gold)" strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c * (1 - Math.min(100, pct) / 100)} transform={"rotate(-90 " + size / 2 + " " + size / 2 + ")"}
+          style={{ transition: "stroke-dashoffset .5s ease" }} />
+      </svg>
+      <span className="pw-ring-tx">{children}</span>
+    </span>);
+}
+const PW_PROG_EVENTS = ["pf:points-earned", "pf:daily-targets", "pw:targets-changed", "storage"];
+function PWProgressStrip({ assessState }) {
+  const [, bump] = useStatePW(0);
+  useEffectPW(() => {
+    const sync = () => bump((x) => x + 1);
+    PW_PROG_EVENTS.forEach((e) => window.addEventListener(e, sync));
+    return () => PW_PROG_EVENTS.forEach((e) => window.removeEventListener(e, sync));
+  }, []);
+  const { done, total, pct } = pwTodayTally(assessState);
+  const pts = pwPointsToday();
+  const streak = pwStreakDays();
+  const { me, league } = pwLeagueStandings();
+  const left = total - done;
+  const jump = (id) => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); };
+  return (
+    <section className="pw-card pw-prog" aria-label="Today's progress">
+      <button type="button" className="pw-prog-ringbtn" onClick={() => jump("todays-targets")} aria-label={done + " of " + total + " targets done today — open Today's Targets"}>
+        <PWRing pct={pct} size={74} stroke={8}><b>{done}</b><small>/{total}</small></PWRing>
+      </button>
+      <div className="pw-prog-tx">
+        <span className="pw-prog-k">Today's progress</span>
+        <span className="pw-prog-t">{total === 0 ? "No targets yet" : left === 0 ? "All targets done — nice work" : left === 1 ? "1 target to go" : left + " targets to go"}</span>
+      </div>
+      <div className="pw-prog-stats">
+        <button type="button" className="pw-prog-stat" onClick={() => jump("todays-targets")}>
+          <span className="pw-prog-ic gold"><IconifyIconPW name="lucide:coins" size={18} color="currentColor" /></span>
+          <span className="pw-prog-stat-tx"><b>+{pts.toLocaleString("en-GB")}</b><span>pts today</span></span>
+        </button>
+        <button type="button" className="pw-prog-stat" onClick={() => goPW("RewardsWeb.html")}>
+          <span className="pw-prog-ic flame"><IconifyIconPW name="lucide:flame" size={18} color="currentColor" /></span>
+          <span className="pw-prog-stat-tx"><b>{streak}</b><span>day streak</span></span>
+        </button>
+        <button type="button" className="pw-prog-stat" onClick={() => jump("your-league")} style={league ? { "--pw-lg-accent": league.accent } : null}>
+          <span className="pw-prog-ic gem"><IconifyIconPW name="lucide:gem" size={18} color="currentColor" /></span>
+          <span className="pw-prog-stat-tx"><b>#{me.rank}</b><span>{league ? league.name + " League" : "League"}</span></span>
+        </button>
+      </div>
+    </section>);
+}
+
 function PWGoalsSection({ assessState, onOpenHub }) {
   if (!pwHasFocus(assessState)) return <PWGoalsGateCard onOpenHub={onOpenHub} />;
   return (
     <>
+      <PWProgressStrip assessState={assessState} />
       <PWGoalFocusCard assessState={assessState} onOpenHub={onOpenHub} />
       <PWTargetsCard assessState={assessState} onOpenHub={onOpenHub} />
       <PWLeagueCard />

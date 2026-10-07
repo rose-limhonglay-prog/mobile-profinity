@@ -536,14 +536,94 @@ function PWInfoModal({
   }), coachLabel || "Ask Ava"))));
 }
 
+/* ⓘ with a white hovering popover (twin of PMInfoTip, 2026-10-07): the
+   card's explanation copy lives here. Opens on hover or focus, click toggles
+   it (touch), click elsewhere / Esc closes. "Read more" opens PWInfoModal. */
+function PWInfoTip({
+  label,
+  children,
+  onMore,
+  moreLabel
+}) {
+  const [open, setOpen] = useStatePW(false);
+  const [x, setX] = useStatePW(0); // caret x within the header row
+  const host = React.useRef(null);
+  const tipId = React.useId ? React.useId() : undefined;
+  useEffectPW(() => {
+    if (!open) return;
+    try {
+      const b = host.current.querySelector(".pw-pane-info");
+      setX(b.offsetLeft + b.offsetWidth / 2);
+    } catch (e) {}
+    const onDown = e => {
+      if (host.current && !host.current.contains(e.target)) setOpen(false);
+    };
+    const onKey = e => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onDown, true);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDown, true);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+  return /*#__PURE__*/React.createElement("span", {
+    className: "pw-tip" + (open ? " is-open" : ""),
+    ref: host,
+    onMouseEnter: () => setOpen(true),
+    onMouseLeave: () => setOpen(false)
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-pane-info",
+    "aria-label": label,
+    "aria-expanded": open,
+    "aria-controls": tipId,
+    onClick: () => setOpen(o => !o),
+    onFocus: () => setOpen(true)
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:info",
+    size: 17,
+    color: open ? "var(--ai-purple)" : "var(--gray-500)"
+  })), open && /*#__PURE__*/React.createElement("span", {
+    className: "pw-tip-pop",
+    id: tipId,
+    role: "tooltip",
+    style: {
+      "--tip-x": x + "px"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pw-tip-caret",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pw-tip-body"
+  }, children), onMore && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-tip-more",
+    onClick: () => {
+      setOpen(false);
+      onMore();
+    }
+  }, moreLabel || "Read more", /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:arrow-right",
+    size: 13,
+    color: "currentColor"
+  }))));
+}
+
 /* Card shell for the pane cards: bordered card, a collapse toggle pinned to
-   the top-right corner, and an ⓘ button after the title (twin of PMPaneCard). */
+   the top-right corner, and an ⓘ after the title (twin of PMPaneCard).
+   `sub` and `tip` render inside the ⓘ popover; `meta` is the one short line
+   that stays under the title (e.g. today's date). */
 function PWPaneCard({
   id,
   title,
   sub,
+  tip,
+  meta,
   infoLabel,
   onInfo,
+  moreLabel,
   className,
   children,
   defaultOpen = true,
@@ -556,18 +636,13 @@ function PWPaneCard({
     className: "pw-card pw-pane-card" + (open ? "" : " is-collapsed") + (stacked ? " pw-pane-card--stacked" : "") + (className ? " " + className : "")
   }, /*#__PURE__*/React.createElement("div", {
     className: "pw-pane-hd"
-  }, /*#__PURE__*/React.createElement("h2", null, title), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pw-pane-info",
-    "aria-label": infoLabel || "About " + title,
-    onClick: onInfo
-  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:info",
-    size: 17,
-    color: "var(--gray-500)"
-  }))), sub && open && /*#__PURE__*/React.createElement("p", {
-    className: "pw-pane-sub"
-  }, sub), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("h2", null, title), /*#__PURE__*/React.createElement(PWInfoTip, {
+    label: infoLabel || "About " + title,
+    onMore: onInfo,
+    moreLabel: moreLabel
+  }, sub && /*#__PURE__*/React.createElement("p", null, sub), tip)), meta && open && /*#__PURE__*/React.createElement("p", {
+    className: "pw-pane-meta"
+  }, meta), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-pane-toggle",
     "aria-expanded": open,
@@ -599,9 +674,11 @@ function PWGoalFocusCard({
   const paid = pwIsPaid();
   return /*#__PURE__*/React.createElement(PWPaneCard, {
     title: "Your coach focus",
-    infoLabel: "How Ava chooses your focus",
+    infoLabel: "Why this focus",
     onInfo: () => setInfo(true),
-    className: "pw-goal-card cf-pw-goal"
+    moreLabel: "How Ava chooses your focus",
+    className: "pw-goal-card cf-pw-goal",
+    tip: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", null, focus.reason), focus.reframe && /*#__PURE__*/React.createElement("p", null, focus.reframe), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, "Your door"), " — three ways to start on ", focus.domain, " today. Pick whichever suits you."), !paid && /*#__PURE__*/React.createElement("p", null, "You can buy any course on Basic — no membership needed. Coaching with Ava on this plan (weekly plans, check-ins and role-play) comes with Confidence."))
   }, /*#__PURE__*/React.createElement("div", {
     className: "cf-pw-goal-grid"
   }, /*#__PURE__*/React.createElement("div", {
@@ -618,10 +695,8 @@ function PWGoalFocusCard({
     }
   }, /*#__PURE__*/React.createElement(UI.CFFocusChip, {
     domain: focus.domain,
-    size: "lg"
-  })), /*#__PURE__*/React.createElement("p", {
-    className: "cf-goal-reason"
-  }, focus.reason), focus.confirm && /*#__PURE__*/React.createElement("div", {
+    size: "hero"
+  })), focus.confirm && /*#__PURE__*/React.createElement("div", {
     className: "cf-confirm",
     style: {
       marginTop: 12
@@ -654,12 +729,9 @@ function PWGoalFocusCard({
     className: "cf-kicker"
   }, "Your next 90 days"), /*#__PURE__*/React.createElement("span", {
     className: "cf-milestone-ti"
-  }, focus.milestone))), /*#__PURE__*/React.createElement("p", {
-    className: "cf-reframe",
-    style: {
-      marginTop: 10
-    }
-  }, focus.reframe), /*#__PURE__*/React.createElement("div", {
+  }, focus.milestone))), /*#__PURE__*/React.createElement("div", {
+    className: "cf-pw-goal-foot"
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14
     }
@@ -679,7 +751,7 @@ function PWGoalFocusCard({
     name: "lucide:message-circle",
     size: 18,
     color: "#4F46C8"
-  }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "Coach with Ava on this plan"), " — weekly plans, check-ins and role-play with Confidence."), /*#__PURE__*/React.createElement(IconifyIconPW, {
+  }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "Coach with Ava on this plan"), " · Confidence"), /*#__PURE__*/React.createElement(IconifyIconPW, {
     name: "lucide:lock",
     size: 14,
     color: "var(--gray-400)"
@@ -698,12 +770,13 @@ function PWGoalFocusCard({
     type: "button",
     className: "cf-link",
     onClick: () => onOpenHub("whereNow")
-  }, "Check in now"))), /*#__PURE__*/React.createElement("div", {
+  }, "Check in now")))), /*#__PURE__*/React.createElement("div", {
     className: "cf-pw-goal-right"
   }, /*#__PURE__*/React.createElement(UI.CFDoor, {
     focus: focus,
     web: true,
-    tier: pwTier()
+    tier: pwTier(),
+    quiet: true
   }))), /*#__PURE__*/React.createElement(PWInfoModal, {
     open: info,
     onClose: () => setInfo(false),
@@ -1031,6 +1104,9 @@ function PWTargetsCard({
     try {
       localStorage.setItem(PW_TARGETS_KEY, JSON.stringify(state));
     } catch (e) {}
+    try {
+      window.dispatchEvent(new CustomEvent("pw:targets-changed"));
+    } catch (e) {}
   }, [state]);
   /* Another pillar answered while this card is mounted → its task joins
      today's set immediately. */
@@ -1100,16 +1176,19 @@ function PWTargetsCard({
   const doneCount = rows.filter(t => t.done).length + pickDone;
   const allDone = total > 0 && doneCount === total;
   return /*#__PURE__*/React.createElement(PWPaneCard, {
+    id: "todays-targets",
     title: "Today's Targets",
-    sub: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    meta: /*#__PURE__*/React.createElement("span", {
       className: "pw-target-date"
     }, new Date().toLocaleDateString("en-GB", {
       weekday: "long",
       day: "numeric",
       month: "long"
-    })), "Completing these will move your Prosperity Spiral forward"),
-    infoLabel: "How targets and points work",
-    onInfo: () => setInfo(true)
+    })),
+    sub: "Completing these will move your Prosperity Spiral forward.",
+    infoLabel: "About Today's Targets",
+    onInfo: () => setInfo(true),
+    moreLabel: "How targets and points work"
   }, nextKey && /*#__PURE__*/React.createElement(PWAssessNudgeRow, {
     pillarKey: nextKey,
     remaining: remaining,
@@ -1324,6 +1403,7 @@ function PWLeagueCard() {
   const gap = above ? above.points - me.points : 0;
   const rows = [above, me, below].filter(Boolean);
   return /*#__PURE__*/React.createElement("section", {
+    id: "your-league",
     className: "pw-card pw-league-card" + (open ? "" : " is-collapsed")
   }, /*#__PURE__*/React.createElement("div", {
     className: "pw-league-hd",
@@ -1336,7 +1416,9 @@ function PWLeagueCard() {
   }, /*#__PURE__*/React.createElement(PWLeagueGem, {
     src: league.lottie,
     size: 46
-  })), /*#__PURE__*/React.createElement("h2", null, league ? league.name + " League" : "Your league"), /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("h2", null, league ? league.name + " League" : "Your league"), /*#__PURE__*/React.createElement(PWInfoTip, {
+    label: "About your league"
+  }, /*#__PURE__*/React.createElement("p", null, above ? /*#__PURE__*/React.createElement(React.Fragment, null, league ? "Your league · last 30 days" : "Last 30 days", " · ", /*#__PURE__*/React.createElement("b", null, fmt(gap), " pts"), " behind ", firstName, " — finish today's targets to close it.") : /*#__PURE__*/React.createElement(React.Fragment, null, league ? "Your league · last 30 days" : "Last 30 days", " · you're leading ", league ? league.name + " League" : "the league", " — finish today's targets to stay there."))), /*#__PURE__*/React.createElement("span", {
     className: "pw-goals-rank pw-league-rank",
     "aria-label": "Ranked number " + me.rank
   }, "#", me.rank), /*#__PURE__*/React.createElement("button", {
@@ -1353,9 +1435,7 @@ function PWLeagueCard() {
   }))), open && /*#__PURE__*/React.createElement("div", {
     className: "pw-league-body",
     id: bodyId
-  }, /*#__PURE__*/React.createElement("p", {
-    className: "pw-league-sub"
-  }, above ? /*#__PURE__*/React.createElement(React.Fragment, null, league ? "Your league · last 30 days" : "Last 30 days", " · ", /*#__PURE__*/React.createElement("b", null, fmt(gap), " pts"), " behind ", firstName, " — finish today's targets to close it.") : /*#__PURE__*/React.createElement(React.Fragment, null, league ? "Your league · last 30 days" : "Last 30 days", " · you're leading ", league ? league.name + " League" : "the league", " — finish today's targets to stay there.")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "pw-league-rows"
   }, rows.map(r => /*#__PURE__*/React.createElement("div", {
     key: r.rank,
@@ -1389,6 +1469,183 @@ function PWLeagueCard() {
    "Where you are now" is answered (same order as mobile's expanded "Track
    your goals" pane), or the gate card until then — rendered inline (no mobile-style collapse/expand
    slide-over; desktop has the room to just show it). */
+/* ---- "Today's progress" strip (twin of PMProgressStrip, 2026-10-07):
+   targets ring, points today, check-in streak, league rank; each tile jumps
+   to the card it summarises. ---- */
+function pwPointsToday() {
+  try {
+    if (window.PFDailyGoal && window.PFDailyGoal.today) return window.PFDailyGoal.today();
+  } catch (e) {}
+  try {
+    const st = window.PFLoyalty && window.PFLoyalty.getState();
+    const k = d => d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
+    const today = k(new Date());
+    let sum = 0;
+    (st && st.ledger || []).forEach(t => {
+      if (t.pointsDelta > 0 && k(new Date(t.ts)) === today && t.actionId !== "evt_mobile_checkin") sum += t.pointsDelta;
+    });
+    return sum;
+  } catch (e) {
+    return 0;
+  }
+}
+function pwStreakDays() {
+  try {
+    const st = window.PFLoyalty && window.PFLoyalty.getState();
+    return st && st.streak && st.streak.current || 0;
+  } catch (e) {
+    return 0;
+  }
+}
+function pwTodayTally(assessState) {
+  const ranked = pwTargetPillars(assessState || {});
+  const targets = pwLoadTodayTargets(ranked).targets;
+  let picks = null;
+  try {
+    picks = window.PFDailyTargets ? window.PFDailyTargets.get() : null;
+  } catch (e) {}
+  const total = targets.length + (picks ? 2 : 0);
+  const done = targets.filter(t => t.done).length + (picks ? (picks.free.done ? 1 : 0) + (picks.paid.purchased ? 1 : 0) : 0);
+  return {
+    done,
+    total,
+    pct: total ? Math.round(done / total * 100) : 0
+  };
+}
+function PWRing({
+  pct,
+  size = 64,
+  stroke = 6,
+  children
+}) {
+  const r = (size - stroke) / 2,
+    c = 2 * Math.PI * r;
+  return /*#__PURE__*/React.createElement("span", {
+    className: "pw-ring",
+    style: {
+      width: size,
+      height: size
+    }
+  }, /*#__PURE__*/React.createElement("svg", {
+    width: size,
+    height: size,
+    viewBox: "0 0 " + size + " " + size,
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: size / 2,
+    cy: size / 2,
+    r: r,
+    fill: "none",
+    stroke: "var(--pw-ring-track,#EDE9E3)",
+    strokeWidth: stroke
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: size / 2,
+    cy: size / 2,
+    r: r,
+    fill: "none",
+    stroke: "var(--brand-gold)",
+    strokeWidth: stroke,
+    strokeLinecap: "round",
+    strokeDasharray: c,
+    strokeDashoffset: c * (1 - Math.min(100, pct) / 100),
+    transform: "rotate(-90 " + size / 2 + " " + size / 2 + ")",
+    style: {
+      transition: "stroke-dashoffset .5s ease"
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pw-ring-tx"
+  }, children));
+}
+const PW_PROG_EVENTS = ["pf:points-earned", "pf:daily-targets", "pw:targets-changed", "storage"];
+function PWProgressStrip({
+  assessState
+}) {
+  const [, bump] = useStatePW(0);
+  useEffectPW(() => {
+    const sync = () => bump(x => x + 1);
+    PW_PROG_EVENTS.forEach(e => window.addEventListener(e, sync));
+    return () => PW_PROG_EVENTS.forEach(e => window.removeEventListener(e, sync));
+  }, []);
+  const {
+    done,
+    total,
+    pct
+  } = pwTodayTally(assessState);
+  const pts = pwPointsToday();
+  const streak = pwStreakDays();
+  const {
+    me,
+    league
+  } = pwLeagueStandings();
+  const left = total - done;
+  const jump = id => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  };
+  return /*#__PURE__*/React.createElement("section", {
+    className: "pw-card pw-prog",
+    "aria-label": "Today's progress"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-prog-ringbtn",
+    onClick: () => jump("todays-targets"),
+    "aria-label": done + " of " + total + " targets done today — open Today's Targets"
+  }, /*#__PURE__*/React.createElement(PWRing, {
+    pct: pct,
+    size: 74,
+    stroke: 8
+  }, /*#__PURE__*/React.createElement("b", null, done), /*#__PURE__*/React.createElement("small", null, "/", total))), /*#__PURE__*/React.createElement("div", {
+    className: "pw-prog-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pw-prog-k"
+  }, "Today's progress"), /*#__PURE__*/React.createElement("span", {
+    className: "pw-prog-t"
+  }, total === 0 ? "No targets yet" : left === 0 ? "All targets done — nice work" : left === 1 ? "1 target to go" : left + " targets to go")), /*#__PURE__*/React.createElement("div", {
+    className: "pw-prog-stats"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-prog-stat",
+    onClick: () => jump("todays-targets")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pw-prog-ic gold"
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:coins",
+    size: 18,
+    color: "currentColor"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pw-prog-stat-tx"
+  }, /*#__PURE__*/React.createElement("b", null, "+", pts.toLocaleString("en-GB")), /*#__PURE__*/React.createElement("span", null, "pts today"))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-prog-stat",
+    onClick: () => goPW("RewardsWeb.html")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pw-prog-ic flame"
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:flame",
+    size: 18,
+    color: "currentColor"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pw-prog-stat-tx"
+  }, /*#__PURE__*/React.createElement("b", null, streak), /*#__PURE__*/React.createElement("span", null, "day streak"))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-prog-stat",
+    onClick: () => jump("your-league"),
+    style: league ? {
+      "--pw-lg-accent": league.accent
+    } : null
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pw-prog-ic gem"
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:gem",
+    size: 18,
+    color: "currentColor"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "pw-prog-stat-tx"
+  }, /*#__PURE__*/React.createElement("b", null, "#", me.rank), /*#__PURE__*/React.createElement("span", null, league ? league.name + " League" : "League")))));
+}
 function PWGoalsSection({
   assessState,
   onOpenHub
@@ -1396,7 +1653,9 @@ function PWGoalsSection({
   if (!pwHasFocus(assessState)) return /*#__PURE__*/React.createElement(PWGoalsGateCard, {
     onOpenHub: onOpenHub
   });
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PWGoalFocusCard, {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PWProgressStrip, {
+    assessState: assessState
+  }), /*#__PURE__*/React.createElement(PWGoalFocusCard, {
     assessState: assessState,
     onOpenHub: onOpenHub
   }), /*#__PURE__*/React.createElement(PWTargetsCard, {

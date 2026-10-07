@@ -844,3 +844,66 @@
 .pw-cac-input i{position:absolute;left:14px;font-style:normal;font-size:15px;color:var(--gray-500)}
 .pw-cac-input input{width:100%;box-sizing:border-box;height:42px;padding:0 14px;border-radius:12px;border:1px solid var(--brand-navy);background:var(--surface-card);font-family:var(--font-sans);font-size:15px;color:var(--text-heading);outline:none}
 .pw-cac-input i+input{padding-left:30px}
+
+
+/* ===== ⓘ white hovering popover (2026-10-07, twin of .pm-tip): the cards'
+   explanation copy moved off the card into a tip under the ⓘ — hover/focus
+   opens it on desktop, click toggles for touch. ===== */
+.pw-pane-hd,.pw-league-hd{position:relative}
+.pw-tip{display:inline-flex;flex:none}
+.pw-tip.is-open .pw-pane-info{background:#F4F3FF}
+.pw-tip-pop{position:absolute;left:0;top:calc(100% + 10px);z-index:60;width:min(380px,100%);display:flex;flex-direction:column;gap:8px;
+  padding:14px 16px 13px;border-radius:14px;background:var(--surface-card,#fff);color:var(--gray-600);
+  border:1px solid var(--border-default);box-shadow:0 16px 40px rgba(16,20,48,.16),0 2px 6px rgba(16,20,48,.06);
+  animation:pw-tip-in .16s cubic-bezier(.22,.61,.36,1);text-align:left;font-weight:var(--fw-regular)}
+.pw-tip-pop::before{content:"";position:absolute;left:0;right:0;top:-12px;height:12px}  /* hover bridge from the ⓘ */
+@keyframes pw-tip-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.pw-tip-caret{position:absolute;left:var(--tip-x,24px);top:-7px;width:12px;height:12px;margin-left:-6px;transform:rotate(45deg);
+  background:var(--surface-card,#fff);border-left:1px solid var(--border-default);border-top:1px solid var(--border-default)}
+.pw-tip-body{display:block}
+.pw-tip-body p{margin:0 0 8px;font-family:var(--font-sans);font-size:14px;line-height:1.5;color:var(--gray-600)}
+.pw-tip-body p:last-child{margin-bottom:0}
+.pw-tip-body b{color:var(--text-heading);font-weight:var(--fw-semibold)}
+.pw-tip-more{align-self:flex-start;display:inline-flex;align-items:center;gap:4px;padding:0;border:none;background:none;cursor:pointer;
+  font-family:var(--font-sans);font-weight:var(--fw-semibold);font-size:13.5px;color:var(--ai-purple)}
+.pw-tip-more:hover{text-decoration:underline}
+.pw-pane-meta{margin:6px 0 0;font-family:var(--font-sans);font-size:13.5px;line-height:1.4;color:var(--gray-500)}
+.pw-pane-meta .pw-target-date{display:inline;margin:0}
+.pw-league-hd .pw-tip{margin-left:-4px}
+[data-theme="dark"] .pw-tip.is-open .pw-pane-info{background:rgba(255,255,255,.1)}
+
+
+/* ===== "Today's progress" strip (2026-10-07, twin of .pm-prog) ===== */
+.pw-prog{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;padding:18px 22px;
+  background:linear-gradient(90deg,#FFFBF2 0%,var(--surface-card) 60%);border-color:#F2E6CF}
+[data-theme="dark"] .pw-prog{background:linear-gradient(90deg,rgba(253,195,93,.08),var(--surface-card) 60%);border-color:rgba(253,195,93,.2)}
+.pw-ring{position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;--pw-ring-track:#EDE9E3}
+[data-theme="dark"] .pw-ring{--pw-ring-track:rgba(255,255,255,.12)}
+.pw-ring svg{display:block}
+.pw-ring-tx{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:1px;font-family:var(--font-sans);color:var(--text-heading);line-height:1}
+.pw-ring-tx b{font-weight:var(--fw-bold);font-size:21px}
+.pw-ring-tx small{font-weight:var(--fw-semibold);font-size:12px;color:var(--gray-500)}
+.pw-prog-ringbtn{padding:0;border:none;background:none;cursor:pointer;border-radius:50%}
+.pw-prog-tx{display:flex;flex-direction:column;gap:4px;min-width:0}
+.pw-prog-k{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--brand-gold-700,#8A5303)}
+.pw-prog-t{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:22px;line-height:1.2;color:var(--text-heading);letter-spacing:-.01em}
+.pw-prog-stats{display:flex;gap:10px}
+.pw-prog-stat{display:flex;align-items:center;gap:10px;min-width:150px;padding:10px 14px 10px 10px;border-radius:14px;border:1px solid var(--border-default);
+  background:var(--surface-card);cursor:pointer;text-align:left;font-family:var(--font-sans);transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease}
+.pw-prog-stat:hover{border-color:#E4D9C2;box-shadow:0 6px 16px rgba(16,20,48,.08);transform:translateY(-1px)}
+.pw-prog-stat-tx{display:flex;flex-direction:column;gap:1px;min-width:0}
+.pw-prog-stat-tx b{font-weight:var(--fw-bold);font-size:17px;line-height:1.1;color:var(--text-heading);letter-spacing:-.01em}
+.pw-prog-stat-tx span{font-size:12px;color:var(--gray-500);white-space:nowrap}
+.pw-prog-ic{display:inline-flex;align-items:center;justify-content:center;flex:none;width:34px;height:34px;border-radius:10px}
+.pw-prog-ic.gold{background:#FDF3DC;color:#B4740B}
+.pw-prog-ic.flame{background:#FFECE4;color:#E4572E}
+.pw-prog-ic.gem{background:color-mix(in srgb,var(--pw-lg-accent,#7C4DFF) 14%,#fff);color:var(--pw-lg-accent,#7C4DFF)}
+[data-theme="dark"] .pw-prog-ic.gold{background:rgba(253,195,93,.18);color:#FDC35D}
+[data-theme="dark"] .pw-prog-ic.flame{background:rgba(228,87,46,.2);color:#FF8A65}
+[data-theme="dark"] .pw-prog-ic.gem{background:color-mix(in srgb,var(--pw-lg-accent,#7C4DFF) 22%,transparent)}
+@media (max-width:1100px){.pw-prog{grid-template-columns:auto 1fr}.pw-prog-stats{grid-column:1 / -1}.pw-prog-stat{flex:1;min-width:0}}
+
+/* coach-focus card: the left column stretches to the door's height and its
+   Ava row + check-in sit at the bottom (no dead space under the milestone) */
+.cf-pw-goal .cf-milestone{padding:16px 18px;border-radius:16px;background:#FFFBF2;border:1px solid #F2E6CF}
+[data-theme="dark"] .cf-pw-goal .cf-milestone{background:rgba(253,195,93,.08);border-color:rgba(253,195,93,.2)}

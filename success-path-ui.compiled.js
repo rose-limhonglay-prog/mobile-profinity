@@ -76,6 +76,11 @@ function useSP(slug) {
   }, [slug]);
   return s;
 }
+/* level numbers in circles read as Roman numerals (user, 2026-10-07) */
+function romanSP(n) {
+  const R = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
+  return R[n] || String(n);
+}
 function fmtDateSP(iso) {
   try {
     return new Date(iso).toLocaleDateString("en-GB", {
@@ -147,7 +152,7 @@ function LevelPipsSP({
     n: "check",
     s: 11,
     w: 3
-  }) : m.level)));
+  }) : romanSP(m.level))));
 }
 
 /* float "+N" from an element */
@@ -398,7 +403,7 @@ function MilestoneSP({
   }) : m.status === "upgrade" ? /*#__PURE__*/React.createElement(IcSP, {
     n: "lock",
     s: 16
-  }) : /*#__PURE__*/React.createElement("b", null, m.level)), /*#__PURE__*/React.createElement("span", {
+  }) : /*#__PURE__*/React.createElement("b", null, romanSP(m.level))), /*#__PURE__*/React.createElement("span", {
     className: "sp-ms-tx"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sp-ms-k"
@@ -552,6 +557,7 @@ function PathSheet({
   onClose,
   onOpenLesson
 }) {
+  const sheetS = useSP(slug);
   const s = useSP(slug);
   return /*#__PURE__*/React.createElement("div", {
     className: "sp-root sp-fullsheet",
@@ -569,14 +575,12 @@ function PathSheet({
   }, /*#__PURE__*/React.createElement(IcSP, {
     n: "chevL",
     s: 22
-  })), /*#__PURE__*/React.createElement("h2", null, "Success Path"), /*#__PURE__*/React.createElement("a", {
-    className: "sp-iconbtn",
-    href: "SuccessPath.html?course=" + slug,
-    "aria-label": "Open Success Path hub"
-  }, /*#__PURE__*/React.createElement(IcSP, {
-    n: "route",
-    s: 18
-  }))), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("h2", null, "Success Path", /*#__PURE__*/React.createElement("small", {
+    className: "sp-fs-sub"
+  }, sheetS ? sheetS.shortTitle : "")), /*#__PURE__*/React.createElement("span", {
+    className: "sp-iconbtn sp-iconbtn-spacer",
+    "aria-hidden": "true"
+  })), /*#__PURE__*/React.createElement("div", {
     className: "sp-fs-scroll"
   }, s && /*#__PURE__*/React.createElement("div", {
     className: "sp-hub2 sp-mobile sp-fs-hero"
@@ -1155,7 +1159,7 @@ function statusPillSP(a) {
   };
   if (a.status === "ready") return {
     cls: "ready",
-    text: "Completing…"
+    text: "Ready to tick · +" + a.points + " pts"
   };
   if (a.status === "upgrade") return {
     cls: "lock",
@@ -1168,18 +1172,25 @@ function statusPillSP(a) {
 }
 /* No self-declared tick (user, 2026-10-05): the skill completes on its own
    once its lessons are watched in the course, and Dr Tim's splash takes over. */
-/* 2026-10-07 (user): the card IS the task — eyebrow, the "I can…" statement,
-   status pill and a tick box on the card itself. No body, no lesson rows, no
-   auto-complete note. Tick/untick in place (SPE.tick force, no lesson gate). */
+/* 2026-10-07 (user): the card IS the task — eyebrow (chapter = link to the
+   lesson), the "I can…" statement, then state: LOCKED (lock box, "Watch n
+   more lessons to unlock", lesson link + demo chip) until every linked lesson
+   is complete; READY (gold box, tap to tick); DONE (green box, tap to untick).
+   Finishing the lesson in the course completes the skill on its own with the
+   3s reward splash, then the page reopens the path at the next skill. */
 function JourneySkill({
   a,
   n,
   total,
   slug,
-  onUpgrade
+  onUpgrade,
+  onOpenLesson
 }) {
+  const firstLesson = (a.lessons || [])[0];
   const pill = statusPillSP(a);
   const isDone = a.status === "done";
+  const left = a.lessonsTotal - a.lessonsDone;
+  const firstLeft = (a.lessons || []).filter(x => SPE.readDone().indexOf(x) === -1)[0];
   const tickToggle = e => {
     if (isDone) {
       SPE.untick(slug, a.id);
@@ -1189,15 +1200,32 @@ function JourneySkill({
       onUpgrade && onUpgrade();
       return;
     }
+    if (a.status === "locked") {
+      if (onOpenLesson && firstLeft) onOpenLesson(firstLeft);
+      return;
+    }
     const box = e.currentTarget;
-    const res = SPE.tick(slug, a.id, {
-      force: true
-    });
+    const res = SPE.tick(slug, a.id);
     if (res && res.points) floatPtsSP(box, res.points);
   };
+  const boxIcon = isDone || a.status === "ready" ? /*#__PURE__*/React.createElement(IcSP, {
+    n: "check",
+    s: 14,
+    w: 3.2
+  }) : /*#__PURE__*/React.createElement(IcSP, {
+    n: "lock",
+    s: 12
+  });
+  const pillEl = a.status === "ready" || isDone ? /*#__PURE__*/React.createElement("span", {
+    className: "sp-j-pill sp-j-pill-" + pill.cls
+  }, pill.cls === "done" && /*#__PURE__*/React.createElement(IcSP, {
+    n: "check",
+    s: 11,
+    w: 3
+  }), pill.text) : null;
   return /*#__PURE__*/React.createElement("div", {
     id: "sp-a-" + a.id,
-    className: "sp-j-item sp-j-skill sp-j-" + a.status + (isDone ? " done sp-m-done" : "")
+    className: "sp-j-item sp-j-skill sp-j-" + a.status + (isDone ? " done sp-m-done" : a.status === "ready" ? " sp-m-ready" : "")
   }, /*#__PURE__*/React.createElement("span", {
     className: "sp-j-node",
     "aria-hidden": "true"
@@ -1212,33 +1240,51 @@ function JourneySkill({
     className: "sp-j-card"
   }, /*#__PURE__*/React.createElement("div", {
     className: "sp-j-head sp-j-head-tick"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sp-j-toprow"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "sp-m-box sp-j-box",
+    className: "sp-m-box sp-j-box" + (isDone || a.status === "ready" ? "" : " sp-j-box-locked"),
     role: "checkbox",
     "aria-checked": isDone,
-    "aria-label": (isDone ? "Untick: " : "Tick: ") + a.text,
+    "aria-disabled": a.status === "locked" || a.status === "upgrade",
+    "aria-label": isDone ? "Untick: " + a.text : a.status === "ready" ? "Tick: " + a.text : "Locked: " + a.text,
     onClick: tickToggle
-  }, a.status === "upgrade" && !isDone ? /*#__PURE__*/React.createElement(IcSP, {
-    n: "lock",
-    s: 16
-  }) : /*#__PURE__*/React.createElement(IcSP, {
-    n: "check",
-    s: 20,
-    w: 3
-  })), /*#__PURE__*/React.createElement("span", {
+  }, boxIcon), pillEl), /*#__PURE__*/React.createElement("span", {
     className: "sp-j-head-tx"
   }, /*#__PURE__*/React.createElement("span", {
     className: "sp-j-meta"
-  }, "Skill ", n, " of ", total, " · ", a.subCourse), /*#__PURE__*/React.createElement("span", {
+  }, "Skill ", n, " of ", total, " · ", onOpenLesson && firstLesson ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sp-j-metalink",
+    onClick: () => onOpenLesson(firstLesson),
+    "aria-label": "Open " + firstLesson + " in the course"
+  }, a.subCourse) : a.subCourse), /*#__PURE__*/React.createElement("span", {
     className: "sp-j-title"
-  }, a.text)), /*#__PURE__*/React.createElement("span", {
-    className: "sp-j-pill sp-j-pill-" + pill.cls
-  }, pill.cls === "done" && /*#__PURE__*/React.createElement(IcSP, {
-    n: "check",
-    s: 11,
-    w: 3
-  }), pill.text))));
+  }, a.text), a.status === "locked" && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "sp-j-lock-hint"
+  }, "Watch ", left === 1 ? "1 more lesson" : left + " more lessons", " to unlock · +", a.points, " pts"), onOpenLesson && firstLeft && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sp-j-lessonbtn",
+    onClick: () => onOpenLesson(firstLeft),
+    "aria-label": "Watch the lesson " + firstLeft + " in the course"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sp-j-lessonbtn-ic"
+  }, /*#__PURE__*/React.createElement(IcSP, {
+    n: "play",
+    s: 13
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sp-j-lessonbtn-tx"
+  }, /*#__PURE__*/React.createElement("b", null, firstLeft)), /*#__PURE__*/React.createElement(IcSP, {
+    n: "arrowR",
+    s: 16
+  }))), a.status === "upgrade" && /*#__PURE__*/React.createElement("span", {
+    className: "sp-j-lock-hint"
+  }, "Part of the full 8D Lip Design path. ", /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sp-link",
+    onClick: onUpgrade
+  }, "Unlock with Mastery"))))));
 }
 function PathJourney({
   slug,
@@ -1271,7 +1317,14 @@ function PathJourney({
     };
     window.addEventListener("pf-lessons-done", sync);
     window.addEventListener(SPE.EVT, onEvt);
-    const want = new URLSearchParams(window.location.search).get("skill");
+    let want = new URLSearchParams(window.location.search).get("skill");
+    try {
+      const f = sessionStorage.getItem("pf-sp-focus");
+      if (f) {
+        want = f;
+        sessionStorage.removeItem("pf-sp-focus");
+      }
+    } catch (e) {}
     if (want) setTimeout(() => focusSkill(want), 400);
     return () => {
       window.removeEventListener("pf-lessons-done", sync);
@@ -1295,17 +1348,7 @@ function PathJourney({
   let n = 0;
   return /*#__PURE__*/React.createElement("div", {
     className: "sp-root sp-j sp-" + variant
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "sp-j-item sp-j-start done"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sp-j-node sp-j-node-start",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(IcSP, {
-    n: "route",
-    s: 16
-  })), /*#__PURE__*/React.createElement("p", {
-    className: "sp-j-startline"
-  }, "Start here · work down the path, one skill at a time")), levels.map(m => /*#__PURE__*/React.createElement(React.Fragment, {
+  }, levels.map(m => /*#__PURE__*/React.createElement(React.Fragment, {
     key: m.id
   }, /*#__PURE__*/React.createElement("div", {
     id: "sp-sec-" + m.id,
@@ -1319,7 +1362,7 @@ function PathJourney({
   }) : m.status === "upgrade" ? /*#__PURE__*/React.createElement(IcSP, {
     n: "lock",
     s: 14
-  }) : /*#__PURE__*/React.createElement("b", null, m.level)), /*#__PURE__*/React.createElement("div", {
+  }) : /*#__PURE__*/React.createElement("b", null, romanSP(m.level))), /*#__PURE__*/React.createElement("div", {
     className: "sp-j-level-tx"
   }, /*#__PURE__*/React.createElement("p", {
     className: "sp-eyebrow"
@@ -1341,7 +1384,8 @@ function PathJourney({
       n: n,
       total: total,
       slug: slug,
-      onUpgrade: upgrade
+      onUpgrade: upgrade,
+      onOpenLesson: onOpenLesson
     });
   }))), /*#__PURE__*/React.createElement("div", {
     className: "sp-j-item sp-j-finish" + (doneN === total ? " done" : "")
@@ -1424,7 +1468,7 @@ function LevelStrip({
   }) : m.status === "upgrade" ? /*#__PURE__*/React.createElement(IcSP, {
     n: "lock",
     s: 11
-  }) : m.level), /*#__PURE__*/React.createElement("span", {
+  }) : romanSP(m.level)), /*#__PURE__*/React.createElement("span", {
     className: "sp-lv-k"
   }, "Level ", m.level)), /*#__PURE__*/React.createElement("span", {
     className: "sp-lv-t"
@@ -1504,7 +1548,8 @@ function Hub({
     const flat = cur ? window.PFLearnShared.flatten(cur) : [];
     const l = flat.filter(x => x.name === name)[0];
     const qs = l ? "&level=" + l.li + "&module=" + l.si + "&lesson=" + l.ni + (l.subIdx != null ? "&sub=" + l.subIdx : "") : "";
-    window.location.href = (variant === "web" ? "LessonWeb.html?course=" : "CourseDetail.html?play=1&course=") + slug + qs;
+    /* from=path: the course page sends the member back here after the skill splash */
+    window.location.href = (variant === "web" ? "LessonWeb.html?course=" : "CourseDetail.html?play=1&course=") + slug + qs + "&from=path";
   };
   const courseUrl = (variant === "web" ? "CourseWeb.html?course=" : "CourseDetail.html?course=") + slug;
   const only = tab === "starter" ? ["M1"] : null;

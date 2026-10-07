@@ -109,12 +109,15 @@
   /* ---------------------------------------------------------------- door -- */
   /* "Ava puts Katie at the door": one course (Basic can buy it directly) +
      one free resource to open today, so nobody leaves empty-handed. */
+  /* quiet (Profile cards, 2026-10-07): no intro line and no Basic-pricing
+     note on the card — that copy lives in the card's ⓘ popover instead. */
   function CFDoor({
     focus,
     web,
     tier,
     heading = true,
-    showTrack = true
+    showTrack = true,
+    quiet = false
   }) {
     useCoachRefresh();
     if (!focus) return null;
@@ -135,7 +138,7 @@
       color: "var(--brand-gold)"
     }), "Your door"), /*#__PURE__*/React.createElement("span", {
       className: "cf-door-count"
-    }, showTrack ? 3 : 2, " ways in")), heading && /*#__PURE__*/React.createElement("p", {
+    }, showTrack ? 3 : 2, " ways in")), heading && !quiet && /*#__PURE__*/React.createElement("p", {
       className: "cf-door-sub"
     }, showTrack ? "Three" : "Two", " ways to start on ", /*#__PURE__*/React.createElement("b", null, focus.domain), " today — pick whichever suits you."), /*#__PURE__*/React.createElement("ol", {
       className: "cf-door-list"
@@ -195,7 +198,7 @@
       name: "lucide:sparkles",
       size: 12,
       color: "var(--ai-purple)"
-    }), "Included free from ", course.includedFrom === "mastery" ? "Mastery" : "Confidence", " membership"), !paid && !course.owned && !includedLater && /*#__PURE__*/React.createElement("p", {
+    }), "Included free from ", course.includedFrom === "mastery" ? "Mastery" : "Confidence", " membership"), !paid && !course.owned && !includedLater && !quiet && /*#__PURE__*/React.createElement("p", {
       className: "cf-door-note"
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "lucide:info",
@@ -254,7 +257,7 @@
   }) {
     const dom = CF.DOMAINS[domain];
     return /*#__PURE__*/React.createElement("span", {
-      className: "cf-focus-chip" + (size === "lg" ? " lg" : ""),
+      className: "cf-focus-chip" + (size === "lg" ? " lg" : size === "hero" ? " hero" : ""),
       style: {
         "--cf-dom": dom.color,
         "--cf-dom-soft": dom.soft,
@@ -264,7 +267,7 @@
       className: "cf-focus-chip-ic"
     }, /*#__PURE__*/React.createElement(Icon, {
       name: dom.icon,
-      size: size === "lg" ? 20 : 14,
+      size: size === "lg" || size === "hero" ? 20 : 14,
       color: "#fff"
     })), domain);
   }

@@ -133,7 +133,7 @@
 .sp-fullsheet{position:absolute;inset:0;z-index:70;display:flex;flex-direction:column;background:var(--sp-soft);animation:sp-slide .3s cubic-bezier(.2,.8,.2,1) both}
 @keyframes sp-slide{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}
 .sp-fs-top{display:flex;align-items:center;gap:8px;padding:62px 12px 10px;background:var(--sp-card);border-bottom:1px solid var(--sp-line)}
-.sp-fs-top h2{flex:1;text-align:center;font-size:17px;font-weight:800}
+.sp-fs-top h2{flex:1;text-align:center;font-size:17px;font-weight:800}.sp-iconbtn-spacer{visibility:hidden;pointer-events:none}.sp-fs-sub{display:block;font-size:11.5px;font-weight:600;letter-spacing:.04em;opacity:.72;margin-top:1px;line-height:1.2}.ml-top h1 .sp-fs-sub{text-align:inherit}
 .sp-iconbtn{width:40px;height:40px;border-radius:12px;border:0;background:transparent;color:var(--sp-ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .sp-fs-scroll{flex:1;overflow-y:auto;padding:16px}
 
@@ -454,7 +454,7 @@ body:has(.sp-web-page){margin:0}
 .sp-j-head{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
 .sp-j-head>.sp-ic{color:var(--sp-muted)}
 .sp-j-head-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.sp-j-meta{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--sp-muted)}
+.sp-j-meta{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--sp-muted)}
 .sp-j-here{display:inline-flex;align-items:center;padding:1px 8px;border-radius:99px;background:var(--sp-navy);color:var(--sp-on-navy);font-style:normal;letter-spacing:0;text-transform:none;font-size:11px}
 .sp-j-quote{font-family:var(--sp-title,Georgia,"Times New Roman",serif);font-style:italic;font-size:15.5px;line-height:1.4;color:var(--sp-ink)}
 .sp-j-skill:not(.open) .sp-j-quote{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
@@ -476,7 +476,7 @@ body:has(.sp-web-page){margin:0}
 .sp-j-step-t{flex:1;min-width:0;font-size:14px;font-weight:600;line-height:1.3}
 .sp-j-step-m{flex-shrink:0;font-size:12px;color:var(--sp-muted)}
 .sp-j-step.done .sp-j-step-m{color:var(--sp-green);font-weight:600}
-.sp-j-head-tick{cursor:default}.sp-j-box{cursor:pointer;padding:0;align-self:center}.sp-j-upgrade .sp-j-box{color:var(--sp-lock)}.sp-j-box:focus-visible{outline:2px solid var(--sp-gold-strong);outline-offset:2px}
+.sp-j-head-tick{cursor:default;flex-direction:column;align-items:stretch;gap:8px}.sp-j-toprow{display:flex;align-items:center;justify-content:space-between;gap:10px}.sp-j-box-locked{color:var(--sp-lock)!important;background:var(--sp-soft)}.sp-j-lock-hint{font-size:13px;color:var(--sp-muted);line-height:1.4;margin-top:2px}.sp-j-lessonbtn{display:flex;align-items:center;gap:10px;width:100%;margin-top:10px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--sp-line);background:var(--sp-card);color:var(--sp-ink);font:inherit;text-align:left;cursor:pointer;box-sizing:border-box;transition:border-color .15s ease,background .15s ease}.sp-j-lessonbtn:hover{border-color:var(--sp-gold-strong);background:var(--sp-gold-bg)}.sp-j-lessonbtn:focus-visible{outline:2px solid var(--sp-gold-strong);outline-offset:2px}.sp-j-lessonbtn-ic{width:30px;height:30px;border-radius:50%;background:var(--sp-navy);color:var(--sp-on-navy);display:flex;align-items:center;justify-content:center;flex:none}.sp-j-lessonbtn-tx{flex:1;min-width:0}.sp-j-lessonbtn-tx small{display:block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--sp-muted);margin-bottom:1px}.sp-j-lessonbtn-tx b{display:block;font-size:14px;font-weight:700;line-height:1.3}.sp-j-lessonbtn>.sp-ic:last-child{flex:none;color:var(--sp-muted)}.sp-j-meta{display:block}.sp-j-metalink{border:0;background:none;padding:0;margin:0;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--sp-gold-line);cursor:pointer;text-align:left}.sp-j-metalink:hover{color:var(--sp-gold)}.sp-j-box{cursor:pointer;padding:0;width:26px;height:26px;border-width:2px;border-radius:8px;flex:none}.sp-j-upgrade .sp-j-box{color:var(--sp-lock)}.sp-j-box:focus-visible{outline:2px solid var(--sp-gold-strong);outline-offset:2px}
 .sp-j-locknote{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:13px;color:var(--sp-muted);line-height:1.45}
 .sp-j-locknote .sp-ic{color:var(--sp-lock)}
 .sp-j-locknote.sp-ok .sp-ic{color:var(--sp-green)}
@@ -503,7 +503,7 @@ body:has(.sp-web-page){margin:0}
 .sp-hub-row{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (max-width:979px){.sp-hub-row{grid-template-columns:1fr}}
 /* skill cards titled by their lesson (the "I can…" statement is gone) */
-.sp-j-title{font-size:15.5px;font-weight:700;line-height:1.3;color:var(--sp-ink)}
+.sp-j-title{font-size:15.5px;font-weight:500;line-height:1.3;color:var(--sp-ink)}
 .sp-j-title small{font-weight:500;font-size:12.5px;color:var(--sp-muted)}
 .sp-j-done:not(.open) .sp-j-title,.sp-j-upgrade .sp-j-title{color:var(--sp-body)}
 

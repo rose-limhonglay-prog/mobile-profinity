@@ -86,8 +86,8 @@ header.pf-hdr .pf-hdr-nav>button>span:first-child{display:flex}
   header.pf-hdr .pf-nav-rewards.is-active{background:var(--pf-nav-active-bg,rgb(225,223,242))}
 
   /* things that assumed the 84px bar */
-  #pf-notif-panel{top:64px!important;max-height:calc(100dvh - 64px - 12px - var(--pf-tabbar-h))}
-  #pf-account-menu{top:62px!important;right:8px!important;left:auto!important}
+  #pf-notif-panel{max-height:calc(100dvh - 64px - 12px - var(--pf-tabbar-h))} /* top comes from notifications.js (bell rect) */
+  #pf-account-menu{right:8px!important;left:auto!important}
   #pf-toast-stack{top:64px}
   body>.sp-nudge{top:64px;right:12px;left:12px;width:auto}
   .pf-pinned-box.sticky{top:56px}
@@ -224,3 +224,27 @@ header.pf-hdr .pf-hdr-nav>button>span:first-child{display:flex}
 .pf-wd .m-drawer-profile{padding-top:8px}
 @media (prefers-reduced-motion:reduce){.pf-wd .m-drawer,.pf-wd .m-drawer-scrim{transition:none}}
 html.pf-wd-lock,html.pf-wd-lock body{overflow:hidden}
+
+/* ===========================================================================
+   "Get the app" banner above the header — phone widths only
+   =========================================================================== */
+.pf-appbn{display:none}
+@media (max-width:760px){
+  .pf-appbn{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 8px;
+    background:var(--surface-sunken,#F3F3F7);border-bottom:1px solid var(--border-default);
+    font-family:var(--font-sans);color:var(--text-primary);transition:opacity .2s ease,transform .2s ease}
+  .pf-appbn.is-out{opacity:0;transform:translateY(-8px)}
+  .pf-appbn-x{flex:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:none;border:none;
+    border-radius:50%;color:var(--gray-500);cursor:pointer;padding:0}
+  .pf-appbn-x iconify-icon{display:block}
+  .pf-appbn-ic{flex:none;width:48px;height:48px;border-radius:11px;object-fit:cover;box-shadow:0 1px 3px rgba(12,12,13,.15)}
+  .pf-appbn-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+  .pf-appbn-t{font-weight:var(--fw-semibold);font-size:14px;line-height:1.2;color:var(--text-heading);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pf-appbn-s{font-size:12px;line-height:1.25;color:var(--gray-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pf-appbn-stars{font-size:11px;line-height:1.2;letter-spacing:.06em;color:#F5A623}
+  .pf-appbn-cta{flex:none;display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 14px;border-radius:999px;
+    background:var(--brand-navy);color:#fff;font-weight:var(--fw-semibold);font-size:13px;text-decoration:none;letter-spacing:.01em}
+  .pf-appbn-cta:active{opacity:.85}
+  [data-theme="dark"] .pf-appbn{background:var(--surface-card)}
+  [data-theme="dark"] .pf-appbn-cta{background:var(--brand-gold);color:#1A1736}
+}
