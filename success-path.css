@@ -167,15 +167,45 @@
 .sp-cw-tab.on{background:var(--brand-navy,#0C1928);border-color:var(--brand-navy,#0C1928);color:#fff}
 .sp-cw-tab .sp-badge{min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:#FDC35D;color:#1b1848;font-size:11.5px;display:inline-flex;align-items:center;justify-content:center}
 
-/* newsfeed nudge banner */
-.sp-nudge{position:absolute;left:12px;right:12px;top:106px;z-index:75;display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:18px;
-  background:linear-gradient(135deg,#292569,#1b1848);color:#fff;box-shadow:0 18px 40px rgba(16,24,40,.28);font-family:var(--font-sans,system-ui);animation:sp-drop .45s cubic-bezier(.2,1.2,.4,1) both}
-body>.sp-nudge{position:fixed;top:84px;right:24px;left:auto;width:380px}
-@keyframes sp-drop{from{transform:translateY(-16px);opacity:0}to{transform:none;opacity:1}}
-.sp-nudge-ic{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:rgba(253,195,93,.16);color:#FDC35D;flex-shrink:0}
-.sp-nudge-tx{flex:1;min-width:0}.sp-nudge-t{margin:0;font-size:14.5px;font-weight:800;line-height:1.3}.sp-nudge-b{margin:4px 0 10px;font-size:13px;line-height:1.4;color:rgba(255,255,255,.8)}
-.sp-nudge-cta{height:34px;padding:0 14px;border-radius:10px;border:0;background:#FDC35D;color:#1b1848;font:inherit;font-size:13.5px;font-weight:800;cursor:pointer}
-.sp-nudge-x{width:28px;height:28px;border-radius:8px;border:0;background:rgba(255,255,255,.1);color:#fff;font-size:16px;line-height:1;cursor:pointer;flex-shrink:0}
+/* newsfeed nudge banner — same card as the in-app notification toasts
+   (.pf-toast in notifications.css): white, 14px, 4px accent bar, round icon,
+   title / text / "Just now · action" meta row, floating × top-right.
+   Self-contained because the mobile shells don't load notifications.css;
+   dark via data-theme. Coach nudges take the learning gold accent. */
+.sp-nudge{position:absolute;left:12px;right:12px;top:106px;z-index:75;display:flex;align-items:flex-start;gap:14px;padding:16px 18px;border-radius:14px;box-sizing:border-box;
+  --pf-accent:#CE9957;--pf-icon-bg:#FBF2E7;--spn-bg:#ffffff;--spn-line:#eaecf0;--spn-title:#1F1F1F;--spn-text:#475467;--spn-time:#667085;--spn-x:#98A2B3;--spn-x-hover:#F2F4F7;
+  --spn-shadow:0 12px 32px rgba(12,12,13,.16),0 2px 6px rgba(12,12,13,.06);
+  background:var(--spn-bg);border:1px solid var(--spn-line);border-left:4px solid var(--pf-accent);box-shadow:var(--spn-shadow);color:var(--spn-title);
+  font-family:var(--font-sans,"Poppins",sans-serif);animation:sp-drop .34s cubic-bezier(.2,.9,.3,1.2) both;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sp-nudge.sp-nudge--goal{--pf-accent:#6C63FF;--pf-icon-bg:#EEF0FF}
+.sp-nudge.sp-nudge--ascension{--pf-accent:#CE9957;--pf-icon-bg:#FBF2E7}
+.sp-nudge.sp-nudge--ready,.sp-nudge.sp-nudge--near{--pf-accent:#2A9568;--pf-icon-bg:#E9F7EF}
+[data-theme="dark"] .sp-nudge{--spn-bg:var(--surface-card,#171633);--spn-line:var(--border-default,rgba(255,255,255,.1));--spn-title:var(--text-primary,#fff);--spn-text:var(--text-secondary,rgba(255,255,255,.75));
+  --spn-time:var(--text-muted,rgba(255,255,255,.6));--spn-x:var(--text-muted,rgba(255,255,255,.6));--spn-x-hover:rgba(255,255,255,.1);--pf-icon-bg:color-mix(in srgb,var(--pf-accent) 18%,var(--surface-card,#171633));--spn-shadow:0 16px 40px rgba(0,0,0,.55)}
+body>.sp-nudge{position:fixed;top:100px;right:28px;left:auto;width:420px}
+#pf-toast-stack{position:fixed;top:100px;right:28px;width:420px;z-index:100;display:flex;flex-direction:column;gap:14px;pointer-events:none} /* mirror of notifications.css for shells without it */
+#pf-toast-stack>.sp-nudge{position:relative;top:auto;right:auto;left:auto;width:auto;pointer-events:auto}
+@keyframes sp-drop{from{transform:translateX(40px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+[data-ios-device] .sp-nudge,.m-screen>.sp-nudge{animation-name:sp-drop-m}
+@keyframes sp-drop-m{from{transform:translateY(-14px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+.sp-nudge-ic{flex-shrink:0;width:42px;height:42px;border-radius:50%;background:var(--pf-icon-bg);color:var(--pf-accent);display:flex;align-items:center;justify-content:center}
+.sp-nudge-ic svg{width:22px;height:22px}
+.sp-nudge-tx{flex:1;min-width:0}
+.sp-nudge-t{margin:0 0 3px;padding-right:18px;font-size:16px;font-weight:700;line-height:1.3;color:var(--spn-title)}
+.sp-nudge-b{margin:0;font-size:14px;line-height:1.45;color:var(--spn-text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sp-nudge-meta{display:flex;align-items:center;gap:10px;margin-top:8px}
+.sp-nudge-time{font-size:13px;color:var(--spn-time)}
+.sp-nudge-cta{background:none;border:0;padding:0;font:inherit;font-size:13px;font-weight:700;color:var(--pf-accent);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sp-nudge-cta:hover{text-decoration:underline}
+.sp-nudge-x{position:absolute;top:10px;right:10px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border:0;background:none;border-radius:50%;cursor:pointer;color:var(--spn-x);padding:0;-webkit-tap-highlight-color:transparent}
+.sp-nudge-x::before{content:"";position:absolute;inset:-6px}
+.sp-nudge-x:hover{background:var(--spn-x-hover)}
+.sp-nudge-x svg{width:16px;height:16px}
+/* phone-width: slightly tighter type so the card doesn't crowd the feed */
+[data-ios-device] .sp-nudge,.m-screen>.sp-nudge{padding:14px 16px;gap:12px}
+[data-ios-device] .sp-nudge-t,.m-screen>.sp-nudge .sp-nudge-t{font-size:15px}
+[data-ios-device] .sp-nudge-b,.m-screen>.sp-nudge .sp-nudge-b{font-size:13px}
+[data-ios-device] .sp-nudge-ic,.m-screen>.sp-nudge .sp-nudge-ic{width:40px;height:40px}
 @media (prefers-reduced-motion:reduce){.sp-root *,.sp-nudge,.sp-float{animation:none!important;transition:none!important}}
 
 /* hub page chrome */

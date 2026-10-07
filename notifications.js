@@ -140,6 +140,9 @@
   var toastStackEl;
   function ensureToastStack() {
     if (toastStackEl) return toastStackEl;
+    /* reuse a stack another module (success-path-nudge.js) already mounted */
+    toastStackEl = document.getElementById("pf-toast-stack");
+    if (toastStackEl) return toastStackEl;
     toastStackEl = document.createElement("div");
     toastStackEl.id = "pf-toast-stack";
     document.body.appendChild(toastStackEl);
