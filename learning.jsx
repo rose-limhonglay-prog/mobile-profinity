@@ -45,15 +45,19 @@ const TABS = ["All Courses", "In Progress", "Completed", "Saved"];
    not yet completed (pf-lessons-done) — the same place mobile "Continue" opens. */
 const PFS = window.PFLearnShared || null;
 function resumePoint(c) {
+  /* a bought generic course carries its curriculum (PFLearnCourses.purchasedCourses) */
+  if (c.curriculum && PFS && PFS.resume) { try { return PFS.resume(c.curriculum); } catch (e) {} }
   if (PFS && PFS.CURRICULA && PFS.CURRICULA[c.slug] && PFS.resume) { try { return PFS.resume(c.slug); } catch (e) {} }
   return null;
 }
+/* generic (bought) courses are rebuilt from their title on the lesson page */
+function genericTail(c) { return c.generic ? { title: c.title, dur: c.dur || undefined } : {}; }
 function resumeLessonNumber(c) { const r = resumePoint(c); return r ? r.lessonNumber : c.lesson; }
 function resumeUrl(c) {
   const rp = resumePoint(c);
-  if (rp && rp.item) return PFL.lessonUrl(c.slug, { level: rp.item.li, module: rp.item.si, lesson: rp.item.ni, sub: rp.item.subIdx == null ? undefined : rp.item.subIdx });
+  if (rp && rp.item) return PFL.lessonUrl(c.slug, Object.assign({ level: rp.item.li, module: rp.item.si, lesson: rp.item.ni, sub: rp.item.subIdx == null ? undefined : rp.item.subIdx }, genericTail(c)));
   const r = c.resume || { level: 0, module: 0 };
-  return PFL.lessonUrl(c.slug, { level: r.level, module: r.module, lesson: Math.max(0, (c.lesson || 1) - 1) });
+  return PFL.lessonUrl(c.slug, Object.assign({ level: r.level, module: r.module, lesson: Math.max(0, (c.lesson || 1) - 1) }, genericTail(c)));
 }
 function certificateUrl(c) {
   return "CertificateWeb.html?" + new URLSearchParams({
@@ -215,14 +219,20 @@ function SaveButton({ title, saved, className }) {
   );
 }
 
-function LockedCoursesPanel() {
+/* Free account, nothing bought yet (user, 2026-10-07): My Courses is open —
+   it just waits for the first purchase. The button scrolls to the paid picks. */
+function scrollToRelated() {
+  const el = document.getElementById("lrn2-related");
+  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+function BuyFirstCoursePanel({ onBrowse }) {
   return (
-    <div className="lrn2-locked">
-      <span className="lrn2-locked-icon"><IconifyIcon name="lucide:lock" size={28} color="#fff" /></span>
-      <h3>Unlock My Courses</h3>
-      <p>Upgrade to purchase courses and they&rsquo;ll live here for easy access.</p>
-      <button type="button" className="lrn2-locked-upgrade-btn" onClick={() => go(PFL.membershipUrl)}>
-        Upgrade<IconifyIcon name="lucide:arrow-up-right" size={19} color="#fff" />
+    <div className="lrn2-mc-empty lrn2-mc-empty-free" data-screen-label="My Courses · nothing bought yet">
+      <span className="ic"><IconifyIcon name="lucide:shopping-bag" size={24} color="var(--lrn2-gold-ink)" /></span>
+      <h3>No courses yet</h3>
+      <p>Buy any course on its own and it lives here &mdash; continue it, finish it and earn the certificate. No membership needed.</p>
+      <button type="button" className="lrn2-outline-btn filled" onClick={onBrowse}>
+        See courses to buy<IconifyIcon name="lucide:arrow-down" size={17} color="#fff" />
       </button>
     </div>
   );
@@ -331,17 +341,19 @@ function RelatedContent() {
   if (!related.length) return null;
   const tierName = PFL.TIER_NAME[PFL.readTier()] || "your membership";
   return (
-    <section className="lrn2-related" data-screen-label="Explore related content">
+    <section className="lrn2-related" id="lrn2-related" data-screen-label="Explore related content">
       {/* redesigned (user, 2026-09-16): editorial header + 3-up cover cards on a cream band */}
       <div className="lrn2-rel-head">
         <div className="lrn2-rel-head-tx">
           <span className="lrn2-eyebrow gold">Recommended for you</span>
           <h2 className="lrn2-rel-title">Explore related content</h2>
-          <p className="lrn2-rel-sub">Paid courses hand-picked to build on 8D Lip Design.</p>
+          <p className="lrn2-rel-sub">{FREE_TIER ? "Buy any course on its own — no membership needed. It lands in My Courses the moment you pay." : "Paid courses hand-picked to build on 8D Lip Design."}</p>
         </div>
+        {/* the All Courses catalogue stays members-only */}
+        {!FREE_TIER &&
         <button type="button" className="lrn2-rel-browse" onClick={() => go(PFL.allCoursesUrl())}>
           Browse all courses<IconifyIcon name="lucide:arrow-right" size={16} color="currentColor" />
-        </button>
+        </button>}
       </div>
       <div className="lrn2-related-list">
         {related.map((r, i) => {
@@ -612,10 +624,17 @@ function MyLearningApp() {
   const [surveyOpen, setSurveyOpen] = useState(false);
   const [resourcesUnlocked, setResourcesUnlocked] = useState(PFL.resourcesUnlocked);
   const saved = PFL.useSaved();
+  const purchased = PFL.usePurchased();
+  const [done] = PFL.useLessonsDone();
   useEffectL(() => pfTagActiveNav("My Learning"));
   useEffectL(() => { const t = setTimeout(() => setLoading(false), 1200); return () => clearTimeout(t); }, []);
+  /* MyLearning.html#related (from the My Courses page) lands on the paid picks */
+  useEffectL(() => { if (window.location.hash === "#related") { const t = setTimeout(scrollToRelated, 450); return () => clearTimeout(t); } }, []);
 
-  const myCourses = PFC.coursesForTier(TIER);
+  /* Free account (user, 2026-10-07): My Courses is the courses they've bought,
+     with live progress; Continue Learning resumes the first one in progress. */
+  const myCourses = FREE_TIER ? PFC.purchasedCourses(purchased, done) : PFC.coursesForTier(TIER);
+  const showSkeleton = loading && myCourses.length > 0;
   const q = query.trim().toLowerCase();
   const filters = {
     "In Progress": (c) => c.inProgress,
@@ -640,7 +659,7 @@ function MyLearningApp() {
     inProgressN ? inProgressN + " in progress" : null,
     certN ? certN + (certN === 1 ? " certificate" : " certificates") : null,
   ].filter(Boolean).join(" · ");
-  const showContinue = !FREE_TIER && !CONFIDENCE_TIER && continueCourse && !q && (tab === "All Courses" || tab === "In Progress");
+  const showContinue = !CONFIDENCE_TIER && continueCourse && !q && (tab === "All Courses" || tab === "In Progress");
 
   const unlockResources = () => { PFL.unlockResources(); setResourcesUnlocked(true); };
 
@@ -669,36 +688,33 @@ function MyLearningApp() {
 
         {showContinue && <ContinueLearning c={continueCourse} />}
 
-        <section className={"panel" + (FREE_TIER ? "" : " lrn2-mc-panel")} data-screen-label="My Courses">
-          {FREE_TIER ? (
-            <>
-              <SectionHead title="My Courses" />
-              <LockedCoursesPanel />
-            </>
-          ) : (
+        <section className="panel lrn2-mc-panel" data-screen-label="My Courses">
+          {(
             <>
               <div className="lrn2-mc-head">
                 <div className="lrn2-mc-head-tx">
                   <span className="lrn2-eyebrow gold">Your library</span>
                   <h2 className="lrn2-mc-h">My Courses</h2>
-                  <p className="lrn2-mc-sub">{mcSummary}</p>
+                  <p className="lrn2-mc-sub">{FREE_TIER && !myCourses.length ? "Courses you buy live here — no membership needed." : mcSummary}</p>
                 </div>
+                {myCourses.length > 0 &&
                 <button type="button" className="lrn2-rel-browse" onClick={() => go("MyCoursesWeb.html")}>
                   View all courses<IconifyIcon name="lucide:arrow-right" size={16} color="currentColor" />
-                </button>
+                </button>}
               </div>
-              {(loading || shownCourses.length > 0) &&
+              {FREE_TIER && !myCourses.length && <BuyFirstCoursePanel onBrowse={scrollToRelated} />}
+              {(showSkeleton || shownCourses.length > 0) &&
                 <div className="lrn2-mc-grid">
-                  {loading
+                  {showSkeleton
                     ? Array.from({ length: 3 }).map((_, i) => <SkeletonCourseCard key={i} />)
                     : shownCourses.map((c, i) => <MyCourseCard key={c.slug} c={c} saved={saved} featured={leadTab && i === 0 && !!c.inProgress} />)}
                 </div>}
-              {!loading && visibleCourses.length === 0 &&
+              {!showSkeleton && myCourses.length > 0 && visibleCourses.length === 0 &&
                 <div className="lrn2-mc-empty">
                   <span className="ic"><IconifyIcon name={q ? "lucide:search" : MC_EMPTY_ICON[tab] || "lucide:book-open"} size={24} color="var(--lrn2-gold-ink)" /></span>
                   <p>{q ? "No courses match your search." : EMPTY[tab] || "No courses here yet."}</p>
                 </div>}
-              {!loading && hiddenCount > 0 &&
+              {!showSkeleton && hiddenCount > 0 &&
                 <button type="button" className="lrn2-mc-more" onClick={() => go("MyCoursesWeb.html")}>
                   View all {orderedCourses.length} courses<IconifyIcon name="lucide:arrow-right" size={16} color="currentColor" />
                 </button>}
@@ -706,10 +722,10 @@ function MyLearningApp() {
           )}
         </section>
 
-        {/* Paid related courses and the All Courses browse card are members-only:
-            a free user only sees the locked My Courses card, Free Resources
-            and the Subscribe card. */}
-        {!FREE_TIER && <RelatedContent />}
+        {/* Paid related courses are open to every tier (user, 2026-10-07): a free
+            account buys a course here and it lands in My Courses above. The All
+            Courses browse card stays members-only. */}
+        <RelatedContent />
 
         <section className="lrn2-promos">
           <PromoFreeResources unlocked={resourcesUnlocked} onStartSurvey={() => setSurveyOpen(true)} />

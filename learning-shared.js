@@ -351,7 +351,127 @@
   P.mobileLessonUrl = function (page, course, item, extra) {
     var p = new URLSearchParams(Object.assign({ course: course.slug, level: item.li, module: item.si, lesson: item.ni }, extra || {}));
     if (item.subIdx != null) p.set("sub", item.subIdx);
+    /* a generic (bought) course is rebuilt from its title on the course page */
+    if (course.generic) { p.set("title", course.title); if (course.dur) p.set("dur", course.dur); }
     return page + "?" + p.toString();
+  };
+
+  /* ---------------------------------------------------------------- generic (bought) courses -- */
+  /* Any course without a bespoke curriculum renders as the same three-level
+     success path on CourseDetail.html (lesson-confidence.jsx
+     buildGenericCourseLX) and CourseWeb/LessonWeb (course-data-web.js
+     buildGenericCourse). This is the one copy My Learning uses to read a
+     bought course's live progress out of pf-lessons-done — the lesson names
+     must stay identical to those two builders. */
+  var STILLS = [
+  [/temple/i, "assets/course-temple-filler.webp"],
+  [/membership/i, "assets/course-membership-banner.jpg"],
+  [/lip/i, "assets/course-8d-lip-design.jpg"],
+  [/brow|eyelid|ptosis/i, "assets/course-brow-lift.jpg"],
+  [/cheek/i, "assets/course-cheek-contouring.jpg"],
+  [/jaw/i, "assets/course-jawline-sculpting.jpg"],
+  [/tear/i, "assets/course-tear-trough.jpg"],
+  [/rhino|nose/i, "assets/course-rhinoplasty.jpg"],
+  [/skin|booster/i, "assets/course-skin-boosters.jpg"],
+  [/complication|toxin|botox/i, "assets/course-complications.jpg"],
+  [/marketing|business|clinic/i, "assets/course-marketing.webp"],
+  [/full.?face|rejuven/i, "assets/course-full-face-rejuvenation.jpg"]];
+  P.stillFor = function (title) {
+    for (var i = 0; i < STILLS.length; i++) if (STILLS[i][0].test(title)) return STILLS[i][1];
+    return "assets/course-consultation.jpg";
+  };
+  P.titleFromSlug = function (slug) {
+    return String(slug || "Course").split("-").map(function (w) { return w ? w.charAt(0).toUpperCase() + w.slice(1) : w; }).join(" ");
+  };
+  P.genericCourse = function (title, slug, opts) {
+    opts = opts || {};
+    title = title || P.titleFromSlug(slug);
+    var dur = opts.dur || "45m";
+    var instr = opts.instr || "Dr Tim Pearce";
+    var lower = title.toLowerCase();
+    return {
+      slug: slug || P.slug(title),
+      title: title,
+      generic: true,
+      dur: opts.dur || null,
+      still: opts.image || P.stillFor(title),
+      levels: [
+      { title: "Level 1", open: true,
+        sections: [
+        { name: "Getting Started", free: true,
+          desc: "Foundations you need before your first " + lower + " patient — a focused " + dur + " path with " + instr + ", filled with practical protocols and real clinic scenarios.",
+          bullets: [],
+          lessons: [
+          { name: "Orientation", dur: "3:04" },
+          { name: "Core Technique Walkthrough", dur: "2:14" },
+          { name: "Common Pitfalls to Avoid", dur: "5:24" }] }] },
+      { title: "Level 2", open: true,
+        sections: [
+        { name: "Core Technique",
+          desc: "Anatomy, product choice and the " + lower + " technique itself, demonstrated step by step on a real patient.",
+          bullets: [],
+          lessons: [
+          { name: "Anatomy & Danger Zones", dur: "6:12" },
+          { name: "Product Selection & Dosing", dur: "4:48" },
+          { name: "Injection Technique Demonstration", dur: "8:31" },
+          { name: "Aftercare Protocol", dur: "3:05" }] }] },
+      { title: "Level 3", open: true,
+        sections: [
+        { name: "Advanced Practice",
+          desc: "Complications, case reviews and how to bring this treatment into your clinic with confidence.",
+          bullets: [],
+          lessons: [
+          { name: "Managing Complications", dur: "7:20" },
+          { name: "Case Study Review", dur: "5:56" },
+          { name: "Consultation & Consent Checklist", dur: "4 pages", kind: "pdf" },
+          { name: "Building Your Treatment Menu", dur: "3:44" }] }] },
+      { title: "End of Success Path Quiz", quiz: true, open: true, sections: [
+        { name: "Final Assessment", desc: "Twenty questions across assessment, technique and aftercare.", bullets: [],
+          lessons: [{ name: title + " success path quiz", dur: "20 Qs", kind: "quiz" }] }] }]
+    };
+  };
+
+  /* What My Learning knows about a slug: the related pool first (it carries
+     level, cover, blurb, lessons and duration), then the catalogue, then a
+     title rebuilt from the slug. */
+  P.courseInfo = function (slug) {
+    var hit = null;
+    for (var i = 0; i < (P.RELATED_POOL || []).length; i++) if (P.RELATED_POOL[i].slug === slug) { hit = P.RELATED_POOL[i]; break; }
+    if (!hit) for (var j = 0; j < (P.CATALOG || []).length; j++) if ((P.CATALOG[j].slug || P.slug(P.CATALOG[j].title)) === slug) { hit = P.CATALOG[j]; break; }
+    if (hit) return { slug: slug, title: hit.title, level: hit.level || "Intermediate", image: hit.image, blurb: hit.blurb, lessons: hit.lessons, dur: hit.dur || (hit.mins ? Math.floor(hit.mins / 60) + "h " + (hit.mins % 60 ? (hit.mins % 60) + "m" : "") : null) };
+    var title = P.titleFromSlug(slug);
+    return { slug: slug, title: title, level: "Intermediate", image: P.stillFor(title), blurb: "", lessons: 12, dur: null };
+  };
+
+  /* The courses a member has bought (pf-purchased-courses), shaped like the
+     My Courses cards on both My Learning pages, with live progress read from
+     pf-lessons-done through the same generic curriculum the course page
+     renders. A free account's My Courses is exactly this list (user,
+     2026-10-07): buy a course, continue it, finish it — no membership needed. */
+  P.purchasedCourses = function (purchased, done, opts) {
+    opts = opts || {};
+    purchased = purchased || P.readPurchased();
+    done = done || P.readDone();
+    var tier = opts.tier || P.readTier();
+    var out = [];
+    purchased.forEach(function (slug) {
+      if (!slug || opts.skipIncluded !== false && P.includedIn(slug, tier)) return;
+      var info = P.courseInfo(slug);
+      var course = P.CURRICULA[slug] || P.genericCourse(info.title, slug, { dur: info.dur, image: info.image });
+      var r = P.resume(course, done);
+      var c = { slug: slug, title: info.title, level: info.level, image: info.image, description: info.blurb, lessons: info.lessons, dur: info.dur,
+        purchased: true, generic: !!course.generic, curriculum: course };
+      if (r.allDone) {
+        c.completed = true;
+        c.certificate = { issuedDate: "Today", id: "PF-" + slug.replace(/[^a-z0-9]/g, "").slice(0, 3).toUpperCase() + "-" + String(1000 + slug.length * 37 % 9000), image: "assets/certificate-thumb.svg" };
+      } else if (r.started) {
+        c.progress = r.pct; c.lesson = r.lessonNumber;
+        var modules = course.levels.filter(function (l) { return (l.sections || []).length; }).length;
+        c.modulesLeft = Math.max(1, modules - r.item.li);
+      }
+      out.push(c);
+    });
+    return out;
   };
 
   /* ---------------------------------------------------------------- pricing -- */

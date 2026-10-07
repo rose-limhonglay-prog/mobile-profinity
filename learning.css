@@ -634,6 +634,10 @@ img{max-width:100%}
 .lrn2-mc-empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:44px 20px;border-radius:16px;border:1px dashed var(--border-strong);text-align:center}
 .lrn2-mc-empty .ic{width:52px;height:52px;border-radius:50%;background:var(--lrn2-gold-bg);display:inline-flex;align-items:center;justify-content:center}
 .lrn2-mc-empty p{margin:0;font-family:var(--font-sans);font-size:15px;color:var(--gray-600)}
+/* free account, nothing bought yet (user, 2026-10-07) */
+.lrn2-mc-empty h3{margin:0;font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:18px;color:var(--brand-navy)}
+.lrn2-mc-empty-free p{max-width:460px;line-height:1.5}
+.lrn2-mc-empty .lrn2-outline-btn{margin-top:6px}
 .lrn2-mc.skel-card{border-radius:16px}
 .lrn2-mc-skcover{aspect-ratio:16/9}
 .lrn2-mc.skel-card .sk-body{padding:18px 20px 20px}

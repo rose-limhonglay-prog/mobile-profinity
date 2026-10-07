@@ -58,6 +58,12 @@ const TABS = ["All Courses", "In Progress", "Completed", "Saved"];
    not yet completed (pf-lessons-done) — the same place mobile "Continue" opens. */
 const PFS = window.PFLearnShared || null;
 function resumePoint(c) {
+  /* a bought generic course carries its curriculum (PFLearnCourses.purchasedCourses) */
+  if (c.curriculum && PFS && PFS.resume) {
+    try {
+      return PFS.resume(c.curriculum);
+    } catch (e) {}
+  }
   if (PFS && PFS.CURRICULA && PFS.CURRICULA[c.slug] && PFS.resume) {
     try {
       return PFS.resume(c.slug);
@@ -65,27 +71,34 @@ function resumePoint(c) {
   }
   return null;
 }
+/* generic (bought) courses are rebuilt from their title on the lesson page */
+function genericTail(c) {
+  return c.generic ? {
+    title: c.title,
+    dur: c.dur || undefined
+  } : {};
+}
 function resumeLessonNumber(c) {
   const r = resumePoint(c);
   return r ? r.lessonNumber : c.lesson;
 }
 function resumeUrl(c) {
   const rp = resumePoint(c);
-  if (rp && rp.item) return PFL.lessonUrl(c.slug, {
+  if (rp && rp.item) return PFL.lessonUrl(c.slug, Object.assign({
     level: rp.item.li,
     module: rp.item.si,
     lesson: rp.item.ni,
     sub: rp.item.subIdx == null ? undefined : rp.item.subIdx
-  });
+  }, genericTail(c)));
   const r = c.resume || {
     level: 0,
     module: 0
   };
-  return PFL.lessonUrl(c.slug, {
+  return PFL.lessonUrl(c.slug, Object.assign({
     level: r.level,
     module: r.module,
     lesson: Math.max(0, (c.lesson || 1) - 1)
-  });
+  }, genericTail(c)));
 }
 function certificateUrl(c) {
   return "CertificateWeb.html?" + new URLSearchParams({
@@ -360,22 +373,35 @@ function SaveButton({
     color: on ? "var(--brand-gold)" : "var(--brand-navy)"
   }));
 }
-function LockedCoursesPanel() {
+
+/* Free account, nothing bought yet (user, 2026-10-07): My Courses is open —
+   it just waits for the first purchase. The button scrolls to the paid picks. */
+function scrollToRelated() {
+  const el = document.getElementById("lrn2-related");
+  if (el) el.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+}
+function BuyFirstCoursePanel({
+  onBrowse
+}) {
   return /*#__PURE__*/React.createElement("div", {
-    className: "lrn2-locked"
+    className: "lrn2-mc-empty lrn2-mc-empty-free",
+    "data-screen-label": "My Courses · nothing bought yet"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "lrn2-locked-icon"
+    className: "ic"
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:lock",
-    size: 28,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement("h3", null, "Unlock My Courses"), /*#__PURE__*/React.createElement("p", null, "Upgrade to purchase courses and they’ll live here for easy access."), /*#__PURE__*/React.createElement("button", {
+    name: "lucide:shopping-bag",
+    size: 24,
+    color: "var(--lrn2-gold-ink)"
+  })), /*#__PURE__*/React.createElement("h3", null, "No courses yet"), /*#__PURE__*/React.createElement("p", null, "Buy any course on its own and it lives here — continue it, finish it and earn the certificate. No membership needed."), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lrn2-locked-upgrade-btn",
-    onClick: () => go(PFL.membershipUrl)
-  }, "Upgrade", /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:arrow-up-right",
-    size: 19,
+    className: "lrn2-outline-btn filled",
+    onClick: onBrowse
+  }, "See courses to buy", /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:arrow-down",
+    size: 17,
     color: "#fff"
   })));
 }
@@ -594,6 +620,7 @@ function RelatedContent() {
   const tierName = PFL.TIER_NAME[PFL.readTier()] || "your membership";
   return /*#__PURE__*/React.createElement("section", {
     className: "lrn2-related",
+    id: "lrn2-related",
     "data-screen-label": "Explore related content"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lrn2-rel-head"
@@ -605,7 +632,7 @@ function RelatedContent() {
     className: "lrn2-rel-title"
   }, "Explore related content"), /*#__PURE__*/React.createElement("p", {
     className: "lrn2-rel-sub"
-  }, "Paid courses hand-picked to build on 8D Lip Design.")), /*#__PURE__*/React.createElement("button", {
+  }, FREE_TIER ? "Buy any course on its own — no membership needed. It lands in My Courses the moment you pay." : "Paid courses hand-picked to build on 8D Lip Design.")), !FREE_TIER && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lrn2-rel-browse",
     onClick: () => go(PFL.allCoursesUrl())
@@ -1090,12 +1117,25 @@ function MyLearningApp() {
   const [surveyOpen, setSurveyOpen] = useState(false);
   const [resourcesUnlocked, setResourcesUnlocked] = useState(PFL.resourcesUnlocked);
   const saved = PFL.useSaved();
+  const purchased = PFL.usePurchased();
+  const [done] = PFL.useLessonsDone();
   useEffectL(() => pfTagActiveNav("My Learning"));
   useEffectL(() => {
     const t = setTimeout(() => setLoading(false), 1200);
     return () => clearTimeout(t);
   }, []);
-  const myCourses = PFC.coursesForTier(TIER);
+  /* MyLearning.html#related (from the My Courses page) lands on the paid picks */
+  useEffectL(() => {
+    if (window.location.hash === "#related") {
+      const t = setTimeout(scrollToRelated, 450);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  /* Free account (user, 2026-10-07): My Courses is the courses they've bought,
+     with live progress; Continue Learning resumes the first one in progress. */
+  const myCourses = FREE_TIER ? PFC.purchasedCourses(purchased, done) : PFC.coursesForTier(TIER);
+  const showSkeleton = loading && myCourses.length > 0;
   const q = query.trim().toLowerCase();
   const filters = {
     "In Progress": c => c.inProgress,
@@ -1115,7 +1155,7 @@ function MyLearningApp() {
   const inProgressN = myCourses.filter(c => c.inProgress).length;
   const certN = myCourses.filter(c => c.completed).length;
   const mcSummary = [myCourses.length + (myCourses.length === 1 ? " course" : " courses"), inProgressN ? inProgressN + " in progress" : null, certN ? certN + (certN === 1 ? " certificate" : " certificates") : null].filter(Boolean).join(" · ");
-  const showContinue = !FREE_TIER && !CONFIDENCE_TIER && continueCourse && !q && (tab === "All Courses" || tab === "In Progress");
+  const showContinue = !CONFIDENCE_TIER && continueCourse && !q && (tab === "All Courses" || tab === "In Progress");
   const unlockResources = () => {
     PFL.unlockResources();
     setResourcesUnlocked(true);
@@ -1173,11 +1213,9 @@ function MyLearningApp() {
   }), showContinue && /*#__PURE__*/React.createElement(ContinueLearning, {
     c: continueCourse
   }), /*#__PURE__*/React.createElement("section", {
-    className: "panel" + (FREE_TIER ? "" : " lrn2-mc-panel"),
+    className: "panel lrn2-mc-panel",
     "data-screen-label": "My Courses"
-  }, FREE_TIER ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SectionHead, {
-    title: "My Courses"
-  }), /*#__PURE__*/React.createElement(LockedCoursesPanel, null)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "lrn2-mc-head"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lrn2-mc-head-tx"
@@ -1187,7 +1225,7 @@ function MyLearningApp() {
     className: "lrn2-mc-h"
   }, "My Courses"), /*#__PURE__*/React.createElement("p", {
     className: "lrn2-mc-sub"
-  }, mcSummary)), /*#__PURE__*/React.createElement("button", {
+  }, FREE_TIER && !myCourses.length ? "Courses you buy live here — no membership needed." : mcSummary)), myCourses.length > 0 && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lrn2-rel-browse",
     onClick: () => go("MyCoursesWeb.html")
@@ -1195,9 +1233,11 @@ function MyLearningApp() {
     name: "lucide:arrow-right",
     size: 16,
     color: "currentColor"
-  }))), (loading || shownCourses.length > 0) && /*#__PURE__*/React.createElement("div", {
+  }))), FREE_TIER && !myCourses.length && /*#__PURE__*/React.createElement(BuyFirstCoursePanel, {
+    onBrowse: scrollToRelated
+  }), (showSkeleton || shownCourses.length > 0) && /*#__PURE__*/React.createElement("div", {
     className: "lrn2-mc-grid"
-  }, loading ? Array.from({
+  }, showSkeleton ? Array.from({
     length: 3
   }).map((_, i) => /*#__PURE__*/React.createElement(SkeletonCourseCard, {
     key: i
@@ -1206,7 +1246,7 @@ function MyLearningApp() {
     c: c,
     saved: saved,
     featured: leadTab && i === 0 && !!c.inProgress
-  }))), !loading && visibleCourses.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }))), !showSkeleton && myCourses.length > 0 && visibleCourses.length === 0 && /*#__PURE__*/React.createElement("div", {
     className: "lrn2-mc-empty"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
@@ -1214,7 +1254,7 @@ function MyLearningApp() {
     name: q ? "lucide:search" : MC_EMPTY_ICON[tab] || "lucide:book-open",
     size: 24,
     color: "var(--lrn2-gold-ink)"
-  })), /*#__PURE__*/React.createElement("p", null, q ? "No courses match your search." : EMPTY[tab] || "No courses here yet.")), !loading && hiddenCount > 0 && /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("p", null, q ? "No courses match your search." : EMPTY[tab] || "No courses here yet.")), !showSkeleton && hiddenCount > 0 && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lrn2-mc-more",
     onClick: () => go("MyCoursesWeb.html")
@@ -1222,7 +1262,7 @@ function MyLearningApp() {
     name: "lucide:arrow-right",
     size: 16,
     color: "currentColor"
-  })))), !FREE_TIER && /*#__PURE__*/React.createElement(RelatedContent, null), /*#__PURE__*/React.createElement("section", {
+  })))), /*#__PURE__*/React.createElement(RelatedContent, null), /*#__PURE__*/React.createElement("section", {
     className: "lrn2-promos"
   }, /*#__PURE__*/React.createElement(PromoFreeResources, {
     unlocked: resourcesUnlocked,

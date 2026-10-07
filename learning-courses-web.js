@@ -62,6 +62,16 @@
 
   function coursesForTier(tier) { return tier === "confidence" ? MY_COURSES_CONFIDENCE : MY_COURSES; }
 
+  /* Bought courses (pf-purchased-courses) — a free account's My Courses
+     (user, 2026-10-07). Shaped like MY_COURSES with live progress read from
+     pf-lessons-done through learning-shared.js's generic curriculum, so the
+     cards, Continue Learning and the My Courses page all work for them. */
+  function purchasedCourses(purchased, done) {
+    const S = window.PFLearnShared;
+    if (!S || !S.purchasedCourses) return [];
+    return S.purchasedCourses(purchased, done).map(course);
+  }
+
   /* Paid related courses under My Courses. Three unbought ones are always on
      offer — bought slugs (pf-purchased-courses) drop out and the next in the
      pool backfills. Prices match PFLearn.PRICES. */
@@ -123,7 +133,7 @@
     { title: "Complications Management", level: "Advanced", lessons: 12, price: 450, image: IMG.complications, blurb: "Recognise, prevent and manage vascular and other complications." }
   ].map((r) => Object.assign({ slug: slugify(r.title) }, r));
 
-  window.PFLearnCourses = { IMG, CERT_THUMB, TUTOR, slugify, MY_COURSES, MY_COURSES_CONFIDENCE, coursesForTier,
+  window.PFLearnCourses = { IMG, CERT_THUMB, TUTOR, slugify, MY_COURSES, MY_COURSES_CONFIDENCE, coursesForTier, purchasedCourses,
     RELATED_POOL, RELATED_VISIBLE, relatedFor, HOW_IT_WORKS,
     CONFIDENCE_COURSE, CONFIDENCE_MODULE, CONFIDENCE_RELATED, lessonDone };
 })();

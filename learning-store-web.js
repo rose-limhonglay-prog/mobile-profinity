@@ -148,7 +148,8 @@
   function lessonUrl(slug, pos) {
     pos = pos || {};
     if (pos.flat != null) return "LessonWeb.html?" + qs({ course: slug, lesson: pos.flat });
-    return "LessonWeb.html?" + qs({ course: slug, level: pos.level, module: pos.module, lesson: pos.lesson, sub: pos.sub, play: pos.play });
+    /* title/dur/price ride along for generic (bought) courses, which the lesson page rebuilds from the title */
+    return "LessonWeb.html?" + qs({ course: slug, level: pos.level, module: pos.module, lesson: pos.lesson, sub: pos.sub, play: pos.play, title: pos.title, dur: pos.dur, price: pos.price });
   }
   /* CourseCheckoutWeb.html — ret brings the buyer back to the sending page */
   function checkoutUrl(course, ret) {

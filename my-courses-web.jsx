@@ -27,20 +27,22 @@ function navigateMCW(label) {
 
 const TIER_MCW = PFL_MCW.readTier();
 const FREE_TIER_MCW = TIER_MCW === "free";
-const MY_COURSES_MCW = PFC_MCW.coursesForTier(TIER_MCW);
 
 /* Resume deep link: the course's saved level/module + its 1-based lesson. */
 const PFS_MCW = window.PFLearnShared || null;
 function resumePointMCW(c) {
+  /* a bought generic course carries its curriculum (PFLearnCourses.purchasedCourses) */
+  if (c.curriculum && PFS_MCW && PFS_MCW.resume) { try { return PFS_MCW.resume(c.curriculum); } catch (e) {} }
   if (PFS_MCW && PFS_MCW.CURRICULA && PFS_MCW.CURRICULA[c.slug] && PFS_MCW.resume) { try { return PFS_MCW.resume(c.slug); } catch (e) {} }
   return null;
 }
+function genericTailMCW(c) { return c.generic ? { title: c.title, dur: c.dur || undefined } : {}; }
 function resumeLessonNumberMCW(c) { const r = resumePointMCW(c); return r ? r.lessonNumber : c.lesson; }
 function resumeUrlMCW(c) {
   const rp = resumePointMCW(c);
-  if (rp && rp.item) return PFL_MCW.lessonUrl(c.slug, { level: rp.item.li, module: rp.item.si, lesson: rp.item.ni, sub: rp.item.subIdx == null ? undefined : rp.item.subIdx });
+  if (rp && rp.item) return PFL_MCW.lessonUrl(c.slug, Object.assign({ level: rp.item.li, module: rp.item.si, lesson: rp.item.ni, sub: rp.item.subIdx == null ? undefined : rp.item.subIdx }, genericTailMCW(c)));
   const r = c.resume || { level: 0, module: 0 };
-  return PFL_MCW.lessonUrl(c.slug, { level: r.level, module: r.module, lesson: Math.max(0, (c.lesson || 1) - 1) });
+  return PFL_MCW.lessonUrl(c.slug, Object.assign({ level: r.level, module: r.module, lesson: Math.max(0, (c.lesson || 1) - 1) }, genericTailMCW(c)));
 }
 function certificateUrlMCW(c) {
   return "CertificateWeb.html?" + new URLSearchParams({
@@ -142,14 +144,16 @@ function MCWCertificateCard({ c }) {
   );
 }
 
-function MCWLockedPanel() {
+/* Free account, nothing bought yet (user, 2026-10-07): My Courses is open —
+   it waits for the first purchase, made from the paid picks on My Learning. */
+function MCWBuyFirstPanel() {
   return (
-    <div className="mcw-locked">
-      <span className="mcw-locked-icon"><IconifyMCW name="lucide:lock" size={28} color="#fff" /></span>
-      <h3>Unlock My Courses</h3>
-      <p>Upgrade to purchase courses and they&rsquo;ll live here for easy access.</p>
-      <button type="button" className="mcw-locked-upgrade-btn" onClick={() => goMCW(PFL_MCW.membershipUrl)}>
-        Upgrade<IconifyMCW name="lucide:arrow-up-right" size={19} color="#fff" />
+    <div className="mcw-locked" data-screen-label="My Courses · nothing bought yet">
+      <span className="mcw-locked-icon"><IconifyMCW name="lucide:shopping-bag" size={28} color="#fff" /></span>
+      <h3>No courses yet</h3>
+      <p>Buy any course on its own and it lives here &mdash; continue it, finish it and earn the certificate. No membership needed.</p>
+      <button type="button" className="mcw-locked-upgrade-btn" onClick={() => goMCW(PFL_MCW.myLearningUrl + "#related")}>
+        See courses to buy<IconifyMCW name="lucide:arrow-up-right" size={19} color="#fff" />
       </button>
     </div>
   );
@@ -159,6 +163,10 @@ function MyCoursesWebApp() {
   const [query, setQuery] = useStateMCW("");
   const [tab, setTab] = useStateMCW("All Courses");
   const saved = PFL_MCW.useSaved();
+  const purchased = PFL_MCW.usePurchased();
+  const [done] = PFL_MCW.useLessonsDone();
+  /* Free account (user, 2026-10-07): the courses they've bought, with live progress. */
+  const MY_COURSES_MCW = FREE_TIER_MCW ? PFC_MCW.purchasedCourses(purchased, done) : PFC_MCW.coursesForTier(TIER_MCW);
 
   const q = query.trim().toLowerCase();
   const filters = {
@@ -189,15 +197,15 @@ function MyCoursesWebApp() {
             <h1>My Courses</h1>
             <p>Every course you&rsquo;ve started, saved or completed &mdash; all in one place.</p>
           </div>
-          {!FREE_TIER_MCW &&
+          {(!FREE_TIER_MCW || MY_COURSES_MCW.length > 0) &&
             <div className="mcw-head-side">
-              <span className="mcw-tierpill"><IconifyMCW name="lucide:crown" size={15} color="#fff" />{PFL_MCW.TIER_NAME[TIER_MCW]} Path</span>
-              <span className="mcw-count">{MY_COURSES_MCW.length} courses &middot; {inProgressCount} in progress &middot; {completedCount} completed</span>
+              {!FREE_TIER_MCW && <span className="mcw-tierpill"><IconifyMCW name="lucide:crown" size={15} color="#fff" />{PFL_MCW.TIER_NAME[TIER_MCW]} Path</span>}
+              <span className="mcw-count">{MY_COURSES_MCW.length} {MY_COURSES_MCW.length === 1 ? "course" : "courses"} &middot; {inProgressCount} in progress &middot; {completedCount} completed</span>
             </div>}
         </div>
 
-        {FREE_TIER_MCW ? (
-          <MCWLockedPanel />
+        {FREE_TIER_MCW && MY_COURSES_MCW.length === 0 ? (
+          <MCWBuyFirstPanel />
         ) : (
           <>
             <div className="mcw-toolbar">

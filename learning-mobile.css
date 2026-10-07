@@ -556,6 +556,10 @@ img { max-width: 100%; }
 .lm2-mc-more span:last-child { font-size: 12.5px; color: var(--gray-500); }
 .lm2-mc-empty { margin: 0 20px; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 36px 20px; border-radius: 18px; border: 1px dashed var(--border-strong); text-align: center; }
 .lm2-mc-empty p { margin: 0; font-family: var(--font-sans); font-size: 14px; color: var(--gray-600); }
+/* free account, nothing bought yet (user, 2026-10-07) */
+.lm2-mc-empty b { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 16px; color: var(--text-heading); }
+.lm2-mc-empty-free p { max-width: 300px; line-height: 1.5; }
+.lm2-mc-empty .lm2-upgrade-btn { margin-top: 4px; min-height: 44px; font-size: 14px; }
 [data-theme="dark"] .lm2-mc-kicker, [data-theme="dark"] .lm2-mc-eyebrow.live { color: #CE9957; }
 
 /* ===== Continue Learning — hero ported from desktop (learning.css .lrn2-hero / .lrn2-ba / .lrn2-modstrip; user 2026-09-16) ===== */

@@ -94,19 +94,33 @@ const LM2_GOAL = {
    always opens the course and lesson the member is actually on (the reader's
    player opens straight away via ?play=1). */
 const LM2_CONTINUE_SLUG = "8d-lip-design";
-function continueDataL(done) {
-  const r = PFLS_L.resume(LM2_CONTINUE_SLUG, done);
+/* Course page URL for a curriculum — a generic (bought) course is rebuilt
+   from its title there, so the title rides along. */
+function courseHomeUrlL(course) {
+  const p = new URLSearchParams({
+    course: course.slug
+  });
+  if (course.generic) {
+    p.set("title", course.title);
+    if (course.dur) p.set("dur", course.dur);
+  }
+  return "CourseDetail.html?" + p.toString();
+}
+/* `course` (optional) — a curriculum object; a free account's Continue card
+   resumes the first bought course in progress instead of 8D (user, 2026-10-07). */
+function continueDataL(done, course) {
+  const r = PFLS_L.resume(course || LM2_CONTINUE_SLUG, done);
   const inModule = r.flat.filter(l => PFLS_L.groupName(l) === r.groupName);
   const leftInModule = inModule.filter(l => done.indexOf(l.name) === -1).length;
   return {
-    image: IMG_L.lip,
+    image: course ? course.still || IMG_L.lip : IMG_L.lip,
     level: "Intermediate",
     title: r.course.title,
     progress: r.pct,
     resume: r,
     note: r.allDone ? "Course complete — your certificate is ready." : leftInModule <= 1 ? "Last lesson in this module — then " + (r.nextModule ? r.nextModule.name : "the final quiz") + "." : "Only " + leftInModule + " more lessons in " + r.groupName + " · " + r.left + " to your certificate",
     cta: r.allDone ? "Review course" : r.started ? "Resume Lesson " + r.lessonNumber : "Start Lesson 1",
-    href: r.allDone ? "CourseDetail.html?course=" + LM2_CONTINUE_SLUG : PFLS_L.mobileLessonUrl("CourseDetail.html", r.course, r.item, {
+    href: r.allDone ? courseHomeUrlL(r.course) : PFLS_L.mobileLessonUrl("CourseDetail.html", r.course, r.item, {
       play: 1
     })
   };
@@ -115,6 +129,12 @@ function continueDataL(done) {
 /* Resume link for a My Courses card — the 8D course resumes at its real
    current lesson; other courses land on the course page. */
 function resumeUrlL(c) {
+  if (c.curriculum) {
+    const r = PFLS_L.resume(c.curriculum);
+    return PFLS_L.mobileLessonUrl("CourseDetail.html", c.curriculum, r.item, {
+      play: 1
+    });
+  }
   if (c.slug === LM2_CONTINUE_SLUG) {
     const r = PFLS_L.resume(LM2_CONTINUE_SLUG);
     return PFLS_L.mobileLessonUrl("CourseDetail.html", r.course, r.item, {
@@ -605,29 +625,6 @@ function LM2SubscribeCard({
     color: "#fff"
   })));
 }
-function LM2LockedCard({
-  title,
-  body,
-  onUpgrade
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "lm2-locked"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ic"
-  }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:lock",
-    size: 20,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement("h3", null, title), /*#__PURE__*/React.createElement("p", null, body), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lm2-upgrade-btn",
-    onClick: onUpgrade
-  }, "Upgrade", /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:arrow-up-right",
-    size: 16,
-    color: "#fff"
-  })));
-}
 
 /* Card CTA (user, 2026-09-11): in progress → filled "Continue · n%" to the
    resume point; completed → "View Certificate"; otherwise "Start Now". */
@@ -963,6 +960,7 @@ function LM2RelatedContent() {
   }).toString());
   return /*#__PURE__*/React.createElement("section", {
     className: "lm2-related",
+    id: "lm2-related",
     "data-screen-label": "Explore related content"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm2-related-head"
@@ -972,7 +970,7 @@ function LM2RelatedContent() {
     className: "lm2-related-h"
   }, "Explore related content"), /*#__PURE__*/React.createElement("p", {
     className: "lm2-related-sub"
-  }, "Paid courses hand-picked to build on 8D Lip Design.")), /*#__PURE__*/React.createElement("div", {
+  }, LM_FREE ? "Buy any course on its own — no membership needed. It lands in My Courses the moment you pay." : "Paid courses hand-picked to build on 8D Lip Design.")), /*#__PURE__*/React.createElement("div", {
     className: "lm2-related-rail",
     role: "list"
   }, related.map((r, i) => /*#__PURE__*/React.createElement("button", {
@@ -1026,6 +1024,38 @@ function LM2RelatedContent() {
     size: 18,
     color: "#0C1928"
   }))))))));
+}
+
+/* Free account, nothing bought yet (user, 2026-10-07): My Courses is open —
+   it just waits for the first purchase. The button scrolls to the paid picks. */
+function scrollToRelatedL() {
+  const el = document.getElementById("lm2-related");
+  if (el) el.scrollIntoView({
+    behavior: "smooth",
+    block: "start"
+  });
+}
+function LM2BuyFirstCourse({
+  onBrowse
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mc-empty lm2-mc-empty-free",
+    "data-screen-label": "My Courses · nothing bought yet"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:shopping-bag",
+    size: 22,
+    color: "#8A5303"
+  })), /*#__PURE__*/React.createElement("b", null, "No courses yet"), /*#__PURE__*/React.createElement("p", null, "Buy any course on its own and it lives here — continue it, finish it and earn the certificate. No membership needed."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-upgrade-btn",
+    onClick: onBrowse
+  }, "See courses to buy", /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-down",
+    size: 16,
+    color: "#fff"
+  })));
 }
 function LM2FreeResources({
   unlocked,
@@ -1227,10 +1257,21 @@ function LearningHome() {
   } = useScrollChromeL(scrollRef);
   const nextTier = lmNextTierL(LM_TIER);
   const done = PFLS_L.useLessonsDone();
-  const myCourses = withLiveProgressL(LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES, done);
-  const continueData = continueDataL(done);
+  const purchased = usePurchasedL();
+  /* Free account (user, 2026-10-07): My Courses is the courses they've bought,
+     with live progress; Continue Learning resumes the first one in progress. */
+  const myCourses = LM_FREE ? PFLS_L.purchasedCourses(purchased, done) : withLiveProgressL(LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES, done);
+  const freeContinue = LM_FREE ? myCourses.find(inProgressL) : null;
+  const continueData = LM_FREE ? freeContinue ? continueDataL(done, freeContinue.curriculum) : null : continueDataL(done);
   const visibleCourses = myCourses.filter(LM2_COURSE_TAB_FILTERS[tab] || (() => true));
-  const showContinue = !LM_FREE && (tab === "All Courses" || tab === "In Progress");
+  const showContinue = !!continueData && (tab === "All Courses" || tab === "In Progress");
+  /* LearningMobile.html#related (from the My Courses page) lands on the paid picks */
+  React.useEffect(() => {
+    if (window.location.hash === "#related") {
+      const t = setTimeout(scrollToRelatedL, 450);
+      return () => clearTimeout(t);
+    }
+  }, []);
   /* My Courses rail (user, 2026-09-16, ported from desktop): the first
      in-progress course leads and is the featured card; All Courses shows
      six and the rest sit behind "View all", which opens the mobile My Courses
@@ -1264,15 +1305,9 @@ function LearningHome() {
   }), /*#__PURE__*/React.createElement(LM2SearchBar, null), showContinue && /*#__PURE__*/React.createElement(LM2ContinueCard, {
     data: continueData
   }), /*#__PURE__*/React.createElement("section", {
-    className: "lm2-courseband" + (LM_FREE ? "" : " lm2-mc-band"),
+    className: "lm2-courseband lm2-mc-band",
     "data-screen-label": "My Courses"
-  }, LM_FREE ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SecHead, {
-    title: "My Courses"
-  }), /*#__PURE__*/React.createElement(LM2LockedCard, {
-    title: "Unlock My Courses",
-    body: "Upgrade to purchase courses and they'll live here for easy access.",
-    onUpgrade: () => goL("MembershipTier.html")
-  })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "lm2-mc-head"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lm2-mc-head-tx"
@@ -1282,7 +1317,7 @@ function LearningHome() {
     className: "lm2-mc-h"
   }, "My Courses"), /*#__PURE__*/React.createElement("p", {
     className: "lm2-mc-sub"
-  }, mcSummaryL)), /*#__PURE__*/React.createElement("a", {
+  }, LM_FREE && !myCourses.length ? "Courses you buy live here — no membership needed." : mcSummaryL)), myCourses.length > 0 && /*#__PURE__*/React.createElement("a", {
     href: "#",
     className: "lm2-mc-viewall",
     onClick: e => {
@@ -1293,7 +1328,9 @@ function LearningHome() {
     name: "lucide:arrow-right",
     size: 14,
     color: "currentColor"
-  }))), shownCoursesL.length ? /*#__PURE__*/React.createElement("div", {
+  }))), LM_FREE && !myCourses.length ? /*#__PURE__*/React.createElement(LM2BuyFirstCourse, {
+    onBrowse: scrollToRelatedL
+  }) : shownCoursesL.length ? /*#__PURE__*/React.createElement("div", {
     className: "lm2-mc-rail",
     role: "list"
   }, /*#__PURE__*/React.createElement("span", {
@@ -1325,7 +1362,7 @@ function LearningHome() {
     name: tab === "Completed" ? "lucide:award" : "lucide:play-circle",
     size: 22,
     color: "#8A5303"
-  })), /*#__PURE__*/React.createElement("p", null, tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate.")))), !LM_FREE && /*#__PURE__*/React.createElement(LM2RelatedContent, null), /*#__PURE__*/React.createElement(LM2FreeResources, {
+  })), /*#__PURE__*/React.createElement("p", null, tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate.")))), /*#__PURE__*/React.createElement(LM2RelatedContent, null), /*#__PURE__*/React.createElement(LM2FreeResources, {
     unlocked: resourcesUnlocked,
     onStartSurvey: () => setSurveyOpen(true)
   }), !LM_FREE && /*#__PURE__*/React.createElement(LM2LearningPathCard, null), nextTier && /*#__PURE__*/React.createElement(LM2SubscribeCard, {
@@ -1381,7 +1418,8 @@ function MyCoursesHome() {
   } = useScrollChromeL(scrollRef);
   const done = PFLS_L.useLessonsDone();
   const saved = useSavedL();
-  const myCourses = withLiveProgressL(LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES, done);
+  const purchased = usePurchasedL();
+  const myCourses = LM_FREE ? PFLS_L.purchasedCourses(purchased, done) : withLiveProgressL(LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES, done);
   const q = query.trim().toLowerCase();
   const filters = {
     "In Progress": inProgressL,
@@ -1420,13 +1458,11 @@ function MyCoursesHome() {
     className: "lm2-mcp-h"
   }, "My Courses"), /*#__PURE__*/React.createElement("p", {
     className: "lm2-mc-sub"
-  }, LM_FREE ? "Every course you start, save or complete — all in one place." : summary)), LM_FREE ? /*#__PURE__*/React.createElement("section", {
+  }, LM_FREE && !myCourses.length ? "Every course you buy — all in one place, no membership needed." : summary)), LM_FREE && !myCourses.length ? /*#__PURE__*/React.createElement("section", {
     className: "lm2-courseband lm2-mc-band",
-    "data-screen-label": "My Courses locked"
-  }, /*#__PURE__*/React.createElement(LM2LockedCard, {
-    title: "Unlock My Courses",
-    body: "Upgrade to purchase courses and they'll live here for easy access.",
-    onUpgrade: () => goL("MembershipTier.html")
+    "data-screen-label": "My Courses · nothing bought yet"
+  }, /*#__PURE__*/React.createElement(LM2BuyFirstCourse, {
+    onBrowse: () => goL("LearningMobile.html#related")
   })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
     className: "lm2-search lm2-mcp-search"
   }, /*#__PURE__*/React.createElement(IconifyL, {

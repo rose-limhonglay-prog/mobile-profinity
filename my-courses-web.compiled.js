@@ -45,11 +45,16 @@ function navigateMCW(label) {
 }
 const TIER_MCW = PFL_MCW.readTier();
 const FREE_TIER_MCW = TIER_MCW === "free";
-const MY_COURSES_MCW = PFC_MCW.coursesForTier(TIER_MCW);
 
 /* Resume deep link: the course's saved level/module + its 1-based lesson. */
 const PFS_MCW = window.PFLearnShared || null;
 function resumePointMCW(c) {
+  /* a bought generic course carries its curriculum (PFLearnCourses.purchasedCourses) */
+  if (c.curriculum && PFS_MCW && PFS_MCW.resume) {
+    try {
+      return PFS_MCW.resume(c.curriculum);
+    } catch (e) {}
+  }
   if (PFS_MCW && PFS_MCW.CURRICULA && PFS_MCW.CURRICULA[c.slug] && PFS_MCW.resume) {
     try {
       return PFS_MCW.resume(c.slug);
@@ -57,27 +62,33 @@ function resumePointMCW(c) {
   }
   return null;
 }
+function genericTailMCW(c) {
+  return c.generic ? {
+    title: c.title,
+    dur: c.dur || undefined
+  } : {};
+}
 function resumeLessonNumberMCW(c) {
   const r = resumePointMCW(c);
   return r ? r.lessonNumber : c.lesson;
 }
 function resumeUrlMCW(c) {
   const rp = resumePointMCW(c);
-  if (rp && rp.item) return PFL_MCW.lessonUrl(c.slug, {
+  if (rp && rp.item) return PFL_MCW.lessonUrl(c.slug, Object.assign({
     level: rp.item.li,
     module: rp.item.si,
     lesson: rp.item.ni,
     sub: rp.item.subIdx == null ? undefined : rp.item.subIdx
-  });
+  }, genericTailMCW(c)));
   const r = c.resume || {
     level: 0,
     module: 0
   };
-  return PFL_MCW.lessonUrl(c.slug, {
+  return PFL_MCW.lessonUrl(c.slug, Object.assign({
     level: r.level,
     module: r.module,
     lesson: Math.max(0, (c.lesson || 1) - 1)
-  });
+  }, genericTailMCW(c)));
 }
 function certificateUrlMCW(c) {
   return "CertificateWeb.html?" + new URLSearchParams({
@@ -271,20 +282,24 @@ function MCWCertificateCard({
     onClick: () => goMCW(certificateUrlMCW(c))
   }, "View Certificate")));
 }
-function MCWLockedPanel() {
+
+/* Free account, nothing bought yet (user, 2026-10-07): My Courses is open —
+   it waits for the first purchase, made from the paid picks on My Learning. */
+function MCWBuyFirstPanel() {
   return /*#__PURE__*/React.createElement("div", {
-    className: "mcw-locked"
+    className: "mcw-locked",
+    "data-screen-label": "My Courses · nothing bought yet"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mcw-locked-icon"
   }, /*#__PURE__*/React.createElement(IconifyMCW, {
-    name: "lucide:lock",
+    name: "lucide:shopping-bag",
     size: 28,
     color: "#fff"
-  })), /*#__PURE__*/React.createElement("h3", null, "Unlock My Courses"), /*#__PURE__*/React.createElement("p", null, "Upgrade to purchase courses and they’ll live here for easy access."), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("h3", null, "No courses yet"), /*#__PURE__*/React.createElement("p", null, "Buy any course on its own and it lives here — continue it, finish it and earn the certificate. No membership needed."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "mcw-locked-upgrade-btn",
-    onClick: () => goMCW(PFL_MCW.membershipUrl)
-  }, "Upgrade", /*#__PURE__*/React.createElement(IconifyMCW, {
+    onClick: () => goMCW(PFL_MCW.myLearningUrl + "#related")
+  }, "See courses to buy", /*#__PURE__*/React.createElement(IconifyMCW, {
     name: "lucide:arrow-up-right",
     size: 19,
     color: "#fff"
@@ -294,6 +309,10 @@ function MyCoursesWebApp() {
   const [query, setQuery] = useStateMCW("");
   const [tab, setTab] = useStateMCW("All Courses");
   const saved = PFL_MCW.useSaved();
+  const purchased = PFL_MCW.usePurchased();
+  const [done] = PFL_MCW.useLessonsDone();
+  /* Free account (user, 2026-10-07): the courses they've bought, with live progress. */
+  const MY_COURSES_MCW = FREE_TIER_MCW ? PFC_MCW.purchasedCourses(purchased, done) : PFC_MCW.coursesForTier(TIER_MCW);
   const q = query.trim().toLowerCase();
   const filters = {
     "In Progress": c => c.inProgress,
@@ -335,9 +354,9 @@ function MyCoursesWebApp() {
     color: "var(--brand-navy)"
   }), "Back to My Learning"), /*#__PURE__*/React.createElement("div", {
     className: "mcw-head"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", null, "My Courses"), /*#__PURE__*/React.createElement("p", null, "Every course you’ve started, saved or completed — all in one place.")), !FREE_TIER_MCW && /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", null, "My Courses"), /*#__PURE__*/React.createElement("p", null, "Every course you’ve started, saved or completed — all in one place.")), (!FREE_TIER_MCW || MY_COURSES_MCW.length > 0) && /*#__PURE__*/React.createElement("div", {
     className: "mcw-head-side"
-  }, /*#__PURE__*/React.createElement("span", {
+  }, !FREE_TIER_MCW && /*#__PURE__*/React.createElement("span", {
     className: "mcw-tierpill"
   }, /*#__PURE__*/React.createElement(IconifyMCW, {
     name: "lucide:crown",
@@ -345,7 +364,7 @@ function MyCoursesWebApp() {
     color: "#fff"
   }), PFL_MCW.TIER_NAME[TIER_MCW], " Path"), /*#__PURE__*/React.createElement("span", {
     className: "mcw-count"
-  }, MY_COURSES_MCW.length, " courses · ", inProgressCount, " in progress · ", completedCount, " completed"))), FREE_TIER_MCW ? /*#__PURE__*/React.createElement(MCWLockedPanel, null) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, MY_COURSES_MCW.length, " ", MY_COURSES_MCW.length === 1 ? "course" : "courses", " · ", inProgressCount, " in progress · ", completedCount, " completed"))), FREE_TIER_MCW && MY_COURSES_MCW.length === 0 ? /*#__PURE__*/React.createElement(MCWBuyFirstPanel, null) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "mcw-toolbar"
   }, /*#__PURE__*/React.createElement("label", {
     className: "mcw-search"
