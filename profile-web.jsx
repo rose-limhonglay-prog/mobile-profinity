@@ -963,7 +963,7 @@ function PWGoalsSection({ assessState, onOpenHub }) {
   if (!pwHasFocus(assessState)) return <PWGoalsGateCard onOpenHub={onOpenHub} />;
   return (
     <>
-      <PWProgressStrip assessState={assessState} />
+      {/* Today's progress strip removed (user, 2026-10-07) */}
       <PWGoalFocusCard assessState={assessState} onOpenHub={onOpenHub} />
       <PWTargetsCard assessState={assessState} onOpenHub={onOpenHub} />
       <PWLeagueCard />

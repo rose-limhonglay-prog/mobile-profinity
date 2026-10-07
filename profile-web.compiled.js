@@ -1653,9 +1653,7 @@ function PWGoalsSection({
   if (!pwHasFocus(assessState)) return /*#__PURE__*/React.createElement(PWGoalsGateCard, {
     onOpenHub: onOpenHub
   });
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PWProgressStrip, {
-    assessState: assessState
-  }), /*#__PURE__*/React.createElement(PWGoalFocusCard, {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PWGoalFocusCard, {
     assessState: assessState,
     onOpenHub: onOpenHub
   }), /*#__PURE__*/React.createElement(PWTargetsCard, {

@@ -407,13 +407,22 @@
       className: "cf-btn cf-btn-ghost",
       onClick: () => onAskAva && onAskAva("My " + focus.confirm.alt + " score is lower than my " + focus.domain + " focus. Should I switch my focus?")
     }, "Ask Ava")), /*#__PURE__*/React.createElement("div", {
+      className: "cf-milestone-card"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "cf-milestone-wm",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:flag",
+      size: 96,
+      color: "currentColor"
+    })), /*#__PURE__*/React.createElement("div", {
       className: "cf-milestone"
     }, /*#__PURE__*/React.createElement("span", {
       className: "cf-milestone-ic",
       "aria-hidden": "true"
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "lucide:flag",
-      size: 16,
+      size: 18,
       color: "#fff"
     })), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
       className: "cf-kicker"
@@ -421,25 +430,49 @@
       className: "cf-milestone-ti"
     }, focus.milestone))), /*#__PURE__*/React.createElement("p", {
       className: "cf-reframe"
-    }, focus.reframe), paid ? /*#__PURE__*/React.createElement("div", {
+    }, focus.reframe)), paid ? /*#__PURE__*/React.createElement("div", {
       className: "cf-next"
     }, !focusDone && onSharpen && /*#__PURE__*/React.createElement("button", {
       type: "button",
-      className: "cf-btn cf-btn-primary cf-btn-block",
+      className: "cf-act cf-act-primary",
       onClick: () => onSharpen(focus.domain)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "cf-act-ic"
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "lucide:gauge",
-      size: 16,
+      size: 18,
       color: "#fff"
-    }), "Sharpen it: take the ", focus.domain, " deep-dive · 3 mins"), /*#__PURE__*/React.createElement("button", {
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "cf-act-copy"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ti"
+    }, "Sharpen it"), /*#__PURE__*/React.createElement("span", {
+      className: "su"
+    }, "Take the ", focus.domain, " deep-dive · 3 mins")), /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:chevron-right",
+      size: 18,
+      color: "rgba(255,255,255,.7)"
+    })), /*#__PURE__*/React.createElement("button", {
       type: "button",
-      className: "cf-btn cf-btn-ai cf-btn-block",
+      className: "cf-act cf-act-ai",
       onClick: () => onAskAva && onAskAva(CF.avaPrompt(focus))
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "cf-act-ic"
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "lucide:sparkles",
-      size: 16,
+      size: 18,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "cf-act-copy"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ti"
+    }, "Ask Ava to plan my week"), /*#__PURE__*/React.createElement("span", {
+      className: "su"
+    }, "Seven days of steps toward this milestone")), /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:chevron-right",
+      size: 18,
       color: "var(--ai-purple)"
-    }), "Ask Ava to plan my week")) : /*#__PURE__*/React.createElement(CFUpgradeTease, {
+    }))) : /*#__PURE__*/React.createElement(CFUpgradeTease, {
       focus: focus,
       web: web,
       onPreview: onPreview
@@ -449,17 +482,25 @@
       className: "cf-checkin"
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "lucide:calendar-clock",
-      size: 13,
-      color: "var(--gray-500)"
+      size: 14,
+      color: "currentColor"
     }), CF.checkInLabel(focus)), onRetake && /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "cf-link",
       onClick: onRetake
-    }, "Update my answers")), onDone && /*#__PURE__*/React.createElement("button", {
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:pencil-line",
+      size: 13,
+      color: "currentColor"
+    }), "Update my answers")), onDone && /*#__PURE__*/React.createElement("button", {
       type: "button",
-      className: "cf-btn cf-btn-navy cf-btn-block cf-reveal-done",
+      className: "cf-btn cf-btn-ghost cf-btn-block cf-reveal-done",
       onClick: onDone
-    }, "Back to Get to know you"));
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:arrow-left",
+      size: 16,
+      color: "currentColor"
+    }), "Back to Get to know you"));
   }
 
   /* ------------------------------------------------------ locked preview -- */

@@ -1752,9 +1752,7 @@ function PMGoalsMenu({
     name: "lucide:target",
     size: 22,
     color: "var(--brand-gold)"
-  }), "Track your goals")), unlocked ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PMProgressStrip, {
-    assessState: assessState
-  }), /*#__PURE__*/React.createElement(PMGoalFocusCard, {
+  }), "Track your goals")), unlocked ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PMGoalFocusCard, {
     assessState: assessState
   }), /*#__PURE__*/React.createElement(PMTargetsCard, {
     assessState: assessState

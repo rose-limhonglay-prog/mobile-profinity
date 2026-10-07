@@ -204,33 +204,41 @@
             <button type="button" className="cf-btn cf-btn-ghost" onClick={() => onAskAva && onAskAva("My " + focus.confirm.alt + " score is lower than my " + focus.domain + " focus. Should I switch my focus?")}>Ask Ava</button>
           </div>}
 
-        <div className="cf-milestone">
-          <span className="cf-milestone-ic" aria-hidden="true"><Icon name="lucide:flag" size={16} color="#fff" /></span>
-          <span>
-            <span className="cf-kicker">Your next 90 days</span>
-            <span className="cf-milestone-ti">{focus.milestone}</span>
-          </span>
+        {/* milestone card (restyled 2026-10-07): warm gold card, flag badge,
+            reframe as a pull-quote underneath */}
+        <div className="cf-milestone-card">
+          <span className="cf-milestone-wm" aria-hidden="true"><Icon name="lucide:flag" size={96} color="currentColor" /></span>
+          <div className="cf-milestone">
+            <span className="cf-milestone-ic" aria-hidden="true"><Icon name="lucide:flag" size={18} color="#fff" /></span>
+            <span>
+              <span className="cf-kicker">Your next 90 days</span>
+              <span className="cf-milestone-ti">{focus.milestone}</span>
+            </span>
+          </div>
+          <p className="cf-reframe">{focus.reframe}</p>
         </div>
-        <p className="cf-reframe">{focus.reframe}</p>
-
 
         {paid ?
         <div className="cf-next">
             {!focusDone && onSharpen &&
-          <button type="button" className="cf-btn cf-btn-primary cf-btn-block" onClick={() => onSharpen(focus.domain)}>
-                <Icon name="lucide:gauge" size={16} color="#fff" />Sharpen it: take the {focus.domain} deep-dive · 3 mins
+          <button type="button" className="cf-act cf-act-primary" onClick={() => onSharpen(focus.domain)}>
+                <span className="cf-act-ic"><Icon name="lucide:gauge" size={18} color="#fff" /></span>
+                <span className="cf-act-copy"><span className="ti">Sharpen it</span><span className="su">Take the {focus.domain} deep-dive · 3 mins</span></span>
+                <Icon name="lucide:chevron-right" size={18} color="rgba(255,255,255,.7)" />
               </button>}
-            <button type="button" className="cf-btn cf-btn-ai cf-btn-block" onClick={() => onAskAva && onAskAva(CF.avaPrompt(focus))}>
-              <Icon name="lucide:sparkles" size={16} color="var(--ai-purple)" />Ask Ava to plan my week
+            <button type="button" className="cf-act cf-act-ai" onClick={() => onAskAva && onAskAva(CF.avaPrompt(focus))}>
+              <span className="cf-act-ic"><Icon name="lucide:sparkles" size={18} color="#fff" /></span>
+              <span className="cf-act-copy"><span className="ti">Ask Ava to plan my week</span><span className="su">Seven days of steps toward this milestone</span></span>
+              <Icon name="lucide:chevron-right" size={18} color="var(--ai-purple)" />
             </button>
           </div> :
         <CFUpgradeTease focus={focus} web={web} onPreview={onPreview} />}
 
         <div className="cf-reveal-foot">
-          <span className="cf-checkin"><Icon name="lucide:calendar-clock" size={13} color="var(--gray-500)" />{CF.checkInLabel(focus)}</span>
-          {onRetake && <button type="button" className="cf-link" onClick={onRetake}>Update my answers</button>}
+          <span className="cf-checkin"><Icon name="lucide:calendar-clock" size={14} color="currentColor" />{CF.checkInLabel(focus)}</span>
+          {onRetake && <button type="button" className="cf-link" onClick={onRetake}><Icon name="lucide:pencil-line" size={13} color="currentColor" />Update my answers</button>}
         </div>
-        {onDone && <button type="button" className="cf-btn cf-btn-navy cf-btn-block cf-reveal-done" onClick={onDone}>Back to Get to know you</button>}
+        {onDone && <button type="button" className="cf-btn cf-btn-ghost cf-btn-block cf-reveal-done" onClick={onDone}><Icon name="lucide:arrow-left" size={16} color="currentColor" />Back to Get to know you</button>}
       </div>);
   }
 

@@ -1026,7 +1026,7 @@ function PMGoalsMenu({ assessState }) {
           </div>
           {unlocked ?
           <>
-              <PMProgressStrip assessState={assessState} />
+              {/* Today's progress strip removed (user, 2026-10-07) */}
               <PMGoalFocusCard assessState={assessState} />
               <PMTargetsCard assessState={assessState} />
               <PMLeagueCard />

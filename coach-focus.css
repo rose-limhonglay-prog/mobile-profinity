@@ -57,6 +57,34 @@
 .cf-milestone .cf-kicker{color:#8A5303}
 .cf-milestone-ti{font-family:var(--font-sans);font-weight:var(--fw-bold,700);font-size:16px;line-height:1.35;color:var(--text-heading)}
 .cf-reframe{margin:-12px 0 0;padding:0 0 0 52px;font-family:var(--font-sans);font-size:13.5px;line-height:1.55;color:var(--gray-600)}
+/* reveal: milestone as a warm gold card (2026-10-07) */
+.cf-milestone-card{position:relative;overflow:hidden;display:flex;flex-direction:column;gap:14px;padding:20px 18px 18px;border-radius:22px;
+  border:1px solid #F0DFC0;background:linear-gradient(160deg,#FFF6E3 0%,#FFFBF3 55%,#FFFFFF 100%);box-shadow:0 10px 28px rgba(206,153,87,.14)}
+.cf-milestone-card > *{position:relative}
+.cf-milestone-wm{position:absolute!important;right:-18px;top:-22px;color:#E3B778;opacity:.14;transform:rotate(-12deg);pointer-events:none}
+.cf-milestone-card .cf-milestone{padding:0;border:0;gap:14px;align-items:center}
+.cf-milestone-card .cf-milestone-ic{width:44px;height:44px;border-radius:14px;box-shadow:0 6px 14px rgba(206,153,87,.35),0 0 0 4px rgba(227,183,120,.22)}
+.cf-milestone-card .cf-milestone > span:last-child{gap:5px}
+.cf-milestone-card .cf-milestone-ti{font-size:17.5px;line-height:1.3;letter-spacing:-.015em}
+.cf-milestone-card .cf-reframe{margin:0;padding:12px 0 0 14px;border-top:1px dashed #EBD9B8;position:relative;font-size:14px;line-height:1.6;color:var(--gray-700,#4b5563)}
+.cf-milestone-card .cf-reframe::before{content:"";position:absolute;left:0;top:14px;bottom:2px;width:3px;border-radius:3px;background:linear-gradient(180deg,#E3B778,#CE9957)}
+/* reveal: rich action rows */
+.cf-act{display:flex;align-items:center;gap:13px;width:100%;min-height:64px;padding:11px 14px 11px 12px;border-radius:18px;border:1px solid transparent;
+  text-align:left;cursor:pointer;font-family:var(--font-sans);transition:transform .15s ease,box-shadow .15s ease,filter .15s ease}
+.cf-act:active{transform:scale(.985)}
+.cf-act:focus-visible{outline:2px solid var(--ai-purple,#6C63FF);outline-offset:2px}
+.cf-act-ic{flex:none;display:flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:13px}
+.cf-act-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.cf-act-copy .ti{font-weight:var(--fw-bold,700);font-size:15px;line-height:1.25;letter-spacing:-.01em}
+.cf-act-copy .su{font-size:12.5px;line-height:1.35;opacity:.78}
+.cf-act-primary{background:linear-gradient(135deg,#1B1848 0%,#2F2A75 100%);color:#fff;box-shadow:0 10px 24px rgba(27,24,72,.26)}
+.cf-act-primary:hover{filter:brightness(1.08)}
+.cf-act-primary .cf-act-ic{background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.cf-act-ai{background:linear-gradient(135deg,#F3F1FF 0%,#FAF9FF 100%);color:#2E2A6B;border-color:#E2DEFF;box-shadow:0 6px 18px rgba(108,99,255,.10)}
+.cf-act-ai:hover{border-color:var(--ai-purple,#6C63FF)}
+.cf-act-ai .cf-act-ic{background:linear-gradient(135deg,#6C63FF,#9b8cff);box-shadow:0 5px 12px rgba(108,99,255,.3)}
+.cf-act-ai .cf-act-copy .ti{color:#4F46C8}
+.cf-act-ai .cf-act-copy .su{color:#5c5890;opacity:1}
 .cf-confirm{display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:2px 0 2px 14px;border-left:3px solid var(--ai-purple,#6C63FF)}
 .cf-confirm-hd{display:flex;align-items:center;gap:8px}
 .cf-confirm-hd .cf-kicker{color:#4F46C8}
@@ -65,9 +93,12 @@
   background:linear-gradient(135deg,#6C63FF 0%,#4F46C8 100%);color:#fff;box-shadow:0 6px 16px rgba(108,99,255,.28)}
 .cf-confirm .cf-btn:hover{filter:brightness(1.08)}
 .cf-next{display:flex;flex-direction:column;gap:10px}
-.cf-reveal-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px}
-.cf-checkin{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-sans);font-size:12.5px;color:var(--gray-500)}
-.cf-reveal-done{margin-top:2px}
+.cf-reveal-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 12px;margin-top:-6px}
+.cf-checkin{display:inline-flex;align-items:center;gap:7px;padding:7px 12px 7px 10px;border-radius:100px;background:var(--surface-sunken,#F4F2EE);
+  font-family:var(--font-sans);font-weight:var(--fw-semibold,600);font-size:12.5px;color:var(--gray-600)}
+.cf-reveal-foot .cf-link{display:inline-flex;align-items:center;gap:5px;text-decoration:none;color:#4F46C8}
+.cf-reveal-foot .cf-link:hover{text-decoration:underline}
+.cf-reveal-done{margin-top:2px;min-height:48px;border-radius:16px;font-weight:var(--fw-bold,700)}
 
 /* ---- door ---- */
 .cf-door{display:flex;flex-direction:column;gap:12px;padding-top:18px;border-top:1px solid var(--border-default)}
@@ -214,6 +245,17 @@
 [data-theme="dark"] .cf-btn-gold{box-shadow:none}
 [data-theme="dark"] .cf-milestone{border-color:var(--border-default)}
 [data-theme="dark"] .cf-milestone .cf-kicker{color:#E2B676}
+[data-theme="dark"] .cf-milestone-card{border-color:color-mix(in srgb,#E3B778 30%,var(--border-default));background:linear-gradient(160deg,color-mix(in srgb,#CE9957 18%,var(--surface-card)) 0%,var(--surface-card) 70%);box-shadow:0 10px 28px rgba(0,0,0,.3)}
+[data-theme="dark"] .cf-milestone-wm{opacity:.1}
+[data-theme="dark"] .cf-milestone-card .cf-reframe{border-top-color:color-mix(in srgb,#E3B778 28%,transparent);color:#D9D6EC}
+[data-theme="dark"] .cf-act-primary{background:linear-gradient(135deg,#FDC35D 0%,#E3A93E 100%);color:#1b1848;box-shadow:0 10px 24px rgba(0,0,0,.3)}
+[data-theme="dark"] .cf-act-primary .cf-act-ic{background:rgba(27,24,72,.16);box-shadow:inset 0 0 0 1px rgba(27,24,72,.2)}
+[data-theme="dark"] .cf-act-primary .cf-act-ic svg,[data-theme="dark"] .cf-act-primary > svg:last-child{color:#1b1848}
+[data-theme="dark"] .cf-act-ai{background:#221d4a;border-color:#3a3480;color:#cfc9ff;box-shadow:none}
+[data-theme="dark"] .cf-act-ai .cf-act-copy .ti{color:#dcd8ff}
+[data-theme="dark"] .cf-act-ai .cf-act-copy .su{color:#aaa4e0}
+[data-theme="dark"] .cf-checkin{background:rgba(255,255,255,.08);color:#D9D6EC}
+[data-theme="dark"] .cf-reveal-foot .cf-link{color:#cfc9ff}
 [data-theme="dark"] .cf-btn-gold,[data-theme="dark"] .cf-btn-free,[data-theme="dark"] .cf-track-cta{background:#FDC35D;color:#1b1848}
 [data-theme="dark"] .cf-track-ic{background:rgba(255,255,255,.14)}
 [data-theme="dark"] .cf-track-ring b{background:#1b1848}
