@@ -271,149 +271,290 @@ function IOSNavBar({
 }
 
 // ─────────────────────────────────────────────────────────────
-// Mobile Safari chrome (iOS 26 — bottom address pill + tabs button)
-// Shown by IOSDevice when window.PF_MOBILE_WEB is set (mobile-web host or
-// ?mobileweb=1): the screens render as a website in the phone's browser.
+// Mobile Safari chrome (iOS 26 — floating bottom bar: back · address pill ·
+// more, over a progressive blur of the page). Shown by IOSDevice when
+// window.PF_MOBILE_WEB is set (mobile-web host or ?mobileweb=1): the screens
+// render as a website in the phone's browser. The bar is an OVERLAY: the page
+// scrolls underneath it (real-device.css extends the shell scrollers by
+// --pf-sfb) while bottom-anchored UI (tab bar, FAB, sheets) stays above it,
+// exactly like fixed elements do in real Safari.
 // ─────────────────────────────────────────────────────────────
 const IOS_SAFARI_DOMAIN = 'profinity-mobileweb.vercel.app';
+const IOS_SAFARI_H = 100; // height of the Safari bottom chrome (--pf-sfb)
 function IOSSafariBar({
   dark = false,
   domain = IOS_SAFARI_DOMAIN
 }) {
-  const ink = dark ? '#fff' : '#000';
-  const muted = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
-  const glyph = (d, w = 18, h = 18, vb = '0 0 24 24') => /*#__PURE__*/React.createElement("svg", {
-    width: w,
-    height: h,
-    viewBox: vb,
-    fill: "none",
-    stroke: ink,
-    strokeWidth: "2",
-    strokeLinecap: "round",
-    strokeLinejoin: "round"
-  }, d);
-  return /*#__PURE__*/React.createElement("div", {
-    className: "ios-safari",
-    "data-ios-safari": "",
-    style: {
-      flex: 'none',
-      position: 'relative',
-      zIndex: 40,
-      height: 84,
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: 10,
-      padding: '8px 12px 0',
-      boxSizing: 'border-box'
-    }
-  }, /*#__PURE__*/React.createElement(IOSGlassPill, {
-    dark: dark,
-    style: {
-      flex: 1,
-      height: 50,
-      borderRadius: 26,
-      justifyContent: 'stretch'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      width: '100%',
-      padding: '0 6px',
-      gap: 6
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 36,
-      height: 36,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }
-  }, glyph(/*#__PURE__*/React.createElement("path", {
-    d: "M15 5l-7 7 7 7"
-  }), 16, 16)), /*#__PURE__*/React.createElement("div", {
-    className: "ios-safari-url",
-    style: {
-      flex: 1,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-      minWidth: 0,
-      fontFamily: '-apple-system, "SF Pro", system-ui',
-      fontSize: 16,
-      fontWeight: 500,
-      color: ink,
-      letterSpacing: -0.2,
-      whiteSpace: 'nowrap',
-      overflow: 'hidden',
-      textOverflow: 'ellipsis'
-    }
-  }, /*#__PURE__*/React.createElement("svg", {
-    width: "11",
-    height: "13",
-    viewBox: "0 0 11 13",
-    fill: muted
-  }, /*#__PURE__*/React.createElement("rect", {
-    x: "0",
-    y: "5",
-    width: "11",
-    height: "8",
-    rx: "2"
-  }), /*#__PURE__*/React.createElement("path", {
-    d: "M2.5 5V3.5a3 3 0 016 0V5",
-    stroke: muted,
-    strokeWidth: "1.6",
-    fill: "none"
-  })), /*#__PURE__*/React.createElement("span", {
-    style: {
-      overflow: 'hidden',
-      textOverflow: 'ellipsis'
-    }
-  }, domain)), /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: 36,
-      height: 36,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }
-  }, /*#__PURE__*/React.createElement("svg", {
-    width: "20",
-    height: "6",
-    viewBox: "0 0 22 6"
-  }, /*#__PURE__*/React.createElement("circle", {
-    cx: "3",
-    cy: "3",
-    r: "2.4",
-    fill: ink
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "11",
-    cy: "3",
-    r: "2.4",
-    fill: ink
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: "19",
-    cy: "3",
-    r: "2.4",
-    fill: ink
-  }))))), /*#__PURE__*/React.createElement(IOSGlassPill, {
-    dark: dark,
+  // colours live in real-device.css (.ios-safari-*) so [data-theme="dark"] applies
+  const circle = (child, {
+    label,
+    onClick,
+    disabled
+  } = {}) => /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "ios-safari-glass ios-safari-circle",
+    "aria-label": label,
+    onClick: onClick,
+    disabled: disabled,
     style: {
       width: 50,
       height: 50,
-      flex: 'none'
+      flex: 'none',
+      borderRadius: '50%',
+      border: 'none',
+      padding: 0,
+      cursor: disabled ? 'default' : 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      pointerEvents: 'auto'
     }
-  }, glyph(/*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
-    x: "4",
-    y: "7",
-    width: "13",
-    height: "13",
-    rx: "2.5"
+  }, child);
+  const back = () => {
+    try {
+      if (history.length > 1) history.back();
+    } catch (e) {}
+  };
+  const canBack = (() => {
+    try {
+      return history.length > 1;
+    } catch (e) {
+      return false;
+    }
+  })();
+  return /*#__PURE__*/React.createElement("div", {
+    className: 'ios-safari' + (dark ? ' is-dark' : ''),
+    "data-ios-safari": "",
+    style: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: IOS_SAFARI_H + 26,
+      zIndex: 40,
+      pointerEvents: 'none',
+      fontFamily: '-apple-system, "SF Pro", system-ui'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ios-safari-haze",
+    "aria-hidden": "true",
+    style: {
+      position: 'absolute',
+      inset: 0
+    }
+  }), /*#__PURE__*/React.createElement("div", {
+    style: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 38,
+      height: 50,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
+      padding: '0 20px',
+      boxSizing: 'border-box'
+    }
+  }, circle(/*#__PURE__*/React.createElement("svg", {
+    width: "22",
+    height: "22",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2.4",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M14.5 5.5L8 12l6.5 6.5"
+  })), {
+    label: 'Back',
+    onClick: back,
+    disabled: !canBack
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "ios-safari-glass ios-safari-pill",
+    style: {
+      flex: 1,
+      minWidth: 0,
+      height: 50,
+      borderRadius: 25,
+      position: 'relative',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '0 6px',
+      boxSizing: 'border-box',
+      pointerEvents: 'auto'
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "ios-safari-ib",
+    "aria-label": "Page menu",
+    style: {
+      width: 36,
+      height: 36,
+      flex: 'none',
+      border: 'none',
+      background: 'none',
+      padding: 0,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("svg", {
+    width: "22",
+    height: "22",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "1.9",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, /*#__PURE__*/React.createElement("rect", {
+    x: "3.5",
+    y: "4.5",
+    width: "17",
+    height: "15",
+    rx: "3"
   }), /*#__PURE__*/React.createElement("path", {
-    d: "M8 4h11a2 2 0 012 2v11"
-  })), 20, 20)));
+    d: "M8 9.5h8M8 13.5h8M8 17.5h5"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "ios-safari-url",
+    style: {
+      flex: 1,
+      minWidth: 0,
+      textAlign: 'center',
+      fontSize: 16,
+      fontWeight: 600,
+      letterSpacing: -0.35,
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      padding: '0 4px'
+    }
+  }, domain), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "ios-safari-ib",
+    "aria-label": "Reload",
+    onClick: () => {
+      try {
+        location.reload();
+      } catch (e) {}
+    },
+    style: {
+      width: 36,
+      height: 36,
+      flex: 'none',
+      border: 'none',
+      background: 'none',
+      padding: 0,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }
+  }, /*#__PURE__*/React.createElement("svg", {
+    width: "22",
+    height: "22",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2.1",
+    strokeLinecap: "round",
+    strokeLinejoin: "round"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M19 12a7 7 0 1 1-2.05-4.95"
+  }), /*#__PURE__*/React.createElement("path", {
+    d: "M19 4.5v4h-4"
+  })))), circle(/*#__PURE__*/React.createElement("svg", {
+    width: "22",
+    height: "8",
+    viewBox: "0 0 22 8",
+    fill: "currentColor"
+  }, /*#__PURE__*/React.createElement("circle", {
+    cx: "3",
+    cy: "4",
+    r: "2.4"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "11",
+    cy: "4",
+    r: "2.4"
+  }), /*#__PURE__*/React.createElement("circle", {
+    cx: "19",
+    cy: "4",
+    r: "2.4"
+  })), {
+    label: 'More'
+  })));
+}
+
+// ─────────────────────────────────────────────────────────────
+// "Get the app" banner (iOS Smart-App-Banner style) — desktop mobile-web
+// preview only (real phones get Safari's native one via the apple-itunes-app
+// meta from real-device.js). Same markup/classes as the web header's banner
+// (web-header-responsive.js) so the two look identical; styled by
+// real-device.css. real-device.js sets <html data-pf-appbn> before paint when
+// it should show, and the shells' status-bar clearances collapse while it is
+// up (the banner takes the fake status bar's inset).
+// ─────────────────────────────────────────────────────────────
+const APP_BANNER_KEY = 'pf-app-banner-dismissed';
+const APP_STORE_URL = 'https://apps.apple.com/app/profinity-academy/id0000000000';
+function IOSAppBanner({
+  dark = false
+}) {
+  const [on, setOn] = React.useState(() => document.documentElement.hasAttribute('data-pf-appbn'));
+  if (!on) return null;
+  const dismiss = () => {
+    try {
+      localStorage.setItem(APP_BANNER_KEY, String(Date.now()));
+    } catch (e) {}
+    document.documentElement.removeAttribute('data-pf-appbn');
+    setOn(false);
+  };
+  const href = window.PF_APP_STORE_URL || APP_STORE_URL;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pf-appbn ios-appbn",
+    role: "complementary",
+    "aria-label": "Get the PROfinity app",
+    style: {
+      flex: 'none',
+      position: 'relative',
+      zIndex: 1
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-appbn-x",
+    "aria-label": "Dismiss",
+    onClick: dismiss
+  }, /*#__PURE__*/React.createElement("svg", {
+    width: "16",
+    height: "16",
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round"
+  }, /*#__PURE__*/React.createElement("path", {
+    d: "M6 6l12 12M18 6L6 18"
+  }))), /*#__PURE__*/React.createElement("img", {
+    className: "pf-appbn-ic",
+    src: "assets/app-icon-512.png",
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pf-appbn-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-appbn-t"
+  }, "PROfinity Academy"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-appbn-s"
+  }, "Free on the App Store"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-appbn-stars",
+    "aria-label": "Rated 4.9 out of 5"
+  }, "★★★★★")), /*#__PURE__*/React.createElement("a", {
+    className: "pf-appbn-cta",
+    href: href,
+    target: "_blank",
+    rel: "noopener"
+  }, "Download"));
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -553,16 +694,22 @@ function IOSDevice({
     }), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
+        minHeight: 0,
         overflowX: 'hidden',
-        overflowY: 'auto'
+        overflowY: 'auto',
+        position: 'relative'
       }
     }, children), keyboard && /*#__PURE__*/React.createElement(IOSKeyboard, {
       dark: dark
     })));
   }
+  const mobileWeb = !!window.PF_MOBILE_WEB;
+  const safari = mobileWeb && !keyboard;
   return /*#__PURE__*/React.createElement("div", {
     "data-ios-device": "",
+    "data-safari": safari ? '' : undefined,
     style: {
+      '--pf-sfb': safari ? IOS_SAFARI_H + 'px' : '0px',
       width,
       height,
       borderRadius: 48,
@@ -601,21 +748,35 @@ function IOSDevice({
       display: 'flex',
       flexDirection: 'column'
     }
-  }, title !== undefined && /*#__PURE__*/React.createElement(IOSNavBar, {
+  }, mobileWeb && /*#__PURE__*/React.createElement(IOSAppBanner, {
+    dark: dark
+  }), title !== undefined && /*#__PURE__*/React.createElement(IOSNavBar, {
     title: title,
     dark: dark
   }), /*#__PURE__*/React.createElement("div", {
-    style: {
+    style: safari ? {
       flex: 1,
+      minHeight: 0,
+      overflow: 'visible',
+      position: 'relative'
+    } : {
+      flex: 1,
+      minHeight: 0,
       overflowX: 'hidden',
       overflowY: 'auto',
       position: 'relative'
     }
   }, children), keyboard && /*#__PURE__*/React.createElement(IOSKeyboard, {
     dark: dark
-  }), !!window.PF_MOBILE_WEB && !keyboard && /*#__PURE__*/React.createElement(IOSSafariBar, {
+  }), safari && /*#__PURE__*/React.createElement("div", {
+    "aria-hidden": "true",
+    style: {
+      flex: 'none',
+      height: IOS_SAFARI_H
+    }
+  })), safari && /*#__PURE__*/React.createElement(IOSSafariBar, {
     dark: dark
-  })), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       bottom: 0,
@@ -845,5 +1006,6 @@ Object.assign(window, {
   IOSList,
   IOSListRow,
   IOSKeyboard,
-  IOSSafariBar
+  IOSSafariBar,
+  IOSAppBanner
 });

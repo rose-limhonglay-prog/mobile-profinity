@@ -138,46 +138,101 @@ function IOSNavBar({ title = 'Title', dark = false, trailingIcon = true }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Mobile Safari chrome (iOS 26 — bottom address pill + tabs button)
-// Shown by IOSDevice when window.PF_MOBILE_WEB is set (mobile-web host or
-// ?mobileweb=1): the screens render as a website in the phone's browser.
+// Mobile Safari chrome (iOS 26 — floating bottom bar: back · address pill ·
+// more, over a progressive blur of the page). Shown by IOSDevice when
+// window.PF_MOBILE_WEB is set (mobile-web host or ?mobileweb=1): the screens
+// render as a website in the phone's browser. The bar is an OVERLAY: the page
+// scrolls underneath it (real-device.css extends the shell scrollers by
+// --pf-sfb) while bottom-anchored UI (tab bar, FAB, sheets) stays above it,
+// exactly like fixed elements do in real Safari.
 // ─────────────────────────────────────────────────────────────
 const IOS_SAFARI_DOMAIN = 'profinity-mobileweb.vercel.app';
+const IOS_SAFARI_H = 100; // height of the Safari bottom chrome (--pf-sfb)
 function IOSSafariBar({ dark = false, domain = IOS_SAFARI_DOMAIN }) {
-  const ink = dark ? '#fff' : '#000';
-  const muted = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
-  const glyph = (d, w = 18, h = 18, vb = '0 0 24 24') => (
-    <svg width={w} height={h} viewBox={vb} fill="none" stroke={ink} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">{d}</svg>
+  // colours live in real-device.css (.ios-safari-*) so [data-theme="dark"] applies
+  const circle = (child, { label, onClick, disabled } = {}) => (
+    <button type="button" className="ios-safari-glass ios-safari-circle" aria-label={label} onClick={onClick} disabled={disabled} style={{
+      width: 50, height: 50, flex: 'none', borderRadius: '50%', border: 'none', padding: 0, cursor: disabled ? 'default' : 'pointer',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'auto',
+    }}>{child}</button>
   );
+  const back = () => { try { if (history.length > 1) history.back(); } catch (e) {} };
+  const canBack = (() => { try { return history.length > 1; } catch (e) { return false; } })();
   return (
-    <div className="ios-safari" data-ios-safari="" style={{
-      flex: 'none', position: 'relative', zIndex: 40, height: 84,
-      display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 12px 0',
-      boxSizing: 'border-box',
+    <div className={'ios-safari' + (dark ? ' is-dark' : '')} data-ios-safari="" style={{
+      position: 'absolute', left: 0, right: 0, bottom: 0, height: IOS_SAFARI_H + 26, zIndex: 40,
+      pointerEvents: 'none', fontFamily: '-apple-system, "SF Pro", system-ui',
     }}>
-      {/* back · domain · more */}
-      <IOSGlassPill dark={dark} style={{ flex: 1, height: 50, borderRadius: 26, justifyContent: 'stretch' }}>
-        <div style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '0 6px', gap: 6 }}>
-          <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {glyph(<path d="M15 5l-7 7 7 7" />, 16, 16)}
-          </div>
+      {/* progressive blur + tint of the page scrolling underneath */}
+      <div className="ios-safari-haze" aria-hidden="true" style={{ position: 'absolute', inset: 0 }} />
+      {/* back · address pill · more */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0, bottom: 38, height: 50,
+        display: 'flex', alignItems: 'center', gap: 8, padding: '0 20px', boxSizing: 'border-box',
+      }}>
+        {circle(
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 5.5L8 12l6.5 6.5" /></svg>,
+          { label: 'Back', onClick: back, disabled: !canBack }
+        )}
+        <div className="ios-safari-glass ios-safari-pill" style={{
+          flex: 1, minWidth: 0, height: 50, borderRadius: 25, position: 'relative',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 6px', boxSizing: 'border-box',
+          pointerEvents: 'auto',
+        }}>
+          {/* page menu */}
+          <button type="button" className="ios-safari-ib" aria-label="Page menu" style={{ width: 36, height: 36, flex: 'none', border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="3" /><path d="M8 9.5h8M8 13.5h8M8 17.5h5" /></svg>
+          </button>
           <div className="ios-safari-url" style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, minWidth: 0,
-            fontFamily: '-apple-system, "SF Pro", system-ui', fontSize: 16, fontWeight: 500, color: ink,
-            letterSpacing: -0.2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-          }}>
-            <svg width="11" height="13" viewBox="0 0 11 13" fill={muted}><rect x="0" y="5" width="11" height="8" rx="2"/><path d="M2.5 5V3.5a3 3 0 016 0V5" stroke={muted} strokeWidth="1.6" fill="none"/></svg>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{domain}</span>
-          </div>
-          <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="20" height="6" viewBox="0 0 22 6"><circle cx="3" cy="3" r="2.4" fill={ink}/><circle cx="11" cy="3" r="2.4" fill={ink}/><circle cx="19" cy="3" r="2.4" fill={ink}/></svg>
-          </div>
+            flex: 1, minWidth: 0, textAlign: 'center', fontSize: 16, fontWeight: 600, letterSpacing: -0.35,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', padding: '0 4px',
+          }}>{domain}</div>
+          {/* reload */}
+          <button type="button" className="ios-safari-ib" aria-label="Reload" onClick={() => { try { location.reload(); } catch (e) {} }} style={{ width: 36, height: 36, flex: 'none', border: 'none', background: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12a7 7 0 1 1-2.05-4.95" /><path d="M19 4.5v4h-4" /></svg>
+          </button>
         </div>
-      </IOSGlassPill>
-      {/* tabs */}
-      <IOSGlassPill dark={dark} style={{ width: 50, height: 50, flex: 'none' }}>
-        {glyph(<><rect x="4" y="7" width="13" height="13" rx="2.5" /><path d="M8 4h11a2 2 0 012 2v11" /></>, 20, 20)}
-      </IOSGlassPill>
+        {circle(
+          <svg width="22" height="8" viewBox="0 0 22 8" fill="currentColor"><circle cx="3" cy="4" r="2.4"/><circle cx="11" cy="4" r="2.4"/><circle cx="19" cy="4" r="2.4"/></svg>,
+          { label: 'More' }
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// "Get the app" banner (iOS Smart-App-Banner style) — desktop mobile-web
+// preview only (real phones get Safari's native one via the apple-itunes-app
+// meta from real-device.js). Same markup/classes as the web header's banner
+// (web-header-responsive.js) so the two look identical; styled by
+// real-device.css. real-device.js sets <html data-pf-appbn> before paint when
+// it should show, and the shells' status-bar clearances collapse while it is
+// up (the banner takes the fake status bar's inset).
+// ─────────────────────────────────────────────────────────────
+const APP_BANNER_KEY = 'pf-app-banner-dismissed';
+const APP_STORE_URL = 'https://apps.apple.com/app/profinity-academy/id0000000000';
+function IOSAppBanner({ dark = false }) {
+  const [on, setOn] = React.useState(() => document.documentElement.hasAttribute('data-pf-appbn'));
+  if (!on) return null;
+  const dismiss = () => {
+    try { localStorage.setItem(APP_BANNER_KEY, String(Date.now())); } catch (e) {}
+    document.documentElement.removeAttribute('data-pf-appbn');
+    setOn(false);
+  };
+  const href = window.PF_APP_STORE_URL || APP_STORE_URL;
+  return (
+    <div className="pf-appbn ios-appbn" role="complementary" aria-label="Get the PROfinity app" style={{ flex: 'none', position: 'relative', zIndex: 1 }}>
+      <button type="button" className="pf-appbn-x" aria-label="Dismiss" onClick={dismiss}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+      <img className="pf-appbn-ic" src="assets/app-icon-512.png" alt="" />
+      <span className="pf-appbn-tx">
+        <span className="pf-appbn-t">PROfinity Academy</span>
+        <span className="pf-appbn-s">Free on the App Store</span>
+        <span className="pf-appbn-stars" aria-label="Rated 4.9 out of 5">★★★★★</span>
+      </span>
+      <a className="pf-appbn-cta" href={href} target="_blank" rel="noopener">Download</a>
     </div>
   );
 }
@@ -261,14 +316,17 @@ function IOSDevice({
       }}>
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           {title !== undefined && <IOSNavBar title={title} dark={dark} />}
-          <div style={{ flex: 1, overflowX: 'hidden', overflowY: 'auto' }}>{children}</div>
+          <div style={{ flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', position: 'relative' }}>{children}</div>
           {keyboard && <IOSKeyboard dark={dark} />}
         </div>
       </div>
     );
   }
+  const mobileWeb = !!window.PF_MOBILE_WEB;
+  const safari = mobileWeb && !keyboard;
   return (
-    <div data-ios-device="" style={{
+    <div data-ios-device="" data-safari={safari ? '' : undefined} style={{
+      '--pf-sfb': safari ? IOS_SAFARI_H + 'px' : '0px',
       width, height, borderRadius: 48, overflow: 'hidden',
       position: 'relative', background: dark ? '#000' : '#F2F2F7',
       boxShadow: '0 40px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.12)',
@@ -286,15 +344,23 @@ function IOSDevice({
       </div>
       {/* nav + content */}
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {mobileWeb && <IOSAppBanner dark={dark} />}
         {title !== undefined && <IOSNavBar title={title} dark={dark} />}
         {/* overflowX hidden: off-canvas drawers (notifications / messages
             panels parked at translateX(100%)) must never give the phone a
-            horizontal scrollbar strip under the dock */}
-        <div style={{ flex: 1, overflowX: 'hidden', overflowY: 'auto', position: 'relative' }}>{children}</div>
+            horizontal scrollbar strip under the dock. In the mobile-web
+            preview the box is the Safari "small viewport" (ends above the
+            bar) and stays overflow:visible so the shell scrollers can extend
+            underneath the floating bar (real-device.css) — the bezel root
+            clips them instead. */}
+        <div style={safari
+          ? { flex: 1, minHeight: 0, overflow: 'visible', position: 'relative' }
+          : { flex: 1, minHeight: 0, overflowX: 'hidden', overflowY: 'auto', position: 'relative' }}>{children}</div>
         {keyboard && <IOSKeyboard dark={dark} />}
         {/* mobile-web preview: the screen is a website inside Safari */}
-        {!!window.PF_MOBILE_WEB && !keyboard && <IOSSafariBar dark={dark} />}
+        {safari && <div aria-hidden="true" style={{ flex: 'none', height: IOS_SAFARI_H }} />}
       </div>
+      {safari && <IOSSafariBar dark={dark} />}
       {/* home indicator — always on top */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 60,
@@ -414,5 +480,5 @@ function IOSKeyboard({ dark = false }) {
 }
 
 Object.assign(window, {
-  IOSDevice, IOSStatusBar, IOSNavBar, IOSGlassPill, IOSList, IOSListRow, IOSKeyboard, IOSSafariBar,
+  IOSDevice, IOSStatusBar, IOSNavBar, IOSGlassPill, IOSList, IOSListRow, IOSKeyboard, IOSSafariBar, IOSAppBanner,
 });

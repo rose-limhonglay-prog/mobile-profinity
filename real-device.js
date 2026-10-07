@@ -12,7 +12,8 @@
        Add-to-Home-Screen metas + manifest so the site runs standalone
 
    ON when:  the page is served from the mobile-web host
-             (profinity-mobileweb.vercel.app, or any host containing "mobileweb")
+             (profinity-mobileweb.vercel.app, or any host containing "mobileweb",
+             or locally http://localhost:3002 — `npm run dev:mobileweb`)
    Force:    ?realdevice=1 / ?realdevice=0 — sticks in localStorage for the
              rest of the browsing session, so the whole flow can be tested
              on localhost or the main design link.
@@ -30,14 +31,21 @@
       if (s === '1' || s === '0') forced = s;
     }
   } catch (e) {}
-  var host = HOST_RE.test(location.hostname);
+  // Local twin of the mobile-web host: `npm run dev:mobileweb` serves the same
+  // files on port 3002 (localhost:3000 stays the native-app bezel). Any
+  // *.localhost name containing "mobileweb" works too (Chrome resolves them).
+  var MOBILE_WEB_PORT = '3002';
+  var host = HOST_RE.test(location.hostname) || location.port === MOBILE_WEB_PORT;
   // "mobile web" preview (desktop): the bezel shows the screens inside Safari
-  // (IOSSafariBar in ios-frame.jsx). ?mobileweb=1 / ?mobileweb=0 force it.
+  // (IOSSafariBar in ios-frame.jsx). ?mobileweb=1 / ?mobileweb=0 force it for one load.
+  // The host/port decides; ?mobileweb=1/0 overrides for THIS load only (it
+  // used to stick in localStorage, which made localhost:3000 show the mobile
+  // web version after one test — the stale key is cleared here).
   var mw = null;
   try {
+    localStorage.removeItem('pf-mobile-web');
     var mq = new URLSearchParams(location.search).get('mobileweb');
-    if (mq === '1' || mq === '0') { mw = mq; localStorage.setItem('pf-mobile-web', mq); }
-    else { var ms = localStorage.getItem('pf-mobile-web'); if (ms === '1' || ms === '0') mw = ms; }
+    if (mq === '1' || mq === '0') mw = mq;
   } catch (e) {}
   var mobileWeb = mw !== null ? mw === '1' : host;
   // phone-sized viewports only: on a desktop/tablet the mobile-web host keeps
@@ -56,7 +64,20 @@
   window.PF_MOBILE_WEB = mobileWeb;
   window.PF_REAL_DEVICE = on;
   if (mobileWeb) document.documentElement.setAttribute('data-mobile-web', '1');
-  window.PFRealDevice = { on: on, mobileWeb: mobileWeb, host: host, narrow: narrow, standalone: standalone, forced: forced !== null };
+  // "Get the app" banner (IOSAppBanner in ios-frame.jsx) on the DESKTOP
+  // mobile-web preview only: it mirrors Safari's native Smart App Banner,
+  // which real phones get from the apple-itunes-app meta injected below.
+  // Flag the html before paint so real-device.css can hand the status-bar
+  // clearance to the banner. ?appbanner=1 forces it back, ?appbanner=0 hides.
+  var banner = mobileWeb && !on && !standalone;
+  try {
+    var bq = new URLSearchParams(location.search).get('appbanner');
+    if (bq === '1') { banner = mobileWeb; localStorage.removeItem('pf-app-banner-dismissed'); }
+    else if (bq === '0') banner = false;
+    else if (banner && localStorage.getItem('pf-app-banner-dismissed')) banner = false;
+  } catch (e) {}
+  if (banner) document.documentElement.setAttribute('data-pf-appbn', '1');
+  window.PFRealDevice = { on: on, mobileWeb: mobileWeb, host: host, narrow: narrow, standalone: standalone, forced: forced !== null, banner: banner };
   if (!on) return;
 
   var root = document.documentElement;
@@ -71,6 +92,9 @@
     if (media) m.setAttribute('media', media);
     head.appendChild(m);
   }
+  // Safari's native Smart App Banner ("PROfinity Academy — Free on the App
+  // Store · Download"). Replace the placeholder id with the real listing's.
+  addMeta('apple-itunes-app', 'app-id=' + (window.PF_APP_STORE_ID || '0000000000'));
   function addLink(rel, href, extra) {
     if (document.querySelector('link[rel="' + rel + '"]')) return;
     var l = document.createElement('link');

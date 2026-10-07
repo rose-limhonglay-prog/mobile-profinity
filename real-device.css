@@ -37,44 +37,49 @@ html[data-real-device] [data-ios-device]{
 }
 html[data-real-device] .ios-statusbar{display:none !important}
 
-/* ---- 2. status-bar clearances → safe-area inset ---- */
+/* ---- 2. status-bar clearances → safe-area inset ----
+   Also applied while the mobile-web "Get the app" banner is up
+   (<html data-pf-appbn>): the banner sits above the screen and carries the
+   status-bar clearance itself, so every header collapses to its small gap. */
+html[data-pf-appbn]{--pf-sat:0px;--pf-top:10px;--pf-top-lg:16px}
 /* 52/54px top bars */
-html[data-real-device] :is(
+html:is([data-real-device],[data-pf-appbn]) :is(
   .m-top,.cm-top,.pm-top,.ev-head,.cp-top,.ac-head,.acc-top,.acc-cat-top,.lcm-top,.cd-head,.sr-head,
   .cs-bar,.dm-page-head,.dm-info-head,.pm-edit-hd,.pm-qrs-hd,.ev-lobby-top,.ls-topbar,.cp-cover-picker
 ){padding-top:var(--pf-top) !important}
 /* 56–62px top bars */
-html[data-real-device] :is(
+html:is([data-real-device],[data-pf-appbn]) :is(
   .as-top,.vs-m-top,.cc-top,.cd-top,.ds-top,.iv-top,.ls-top,.ma-top,.mt-top,.mo-top,.sm-top,.ms-top,.ns-top,
   .py-top,.sc-top,.lc-top,.lc-ptop,.sp-fs-top,.device-stage .ml-top,.device-stage .bpr-screen .ml-top,
   .device-stage .lb-screen .ml-top,.device-stage .mr-screen .ml-top
 ){padding-top:var(--pf-top-lg) !important}
 /* dm / minute-taker use a token for the inset */
-html[data-real-device] .dm-app{--dm-status:var(--pf-top)}
+html:is([data-real-device],[data-pf-appbn]) .dm-app{--dm-status:var(--pf-top)}
 html[data-real-device] .mt-app .mt-screen,
 html[data-real-device] .mt-screen{--mt-top-inset:var(--pf-sat);--mt-bottom-inset:var(--pf-sab)}
+html[data-pf-appbn]:not([data-real-device]) .mt-screen{--mt-top-inset:0px}
 /* collapsed headers: the scroller only reserves the status bar now */
-html[data-real-device] :is(
+html:is([data-real-device],[data-pf-appbn]) :is(
   .m-screen.chrome-float .m-scroll,.pm-screen.chrome-float .pm-scroll,.lm-screen.chrome-float .lm-scroll,
   .ag-screen.chrome-float .ag-scroll,.lcm-screen.chrome-float .lcm-scroll,.acc-screen.chrome-float .acc-scroll,
   .cm-header-wrap.cm-header-hidden .cm-head
 ){padding-top:var(--pf-sat) !important}
 /* side drawer + notifications / messages panels */
-html[data-real-device] :is(.m-drawer,.nt-panel){padding-top:calc(var(--pf-sat) + 14px) !important}
+html:is([data-real-device],[data-pf-appbn]) :is(.m-drawer,.nt-panel){padding-top:calc(var(--pf-sat) + 14px) !important}
 /* floating things anchored under the fake status bar */
-html[data-real-device] .m-pts-tally{top:calc(var(--pf-sat) + 8px) !important}
-html[data-real-device] .m-notif{top:calc(var(--pf-sat) + 54px) !important}
-html[data-real-device] .m-push{top:calc(var(--pf-sat) + 8px) !important}
-html[data-real-device] .dm-push{top:calc(var(--pf-sat) + 8px) !important}
-html[data-real-device] :is(.cc-close,.dg-close,.pf-fsv--m .pf-fsv-topleft,.pf-fsv--m .pf-fsv-frame-top,
+html:is([data-real-device],[data-pf-appbn]) .m-pts-tally{top:calc(var(--pf-sat) + 8px) !important}
+html:is([data-real-device],[data-pf-appbn]) .m-notif{top:calc(var(--pf-sat) + 54px) !important}
+html:is([data-real-device],[data-pf-appbn]) .m-push{top:calc(var(--pf-sat) + 8px) !important}
+html:is([data-real-device],[data-pf-appbn]) .dm-push{top:calc(var(--pf-sat) + 8px) !important}
+html:is([data-real-device],[data-pf-appbn]) :is(.cc-close,.dg-close,.pf-fsv--m .pf-fsv-topleft,.pf-fsv--m .pf-fsv-frame-top,
   [data-ios-device] .sp-ss-x,.device-stage .rsc-close){top:calc(var(--pf-sat) + 12px) !important}
-html[data-real-device] :is(.rl-top,.cp-live-back){top:calc(var(--pf-sat) + 8px) !important}
-html[data-real-device] .cp-live-who{top:calc(var(--pf-sat) + 10px) !important}
-html[data-real-device] .dm-sticker-sheet{top:calc(var(--pf-sat) + 12px) !important}
-html[data-real-device] .dm-lightbox-close{top:calc(var(--pf-sat) + 8px) !important}
-html[data-real-device] :is(.au-help,.au-brand){padding-top:calc(var(--pf-sat) + 16px) !important}
-html[data-real-device] .cc-body{padding-top:calc(var(--pf-sat) + 20px) !important}
-html[data-real-device] .rsc-hero{padding-top:calc(var(--pf-sat) + 16px) !important}
+html:is([data-real-device],[data-pf-appbn]) :is(.rl-top,.cp-live-back){top:calc(var(--pf-sat) + 8px) !important}
+html:is([data-real-device],[data-pf-appbn]) .cp-live-who{top:calc(var(--pf-sat) + 10px) !important}
+html:is([data-real-device],[data-pf-appbn]) .dm-sticker-sheet{top:calc(var(--pf-sat) + 12px) !important}
+html:is([data-real-device],[data-pf-appbn]) .dm-lightbox-close{top:calc(var(--pf-sat) + 8px) !important}
+html:is([data-real-device],[data-pf-appbn]) :is(.au-help,.au-brand){padding-top:calc(var(--pf-sat) + 16px) !important}
+html:is([data-real-device],[data-pf-appbn]) .cc-body{padding-top:calc(var(--pf-sat) + 20px) !important}
+html:is([data-real-device],[data-pf-appbn]) .rsc-hero{padding-top:calc(var(--pf-sat) + 16px) !important}
 
 /* ---- 3. bottom: the home indicator is the OS's job now ---- */
 html[data-real-device] .device-stage .ml-scroll{padding-bottom:calc(16px + var(--pf-sab)) !important}
@@ -94,6 +99,64 @@ html[data-real-device] .app:not(.device-stage){
    (useDeviceScale*: transform:scale(n) on the wrapper) — not when frameless */
 html[data-real-device] .device-stage > div{transform:none !important}
 
-/* ---- mobile-web preview (desktop bezel + Safari chrome, see IOSSafariBar) ---- */
+/* ===========================================================================
+   mobile-web preview — the screens as a website inside Safari (iOS 26)
+   Active when real-device.js has set <html data-mobile-web>. IOSDevice
+   (ios-frame.jsx) renders the "Get the app" banner above the screen and, on
+   the desktop bezel, the floating Safari bar (IOSSafariBar) over the bottom
+   --pf-sfb px of the screen. Real phones get the real Safari chrome.
+   =========================================================================== */
 html[data-mobile-web] [data-ios-device]{background:var(--surface-page,#F2F2F7)}
-[data-theme="dark"] .ios-safari .ios-safari-url{color:#fff}
+
+/* ---- "Get the app" banner (same look as web-header-responsive's .pf-appbn) ---- */
+.ios-appbn{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 8px;
+  background:var(--surface-sunken,#F3F3F7);border-bottom:1px solid var(--border-default,#E6E6EC);
+  font-family:var(--font-sans,-apple-system,system-ui,sans-serif);color:var(--text-primary,#1A1736)}
+/* the fake status bar (≈54px) sits on the banner (desktop preview only) */
+.ios-appbn{padding-top:62px}
+.ios-appbn .pf-appbn-x{flex:none;width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:none;border:none;
+  border-radius:50%;color:var(--gray-500,#6B6B7B);cursor:pointer;padding:0}
+.ios-appbn .pf-appbn-x svg{display:block}
+.ios-appbn .pf-appbn-ic{flex:none;width:48px;height:48px;border-radius:11px;object-fit:cover;box-shadow:0 1px 3px rgba(12,12,13,.15)}
+.ios-appbn .pf-appbn-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.ios-appbn .pf-appbn-t{font-weight:var(--fw-semibold,600);font-size:14px;line-height:1.2;color:var(--text-heading,#0C1928);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ios-appbn .pf-appbn-s{font-size:12px;line-height:1.25;color:var(--gray-500,#6B6B7B);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ios-appbn .pf-appbn-stars{font-size:11px;line-height:1.2;letter-spacing:.06em;color:#F5A623}
+.ios-appbn .pf-appbn-cta{flex:none;display:inline-flex;align-items:center;justify-content:center;height:32px;padding:0 14px;border-radius:999px;
+  background:var(--brand-navy,#1A1736);color:#fff;font-weight:var(--fw-semibold,600);font-size:13px;text-decoration:none;letter-spacing:.01em}
+.ios-appbn .pf-appbn-cta:active{opacity:.85}
+[data-theme="dark"] .ios-appbn{background:var(--surface-card,#111026);border-bottom-color:var(--border-default,rgba(255,255,255,.08))}
+[data-theme="dark"] .ios-appbn .pf-appbn-cta{background:var(--brand-gold,#C9A24A);color:#1A1736}
+
+/* ---- floating Safari bar (desktop bezel only) ---- */
+.ios-safari-haze{
+  -webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);
+  -webkit-mask-image:linear-gradient(to top,#000 0%,#000 48%,rgba(0,0,0,.55) 70%,transparent 100%);
+  mask-image:linear-gradient(to top,#000 0%,#000 48%,rgba(0,0,0,.55) 70%,transparent 100%);
+  background:linear-gradient(to top,rgba(248,248,250,.72) 0%,rgba(248,248,250,.34) 50%,rgba(248,248,250,0) 100%);
+}
+.ios-safari-glass{
+  color:#000;background:rgba(255,255,255,.82);
+  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  box-shadow:0 1px 2px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.10),inset 0 0 0 .5px rgba(0,0,0,.05);
+}
+.ios-safari-circle:disabled{color:rgba(60,60,67,.35)}
+.ios-safari-circle:not(:disabled):active,.ios-safari-ib:active{opacity:.6}
+.ios-safari-ib{color:#000}
+.ios-safari-url{color:#000}
+.ios-safari.is-dark .ios-safari-haze,[data-theme="dark"] .ios-safari-haze{
+  background:linear-gradient(to top,rgba(0,0,0,.62) 0%,rgba(0,0,0,.3) 50%,rgba(0,0,0,0) 100%)}
+.ios-safari.is-dark .ios-safari-glass,[data-theme="dark"] .ios-safari-glass{
+  color:#fff;background:rgba(44,44,46,.72);
+  box-shadow:0 1px 2px rgba(0,0,0,.45),0 8px 24px rgba(0,0,0,.35),inset 0 0 0 .5px rgba(255,255,255,.14)}
+.ios-safari.is-dark .ios-safari-circle:disabled,[data-theme="dark"] .ios-safari-circle:disabled{color:rgba(235,235,245,.35)}
+.ios-safari.is-dark :is(.ios-safari-ib,.ios-safari-url),[data-theme="dark"] :is(.ios-safari-ib,.ios-safari-url){color:#fff}
+
+/* the shell scrollers run on under the bar (the page scrolls beneath it, as
+   in Safari) while bottom-anchored UI — tab bar, FAB, sheets — stays in the
+   "small viewport" above it. The screen roots must not clip for this. */
+[data-ios-device][data-safari] :is(.m-screen,.cm-screen,.pm-screen,.lm-screen,.lcm-screen,.ag-screen,.ev-screen,.acc-screen,.ml-screen){overflow:visible !important}
+[data-ios-device][data-safari] :is(.m-scroll,.cm-scroll,.pm-scroll,.lm-scroll,.lcm-scroll,.ag-scroll,.ev-scroll,.acc-scroll,.ml-scroll){
+  margin-bottom:calc(-1 * var(--pf-sfb,0px))}
+[data-ios-device][data-safari] :is(.m-scroll,.cm-scroll,.pm-scroll,.lm-scroll,.lcm-scroll,.ag-scroll,.ev-scroll,.acc-scroll,.ml-scroll)::after{
+  content:"";display:block;flex:none;height:var(--pf-sfb,0px)}
