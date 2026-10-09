@@ -1266,18 +1266,7 @@ function PMTargetsCard({
       name: "lucide:check",
       size: 11,
       color: "#1E7A5C"
-    }), "+", pr.pts, " pts earned") : "+" + pr.pts + " pts · " + capTail))), /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "cf-btn cf-btn-free cf-door-tick" + (t.done ? " is-done" : ""),
-      role: "checkbox",
-      "aria-checked": t.done,
-      "aria-label": (t.done ? "Mark not done: " : "Mark done: ") + t.text,
-      onClick: () => toggle(t.id)
-    }, t.done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-      name: "lucide:check",
-      size: 13,
-      color: "currentColor"
-    }), "Done") : "Done")));
+    }), "+", pr.pts, " pts earned") : "+" + pr.pts + " pts · " + capTail)))));
   }))), allDone && /*#__PURE__*/React.createElement("p", {
     className: "pm-target-foot"
   }, "That's today's set — new targets arrive tomorrow."), /*#__PURE__*/React.createElement(PMInfoModal, {

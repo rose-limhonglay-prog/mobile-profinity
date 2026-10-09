@@ -309,7 +309,7 @@
 .cf-track.soon .cf-track-eyebrow{color:var(--gray-500)}
 .cf-track-ti{font-family:var(--font-sans);font-weight:var(--fw-bold,700);font-size:14px;line-height:1.3;color:var(--text-heading)}
 .cf-track-su{font-family:var(--font-sans);font-size:12.5px;line-height:1.4;color:var(--gray-600)}
-.cf-track-cta{flex:none;padding:7px 12px;border-radius:100px;background:var(--brand-navy);color:#fff;font-family:var(--font-sans);font-weight:var(--fw-semibold,600);font-size:12.5px}
+.cf-track-cta{flex:none;display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:0 12px;border-radius:var(--r-md,12px);background:var(--brand-navy);color:#fff;font-family:var(--font-sans);font-weight:var(--fw-bold,700);font-size:13px}  /* same corner + weight as .cf-btn-free (user 2026-10-09: was a 100px pill) */
 .cf-track.locked .cf-track-cta{background:var(--surface-card);color:var(--brand-navy);border:1px solid var(--border-strong,#d5d8e4)}
 [data-theme="dark"] .cf-track-eyebrow{color:var(--gray-400)}
 
@@ -344,12 +344,9 @@
 .cf-door-item.done .cf-free-ti{color:var(--gray-500);text-decoration:line-through}
 .cf-door-item.done .cf-door-ti{color:var(--gray-500)}
 .cf-free-cap.earned{display:inline-flex;align-items:center;gap:3px;color:#1E7A5C;font-weight:var(--fw-semibold,600)}
-.cf-door-tick{min-width:0}
-.cf-door-tick.is-done{background:#EAF6F0;color:#1E7A5C}
 .cf-door-item.is-settling{animation:cf-door-settle .5s ease both}
 @keyframes cf-door-settle{0%{transform:scale(1)}35%{transform:scale(.985)}100%{transform:scale(1)}}
 [data-theme="dark"] .cf-door-targets .cf-door-item.done{background:rgba(255,255,255,.04)}
-[data-theme="dark"] .cf-door-tick.is-done{background:rgba(30,122,92,.22);color:#7fd1b0}
 [data-theme="dark"] .cf-free-cap.earned{color:#7fd1b0}
 [data-theme="dark"] .cf-door-num.is-icon{background:var(--ai-purple,#6C63FF);color:#fff}
 

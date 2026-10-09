@@ -1389,4 +1389,4 @@ img{max-width:100%}
 .pm-goal-card .cf-free,.pm-goal-card .cf-track{flex-wrap:wrap;row-gap:10px}
 .pm-goal-card .cf-free-copy,.pm-goal-card .cf-track-copy{flex:1 1 0;min-width:0}
 .pm-goal-card .cf-free .cf-btn-free,.pm-goal-card .cf-track-cta{flex:0 0 100%;width:100%;justify-content:center;text-align:center;box-sizing:border-box}
-.pm-goal-card .cf-track-cta{padding:10px 12px;font-size:13.5px}
+.pm-goal-card .cf-track-cta{min-height:38px;font-size:13px}

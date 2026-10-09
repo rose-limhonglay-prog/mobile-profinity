@@ -728,7 +728,7 @@ function PMTargetsCard({ assessState }) {
             const capTail = pr.label + (isFocus ? " · " + t.pillar : "");
             return (
               <li key={t.id} className={"cf-door-item cf-door-item-check" + (t.done ? " done" : "") + (settling === t.id && t.done ? " is-settling" : "")}>
-                {/* tick circle (user 2026-10-08) — same toggle as the Done button */}
+                {/* tick circle (user 2026-10-08) is the only toggle; the Done button was removed 2026-10-09 (user) */}
                 <span className="cf-door-check" role="checkbox" tabIndex={0} aria-checked={t.done}
                   aria-label={(t.done ? "Mark not done: " : "Mark done: ") + t.text}
                   onClick={() => toggle(t.id)}
@@ -744,10 +744,6 @@ function PMTargetsCard({ assessState }) {
                       <span className="cf-free-ti">{t.text}</span>
                       <span className={"cf-free-cap" + (t.done ? " earned" : "")}>{t.done ? <><DSPM.IconifyIcon name="lucide:check" size={11} color="#1E7A5C" />+{pr.pts} pts earned</> : "+" + pr.pts + " pts · " + capTail}</span>
                     </span>
-                  </button>
-                  <button type="button" className={"cf-btn cf-btn-free cf-door-tick" + (t.done ? " is-done" : "")} role="checkbox" aria-checked={t.done}
-                    aria-label={(t.done ? "Mark not done: " : "Mark done: ") + t.text} onClick={() => toggle(t.id)}>
-                    {t.done ? <><DSPM.IconifyIcon name="lucide:check" size={13} color="currentColor" />Done</> : "Done"}
                   </button>
                 </div>
               </li>);
