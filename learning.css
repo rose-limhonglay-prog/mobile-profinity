@@ -680,3 +680,10 @@ img{max-width:100%}
 .lrn2-survey .sv-summary-h span{letter-spacing:0;text-transform:none;font-weight:var(--fw-semibold);font-size:var(--fs-caption);color:var(--gray-500)}
 .lrn2-survey .sv-sum-n{font-family:"Times New Roman",Times,serif;color:var(--brand-gold);margin-right:8px}
 .lrn2-survey .sv-sum-a{gap:10px}
+
+/* Free accounts (user, 2026-10-08): the Free Resources promo sits above the paid
+   picks, directly under My Courses, so the first suggestion is never a purchase. */
+.lrn2-promos.lrn2-promos-first{margin-top:28px}
+/* Nothing bought yet on a free account: the free-resources panel replaces the
+   My Courses section, with the tabs and search gone above it. */
+.panel.lrn2-mc-panel.lrn2-start-free{margin-top:32px}

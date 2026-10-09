@@ -1034,10 +1034,36 @@ function readDmGroupsC() {
               <DSC.IconifyIcon name="lucide:log-out" size={22} color="var(--error)" />
               Logout
             </button>
+            <DevTierRowC />
           </div>
         </aside>
       </div>);
 
+  }
+
+
+  /* Dev mode · "Viewing as" tier chips at the foot of the drawer (user,
+     2026-10-08): writes pf-subscription-tier (Basic = key removed — the key
+     coach-focus.js / Membership pages read) and reloads so every tier-gated
+     surface re-renders. Prototype-only. */
+  const DEV_TIERS_C = [["free", "Basic"], ["confidence", "Confidence"], ["mastery", "Mastery"], ["freedom", "Freedom"], ["inner", "Inner Circle"]];
+  function devTierC() { try { const t = localStorage.getItem("pf-subscription-tier"); return DEV_TIERS_C.some((x) => x[0] === t) ? t : "free"; } catch (e) { return "free"; } }
+  function devSetTierC(t) {
+    try { if (t === "free") localStorage.removeItem("pf-subscription-tier"); else localStorage.setItem("pf-subscription-tier", t); } catch (e) {}
+    try { const u = new URL(location.href); u.searchParams.delete("tier"); history.replaceState(null, "", u.toString()); } catch (e) {}
+    location.reload();
+  }
+  function DevTierRowC() {
+    const cur = devTierC();
+    return (
+      <div className="m-drawer-dev" role="group" aria-label="Dev mode: view the app as a membership tier">
+        <span className="m-drawer-dev-h"><i aria-hidden="true" />Dev mode · Viewing as</span>
+        <div className="m-drawer-dev-chips">
+          {DEV_TIERS_C.map(([k, l]) =>
+          <button key={k} type="button" className={"m-drawer-dev-chip" + (cur === k ? " on" : "")} aria-pressed={cur === k}
+            onClick={() => { if (cur !== k) devSetTierC(k); }}>{l}</button>)}
+        </div>
+      </div>);
   }
 
   function MobileChromeC() {

@@ -54,9 +54,15 @@
       <button type="button" className={"cf-track" + (t.locked ? " locked" : "")}
         onClick={() => go(CF.pathHubUrl(p, web, t.locked ? "sp=starter&tab=starter" : ""))}
         aria-label={(t.locked ? "Preview the " + p.starterTitle : "Open the " + p.title + " Success Path")}>
+        {/* course cover instead of the % ring (user 2026-10-08); the ring/route
+            icon stays as the fallback for paths without an image */}
+        {p.image ?
+        <span className={"cf-track-ic cf-track-thumb" + (t.locked ? " locked" : "")} style={{ backgroundImage: "url(" + p.image + ")" }} aria-hidden="true">
+          {t.locked && <span className="cf-track-thumb-lock"><Icon name="lucide:lock" size={14} color="#fff" /></span>}
+        </span> :
         <span className="cf-track-ic" aria-hidden="true">
           {pr ? <span className="cf-track-ring" style={{ "--pct": pct }}><b>{pct}%</b></span> : <Icon name={t.locked ? "lucide:lock" : "lucide:route"} size={18} color="#fff" />}
-        </span>
+        </span>}
         <span className="cf-track-copy">
           <span className="cf-track-eyebrow">Your progression track{t.locked ? " · Confidence" : ""}</span>
           <span className="cf-track-ti">{t.locked ? p.starterTitle : p.title + " Success Path"}</span>
@@ -90,7 +96,7 @@
           </div>}
         {heading && !quiet && <p className="cf-door-sub">{showTrack ? "Three" : "Two"} ways to start on <b>{focus.domain}</b> today — pick whichever suits you.</p>}
         <ol className="cf-door-list">
-        <li className="cf-door-item"><span className="cf-door-num" aria-label="Entry 1 of 3">1</span>
+        <li className="cf-door-item">
         <div className="cf-door-course" style={{ "--cf-dom": dom.color, "--cf-dom-soft": dom.soft, "--cf-dom-text": dom.text }}>
           <button type="button" className="cf-door-main" onClick={() => go(CF.courseUrl(course, web))}
             aria-label={"View course: " + course.title}>
@@ -117,7 +123,7 @@
         </div>
         </li>
 
-        <li className="cf-door-item"><span className="cf-door-num" aria-label="Entry 2 of 3">2</span>
+        <li className="cf-door-item">
         <div className={"cf-free" + (free.opened ? " done" : "")}>
           <span className="cf-free-ic" aria-hidden="true"><Icon name={free.opened ? "lucide:file-check-2" : "lucide:file-down"} size={18} color="var(--brand-navy)" /></span>
           <span className="cf-free-copy">
@@ -130,7 +136,7 @@
           </button>
         </div>
         </li>
-        {showTrack && <li className="cf-door-item"><span className="cf-door-num" aria-label="Entry 3 of 3">3</span><CFTrack focus={focus} web={web} tier={tier} /></li>}
+        {showTrack && <li className="cf-door-item"><CFTrack focus={focus} web={web} tier={tier} /></li>}
         </ol>
       </div>);
   }

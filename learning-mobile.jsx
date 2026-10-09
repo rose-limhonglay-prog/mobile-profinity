@@ -514,19 +514,23 @@ function LM2RelatedContent() {
 }
 
 /* Free account, nothing bought yet (user, 2026-10-07): My Courses is open —
-   it just waits for the first purchase. The button scrolls to the paid picks. */
+   it just waits for the first purchase. The #related deep link still lands
+   on the paid picks. */
 function scrollToRelatedL() {
   const el = document.getElementById("lm2-related");
   if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
-function LM2BuyFirstCourse({ onBrowse }) {
+/* The first suggestion is the free resources, not a purchase (user,
+   2026-10-08): the empty My Courses panel opens the Free Resources page. */
+const LM2_FREE_RESOURCES_URL = "AllCoursesMobile.html?free=1";
+function LM2StartFreeResources() {
   return (
-    <div className="lm2-mc-empty lm2-mc-empty-free" data-screen-label="My Courses · nothing bought yet">
-      <span className="ic"><IconifyL name="lucide:shopping-bag" size={22} color="#8A5303" /></span>
-      <b>No courses yet</b>
-      <p>Buy any course on its own and it lives here — continue it, finish it and earn the certificate. No membership needed.</p>
-      <button type="button" className="lm2-upgrade-btn" onClick={onBrowse}>
-        See courses to buy<IconifyL name="lucide:arrow-down" size={16} color="#fff" />
+    <div className="lm2-mc-empty lm2-mc-empty-free" data-screen-label="My Courses · start with free resources">
+      <span className="ic"><IconifyL name="lucide:folder-open" size={22} color="#8A5303" /></span>
+      <b>Start with free resources</b>
+      <p>Guides, checklists and vein maps you can use today — free, no card needed. Any course you buy later lives here too.</p>
+      <button type="button" className="lm2-upgrade-btn" onClick={() => goL(LM2_FREE_RESOURCES_URL)}>
+        Open Free Resources<IconifyL name="lucide:arrow-up-right" size={16} color="#fff" />
       </button>
     </div>);
 }
@@ -535,11 +539,11 @@ function LM2FreeResources({ unlocked, onStartSurvey }) {
   return (
     <section className="lm2-freeres" data-screen-label="Free Resources">
       {/* the resources page reuses the All Courses card design (?free=1) */}
-      <SecHead title="Free Resources" linkLabel="View All" viewAll={unlocked} onLink={() => goL("AllCoursesMobile.html?free=1")} />
+      <SecHead title="Free Resources" linkLabel="View All" viewAll={unlocked} onLink={() => goL(LM2_FREE_RESOURCES_URL)} />
       {unlocked ?
       <div className="lm2-freeres-open">
           <p>Your free resources are unlocked — guides, checklists and vein maps tailored to your clinic goals.</p>
-          <button type="button" className="lm2-outline-btn" onClick={() => goL("AllCoursesMobile.html?free=1")}>
+          <button type="button" className="lm2-outline-btn" onClick={() => goL(LM2_FREE_RESOURCES_URL)}>
             View free resources<IconifyL name="lucide:arrow-up-right" size={16} color="var(--brand-navy)" />
           </button>
         </div> :
@@ -670,6 +674,7 @@ function LearningHome() {
   /* Free account (user, 2026-10-07): My Courses is the courses they've bought,
      with live progress; Continue Learning resumes the first one in progress. */
   const myCourses = LM_FREE ? PFLS_L.purchasedCourses(purchased, done) : withLiveProgressL(LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES, done);
+  const noCoursesYetL = LM_FREE && !myCourses.length;
   const freeContinue = LM_FREE ? myCourses.find(inProgressL) : null;
   const continueData = LM_FREE ? (freeContinue ? continueDataL(done, freeContinue.curriculum) : null) : continueDataL(done);
   const visibleCourses = myCourses.filter(LM2_COURSE_TAB_FILTERS[tab] || (() => true));
@@ -707,10 +712,16 @@ function LearningHome() {
 
         <LM2GoalBanner data={LM2_GOAL} onHelp={() => setHelpOpen(true)} />
 
-        <LM2SearchBar />
+        {!noCoursesYetL && <LM2SearchBar />}
 
         {showContinue && <LM2ContinueCard data={continueData} />}
 
+        {/* Nothing bought yet on a free account (user, 2026-10-08): no My Courses
+            section at all — the free-resources panel stands on its own. */}
+        {noCoursesYetL ?
+        <section className="lm2-courseband lm2-mc-band lm2-start-free" data-screen-label="Start with free resources">
+          <LM2StartFreeResources />
+        </section> :
         <section className="lm2-courseband lm2-mc-band" data-screen-label="My Courses">
           <React.Fragment>
               <div className="lm2-mc-head">
@@ -724,9 +735,7 @@ function LearningHome() {
                   View all<IconifyL name="lucide:arrow-right" size={14} color="currentColor" />
                 </a>}
               </div>
-              {LM_FREE && !myCourses.length ?
-            <LM2BuyFirstCourse onBrowse={scrollToRelatedL} /> :
-            shownCoursesL.length ?
+              {shownCoursesL.length ?
             <div className="lm2-mc-rail" role="list">
                   <span className="lm2-coursegrid-pad" aria-hidden="true" />
                   {shownCoursesL.map((c, i) => <LM2MyCourseCard key={c.slug || c.title} c={c} featured={leadTabL && i === 0 && inProgressL(c)} />)}
@@ -743,14 +752,18 @@ function LearningHome() {
                   <p>{tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate."}</p>
                 </div>}
             </React.Fragment>
-        </section>
+        </section>}
+
+        {/* Free accounts see the free resources before anything paid (user,
+            2026-10-08); members keep the paid picks first. */}
+        {LM_FREE && <LM2FreeResources unlocked={resourcesUnlocked} onStartSurvey={() => setSurveyOpen(true)} />}
 
         {/* Paid related courses are open to every tier (user, 2026-10-07): a free
             account buys a course here and it lands in My Courses above. The All
             Courses browse card stays members-only. */}
         <LM2RelatedContent />
 
-        <LM2FreeResources unlocked={resourcesUnlocked} onStartSurvey={() => setSurveyOpen(true)} />
+        {!LM_FREE && <LM2FreeResources unlocked={resourcesUnlocked} onStartSurvey={() => setSurveyOpen(true)} />}
 
         {!LM_FREE && <LM2LearningPathCard />}
 
@@ -834,7 +847,7 @@ function MyCoursesHome() {
 
         {LM_FREE && !myCourses.length ?
         <section className="lm2-courseband lm2-mc-band" data-screen-label="My Courses · nothing bought yet">
-            <LM2BuyFirstCourse onBrowse={() => goL("LearningMobile.html#related")} />
+            <LM2StartFreeResources />
           </section> :
         <React.Fragment>
             <label className="lm2-search lm2-mcp-search">

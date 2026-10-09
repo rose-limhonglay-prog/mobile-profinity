@@ -81,7 +81,19 @@
       className: "cf-track" + (t.locked ? " locked" : ""),
       onClick: () => go(CF.pathHubUrl(p, web, t.locked ? "sp=starter&tab=starter" : "")),
       "aria-label": t.locked ? "Preview the " + p.starterTitle : "Open the " + p.title + " Success Path"
-    }, /*#__PURE__*/React.createElement("span", {
+    }, p.image ? /*#__PURE__*/React.createElement("span", {
+      className: "cf-track-ic cf-track-thumb" + (t.locked ? " locked" : ""),
+      style: {
+        backgroundImage: "url(" + p.image + ")"
+      },
+      "aria-hidden": "true"
+    }, t.locked && /*#__PURE__*/React.createElement("span", {
+      className: "cf-track-thumb-lock"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:lock",
+      size: 14,
+      color: "#fff"
+    }))) : /*#__PURE__*/React.createElement("span", {
       className: "cf-track-ic",
       "aria-hidden": "true"
     }, pr ? /*#__PURE__*/React.createElement("span", {
@@ -144,10 +156,7 @@
       className: "cf-door-list"
     }, /*#__PURE__*/React.createElement("li", {
       className: "cf-door-item"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "cf-door-num",
-      "aria-label": "Entry 1 of 3"
-    }, "1"), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       className: "cf-door-course",
       style: {
         "--cf-dom": dom.color,
@@ -206,10 +215,7 @@
       color: "var(--gray-500)"
     }), "You can buy any course on Basic — no membership needed."))), /*#__PURE__*/React.createElement("li", {
       className: "cf-door-item"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "cf-door-num",
-      "aria-label": "Entry 2 of 3"
-    }, "2"), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       className: "cf-free" + (free.opened ? " done" : "")
     }, /*#__PURE__*/React.createElement("span", {
       className: "cf-free-ic",
@@ -240,10 +246,7 @@
       color: "#fff"
     }), "Get it")))), showTrack && /*#__PURE__*/React.createElement("li", {
       className: "cf-door-item"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "cf-door-num",
-      "aria-label": "Entry 3 of 3"
-    }, "3"), /*#__PURE__*/React.createElement(CFTrack, {
+    }, /*#__PURE__*/React.createElement(CFTrack, {
       focus: focus,
       web: web,
       tier: tier

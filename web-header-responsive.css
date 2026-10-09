@@ -248,3 +248,13 @@ html.pf-wd-lock,html.pf-wd-lock body{overflow:hidden}
   [data-theme="dark"] .pf-appbn{background:var(--surface-card)}
   [data-theme="dark"] .pf-appbn-cta{background:var(--brand-gold);color:#1A1736}
 }
+
+/* ===== dev mode · "Viewing as" tier chips under Logout (2026-10-08) ===== */
+.pf-wd .m-drawer-dev{margin:10px 6px 18px;padding:12px 12px 12px;border-radius:14px;border:1px dashed var(--border-strong,#d5d8e4);background:var(--surface-sunken)}
+.pf-wd .m-drawer-dev-h{display:flex;align-items:center;gap:7px;margin-bottom:9px;font-family:var(--font-sans);font-weight:var(--fw-bold,700);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-500)}
+.pf-wd .m-drawer-dev-h i{width:7px;height:7px;border-radius:50%;background:#FDC35D;box-shadow:0 0 0 3px rgba(253,195,93,.25)}
+.pf-wd .m-drawer-dev-chips{display:flex;flex-wrap:wrap;gap:6px}
+.pf-wd .m-drawer-dev-chip{min-height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--border-default);background:var(--surface-card);color:var(--text-heading);font-family:var(--font-sans);font-weight:var(--fw-semibold,600);font-size:12.5px;cursor:pointer}
+.pf-wd .m-drawer-dev-chip:active{transform:scale(.97)}
+.pf-wd .m-drawer-dev-chip.on{background:var(--brand-navy);border-color:var(--brand-navy);color:#fff}
+[data-theme="dark"] .pf-wd .m-drawer-dev-chip.on{background:#FDC35D;border-color:#FDC35D;color:#1b1848}

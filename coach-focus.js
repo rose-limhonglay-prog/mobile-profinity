@@ -351,6 +351,7 @@
      Path, Confidence+ track it for real. */
   C.PATHS = {
     "Clinical Skills": { slug: "8d-lip-design", title: "8D Lip Design", levels: 5, skills: 19,
+      image: "assets/course-8d-lip-design.jpg", /* course cover shown on the track row (user 2026-10-08) */
       starterTitle: "Free Starter Path · Safe Lips", starterSkills: 5 }
   };
   C.pathHubUrl = function (path, web, extra) {

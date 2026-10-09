@@ -413,13 +413,33 @@ function PMInfoModal({
    explanation into the ⓘ"). The explanatory copy that used to sit on the
    card lives here; tap toggles it, a tap anywhere else closes it. "Read
    more" hands off to the fuller PMInfoModal when the card has one. */
+/* ⓘ popovers open on HOVER (user, 2026-10-08) — focus too for keyboards;
+   a tap only toggles on touch screens, which have no hover. `icon` swaps
+   the glyph (the coach-focus card uses a "?" for Ava's question). */
+const PM_NO_HOVER = (() => {
+  try {
+    return window.matchMedia("(hover: none)").matches;
+  } catch (e) {
+    return true;
+  }
+})();
 function PMInfoTip({
   label,
   children,
   onMore,
-  moreLabel
+  moreLabel,
+  icon = "lucide:info"
 }) {
   const [open, setOpen] = useStatePM(false);
+  const closeT = React.useRef(null);
+  const show = () => {
+    clearTimeout(closeT.current);
+    setOpen(true);
+  };
+  const hide = () => {
+    clearTimeout(closeT.current);
+    closeT.current = setTimeout(() => setOpen(false), 160);
+  };
   const [x, setX] = useStatePM(0); // caret x within the header row
   const host = React.useRef(null);
   const tipId = React.useId ? React.useId() : undefined;
@@ -444,16 +464,22 @@ function PMInfoTip({
   }, [open]);
   return /*#__PURE__*/React.createElement("span", {
     className: "pm-tip" + (open ? " is-open" : ""),
-    ref: host
+    ref: host,
+    onMouseEnter: show,
+    onMouseLeave: hide
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-pane-info",
     "aria-label": label,
     "aria-expanded": open,
     "aria-controls": tipId,
-    onClick: () => setOpen(o => !o)
+    onClick: () => {
+      if (PM_NO_HOVER) setOpen(o => !o);
+    },
+    onFocus: show,
+    onBlur: hide
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:info",
+    name: icon,
     size: 17,
     color: open ? "var(--ai-purple)" : "var(--gray-500)"
   })), open && /*#__PURE__*/React.createElement("span", {
@@ -553,36 +579,45 @@ function PMGoalFocusCard({
     className: "pm-goal-top"
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-goal-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "eyebrow",
-    style: {
-      color: "var(--ai-purple)"
-    }
-  }, "Ava recommends starting here"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      margin: "8px 0 2px"
-    }
-  }, /*#__PURE__*/React.createElement(UI.CFFocusChip, {
-    domain: focus.domain,
-    size: "hero"
-  })))), focus.confirm && /*#__PURE__*/React.createElement("div", {
-    className: "cf-confirm",
-    style: {
-      marginTop: 12
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cf-confirm-hd"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:message-circle-question",
-    size: 18,
-    color: "var(--ai-purple)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "cf-kicker"
-  }, "Ava has a question")), /*#__PURE__*/React.createElement("p", null, "Your ", /*#__PURE__*/React.createElement("b", null, focus.confirm.alt), " deep-dive scored ", focus.confirm.altScore, " — well below ", focus.domain, " (", focus.confirm.focusScore, "). Is ", focus.confirm.alt.toLowerCase(), " what's really holding you back?"), /*#__PURE__*/React.createElement("button", {
+  }, (() => {
+    const dom = window.PFCoachFocus && window.PFCoachFocus.DOMAINS[focus.domain] || {};
+    return /*#__PURE__*/React.createElement("div", {
+      className: "cf-reveal-hero cf-goal-hero",
+      style: {
+        "--cf-dom": dom.color,
+        "--cf-dom-soft": dom.soft,
+        "--cf-dom-text": dom.text
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "cf-reveal-glow",
+      "aria-hidden": "true"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "cf-reveal-ava",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+      name: "lucide:sparkles",
+      size: 20,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "cf-kicker"
+    }, "Ava found your focus"), /*#__PURE__*/React.createElement(UI.CFFocusChip, {
+      domain: focus.domain,
+      size: "lg"
+    }));
+  })())), focus.confirm && /*#__PURE__*/React.createElement("div", {
+    className: "cf-ask-row"
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "cf-btn cf-btn-ghost",
+    className: "cf-btn cf-ask-btn",
     onClick: () => pmAskAva("My " + focus.confirm.alt + " score is lower than my " + focus.domain + " focus. Should I switch my focus?")
-  }, "Ask Ava")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:sparkles",
+    size: 16,
+    color: "#fff"
+  }), "Ask Ava"), /*#__PURE__*/React.createElement(PMInfoTip, {
+    label: "Why Ava is asking",
+    icon: "lucide:circle-help"
+  }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, "Ava has a question."), " Your ", /*#__PURE__*/React.createElement("b", null, focus.confirm.alt), " deep-dive scored ", focus.confirm.altScore, " — well below ", focus.domain, " (", focus.confirm.focusScore, "). Is ", focus.confirm.alt.toLowerCase(), " what's really holding you back?"))), /*#__PURE__*/React.createElement("div", {
     className: "cf-milestone",
     style: {
       margin: "12px 0 4px"
@@ -607,46 +642,7 @@ function PMGoalFocusCard({
     web: false,
     tier: pmTier(),
     quiet: true
-  })), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 12
-    }
-  }, paid ? /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "cf-btn cf-btn-ai cf-btn-block",
-    onClick: () => pmAskAva(PM_CF.avaPrompt(focus))
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:sparkles",
-    size: 16,
-    color: "var(--ai-purple)"
-  }), "Ask Ava to plan my week") : /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "cf-ava-locked",
-    onClick: () => goPM(PM_CF.upgradeUrl(false))
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:message-circle",
-    size: 18,
-    color: "#4F46C8"
-  }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "Coach with Ava on this plan"), " · Confidence"), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:lock",
-    size: 14,
-    color: "var(--gray-400)"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "cf-reveal-foot",
-    style: {
-      marginTop: 10
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cf-checkin"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:calendar-clock",
-    size: 13,
-    color: "var(--gray-500)"
-  }), PM_CF.checkInLabel(focus)), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "cf-link",
-    onClick: () => pmOpenAssessHub("whereNow")
-  }, "Check in now")), /*#__PURE__*/React.createElement(PMInfoModal, {
+  })), /*#__PURE__*/React.createElement(PMInfoModal, {
     open: info,
     onClose: () => setInfo(false),
     title: "How Ava chooses your focus",
@@ -923,38 +919,37 @@ function pmReconcileTargets(state, ranked) {
 
 /* "Next up" row at the top of Today's Targets while pillars are still
    unanswered — opens that pillar's questions directly. Not part of the
-   ticked set: it completes itself when the assessment does. */
+   ticked set: it completes itself when the assessment does. Rendered in the
+   coach-focus "door" row style (user, 2026-10-08: Today's Targets copies the
+   Your door UI) — the badge is a compass, not a number. */
 function PMAssessNudgeRow({
   pillarKey,
   remaining,
   locked
 }) {
   const open = () => pmOpenAssessHub(pillarKey);
-  return /*#__PURE__*/React.createElement("div", {
-    className: "pm-target-row pm-target-assess"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-target-assess-ic",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: locked ? "lucide:lock" : "lucide:compass",
-    size: 18,
-    color: "var(--ai-purple)"
-  })), /*#__PURE__*/React.createElement("button", {
+  return /*#__PURE__*/React.createElement("li", {
+    className: "cf-door-item cf-door-nudge"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cf-free"
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "pm-target-main",
+    className: "cf-door-main cf-free-main",
     onClick: open,
     "aria-label": (locked ? "Preview the " : "Answer the ") + pillarKey + " deep-dive in Get to know you. About 3 minutes"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-target-copy"
+    className: "cf-free-copy"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "tx"
+    className: "cf-free-eyebrow"
+  }, "Next up", locked ? " · Confidence" : ""), /*#__PURE__*/React.createElement("span", {
+    className: "cf-free-ti"
   }, "Sharpen your plan: ", pillarKey, " deep-dive"), /*#__PURE__*/React.createElement("span", {
-    className: "cap"
-  }, locked ? "Get to know you · Confidence · ~3 mins" : "Get to know you · " + remaining + " pillar" + (remaining === 1 ? "" : "s") + " still to deep-dive · ~3 mins"))), /*#__PURE__*/React.createElement("button", {
+    className: "cf-free-cap"
+  }, "Get to know you · ", locked ? "locked preview" : remaining + " pillar" + (remaining === 1 ? "" : "s") + " to deep-dive", " · ~3 mins"))), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "pm-pick-cta pm-target-assess-cta",
+    className: "cf-btn cf-btn-free cf-btn-ai-solid",
     onClick: open
-  }, locked ? "Preview" : "Start"));
+  }, locked ? "Preview" : "Start")));
 }
 
 /* Daily picks (user, 2026-09-22): every day's set must also carry one FREE
@@ -1009,66 +1004,88 @@ function PMDailyPicks() {
     T.tapPaid("detail");
     goPM(T.paidDetailUrl(false));
   }
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "pm-target-row pm-pick pm-pick-free" + (free.done ? " done" : "")
+
+  /* Door-style rows (coach-focus.css .cf-door-*): 1 = the course pick with
+     its cover, 2 = the free PDF. Both count toward the day's set. */
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("li", {
+    className: "cf-door-item" + (paid.purchased ? " done" : "")
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cf-door-course"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "pm-target-main",
-    onClick: download,
-    "aria-label": (free.done ? "Downloaded: " : "Download the free PDF: ") + free.title
+    className: "cf-door-main",
+    onClick: viewCourse,
+    "aria-label": (paid.purchased ? "Enrolled: " : "View course: ") + paid.title + ", " + price
   }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-pick-icon"
+    className: "cf-door-thumb",
+    style: {
+      backgroundImage: "url(" + paid.image + ")"
+    },
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "cf-door-copy"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cf-door-eyebrow"
+  }, paid.purchased ? "Enrolled · +" + paid.pts + " pts earned" : "Course pick · +" + paid.pts + " pts"), /*#__PURE__*/React.createElement("span", {
+    className: "cf-door-ti"
+  }, paid.title), /*#__PURE__*/React.createElement("span", {
+    className: "cf-door-bl"
+  }, paid.blurb))), /*#__PURE__*/React.createElement("div", {
+    className: "cf-door-actions"
+  }, paid.purchased ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cf-btn cf-btn-primary",
+    onClick: viewCourse
+  }, "Open course", /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:arrow-up-right",
+    size: 16,
+    color: "#fff"
+  })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cf-btn cf-btn-ghost",
+    onClick: viewCourse
+  }, "View course"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cf-btn cf-btn-gold",
+    onClick: buy,
+    "aria-label": "Buy " + paid.title + " for " + price
+  }, "Buy ", price))))), /*#__PURE__*/React.createElement("li", {
+    className: "cf-door-item" + (free.done ? " done" : "")
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cf-free"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cf-free-ic",
+    "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: free.done ? "lucide:file-check-2" : "lucide:file-down",
     size: 18,
-    color: "var(--pm-pick-free, #1E7A5C)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "pm-target-copy"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "tx"
-  }, free.title), /*#__PURE__*/React.createElement("span", {
-    className: "cap"
-  }, "PDF guide · ", free.pages, " pages · +", free.pts, " pts"))), /*#__PURE__*/React.createElement("button", {
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "pm-pick-cta" + (free.done ? " is-done" : ""),
+    className: "cf-door-main cf-free-main",
+    onClick: download,
+    "aria-label": (free.done ? "Downloaded: " : "Download the free PDF: ") + free.title
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cf-free-copy"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cf-free-eyebrow"
+  }, free.done ? "Saved" : "Start free today"), /*#__PURE__*/React.createElement("span", {
+    className: "cf-free-ti"
+  }, free.title), /*#__PURE__*/React.createElement("span", {
+    className: "cf-free-cap" + (free.done ? " earned" : "")
+  }, "PDF guide · ", free.pages, " pages · ", free.done ? "+" + free.pts + " pts earned" : "+" + free.pts + " pts"))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cf-btn cf-btn-free" + (free.done ? " is-done" : ""),
     onClick: download
   }, free.done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:check",
     size: 13,
-    color: "#1E7A5C"
-  }), "Saved") : "Download")), /*#__PURE__*/React.createElement("div", {
-    className: "pm-target-row pm-pick pm-pick-paid" + (paid.purchased ? " done" : "")
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pm-target-main",
-    onClick: viewCourse,
-    "aria-label": (paid.purchased ? "Enrolled: " : "View course: ") + paid.title + ", " + price
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pm-pick-icon"
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:graduation-cap",
-    size: 18,
-    color: "var(--brand-gold-700, #8A5303)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "pm-target-copy"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "tx"
-  }, paid.title), /*#__PURE__*/React.createElement("span", {
-    className: "cap"
-  }, paid.purchased ? "Enrolled · +" + paid.pts + " pts earned" : "Course · " + price + " · +" + paid.pts + " pts when you enrol"))), paid.purchased ? /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pm-pick-cta is-done",
-    onClick: viewCourse
-  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
-    name: "lucide:check",
-    size: 13,
-    color: "#1E7A5C"
-  }), "Owned") : /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pm-pick-cta pm-pick-cta-buy",
-    onClick: buy,
-    "aria-label": "Buy " + paid.title + " for " + price
-  }, "Buy ", price)));
+    color: "currentColor"
+  }), "Saved") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:download",
+    size: 14,
+    color: "#fff"
+  }), "Get it")))));
 }
 function PMTargetsCard({
   assessState
@@ -1175,20 +1192,34 @@ function PMTargetsCard({
     infoLabel: "About Today's Targets",
     onInfo: () => setInfo(true),
     moreLabel: "How targets and points work"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cf-door cf-door-targets"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cf-door-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cf-kicker"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:list-checks",
+    size: 14,
+    color: "var(--brand-gold)"
+  }), "Today's set"), /*#__PURE__*/React.createElement("span", {
+    className: "cf-door-count"
+  }, doneCount, " of ", total, " done")), /*#__PURE__*/React.createElement("ol", {
+    className: "cf-door-list"
   }, nextKey && /*#__PURE__*/React.createElement(PMAssessNudgeRow, {
     pillarKey: nextKey,
     remaining: remaining,
     locked: !paid
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "pm-target-rows"
-  }, /*#__PURE__*/React.createElement(PMDailyPicks, null), rows.map(t => {
+  }), /*#__PURE__*/React.createElement(PMDailyPicks, null), rows.map((t, i) => {
     const pr = PM_PRIORITY[t.priority];
-    const caption = (t.pillar ? focus && t.pillar === focus.domain ? "Your focus · " + t.pillar : t.pillar : "Suggested by Ava") + " · " + pr.label;
-    return /*#__PURE__*/React.createElement("div", {
+    const isFocus = !!(t.pillar && focus && t.pillar === focus.domain);
+    const eyebrow = t.pillar ? isFocus ? "Your focus" : t.pillar : "Suggested by Ava";
+    const capTail = pr.label + (isFocus ? " · " + t.pillar : "");
+    return /*#__PURE__*/React.createElement("li", {
       key: t.id,
-      className: "pm-target-row" + (t.done ? " done" : "") + (settling === t.id && t.done ? " is-settling" : "")
+      className: "cf-door-item cf-door-item-check" + (t.done ? " done" : "") + (settling === t.id && t.done ? " is-settling" : "")
     }, /*#__PURE__*/React.createElement("span", {
-      className: "pm-target-check",
+      className: "cf-door-check",
       role: "checkbox",
       tabIndex: 0,
       "aria-checked": t.done,
@@ -1206,37 +1237,50 @@ function PMTargetsCard({
       name: "lucide:check",
       size: 13,
       color: "#fff"
-    }))), /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "pm-target-main",
-      "aria-label": t.text + ". " + caption + ". Opens " + (t.pillar || "your") + " goal page",
-      onClick: () => goPM(t.pillar ? pmGoalUrl(t.pillar) : "LearningMobile.html")
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "cf-free cf-door-task"
     }, /*#__PURE__*/React.createElement("span", {
-      className: "pm-target-prio",
+      className: "cf-free-ic",
       style: {
-        color: pr.color
+        "--cf-prio": pr.color
       },
       "aria-hidden": "true"
     }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
       name: pr.icon,
       size: 18,
       color: pr.color
-    })), /*#__PURE__*/React.createElement("span", {
-      className: "pm-target-copy"
+    })), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "cf-door-main cf-free-main",
+      "aria-label": t.text + ". " + eyebrow + " · " + pr.label + ". Opens " + (t.pillar || "your") + " goal page",
+      onClick: () => goPM(t.pillar ? pmGoalUrl(t.pillar) : "LearningMobile.html")
     }, /*#__PURE__*/React.createElement("span", {
-      className: "tx"
+      className: "cf-free-copy"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "cf-free-eyebrow"
+    }, eyebrow), /*#__PURE__*/React.createElement("span", {
+      className: "cf-free-ti"
     }, t.text), /*#__PURE__*/React.createElement("span", {
-      className: "cap"
-    }, caption)), /*#__PURE__*/React.createElement("span", {
-      className: "pm-target-pts" + (t.done ? " earned" : "")
-    }, t.done && /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+      className: "cf-free-cap" + (t.done ? " earned" : "")
+    }, t.done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
       name: "lucide:check",
       size: 11,
       color: "#1E7A5C"
-    }), "+", pr.pts, " pts")));
-  })), /*#__PURE__*/React.createElement("p", {
+    }), "+", pr.pts, " pts earned") : "+" + pr.pts + " pts · " + capTail))), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "cf-btn cf-btn-free cf-door-tick" + (t.done ? " is-done" : ""),
+      role: "checkbox",
+      "aria-checked": t.done,
+      "aria-label": (t.done ? "Mark not done: " : "Mark done: ") + t.text,
+      onClick: () => toggle(t.id)
+    }, t.done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+      name: "lucide:check",
+      size: 13,
+      color: "currentColor"
+    }), "Done") : "Done")));
+  }))), allDone && /*#__PURE__*/React.createElement("p", {
     className: "pm-target-foot"
-  }, doneCount, " of ", total, " done", allDone ? " — that's today's set. New targets arrive tomorrow" : ""), /*#__PURE__*/React.createElement(PMInfoModal, {
+  }, "That's today's set — new targets arrive tomorrow."), /*#__PURE__*/React.createElement(PMInfoModal, {
     open: info,
     onClose: () => setInfo(false),
     title: "How targets and points work",

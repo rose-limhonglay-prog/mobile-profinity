@@ -1027,7 +1027,8 @@ function LM2RelatedContent() {
 }
 
 /* Free account, nothing bought yet (user, 2026-10-07): My Courses is open —
-   it just waits for the first purchase. The button scrolls to the paid picks. */
+   it just waits for the first purchase. The #related deep link still lands
+   on the paid picks. */
 function scrollToRelatedL() {
   const el = document.getElementById("lm2-related");
   if (el) el.scrollIntoView({
@@ -1035,24 +1036,25 @@ function scrollToRelatedL() {
     block: "start"
   });
 }
-function LM2BuyFirstCourse({
-  onBrowse
-}) {
+/* The first suggestion is the free resources, not a purchase (user,
+   2026-10-08): the empty My Courses panel opens the Free Resources page. */
+const LM2_FREE_RESOURCES_URL = "AllCoursesMobile.html?free=1";
+function LM2StartFreeResources() {
   return /*#__PURE__*/React.createElement("div", {
     className: "lm2-mc-empty lm2-mc-empty-free",
-    "data-screen-label": "My Courses · nothing bought yet"
+    "data-screen-label": "My Courses · start with free resources"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
   }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:shopping-bag",
+    name: "lucide:folder-open",
     size: 22,
     color: "#8A5303"
-  })), /*#__PURE__*/React.createElement("b", null, "No courses yet"), /*#__PURE__*/React.createElement("p", null, "Buy any course on its own and it lives here — continue it, finish it and earn the certificate. No membership needed."), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("b", null, "Start with free resources"), /*#__PURE__*/React.createElement("p", null, "Guides, checklists and vein maps you can use today — free, no card needed. Any course you buy later lives here too."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lm2-upgrade-btn",
-    onClick: onBrowse
-  }, "See courses to buy", /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:arrow-down",
+    onClick: () => goL(LM2_FREE_RESOURCES_URL)
+  }, "Open Free Resources", /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-up-right",
     size: 16,
     color: "#fff"
   })));
@@ -1068,13 +1070,13 @@ function LM2FreeResources({
     title: "Free Resources",
     linkLabel: "View All",
     viewAll: unlocked,
-    onLink: () => goL("AllCoursesMobile.html?free=1")
+    onLink: () => goL(LM2_FREE_RESOURCES_URL)
   }), unlocked ? /*#__PURE__*/React.createElement("div", {
     className: "lm2-freeres-open"
   }, /*#__PURE__*/React.createElement("p", null, "Your free resources are unlocked — guides, checklists and vein maps tailored to your clinic goals."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lm2-outline-btn",
-    onClick: () => goL("AllCoursesMobile.html?free=1")
+    onClick: () => goL(LM2_FREE_RESOURCES_URL)
   }, "View free resources", /*#__PURE__*/React.createElement(IconifyL, {
     name: "lucide:arrow-up-right",
     size: 16,
@@ -1261,6 +1263,7 @@ function LearningHome() {
   /* Free account (user, 2026-10-07): My Courses is the courses they've bought,
      with live progress; Continue Learning resumes the first one in progress. */
   const myCourses = LM_FREE ? PFLS_L.purchasedCourses(purchased, done) : withLiveProgressL(LM_TIER === "confidence" ? LM2_MY_COURSES_CONFIDENCE : LM2_MY_COURSES, done);
+  const noCoursesYetL = LM_FREE && !myCourses.length;
   const freeContinue = LM_FREE ? myCourses.find(inProgressL) : null;
   const continueData = LM_FREE ? freeContinue ? continueDataL(done, freeContinue.curriculum) : null : continueDataL(done);
   const visibleCourses = myCourses.filter(LM2_COURSE_TAB_FILTERS[tab] || (() => true));
@@ -1302,9 +1305,12 @@ function LearningHome() {
   }), /*#__PURE__*/React.createElement(LM2GoalBanner, {
     data: LM2_GOAL,
     onHelp: () => setHelpOpen(true)
-  }), /*#__PURE__*/React.createElement(LM2SearchBar, null), showContinue && /*#__PURE__*/React.createElement(LM2ContinueCard, {
+  }), !noCoursesYetL && /*#__PURE__*/React.createElement(LM2SearchBar, null), showContinue && /*#__PURE__*/React.createElement(LM2ContinueCard, {
     data: continueData
-  }), /*#__PURE__*/React.createElement("section", {
+  }), noCoursesYetL ? /*#__PURE__*/React.createElement("section", {
+    className: "lm2-courseband lm2-mc-band lm2-start-free",
+    "data-screen-label": "Start with free resources"
+  }, /*#__PURE__*/React.createElement(LM2StartFreeResources, null)) : /*#__PURE__*/React.createElement("section", {
     className: "lm2-courseband lm2-mc-band",
     "data-screen-label": "My Courses"
   }, /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
@@ -1328,9 +1334,7 @@ function LearningHome() {
     name: "lucide:arrow-right",
     size: 14,
     color: "currentColor"
-  }))), LM_FREE && !myCourses.length ? /*#__PURE__*/React.createElement(LM2BuyFirstCourse, {
-    onBrowse: scrollToRelatedL
-  }) : shownCoursesL.length ? /*#__PURE__*/React.createElement("div", {
+  }))), shownCoursesL.length ? /*#__PURE__*/React.createElement("div", {
     className: "lm2-mc-rail",
     role: "list"
   }, /*#__PURE__*/React.createElement("span", {
@@ -1362,7 +1366,10 @@ function LearningHome() {
     name: tab === "Completed" ? "lucide:award" : "lucide:play-circle",
     size: 22,
     color: "#8A5303"
-  })), /*#__PURE__*/React.createElement("p", null, tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate.")))), /*#__PURE__*/React.createElement(LM2RelatedContent, null), /*#__PURE__*/React.createElement(LM2FreeResources, {
+  })), /*#__PURE__*/React.createElement("p", null, tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate.")))), LM_FREE && /*#__PURE__*/React.createElement(LM2FreeResources, {
+    unlocked: resourcesUnlocked,
+    onStartSurvey: () => setSurveyOpen(true)
+  }), /*#__PURE__*/React.createElement(LM2RelatedContent, null), !LM_FREE && /*#__PURE__*/React.createElement(LM2FreeResources, {
     unlocked: resourcesUnlocked,
     onStartSurvey: () => setSurveyOpen(true)
   }), !LM_FREE && /*#__PURE__*/React.createElement(LM2LearningPathCard, null), nextTier && /*#__PURE__*/React.createElement(LM2SubscribeCard, {
@@ -1461,9 +1468,7 @@ function MyCoursesHome() {
   }, LM_FREE && !myCourses.length ? "Every course you buy — all in one place, no membership needed." : summary)), LM_FREE && !myCourses.length ? /*#__PURE__*/React.createElement("section", {
     className: "lm2-courseband lm2-mc-band",
     "data-screen-label": "My Courses · nothing bought yet"
-  }, /*#__PURE__*/React.createElement(LM2BuyFirstCourse, {
-    onBrowse: () => goL("LearningMobile.html#related")
-  })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
+  }, /*#__PURE__*/React.createElement(LM2StartFreeResources, null)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("label", {
     className: "lm2-search lm2-mcp-search"
   }, /*#__PURE__*/React.createElement(IconifyL, {
     name: "lucide:search",

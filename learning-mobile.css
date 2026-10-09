@@ -642,3 +642,6 @@ img { max-width: 100%; }
 [data-theme="dark"] .lm2-mcp-tab.on { background: #CE9957; border-color: #CE9957; color: #0C1928; }
 [data-theme="dark"] .lm2-mcp-back, [data-theme="dark"] .lm2-mcp-h, [data-theme="dark"] .lm2-mcp-reset { color: var(--text-primary); }
 [data-theme="dark"] .lm2-mcp-tab-n { color: #CE9957; }
+/* Nothing bought yet on a free account: the free-resources panel replaces the
+   My Courses section (search bar hidden), so it sits a touch closer to the goal banner. */
+.lm2-courseband.lm2-mc-band.lm2-start-free { margin-top: 20px; }

@@ -284,22 +284,26 @@ function MCWCertificateCard({
 }
 
 /* Free account, nothing bought yet (user, 2026-10-07): My Courses is open —
-   it waits for the first purchase, made from the paid picks on My Learning. */
-function MCWBuyFirstPanel() {
+   it waits for the first purchase. The first suggestion is the free
+   resources, not a purchase (user, 2026-10-08). */
+function MCWStartFreePanel() {
+  const url = PFL_MCW.allCoursesUrl ? PFL_MCW.allCoursesUrl({
+    free: 1
+  }) : "AllCoursesWeb.html?free=1";
   return /*#__PURE__*/React.createElement("div", {
     className: "mcw-locked",
-    "data-screen-label": "My Courses · nothing bought yet"
+    "data-screen-label": "My Courses · start with free resources"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mcw-locked-icon"
   }, /*#__PURE__*/React.createElement(IconifyMCW, {
-    name: "lucide:shopping-bag",
+    name: "lucide:folder-open",
     size: 28,
     color: "#fff"
-  })), /*#__PURE__*/React.createElement("h3", null, "No courses yet"), /*#__PURE__*/React.createElement("p", null, "Buy any course on its own and it lives here — continue it, finish it and earn the certificate. No membership needed."), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("h3", null, "Start with free resources"), /*#__PURE__*/React.createElement("p", null, "Guides, checklists and vein maps you can use today — free, no card needed. Any course you buy later lives here too."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "mcw-locked-upgrade-btn",
-    onClick: () => goMCW(PFL_MCW.myLearningUrl + "#related")
-  }, "See courses to buy", /*#__PURE__*/React.createElement(IconifyMCW, {
+    onClick: () => goMCW(url)
+  }, "Open Free Resources", /*#__PURE__*/React.createElement(IconifyMCW, {
     name: "lucide:arrow-up-right",
     size: 19,
     color: "#fff"
@@ -364,7 +368,7 @@ function MyCoursesWebApp() {
     color: "#fff"
   }), PFL_MCW.TIER_NAME[TIER_MCW], " Path"), /*#__PURE__*/React.createElement("span", {
     className: "mcw-count"
-  }, MY_COURSES_MCW.length, " ", MY_COURSES_MCW.length === 1 ? "course" : "courses", " · ", inProgressCount, " in progress · ", completedCount, " completed"))), FREE_TIER_MCW && MY_COURSES_MCW.length === 0 ? /*#__PURE__*/React.createElement(MCWBuyFirstPanel, null) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, MY_COURSES_MCW.length, " ", MY_COURSES_MCW.length === 1 ? "course" : "courses", " · ", inProgressCount, " in progress · ", completedCount, " completed"))), FREE_TIER_MCW && MY_COURSES_MCW.length === 0 ? /*#__PURE__*/React.createElement(MCWStartFreePanel, null) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "mcw-toolbar"
   }, /*#__PURE__*/React.createElement("label", {
     className: "mcw-search"

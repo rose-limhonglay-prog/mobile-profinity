@@ -262,8 +262,15 @@ function PMInfoModal({ open, onClose, title, icon, children, coach, coachLabel }
    explanation into the ⓘ"). The explanatory copy that used to sit on the
    card lives here; tap toggles it, a tap anywhere else closes it. "Read
    more" hands off to the fuller PMInfoModal when the card has one. */
-function PMInfoTip({ label, children, onMore, moreLabel }) {
+/* ⓘ popovers open on HOVER (user, 2026-10-08) — focus too for keyboards;
+   a tap only toggles on touch screens, which have no hover. `icon` swaps
+   the glyph (the coach-focus card uses a "?" for Ava's question). */
+const PM_NO_HOVER = (() => { try { return window.matchMedia("(hover: none)").matches; } catch (e) { return true; } })();
+function PMInfoTip({ label, children, onMore, moreLabel, icon = "lucide:info" }) {
   const [open, setOpen] = useStatePM(false);
+  const closeT = React.useRef(null);
+  const show = () => { clearTimeout(closeT.current); setOpen(true); };
+  const hide = () => { clearTimeout(closeT.current); closeT.current = setTimeout(() => setOpen(false), 160); };
   const [x, setX] = useStatePM(0); // caret x within the header row
   const host = React.useRef(null);
   const tipId = React.useId ? React.useId() : undefined;
@@ -277,9 +284,10 @@ function PMInfoTip({ label, children, onMore, moreLabel }) {
     return () => { document.removeEventListener("pointerdown", onDown, true); document.removeEventListener("keydown", onKey); };
   }, [open]);
   return (
-    <span className={"pm-tip" + (open ? " is-open" : "")} ref={host}>
-      <button type="button" className="pm-pane-info" aria-label={label} aria-expanded={open} aria-controls={tipId} onClick={() => setOpen((o) => !o)}>
-        <DSPM.IconifyIcon name="lucide:info" size={17} color={open ? "var(--ai-purple)" : "var(--gray-500)"} />
+    <span className={"pm-tip" + (open ? " is-open" : "")} ref={host} onMouseEnter={show} onMouseLeave={hide}>
+      <button type="button" className="pm-pane-info" aria-label={label} aria-expanded={open} aria-controls={tipId}
+        onClick={() => { if (PM_NO_HOVER) setOpen((o) => !o); }} onFocus={show} onBlur={hide}>
+        <DSPM.IconifyIcon name={icon} size={17} color={open ? "var(--ai-purple)" : "var(--gray-500)"} />
       </button>
       {open &&
         <span className="pm-tip-pop" id={tipId} role="tooltip" style={{ "--tip-x": x + "px" }}>
@@ -336,36 +344,30 @@ function PMGoalFocusCard({ assessState }) {
       </>}>
       <div className="pm-goal-top">
         <div className="pm-goal-main">
-          <span className="eyebrow" style={{ color: "var(--ai-purple)" }}>Ava recommends starting here</span>
-          <div style={{ margin: "8px 0 2px" }}><UI.CFFocusChip domain={focus.domain} size="hero" /></div>
+          {(() => { const dom = (window.PFCoachFocus && window.PFCoachFocus.DOMAINS[focus.domain]) || {}; return (
+          <div className="cf-reveal-hero cf-goal-hero" style={{ "--cf-dom": dom.color, "--cf-dom-soft": dom.soft, "--cf-dom-text": dom.text }}>
+            <span className="cf-reveal-glow" aria-hidden="true" />
+            <span className="cf-reveal-ava" aria-hidden="true"><DSPM.IconifyIcon name="lucide:sparkles" size={20} color="#fff" /></span>
+            <span className="cf-kicker">Ava found your focus</span>
+            <UI.CFFocusChip domain={focus.domain} size="lg" />
+          </div>); })()}
         </div>
       </div>
+      {/* Ava's question (user 2026-10-08): one Ask Ava button + a "?" that
+          shows the question on hover (tap on touch) instead of the full block */}
       {focus.confirm &&
-      <div className="cf-confirm" style={{ marginTop: 12 }}>
-          <span className="cf-confirm-hd"><DSPM.IconifyIcon name="lucide:message-circle-question" size={18} color="var(--ai-purple)" /><span className="cf-kicker">Ava has a question</span></span>
-          <p>Your <b>{focus.confirm.alt}</b> deep-dive scored {focus.confirm.altScore} — well below {focus.domain} ({focus.confirm.focusScore}). Is {focus.confirm.alt.toLowerCase()} what's really holding you back?</p>
-          <button type="button" className="cf-btn cf-btn-ghost" onClick={() => pmAskAva("My " + focus.confirm.alt + " score is lower than my " + focus.domain + " focus. Should I switch my focus?")}>Ask Ava</button>
+      <div className="cf-ask-row">
+          <button type="button" className="cf-btn cf-ask-btn" onClick={() => pmAskAva("My " + focus.confirm.alt + " score is lower than my " + focus.domain + " focus. Should I switch my focus?")}><DSPM.IconifyIcon name="lucide:sparkles" size={16} color="#fff" />Ask Ava</button>
+          <PMInfoTip label="Why Ava is asking" icon="lucide:circle-help">
+            <p><b>Ava has a question.</b> Your <b>{focus.confirm.alt}</b> deep-dive scored {focus.confirm.altScore} — well below {focus.domain} ({focus.confirm.focusScore}). Is {focus.confirm.alt.toLowerCase()} what's really holding you back?</p>
+          </PMInfoTip>
         </div>}
       <div className="cf-milestone" style={{ margin: "12px 0 4px" }}>
         <span className="cf-milestone-ic" aria-hidden="true"><DSPM.IconifyIcon name="lucide:flag" size={16} color="#fff" /></span>
         <span><span className="cf-kicker">Your next 90 days</span><span className="cf-milestone-ti">{focus.milestone}</span></span>
       </div>
       <div style={{ marginTop: 12 }}><UI.CFDoor focus={focus} web={false} tier={pmTier()} quiet /></div>
-      <div style={{ marginTop: 12 }}>
-        {paid ?
-        <button type="button" className="cf-btn cf-btn-ai cf-btn-block" onClick={() => pmAskAva(PM_CF.avaPrompt(focus))}>
-            <DSPM.IconifyIcon name="lucide:sparkles" size={16} color="var(--ai-purple)" />Ask Ava to plan my week
-          </button> :
-        <button type="button" className="cf-ava-locked" onClick={() => goPM(PM_CF.upgradeUrl(false))}>
-            <DSPM.IconifyIcon name="lucide:message-circle" size={18} color="#4F46C8" />
-            <span><b>Coach with Ava on this plan</b> · Confidence</span>
-            <DSPM.IconifyIcon name="lucide:lock" size={14} color="var(--gray-400)" />
-          </button>}
-      </div>
-      <div className="cf-reveal-foot" style={{ marginTop: 10 }}>
-        <span className="cf-checkin"><DSPM.IconifyIcon name="lucide:calendar-clock" size={13} color="var(--gray-500)" />{PM_CF.checkInLabel(focus)}</span>
-        <button type="button" className="cf-link" onClick={() => pmOpenAssessHub("whereNow")}>Check in now</button>
-      </div>
+      {/* plan-my-week button + check-in footer removed (user 2026-10-08) */}
       <PMInfoModal open={info} onClose={() => setInfo(false)} title="How Ava chooses your focus" icon="lucide:compass"
         coach={paid ? "Why is " + focus.domain + " my focus right now, and what should I do first?" : null} coachLabel="Ask Ava about my focus">
         <p><b>“The goal doesn't dictate the content — the constraint does.”</b> Your goal is where you're heading; your focus is the one thing holding you back right now.</p>
@@ -535,21 +537,25 @@ function pmReconcileTargets(state, ranked) {
 
 /* "Next up" row at the top of Today's Targets while pillars are still
    unanswered — opens that pillar's questions directly. Not part of the
-   ticked set: it completes itself when the assessment does. */
+   ticked set: it completes itself when the assessment does. Rendered in the
+   coach-focus "door" row style (user, 2026-10-08: Today's Targets copies the
+   Your door UI) — the badge is a compass, not a number. */
 function PMAssessNudgeRow({ pillarKey, remaining, locked }) {
   const open = () => pmOpenAssessHub(pillarKey);
   return (
-    <div className="pm-target-row pm-target-assess">
-      <span className="pm-target-assess-ic" aria-hidden="true"><DSPM.IconifyIcon name={locked ? "lucide:lock" : "lucide:compass"} size={18} color="var(--ai-purple)" /></span>
-      <button type="button" className="pm-target-main" onClick={open}
-        aria-label={(locked ? "Preview the " : "Answer the ") + pillarKey + " deep-dive in Get to know you. About 3 minutes"}>
-        <span className="pm-target-copy">
-          <span className="tx">Sharpen your plan: {pillarKey} deep-dive</span>
-          <span className="cap">{locked ? "Get to know you · Confidence · ~3 mins" : "Get to know you · " + remaining + " pillar" + (remaining === 1 ? "" : "s") + " still to deep-dive · ~3 mins"}</span>
-        </span>
-      </button>
-      <button type="button" className="pm-pick-cta pm-target-assess-cta" onClick={open}>{locked ? "Preview" : "Start"}</button>
-    </div>);
+    <li className="cf-door-item cf-door-nudge">
+      <div className="cf-free">
+        <button type="button" className="cf-door-main cf-free-main" onClick={open}
+          aria-label={(locked ? "Preview the " : "Answer the ") + pillarKey + " deep-dive in Get to know you. About 3 minutes"}>
+          <span className="cf-free-copy">
+            <span className="cf-free-eyebrow">Next up{locked ? " · Confidence" : ""}</span>
+            <span className="cf-free-ti">Sharpen your plan: {pillarKey} deep-dive</span>
+            <span className="cf-free-cap">Get to know you · {locked ? "locked preview" : remaining + " pillar" + (remaining === 1 ? "" : "s") + " to deep-dive"} · ~3 mins</span>
+          </span>
+        </button>
+        <button type="button" className="cf-btn cf-btn-free cf-btn-ai-solid" onClick={open}>{locked ? "Preview" : "Start"}</button>
+      </div>
+    </li>);
 }
 
 /* Daily picks (user, 2026-09-22): every day's set must also carry one FREE
@@ -589,43 +595,50 @@ function PMDailyPicks() {
   function buy() { T.tapPaid("buy"); goPM(T.paidCheckoutUrl(false)); }
   function viewCourse() { T.tapPaid("detail"); goPM(T.paidDetailUrl(false)); }
 
+  /* Door-style rows (coach-focus.css .cf-door-*): 1 = the course pick with
+     its cover, 2 = the free PDF. Both count toward the day's set. */
   return (
     <>
-      <div className={"pm-target-row pm-pick pm-pick-free" + (free.done ? " done" : "")}>
-        <button type="button" className="pm-target-main" onClick={download}
-          aria-label={(free.done ? "Downloaded: " : "Download the free PDF: ") + free.title}>
-          <span className="pm-pick-icon">
-            <DSPM.IconifyIcon name={free.done ? "lucide:file-check-2" : "lucide:file-down"} size={18} color="var(--pm-pick-free, #1E7A5C)" />
-          </span>
-          <span className="pm-target-copy">
-            <span className="tx">{free.title}</span>
-            <span className="cap">PDF guide · {free.pages} pages · +{free.pts} pts</span>
-          </span>
-        </button>
-        <button type="button" className={"pm-pick-cta" + (free.done ? " is-done" : "")} onClick={download}>
-          {free.done ? <><DSPM.IconifyIcon name="lucide:check" size={13} color="#1E7A5C" />Saved</> : "Download"}
-        </button>
-      </div>
+      <li className={"cf-door-item" + (paid.purchased ? " done" : "")}>
+        <div className="cf-door-course">
+          <button type="button" className="cf-door-main" onClick={viewCourse}
+            aria-label={(paid.purchased ? "Enrolled: " : "View course: ") + paid.title + ", " + price}>
+            <span className="cf-door-thumb" style={{ backgroundImage: "url(" + paid.image + ")" }} aria-hidden="true" />
+            <span className="cf-door-copy">
+              <span className="cf-door-eyebrow">{paid.purchased ? "Enrolled · +" + paid.pts + " pts earned" : "Course pick · +" + paid.pts + " pts"}</span>
+              <span className="cf-door-ti">{paid.title}</span>
+              <span className="cf-door-bl">{paid.blurb}</span>
+            </span>
+          </button>
+          <div className="cf-door-actions">
+            {paid.purchased ?
+            <button type="button" className="cf-btn cf-btn-primary" onClick={viewCourse}>
+                Open course<DSPM.IconifyIcon name="lucide:arrow-up-right" size={16} color="#fff" />
+              </button> :
+            <>
+                <button type="button" className="cf-btn cf-btn-ghost" onClick={viewCourse}>View course</button>
+                <button type="button" className="cf-btn cf-btn-gold" onClick={buy} aria-label={"Buy " + paid.title + " for " + price}>Buy {price}</button>
+              </>}
+          </div>
+        </div>
+      </li>
 
-      <div className={"pm-target-row pm-pick pm-pick-paid" + (paid.purchased ? " done" : "")}>
-        <button type="button" className="pm-target-main" onClick={viewCourse}
-          aria-label={(paid.purchased ? "Enrolled: " : "View course: ") + paid.title + ", " + price}>
-          <span className="pm-pick-icon">
-            <DSPM.IconifyIcon name="lucide:graduation-cap" size={18} color="var(--brand-gold-700, #8A5303)" />
-          </span>
-          <span className="pm-target-copy">
-            <span className="tx">{paid.title}</span>
-            <span className="cap">{paid.purchased ? "Enrolled · +" + paid.pts + " pts earned" : "Course · " + price + " · +" + paid.pts + " pts when you enrol"}</span>
-          </span>
-        </button>
-        {paid.purchased ?
-        <button type="button" className="pm-pick-cta is-done" onClick={viewCourse}>
-            <DSPM.IconifyIcon name="lucide:check" size={13} color="#1E7A5C" />Owned
-          </button> :
-        <button type="button" className="pm-pick-cta pm-pick-cta-buy" onClick={buy} aria-label={"Buy " + paid.title + " for " + price}>
-            Buy {price}
-          </button>}
-      </div>
+      <li className={"cf-door-item" + (free.done ? " done" : "")}>
+        <div className="cf-free">
+          <span className="cf-free-ic" aria-hidden="true"><DSPM.IconifyIcon name={free.done ? "lucide:file-check-2" : "lucide:file-down"} size={18} color="var(--brand-navy)" /></span>
+          <button type="button" className="cf-door-main cf-free-main" onClick={download}
+            aria-label={(free.done ? "Downloaded: " : "Download the free PDF: ") + free.title}>
+            <span className="cf-free-copy">
+              <span className="cf-free-eyebrow">{free.done ? "Saved" : "Start free today"}</span>
+              <span className="cf-free-ti">{free.title}</span>
+              <span className={"cf-free-cap" + (free.done ? " earned" : "")}>PDF guide · {free.pages} pages · {free.done ? "+" + free.pts + " pts earned" : "+" + free.pts + " pts"}</span>
+            </span>
+          </button>
+          <button type="button" className={"cf-btn cf-btn-free" + (free.done ? " is-done" : "")} onClick={download}>
+            {free.done ? <><DSPM.IconifyIcon name="lucide:check" size={13} color="currentColor" />Saved</> : <><DSPM.IconifyIcon name="lucide:download" size={14} color="#fff" />Get it</>}
+          </button>
+        </div>
+      </li>
     </>);
 }
 
@@ -700,37 +713,48 @@ function PMTargetsCard({ assessState }) {
       meta={<span className="pm-target-date">{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}</span>}
       sub="Completing these will move your Prosperity Spiral forward."
       infoLabel="About Today's Targets" onInfo={() => setInfo(true)} moreLabel="How targets and points work">
-      {nextKey && <PMAssessNudgeRow pillarKey={nextKey} remaining={remaining} locked={!paid} />}
-      <div className="pm-target-rows">
-        <PMDailyPicks />
-        {rows.map((t) => {
-          const pr = PM_PRIORITY[t.priority];
-          const caption = (t.pillar ? (focus && t.pillar === focus.domain ? "Your focus · " + t.pillar : t.pillar) : "Suggested by Ava") + " · " + pr.label;
-          return (
-            <div key={t.id} className={"pm-target-row" + (t.done ? " done" : "") + (settling === t.id && t.done ? " is-settling" : "")}>
-              <span className="pm-target-check" role="checkbox" tabIndex={0} aria-checked={t.done}
-                aria-label={(t.done ? "Mark not done: " : "Mark done: ") + t.text}
-                onClick={() => toggle(t.id)}
-                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(t.id); } }}>
-                <span className="circle">{t.done && <DSPM.IconifyIcon name="lucide:check" size={13} color="#fff" />}</span>
-              </span>
-              <button type="button" className="pm-target-main" aria-label={t.text + ". " + caption + ". Opens " + (t.pillar || "your") + " goal page"}
-                onClick={() => goPM(t.pillar ? pmGoalUrl(t.pillar) : "LearningMobile.html")}>
-                <span className="pm-target-prio" style={{ color: pr.color }} aria-hidden="true">
-                  <DSPM.IconifyIcon name={pr.icon} size={18} color={pr.color} />
+    <div className="cf-door cf-door-targets">
+        <div className="cf-door-hd">
+          <span className="cf-kicker"><DSPM.IconifyIcon name="lucide:list-checks" size={14} color="var(--brand-gold)" />Today's set</span>
+          <span className="cf-door-count">{doneCount} of {total} done</span>
+        </div>
+        <ol className="cf-door-list">
+          {nextKey && <PMAssessNudgeRow pillarKey={nextKey} remaining={remaining} locked={!paid} />}
+          <PMDailyPicks />
+          {rows.map((t, i) => {
+            const pr = PM_PRIORITY[t.priority];
+            const isFocus = !!(t.pillar && focus && t.pillar === focus.domain);
+            const eyebrow = t.pillar ? (isFocus ? "Your focus" : t.pillar) : "Suggested by Ava";
+            const capTail = pr.label + (isFocus ? " · " + t.pillar : "");
+            return (
+              <li key={t.id} className={"cf-door-item cf-door-item-check" + (t.done ? " done" : "") + (settling === t.id && t.done ? " is-settling" : "")}>
+                {/* tick circle (user 2026-10-08) — same toggle as the Done button */}
+                <span className="cf-door-check" role="checkbox" tabIndex={0} aria-checked={t.done}
+                  aria-label={(t.done ? "Mark not done: " : "Mark done: ") + t.text}
+                  onClick={() => toggle(t.id)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(t.id); } }}>
+                  <span className="circle">{t.done && <DSPM.IconifyIcon name="lucide:check" size={13} color="#fff" />}</span>
                 </span>
-                <span className="pm-target-copy">
-                  <span className="tx">{t.text}</span>
-                  <span className="cap">{caption}</span>
-                </span>
-                <span className={"pm-target-pts" + (t.done ? " earned" : "")}>
-                  {t.done && <DSPM.IconifyIcon name="lucide:check" size={11} color="#1E7A5C" />}+{pr.pts} pts
-                </span>
-              </button>
-            </div>);
-        })}
+                <div className="cf-free cf-door-task">
+                  <span className="cf-free-ic" style={{ "--cf-prio": pr.color }} aria-hidden="true"><DSPM.IconifyIcon name={pr.icon} size={18} color={pr.color} /></span>
+                  <button type="button" className="cf-door-main cf-free-main" aria-label={t.text + ". " + eyebrow + " · " + pr.label + ". Opens " + (t.pillar || "your") + " goal page"}
+                    onClick={() => goPM(t.pillar ? pmGoalUrl(t.pillar) : "LearningMobile.html")}>
+                    <span className="cf-free-copy">
+                      <span className="cf-free-eyebrow">{eyebrow}</span>
+                      <span className="cf-free-ti">{t.text}</span>
+                      <span className={"cf-free-cap" + (t.done ? " earned" : "")}>{t.done ? <><DSPM.IconifyIcon name="lucide:check" size={11} color="#1E7A5C" />+{pr.pts} pts earned</> : "+" + pr.pts + " pts · " + capTail}</span>
+                    </span>
+                  </button>
+                  <button type="button" className={"cf-btn cf-btn-free cf-door-tick" + (t.done ? " is-done" : "")} role="checkbox" aria-checked={t.done}
+                    aria-label={(t.done ? "Mark not done: " : "Mark done: ") + t.text} onClick={() => toggle(t.id)}>
+                    {t.done ? <><DSPM.IconifyIcon name="lucide:check" size={13} color="currentColor" />Done</> : "Done"}
+                  </button>
+                </div>
+              </li>);
+          })}
+        </ol>
       </div>
-      <p className="pm-target-foot">{doneCount} of {total} done{allDone ? " — that's today's set. New targets arrive tomorrow" : ""}</p>
+      {allDone && <p className="pm-target-foot">That's today's set — new targets arrive tomorrow.</p>}
 
       <PMInfoModal open={info} onClose={() => setInfo(false)} title="How targets and points work" icon="lucide:list-checks"
         coach="What should I tackle first from today's targets, and why?" coachLabel="Ask Ava where to start">

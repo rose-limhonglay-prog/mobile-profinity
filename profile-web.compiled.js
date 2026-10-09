@@ -539,11 +539,21 @@ function PWInfoModal({
 /* ⓘ with a white hovering popover (twin of PMInfoTip, 2026-10-07): the
    card's explanation copy lives here. Opens on hover or focus, click toggles
    it (touch), click elsewhere / Esc closes. "Read more" opens PWInfoModal. */
+/* ⓘ popovers open on HOVER (user, 2026-10-08); a click only toggles on
+   touch screens. `icon` swaps the glyph ("?" for Ava's question). */
+const PW_NO_HOVER = (() => {
+  try {
+    return window.matchMedia("(hover: none)").matches;
+  } catch (e) {
+    return true;
+  }
+})();
 function PWInfoTip({
   label,
   children,
   onMore,
-  moreLabel
+  moreLabel,
+  icon = "lucide:info"
 }) {
   const [open, setOpen] = useStatePW(false);
   const [x, setX] = useStatePW(0); // caret x within the header row
@@ -579,10 +589,13 @@ function PWInfoTip({
     "aria-label": label,
     "aria-expanded": open,
     "aria-controls": tipId,
-    onClick: () => setOpen(o => !o),
-    onFocus: () => setOpen(true)
+    onClick: () => {
+      if (PW_NO_HOVER) setOpen(o => !o);
+    },
+    onFocus: () => setOpen(true),
+    onBlur: () => setOpen(false)
   }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:info",
+    name: icon,
     size: 17,
     color: open ? "var(--ai-purple)" : "var(--gray-500)"
   })), open && /*#__PURE__*/React.createElement("span", {
@@ -683,37 +696,45 @@ function PWGoalFocusCard({
     className: "cf-pw-goal-grid"
   }, /*#__PURE__*/React.createElement("div", {
     className: "cf-pw-goal-left"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "eyebrow"
+  }, (() => {
+    const dom = window.PFCoachFocus && window.PFCoachFocus.DOMAINS[focus.domain] || {};
+    return /*#__PURE__*/React.createElement("div", {
+      className: "cf-reveal-hero cf-goal-hero",
+      style: {
+        "--cf-dom": dom.color,
+        "--cf-dom-soft": dom.soft,
+        "--cf-dom-text": dom.text
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "cf-reveal-glow",
+      "aria-hidden": "true"
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "cf-reveal-ava",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+      name: "lucide:sparkles",
+      size: 20,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "cf-kicker"
+    }, "Ava found your focus"), /*#__PURE__*/React.createElement(UI.CFFocusChip, {
+      domain: focus.domain,
+      size: "lg"
+    }));
+  })(), focus.confirm && /*#__PURE__*/React.createElement("div", {
+    className: "cf-ask-row"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cf-btn cf-ask-btn",
+    onClick: () => pwAskAva("My " + focus.confirm.alt + " score is lower than my " + focus.domain + " focus. Should I switch my focus?")
   }, /*#__PURE__*/React.createElement(IconifyIconPW, {
     name: "lucide:sparkles",
-    size: 13,
-    color: "var(--ai-purple)"
-  }), "Ava recommends starting here"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      margin: "10px 0 8px"
-    }
-  }, /*#__PURE__*/React.createElement(UI.CFFocusChip, {
-    domain: focus.domain,
-    size: "hero"
-  })), focus.confirm && /*#__PURE__*/React.createElement("div", {
-    className: "cf-confirm",
-    style: {
-      marginTop: 12
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cf-confirm-hd"
-  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:message-circle-question",
-    size: 18,
-    color: "var(--ai-purple)"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "cf-kicker"
-  }, "Ava has a question")), /*#__PURE__*/React.createElement("p", null, "Your ", /*#__PURE__*/React.createElement("b", null, focus.confirm.alt), " deep-dive scored ", focus.confirm.altScore, " — well below ", focus.domain, " (", focus.confirm.focusScore, "). Is ", focus.confirm.alt.toLowerCase(), " what's really holding you back?"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "cf-btn cf-btn-ghost",
-    onClick: () => pwAskAva("My " + focus.confirm.alt + " score is lower than my " + focus.domain + " focus. Should I switch my focus?")
-  }, "Ask Ava")), /*#__PURE__*/React.createElement("div", {
+    size: 16,
+    color: "#fff"
+  }), "Ask Ava"), /*#__PURE__*/React.createElement(PWInfoTip, {
+    label: "Why Ava is asking",
+    icon: "lucide:circle-help"
+  }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, "Ava has a question."), " Your ", /*#__PURE__*/React.createElement("b", null, focus.confirm.alt), " deep-dive scored ", focus.confirm.altScore, " — well below ", focus.domain, " (", focus.confirm.focusScore, "). Is ", focus.confirm.alt.toLowerCase(), " what's really holding you back?"))), /*#__PURE__*/React.createElement("div", {
     className: "cf-milestone",
     style: {
       marginTop: 14
@@ -729,48 +750,7 @@ function PWGoalFocusCard({
     className: "cf-kicker"
   }, "Your next 90 days"), /*#__PURE__*/React.createElement("span", {
     className: "cf-milestone-ti"
-  }, focus.milestone))), /*#__PURE__*/React.createElement("div", {
-    className: "cf-pw-goal-foot"
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 14
-    }
-  }, paid ? /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "cf-btn cf-btn-ai",
-    onClick: () => pwAskAva(PW_CF.avaPrompt(focus))
-  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:sparkles",
-    size: 16,
-    color: "var(--ai-purple)"
-  }), "Ask Ava to plan my week") : /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "cf-ava-locked",
-    onClick: () => goPW(PW_CF.upgradeUrl(true))
-  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:message-circle",
-    size: 18,
-    color: "#4F46C8"
-  }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "Coach with Ava on this plan"), " · Confidence"), /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:lock",
-    size: 14,
-    color: "var(--gray-400)"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "cf-reveal-foot",
-    style: {
-      marginTop: 12
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cf-checkin"
-  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:calendar-clock",
-    size: 13,
-    color: "var(--gray-500)"
-  }), PW_CF.checkInLabel(focus)), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "cf-link",
-    onClick: () => onOpenHub("whereNow")
-  }, "Check in now")))), /*#__PURE__*/React.createElement("div", {
+  }, focus.milestone)))), /*#__PURE__*/React.createElement("div", {
     className: "cf-pw-goal-right"
   }, /*#__PURE__*/React.createElement(UI.CFDoor, {
     focus: focus,
@@ -948,7 +928,9 @@ function PWSpiralCard({
 
 /* "Next up" row at the top of Today's Targets while pillars are still
    unanswered — opens that pillar's questions directly. Not part of the
-   ticked set: it completes itself when the assessment does. */
+   ticked set: it completes itself when the assessment does. Rendered in the
+   coach-focus "door" row style (user, 2026-10-08: Today's Targets copies the
+   Your door UI) — the badge is a compass, not a number. */
 function PWAssessNudgeRow({
   pillarKey,
   remaining,
@@ -956,31 +938,28 @@ function PWAssessNudgeRow({
   locked
 }) {
   const open = () => onOpenHub(pillarKey);
-  return /*#__PURE__*/React.createElement("div", {
-    className: "pw-target-row pw-target-assess"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pw-target-assess-ic",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: locked ? "lucide:lock" : "lucide:compass",
-    size: 18,
-    color: "var(--ai-purple)"
-  })), /*#__PURE__*/React.createElement("button", {
+  return /*#__PURE__*/React.createElement("li", {
+    className: "cf-door-item cf-door-nudge"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cf-free"
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "pw-target-main",
+    className: "cf-door-main cf-free-main",
     onClick: open,
     "aria-label": (locked ? "Preview the " : "Answer the ") + pillarKey + " deep-dive in Get to know you. About 3 minutes"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "pw-target-copy"
+    className: "cf-free-copy"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "tx"
+    className: "cf-free-eyebrow"
+  }, "Next up", locked ? " · Confidence" : ""), /*#__PURE__*/React.createElement("span", {
+    className: "cf-free-ti"
   }, "Sharpen your plan: ", pillarKey, " deep-dive"), /*#__PURE__*/React.createElement("span", {
-    className: "cap"
-  }, locked ? "Get to know you · Confidence · ~3 mins" : "Get to know you · " + remaining + " pillar" + (remaining === 1 ? "" : "s") + " still to deep-dive · ~3 mins"))), /*#__PURE__*/React.createElement("button", {
+    className: "cf-free-cap"
+  }, "Get to know you · ", locked ? "locked preview" : remaining + " pillar" + (remaining === 1 ? "" : "s") + " to deep-dive", " · ~3 mins"))), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "pw-pick-cta pw-target-assess-cta",
+    className: "cf-btn cf-btn-free cf-btn-ai-solid",
     onClick: open
-  }, locked ? "Preview" : "Start"));
+  }, locked ? "Preview" : "Start")));
 }
 
 /* Daily picks (user, 2026-09-22) — desktop twin of profile-mobile.jsx's
@@ -1016,66 +995,88 @@ function PWDailyPicks() {
     T.tapPaid("detail");
     goPW(T.paidDetailUrl(true));
   }
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "pw-target-row pw-pick pw-pick-free" + (free.done ? " done" : "")
+
+  /* Door-style rows (coach-focus.css .cf-door-*): 1 = the course pick with
+     its cover, 2 = the free PDF. Both count toward the day's set. */
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("li", {
+    className: "cf-door-item" + (paid.purchased ? " done" : "")
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cf-door-course"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "pw-target-main",
-    onClick: download,
-    "aria-label": (free.done ? "Downloaded: " : "Download the free PDF: ") + free.title
+    className: "cf-door-main",
+    onClick: viewCourse,
+    "aria-label": (paid.purchased ? "Enrolled: " : "View course: ") + paid.title + ", " + price
   }, /*#__PURE__*/React.createElement("span", {
-    className: "pw-pick-icon"
+    className: "cf-door-thumb",
+    style: {
+      backgroundImage: "url(" + paid.image + ")"
+    },
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "cf-door-copy"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cf-door-eyebrow"
+  }, paid.purchased ? "Enrolled · +" + paid.pts + " pts earned" : "Course pick · +" + paid.pts + " pts"), /*#__PURE__*/React.createElement("span", {
+    className: "cf-door-ti"
+  }, paid.title), /*#__PURE__*/React.createElement("span", {
+    className: "cf-door-bl"
+  }, paid.blurb))), /*#__PURE__*/React.createElement("div", {
+    className: "cf-door-actions"
+  }, paid.purchased ? /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cf-btn cf-btn-primary",
+    onClick: viewCourse
+  }, "Open course", /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:arrow-up-right",
+    size: 16,
+    color: "#fff"
+  })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cf-btn cf-btn-ghost",
+    onClick: viewCourse
+  }, "View course"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cf-btn cf-btn-gold",
+    onClick: buy,
+    "aria-label": "Buy " + paid.title + " for " + price
+  }, "Buy ", price))))), /*#__PURE__*/React.createElement("li", {
+    className: "cf-door-item" + (free.done ? " done" : "")
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cf-free"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cf-free-ic",
+    "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(IconifyIconPW, {
     name: free.done ? "lucide:file-check-2" : "lucide:file-down",
     size: 18,
-    color: "var(--pw-pick-free, #1E7A5C)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "pw-target-copy"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "tx"
-  }, free.title), /*#__PURE__*/React.createElement("span", {
-    className: "cap"
-  }, "PDF guide · ", free.pages, " pages · +", free.pts, " pts"))), /*#__PURE__*/React.createElement("button", {
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "pw-pick-cta" + (free.done ? " is-done" : ""),
+    className: "cf-door-main cf-free-main",
+    onClick: download,
+    "aria-label": (free.done ? "Downloaded: " : "Download the free PDF: ") + free.title
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cf-free-copy"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cf-free-eyebrow"
+  }, free.done ? "Saved" : "Start free today"), /*#__PURE__*/React.createElement("span", {
+    className: "cf-free-ti"
+  }, free.title), /*#__PURE__*/React.createElement("span", {
+    className: "cf-free-cap" + (free.done ? " earned" : "")
+  }, "PDF guide · ", free.pages, " pages · ", free.done ? "+" + free.pts + " pts earned" : "+" + free.pts + " pts"))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cf-btn cf-btn-free" + (free.done ? " is-done" : ""),
     onClick: download
   }, free.done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IconifyIconPW, {
     name: "lucide:check",
     size: 13,
-    color: "#1E7A5C"
-  }), "Saved") : "Download")), /*#__PURE__*/React.createElement("div", {
-    className: "pw-target-row pw-pick pw-pick-paid" + (paid.purchased ? " done" : "")
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pw-target-main",
-    onClick: viewCourse,
-    "aria-label": (paid.purchased ? "Enrolled: " : "View course: ") + paid.title + ", " + price
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "pw-pick-icon"
-  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:graduation-cap",
-    size: 18,
-    color: "var(--brand-gold-700, #8A5303)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "pw-target-copy"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "tx"
-  }, paid.title), /*#__PURE__*/React.createElement("span", {
-    className: "cap"
-  }, paid.purchased ? "Enrolled · +" + paid.pts + " pts earned" : "Course · " + price + " · +" + paid.pts + " pts when you enrol"))), paid.purchased ? /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pw-pick-cta is-done",
-    onClick: viewCourse
-  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:check",
-    size: 13,
-    color: "#1E7A5C"
-  }), "Owned") : /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "pw-pick-cta pw-pick-cta-buy",
-    onClick: buy,
-    "aria-label": "Buy " + paid.title + " for " + price
-  }, "Buy ", price)));
+    color: "currentColor"
+  }), "Saved") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:download",
+    size: 14,
+    color: "#fff"
+  }), "Get it")))));
 }
 
 /* Today's Targets — checkbox · priority chevron · task + caption · pts chip
@@ -1189,21 +1190,35 @@ function PWTargetsCard({
     infoLabel: "About Today's Targets",
     onInfo: () => setInfo(true),
     moreLabel: "How targets and points work"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cf-door cf-door-targets"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cf-door-hd"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cf-kicker"
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:list-checks",
+    size: 14,
+    color: "var(--brand-gold)"
+  }), "Today's set"), /*#__PURE__*/React.createElement("span", {
+    className: "cf-door-count"
+  }, doneCount, " of ", total, " done")), /*#__PURE__*/React.createElement("ol", {
+    className: "cf-door-list"
   }, nextKey && /*#__PURE__*/React.createElement(PWAssessNudgeRow, {
     pillarKey: nextKey,
     remaining: remaining,
     onOpenHub: onOpenHub,
     locked: !paid
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "pw-target-rows"
-  }, /*#__PURE__*/React.createElement(PWDailyPicks, null), rows.map(t => {
+  }), /*#__PURE__*/React.createElement(PWDailyPicks, null), rows.map((t, i) => {
     const pr = PW_PRIORITY[t.priority];
-    const caption = (t.pillar ? focus && t.pillar === focus.domain ? "Your focus · " + t.pillar : t.pillar : "Suggested by Ava") + " · " + pr.label;
-    return /*#__PURE__*/React.createElement("div", {
+    const isFocus = !!(t.pillar && focus && t.pillar === focus.domain);
+    const eyebrow = t.pillar ? isFocus ? "Your focus" : t.pillar : "Suggested by Ava";
+    const capTail = pr.label + (isFocus ? " · " + t.pillar : "");
+    return /*#__PURE__*/React.createElement("li", {
       key: t.id,
-      className: "pw-target-row" + (t.done ? " done" : "") + (settling === t.id && t.done ? " is-settling" : "")
+      className: "cf-door-item cf-door-item-check" + (t.done ? " done" : "") + (settling === t.id && t.done ? " is-settling" : "")
     }, /*#__PURE__*/React.createElement("span", {
-      className: "pw-target-check",
+      className: "cf-door-check",
       role: "checkbox",
       tabIndex: 0,
       "aria-checked": t.done,
@@ -1221,37 +1236,50 @@ function PWTargetsCard({
       name: "lucide:check",
       size: 13,
       color: "#fff"
-    }))), /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "pw-target-main",
-      "aria-label": t.text + ". " + caption + ". Opens " + (t.pillar || "your") + " goal page",
-      onClick: () => goPW(t.pillar ? pwGoalUrl(t.pillar) : "MyLearning.html")
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "cf-free cf-door-task"
     }, /*#__PURE__*/React.createElement("span", {
-      className: "pw-target-prio",
+      className: "cf-free-ic",
       style: {
-        color: pr.color
+        "--cf-prio": pr.color
       },
       "aria-hidden": "true"
     }, /*#__PURE__*/React.createElement(IconifyIconPW, {
       name: pr.icon,
       size: 18,
       color: pr.color
-    })), /*#__PURE__*/React.createElement("span", {
-      className: "pw-target-copy"
+    })), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "cf-door-main cf-free-main",
+      "aria-label": t.text + ". " + eyebrow + " · " + pr.label + ". Opens " + (t.pillar || "your") + " goal page",
+      onClick: () => goPW(t.pillar ? pwGoalUrl(t.pillar) : "MyLearning.html")
     }, /*#__PURE__*/React.createElement("span", {
-      className: "tx"
+      className: "cf-free-copy"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "cf-free-eyebrow"
+    }, eyebrow), /*#__PURE__*/React.createElement("span", {
+      className: "cf-free-ti"
     }, t.text), /*#__PURE__*/React.createElement("span", {
-      className: "cap"
-    }, caption)), /*#__PURE__*/React.createElement("span", {
-      className: "pw-target-pts" + (t.done ? " earned" : "")
-    }, t.done && /*#__PURE__*/React.createElement(IconifyIconPW, {
+      className: "cf-free-cap" + (t.done ? " earned" : "")
+    }, t.done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IconifyIconPW, {
       name: "lucide:check",
       size: 11,
       color: "#1E7A5C"
-    }), "+", pr.pts, " pts")));
-  })), /*#__PURE__*/React.createElement("p", {
+    }), "+", pr.pts, " pts earned") : "+" + pr.pts + " pts · " + capTail))), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "cf-btn cf-btn-free cf-door-tick" + (t.done ? " is-done" : ""),
+      role: "checkbox",
+      "aria-checked": t.done,
+      "aria-label": (t.done ? "Mark not done: " : "Mark done: ") + t.text,
+      onClick: () => toggle(t.id)
+    }, t.done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IconifyIconPW, {
+      name: "lucide:check",
+      size: 13,
+      color: "currentColor"
+    }), "Done") : "Done")));
+  }))), allDone && /*#__PURE__*/React.createElement("p", {
     className: "pw-target-foot"
-  }, doneCount, " of ", total, " done", allDone ? " — that's today's set. New targets arrive tomorrow" : ""), /*#__PURE__*/React.createElement(PWInfoModal, {
+  }, "That's today's set — new targets arrive tomorrow."), /*#__PURE__*/React.createElement(PWInfoModal, {
     open: info,
     onClose: () => setInfo(false),
     title: "How targets and points work",

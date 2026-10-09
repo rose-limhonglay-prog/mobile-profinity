@@ -160,3 +160,25 @@ html[data-mobile-web] [data-ios-device]{background:var(--surface-page,#F2F2F7)}
   margin-bottom:calc(-1 * var(--pf-sfb,0px))}
 [data-ios-device][data-safari] :is(.m-scroll,.cm-scroll,.pm-scroll,.lm-scroll,.lcm-scroll,.ag-scroll,.ev-scroll,.acc-scroll,.ml-scroll)::after{
   content:"";display:block;flex:none;height:var(--pf-sfb,0px)}
+
+/* ---- mobile-web preview: overlays belong to the WEB PAGE, not the phone ----
+   The check-in takeover, What's new stepper, Reward Splash, launch splash,
+   Success Path sheet, tour and the floating upload / call cards are appended
+   straight to [data-ios-device] with inset:0, so in the Safari preview they
+   painted over the status bar, the "Get the app" banner and the floating
+   Safari bar — the screen suddenly looked like the native app. Inside Safari a
+   page can only draw in its own viewport: below the browser's top chrome and
+   (position:fixed) above the floating bar. --pf-web-top = the shells' 52px
+   status-bar clearance, or status bar (62px) + banner (59px, .ios-appbn)
+   while the banner is up. */
+[data-ios-device][data-safari]{--pf-web-top:52px}
+html[data-pf-appbn] [data-ios-device][data-safari]{--pf-web-top:121px}
+[data-ios-device][data-safari] > :is(.pf-dci-root,.pf-wn-root,.pf-rsp,.pf-launch--framed,.sp-ss,.pf-tour-overlay,.pf-tour-layer,.pf-ava-root,.pf-ava-sheet-wrap){
+  top:var(--pf-web-top) !important;bottom:var(--pf-sfb,0px) !important;border-radius:0 !important}
+/* close buttons were placed under the fake status bar; the root now starts beneath it */
+[data-ios-device][data-safari] > .pf-dci-root .pf-dci-close{top:12px !important}
+[data-ios-device][data-safari] > .sp-ss .sp-ss-x{top:12px !important}
+[data-ios-device][data-safari] > .pf-wn-root{padding-top:16px;padding-bottom:16px}
+/* bottom-anchored floating cards sit above the bar, like the tab bar and FAB */
+[data-ios-device][data-safari] > .pf-uplt{bottom:calc(22px + var(--pf-sfb,0px)) !important}
+[data-ios-device][data-safari] > .pf-vcall{bottom:calc(120px + var(--pf-sfb,0px)) !important}

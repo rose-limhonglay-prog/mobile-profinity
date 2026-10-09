@@ -73,6 +73,7 @@
     { d: "30", m: "JUN", label: "Technique Tuesday Webinar", t: "8:00 PM", access: "open",
       hosts: [{ name: "Dr Tim Pearce", avatar: "assets/avatar-drtim.png" }, { name: "Miranda Pearce", avatar: "assets/avatar-miranda.jpg" }] },
     { d: "5", m: "JUL", label: "Confidence Masterclass", t: "6:00 PM", access: "members" }];
+  var DEV_TIERS = [["free", "Basic"], ["confidence", "Confidence"], ["mastery", "Mastery"], ["freedom", "Freedom"], ["inner", "Inner Circle"]];
   var PROFILE_ROWS = [
     { label: "Edit Profile",       icon: "lucide:book-open",   href: "ProfileMobile.html" },
     { label: "Account Settings",   icon: "lucide:settings",    href: "AccountSettings.html" },
@@ -165,6 +166,11 @@
         '<span class="sm-row-label">' + esc(c.label) + '</span>' + ic("lucide:chevron-right", 20, "var(--gray-450)") + '</button>';
     }).join("") + '</nav>';
     h += '<button type="button" class="m-drawer-logout" data-href="' + web("AuthMobile.html?view=signin") + '">' + ic("lucide:log-out", 22, "var(--error)") + 'Logout</button>';
+    /* Dev mode · "Viewing as" tier chips (user 2026-10-08) — twin of
+       DevTierRowM in mobile.jsx; click handled by [data-devtier] below. */
+    var curTier = "free"; try { var tt = localStorage.getItem("pf-subscription-tier"); if (DEV_TIERS.some(function (x) { return x[0] === tt; })) curTier = tt; } catch (e) {}
+    h += '<div class="m-drawer-dev" role="group" aria-label="Dev mode: view the app as a membership tier"><span class="m-drawer-dev-h"><i aria-hidden="true"></i>Dev mode · Viewing as</span><div class="m-drawer-dev-chips">' +
+      DEV_TIERS.map(function (t) { return '<button type="button" class="m-drawer-dev-chip' + (t[0] === curTier ? ' on' : '') + '" data-devtier="' + t[0] + '" aria-pressed="' + (t[0] === curTier) + '">' + esc(t[1]) + '</button>'; }).join("") + '</div></div>';
     h += '</div></aside>';
     return h;
   }
@@ -191,6 +197,13 @@
         sw.setAttribute("aria-label", next ? "Switch to light mode" : "Switch to dark mode");
         sw.querySelector(".sm-knob").innerHTML = ic(next ? "lucide:moon" : "lucide:sun", 13, next ? "#1A1736" : "var(--gray-450)");
         return;
+      }
+      var dt = e.target.closest("[data-devtier]");
+      if (dt) {
+        var k = dt.getAttribute("data-devtier");
+        try { if (k === "free") localStorage.removeItem("pf-subscription-tier"); else localStorage.setItem("pf-subscription-tier", k); } catch (err) {}
+        try { var u = new URL(location.href); u.searchParams.delete("tier"); history.replaceState(null, "", u.toString()); } catch (err) {}
+        location.reload(); return;
       }
       var b = e.target.closest("[data-href]");
       if (b && b.getAttribute("data-href")) { closeDrawer(); go(b.getAttribute("data-href")); }

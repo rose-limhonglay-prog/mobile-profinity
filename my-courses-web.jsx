@@ -145,15 +145,17 @@ function MCWCertificateCard({ c }) {
 }
 
 /* Free account, nothing bought yet (user, 2026-10-07): My Courses is open —
-   it waits for the first purchase, made from the paid picks on My Learning. */
-function MCWBuyFirstPanel() {
+   it waits for the first purchase. The first suggestion is the free
+   resources, not a purchase (user, 2026-10-08). */
+function MCWStartFreePanel() {
+  const url = PFL_MCW.allCoursesUrl ? PFL_MCW.allCoursesUrl({ free: 1 }) : "AllCoursesWeb.html?free=1";
   return (
-    <div className="mcw-locked" data-screen-label="My Courses · nothing bought yet">
-      <span className="mcw-locked-icon"><IconifyMCW name="lucide:shopping-bag" size={28} color="#fff" /></span>
-      <h3>No courses yet</h3>
-      <p>Buy any course on its own and it lives here &mdash; continue it, finish it and earn the certificate. No membership needed.</p>
-      <button type="button" className="mcw-locked-upgrade-btn" onClick={() => goMCW(PFL_MCW.myLearningUrl + "#related")}>
-        See courses to buy<IconifyMCW name="lucide:arrow-up-right" size={19} color="#fff" />
+    <div className="mcw-locked" data-screen-label="My Courses · start with free resources">
+      <span className="mcw-locked-icon"><IconifyMCW name="lucide:folder-open" size={28} color="#fff" /></span>
+      <h3>Start with free resources</h3>
+      <p>Guides, checklists and vein maps you can use today &mdash; free, no card needed. Any course you buy later lives here too.</p>
+      <button type="button" className="mcw-locked-upgrade-btn" onClick={() => goMCW(url)}>
+        Open Free Resources<IconifyMCW name="lucide:arrow-up-right" size={19} color="#fff" />
       </button>
     </div>
   );
@@ -205,7 +207,7 @@ function MyCoursesWebApp() {
         </div>
 
         {FREE_TIER_MCW && MY_COURSES_MCW.length === 0 ? (
-          <MCWBuyFirstPanel />
+          <MCWStartFreePanel />
         ) : (
           <>
             <div className="mcw-toolbar">

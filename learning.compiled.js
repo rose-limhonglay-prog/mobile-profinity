@@ -375,7 +375,8 @@ function SaveButton({
 }
 
 /* Free account, nothing bought yet (user, 2026-10-07): My Courses is open —
-   it just waits for the first purchase. The button scrolls to the paid picks. */
+   it just waits for the first purchase. The #related deep link still lands
+   on the paid picks. */
 function scrollToRelated() {
   const el = document.getElementById("lrn2-related");
   if (el) el.scrollIntoView({
@@ -383,24 +384,27 @@ function scrollToRelated() {
     block: "start"
   });
 }
-function BuyFirstCoursePanel({
-  onBrowse
-}) {
+/* The first suggestion is the free resources, not a purchase (user,
+   2026-10-08): the empty My Courses panel opens the Free Resources page. */
+const freeResourcesUrl = () => PFL.allCoursesUrl ? PFL.allCoursesUrl({
+  free: 1
+}) : "AllCoursesWeb.html?free=1";
+function StartFreeResourcesPanel() {
   return /*#__PURE__*/React.createElement("div", {
     className: "lrn2-mc-empty lrn2-mc-empty-free",
-    "data-screen-label": "My Courses · nothing bought yet"
+    "data-screen-label": "My Courses · start with free resources"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:shopping-bag",
+    name: "lucide:folder-open",
     size: 24,
     color: "var(--lrn2-gold-ink)"
-  })), /*#__PURE__*/React.createElement("h3", null, "No courses yet"), /*#__PURE__*/React.createElement("p", null, "Buy any course on its own and it lives here — continue it, finish it and earn the certificate. No membership needed."), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("h3", null, "Start with free resources"), /*#__PURE__*/React.createElement("p", null, "Guides, checklists and vein maps you can use today — free, no card needed. Any course you buy later lives here too."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lrn2-outline-btn filled",
-    onClick: onBrowse
-  }, "See courses to buy", /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:arrow-down",
+    onClick: () => go(freeResourcesUrl())
+  }, "Open Free Resources", /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "lucide:arrow-up-right",
     size: 17,
     color: "#fff"
   })));
@@ -1019,9 +1023,7 @@ function PromoFreeResources({
   }, /*#__PURE__*/React.createElement("h3", null, "Free Resources"), unlocked ? /*#__PURE__*/React.createElement("p", null, "Your free resources are unlocked — guides, checklists and vein maps tailored to your clinic goals.") : /*#__PURE__*/React.createElement("p", null, "Complete a quick survey to unlock free resources tailored to your clinic goals")), unlocked ? /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lrn2-outline-btn lrn2-promo-cta",
-    onClick: () => go(PFL.allCoursesUrl ? PFL.allCoursesUrl({
-      free: 1
-    }) : "AllCoursesWeb.html?free=1")
+    onClick: () => go(freeResourcesUrl())
   }, "View free resources", /*#__PURE__*/React.createElement(IconifyIcon, {
     name: "lucide:arrow-up-right",
     size: 17,
@@ -1135,6 +1137,9 @@ function MyLearningApp() {
   /* Free account (user, 2026-10-07): My Courses is the courses they've bought,
      with live progress; Continue Learning resumes the first one in progress. */
   const myCourses = FREE_TIER ? PFC.purchasedCourses(purchased, done) : PFC.coursesForTier(TIER);
+  /* Nothing bought yet on a free account (user, 2026-10-08): no My Courses
+     section, tabs or course search — the free-resources panel stands alone. */
+  const noCoursesYet = FREE_TIER && !myCourses.length;
   const showSkeleton = loading && myCourses.length > 0;
   const q = query.trim().toLowerCase();
   const filters = {
@@ -1182,13 +1187,13 @@ function MyLearningApp() {
     "data-screen-label": "My Learning"
   }, /*#__PURE__*/React.createElement(Header, null), /*#__PURE__*/React.createElement(GoalCard, {
     onHelp: () => setHelpOpen(true)
-  }), /*#__PURE__*/React.createElement("div", {
+  }), !noCoursesYet && /*#__PURE__*/React.createElement("div", {
     className: "lrn-tabs"
   }, /*#__PURE__*/React.createElement(Tabs, {
     tabs: TABS,
     active: tab,
     onChange: setTab
-  })), /*#__PURE__*/React.createElement("label", {
+  })), !noCoursesYet && /*#__PURE__*/React.createElement("label", {
     className: "search"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "search",
@@ -1212,7 +1217,10 @@ function MyLearningApp() {
     saved: saved
   }), showContinue && /*#__PURE__*/React.createElement(ContinueLearning, {
     c: continueCourse
-  }), /*#__PURE__*/React.createElement("section", {
+  }), noCoursesYet ? /*#__PURE__*/React.createElement("section", {
+    className: "panel lrn2-mc-panel lrn2-start-free",
+    "data-screen-label": "Start with free resources"
+  }, /*#__PURE__*/React.createElement(StartFreeResourcesPanel, null)) : /*#__PURE__*/React.createElement("section", {
     className: "panel lrn2-mc-panel",
     "data-screen-label": "My Courses"
   }, /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
@@ -1233,9 +1241,7 @@ function MyLearningApp() {
     name: "lucide:arrow-right",
     size: 16,
     color: "currentColor"
-  }))), FREE_TIER && !myCourses.length && /*#__PURE__*/React.createElement(BuyFirstCoursePanel, {
-    onBrowse: scrollToRelated
-  }), (showSkeleton || shownCourses.length > 0) && /*#__PURE__*/React.createElement("div", {
+  }))), (showSkeleton || shownCourses.length > 0) && /*#__PURE__*/React.createElement("div", {
     className: "lrn2-mc-grid"
   }, showSkeleton ? Array.from({
     length: 3
@@ -1262,9 +1268,14 @@ function MyLearningApp() {
     name: "lucide:arrow-right",
     size: 16,
     color: "currentColor"
-  })))), /*#__PURE__*/React.createElement(RelatedContent, null), /*#__PURE__*/React.createElement("section", {
-    className: "lrn2-promos"
+  })))), FREE_TIER && /*#__PURE__*/React.createElement("section", {
+    className: "lrn2-promos lrn2-promos-first"
   }, /*#__PURE__*/React.createElement(PromoFreeResources, {
+    unlocked: resourcesUnlocked,
+    onStartSurvey: () => setSurveyOpen(true)
+  })), /*#__PURE__*/React.createElement(RelatedContent, null), /*#__PURE__*/React.createElement("section", {
+    className: "lrn2-promos"
+  }, !FREE_TIER && /*#__PURE__*/React.createElement(PromoFreeResources, {
     unlocked: resourcesUnlocked,
     onStartSurvey: () => setSurveyOpen(true)
   }), !FREE_TIER && /*#__PURE__*/React.createElement(PromoLearningPath, null), /*#__PURE__*/React.createElement(PromoUpgrade, null))), /*#__PURE__*/React.createElement(HelpModal, {

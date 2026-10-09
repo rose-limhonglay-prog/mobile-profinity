@@ -220,19 +220,23 @@ function SaveButton({ title, saved, className }) {
 }
 
 /* Free account, nothing bought yet (user, 2026-10-07): My Courses is open —
-   it just waits for the first purchase. The button scrolls to the paid picks. */
+   it just waits for the first purchase. The #related deep link still lands
+   on the paid picks. */
 function scrollToRelated() {
   const el = document.getElementById("lrn2-related");
   if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
-function BuyFirstCoursePanel({ onBrowse }) {
+/* The first suggestion is the free resources, not a purchase (user,
+   2026-10-08): the empty My Courses panel opens the Free Resources page. */
+const freeResourcesUrl = () => (PFL.allCoursesUrl ? PFL.allCoursesUrl({ free: 1 }) : "AllCoursesWeb.html?free=1");
+function StartFreeResourcesPanel() {
   return (
-    <div className="lrn2-mc-empty lrn2-mc-empty-free" data-screen-label="My Courses · nothing bought yet">
-      <span className="ic"><IconifyIcon name="lucide:shopping-bag" size={24} color="var(--lrn2-gold-ink)" /></span>
-      <h3>No courses yet</h3>
-      <p>Buy any course on its own and it lives here &mdash; continue it, finish it and earn the certificate. No membership needed.</p>
-      <button type="button" className="lrn2-outline-btn filled" onClick={onBrowse}>
-        See courses to buy<IconifyIcon name="lucide:arrow-down" size={17} color="#fff" />
+    <div className="lrn2-mc-empty lrn2-mc-empty-free" data-screen-label="My Courses · start with free resources">
+      <span className="ic"><IconifyIcon name="lucide:folder-open" size={24} color="var(--lrn2-gold-ink)" /></span>
+      <h3>Start with free resources</h3>
+      <p>Guides, checklists and vein maps you can use today &mdash; free, no card needed. Any course you buy later lives here too.</p>
+      <button type="button" className="lrn2-outline-btn filled" onClick={() => go(freeResourcesUrl())}>
+        Open Free Resources<IconifyIcon name="lucide:arrow-up-right" size={17} color="#fff" />
       </button>
     </div>
   );
@@ -549,7 +553,7 @@ function PromoFreeResources({ unlocked, onStartSurvey }) {
       </div>
       {/* CTA sits on the right of the card, like the Subscribe button below (user, 2026-09-16) */}
       {unlocked ? (
-        <button type="button" className="lrn2-outline-btn lrn2-promo-cta" onClick={() => go(PFL.allCoursesUrl ? PFL.allCoursesUrl({ free: 1 }) : "AllCoursesWeb.html?free=1")}>
+        <button type="button" className="lrn2-outline-btn lrn2-promo-cta" onClick={() => go(freeResourcesUrl())}>
           View free resources<IconifyIcon name="lucide:arrow-up-right" size={17} color="var(--brand-navy)" />
         </button>
       ) : (
@@ -634,6 +638,9 @@ function MyLearningApp() {
   /* Free account (user, 2026-10-07): My Courses is the courses they've bought,
      with live progress; Continue Learning resumes the first one in progress. */
   const myCourses = FREE_TIER ? PFC.purchasedCourses(purchased, done) : PFC.coursesForTier(TIER);
+  /* Nothing bought yet on a free account (user, 2026-10-08): no My Courses
+     section, tabs or course search — the free-resources panel stands alone. */
+  const noCoursesYet = FREE_TIER && !myCourses.length;
   const showSkeleton = loading && myCourses.length > 0;
   const q = query.trim().toLowerCase();
   const filters = {
@@ -674,20 +681,26 @@ function MyLearningApp() {
 
         <GoalCard onHelp={() => setHelpOpen(true)} />
 
-        <div className="lrn-tabs">
-          <Tabs tabs={TABS} active={tab} onChange={setTab} />
-        </div>
+        {!noCoursesYet &&
+          <div className="lrn-tabs">
+            <Tabs tabs={TABS} active={tab} onChange={setTab} />
+          </div>}
 
-        <label className="search">
-          <Icon name="search" size={20} color="var(--gray-450)" />
-          <input placeholder="Search course…" aria-label="Search course" value={query} onChange={(e) => setQuery(e.target.value)} />
-          {query && <button type="button" className="search-clear" aria-label="Clear search" onClick={() => setQuery("")}><IconifyIcon name="lucide:x" size={16} color="var(--gray-500)" /></button>}
-        </label>
+        {!noCoursesYet &&
+          <label className="search">
+            <Icon name="search" size={20} color="var(--gray-450)" />
+            <input placeholder="Search course…" aria-label="Search course" value={query} onChange={(e) => setQuery(e.target.value)} />
+            {query && <button type="button" className="search-clear" aria-label="Clear search" onClick={() => setQuery("")}><IconifyIcon name="lucide:x" size={16} color="var(--gray-500)" /></button>}
+          </label>}
 
         {CONFIDENCE_TIER && !q && (tab === "All Courses" || tab === "In Progress") && <ConfidenceDashboard saved={saved} />}
 
         {showContinue && <ContinueLearning c={continueCourse} />}
 
+        {noCoursesYet ?
+        <section className="panel lrn2-mc-panel lrn2-start-free" data-screen-label="Start with free resources">
+          <StartFreeResourcesPanel />
+        </section> :
         <section className="panel lrn2-mc-panel" data-screen-label="My Courses">
           {(
             <>
@@ -702,7 +715,6 @@ function MyLearningApp() {
                   View all courses<IconifyIcon name="lucide:arrow-right" size={16} color="currentColor" />
                 </button>}
               </div>
-              {FREE_TIER && !myCourses.length && <BuyFirstCoursePanel onBrowse={scrollToRelated} />}
               {(showSkeleton || shownCourses.length > 0) &&
                 <div className="lrn2-mc-grid">
                   {showSkeleton
@@ -720,7 +732,14 @@ function MyLearningApp() {
                 </button>}
             </>
           )}
-        </section>
+        </section>}
+
+        {/* Free accounts see the free resources before anything paid (user,
+            2026-10-08); members keep the paid picks first. */}
+        {FREE_TIER &&
+          <section className="lrn2-promos lrn2-promos-first">
+            <PromoFreeResources unlocked={resourcesUnlocked} onStartSurvey={() => setSurveyOpen(true)} />
+          </section>}
 
         {/* Paid related courses are open to every tier (user, 2026-10-07): a free
             account buys a course here and it lands in My Courses above. The All
@@ -728,7 +747,7 @@ function MyLearningApp() {
         <RelatedContent />
 
         <section className="lrn2-promos">
-          <PromoFreeResources unlocked={resourcesUnlocked} onStartSurvey={() => setSurveyOpen(true)} />
+          {!FREE_TIER && <PromoFreeResources unlocked={resourcesUnlocked} onStartSurvey={() => setSurveyOpen(true)} />}
           {!FREE_TIER && <PromoLearningPath />}
           <PromoUpgrade />
         </section>

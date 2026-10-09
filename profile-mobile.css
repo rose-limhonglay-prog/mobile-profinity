@@ -1320,6 +1320,7 @@ img{max-width:100%}
   border:1px solid var(--border-default);box-shadow:0 14px 34px rgba(16,20,48,.16),0 2px 6px rgba(16,20,48,.06);
   animation:pm-tip-in .18s cubic-bezier(.22,.61,.36,1);text-align:left;font-weight:var(--fw-regular)}
 @keyframes pm-tip-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.pm-tip-pop::before{content:"";position:absolute;left:0;right:0;top:-12px;height:12px}  /* hover bridge from the ⓘ */
 .pm-tip-caret{position:absolute;left:var(--tip-x,24px);top:-7px;width:12px;height:12px;margin-left:-6px;transform:rotate(45deg);
   background:var(--surface-card,#fff);border-left:1px solid var(--border-default);border-top:1px solid var(--border-default)}
 .pm-tip-body{display:block}
@@ -1378,8 +1379,7 @@ img{max-width:100%}
 
 /* coach-focus door on this card: number badge tucked top-left so the copy
    gets the full width (the three entries were wrapping hard at 430px) */
-.pm-goal-card .cf-door-item{position:relative;padding:14px 14px 14px 46px}
-.pm-goal-card .cf-door-num{position:absolute;left:13px;top:15px;margin:0}
+.pm-goal-card .cf-door-item{position:relative;padding:14px}
 .pm-goal-card .cf-door-thumb{width:60px;height:60px}
 .pm-goal-card .cf-free{align-items:flex-start}
 .pm-goal-card .cf-free-ic{margin-top:2px}
