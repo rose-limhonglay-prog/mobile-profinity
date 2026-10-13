@@ -46,7 +46,8 @@ const ADL_NAV_TOP = [{
 }, {
   icon: "lucide:users-round",
   label: "Agents",
-  href: "AdminAgents.html"
+  href: "AdminAgents.html",
+  chevron: true
 }, {
   icon: "lucide:calendar",
   label: "Events",

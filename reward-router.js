@@ -222,7 +222,7 @@
      via pf:milestone. lottie-web is loaded on demand like daily-checkin.js. */
   var SPLASH_MS = 2500;                        /* user rule: overlay only, gone after 2–3s */
   var SPLASH_LOTTIE = "assets/lottie/checkin-wink.json?v=20260918a";
-  var SPLASH_WAVE_LOTTIE = "assets/lottie/goal-reached.json?v=20260918a";   /* sign-up / login: the waving character */
+  var SPLASH_WAVE_LOTTIE = "assets/lottie/drtim-cheer.json?v=20261013a";   /* sign-up / login: Dr Tim cheering (was the waving girl, 2026-10-13) */
   var SPLASH_CONFETTI = "https://lottie.host/1b8bdd21-9711-48bb-873f-3889b01b43c8/jrTeYYuQqi.json";
   var HANDOFF_KEY = "pf-celebration-handoff";  /* auth pages → newsfeed: { type: "signup"|"login", tour, ts } */
   var SIGNUP_POINTS = 100, SIGNUP_KEY = "pf-signup-bonus";
@@ -256,7 +256,7 @@
     }
     if (m.type === "action") return { kicker: "Reward earned", points: m.points || 0, title: m.title || "Nice work", sub: m.sub || "", icon: m.icon || "lucide:sparkles", color: "#d9a21b" };
     if (m.type === "achievement") return { kicker: "Achievement unlocked", title: m.title || b.name || "New badge", sub: m.reward || b.reward || m.sub || "", icon: m.icon || b.icon || "lucide:award", color: "#d9a21b" };
-    if (m.type === "league") return { kicker: "League promotion", title: m.title || ("Welcome to the " + (lg.name || "next") + " League"), sub: "A new leaderboard, new rivals, new prizes", icon: "lucide:trophy", color: m.color || lg.accent || "#d9a21b" };
+    if (m.type === "league") return { kicker: "League promotion", title: m.title || ("Welcome to the " + (lg.name || "next") + " League"), sub: "A new leaderboard, new rivals and your one-time perk unlocked", icon: "lucide:trophy", color: m.color || lg.accent || "#d9a21b" };
     return { kicker: "Milestone reached", title: m.title || ((b.name || "Level") + " unlocked"), sub: m.sub || "", icon: "lucide:gem", color: m.color || b.color || "#d9a21b" };
   }
   var SPLASH_CSS =
@@ -439,7 +439,7 @@
     try { lg = L && L.getLeague ? L.getLeague(d.to) : null; } catch (err) {}
     var name = (lg && lg.name) || (d.to && d.to.name) || String(d.to);
     var key = (lg && lg.key) || (d.to && d.to.key) || String(d.to);
-    major({ type: "league", key: key, title: "Welcome to the " + name + " League", sub: "You've been promoted — a new leaderboard, new rivals, new prizes.", color: lg && lg.accent, league: lg });
+    major({ type: "league", key: key, title: "Welcome to the " + name + " League", sub: "You've been promoted — a new leaderboard, new rivals and your one-time perk unlocked.", color: lg && lg.accent, league: lg });
   });
 
   /* ---- sign-up / login hand-off from the auth pages ----

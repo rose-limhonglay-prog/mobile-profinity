@@ -1,6 +1,6 @@
 /* ===========================================================================
    PROfinity — Minute Taker (mobile) · Clinical Note Review
-   The AI-written note (SOAP / DAP / Summary) as editable lettered sections,
+   The AI-written note (Assessment [SOAP] / Data [DAP] / Summary) as editable lettered sections,
    the raw transcript behind a toggle, Discard (in-page sheet) and Save to
    EMR. Runs on window.PFMT. Classes prefixed mtnrm-.
    =========================================================================== */
@@ -124,10 +124,10 @@ const MTNRM_TRANSCRIPTS = {
 };
 const MTNRM_FORMATS = [{
   key: "soap",
-  label: "SOAP"
+  label: "Assessment"
 }, {
   key: "dap",
-  label: "DAP"
+  label: "Data"
 }, {
   key: "summary",
   label: "Summary"
@@ -177,9 +177,6 @@ const MTNRM_FIELDS = {
     tone: "violet"
   }]
 };
-function mtnrmWords(s) {
-  return String(s || "").trim().split(/\s+/).filter(Boolean).length;
-}
 function MTNRMField({
   meta,
   value,
@@ -194,27 +191,43 @@ function MTNRMField({
       el.style.height = el.scrollHeight + "px";
     };
     fit();
+    /* refit once webfonts land (metrics change the wrap) and after layout settles, so no stale blank space is left under the text */
+    const raf = requestAnimationFrame(fit);
+    const late = window.setTimeout(fit, 350);
     window.addEventListener("resize", fit);
+    window.addEventListener("load", fit);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
-    return () => window.removeEventListener("resize", fit);
+    if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", fit);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(late);
+      window.removeEventListener("resize", fit);
+      window.removeEventListener("load", fit);
+      if (document.fonts && document.fonts.removeEventListener) document.fonts.removeEventListener("loadingdone", fit);
+    };
   }, [value]);
-  return /*#__PURE__*/React.createElement("section", {
-    className: "mt-card mtnrm-field"
+  return /*#__PURE__*/React.createElement("div", {
+    className: "mtnrm-sec"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mtnrm-field-head"
+    className: "mtnrm-sec-rail",
+    "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mtnrm-letter mt-tone-" + meta.tone
-  }, meta.letter), /*#__PURE__*/React.createElement("span", {
+  }, meta.letter), /*#__PURE__*/React.createElement("i", {
+    className: "mtnrm-sec-line"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "mtnrm-sec-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtnrm-sec-head"
+  }, /*#__PURE__*/React.createElement("span", {
     className: "mtnrm-field-label"
-  }, meta.label), /*#__PURE__*/React.createElement("span", {
-    className: "mtnrm-count"
-  }, mtnrmWords(value), " words")), /*#__PURE__*/React.createElement("textarea", {
+  }, meta.label)), /*#__PURE__*/React.createElement("textarea", {
     ref: ref,
-    rows: 3,
+    rows: 2,
     value: value,
     onChange: onChange,
     "aria-label": meta.label
-  }));
+  })));
 }
 function MTNRMView() {
   const toast = MTR.useToast();
@@ -315,10 +328,18 @@ function MTNRMView() {
     "aria-selected": format === f.key,
     className: "mtnrm-seg-btn" + (format === f.key ? " is-on" : ""),
     onClick: () => setFormat(f.key)
-  }, f.label))), /*#__PURE__*/React.createElement("div", {
-    className: "mtnrm-fields",
-    key: format
-  }, fields.map(meta => /*#__PURE__*/React.createElement(MTNRMField, {
+  }, f.label))), /*#__PURE__*/React.createElement("section", {
+    className: "mt-card mtnrm-note",
+    key: format,
+    "aria-label": "Clinical note sections"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtnrm-note-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtnrm-note-title"
+  }, /*#__PURE__*/React.createElement(IcR, {
+    name: "lucide:sparkles",
+    size: 14
+  }), MTNRM_FORMATS.find(f => f.key === format).label, " note")), fields.map(meta => /*#__PURE__*/React.createElement(MTNRMField, {
     key: meta.key,
     meta: meta,
     value: note[format][meta.key],

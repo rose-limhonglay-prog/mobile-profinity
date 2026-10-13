@@ -73,7 +73,7 @@ function describeCC(m) {
   }
   if (m.type === "league") {
     const lg = m.league || {};
-    return { tag: "League", title: m.title || ("Promoted to the " + (lg.name || "next") + " League"), sub: "A new leaderboard, new rivals, new prizes", icon: "lucide:trophy", tone: "league", color: m.color || lg.accent };
+    return { tag: "League", title: m.title || ("Promoted to the " + (lg.name || "next") + " League"), sub: "A new leaderboard, new rivals and your one-time perk unlocked", icon: "lucide:trophy", tone: "league", color: m.color || lg.accent };
   }
   if (m.type === "action") {
     /* a way to earn whose admin-set Reward UI is Major / Combined */

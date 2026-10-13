@@ -1,0 +1,155 @@
+/* ===========================================================================
+   PROfinity — Katy · Ways to Earn · iPhone 17 Pro Max
+   Playful earn hub in the Rewards Store's language: category-tinted rows (tones arrive as --wte-a/--wte-b/--wte-ink),
+   navy 12px earn buttons. Classes prefixed wte-.
+   =========================================================================== */
+html, body { margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.app.device-stage { display: flex; align-items: center; justify-content: center; min-height: 100vh; height: 100vh; overflow: hidden; padding: 32px 0;
+  font-family: var(--font-sans); color: var(--text-primary); }
+img { max-width: 100%; }
+
+.wte-screen, .wte-scroll { background: var(--surface-page); }
+.wte-screen { position: relative; overflow: hidden; }
+.wte-scroll { scrollbar-width: none; }
+.wte-scroll::-webkit-scrollbar { display: none; }
+/* fixed-dark toast so the white text/icon stay legible in both themes */
+.wte-screen .ml-toast { background: #1a1736; }
+.wte-toast.win { animation: wte-toast-pop .35s cubic-bezier(.34,1.56,.64,1) both; }
+@keyframes wte-toast-pop { from { transform: translateX(-50%) scale(.7); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
+
+/* ---- section headers ---- */
+.wte-sec { margin: 18px 0 10px; }
+.wte-sec-note { font-size: 12px; font-weight: 600; color: var(--gray-500); }
+
+/* ---- category groups ---- */
+.wte-group { margin-top: 18px; }
+.wte-group:first-child { margin-top: 4px; animation: wte-pop .5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(120ms + var(--wte-i, 0) * 60ms); }
+.wte-group-h { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; flex-wrap: wrap; }
+.wte-group-h h2 { margin: 0; font-size: 16px; font-weight: 800; color: var(--gray-900); }
+.wte-group-blurb { font-size: 12px; color: var(--gray-500); }
+.wte-list { display: flex; flex-direction: column; gap: 8px; }
+.wte-row { display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 12px; border-radius: 16px; background: var(--surface-card); border: 1px solid var(--border-default);
+  box-shadow: 0 1px 4px rgba(16,24,40,.04); transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s ease; }
+.wte-row:hover { box-shadow: 0 8px 20px rgba(16,24,40,.08); }
+.wte-row-ic { flex: none; width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, color-mix(in srgb, var(--wte-a) 70%, var(--surface-card)), var(--wte-a));
+  display: flex; align-items: center; justify-content: center; }
+.wte-row-main { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.wte-row-main .ti { font-size: 14px; font-weight: 700; color: var(--gray-900); }
+.wte-row-main .su { font-size: 11px; color: var(--gray-500); line-height: 1.35; }
+.wte-earn { flex: none; padding: 0 2px; border: none; border-radius: 0; background: none; color: var(--brand-navy); font-family: inherit; font-size: 14px; font-weight: 800;
+  font-variant-numeric: tabular-nums; cursor: pointer; transition: transform .18s cubic-bezier(.34,1.56,.64,1), opacity .15s ease; }
+.wte-earn:hover { opacity: .8; }
+.wte-earn:active { transform: scale(.94); }
+.wte-pts-label { font-size: 12px; font-weight: 600; opacity: .75; }
+
+/* one-time / lifetime-capped action already banked */
+.wte-row.is-done { background: color-mix(in srgb, var(--success, #2a9568) 6%, var(--surface-card)); }
+.wte-row.is-done .ti { color: var(--gray-600); }
+.wte-row.is-done .wte-row-ic { background: var(--success-bg, #ecfdf3); }
+.wte-done { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; height: 30px; padding: 0 12px; border-radius: 999px;
+  background: var(--success-bg, #ecfdf3); color: var(--success, #2a9568); font-size: 12px; font-weight: 700; }
+
+.wte-confetti { position: absolute; z-index: 70; pointer-events: none; }
+.wte-row { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.wte-row:active { transform: scale(.985); }
+.wte-row:focus-visible { outline: 2px solid var(--brand-navy); outline-offset: 2px; }
+
+/* ---- "How it works" sheet (2026-10-13) ---- */
+.wte-scrim { position: absolute; inset: 0; z-index: 80; background: rgba(12, 10, 40, .5); display: flex; align-items: flex-end; animation: wte-fade .2s ease both; }
+@keyframes wte-fade { from { opacity: 0; } to { opacity: 1; } }
+.wte-sheet { width: 100%; max-height: 90%; overflow: auto; background: var(--surface-card); border-radius: 24px 24px 0 0; padding: 10px 18px 22px; box-shadow: 0 -12px 40px rgba(16,24,40,.22);
+  animation: wte-sheet-up .36s cubic-bezier(.2,.9,.2,1) both; scrollbar-width: none; }
+.wte-sheet::-webkit-scrollbar { display: none; }
+@keyframes wte-sheet-up { from { transform: translateY(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.wte-sheet-handle { display: block; width: 40px; height: 4px; border-radius: 2px; background: var(--gray-200, #e2e4ea); margin: 0 auto 14px; }
+.wte-sheet-head { display: flex; align-items: center; gap: 12px; }
+.wte-sheet-tx { flex: 1; min-width: 0; }
+.wte-sheet-cat { display: block; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--wte-ink); }
+.wte-sheet h2 { margin: 2px 0 0; font-size: 18px; font-weight: 800; color: var(--gray-900); line-height: 1.2; }
+.wte-sheet-close { flex: none; width: 34px; height: 34px; border-radius: 50%; border: none; background: var(--gray-75, #f4f4f7); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.wte-sheet-kicker { margin: 18px 0 8px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--gray-500); }
+
+/* animated stage: light (cream + gold) in light mode since 2026-10-13 at the user's request;
+   the original navy stage is kept for dark mode (overrides at the end of this block) */
+.wte-stage { position: relative; overflow: hidden; border-radius: 18px; padding: 14px 14px 18px; min-height: 210px;
+  background: radial-gradient(120% 90% at 50% 0%, #FFFDF8 0%, #FFF6E6 55%, #FDEBC8 100%); color: #292569; border: 1px solid rgba(217,162,27,.28); }
+.wte-stage-pill { position: absolute; top: 10px; right: 10px; display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px 0 8px; border-radius: 999px;
+  background: #FCC25D; color: #3D2A00; font-size: 12px; font-weight: 800; font-variant-numeric: tabular-nums; transition: transform .25s cubic-bezier(.34,1.56,.64,1); }
+.wte-stage-pill.bump { animation: wte-bump .5s cubic-bezier(.34,1.56,.64,1) both; }
+@keyframes wte-bump { 0% { transform: scale(1); } 40% { transform: scale(1.22); } 100% { transform: scale(1); } }
+/* Dr Tim presenter row */
+.wte-stage-doc { display: flex; align-items: center; gap: 10px; padding-right: 64px; }
+.wte-doc { flex: none; width: 56px; height: 56px; border-radius: 50%; overflow: hidden; background: #FFF3DC; border: 2px solid #FCC25D; transition: transform .35s cubic-bezier(.34,1.56,.64,1); }
+.wte-doc.is-happy { transform: scale(1.1); border-color: #FCC25D; box-shadow: 0 0 0 6px rgba(252,194,93,.18); }
+.wte-doc-anim { display: block; }
+.wte-doc-anim svg { display: block; }
+.wte-stage-say { position: relative; flex: 1; min-width: 0; padding: 8px 11px; border-radius: 12px; background: #fff; color: #292569; font-size: 12.5px; font-weight: 700; line-height: 1.3;
+  box-shadow: 0 2px 10px rgba(41,37,105,.08), 0 0 0 1px rgba(41,37,105,.06); animation: wte-say .3s cubic-bezier(.2,.9,.2,1) both; }
+.wte-stage-say::before { content: ""; position: absolute; left: -5px; top: 50%; width: 10px; height: 10px; background: #fff; transform: translateY(-50%) rotate(45deg); border-radius: 2px; box-shadow: -1px 1px 0 0 rgba(41,37,105,.06); }
+@keyframes wte-say { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
+.wte-stage-steps { display: flex; align-items: flex-start; justify-content: center; gap: 6px; margin-top: 18px; }
+.wte-st { display: flex; flex-direction: column; align-items: center; gap: 7px; width: 84px; opacity: .38; transform: translateY(6px); transition: opacity .3s ease, transform .3s cubic-bezier(.2,.9,.2,1); }
+.wte-st.is-active, .wte-st.is-done { opacity: 1; transform: none; }
+.wte-st-ic { position: relative; width: 48px; height: 48px; border-radius: 15px; display: flex; align-items: center; justify-content: center; color: #292569;
+  background: #fff; border: 1.5px solid rgba(41,37,105,.14); transition: background .25s ease, transform .3s cubic-bezier(.34,1.56,.64,1), color .25s ease; }
+.wte-st.is-active .wte-st-ic { background: var(--wte-b); color: var(--wte-ink); border-color: transparent; transform: scale(1.12); box-shadow: 0 8px 20px rgba(41,37,105,.18); }
+.wte-st.is-done .wte-st-ic { background: #FFF3DC; border-color: rgba(217,162,27,.6); }
+.wte-st-ring { position: absolute; inset: -3px; border-radius: 18px; border: 2px solid var(--wte-b); opacity: 0; pointer-events: none; }
+.wte-st.is-active .wte-st-ring { animation: wte-ring .9s ease-out infinite; }
+@keyframes wte-ring { 0% { transform: scale(.9); opacity: .9; } 100% { transform: scale(1.5); opacity: 0; } }
+.wte-st-tick { position: absolute; right: -5px; bottom: -5px; width: 18px; height: 18px; border-radius: 50%; background: var(--success, #2a9568); border: 2px solid #fff;
+  display: flex; align-items: center; justify-content: center; transform: scale(0); transition: transform .3s cubic-bezier(.34,1.56,.64,1); }
+.wte-st.is-done .wte-st-tick { transform: scale(1); }
+.wte-st-lb { font-size: 11px; font-weight: 700; line-height: 1.25; text-align: center; color: #292569; }
+.wte-stage-link { flex: none; width: 18px; height: 2px; margin-top: 23px; border-radius: 1px; background: rgba(41,37,105,.16); transition: background .3s ease; }
+.wte-stage-link.on { background: #D9A21B; }
+/* dark mode keeps the original navy stage */
+[data-theme="dark"] .wte-stage { background: radial-gradient(120% 90% at 50% 0%, #3a3480 0%, #292569 55%, #1b1848 100%); color: #fff; border-color: transparent; }
+[data-theme="dark"] .wte-doc { background: rgba(255,255,255,.1); border-color: rgba(252,194,93,.55); }
+[data-theme="dark"] .wte-doc.is-happy { border-color: #FCC25D; }
+[data-theme="dark"] .wte-stage-say { background: rgba(255,255,255,.94); box-shadow: none; }
+[data-theme="dark"] .wte-stage-say::before { background: rgba(255,255,255,.94); box-shadow: none; }
+[data-theme="dark"] .wte-st-ic { color: #fff; background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.2); }
+[data-theme="dark"] .wte-st.is-active .wte-st-ic { background: var(--wte-b); color: var(--wte-ink); border-color: transparent; box-shadow: 0 8px 20px rgba(0,0,0,.25); }
+[data-theme="dark"] .wte-st.is-done .wte-st-ic { background: rgba(255,255,255,.18); border-color: rgba(252,194,93,.6); }
+[data-theme="dark"] .wte-st-tick { border-color: #292569; }
+[data-theme="dark"] .wte-st-lb { color: rgba(255,255,255,.85); }
+[data-theme="dark"] .wte-stage-link { background: rgba(255,255,255,.18); }
+[data-theme="dark"] .wte-stage-link.on { background: #FCC25D; }
+.wte-stage-float { position: absolute; left: 50%; bottom: 60px; transform: translate(-50%, 0); padding: 5px 11px; border-radius: 999px; background: #FCC25D; color: #3D2A00;
+  font-size: 13px; font-weight: 800; opacity: 0; pointer-events: none; }
+.wte-stage.is-float .wte-stage-float { animation: wte-float .9s cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes wte-float { 0% { opacity: 0; transform: translate(-50%, 10px) scale(.7); } 25% { opacity: 1; transform: translate(-50%, -8px) scale(1.05); } 100% { opacity: 0; transform: translate(calc(-50% + 110px), -86px) scale(.6); } }
+
+.wte-steps { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.wte-steps li { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--gray-700); }
+.wte-steps-n { flex: none; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--wte-a); color: var(--wte-ink); font-size: 11px; font-weight: 800; }
+.wte-steps-pts { padding-top: 8px; border-top: 1px dashed var(--border-default); }
+.wte-steps-pts .wte-steps-n { background: #FCC25D; }
+.wte-steps-pts b { color: var(--gray-900); }
+.wte-rule { display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; padding: 10px 12px; border-radius: 12px; background: var(--gray-75, #f4f4f7); font-size: 11.5px; line-height: 1.4; color: var(--gray-600); }
+.wte-rule b { color: var(--gray-800); font-weight: 700; }
+.wte-sheet-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 48px; margin-top: 16px; border: none; border-radius: 14px; background: var(--brand-navy); color: #fff;
+  font-family: inherit; font-size: 15px; font-weight: 800; cursor: pointer; }
+.wte-sheet-btn:active { transform: scale(.98); }
+.wte-sheet-btn.is-done { background: var(--success-bg, #ecfdf3); color: var(--success, #2a9568); cursor: default; }
+[data-theme="dark"] .wte-sheet-btn { background: #FCC25D; color: #131126; }
+[data-theme="dark"] .wte-sheet-btn.is-done { background: rgba(52,199,123,.16); color: #6fdc9f; }
+[data-theme="dark"] .wte-sheet-close, [data-theme="dark"] .wte-rule { background: var(--surface-sunken, rgba(255,255,255,.06)); }
+[data-theme="dark"] .wte-steps-n { background: color-mix(in srgb, var(--wte-b) 26%, var(--surface-card)); color: var(--wte-b); }
+[data-theme="dark"] .wte-steps-pts .wte-steps-n { background: #FCC25D; color: #3D2A00; }
+
+/* dark: the navy→gold swap leaves white-on-gold; use the ink the store chip uses */
+[data-theme="dark"] .wte-done { background: rgba(52, 199, 123, .16); color: #6fdc9f; }
+[data-theme="dark"] .wte-row.is-done .wte-row-ic { background: rgba(52, 199, 123, .16); }
+[data-theme="dark"] .wte-earn { color: #FCC25D; }
+[data-theme="dark"] .wte-row-ic { background: color-mix(in srgb, var(--wte-b) 26%, var(--surface-card)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .wte-group, .wte-toast.win, .wte-scrim, .wte-sheet, .wte-st.is-active .wte-st-ring, .wte-stage-pill.bump, .wte-stage.is-float .wte-stage-float, .wte-stage-say { animation: none; }
+  .wte-doc { transition: none; }
+  .wte-st, .wte-st-ic, .wte-st-tick { transition: none; }
+  .wte-row, .wte-earn { transition: none; }
+}

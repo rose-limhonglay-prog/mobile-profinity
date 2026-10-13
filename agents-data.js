@@ -18,9 +18,11 @@
     green:  { bg: "#E7F6EE", fg: "#1F7A52" },
     blue:   { bg: "#EAF2FF", fg: "#2457B8" },
     slate:  { bg: "#EDEFF4", fg: "#3B4664" },
+    bronze: { bg: "#F7EFE3", fg: "#8A5303" },
   };
 
-  var AGENTS = [
+  /* pristine catalogue; AGENTS (member-visible) and ALL (admin) are rebuilt from it + admin overrides */
+  var BASE = [
     {
       id: "assess-pro", name: "Assess Pro", category: "Clinical", tone: "teal", icon: "lucide:scan-face",
       status: "available", badge: "Included with Artcodes", price: "Starts at £97/mo", featured: true,
@@ -96,7 +98,7 @@
       bestFor: "Practitioners who post inconsistently",
     },
     {
-      id: "minutes", name: "Minute Taker", category: "Operations", tone: "slate", icon: "lucide:mic",
+      id: "minutes", name: "Minute Taker", category: "Operations", tone: "bronze", icon: "lucide:mic",
       status: "available", badge: "Included in Premium", price: "Starts at £57/mo", featured: true, cta: "Open Minute Taker",
       href: { mobile: "MinuteTakerDashboardMobile.html", web: "MinuteTakerDashboard.html" },
       artChips: [["lucide:file-text", "Notes in 2 min"], ["lucide:list-checks", "3 actions assigned"]],
@@ -124,6 +126,49 @@
   ];
 
   var CATEGORIES = ["All", "Front desk", "Clinical", "Growth", "Operations", "Finance"];
+
+  /* ---- admin overrides (AdminAgents.html) — edits members see immediately ---- */
+  var ADMIN_KEY = "pf-admin-agents";
+  var EDITABLE = ["name", "shortName", "tagline", "description", "bullets", "bestFor", "cta", "status", "eta", "badge", "price", "featured", "hidden"];
+  function readAdmin() {
+    try { var v = JSON.parse(localStorage.getItem(ADMIN_KEY) || "{}"); return v && typeof v === "object" && !Array.isArray(v) ? v : {}; } catch (e) { return {}; }
+  }
+  function writeAdmin(map) {
+    try { localStorage.setItem(ADMIN_KEY, JSON.stringify(map)); } catch (e) {}
+    try { window.dispatchEvent(new CustomEvent("pf:agents-changed", { detail: { map: map } })); } catch (e) {}
+  }
+  var ALL = [];     /* every agent incl. hidden — admin */
+  var AGENTS = [];  /* what members see */
+  function rebuild() {
+    var map = readAdmin();
+    ALL.length = 0; AGENTS.length = 0;
+    BASE.forEach(function (b) {
+      var o = Object.assign({}, b, map[b.id] || {});
+      o.bullets = (o.bullets || []).slice();
+      ALL.push(o);
+      if (!o.hidden) AGENTS.push(o);
+    });
+  }
+  rebuild();
+  var admin = {
+    KEY: ADMIN_KEY, EDITABLE: EDITABLE,
+    read: readAdmin,
+    get: function (id) { return readAdmin()[id] || {}; },
+    base: function (id) { return BASE.filter(function (a) { return a.id === id; })[0] || null; },
+    isEdited: function (id) { var o = readAdmin()[id]; return !!(o && Object.keys(o).length); },
+    save: function (id, patch) {
+      var map = readAdmin(); var cur = Object.assign({}, map[id] || {});
+      var base = admin.base(id) || {};
+      EDITABLE.forEach(function (k) {
+        if (!(k in patch)) return;
+        var same = JSON.stringify(patch[k]) === JSON.stringify(base[k] === undefined ? (k === "hidden" || k === "featured" ? false : "") : base[k]);
+        if (same) delete cur[k]; else cur[k] = patch[k];
+      });
+      if (Object.keys(cur).length) map[id] = cur; else delete map[id];
+      writeAdmin(map); rebuild();
+    },
+    reset: function (id) { var map = readAdmin(); delete map[id]; writeAdmin(map); rebuild(); },
+  };
 
   function readWaitlist() {
     try { var v = JSON.parse(localStorage.getItem(WAITLIST_KEY) || "[]"); return Array.isArray(v) ? v : []; } catch (e) { return []; }
@@ -165,8 +210,8 @@
   }
 
   window.PFAgents = {
-    AGENTS: AGENTS, CATEGORIES: CATEGORIES, TONES: TONES, WAITLIST_KEY: WAITLIST_KEY,
+    AGENTS: AGENTS, ALL: ALL, CATEGORIES: CATEGORIES, TONES: TONES, WAITLIST_KEY: WAITLIST_KEY, admin: admin, rebuild: rebuild,
     readWaitlist: readWaitlist, isWaiting: isWaiting, join: join, leave: leave, counts: counts, askAva: askAva, open: open,
-    byId: function (id) { return AGENTS.filter(function (a) { return a.id === id; })[0] || null; },
+    byId: function (id) { return ALL.filter(function (a) { return a.id === id; })[0] || null; },
   };
 })();

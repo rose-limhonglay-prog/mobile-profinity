@@ -112,6 +112,9 @@
 .agx-live.agx-live-slate { background: radial-gradient(120% 140% at 100% 0%, #4A5678 0%, #2E3654 45%, #1B2138 100%); }
 .agx-live-slate .agx-live-kicker .agx-dot { background: #9DB4FF; box-shadow: 0 0 0 3px rgba(157,180,255,.25); }
 .agx-live.agx-live-slate .agx-spot-glow { background: radial-gradient(closest-side, rgba(157,180,255,.22), transparent 70%); }
+.agx-live.agx-live-bronze { background: radial-gradient(120% 140% at 100% 0%, #B9772E 0%, #7E4B16 45%, #45280C 100%); }
+.agx-live-bronze .agx-live-kicker .agx-dot { background: #FFD98A; box-shadow: 0 0 0 3px rgba(255,217,138,.25); }
+.agx-live.agx-live-bronze .agx-spot-glow { background: radial-gradient(closest-side, rgba(255,210,140,.26), transparent 70%); }
 .agx-live.agx-live-purple .agx-spot-glow { background: radial-gradient(closest-side, rgba(255,217,138,.22), transparent 70%); }
 .agx-live:hover { border-color: transparent; }
 .agx-live-art { position: relative; height: 150px; margin: -4px -6px 8px; display: flex; align-items: center; justify-content: center; }

@@ -34,7 +34,7 @@ const MAP_NAV = [
   { icon: "lucide:layout-dashboard", label: "Content Moderation" },
   { icon: "lucide:life-buoy", label: "Service Requests" },
   { icon: "lucide:shield-check", label: "Verification" },
-  { icon: "lucide:users-round", label: "Agents" },
+  { icon: "lucide:users-round", label: "Agents", chevron: true },
   { icon: "lucide:calendar", label: "Events" },
   { icon: "lucide:map", label: "Product Mapping", active: true },
   { icon: "lucide:bar-chart-3", label: "Analytics" },

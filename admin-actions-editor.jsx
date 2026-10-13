@@ -46,7 +46,7 @@ const ADL_NAV_TOP = [
   { icon: "lucide:layout-dashboard", label: "Content Moderation", href: "AdminModeration.html" },
   { icon: "lucide:life-buoy", label: "Service Requests", href: "AdminServiceRequests.html" },
   { icon: "lucide:shield-check", label: "Verification", href: "AdminVerification.html" },
-  { icon: "lucide:users-round", label: "Agents", href: "AdminAgents.html" },
+  { icon: "lucide:users-round", label: "Agents", href: "AdminAgents.html", chevron: true },
   { icon: "lucide:calendar", label: "Events", href: "AdminEvents.html" },
   { icon: "lucide:map", label: "Product Mapping", href: "AdminProductMapping.html" },
   { icon: "lucide:bar-chart-3", label: "Analytics", href: "AdminAnalytics.html" },
@@ -427,7 +427,7 @@ function ActEditor({ action, stored, achievementBadges, onChange, onSave, onNew,
    floatPoints, daily-checkin.js, daily-goal.jsx, reward-router.js showSplash,
    combined-celebration.jsx). Lottie mascots are the same JSON files. */
 const SIM_LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
-const SIM_LOTTIE = { wink: "assets/lottie/checkin-wink.json?v=20260918a", welcome: "assets/lottie/checkin-welcome.json?v=20260917c", wave: "assets/lottie/goal-reached.json?v=20260918a" };
+const SIM_LOTTIE = { wink: "assets/lottie/checkin-wink.json?v=20260918a", welcome: "assets/lottie/checkin-welcome.json?v=20260917c", wave: "assets/lottie/drtim-cheer.json?v=20261013a" };
 let simLottieLib = null;
 function simLoadLottie() {
   if (window.lottie) return Promise.resolve(window.lottie);

@@ -5,7 +5,7 @@
    gems, points-based via the Milestone Path), streak-at-risk banner, Lifetime
    Points / Active Streak stat tiles (streak → CheckInStreak), "Your league"
    card (leaderboard snapshot: own league + rank) with a Milestone Path button
-   beneath, "Jump back in" quick nav (My Rewards), Recent Activity and a "Your points" side card — on the
+   beneath, "Jump back in" quick nav (My Rewards), a "Last 7 days" points gauge (PFRewardsEmbed.PointsWeek, replaced Recent Activity 2026-10-13) and a "Your points" side card — on the
    web page shell (TopNav + centered two-column layout). Points-only since
    2026-09-24: no Spendable Credits, no Rewards Store.
    instead of the phone frame. Reads/writes the same localStorage-backed
@@ -177,7 +177,7 @@ function LeagueCardRW({ state }) {
   const total = st.rows.length;
   const gap = above ? above.points - me.points : 0;
   return (
-    <button type="button" className="rw-card rw-league" style={{ "--lg-accent": cur.accent, "--lg-deep": cur.deep, "--lg-soft": cur.soft }}
+    <button type="button" className="rw-card rw-league" style={{ "--lg-accent": cur.accent, "--lg-deep": cur.deep, "--lg-soft": cur.soft }} data-tour="leaderboard"
       onClick={() => goRW("Leaderboard.html")}
       aria-label={"Leaderboard. You're " + rwOrdinal(me.rank) + " of " + total + " in the " + cur.name + " League with " + rwPts(me.points) + ". Open the leaderboard"}>
       <span className="rw-league-gem"><LeagueLottieRW src={cur.lottie} size={64} /></span>
@@ -199,14 +199,18 @@ function FeatureTilesRW({ state }) {
   const mpNote = milestone ? (milestone.next ? PF_RW.formatNumber(milestone.remaining) + " pts to go" : "Every badge earned") : "Badges & benefits";
   const vouchers = (state.redeemedVouchers || []).length;
   const mrNote = vouchers ? vouchers + " unlocked" : "Course discounts";
+  /* Ways to Earn is back on the dashboard (user 2026-10-09) as a full-width
+     row above the two tiles — twin of RdbFeatureTiles in rewards-dashboard.jsx. */
+  const earnCount = (() => { try { return PF_RW.getConfig().actions.filter((a) => a.active).length; } catch (e) { return 0; } })();
   const items = [
-    { label: "Milestone Path", note: mpNote, icon: "lucide:milestone", href: "MilestonePath.html?ret=RewardsWeb.html" },
-    { label: "My Rewards", note: mrNote, icon: "lucide:ticket", href: "MyRewards.html" }
+    { label: "Ways to Earn", note: earnCount ? earnCount + " ways to earn points" : "Every way to earn points", icon: "lucide:coins", href: "WaysToEarn.html?ret=RewardsWeb.html", wide: true, tour: "earn" },
+    { label: "Milestone Path", note: mpNote, icon: "lucide:milestone", href: "MilestonePath.html?ret=RewardsWeb.html", tour: "path" },
+    { label: "My Rewards", note: mrNote, icon: "lucide:ticket", href: "MyRewards.html", tour: "rewards" }
   ];
   return (
     <div className="rw-feats">
       {items.map((it) => (
-        <button key={it.label} type="button" className="rw-card rw-feat" onClick={() => goRW(it.href)} aria-label={it.label + ". " + it.note}>
+        <button key={it.label} type="button" className={"rw-card rw-feat" + (it.wide ? " rw-feat-wide" : "")} data-tour={it.tour} onClick={() => goRW(it.href)} aria-label={it.label + ". " + it.note}>
           <span className="rw-feat-ic" aria-hidden="true"><IconifyRW name={it.icon} size={22} color="#fff" /></span>
           <span className="rw-feat-tx"><b>{it.label}</b><i>{it.note}</i></span>
           <IconifyRW name="lucide:chevron-right" size={18} color="var(--gray-400)" />
@@ -217,22 +221,21 @@ function FeatureTilesRW({ state }) {
 }
 
 /* ------------------------------------------------------------ stat tiles */
-/* Lifetime Points tile: the header points pill's smiling-face Lottie (was a coin-stack iframe) */
-const RW_MASCOT_SRC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
+/* Lifetime Points tile: the header points pill's coffee-break Dr Tim Lottie + ring crop (was the smiley) */
+const RW_MASCOT_SRC = "assets/lottie/drtim-coffee.json?v=20261013a";
 function EngagementCardsRW({ state }) {
-  const week = PF_RW.getWeekPoints(state);
   const tiles = [
-    { value: PF_RW.formatNumber(state.lifetimePoints), label: "Lifetime Points", sub: "+" + PF_RW.formatNumber(week) + " this week", json: RW_MASCOT_SRC, size: 48 },
+    { value: PF_RW.formatNumber(state.lifetimePoints), label: "Lifetime Points", unit: "pts", sub: "Never spent · never expire", json: RW_MASCOT_SRC, size: 48 },
     { value: state.streak.current + " Days", label: "Active Streak", sub: "Longest " + state.streak.longest + " days", lottie: "https://lottie.host/embed/d7ce0087-b4ad-4b7a-b657-558f841da6e5/pSvC2r0DRZ.json", size: 60,
       href: "CheckInStreak.html", aria: "Active streak: " + state.streak.current + " days. Open check-in streak" }
   ];
   return (
-    <div className="rw-eng-grid">
+    <div className="rw-eng-grid" data-tour="stats">
       {tiles.map((t) => {
         const inner = (
           <React.Fragment>
             <span className={"rw-eng-lottie" + (t.json ? " rw-eng-lottie--face" : "")} aria-hidden="true">{t.json ? <LeagueLottieRW src={t.json} size={t.size} /> : <iframe src={t.lottie} title="" scrolling="no" style={{ width: t.size + "px", height: t.size + "px", border: "none", background: "transparent" }} />}</span>
-            <div className="rw-eng-value">{t.value}</div>
+            <div className={"rw-eng-value" + (t.unit ? " rw-eng-value--pts" : "")}>{t.value}{t.unit ? <span className="rw-eng-unit">{t.unit}</span> : null}</div>
             <div className="rw-eng-label">{t.label}{t.href ? <IconifyRW name="lucide:chevron-right" size={14} color="var(--gray-400)" /> : null}</div>
             <div className="rw-eng-sub">{t.sub}</div>
           </React.Fragment>
@@ -331,7 +334,7 @@ function WelcomeModalRW({ state, league, onClose, initialStep }) {
             {/* Dr Tim avatar Lottie — same file as the daily check-in "Welcome back" screen */}
             <span className="rw-welcome-doc" aria-hidden="true"><LeagueLottieRW src="assets/lottie/checkin-welcome.json" size={210} /></span>
             <b id="rw-welcome-title">Welcome to Rewards, {first}!</b>
-            <p>Every check-in, post and lesson earns points. {next ? <React.Fragment>Reach <strong>{rwPts(next.requires)}</strong> to move up to <strong>{next.name} League</strong> and unlock your first benefit bundle.</React.Fragment> : null}</p>
+            <p>Every check-in, post and lesson earns points. {next ? <React.Fragment>Reach <strong>{rwPts(next.requires)}</strong> to move up to <strong>{next.name} League</strong> and unlock its one-time perk. Points are lifetime — never spent, never expired.</React.Fragment> : null}</p>
             <button type="button" className="rw-welcome-btn" onClick={() => setStep(2)}>See ways to earn<IconifyRW name="lucide:arrow-right" size={15} color="#3D2A00" /></button>
             <button type="button" className="rw-welcome-skip" onClick={onClose}>Explore my Rewards</button>
           </React.Fragment>
@@ -351,7 +354,7 @@ function WelcomeModalRW({ state, league, onClose, initialStep }) {
               ))}
             </ul>
             <button type="button" className="rw-welcome-btn" onClick={onClose}>Let's start<IconifyRW name="lucide:arrow-right" size={15} color="#3D2A00" /></button>
-            <button type="button" className="rw-welcome-skip" onClick={() => { onClose(); goRW("WaysToEarn.html"); }}>See all ways to earn</button>
+            <button type="button" className="rw-welcome-skip" onClick={() => { onClose(); goRW("WaysToEarn.html?ret=RewardsWeb.html"); }}>See all ways to earn</button>
           </React.Fragment>
         )}
       </div>
@@ -360,30 +363,12 @@ function WelcomeModalRW({ state, league, onClose, initialStep }) {
 }
 
 /* -------------------------------------------------------------- activity */
-function RecentActivityRW({ state }) {
-  const rows = state.ledger.slice().sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 8);
-  return (
-    <div className="rw-card rw-activity">
-      {rows.map((t) => (
-        <div key={t.id} className="rw-activity-row">
-          <span className="rw-activity-ic" aria-hidden="true">
-            <IconifyRW name={t.pointsDelta > 0 ? "lucide:plus" : "lucide:minus"} size={14} color={t.pointsDelta > 0 ? "#9C6A0E" : "var(--gray-500)"} />
-          </span>
-          <span className="rw-activity-main">
-            <span className="rw-activity-label">{t.label}</span>
-            <span className="rw-activity-time" title={fmtFullDateRW(t.ts)}>{fmtRelDateRW(t.ts)}</span>
-          </span>
-          <span className={"rw-activity-amt" + (t.pointsDelta > 0 ? "" : " is-spend")}>{t.pointsDelta > 0 ? "+" + PF_RW.formatNumber(t.pointsDelta) + " pts" : "—"}</span>
-        </div>
-      ))}
-      {rows.length === 0 ? <div className="rw-empty">No activity yet — check in today to earn your first points.</div> : null}
-    </div>
-  );
-}
+/* Recent Activity (ledger rows) was replaced on 2026-10-13 by the shared
+   "Last 7 days" gauge — PFRewardsEmbed.PointsWeek (rewards-milestone-embed.jsx). */
 
 /* ---------------------------------------------------------- side summary */
 function PointsCardRW({ state, league }) {
-  const week = PF_RW.getWeekPoints(state);
+  const week = PF_RW.getRollingPoints ? PF_RW.getRollingPoints(state, 7) : PF_RW.getWeekPoints(state);
   const tier = state.user && state.user.membershipTier ? String(state.user.membershipTier) : null;
   const mult = tier ? PF_RW.tierMultiplierFor(null, tier) : null;
   const next = league ? league.next : null;
@@ -392,16 +377,17 @@ function PointsCardRW({ state, league }) {
       <h3>Your points</h3>
       <dl className="rw-kv">
         <div><dt>Lifetime points</dt><dd>{PF_RW.formatNumber(state.lifetimePoints)}</dd></div>
-        <div><dt>Points this week</dt><dd>{PF_RW.formatNumber(week)}</dd></div>
+        <div><dt>Last 7 days</dt><dd>{PF_RW.formatNumber(week)}</dd></div>
         {next ? <div><dt>To {next.name} League</dt><dd className="warn">{rwPts(league.need)}</dd></div> : null}
         {mult ? <div><dt>{tier} tier multiplier</dt><dd>{mult}×</dd></div> : null}
       </dl>
+      <p className="rw-kv-note">Points are lifetime — never spent, never expired. Each of the six leagues unlocks one one-time perk.</p>
       <button className="rw-btn rw-btn-coral" type="button" onClick={() => goRW("MilestonePath.html?ret=RewardsWeb.html")}>View Milestone Path<IconifyRW name="lucide:arrow-right" size={16} color="#3D2A00" /></button>
     </section>
   );
 }
 
-function DemoCardRW({ onRisk, onMilestone, onGoal, onNew, onReset }) {
+function DemoCardRW({ onRisk, onMilestone, onGoal, onNew, onReset, onTour }) {
   return (
     <section className="rw-card rw-side-card rw-demo" aria-label="Demo controls">
       <h3>Demo controls</h3>
@@ -410,6 +396,7 @@ function DemoCardRW({ onRisk, onMilestone, onGoal, onNew, onReset }) {
         <button className="rw-demo-btn" type="button" onClick={onMilestone}>Simulate 50k milestone</button>
         <button className="rw-demo-btn" type="button" onClick={onGoal}>Daily goal reached</button>
         <button className="rw-demo-btn" type="button" onClick={onNew}>New member view</button>
+        <button className="rw-demo-btn" type="button" onClick={onTour}>Replay tour</button>
         <button className="rw-demo-btn" type="button" onClick={onReset}>Reset demo data</button>
       </div>
     </section>
@@ -424,6 +411,16 @@ function RewardsWebApp() {
   const closeWelcome = React.useCallback(() => { rwMarkWelcomeSeen(); setWelcomeOpen(false); }, []);
   const [toast, setToast] = useStateRW(null);
   const refresh = () => { setState(PF_RW.getState()); setLeague(rwLeagueProgress()); };
+  /* first-visit section tour (twin of the mobile page); ?tour=1 replays */
+  const EMB = window.PFRewardsEmbed;
+  const [tourOpen, setTourOpen] = useStateRW(false);
+  const [tourWanted, setTourWanted] = useStateRW(() => !!(EMB && EMB.shouldTour && EMB.shouldTour()));
+  useEffectRW(() => {
+    if (!tourWanted || welcomeOpen) return;
+    const iv = setInterval(() => { if (EMB.quietForTour()) { clearInterval(iv); setTourOpen(true); } }, 400);
+    return () => clearInterval(iv);
+  }, [tourWanted, welcomeOpen]);
+  const endTour = React.useCallback(() => { setTourOpen(false); setTourWanted(false); }, []);
   const flash = (m) => { setToast(m); setTimeout(() => setToast(null), 2400); };
 
   /* Stay in sync when another tab (or the mobile preview) earns points. */
@@ -470,8 +467,8 @@ function RewardsWebApp() {
 
             {/* "Jump back in" quick nav removed (user, 2026-09-24) */}
             <section className="rw-sec">
-              <div className="rw-sec-h"><h2>Recent Activity</h2></div>
-              <RecentActivityRW state={state} />
+              <div className="rw-sec-h"><h2>Last 7 days</h2></div>
+              {window.PFRewardsEmbed && window.PFRewardsEmbed.PointsWeek ? <window.PFRewardsEmbed.PointsWeek state={state} /> : null}
             </section>
           </main>
 
@@ -483,12 +480,14 @@ function RewardsWebApp() {
               onMilestone={() => { PF_RW.setState({ lifetimePoints: 49700 }); goRW("MilestoneSplash.html"); }}
               onGoal={() => { if (window.PFDailyGoal) window.PFDailyGoal.reset(); goRW("DailyGoal.html?ret=RewardsWeb.html"); }}
               onNew={() => goRW("RewardsWeb.html?new=1")}
+              onTour={() => { window.scrollTo({ top: 0 }); setTourOpen(false); setTourWanted(true); }}
               onReset={() => { PF_RW.resetDemo(); refresh(); flash("Demo data reset."); }} />
           </aside>
         </div>
       </div>
 
       {welcomeOpen && <WelcomeModalRW state={state} league={league} onClose={closeWelcome} initialStep={rwWelcomeStep()} />}
+      {tourOpen && EMB && EMB.Tour && <EMB.Tour host={null} onDone={endTour} />}
       {toast && <div className="rw-toast" role="status"><IconifyRW name="lucide:check-circle" size={16} color="#fff" />{toast}</div>}
     </div>
   );

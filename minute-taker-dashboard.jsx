@@ -1,7 +1,7 @@
 /* ===========================================================================
    PROfinity — Minute Taker · Clinician Dashboard (web)
    Landing hub for the Minute Taker ambient documentation agent: gradient
-   hero with today's numbers + Start session, today's / earlier sessions
+   hero with today's numbers + Start session, Upcoming / Saved sessions toggle
    with patient avatars, voice-profile ring, recent patients. Web twin of
    MinuteTakerDashboardMobile (minute-taker-dashboard-mobile.jsx).
    PRD: Minute Taker Assistant Agent v1.0 — Screen 1 (Sec. 3.1 / MT-K02, MT-K03).
@@ -9,6 +9,7 @@
    =========================================================================== */
 const { useState: useStateMTD } = React;
 
+function getParamMTD(name) { try { return new URLSearchParams(window.location.search).get(name) || ""; } catch (e) { return ""; } }
 function goMTD(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
 
 /* ------------------------------------------------------------- sidebar */
@@ -69,12 +70,21 @@ function MTDHeader({ title }) {
 
 /* ---------------------------------------------------------------- data */
 const MTD_SESSIONS = [
-  { patient: "Eleanor Vance", id: "MT-77213", day: "today", time: "09:30", duration: "45 min", status: "Note Ready", type: "Injectables follow-up" },
-  { patient: "Marcus Thorne", id: "MT-77198", day: "today", time: "08:00", duration: "30 min", status: "Processing", type: "New patient consult" },
-  { patient: "Sarah Jenkins", id: "MT-84729", day: "yesterday", time: "16:15", duration: "55 min", status: "Saved", type: "Post-op review" },
-  { patient: "David Cho", id: "MT-77042", day: "yesterday", time: "14:00", duration: "20 min", status: "Saved", type: "Acne protocol · S2" },
+  { sid: "s1", patient: "Eleanor Vance", id: "MT-77213", day: "today", time: "09:30", duration: "45 min", status: "Note Ready", type: "Injectables follow-up" },
+  { sid: "s2", patient: "Marcus Thorne", id: "MT-77198", day: "today", time: "08:00", duration: "30 min", status: "Processing", type: "New patient consult" },
+  { sid: "s3", patient: "Sarah Jenkins", id: "MT-84729", day: "yesterday", when: "Yesterday", time: "16:15", duration: "55 min", status: "Saved", type: "Post-op review" },
+  { sid: "s4", patient: "David Cho", id: "MT-77042", day: "yesterday", when: "Yesterday", time: "14:00", duration: "20 min", status: "Saved", type: "Acne protocol · S2" },
+  { sid: "s5", patient: "Priya Natarajan", id: "MT-77310", day: "earlier", when: "5 days ago", time: "10:45", duration: "35 min", status: "Saved", type: "Skin consult" },
+  { sid: "s6", patient: "Eleanor Vance", id: "MT-77213", day: "earlier", when: "2 weeks ago", time: "11:00", duration: "40 min", status: "Saved", type: "Injectables · session 1" },
+  { sid: "s7", patient: "Sarah Jenkins", id: "MT-84729", day: "earlier", when: "3 weeks ago", time: "09:00", duration: "50 min", status: "Saved", type: "Knee arthroscopy review" },
+  { sid: "s8", patient: "David Cho", id: "MT-77042", day: "earlier", when: "4 weeks ago", time: "15:30", duration: "25 min", status: "Saved", type: "Acne protocol · S1" },
+  { sid: "s9", patient: "Amir Khan", id: "MT-76980", day: "earlier", when: "2 months ago", time: "10:00", duration: "30 min", status: "Saved", type: "Rosacea review" },
 ];
-const MTD_UPCOMING = { patient: "Priya Natarajan", time: "11:15", type: "Skin consult" };
+const MTD_UPCOMING = [
+  { patient: "Priya Natarajan", time: "11:15", type: "Skin consult" },
+  { patient: "Amir Khan", time: "14:30", type: "Rosacea follow-up" },
+  { patient: "Sarah Jenkins", time: "16:00", type: "Post-op check" },
+];
 const MTD_RECENT = [
   { name: "Eleanor Vance", sub: "Today", tone: "teal" },
   { name: "Sarah Jenkins", sub: "3 weeks ago", tone: "violet" },
@@ -97,10 +107,30 @@ function MTDAvatar({ name, size = 40, tone }) {
 }
 
 /* ---------------------------------------------------------------- view */
-function MTDSessionRow({ row }) {
+const MTD_MENU = [
+  { key: "note", icon: "lucide:file-text", label: "Clinical note", needsNote: true },
+  { key: "archive", icon: "lucide:archive", label: "Archive" },
+  { key: "download", icon: "lucide:download", label: "Download", needsNote: true },
+];
+function MTDSessionRow({ row, onArchive, onToast }) {
   const meta = MTD_STATUS[row.status];
   const disabled = row.status === "Processing";
+  const [menu, setMenu] = useStateMTD(false);
+  const wrapRef = React.useRef(null);
   const open = () => goMTD("MinuteTakerNoteReview.html?patient=" + encodeURIComponent(row.patient) + "&id=" + row.id);
+  React.useEffect(() => {
+    if (!menu) return undefined;
+    const off = (e) => { if (wrapRef.current && !wrapRef.current.contains(e.target)) setMenu(false); };
+    const esc = (e) => { if (e.key === "Escape") setMenu(false); };
+    document.addEventListener("mousedown", off); document.addEventListener("keydown", esc);
+    return () => { document.removeEventListener("mousedown", off); document.removeEventListener("keydown", esc); };
+  }, [menu]);
+  function act(key) {
+    setMenu(false);
+    if (key === "note") open();
+    else if (key === "archive") onArchive(row);
+    else if (key === "download") onToast("Downloading the note as a PDF…");
+  }
   return (
     <div className={"mtd-trow" + (disabled ? " is-processing" : "")}>
       <div className="mtd-cell-patient">
@@ -110,24 +140,44 @@ function MTDSessionRow({ row }) {
           <div className="mtd-when-cell">{row.type}</div>
         </div>
       </div>
-      <span className="mtd-when-cell mtd-cell-time"><strong>{row.time}</strong> · {row.duration}</span>
+      <span className="mtd-when-cell mtd-cell-time">{row.when ? <><strong>{row.when}</strong> · {row.time}</> : <><strong>{row.time}</strong> · {row.duration}</>}</span>
       <span className={"mtd-status-pill mtd-status-" + meta.cls + (disabled ? " is-spin" : "")}>
         <iconify-icon icon={meta.icon}></iconify-icon>{meta.label}
       </span>
-      <button type="button" className={"mtd-row-btn" + (disabled ? " is-disabled" : "")} disabled={disabled} onClick={disabled ? undefined : open}>
-        {meta.cta}{!disabled && <iconify-icon icon="lucide:chevron-right"></iconify-icon>}
-      </button>
+      <div className="mtd-cell-actions">
+        <button type="button" className={"mtd-row-btn" + (disabled ? " is-disabled" : "")} disabled={disabled} onClick={disabled ? undefined : open}>
+          {meta.cta}
+        </button>
+        <div className="mtd-kebab-wrap" ref={wrapRef}>
+          <button type="button" className={"mtd-kebab" + (menu ? " is-on" : "")} aria-label={"More options for " + row.patient} aria-haspopup="menu" aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
+            <iconify-icon icon="lucide:ellipsis-vertical"></iconify-icon>
+          </button>
+          {menu && (
+            <div className="mtd-menu" role="menu">
+              {MTD_MENU.map((it) => (
+                <button key={it.key} type="button" role="menuitem" disabled={disabled && it.needsNote} onClick={() => act(it.key)}>
+                  <iconify-icon icon={it.icon}></iconify-icon>{it.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
 function MTDView() {
   const [search, setSearch] = useStateMTD("");
-  const [showProfile, setShowProfile] = useStateMTD(false);
-  const today = MTD_SESSIONS.filter((s) => s.day === "today");
-  const earlier = MTD_SESSIONS.filter((s) => s.day !== "today");
-  const ready = MTD_SESSIONS.filter((s) => s.status === "Note Ready").length;
-  const pct = 98, r = 30, c = 2 * Math.PI * r;
+  const [archived, setArchived] = useStateMTD([]);
+  const [toast, setToast] = useStateMTD(null);
+  const toastRef = React.useRef(null);
+  const showToast = (msg) => { setToast(msg); clearTimeout(toastRef.current); toastRef.current = setTimeout(() => setToast(null), 2200); };
+  const [view, setView] = useStateMTD(getParamMTD("view") === "saved" ? "saved" : "upcoming");
+  const sessions = MTD_SESSIONS.filter((s) => !archived.includes(s.sid));
+  const today = sessions.filter((s) => s.day === "today");
+  const ready = sessions.filter((s) => s.status === "Note Ready").length;
+  const archiveRow = (row) => { setArchived((a) => a.concat(row.sid)); showToast("Moved to the archive"); };
 
   function startSession() {
     const target = search.trim() || "Sarah Jenkins";
@@ -144,7 +194,7 @@ function MTDView() {
         <div className="mtd-hero-main">
           <div className="mtd-hero-eyebrow">{mtdToday()}</div>
           <h1>{mtdGreeting()}, Dr Smith</h1>
-          <p>{today.length + 1} consultations today · {ready} note ready to review</p>
+          <p>{today.length + MTD_UPCOMING.length} consultations today · {ready} note ready to review</p>
           <div className="mtd-search-wrap">
             <iconify-icon icon="lucide:search"></iconify-icon>
             <input placeholder="Search patients by name, ID or DOB to start a session…" value={search}
@@ -155,7 +205,7 @@ function MTDView() {
           </div>
         </div>
         <div className="mtd-stats">
-          <div className="mtd-stat"><strong>{today.length + 1}</strong><span>Today</span></div>
+          <div className="mtd-stat"><strong>{today.length + MTD_UPCOMING.length}</strong><span>Today</span></div>
           <div className="mtd-stat"><strong>{ready}</strong><span>To review</span></div>
           <div className="mtd-stat"><strong>2<em>m</em></strong><span>Avg. write-up</span></div>
           <div className="mtd-stat"><strong>98<em>%</em></strong><span>Voice match</span></div>
@@ -166,66 +216,37 @@ function MTDView() {
         <div className="mtd-main-col">
           <div className="mtd-card">
             <div className="mtd-card-head">
-              <span className="mtd-card-title-text"><span className="mtd-ti"><iconify-icon icon="lucide:calendar-days"></iconify-icon></span>Today</span>
+              <span className="mtd-card-title-text"><span className="mtd-ti"><iconify-icon icon="lucide:calendar-days"></iconify-icon></span>Sessions</span>
+              <a href="MinuteTakerArchive.html" onClick={(e) => { e.preventDefault(); goMTD("MinuteTakerArchive.html"); }}>View archive <iconify-icon icon="lucide:arrow-up-right"></iconify-icon></a>
+            </div>
+            <div className="mtd-seg" role="tablist" aria-label="Sessions view">
+              <button type="button" role="tab" aria-selected={view === "upcoming"} className={"mtd-seg-btn" + (view === "upcoming" ? " is-on" : "")} onClick={() => setView("upcoming")}>Upcoming<em>{MTD_UPCOMING.length}</em></button>
+              <button type="button" role="tab" aria-selected={view === "saved"} className={"mtd-seg-btn" + (view === "saved" ? " is-on" : "")} onClick={() => setView("saved")}>Saved<em>{sessions.length}</em></button>
             </div>
             <div className="mtd-thead">
               <span className="mtd-th">Patient</span><span className="mtd-th">Time</span><span className="mtd-th">Status</span><span className="mtd-th">Action</span>
             </div>
-            {today.map((row) => <MTDSessionRow key={row.id} row={row} />)}
-            <div className="mtd-trow mtd-trow-upcoming">
-              <div className="mtd-cell-patient">
-                <span className="mtd-upcoming-time"><strong>{MTD_UPCOMING.time}</strong><span>next</span></span>
-                <div>
-                  <div className="mtd-patient-cell">{MTD_UPCOMING.patient}</div>
-                  <div className="mtd-when-cell">{MTD_UPCOMING.type}</div>
+            {view === "upcoming" ? MTD_UPCOMING.map((u, i) => (
+              <div key={u.patient + u.time} className="mtd-trow mtd-trow-upcoming">
+                <div className="mtd-cell-patient">
+                  <span className="mtd-upcoming-time"><strong>{u.time}</strong><span>{i === 0 ? "next" : "today"}</span></span>
+                  <div>
+                    <div className="mtd-patient-cell">{u.patient}</div>
+                    <div className="mtd-when-cell">{u.type}</div>
+                  </div>
                 </div>
+                <span className="mtd-when-cell mtd-cell-time">Not started</span>
+                <span className="mtd-status-pill mtd-status-muted"><iconify-icon icon="lucide:calendar"></iconify-icon>Scheduled</span>
+                <button type="button" className="mtd-row-btn mtd-row-btn-primary" onClick={() => goMTD("MinuteTakerPatientContext.html?patient=" + encodeURIComponent(u.patient))}>
+                  Prepare<iconify-icon icon="lucide:chevron-right"></iconify-icon>
+                </button>
               </div>
-              <span className="mtd-when-cell mtd-cell-time">Not started</span>
-              <span className="mtd-status-pill mtd-status-muted"><iconify-icon icon="lucide:calendar"></iconify-icon>Scheduled</span>
-              <button type="button" className="mtd-row-btn mtd-row-btn-primary" onClick={() => goMTD("MinuteTakerPatientContext.html?patient=" + encodeURIComponent(MTD_UPCOMING.patient))}>
-                Prepare<iconify-icon icon="lucide:chevron-right"></iconify-icon>
-              </button>
-            </div>
-          </div>
-
-          <div className="mtd-card">
-            <div className="mtd-card-head">
-              <span className="mtd-card-title-text"><span className="mtd-ti"><iconify-icon icon="lucide:history"></iconify-icon></span>Earlier</span>
-              <a href="MinuteTakerArchive.html" onClick={(e) => { e.preventDefault(); goMTD("MinuteTakerArchive.html"); }}>View archive <iconify-icon icon="lucide:arrow-up-right"></iconify-icon></a>
-            </div>
-            {earlier.map((row) => <MTDSessionRow key={row.id} row={row} />)}
+            )) : sessions.map((row) => <MTDSessionRow key={row.sid} row={row} onArchive={archiveRow} onToast={showToast} />)}
+            {view === "saved" && sessions.length === 0 && <div className="mtd-empty">Everything has been archived.</div>}
           </div>
         </div>
 
         <div className="mtd-side-col">
-          <div className="mtd-card mtd-enrol-card">
-            <div className="mtd-card-head">
-              <span className="mtd-card-title-text"><span className="mtd-ti"><iconify-icon icon="lucide:audio-lines"></iconify-icon></span>Voice profile</span>
-              <button type="button" className="mtd-link" onClick={() => setShowProfile((v) => !v)}>{showProfile ? "Hide" : "Manage"}</button>
-            </div>
-            <div className="mtd-voice-row">
-              <div className="mtd-ring" role="img" aria-label={pct + "% voice match"}>
-                <svg viewBox="0 0 72 72" width="72" height="72">
-                  <circle cx="36" cy="36" r={r} className="mtd-ring-track" />
-                  <circle cx="36" cy="36" r={r} className="mtd-ring-fill" style={{ strokeDasharray: c, strokeDashoffset: c * (1 - pct / 100) }} />
-                </svg>
-                <span className="mtd-ring-val">{pct}<em>%</em></span>
-              </div>
-              <div>
-                <div className="mtd-voice-title"><span className="mtd-live-dot" />Profile active</div>
-                <div className="mtd-voice-sub">Minute Taker recognises your voice, so clinician and patient speech stay separated.</div>
-              </div>
-            </div>
-            {showProfile && (
-              <div className="mtd-enrol-detail">
-                <div className="mtd-enrol-detail-row"><span>Match confidence</span><strong>98%</strong></div>
-                <div className="mtd-enrol-detail-row"><span>Sample length</span><strong>32 s</strong></div>
-                <div className="mtd-enrol-detail-row"><span>Last recalibrated</span><strong>2 weeks ago</strong></div>
-                <button className="mtd-btn mtd-btn-soft" type="button"><iconify-icon icon="lucide:mic"></iconify-icon>Re-record sample</button>
-              </div>
-            )}
-          </div>
-
           <div className="mtd-card">
             <div className="mtd-card-head">
               <span className="mtd-card-title-text"><span className="mtd-ti"><iconify-icon icon="lucide:users"></iconify-icon></span>Recent patients</span>
@@ -247,6 +268,7 @@ function MTDView() {
           </div>
         </div>
       </div>
+      <div className={"mtd-toast" + (toast ? " is-on" : "")} role="status" aria-live="polite">{toast && <><iconify-icon icon="lucide:check-circle-2"></iconify-icon>{toast}</>}</div>
     </div>
   );
 }

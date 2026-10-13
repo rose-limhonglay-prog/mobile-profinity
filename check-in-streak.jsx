@@ -1,16 +1,21 @@
 /* ===========================================================================
    PROfinity — Katy · Check-In Streak ("5 in a row") · iPhone 17 Pro Max
    Celebrates the consecutive daily check-in streak the Mobile Check-In
-   guardrail asks for: five day-slots in a row, each one playing the
-   lemon-in-shades Lottie once the day is banked. Check-in, streak freeze and
-   the Streak Master milestone all run through window.PFLoyalty.
+   guardrail asks for: five day-slots on a connected track, each one playing
+   the cheering Dr Tim Lottie once the day is banked, presented by the
+   coffee-break Dr Tim (assets/lottie/drtim-coffee.json, same ring crop as the
+   header points pill). Redesigned 2026-10-13 as a light cream + gold hero
+   with the check-in action inside it (navy hero kept for dark mode). Check-in,
+   streak freeze and the Streak Master milestone all run through window.PFLoyalty.
    Suffixed -CIS to avoid clashes with other pages.
    =========================================================================== */
 const { useState: useStateCIS, useEffect: useEffectCIS, useRef: useRefCIS, useMemo: useMemoCIS } = React;
 const DSCIS = window.ProfinityDesignSystem_c2b5cc;
 const PF_CIS = window.PFLoyalty;
 
-const CIS_LOTTIE = "https://lottie.host/82113f83-6260-46ed-b045-3fdc9092198f/lGsCEPPU0v.json";
+/* on-brand slot character: the cheering Dr Tim avatar (assets/lottie, same
+   file family as daily-checkin.js / the Rewards welcome modal) */
+const CIS_LOTTIE = "assets/lottie/checkin-happy.json";
 const CIS_SLOTS = 5;
 const CIS_DAY = 86400000;
 
@@ -30,7 +35,9 @@ function CisLottie({ size, delay }) {
     loadCisLottie().then((data) => {
       const start = () => {
         if (dead || !window.lottie || !host.current) return;
-        anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: true, autoplay: false, animationData: JSON.parse(JSON.stringify(data)) });
+        anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: true, autoplay: false, animationData: JSON.parse(JSON.stringify(data)),
+          /* the avatar is a 4:3 scene — fill the round slot by height and crop the sides */
+          rendererSettings: { preserveAspectRatio: "xMidYMid slice" } });
         timer = setTimeout(() => { if (!dead && anim) anim.play(); }, delay || 0);
       };
       if (window.lottie) start();
@@ -42,6 +49,26 @@ function CisLottie({ size, delay }) {
     return () => { dead = true; if (timer) clearTimeout(timer); if (anim) anim.destroy(); };
   }, [delay]);
   return <span ref={host} className="cis-lottie" style={{ width: size, height: size }} aria-hidden="true" />;
+}
+
+/* hero presenter: the coffee-break Dr Tim, cropped to face + mug by the CSS
+   ring (.cis-hero-doc) exactly like the header points pill */
+const CIS_DOC_LOTTIE = "assets/lottie/drtim-coffee.json?v=20261013a";
+function CisDoc() {
+  const host = useRefCIS(null);
+  useEffectCIS(() => {
+    let anim, iv, dead = false;
+    const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    const start = () => {
+      if (dead || !window.lottie || !host.current) return;
+      anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: !still, autoplay: !still, path: CIS_DOC_LOTTIE });
+      if (still) anim.addEventListener("DOMLoaded", () => anim.goToAndStop(0, true));
+    };
+    if (window.lottie) start();
+    else { iv = setInterval(() => { if (window.lottie) { clearInterval(iv); iv = null; start(); } }, 120); setTimeout(() => { if (iv) clearInterval(iv); }, 8000); }
+    return () => { dead = true; if (iv) clearInterval(iv); if (anim) anim.destroy(); };
+  }, []);
+  return <span ref={host} className="cis-doc-anim" aria-hidden="true" />;
 }
 
 function sameDayCIS(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
@@ -161,7 +188,7 @@ function CheckInStreakScreen() {
     ? <>Start your <b>streak</b></>
     : <><b>{current}</b> in a row!</>;
   const sub = current === 0
-    ? "Check in today to plant your first lemon. Five days running clears the Mobile Check-In guardrail."
+    ? "Check in today to start your streak. Five days running clears the Mobile Check-In guardrail."
     : rowComplete
       ? (checkedInToday ? "Five days running and the Mobile Check-In guardrail is cleared. Come back tomorrow to keep the row alive." : "Five days running. Check in today to make it " + (current + 1) + " and keep the row alive.")
       : (CIS_SLOTS - current) + " more " + (CIS_SLOTS - current === 1 ? "day" : "days") + " to make it five in a row.";
@@ -175,49 +202,58 @@ function CheckInStreakScreen() {
       </div>
       <div className="ml-scroll cis-scroll">
         <section className="cis-hero" aria-label={current + " day check-in streak"}>
-          <span className="cis-hero-glow" aria-hidden="true" />
           {rowComplete && (
             <div className="cis-confetti" aria-hidden="true">
               {Array.from({ length: 14 }).map((_, i) => <span key={i} className={"cis-confetti-piece p" + (i % 6)} style={{ left: (4 + i * 6.8) + "%", animationDelay: (i * 0.17) + "s" }} />)}
             </div>
           )}
-          <div className="cis-kicker"><DSCIS.IconifyIcon name="lucide:flame" size={14} color="currentColor" /> Daily check-in</div>
-          <h2>{headline}</h2>
-          <p className="cis-hero-sub">{sub}</p>
+          <div className="cis-hero-top">
+            <span className="cis-hero-doc" aria-hidden="true"><CisDoc /></span>
+            <div className="cis-hero-tx">
+              <div className="cis-kicker"><DSCIS.IconifyIcon name="lucide:flame" size={12} color="currentColor" /> Daily check-in</div>
+              <h2>{headline}</h2>
+              <p className="cis-hero-sub">{sub}</p>
+            </div>
+          </div>
 
           <div className="cis-row" role="list" aria-label="Last five check-in days">
             {slots.map((s) => (
-              <div key={s.i} role="listitem" className={"cis-slot" + (s.done ? " is-done" : "") + (s.today ? " is-today" : "")} style={{ "--d": (s.i * 110) + "ms" }} aria-label={s.label + (s.done ? ": checked in" : ": not yet")}>
-                <span className="cis-slot-art">
-                  {s.done
-                    ? <><CisLottie size={58} delay={s.i * 180} /><span className="cis-slot-tick"><DSCIS.IconifyIcon name="lucide:check" size={11} color="#fff" /></span></>
-                    : <span className="cis-slot-empty">{s.label === "Today" ? <DSCIS.IconifyIcon name="lucide:calendar-check" size={20} color="currentColor" /> : s.date.toLocaleDateString("en-GB", { weekday: "narrow" })}</span>}
-                </span>
-                <span className="cis-slot-day">{s.label}</span>
-              </div>
+              <React.Fragment key={s.i}>
+                {s.i > 0 && <span className={"cis-link" + (s.done ? " on" : "")} aria-hidden="true" />}
+                <div role="listitem" className={"cis-slot" + (s.done ? " is-done" : "") + (s.today ? " is-today" : "")} style={{ "--d": (s.i * 110) + "ms" }} aria-label={s.label + (s.done ? ": checked in" : ": not yet")}>
+                  <span className="cis-slot-art">
+                    {s.done
+                      ? <><CisLottie size={50} delay={s.i * 180} /><span className="cis-slot-tick"><DSCIS.IconifyIcon name="lucide:check" size={11} color="#fff" /></span></>
+                      : <span className="cis-slot-empty">{s.label === "Today" ? <DSCIS.IconifyIcon name="lucide:calendar-check" size={20} color="currentColor" /> : s.date.toLocaleDateString("en-GB", { weekday: "narrow" })}</span>}
+                  </span>
+                  <span className="cis-slot-day">{s.label}</span>
+                </div>
+              </React.Fragment>
             ))}
+          </div>
+
+          <div className="cis-act">
+            {checkedInToday
+              ? <div className="cis-status" role="status"><DSCIS.IconifyIcon name="lucide:check" size={18} color="currentColor" /> Checked in today</div>
+              : <button className="ml-btn ml-btn-navy cis-cta" type="button" onClick={checkIn} aria-label={"Check in today for " + projected + " points"}><DSCIS.IconifyIcon name="lucide:zap" size={18} color="currentColor" /> Check in today <span className="cis-cta-pts">· +{projected} pts</span></button>}
+            <p className="cis-cta-note">{checkedInToday ? "Your streak is safe until tomorrow." : "Check in once a day to keep the row growing."}</p>
           </div>
         </section>
 
-        {checkedInToday
-          ? <button className="ml-btn cis-cta is-done" type="button" disabled aria-disabled="true"><DSCIS.IconifyIcon name="lucide:check" size={18} color="currentColor" /> Checked in today</button>
-          : <button className="ml-btn ml-btn-navy cis-cta" type="button" onClick={checkIn} aria-label={"Check in today for " + projected + " points"}><DSCIS.IconifyIcon name="lucide:zap" size={18} color="currentColor" /> Check in today <span className="cis-cta-pts">· +{projected} pts</span></button>}
-        <p className="cis-cta-note">{checkedInToday ? "Your streak is safe until tomorrow." : "Check in once a day to keep the row growing."}</p>
-
         <CisStreakRiskBanner streak={streak} />
 
-        <div className="cis-stats">
-          <div className="ml-card cis-stat">
+        <div className="ml-card cis-stats" aria-label="Streak stats">
+          <div className="cis-stat">
             <span className="cis-stat-ico"><DSCIS.IconifyIcon name="lucide:flame" size={16} color="currentColor" /></span>
             <span className="cis-stat-value">{current} {current === 1 ? "day" : "days"}</span>
             <span className="cis-stat-label">Current streak</span>
           </div>
-          <div className="ml-card cis-stat">
+          <div className="cis-stat">
             <span className="cis-stat-ico"><DSCIS.IconifyIcon name="lucide:trophy" size={16} color="currentColor" /></span>
             <span className="cis-stat-value">{streak.longest || current} days</span>
             <span className="cis-stat-label">Longest streak</span>
           </div>
-          <div className="ml-card cis-stat">
+          <div className="cis-stat">
             <span className="cis-stat-ico"><DSCIS.IconifyIcon name="lucide:zap" size={16} color="currentColor" /></span>
             <span className="cis-stat-value">+{projected}</span>
             <span className="cis-stat-label">Pts per check-in</span>
@@ -240,7 +276,7 @@ function CheckInStreakScreen() {
           <span className="cis-freeze-ico"><DSCIS.IconifyIcon name="lucide:snowflake" size={20} color="currentColor" /></span>
           <span className="cis-freeze-main">
             <span className="ti">{streak.frozen ? "Streak frozen" : "Streak freeze"}</span>
-            <span className="su">{streak.frozen && streak.frozenUntil ? "Safe until " + new Date(streak.frozenUntil).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }) : "Miss a day without losing your lemons · " + PF_CIS.formatNumber(config.streakFreezeCost) + " credits"}</span>
+            <span className="su">{streak.frozen && streak.frozenUntil ? "Safe until " + new Date(streak.frozenUntil).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }) : "Miss a day without breaking your streak · keeps it safe for 2 days"}</span>
           </span>
           {streak.frozen
             ? <span className="cis-freeze-on"><DSCIS.IconifyIcon name="lucide:lock" size={16} color="var(--gray-400)" /></span>

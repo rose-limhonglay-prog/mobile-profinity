@@ -19,7 +19,10 @@ const PF_DG = window.PFLoyalty;
 /* User-supplied celebration character (lottie.host rssigJRNIC, saved locally
    as assets/lottie/goal-reached.json — 1000×1000, 50 frames, loops). Replaced
    the check-in doctor cut on 2026-09-18. */
-const DG_LOTTIE = "assets/lottie/goal-reached.json?v=20260918a";
+/* 2026-10-13: the waving girl gave way to Dr Tim cheering (user's lottie.host
+   CnxkrTL3YB recoloured to his avatar palette + glasses, three-quarter crop
+   baked in; see assets/lottie/drtim-cheer.json) */
+const DG_LOTTIE = "assets/lottie/drtim-cheer.json?v=20261013a";
 const DG_CONFETTI = "https://lottie.host/1b8bdd21-9711-48bb-873f-3889b01b43c8/jrTeYYuQqi.json";
 const DG_MARKS = (window.PFDailyGoal && window.PFDailyGoal.marks) || window.PF_DAILY_GOAL_MARKS || [280, 500, 750, 1000];
 const DG_GOAL = DG_MARKS[0];

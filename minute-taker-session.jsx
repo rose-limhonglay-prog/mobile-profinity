@@ -45,11 +45,12 @@ function MTSView() {
   const consentGiven = getParamMTS("consent") ? true : (ctx.consentGiven !== undefined ? ctx.consentGiven : true);
   const meta = MTS_PATIENT_META[patient] || (ctx.isNewPatient ? MTS_META_FALLBACK : MTS_PATIENT_META["Sarah Jenkins"]);
 
-  const [started, setStarted] = useStateMTS(false);
+  const [started, setStarted] = useStateMTS(getParamMTS("autostart") === "1"); /* ?autostart=1 for demos / screenshots */
   const [seconds, setSeconds] = useStateMTS(0);
   const [paused, setPaused] = useStateMTS(false);
   const [lineCount, setLineCount] = useStateMTS(0);
   const [ending, setEnding] = useStateMTS(false);
+  const [confirmEnd, setConfirmEnd] = useStateMTS(getParamMTS("confirm") === "1");
   const scrollRef = useRefMTS(null);
 
   useEffectMTS(() => {
@@ -70,6 +71,7 @@ function MTSView() {
   }, [lineCount]);
 
   function endSession() {
+    setConfirmEnd(false);
     setEnding(true);
     window.setTimeout(() => {
       const savedCtx = mtsLoadContext();
@@ -113,6 +115,16 @@ function MTSView() {
             </button>
           </div>
         ) : (
+          <>
+          <div className="mts-live-strip">
+            <div className={"mts-orb" + (paused ? " is-paused" : "")} role="img" aria-label={paused ? "Paused" : "Listening"}>
+              <span className="mts-orb-halo" aria-hidden="true" />
+              <span className="mts-orb-body" aria-hidden="true"><i className="c1" /><i className="c2" /><i className="c3" /></span>
+            </div>
+            <div className="mts-live-caption">
+              {paused ? <><iconify-icon icon="lucide:pause"></iconify-icon>Paused · audio isn't being captured</> : <><span className="mts-live-dot" />Listening · diarising clinician and patient</>}
+            </div>
+          </div>
           <div className="mts-transcript" ref={scrollRef}>
             <div className="mts-transcript-meta">10:00 AM · Session started. Consent verified.</div>
             {MTS_SCRIPT.slice(0, lineCount).map((line, i) => (
@@ -126,10 +138,10 @@ function MTSView() {
               </div>
             ))}
             {!paused && !ending && lineCount < MTS_SCRIPT.length && (
-              <div className="mts-transcript-meta mts-listening">~ Listening to live audio feed…</div>
+              <div className="mts-transcript-meta mts-listening">Transcribing…</div>
             )}
-            {paused && <div className="mts-transcript-meta mts-listening">|| Audio capture paused</div>}
           </div>
+          </>
         )}
 
         <div className="mts-footer">
@@ -141,7 +153,7 @@ function MTSView() {
             </button>
           )}
           {started && (
-            <button className="mts-btn mts-btn-danger" type="button" onClick={endSession} disabled={ending}>
+            <button className="mts-btn mts-btn-danger" type="button" onClick={() => setConfirmEnd(true)} disabled={ending}>
               <iconify-icon icon="lucide:square"></iconify-icon>End Session
             </button>
           )}
@@ -152,7 +164,20 @@ function MTSView() {
       {ending && (
         <div className="mts-overlay">
           <div className="mts-spinner" />
-          <p>Generating structured SOAP note…</p>
+          <p>Generating your structured note…</p>
+        </div>
+      )}
+      {started && confirmEnd && !ending && (
+        <div className="mts-confirm-scrim" onClick={() => setConfirmEnd(false)}>
+          <div className="mts-confirm" role="alertdialog" aria-modal="true" aria-labelledby="mts-confirm-title" onClick={(e) => e.stopPropagation()}>
+            <span className="mts-confirm-ic"><iconify-icon icon="lucide:circle-stop"></iconify-icon></span>
+            <h3 id="mts-confirm-title">End the Minute Taker session?</h3>
+            <p>Minute Taker will stop listening and write up the note from the {fmtClock(seconds)} recorded so far. You can review and edit it before anything is saved.</p>
+            <div className="mts-confirm-actions">
+              <button className="mts-btn mts-btn-ghost" type="button" onClick={() => setConfirmEnd(false)}>Keep recording</button>
+              <button className="mts-btn mts-btn-danger" type="button" onClick={endSession}><iconify-icon icon="lucide:check"></iconify-icon>End and write note</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

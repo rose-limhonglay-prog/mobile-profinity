@@ -126,7 +126,7 @@
     { key: "silver", name: "Silver", threshold: 5000, color: "#8a94a6", celebration: "rewardSplash" },
     { key: "gold", name: "Gold", threshold: 10000, color: "#e2a300", celebration: "rewardSplash" },
     { key: "platinum", name: "Platinum", threshold: 20000, color: "#5b6b8c", celebration: "rewardSplash" },
-    { key: "diamond", name: "Diamond", threshold: 50000, color: "#3f8fd1", celebration: "major", splashTitle: "Sapphire Collector", splashPerks: ["2.0x permanent multiplier", "VIP Store Access", "Monthly Bonus Box"] }
+    { key: "diamond", name: "Diamond", threshold: 50000, color: "#3f8fd1", celebration: "major", splashTitle: "Sapphire Collector", splashPerks: ["Sapphire Collector title on your profile", "Badge added to your gallery", "Shown on your public profile"] }
   ];
 
   /* Milestone Path: ONE linear journey every member walks along the same
@@ -134,43 +134,42 @@
      milestones ARE the six league badges (league-engine.js): Jade → Topaz →
      Ruby → Emerald → Amethyst → Sapphire, so the league a member holds and
      "how far to the next league" are read straight off these thresholds
-     (PFLeague matches by `key`). Each milestone's `benefits` unlock
-     automatically and permanently the instant lifetimePoints crosses
-     `threshold` — nothing to choose, nothing to redeem, and points never get
-     spent so nothing here locks back up. */
+     (PFLeague matches by `key`). The model (2026-10-13): points are LIFETIME
+     — they are never spent and never expire — and each of the six levels
+     unlocks exactly ONE one-time perk, automatically and permanently, the
+     instant lifetimePoints crosses `threshold` (0 → 60,000). Nothing to
+     choose, nothing to redeem, nothing ever locks back up. Keep `benefits`
+     to a single entry per league; the member UI calls it "your one-time perk". */
   var DEFAULT_MILESTONE_PATH = [
     { key: "jade", name: "Jade", threshold: 0, benefits: [
-      { title: "Jade League Leaderboard", description: "Your starting league. Compete with fellow newcomers on the Jade board and start banking points from day one.", delivery: "Active from your first check-in" }
+      { title: "Jade League Leaderboard", description: "Your starting league. Compete with fellow newcomers on the Jade board and start banking lifetime points from day one.", delivery: "Active from your first check-in" }
     ] },
     { key: "topaz", name: "Topaz", threshold: 1500, benefits: [
-      { title: "Aesthetic Clinical Tools Bundle", description: "Premium procedural video sets and clinical intake templates, unlocked in your account.", delivery: "Instant digital unlock" }
+      { title: "Aesthetic Clinical Tools Bundle", description: "Premium procedural video sets and clinical intake templates, unlocked once in your account and yours to keep.", delivery: "Instant digital unlock · one-time" }
     ] },
     { key: "ruby", name: "Ruby", threshold: 6000, benefits: [
-      { title: "Course Credit — up to £250", description: "Applied automatically toward any course in the PROfinity catalogue.", delivery: "Voucher code, redeemable at checkout" },
-      { title: "Priority Directory Placement (30 days)", description: "Your profile is boosted to the top of the Clinician Directory for 30 days.", delivery: "Applied automatically to your profile" }
+      { title: "Course Credit — up to £250", description: "A one-time credit applied toward any course in the PROfinity catalogue.", delivery: "Voucher code, redeemable once at checkout" }
     ] },
     { key: "emerald", name: "Emerald", threshold: 15000, benefits: [
-      { title: "Permanent 10% Discount", description: "10% off every course and product in the PROfinity catalogue, for good.", delivery: "Applied automatically at checkout" },
-      { title: "1-on-1 Personal Mentorship Session", description: "A 45-minute clinical or business consulting session with leadership.", delivery: "Calendar booking link" }
+      { title: "1-on-1 Personal Mentorship Session", description: "A one-time 45-minute clinical or business consulting session with leadership.", delivery: "Calendar booking link · one session" }
     ] },
     { key: "amethyst", name: "Amethyst", threshold: 30000, benefits: [
-      { title: "Course Credit — up to £1,000", description: "Applied automatically toward any course, bundle, or certification in the PROfinity catalogue.", delivery: "Voucher code, redeemable at checkout" }
+      { title: "Course Credit — up to £1,000", description: "A one-time credit applied toward any course, bundle, or certification in the PROfinity catalogue.", delivery: "Voucher code, redeemable once at checkout" }
     ] },
     { key: "sapphire", name: "Sapphire", threshold: 60000, benefits: [
-      { title: "Dinner with Dr Tim Pearce", description: "An exclusive dining and mentorship experience with the platform founder. Subject to quarterly availability.", delivery: "Concierge booking" },
-      { title: "Exclusive Event Seat", description: "Priority VIP seating at a live aesthetic workshop or the annual conference.", delivery: "E-ticket via email" }
+      { title: "Dinner with Dr Tim Pearce", description: "The top of the path: an exclusive one-time dining and mentorship experience with the platform founder. Subject to quarterly availability.", delivery: "Concierge booking · one evening" }
     ] }
   ];
   /* bump when DEFAULT_MILESTONE_PATH changes shape so a member's cached
      config is re-seeded (admin edits made after that still stick) */
-  var MILESTONE_PATH_VERSION = 2;
+  var MILESTONE_PATH_VERSION = 3;
 
   var DEFAULT_ACHIEVEMENT_BADGES = [
-    { key: "first_blood", name: "First Blood", icon: "lucide:zap", description: "Complete your very first point-earning action.", criteria: { type: "actionCount", actionId: null, count: 1 }, reward: "50 bonus credits" },
+    { key: "first_blood", name: "First Blood", icon: "lucide:zap", description: "Complete your very first point-earning action.", criteria: { type: "actionCount", actionId: null, count: 1 }, reward: "50 bonus points" },
     { key: "high_roller", name: "High Roller", icon: "lucide:gem", description: "Complete 3 courses end to end.", criteria: { type: "actionCount", actionId: "evt_course_complete", count: 3 }, reward: "2x multiplier for 7 days" },
     { key: "streak_master", name: "Streak Master", icon: "lucide:flame", description: "Reach a 30-day check-in streak.", criteria: { type: "streak", count: 30 }, reward: "1.5x multiplier for 7 days" },
     { key: "community_pillar", name: "Community Pillar", icon: "lucide:users", description: "Share 10 case studies with the community.", criteria: { type: "actionCount", actionId: "evt_case_study_share", count: 10 }, reward: "Featured Clinician spotlight" },
-    { key: "master_reviewer", name: "Master Reviewer", icon: "lucide:star", description: "Write 10 product reviews.", criteria: { type: "actionCount", actionId: "evt_prod_review_submit", count: 10 }, reward: "5,000 bonus credits + 2x multiplier" }
+    { key: "master_reviewer", name: "Master Reviewer", icon: "lucide:star", description: "Write 10 product reviews.", criteria: { type: "actionCount", actionId: "evt_prod_review_submit", count: 10 }, reward: "5,000 bonus points" }
   ];
 
   /* Every reward is a discount on a specific course. `image` is the same
@@ -290,6 +289,17 @@
       var have = cfg.actions.map(function (a) { return a && a.id; });
       var missing = DEFAULT_ACTIONS.filter(function (a) { return have.indexOf(a.id) < 0; });
       if (missing.length) { cfg = Object.assign({}, cfg, { actions: cfg.actions.concat(JSON.parse(JSON.stringify(missing))) }); writeJSON(CONFIG_KEY, cfg); }
+    }
+    // achievement reward copy follows the defaults (points, never credits —
+    // 2026-10-13); a cached config would otherwise keep the old wording
+    if (Array.isArray(cfg.achievementBadges)) {
+      var achChanged = false;
+      var achFixed = cfg.achievementBadges.map(function (b) {
+        var d = DEFAULT_ACHIEVEMENT_BADGES.filter(function (x) { return b && x.key === b.key; })[0];
+        if (d && b.reward !== d.reward && /credit/i.test(String(b.reward || ""))) { achChanged = true; return Object.assign({}, b, { reward: d.reward }); }
+        return b;
+      });
+      if (achChanged) { cfg = Object.assign({}, cfg, { achievementBadges: achFixed }); writeJSON(CONFIG_KEY, cfg); }
     }
     // backfill any keys added after a user's config was first seeded
     var merged = Object.assign({}, DEFAULT_CONFIG, cfg);
@@ -680,6 +690,36 @@
       return s + (t.pointsDelta > 0 && ts >= from ? t.pointsDelta : 0);
     }, 0);
   }
+  /* Points earned in the last `days` × 24h (rolling, default 7) — the
+     Rewards pages' "Last 7 days" gauge (2026-10-13, replaced Recent Activity). */
+  function getRollingPoints(state, days) {
+    state = state || getState();
+    var from = Date.now() - (days || 7) * 86400000;
+    return (state.ledger || []).reduce(function (s, t) {
+      var ts = new Date(t.ts).getTime();
+      return s + (t.pointsDelta > 0 && ts >= from ? t.pointsDelta : 0);
+    }, 0);
+  }
+  /* Same window bucketed per calendar day, oldest first:
+     [{ date: Date, key: "YYYY-MM-DD", points, today }] */
+  function getDailyPoints(state, days) {
+    state = state || getState();
+    days = days || 7;
+    var out = [], byKey = {};
+    for (var i = days - 1; i >= 0; i--) {
+      var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
+      var k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      var row = { date: d, key: k, points: 0, today: i === 0 };
+      byKey[k] = row; out.push(row);
+    }
+    (state.ledger || []).forEach(function (t) {
+      if (!(t.pointsDelta > 0)) return;
+      var d = new Date(t.ts);
+      var k = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      if (byKey[k]) byKey[k].points += t.pointsDelta;
+    });
+    return out;
+  }
   /* Book a payout that was already decided elsewhere (the newsfeed's fixed
      +15 like/comment reward) so it shows in the ledger, lifetime total and
      this week's beaker fill. Skips the caps — those live in completeAction. */
@@ -720,7 +760,7 @@
     checkIn: checkIn, setStreakAtRisk: setStreakAtRisk, freezeStreak: freezeStreak,
     spendCreditsToFreezeStreak: spendCreditsToFreezeStreak, restoreBrokenStreak: restoreBrokenStreak,
     evaluateAchievements: evaluateAchievements,
-    getWeekPoints: getWeekPoints, awardPoints: awardPoints,
+    getWeekPoints: getWeekPoints, getRollingPoints: getRollingPoints, getDailyPoints: getDailyPoints, awardPoints: awardPoints,
     formatNumber: formatNumber
   };
 })();

@@ -20,7 +20,7 @@ const EVT_NAV = [
   { icon: "lucide:layout-dashboard", label: "Content Moderation" },
   { icon: "lucide:life-buoy", label: "Service Requests" },
   { icon: "lucide:shield-check", label: "Verification" },
-  { icon: "lucide:users-round", label: "Agents" },
+  { icon: "lucide:users-round", label: "Agents", chevron: true },
   { icon: "lucide:calendar", label: "Events", active: true },
   { icon: "lucide:map", label: "Product Mapping" },
   { icon: "lucide:bar-chart-3", label: "Analytics" },

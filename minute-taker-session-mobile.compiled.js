@@ -1,8 +1,10 @@
 /* ===========================================================================
    PROfinity — Minute Taker (mobile) · Live Session
    Step 2 of 2: a ready screen with a big pulsing mic (recording only starts
-   on tap), then a live diarised transcript with an animated waveform,
-   pause/resume and End session → note generation overlay → Note Review.
+   on tap), then a voice-mode stage (user, 2026-10-12): a drifting cloud orb
+   in the middle, round Cancel / patient buttons up top, and a bottom dock
+   with the live-transcript pill (opens a sheet), Pause and End session.
+   End session → note generation overlay → Note Review.
    Runs on window.PFMT. Classes prefixed mtsem-.
    =========================================================================== */
 const {
@@ -45,23 +47,6 @@ function mtsemTime(startedAt, offsetSec) {
     return "";
   }
 }
-function MTSEMWave({
-  paused
-}) {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "mtsem-wave" + (paused ? " is-paused" : ""),
-    "aria-hidden": "true"
-  }, Array.from({
-    length: 26
-  }).map((_, i) => /*#__PURE__*/React.createElement("i", {
-    key: i,
-    style: {
-      height: 8 + Math.round(20 * Math.abs(Math.sin(i * 0.8 + 1))),
-      animationDelay: i * -0.08 + "s",
-      animationDuration: 1.1 + i % 5 * 0.12 + "s"
-    }
-  })));
-}
 function MTSEMView() {
   const ctx = MTE.loadCtx();
   const patient = MTE.getParam("patient") || ctx.patient || "Sarah Jenkins";
@@ -70,13 +55,19 @@ function MTSEMView() {
   const consent = ctx.consentGiven !== undefined ? ctx.consentGiven : true;
   const primer = ctx.useContext === false ? "" : ctx.primer || p && p.primer || "";
   const first = patient.split(" ")[0];
-  const [started, setStarted] = useStateMTSEM(false);
-  const [startedAt, setStartedAt] = useStateMTSEM(null);
-  const [seconds, setSeconds] = useStateMTSEM(0);
-  const [paused, setPaused] = useStateMTSEM(false);
-  const [lineCount, setLineCount] = useStateMTSEM(0);
-  const [ending, setEnding] = useStateMTSEM(false);
+
+  /* ?autostart=1 skips the ready screen, ?end=1 jumps to the note-writing overlay (demo / screenshots) */
+  const auto = MTE.getParam("autostart") === "1" || MTE.getParam("end") === "1";
+  const [started, setStarted] = useStateMTSEM(auto);
+  const [startedAt, setStartedAt] = useStateMTSEM(auto ? Date.now() : null);
+  const [seconds, setSeconds] = useStateMTSEM(auto ? 7 : 0);
+  const [paused, setPaused] = useStateMTSEM(MTE.getParam("paused") === "1");
+  const [lineCount, setLineCount] = useStateMTSEM(auto ? 2 : 0);
+  const [ending, setEnding] = useStateMTSEM(MTE.getParam("end") === "1");
   const [step, setStep] = useStateMTSEM(0);
+  const [showTranscript, setShowTranscript] = useStateMTSEM(MTE.getParam("transcript") === "1");
+  const [showPatient, setShowPatient] = useStateMTSEM(false);
+  const [confirmEnd, setConfirmEnd] = useStateMTSEM(MTE.getParam("confirm") === "1");
   const scrollRef = useRefMTSEM(null);
   useEffectMTSEM(() => {
     if (!started || paused || ending) return undefined;
@@ -94,7 +85,7 @@ function MTSEMView() {
       top: el.scrollHeight,
       behavior: "smooth"
     });
-  }, [lineCount, paused]);
+  }, [lineCount, paused, showTranscript]);
   useEffectMTSEM(() => {
     if (!ending) return undefined;
     if (step >= MTSEM_STEPS.length) {
@@ -119,25 +110,15 @@ function MTSEMView() {
     setStartedAt(Date.now());
   }
   function endSession() {
+    setConfirmEnd(false);
+    setShowTranscript(false);
+    setShowPatient(false);
     setEnding(true);
     setStep(0);
   }
   const title = !started ? "Ready to record" : ending ? "Wrapping up" : paused ? "Paused" : "Recording";
-  return /*#__PURE__*/React.createElement("div", {
-    className: "mt-screen mtsem-screen"
-  }, /*#__PURE__*/React.createElement(TopBarE, {
-    left: /*#__PURE__*/React.createElement(TextBtnE, {
-      onClick: () => MTE.go(MTE.routes.dashboard),
-      disabled: ending
-    }, "Cancel"),
-    title: title,
-    sub: started ? "Step 2 of 2 · Live transcript" : "Step 2 of 2 · Recording",
-    right: started && /*#__PURE__*/React.createElement("span", {
-      className: "mtsem-rec" + (paused ? " is-paused" : "")
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "mtsem-rec-dot"
-    }), MTE.fmtClock(seconds))
-  }), /*#__PURE__*/React.createElement("div", {
+  const latest = lineCount > 0 ? MTSEM_SCRIPT[lineCount - 1] : null;
+  const patientCard = /*#__PURE__*/React.createElement("div", {
     className: "mtsem-patient"
   }, /*#__PURE__*/React.createElement(AvatarE, {
     name: patient,
@@ -153,7 +134,73 @@ function MTSEMView() {
   }, /*#__PURE__*/React.createElement(IcE, {
     name: consent ? "lucide:shield-check" : "lucide:shield-alert",
     size: 12
-  }), consent ? "Consent on file" : "No consent")), !started ? /*#__PURE__*/React.createElement("div", {
+  }), consent ? "Consent on file" : "No consent"));
+  const transcript = /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-transcript",
+    ref: scrollRef
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-meta"
+  }, "Session started ", startedAt ? mtsemTime(startedAt, 0) : "", " · consent verified"), MTSEM_SCRIPT.slice(0, lineCount).map((line, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "mtsem-line mt-fade-in " + line.who
+  }, line.who === "clinician" ? /*#__PURE__*/React.createElement("img", {
+    className: "mtsem-line-avatar",
+    src: "assets/avatar-katy.jpg",
+    alt: ""
+  }) : /*#__PURE__*/React.createElement(AvatarE, {
+    name: patient,
+    size: 30,
+    className: "mtsem-line-avatar"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-bubble"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-bubble-head"
+  }, line.who === "clinician" ? "You" : first, " · ", startedAt ? mtsemTime(startedAt, i * 38) : ""), /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-bubble-text"
+  }, line.text)))), !paused && !ending && lineCount < MTSEM_SCRIPT.length && /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-typing",
+    "aria-label": "Transcribing"
+  }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null)), lineCount >= MTSEM_SCRIPT.length && !paused && /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-meta"
+  }, "Still listening…"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: 12
+    }
+  }));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "mt-screen mtsem-screen" + (started ? " is-live" : "")
+  }, !started ? /*#__PURE__*/React.createElement(TopBarE, {
+    left: /*#__PURE__*/React.createElement(TextBtnE, {
+      onClick: () => MTE.go(MTE.routes.dashboard)
+    }, "Cancel"),
+    title: title,
+    sub: "Step 2 of 2 · Recording"
+  }) : /*#__PURE__*/React.createElement("header", {
+    className: "mtsem-vhead"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtsem-circ",
+    "aria-label": "Cancel session",
+    onClick: () => MTE.go(MTE.routes.dashboard),
+    disabled: ending
+  }, /*#__PURE__*/React.createElement(IcE, {
+    name: "lucide:x",
+    size: 20
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "mtsem-rec" + (paused ? " is-paused" : ""),
+    "aria-live": "off"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtsem-rec-dot"
+  }), MTE.fmtClock(seconds)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtsem-circ",
+    "aria-label": "Patient details",
+    onClick: () => setShowPatient(true),
+    disabled: ending
+  }, /*#__PURE__*/React.createElement(IcE, {
+    name: "lucide:user-round",
+    size: 20
+  }))), !started && patientCard, !started ? /*#__PURE__*/React.createElement("div", {
     className: "mt-scroll mtsem-ready"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -201,49 +248,32 @@ function MTSEMView() {
     size: 12
   }), " Session primer"), /*#__PURE__*/React.createElement("p", null, primer)), /*#__PURE__*/React.createElement("div", {
     className: "mt-spacer"
-  })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "mtsem-wave-card"
-  }, /*#__PURE__*/React.createElement(MTSEMWave, {
-    paused: paused
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "mtsem-wave-label"
+  })) : /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-stage"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-orb" + (paused ? " is-paused" : ""),
+    role: "img",
+    "aria-label": paused ? "Paused" : "Listening"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtsem-orb-halo",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "mtsem-orb-body",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "c1"
+  }), /*#__PURE__*/React.createElement("i", {
+    className: "c2"
+  }), /*#__PURE__*/React.createElement("i", {
+    className: "c3"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-orb-caption"
   }, paused ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IcE, {
     name: "lucide:pause",
     size: 13
-  }), "Paused · audio isn't being captured") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", null, "Paused · audio isn't being captured")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
     className: "mtsem-live"
-  }), "Listening · diarising clinician and patient"))), /*#__PURE__*/React.createElement("div", {
-    className: "mtsem-transcript",
-    ref: scrollRef
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtsem-meta"
-  }, "Session started ", startedAt ? mtsemTime(startedAt, 0) : "", " · consent verified"), MTSEM_SCRIPT.slice(0, lineCount).map((line, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: "mtsem-line mt-fade-in " + line.who
-  }, line.who === "clinician" ? /*#__PURE__*/React.createElement("img", {
-    className: "mtsem-line-avatar",
-    src: "assets/avatar-katy.jpg",
-    alt: ""
-  }) : /*#__PURE__*/React.createElement(AvatarE, {
-    name: patient,
-    size: 30,
-    className: "mtsem-line-avatar"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "mtsem-bubble"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtsem-bubble-head"
-  }, line.who === "clinician" ? "You" : first, " · ", startedAt ? mtsemTime(startedAt, i * 38) : ""), /*#__PURE__*/React.createElement("div", {
-    className: "mtsem-bubble-text"
-  }, line.text)))), !paused && !ending && lineCount < MTSEM_SCRIPT.length && /*#__PURE__*/React.createElement("div", {
-    className: "mtsem-typing",
-    "aria-label": "Transcribing"
-  }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null)), lineCount >= MTSEM_SCRIPT.length && !paused && /*#__PURE__*/React.createElement("div", {
-    className: "mtsem-meta"
-  }, "Still listening…"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 12
-    }
-  }))), !started ? /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("span", null, "Listening · diarising you and ", first)))), !started ? /*#__PURE__*/React.createElement("div", {
     className: "mt-bottom"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -255,25 +285,119 @@ function MTSEMView() {
   }), "Start recording"), /*#__PURE__*/React.createElement("p", {
     className: "mt-bottom-note"
   }, "Recording only starts when you tap.")) : /*#__PURE__*/React.createElement("div", {
-    className: "mt-bottom mtsem-controls"
+    className: "mtsem-dock"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "mt-btn mt-btn-ghost mtsem-pause",
+    className: "mtsem-dock-pill",
+    onClick: () => setShowTranscript(true),
+    disabled: ending,
+    "aria-label": "Open live transcript"
+  }, /*#__PURE__*/React.createElement(IcE, {
+    name: "lucide:captions",
+    size: 20
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "mtsem-dock-text"
+  }, latest ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, latest.who === "clinician" ? "You" : first, ":"), " ", latest.text) : "Live transcript appears here")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtsem-circ mtsem-circ-lg" + (paused ? " is-accent" : ""),
     onClick: () => setPaused(v => !v),
     disabled: ending,
     "aria-label": paused ? "Resume" : "Pause"
   }, /*#__PURE__*/React.createElement(IcE, {
     name: paused ? "lucide:play" : "lucide:pause",
-    size: 18
-  }), paused ? "Resume" : "Pause"), /*#__PURE__*/React.createElement("button", {
+    size: 22
+  })), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "mt-btn mt-btn-danger mt-grow",
-    onClick: endSession,
-    disabled: ending
+    className: "mtsem-circ mtsem-circ-lg mtsem-circ-dark",
+    onClick: () => setConfirmEnd(true),
+    disabled: ending,
+    "aria-label": "End session"
   }, /*#__PURE__*/React.createElement(IcE, {
-    name: "lucide:square",
+    name: "lucide:x",
+    size: 24
+  }))), started && showTranscript && !ending && /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-scrim",
+    onClick: () => setShowTranscript(false)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-sheet mtsem-sheet-transcript",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Live transcript",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtsem-sheet-grab",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-sheet-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mt-grow"
+  }, /*#__PURE__*/React.createElement("h3", null, "Live transcript"), /*#__PURE__*/React.createElement("p", null, lineCount, " ", lineCount === 1 ? "turn" : "turns", " · ", MTE.fmtClock(seconds))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtsem-sheet-x",
+    "aria-label": "Close",
+    onClick: () => setShowTranscript(false)
+  }, /*#__PURE__*/React.createElement(IcE, {
+    name: "lucide:x",
     size: 16
-  }), "End session")), ending && /*#__PURE__*/React.createElement("div", {
+  }))), transcript)), started && showPatient && !ending && /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-scrim",
+    onClick: () => setShowPatient(false)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-sheet",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Patient details",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtsem-sheet-grab",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-sheet-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mt-grow"
+  }, /*#__PURE__*/React.createElement("h3", null, "In this session"), /*#__PURE__*/React.createElement("p", null, "Recording started ", startedAt ? mtsemTime(startedAt, 0) : "")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtsem-sheet-x",
+    "aria-label": "Close",
+    onClick: () => setShowPatient(false)
+  }, /*#__PURE__*/React.createElement(IcE, {
+    name: "lucide:x",
+    size: 16
+  }))), patientCard, primer && /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-primer"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mt-eyebrow"
+  }, /*#__PURE__*/React.createElement(IcE, {
+    name: "lucide:sparkles",
+    size: 12
+  }), " Session primer"), /*#__PURE__*/React.createElement("p", null, primer)))), started && confirmEnd && !ending && /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-scrim mtsem-scrim-center",
+    onClick: () => setConfirmEnd(false)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-confirm",
+    role: "alertdialog",
+    "aria-modal": "true",
+    "aria-labelledby": "mtsem-confirm-title",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtsem-confirm-ic"
+  }, /*#__PURE__*/React.createElement(IcE, {
+    name: "lucide:circle-stop",
+    size: 24
+  })), /*#__PURE__*/React.createElement("h3", {
+    id: "mtsem-confirm-title"
+  }, "End the Minute Taker session?"), /*#__PURE__*/React.createElement("p", null, "Minute Taker will stop listening to ", first, " and write up the note from the ", MTE.fmtClock(seconds), " recorded so far. You can review and edit it before anything is saved."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mt-btn mt-btn-primary mt-btn-block",
+    onClick: endSession
+  }, /*#__PURE__*/React.createElement(IcE, {
+    name: "lucide:check",
+    size: 18
+  }), "Yes, end and write the note"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mt-btn mt-btn-ghost mt-btn-block",
+    onClick: () => setConfirmEnd(false)
+  }, "Keep recording"))), ending && /*#__PURE__*/React.createElement("div", {
     className: "mtsem-overlay",
     role: "dialog",
     "aria-live": "polite",
@@ -281,11 +405,31 @@ function MTSEMView() {
   }, /*#__PURE__*/React.createElement("div", {
     className: "mtsem-overlay-card"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mtsem-spinner"
+    className: "mtsem-orb mtsem-orb-mini",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtsem-orb-halo"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "mtsem-orb-body"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "c1"
+  }), /*#__PURE__*/React.createElement("i", {
+    className: "c2"
+  }), /*#__PURE__*/React.createElement("i", {
+    className: "c3"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "mtsem-orb-badge"
   }, /*#__PURE__*/React.createElement(IcE, {
     name: "lucide:sparkles",
-    size: 20
-  })), /*#__PURE__*/React.createElement("h3", null, "Writing your note"), /*#__PURE__*/React.createElement("p", null, MTE.fmtClock(seconds, "words"), " of conversation · ", lineCount, " ", lineCount === 1 ? "turn" : "turns"), /*#__PURE__*/React.createElement("ol", {
+    size: 14
+  }))), /*#__PURE__*/React.createElement("h3", null, "Writing your note"), /*#__PURE__*/React.createElement("p", null, MTE.fmtClock(seconds, "words"), " of conversation · ", lineCount, " ", lineCount === 1 ? "turn" : "turns"), /*#__PURE__*/React.createElement("div", {
+    className: "mtsem-progress",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      width: Math.round(100 * Math.min(step, MTSEM_STEPS.length) / MTSEM_STEPS.length) + "%"
+    }
+  })), /*#__PURE__*/React.createElement("ol", {
     className: "mtsem-steps"
   }, MTSEM_STEPS.map((s, i) => /*#__PURE__*/React.createElement("li", {
     key: s,
@@ -294,8 +438,12 @@ function MTSEMView() {
     className: "mtsem-step-dot"
   }, i < step ? /*#__PURE__*/React.createElement(IcE, {
     name: "lucide:check",
-    size: 11
-  }) : null), s))))));
+    size: 12
+  }) : null), /*#__PURE__*/React.createElement("span", {
+    className: "mtsem-step-text"
+  }, s), /*#__PURE__*/React.createElement("span", {
+    className: "mtsem-step-state"
+  }, i < step ? "Done" : i === step ? "Working" : "")))))));
 }
 function MTSEMApp() {
   return /*#__PURE__*/React.createElement(ShellE, {

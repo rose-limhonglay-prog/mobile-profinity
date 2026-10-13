@@ -53,27 +53,32 @@ function MTAHeader() {
   );
 }
 
+/* same sessions as the mobile archive (minute-taker-archive-mobile.jsx); daysAgo keeps dates current */
+function mtaIso(daysAgo) { const d = new Date(); d.setDate(d.getDate() - daysAgo); return d.toISOString().slice(0, 10); }
 const MTA_SESSIONS = [
-  { date: "2024-07-20", patient: "Elara Vance", type: "Initial Consult", duration: "45 min", status: "Completed" },
-  { date: "2024-07-19", patient: "Marcus Thorne", type: "Follow-up", duration: "30 min", status: "Completed" },
-  { date: "2024-07-19", patient: "Sophia Chen", type: "Therapy", duration: "60 min", status: "Completed" },
-  { date: "2024-07-18", patient: "Liam O'Connell", type: "Med Review", duration: "20 min", status: "Completed" },
-  { date: "2024-07-18", patient: "Olivia Hayes", type: "Initial Consult", duration: "60 min", status: "Pending" },
-];
+  { daysAgo: 0, patient: "Eleanor Vance", type: "Follow-up", detail: "Injectables follow-up", duration: "45 min", status: "Completed" },
+  { daysAgo: 0, patient: "Marcus Thorne", type: "Initial Consult", detail: "New patient consult", duration: "30 min", status: "Pending" },
+  { daysAgo: 1, patient: "Sarah Jenkins", type: "Review", detail: "Post-op review", duration: "55 min", status: "Completed" },
+  { daysAgo: 1, patient: "David Cho", type: "Treatment", detail: "Acne protocol · S2", duration: "20 min", status: "Completed" },
+  { daysAgo: 5, patient: "Priya Natarajan", type: "Initial Consult", detail: "Skin consult", duration: "35 min", status: "Completed" },
+  { daysAgo: 13, patient: "Eleanor Vance", type: "Treatment", detail: "Injectables · session 1", duration: "40 min", status: "Completed" },
+  { daysAgo: 22, patient: "Sarah Jenkins", type: "Review", detail: "Knee arthroscopy review", duration: "50 min", status: "Completed" },
+  { daysAgo: 29, patient: "David Cho", type: "Treatment", detail: "Acne protocol · S1", duration: "25 min", status: "Completed" },
+  { daysAgo: 41, patient: "Priya Natarajan", type: "Initial Consult", detail: "New patient consult", duration: "45 min", status: "Completed" },
+  { daysAgo: 63, patient: "Amir Khan", type: "Review", detail: "Rosacea review", duration: "30 min", status: "Completed" },
+].map((s) => ({ ...s, date: mtaIso(s.daysAgo) }));
 
-const MTA_TYPES = ["All Types", "Initial Consult", "Follow-up", "Therapy", "Med Review"];
+const MTA_TYPES = ["All Types", "Initial Consult", "Follow-up", "Review", "Treatment"];
 const MTA_RANGES = ["All Time", "Last 7 Days", "Last 30 Days"];
 
-function mtaDaysAgo(dateStr) {
-  const ref = new Date("2024-07-21T00:00:00");
-  const d = new Date(dateStr + "T00:00:00");
-  return Math.round((ref - d) / 86400000);
-}
+function mtaDaysAgo(s) { return s.daysAgo; }
 
 const MTA_COPILOT_ANSWERS = [
-  { match: /hypertension/i, text: "Across the last 3 months, 4 sessions referenced hypertension management. All patients remained on their existing antihypertensive regimen with no dosage escalations. Blood pressure was documented as stable or improving in every case, and follow-up intervals ranged from 3 to 6 months." },
-  { match: /headache/i, text: "2 recent sessions (Sarah Jenkins, Robert Fox) noted headaches as a secondary complaint. Both were characterized as tension-type without red-flag features, and neither required escalation beyond monitoring." },
-  { match: /.*/, text: "Based on the selected sessions, most visits were routine follow-ups with stable findings. No urgent flags were identified across this set — let me know if you'd like this narrowed to a specific patient, condition, or date range." },
+  { match: /rosacea|amir/i, text: "Amir Khan's rosacea review (2 months ago) recorded fewer flares on the current regimen, with good tolerance and no new triggers. The plan was to continue unchanged and review again in 3 months." },
+  { match: /acne|david/i, text: "David Cho has had 2 acne protocol sessions. Session 1 noted mild dryness that settled within a week; session 2 (yesterday) documented clear improvement against the progress photos, with the protocol continuing as planned." },
+  { match: /inject|eleanor|bruis/i, text: "Eleanor Vance's injectable series: session 1 (2 weeks ago) noted minor bruising that resolved. Today's follow-up recorded good symmetry and high satisfaction, with no top-up required before the next review." },
+  { match: /knee|post-op|sarah/i, text: "Sarah Jenkins' post-op reviews show steady progress since the knee arthroscopy: pain scores dropped from 5 to 2, mobility is improving, and there have been no signs of infection at either visit." },
+  { match: /.*/, text: "Across the sessions in view, most visits were routine follow-ups with stable findings and no urgent flags. Ask about a patient, condition or treatment to narrow this down." },
 ];
 
 function mtaAnswerFor(q) {
@@ -92,10 +97,10 @@ function MTAView() {
   const filtered = useMemoMTA(() => {
     return MTA_SESSIONS.filter((s) => {
       const q = search.trim().toLowerCase();
-      if (q && !s.patient.toLowerCase().includes(q) && !s.type.toLowerCase().includes(q)) return false;
+      if (q && !s.patient.toLowerCase().includes(q) && !s.type.toLowerCase().includes(q) && !s.detail.toLowerCase().includes(q)) return false;
       if (type !== "All Types" && s.type !== type) return false;
-      if (range === "Last 7 Days" && mtaDaysAgo(s.date) > 7) return false;
-      if (range === "Last 30 Days" && mtaDaysAgo(s.date) > 30) return false;
+      if (range === "Last 7 Days" && mtaDaysAgo(s) > 7) return false;
+      if (range === "Last 30 Days" && mtaDaysAgo(s) > 30) return false;
       return true;
     });
   }, [search, range, type]);
@@ -154,7 +159,7 @@ function MTAView() {
                   <div key={i} className="mta-row-grid mta-trow">
                     <span>{s.date}</span>
                     <span className="mta-patient-cell">{s.patient}</span>
-                    <span>{s.type}</span>
+                    <span title={s.detail}>{s.type}</span>
                     <span>{s.duration}</span>
                     <span className={"mta-status-pill " + (s.status === "Completed" ? "success" : "warning")}>{s.status}</span>
                     <button type="button" className="mta-view-link" onClick={() => goMTA("MinuteTakerNoteReview.html?patient=" + encodeURIComponent(s.patient))}>

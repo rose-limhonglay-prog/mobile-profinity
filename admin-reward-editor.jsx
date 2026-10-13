@@ -18,7 +18,7 @@ const ADL_NAV_TOP = [
   { icon: "lucide:layout-dashboard", label: "Content Moderation", href: "AdminModeration.html" },
   { icon: "lucide:life-buoy", label: "Service Requests", href: "AdminServiceRequests.html" },
   { icon: "lucide:shield-check", label: "Verification", href: "AdminVerification.html" },
-  { icon: "lucide:users-round", label: "Agents", href: "AdminAgents.html" },
+  { icon: "lucide:users-round", label: "Agents", href: "AdminAgents.html", chevron: true },
   { icon: "lucide:calendar", label: "Events", href: "AdminEvents.html" },
   { icon: "lucide:map", label: "Product Mapping", href: "AdminProductMapping.html" },
   { icon: "lucide:bar-chart-3", label: "Analytics", href: "AdminAnalytics.html" },

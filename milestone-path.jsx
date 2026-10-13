@@ -2,9 +2,10 @@
    PROfinity — Katy · Milestone Path · iPhone 17 Pro Max
    A single vertical journey whose milestones ARE the six league badges
    (Jade → Topaz → Ruby → Emerald → Amethyst → Sapphire, window.PFLeague):
-   each one unlocks its bundle of benefits automatically and permanently the
-   moment Lifetime Points cross its threshold, and crossing it is also what
-   moves the member up a league. No choices, no CTA to tap — this screen is a
+   each one unlocks a single one-time perk automatically and permanently the
+   moment Lifetime Points cross its threshold (points are lifetime — never
+   spent, never expired), and crossing it is also what moves the member up a
+   league. No choices, no CTA to tap — this screen is a
    status view of a path the member is already walking.
    Reads window.PFLoyalty.getMilestoneProgress() (thresholds) and decorates
    each node with its league gem Lottie + accent. Classes prefixed mp-.
@@ -175,8 +176,8 @@ function MilestoneHelpSheetMP({ open, onClose }) {
           <h2 id="mp-help-title">How the path works</h2>
           <button type="button" className="mp-help-close" aria-label="Close" onClick={onClose}><DSMP.IconifyIcon name="lucide:x" size={18} color="var(--gray-600)" /></button>
         </div>
-        <p className="mp-help-p">One journey, no choices to make — each milestone is a league badge. The moment your Lifetime Points reach it you move up a league and its full bundle of benefits unlocks, yours forever.</p>
-        <p className="mp-help-p">Points never get spent, so nothing here ever locks back up.</p>
+        <p className="mp-help-p">Six levels, one journey — from Jade at 0 pts to Sapphire at 60,000 pts. The moment your Lifetime Points reach a league you move up and its single one-time perk unlocks.</p>
+        <p className="mp-help-p">Points are lifetime: they are never spent and never expire, so every perk you unlock stays yours for good.</p>
         <button type="button" className="mp-help-ok" onClick={onClose}>Got it</button>
       </div>
     </div>

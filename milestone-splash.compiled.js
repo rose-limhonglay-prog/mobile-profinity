@@ -36,7 +36,7 @@ function goSPL(url) {
    that plays twice then fades. */
 const SPL_LOTTIE = "assets/lottie/checkin-wink.json?v=20260918a";
 /* sign-up: the same waving character as the Goal Reached screen (user-supplied, 1:1) */
-const SPL_SIGNUP_LOTTIE = "assets/lottie/goal-reached.json?v=20260918a";
+const SPL_SIGNUP_LOTTIE = "assets/lottie/drtim-cheer.json?v=20261013a"; /* Dr Tim cheering (was the waving girl, 2026-10-13) */
 const SPL_CONFETTI = "https://lottie.host/1b8bdd21-9711-48bb-873f-3889b01b43c8/jrTeYYuQqi.json";
 function useLottieSPL(host, opts) {
   useEffectSPL(() => {
@@ -272,7 +272,7 @@ function pickRewardSPL() {
       type: "league",
       key: lg.key,
       title: "Welcome to the " + lg.name + " League",
-      sub: "You've been promoted — a new leaderboard, new rivals, new prizes.",
+      sub: "You've been promoted — a new leaderboard, new rivals and your one-time perk unlocked.",
       color: lg.accent,
       league: lg
     };
@@ -381,8 +381,14 @@ function MilestoneSplashScreen() {
     const lg = item.league || {};
     kicker = "League Promotion";
     title = item.title || "Welcome to the " + (lg.name || "next") + " League";
-    sub = item.sub || "You've been promoted — a new leaderboard, new rivals, new prizes.";
-    perks = ["A fresh leaderboard against " + (lg.name || "your new") + " rivals", "Bigger weekly league prizes", "League gem shown on your profile"];
+    sub = item.sub || "You've been promoted — a new leaderboard, new rivals and your one-time perk unlocked.";
+    /* the league's one-time perk (Milestone Path, matched by key) leads the list */
+    let perkTitle = null;
+    try {
+      const m = (PF.getConfig().milestonePath || []).find(x => x.key === lg.key);
+      perkTitle = m && m.benefits && m.benefits[0] ? m.benefits[0].title : null;
+    } catch (e) {}
+    perks = [perkTitle ? "One-time perk unlocked: " + perkTitle : null, "A fresh leaderboard against " + (lg.name || "your new") + " rivals", "League gem shown on your profile"].filter(Boolean);
     icon = "lucide:trophy";
     color = item.color || lg.accent || "var(--brand-gold)";
     primary = "See the Leaderboard";

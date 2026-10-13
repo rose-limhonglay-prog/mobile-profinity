@@ -2,9 +2,10 @@
    PROfinity — Katy · Milestone Path · iPhone 17 Pro Max
    A single vertical journey whose milestones ARE the six league badges
    (Jade → Topaz → Ruby → Emerald → Amethyst → Sapphire, window.PFLeague):
-   each one unlocks its bundle of benefits automatically and permanently the
-   moment Lifetime Points cross its threshold, and crossing it is also what
-   moves the member up a league. No choices, no CTA to tap — this screen is a
+   each one unlocks a single one-time perk automatically and permanently the
+   moment Lifetime Points cross its threshold (points are lifetime — never
+   spent, never expired), and crossing it is also what moves the member up a
+   league. No choices, no CTA to tap — this screen is a
    status view of a path the member is already walking.
    Reads window.PFLoyalty.getMilestoneProgress() (thresholds) and decorates
    each node with its league gem Lottie + accent. Classes prefixed mp-.
@@ -435,9 +436,9 @@ function MilestoneHelpSheetMP({
     color: "var(--gray-600)"
   }))), /*#__PURE__*/React.createElement("p", {
     className: "mp-help-p"
-  }, "One journey, no choices to make — each milestone is a league badge. The moment your Lifetime Points reach it you move up a league and its full bundle of benefits unlocks, yours forever."), /*#__PURE__*/React.createElement("p", {
+  }, "Six levels, one journey — from Jade at 0 pts to Sapphire at 60,000 pts. The moment your Lifetime Points reach a league you move up and its single one-time perk unlocks."), /*#__PURE__*/React.createElement("p", {
     className: "mp-help-p"
-  }, "Points never get spent, so nothing here ever locks back up."), /*#__PURE__*/React.createElement("button", {
+  }, "Points are lifetime: they are never spent and never expire, so every perk you unlock stays yours for good."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "mp-help-ok",
     onClick: onClose

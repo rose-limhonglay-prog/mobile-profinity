@@ -1,6 +1,6 @@
 /* ===========================================================================
    PROfinity — Minute Taker (mobile) · Clinical Note Review
-   The AI-written note (SOAP / DAP / Summary) as editable lettered sections,
+   The AI-written note (Assessment [SOAP] / Data [DAP] / Summary) as editable lettered sections,
    the raw transcript behind a toggle, Discard (in-page sheet) and Save to
    EMR. Runs on window.PFMT. Classes prefixed mtnrm-.
    =========================================================================== */
@@ -88,8 +88,8 @@ const MTNRM_TRANSCRIPTS = {
 };
 
 const MTNRM_FORMATS = [
-  { key: "soap", label: "SOAP" },
-  { key: "dap", label: "DAP" },
+  { key: "soap", label: "Assessment" },
+  { key: "dap", label: "Data" },
   { key: "summary", label: "Summary" },
 ];
 const MTNRM_FIELDS = {
@@ -109,7 +109,6 @@ const MTNRM_FIELDS = {
   ],
 };
 
-function mtnrmWords(s) { return String(s || "").trim().split(/\s+/).filter(Boolean).length; }
 
 function MTNRMField({ meta, value, onChange }) {
   const ref = React.useRef(null);
@@ -121,19 +120,32 @@ function MTNRMField({ meta, value, onChange }) {
       el.style.height = el.scrollHeight + "px";
     };
     fit();
+    /* refit once webfonts land (metrics change the wrap) and after layout settles, so no stale blank space is left under the text */
+    const raf = requestAnimationFrame(fit);
+    const late = window.setTimeout(fit, 350);
     window.addEventListener("resize", fit);
+    window.addEventListener("load", fit);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
-    return () => window.removeEventListener("resize", fit);
+    if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", fit);
+    return () => {
+      cancelAnimationFrame(raf); window.clearTimeout(late);
+      window.removeEventListener("resize", fit); window.removeEventListener("load", fit);
+      if (document.fonts && document.fonts.removeEventListener) document.fonts.removeEventListener("loadingdone", fit);
+    };
   }, [value]);
   return (
-    <section className="mt-card mtnrm-field">
-      <div className="mtnrm-field-head">
+    <div className="mtnrm-sec">
+      <div className="mtnrm-sec-rail" aria-hidden="true">
         <span className={"mtnrm-letter mt-tone-" + meta.tone}>{meta.letter}</span>
-        <span className="mtnrm-field-label">{meta.label}</span>
-        <span className="mtnrm-count">{mtnrmWords(value)} words</span>
+        <i className="mtnrm-sec-line" />
       </div>
-      <textarea ref={ref} rows={3} value={value} onChange={onChange} aria-label={meta.label} />
-    </section>
+      <div className="mtnrm-sec-body">
+        <div className="mtnrm-sec-head">
+          <span className="mtnrm-field-label">{meta.label}</span>
+        </div>
+        <textarea ref={ref} rows={2} value={value} onChange={onChange} aria-label={meta.label} />
+      </div>
+    </div>
   );
 }
 
@@ -197,11 +209,14 @@ function MTNRMView() {
           ))}
         </div>
 
-        <div className="mtnrm-fields" key={format}>
+        <section className="mt-card mtnrm-note" key={format} aria-label="Clinical note sections">
+          <div className="mtnrm-note-head">
+            <span className="mtnrm-note-title"><IcR name="lucide:sparkles" size={14} />{MTNRM_FORMATS.find((f) => f.key === format).label} note</span>
+          </div>
           {fields.map((meta) => (
             <MTNRMField key={meta.key} meta={meta} value={note[format][meta.key]} onChange={(e) => update(meta.key, e.target.value)} />
           ))}
-        </div>
+        </section>
 
         <button type="button" className={"mtnrm-transcript-toggle" + (showTranscript ? " is-open" : "")} onClick={() => setShowTranscript((v) => !v)} aria-expanded={showTranscript}>
           <span className="mt-ti"><IcR name="lucide:file-text" size={15} /></span>

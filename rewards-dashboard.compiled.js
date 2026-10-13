@@ -159,13 +159,14 @@ function StreakRiskBanner({
   })));
 }
 
-/* Progress-card mascot: a looping smiling-face Lottie (lottie.host ArWGbXL6R3) fed as raw
+/* Lifetime Points mascot: the coffee-break Dr Tim avatar (assets/lottie/drtim-coffee.json,
+   same file + crop as the header points pill since 2026-10-13; was the smiling face) fed as raw
    JSON through lottie-web — never the /embed iframe, which caches hard and
    ignores re-publishes. Replaced the shared smiling-beaker (PointsIconC) on
    2026-09-08; the header points pill (mobile.jsx / mobilechrome.jsx) has its
    same smiling-face Lottie, number in gold #D9A21B. The tooltip still
    reports lifetime points against the engine's beakerFullPoints scale. */
-const RDB_MASCOT_SRC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
+const RDB_MASCOT_SRC = "assets/lottie/drtim-coffee.json?v=20261013a";
 const RDB_LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
 let rdbMascotPromise = null;
 function rdbMascotData() {
@@ -349,7 +350,8 @@ function RdbEngagementCards({
   state
 }) {
   return /*#__PURE__*/React.createElement("div", {
-    className: "rdb-eng-grid"
+    className: "rdb-eng-grid",
+    "data-tour": "stats"
   }, /*#__PURE__*/React.createElement("div", {
     className: "ml-card rdb-eng-card"
   }, /*#__PURE__*/React.createElement("span", {
@@ -359,8 +361,10 @@ function RdbEngagementCards({
     src: RDB_MASCOT_SRC,
     size: 38
   })), /*#__PURE__*/React.createElement("div", {
-    className: "rdb-eng-value"
-  }, PF_RDB.formatNumber(state.lifetimePoints)), /*#__PURE__*/React.createElement("div", {
+    className: "rdb-eng-value rdb-eng-value--pts"
+  }, PF_RDB.formatNumber(state.lifetimePoints), /*#__PURE__*/React.createElement("span", {
+    className: "rdb-eng-unit"
+  }, "pts")), /*#__PURE__*/React.createElement("div", {
     className: "rdb-eng-label"
   }, "Lifetime Points")), /*#__PURE__*/React.createElement("button", {
     className: "ml-card rdb-eng-card rdb-eng-link",
@@ -476,6 +480,7 @@ function RdbLeagueCard({
       "--lg-deep": cur.deep,
       "--lg-soft": cur.soft
     },
+    "data-tour": "leaderboard",
     onClick: () => goRDB("Leaderboard.html"),
     "aria-label": "Leaderboard. You're " + ordinal(me.rank) + " of " + total + " in the " + cur.name + " League with " + PF_RDB.formatNumber(me.points) + " points. Open the leaderboard",
     "data-screen-label": "Leaderboard snapshot"
@@ -512,23 +517,42 @@ function RdbFeatureTiles({
   const mpNote = milestone ? milestone.next ? PF_RDB.formatNumber(milestone.remaining) + " pts to go" : "Every badge earned" : "Badges & benefits";
   const vouchers = (state.redeemedVouchers || []).length;
   const mrNote = vouchers ? vouchers + " unlocked" : "Course discounts";
+  /* Ways to Earn is back on the dashboard (user 2026-10-09) as a full-width
+     row above the two tiles: the list of every point-earning action. */
+  const earnCount = (() => {
+    try {
+      return PF_RDB.getConfig().actions.filter(a => a.active).length;
+    } catch (e) {
+      return 0;
+    }
+  })();
   const items = [{
+    label: "Ways to Earn",
+    note: earnCount ? earnCount + " ways to earn points" : "Every way to earn points",
+    icon: "lucide:coins",
+    href: "WaysToEarn.html",
+    wide: true,
+    tour: "earn"
+  }, {
     label: "Milestone Path",
     note: mpNote,
     icon: "lucide:milestone",
-    href: "MilestonePath.html"
+    href: "MilestonePath.html",
+    tour: "path"
   }, {
     label: "My Rewards",
     note: mrNote,
     icon: "lucide:ticket",
-    href: "MyRewards.html"
+    href: "MyRewards.html",
+    tour: "rewards"
   }];
   return /*#__PURE__*/React.createElement("div", {
     className: "rdb-feats"
   }, items.map(it => /*#__PURE__*/React.createElement("button", {
     key: it.label,
     type: "button",
-    className: "rdb-feat",
+    className: "rdb-feat" + (it.wide ? " rdb-feat-wide" : ""),
+    "data-tour": it.tour,
     onClick: () => goRDB(it.href),
     "aria-label": it.label + ". " + it.note
   }, /*#__PURE__*/React.createElement("span", {
@@ -666,7 +690,7 @@ function RdbWelcomeModal({
     size: 176
   })), /*#__PURE__*/React.createElement("b", {
     id: "rdb-welcome-title"
-  }, "Welcome to Rewards, ", first, "!"), /*#__PURE__*/React.createElement("p", null, "Every check-in, post and lesson earns points. ", next ? /*#__PURE__*/React.createElement(React.Fragment, null, "Reach ", /*#__PURE__*/React.createElement("strong", null, PF_RDB.formatNumber(next.requires), " pts"), " to move up to ", /*#__PURE__*/React.createElement("strong", null, next.name, " League"), " and unlock your first benefit bundle.") : null), /*#__PURE__*/React.createElement("button", {
+  }, "Welcome to Rewards, ", first, "!"), /*#__PURE__*/React.createElement("p", null, "Every check-in, post and lesson earns points. ", next ? /*#__PURE__*/React.createElement(React.Fragment, null, "Reach ", /*#__PURE__*/React.createElement("strong", null, PF_RDB.formatNumber(next.requires), " pts"), " to move up to ", /*#__PURE__*/React.createElement("strong", null, next.name, " League"), " and unlock its one-time perk. Points are lifetime — never spent, never expired.") : null), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "rdb-welcome-btn",
     onClick: () => setStep(2)
@@ -726,32 +750,10 @@ function RdbWelcomeModal({
     }
   }, "See all ways to earn"))));
 }
-function RdbRecentActivity({
-  state
-}) {
-  const rows = state.ledger.slice().sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 6);
-  if (!rows.length) {
-    return /*#__PURE__*/React.createElement("div", {
-      className: "ml-card rdb-activity-empty"
-    }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
-      name: "lucide:sparkles",
-      size: 22,
-      color: "var(--gray-400)"
-    }), /*#__PURE__*/React.createElement("p", null, "No activity yet — check in today to earn your first points."));
-  }
-  return /*#__PURE__*/React.createElement("div", {
-    className: "ml-card"
-  }, rows.map(t => /*#__PURE__*/React.createElement("div", {
-    key: t.id,
-    className: "rdb-activity-row"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "rdb-activity-label"
-  }, t.label), /*#__PURE__*/React.createElement("span", {
-    className: "rdb-activity-time"
-  }, fmtRelDate(t.ts)), /*#__PURE__*/React.createElement("span", {
-    className: "rdb-activity-amt" + (t.pointsDelta > 0 ? "" : " is-spend")
-  }, t.pointsDelta > 0 ? "+" + t.pointsDelta + " pts" : "—"))));
-}
+
+/* Recent Activity (ledger rows) was replaced on 2026-10-13 by the "Last 7
+   days" gauge — PFRewardsEmbed.PointsWeek in rewards-milestone-embed.jsx,
+   shared with RewardsWeb. */
 function RewardsDashboardHome() {
   const [state, setState] = useStateRDB(() => {
     rdbApplyNewMemberFlag();
@@ -769,11 +771,32 @@ function RewardsDashboardHome() {
     setTimeout(() => setToast(null), 2400);
   };
   const scrollRef = useRefRDB(null);
+  const screenRef = useRefRDB(null);
   const {
     hidden: chromeHidden,
     floating: chromeFloat
   } = window.PFUseHeaderHideC(scrollRef);
+  /* first-visit section tour (user 2026-10-13): runs once the welcome modal
+     and the daily check-in takeover are out of the way; ?tour=1 replays */
+  const EMB = window.PFRewardsEmbed;
+  const [tourOpen, setTourOpen] = useStateRDB(false);
+  const [tourWanted, setTourWanted] = useStateRDB(() => !!(EMB && EMB.shouldTour && EMB.shouldTour()));
+  useEffectRDB(() => {
+    if (!tourWanted || welcomeOpen) return;
+    const iv = setInterval(() => {
+      if (EMB.quietForTour()) {
+        clearInterval(iv);
+        setTourOpen(true);
+      }
+    }, 400);
+    return () => clearInterval(iv);
+  }, [tourWanted, welcomeOpen]);
+  const endTour = React.useCallback(() => {
+    setTourOpen(false);
+    setTourWanted(false);
+  }, []);
   return /*#__PURE__*/React.createElement("div", {
+    ref: screenRef,
     className: "lm-screen rdb-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : ""),
     "data-screen-label": "Rewards Dashboard"
   }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement("div", {
@@ -803,9 +826,9 @@ function RewardsDashboardHome() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "ml-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Recent Activity")), /*#__PURE__*/React.createElement(RdbRecentActivity, {
+  }, /*#__PURE__*/React.createElement("h2", null, "Last 7 days")), window.PFRewardsEmbed && window.PFRewardsEmbed.PointsWeek ? /*#__PURE__*/React.createElement(window.PFRewardsEmbed.PointsWeek, {
     state: state
-  })), /*#__PURE__*/React.createElement("div", {
+  }) : null), /*#__PURE__*/React.createElement("div", {
     className: "ml-demo-bar"
   }, /*#__PURE__*/React.createElement("button", {
     className: "ml-demo-btn",
@@ -838,6 +861,16 @@ function RewardsDashboardHome() {
     className: "ml-demo-btn",
     type: "button",
     onClick: () => {
+      scrollRef.current && scrollRef.current.scrollTo({
+        top: 0
+      });
+      setTourWanted(true);
+      setTourOpen(false);
+    }
+  }, "Demo: replay tour"), /*#__PURE__*/React.createElement("button", {
+    className: "ml-demo-btn",
+    type: "button",
+    onClick: () => {
       PF_RDB.resetDemo();
       refresh();
       flash("Demo data reset.");
@@ -852,6 +885,9 @@ function RewardsDashboardHome() {
     state: state,
     onClose: closeWelcome,
     initialStep: rdbWelcomeStep()
+  }), tourOpen && EMB && EMB.Tour && /*#__PURE__*/React.createElement(EMB.Tour, {
+    host: screenRef.current,
+    onDone: endTour
   }), toast && /*#__PURE__*/React.createElement("div", {
     className: "ml-toast"
   }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {

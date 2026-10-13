@@ -1,6 +1,6 @@
 /* ===========================================================================
    PROfinity — Minute Taker · Post-Session Clinical Note Review
-   AI-generated structured note (SOAP/DAP/Summary), editable fields, raw
+   AI-generated structured note (Assessment [SOAP] / Data [DAP] / Summary), editable fields, raw
    transcript sidebar with search. PRD Screen 5 (Sec. 3.5 / MT-K06, MT-K07).
    Classes prefixed mtn- to avoid clashes with other pages.
    =========================================================================== */
@@ -177,10 +177,10 @@ const MTN_TRANSCRIPTS = {
 };
 const MTN_TABS = [{
   key: "soap",
-  label: "SOAP"
+  label: "Assessment"
 }, {
   key: "dap",
-  label: "DAP"
+  label: "Data"
 }, {
   key: "summary",
   label: "Summary"

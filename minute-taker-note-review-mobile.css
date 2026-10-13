@@ -10,23 +10,30 @@
 .mtnrm-ai iconify-icon, .mtnrm-ai svg { flex: none; margin-top: 2px; }
 
 /* segmented control with sliding thumb */
-.mtnrm-seg { position: relative; display: grid; grid-template-columns: repeat(var(--n), 1fr); margin: 14px 0; padding: 4px; border-radius: 14px; background: var(--mt-sunken); }
+.mtnrm-seg { position: relative; display: grid; grid-template-columns: repeat(var(--n), 1fr); margin: 10px 0; padding: 4px; border-radius: 14px; background: var(--mt-sunken); }
 .mtnrm-seg-thumb { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc((100% - 8px) / var(--n)); border-radius: 11px; background: var(--mt-card);
   box-shadow: 0 1px 3px rgba(12,25,40,.12), 0 4px 12px rgba(12,25,40,.08); transform: translateX(calc(var(--i) * 100%)); transition: transform .22s cubic-bezier(.2,.8,.2,1); }
 .mtnrm-seg-btn { position: relative; z-index: 1; height: 38px; border: none; background: none; font-family: inherit; font-size: 13.5px; font-weight: 700; color: var(--mt-mute); cursor: pointer;
   border-radius: 11px; -webkit-tap-highlight-color: transparent; transition: color .18s ease; }
 .mtnrm-seg-btn.is-on { color: var(--mt-ink); }
 
-/* lettered sections */
-.mtnrm-fields { display: flex; flex-direction: column; gap: 12px; animation: mt-fade .28s ease both; }
-.mtnrm-field { padding: 14px 14px 12px; }
-.mtnrm-field-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.mtnrm-letter { width: 30px; height: 30px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; letter-spacing: 0; }
-.mtnrm-field-label { flex: 1; font-size: 14.5px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.01em; }
-.mtnrm-count { font-size: 11px; font-weight: 600; color: var(--mt-faint); }
-.mtnrm-field textarea { width: 100%; border: 1px solid transparent; border-radius: 12px; background: transparent; padding: 8px 10px; margin: 0 -10px; width: calc(100% + 20px);
+/* one note container: lettered rail down the left, editable sections stacked inside */
+.mtnrm-note { padding: 12px 16px 6px; animation: mt-fade .28s ease both; }
+.mtnrm-note-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 2px 0 10px; margin-bottom: 4px; border-bottom: 1px solid var(--mt-line-2); }
+.mtnrm-note-title { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--mt-accent-ink); }
+.mtnrm-sec { display: flex; gap: 12px; }
+.mtnrm-sec-rail { flex: none; width: 30px; display: flex; flex-direction: column; align-items: center; padding-top: 8px; }
+.mtnrm-letter { flex: none; width: 30px; height: 30px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; letter-spacing: 0; }
+.mtnrm-sec-line { flex: 1; width: 2px; margin: 6px 0 2px; border-radius: 2px; background: var(--mt-line-2); }
+.mtnrm-sec:last-child .mtnrm-sec-line { display: none; }
+.mtnrm-sec-body { flex: 1; min-width: 0; padding: 8px 0 10px; }
+.mtnrm-sec + .mtnrm-sec .mtnrm-sec-body { border-top: 1px solid var(--mt-line-2); }
+.mtnrm-sec-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; height: 30px; }
+.mtnrm-field-label { font-size: 14.5px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.01em; }
+.mtnrm-count { font-size: 11px; font-weight: 600; color: var(--mt-faint); white-space: nowrap; }
+.mtnrm-sec textarea { display: block; width: calc(100% + 16px); margin: 2px -8px 0; padding: 4px 8px; border: 1px solid transparent; border-radius: 10px; background: transparent;
   font-family: inherit; font-size: 14.5px; line-height: 1.55; color: var(--mt-ink); resize: none; outline: none; overflow: hidden; transition: background .14s ease, border-color .14s ease; }
-.mtnrm-field textarea:focus { background: var(--mt-sunken); border-color: var(--mt-line); }
+.mtnrm-sec textarea:focus { background: var(--mt-sunken); border-color: var(--mt-line); }
 
 /* transcript */
 .mtnrm-transcript-toggle { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 14px; padding: 12px 14px; border-radius: 16px; text-align: left;

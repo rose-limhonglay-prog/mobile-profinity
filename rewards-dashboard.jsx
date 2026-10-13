@@ -91,13 +91,14 @@ function StreakRiskBanner({ state }) {
   );
 }
 
-/* Progress-card mascot: a looping smiling-face Lottie (lottie.host ArWGbXL6R3) fed as raw
+/* Lifetime Points mascot: the coffee-break Dr Tim avatar (assets/lottie/drtim-coffee.json,
+   same file + crop as the header points pill since 2026-10-13; was the smiling face) fed as raw
    JSON through lottie-web — never the /embed iframe, which caches hard and
    ignores re-publishes. Replaced the shared smiling-beaker (PointsIconC) on
    2026-09-08; the header points pill (mobile.jsx / mobilechrome.jsx) has its
    same smiling-face Lottie, number in gold #D9A21B. The tooltip still
    reports lifetime points against the engine's beakerFullPoints scale. */
-const RDB_MASCOT_SRC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
+const RDB_MASCOT_SRC = "assets/lottie/drtim-coffee.json?v=20261013a";
 const RDB_LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
 let rdbMascotPromise = null;
 function rdbMascotData() {
@@ -199,11 +200,12 @@ function RdbHeader({ state, tier }) {
 
 function RdbEngagementCards({ state }) {
   return (
-    <div className="rdb-eng-grid">
+    <div className="rdb-eng-grid" data-tour="stats">
       <div className="ml-card rdb-eng-card">
-        {/* same smiling-face Lottie as the header points pill (was the coin-stack iframe) */}
+        {/* same coffee-break Dr Tim Lottie + ring crop as the header points pill */}
         <span className="rdb-eng-lottie rdb-eng-lottie--face" aria-hidden="true"><RdbLeagueLottie src={RDB_MASCOT_SRC} size={38} /></span>
-        <div className="rdb-eng-value">{PF_RDB.formatNumber(state.lifetimePoints)}</div>
+        {/* amber like the header points pill + a "pts" unit, so the number reads as points at a glance */}
+        <div className="rdb-eng-value rdb-eng-value--pts">{PF_RDB.formatNumber(state.lifetimePoints)}<span className="rdb-eng-unit">pts</span></div>
         <div className="rdb-eng-label">Lifetime Points</div>
       </div>
       <button className="ml-card rdb-eng-card rdb-eng-link" type="button" onClick={() => goRDB("CheckInStreak.html")} aria-label={"Active streak: " + state.streak.current + " days. Open check-in streak"}>
@@ -252,7 +254,7 @@ function RdbLeagueCard({ state }) {
   const gap = above ? above.points - me.points : 0;
   const ordinal = (n) => { const s = ["th", "st", "nd", "rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); };
   return (
-    <button type="button" className="rdb-league" style={{ "--lg-accent": cur.accent, "--lg-deep": cur.deep, "--lg-soft": cur.soft }}
+    <button type="button" className="rdb-league" style={{ "--lg-accent": cur.accent, "--lg-deep": cur.deep, "--lg-soft": cur.soft }} data-tour="leaderboard"
       onClick={() => goRDB("Leaderboard.html")}
       aria-label={"Leaderboard. You're " + ordinal(me.rank) + " of " + total + " in the " + cur.name + " League with " + PF_RDB.formatNumber(me.points) + " points. Open the leaderboard"}
       data-screen-label="Leaderboard snapshot">
@@ -276,14 +278,18 @@ function RdbFeatureTiles({ state }) {
   const mpNote = milestone ? (milestone.next ? PF_RDB.formatNumber(milestone.remaining) + " pts to go" : "Every badge earned") : "Badges & benefits";
   const vouchers = (state.redeemedVouchers || []).length;
   const mrNote = vouchers ? vouchers + " unlocked" : "Course discounts";
+  /* Ways to Earn is back on the dashboard (user 2026-10-09) as a full-width
+     row above the two tiles: the list of every point-earning action. */
+  const earnCount = (() => { try { return PF_RDB.getConfig().actions.filter((a) => a.active).length; } catch (e) { return 0; } })();
   const items = [
-    { label: "Milestone Path", note: mpNote, icon: "lucide:milestone", href: "MilestonePath.html" },
-    { label: "My Rewards", note: mrNote, icon: "lucide:ticket", href: "MyRewards.html" }
+    { label: "Ways to Earn", note: earnCount ? earnCount + " ways to earn points" : "Every way to earn points", icon: "lucide:coins", href: "WaysToEarn.html", wide: true, tour: "earn" },
+    { label: "Milestone Path", note: mpNote, icon: "lucide:milestone", href: "MilestonePath.html", tour: "path" },
+    { label: "My Rewards", note: mrNote, icon: "lucide:ticket", href: "MyRewards.html", tour: "rewards" }
   ];
   return (
     <div className="rdb-feats">
       {items.map((it) => (
-        <button key={it.label} type="button" className="rdb-feat" onClick={() => goRDB(it.href)} aria-label={it.label + ". " + it.note}>
+        <button key={it.label} type="button" className={"rdb-feat" + (it.wide ? " rdb-feat-wide" : "")} data-tour={it.tour} onClick={() => goRDB(it.href)} aria-label={it.label + ". " + it.note}>
           <span className="rdb-feat-ic" aria-hidden="true"><DSRDB.IconifyIcon name={it.icon} size={20} color="#fff" /></span>
           <span className="rdb-feat-tx"><b>{it.label}</b><i>{it.note}</i></span>
           <DSRDB.IconifyIcon name="lucide:chevron-right" size={16} color="var(--gray-400)" />
@@ -354,7 +360,7 @@ function RdbWelcomeModal({ state, onClose, initialStep }) {
             {/* Dr Tim avatar Lottie — same file as the daily check-in "Welcome back" screen */}
             <span className="rdb-welcome-doc" aria-hidden="true"><RdbLeagueLottie src="assets/lottie/checkin-welcome.json" size={176} /></span>
             <b id="rdb-welcome-title">Welcome to Rewards, {first}!</b>
-            <p>Every check-in, post and lesson earns points. {next ? <React.Fragment>Reach <strong>{PF_RDB.formatNumber(next.requires)} pts</strong> to move up to <strong>{next.name} League</strong> and unlock your first benefit bundle.</React.Fragment> : null}</p>
+            <p>Every check-in, post and lesson earns points. {next ? <React.Fragment>Reach <strong>{PF_RDB.formatNumber(next.requires)} pts</strong> to move up to <strong>{next.name} League</strong> and unlock its one-time perk. Points are lifetime — never spent, never expired.</React.Fragment> : null}</p>
             <button type="button" className="rdb-welcome-btn" onClick={() => setStep(2)}>See ways to earn<DSRDB.IconifyIcon name="lucide:arrow-right" size={14} color="#3D2A00" /></button>
             <button type="button" className="rdb-welcome-skip" onClick={onClose}>Explore my Rewards</button>
           </React.Fragment>
@@ -382,29 +388,9 @@ function RdbWelcomeModal({ state, onClose, initialStep }) {
   );
 }
 
-function RdbRecentActivity({ state }) {
-  const rows = state.ledger.slice().sort((a, b) => new Date(b.ts) - new Date(a.ts)).slice(0, 6);
-  if (!rows.length) {
-    return (
-      <div className="ml-card rdb-activity-empty">
-        <DSRDB.IconifyIcon name="lucide:sparkles" size={22} color="var(--gray-400)" />
-        <p>No activity yet — check in today to earn your first points.</p>
-      </div>
-    );
-  }
-  return (
-    <div className="ml-card">
-      {rows.map((t) => (
-        <div key={t.id} className="rdb-activity-row">
-          <span className="rdb-activity-label">{t.label}</span>
-          <span className="rdb-activity-time">{fmtRelDate(t.ts)}</span>
-          <span className={"rdb-activity-amt" + (t.pointsDelta > 0 ? "" : " is-spend")}>{t.pointsDelta > 0 ? "+" + t.pointsDelta + " pts" : "—"}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
+/* Recent Activity (ledger rows) was replaced on 2026-10-13 by the "Last 7
+   days" gauge — PFRewardsEmbed.PointsWeek in rewards-milestone-embed.jsx,
+   shared with RewardsWeb. */
 function RewardsDashboardHome() {
   const [state, setState] = useStateRDB(() => { rdbApplyNewMemberFlag(); return PF_RDB.getState(); });
   const [toast, setToast] = useStateRDB(null);
@@ -413,10 +399,22 @@ function RewardsDashboardHome() {
   const closeWelcome = React.useCallback(() => { rdbMarkWelcomeSeen(); setWelcomeOpen(false); }, []);
   const flash = (m) => { setToast(m); setTimeout(() => setToast(null), 2400); };
   const scrollRef = useRefRDB(null);
+  const screenRef = useRefRDB(null);
   const { hidden: chromeHidden, floating: chromeFloat } = window.PFUseHeaderHideC(scrollRef);
+  /* first-visit section tour (user 2026-10-13): runs once the welcome modal
+     and the daily check-in takeover are out of the way; ?tour=1 replays */
+  const EMB = window.PFRewardsEmbed;
+  const [tourOpen, setTourOpen] = useStateRDB(false);
+  const [tourWanted, setTourWanted] = useStateRDB(() => !!(EMB && EMB.shouldTour && EMB.shouldTour()));
+  useEffectRDB(() => {
+    if (!tourWanted || welcomeOpen) return;
+    const iv = setInterval(() => { if (EMB.quietForTour()) { clearInterval(iv); setTourOpen(true); } }, 400);
+    return () => clearInterval(iv);
+  }, [tourWanted, welcomeOpen]);
+  const endTour = React.useCallback(() => { setTourOpen(false); setTourWanted(false); }, []);
 
   return (
-    <div className={"lm-screen rdb-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="Rewards Dashboard">
+    <div ref={screenRef} className={"lm-screen rdb-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="Rewards Dashboard">
       <MobileChromeC />
       <div className="lm-scroll" ref={scrollRef}>
         {/* page order (user, 2026-09-24): league rail + leaderboard snapshot first,
@@ -432,8 +430,8 @@ function RewardsDashboardHome() {
         <StreakRiskBanner state={state} />
         <div style={{ padding: "0 20px" }}>
           {/* "Jump back in" quick nav removed (user, 2026-09-24) — My Rewards is reachable from the Milestone Path */}
-          <div className="ml-sec-h"><h2>Recent Activity</h2></div>
-          <RdbRecentActivity state={state} />
+          <div className="ml-sec-h"><h2>Last 7 days</h2></div>
+          {window.PFRewardsEmbed && window.PFRewardsEmbed.PointsWeek ? <window.PFRewardsEmbed.PointsWeek state={state} /> : null}
         </div>
 
         <div className="ml-demo-bar">
@@ -441,12 +439,14 @@ function RewardsDashboardHome() {
           <button className="ml-demo-btn" type="button" onClick={() => { PF_RDB.setState({ lifetimePoints: 49700 }); goRDB("MilestoneSplash.html"); }}>Demo: simulate 50k milestone</button>
           <button className="ml-demo-btn" type="button" onClick={() => { if (window.PFDailyGoal) window.PFDailyGoal.reset(); goRDB("DailyGoal.html?ret=RewardsDashboard.html"); }}>Demo: daily goal reached</button>
           <button className="ml-demo-btn" type="button" onClick={() => goRDB("RewardsDashboard.html?new=1&checkin=0")}>Demo: new member view</button>
+          <button className="ml-demo-btn" type="button" onClick={() => { scrollRef.current && scrollRef.current.scrollTo({ top: 0 }); setTourWanted(true); setTourOpen(false); }}>Demo: replay tour</button>
           <button className="ml-demo-btn" type="button" onClick={() => { PF_RDB.resetDemo(); refresh(); flash("Demo data reset."); }}>Reset demo data</button>
         </div>
         <div style={{ height: 90 }} />
       </div>
       <RdbTabBar compact={chromeHidden} />
       {welcomeOpen && <RdbWelcomeModal state={state} onClose={closeWelcome} initialStep={rdbWelcomeStep()} />}
+      {tourOpen && EMB && EMB.Tour && <EMB.Tour host={screenRef.current} onDone={endTour} />}
       {toast && <div className="ml-toast"><DSRDB.IconifyIcon name="lucide:check-circle" size={16} color="#fff" />{toast}</div>}
     </div>
   );

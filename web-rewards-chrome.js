@@ -19,7 +19,7 @@
   "use strict";
 
   var REWARDS_URL = "RewardsWeb.html";
-  var LOTTIE_SRC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
+  var LOTTIE_SRC = "assets/lottie/drtim-coffee.json?v=20261013a";   /* coffee-break Dr Tim avatar, see assets/lottie/drtim-coffee.build.py (2026-10-13) */
   var LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
   var FALLBACK_TOTAL = 14000, FALLBACK_FULL = 20000;
 
@@ -157,7 +157,7 @@
     pill.className = "m-pts pf-web-pts";
     pill.innerHTML =
       '<span class="m-pts-ic" aria-hidden="true">' +
-        '<span class="m-pts-ic-fb"><iconify-icon icon="lucide:smile" width="18" height="18" style="color:#FCC25D"></iconify-icon></span>' +
+        '<span class="m-pts-ic-fb"><iconify-icon icon="lucide:user-round" width="16" height="16" style="color:#FCC25D"></iconify-icon></span>' +
         '<span class="m-pts-ic-anim"></span>' +
       '</span>' +
       '<span class="m-pts-n"></span>';

@@ -38,7 +38,8 @@ const EVT_NAV = [{
   label: "Verification"
 }, {
   icon: "lucide:users-round",
-  label: "Agents"
+  label: "Agents",
+  chevron: true
 }, {
   icon: "lucide:calendar",
   label: "Events",

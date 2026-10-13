@@ -95,6 +95,7 @@
 [data-theme="dark"] .m-iconbtn:active { background: rgba(206, 153, 87, 0.22); }
 [data-theme="dark"] .m-pts { background: rgba(252, 194, 93, 0.16); color: #F5C542; }
 [data-theme="dark"] .m-pts-delta { color: #F5C542; }
+[data-theme="dark"] .m-pts-ic-anim { background: #2b2745; box-shadow: inset 0 0 0 1.5px #FCC25D; }
 [data-theme="dark"] .pf-pts-float { color: #F5C542; text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 10px rgba(245,197,66,.35); }
 [data-theme="dark"] .pf-pts-float.is-free { text-shadow: 0 1px 0 rgba(0,0,0,.7), 0 0 3px rgba(0,0,0,.6), 0 0 14px rgba(245,197,66,.45); }
 [data-theme="dark"] .m-pts.earn { background: rgba(252, 194, 93, 0.28); }
@@ -362,6 +363,7 @@
 [data-theme="dark"] .agx-ic-rose { --ic-fg: #F09AD6; } [data-theme="dark"] .agx-ic-gold { --ic-fg: #F0C27A; }
 [data-theme="dark"] .agx-ic-green { --ic-fg: #7FE0B0; } [data-theme="dark"] .agx-ic-blue { --ic-fg: #8DB6FF; }
 [data-theme="dark"] .agx-ic-slate { --ic-fg: #B6BFDA; }
+[data-theme="dark"] .agx-ic-bronze { --ic-fg: #F0B95A; }
 [data-theme="dark"] .agx-detail { --ic-bg: color-mix(in srgb, var(--ic-fg) 18%, var(--surface-sunken)); }
 [data-theme="dark"] .agx-card:hover { border-color: #3A3762; }
 [data-theme="dark"] .agx-chip:hover { border-color: #3A3762; }
@@ -416,9 +418,6 @@
 [data-theme="dark"] .rw-kv dd.warn { color: #FDD98F; }
 [data-theme="dark"] .rw-next-reward { background: linear-gradient(120deg, color-mix(in srgb, #FCC25D 14%, var(--surface-card)), color-mix(in srgb, #FCC25D 22%, var(--surface-card))); border-color: rgba(252,194,93,.55); box-shadow: none; }
 [data-theme="dark"] .rw-next-reward-main .nm { color: var(--text-heading); }
-[data-theme="dark"] .rw-activity-ic { background: rgba(252,194,93,.18); }
-[data-theme="dark"] .rw-activity-amt { background: rgba(252,194,93,.16); color: #FDD98F; }
-[data-theme="dark"] .rw-activity-amt.is-spend { background: var(--surface-sunken); }
 [data-theme="dark"] .rw-notif-preview { background: var(--surface-card); }
 [data-theme="dark"] .rw-notif-icon { background: rgba(255,255,255,.08); }
 [data-theme="dark"] .rw-btn-white { background: var(--surface-card); color: #FDD98F; }

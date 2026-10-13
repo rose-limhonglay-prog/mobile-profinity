@@ -1,7 +1,10 @@
 /* ===========================================================================
    PROfinity — Katy · Check-In Streak ("5 in a row") · iPhone 17 Pro Max
-   Five day-slots in a row, each playing the lemon-in-shades Lottie once the
-   day is banked. Classes prefixed cis- to avoid clashes with other pages.
+   Redesigned 2026-10-13 (user: "redesign this"): light cream + gold hero with
+   the coffee-break Dr Tim presenting, a connected five-day track, the
+   check-in action inside the hero, one stats strip, cream milestone / freeze
+   rows. Dark mode keeps the original navy hero (overrides at the end).
+   Classes prefixed cis- to avoid clashes with other pages.
    =========================================================================== */
 html, body { margin: 0; padding: 0; }
 *, *::before, *::after { box-sizing: border-box; }
@@ -14,55 +17,65 @@ img { max-width: 100%; }
 /* fixed-dark toast so the white text/icon stay legible in both themes */
 .cis-screen .ml-toast { background: #1a1736; }
 
-/* ---- hero: fixed navy so it reads the same in both themes (dark swaps --brand-navy to gold) ---- */
-.cis-hero { position: relative; overflow: hidden; border-radius: 20px; padding: 22px 18px 20px; margin-bottom: 14px; text-align: center; color: #fff;
-  background: radial-gradient(120% 90% at 50% 0%, #3a3480 0%, #292569 55%, #1b1848 100%);
-  box-shadow: 0 14px 32px rgba(41, 37, 105, .28); }
-.cis-hero-glow { position: absolute; left: 50%; top: 52%; width: 260px; height: 120px; transform: translate(-50%, -50%); border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(253, 195, 93, .38), rgba(253, 195, 93, 0)); pointer-events: none; }
-.cis-kicker { position: relative; display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--brand-gold-soft); margin-bottom: 6px; }
-.cis-hero h2 { position: relative; margin: 0; font-size: 34px; line-height: 1.05; font-weight: 800; letter-spacing: -.02em; }
-.cis-hero h2 b { color: #fdc35d; font-weight: 800; }
-.cis-hero-sub { position: relative; margin: 8px auto 0; font-size: 13px; line-height: 1.45; color: rgba(255,255,255,.78); max-width: 300px; }
+/* ---- hero: light cream → gold, navy ink ---------------------------------- */
+.cis-hero { position: relative; overflow: hidden; border-radius: 22px; padding: 18px 16px 16px; margin-bottom: 14px; color: #292569;
+  background: radial-gradient(120% 90% at 50% 0%, #FFFDF8 0%, #FFF6E6 55%, #FDEBC8 100%);
+  border: 1px solid rgba(217, 162, 27, .28); box-shadow: 0 12px 30px rgba(217, 162, 27, .14); }
+.cis-hero-top { position: relative; display: flex; align-items: flex-start; gap: 14px; }
+/* coffee-break Dr Tim, same gold-ring crop as the header points pill (lottie-web writes an inline transform → !important) */
+.cis-hero-doc { flex: none; width: 66px; height: 66px; border-radius: 50%; overflow: hidden; background: #FFF3DC; border: 2px solid #FCC25D; box-shadow: 0 6px 16px rgba(217, 162, 27, .22); }
+.cis-doc-anim { display: block; width: 100%; height: 100%; }
+.cis-doc-anim svg { display: block; transform: scale(3.8) !important; transform-origin: 50% 14.7% !important; }
+.cis-hero-tx { flex: 1; min-width: 0; padding-top: 2px; }
+.cis-kicker { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+  color: #9C6A0E; background: #FFF3DC; border: 1px solid rgba(217, 162, 27, .35); padding: 3px 9px 3px 7px; border-radius: 999px; }
+.cis-hero h2 { margin: 8px 0 0; font-size: 30px; line-height: 1.05; font-weight: 800; letter-spacing: -.02em; color: #292569; }
+.cis-hero h2 b { color: #D9A21B; font-weight: 800; }
+.cis-hero-sub { margin: 6px 0 0; font-size: 12.5px; line-height: 1.45; color: rgba(41, 37, 105, .72); }
 
-/* ---- the row of five ---- */
-.cis-row { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 18px; }
-.cis-slot { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
-.cis-slot-art { position: relative; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  background: rgba(255,255,255,.10); border: 1.5px solid rgba(255,255,255,.18); }
-.cis-slot.is-done .cis-slot-art { background: rgba(253, 195, 93, .14); border-color: rgba(253, 195, 93, .55); }
-.cis-slot.is-done .cis-slot-art { animation: cisPop .55s cubic-bezier(.2, 1.4, .4, 1) both; animation-delay: var(--d, 0ms); }
-.cis-lottie { display: block; width: 58px; height: 58px; transform: translateY(1px); }
-.cis-slot-empty { font-size: 15px; font-weight: 800; color: rgba(255,255,255,.55); }
-.cis-slot.is-today .cis-slot-art { box-shadow: 0 0 0 3px rgba(253, 195, 93, .35); animation: cisRing 1.8s ease-in-out infinite; }
-.cis-slot.is-today.is-done .cis-slot-art { animation: cisPop .55s cubic-bezier(.2, 1.4, .4, 1) both; animation-delay: var(--d, 0ms); box-shadow: 0 0 0 3px rgba(253, 195, 93, .35); }
-.cis-slot-tick { position: absolute; right: -2px; bottom: -2px; width: 20px; height: 20px; border-radius: 50%; background: var(--success, #2a9568);
-  border: 2px solid #292569; display: flex; align-items: center; justify-content: center; }
-.cis-slot-day { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.7); white-space: nowrap; }
-.cis-slot.is-today .cis-slot-day { color: #fdc35d; }
+/* ---- the row of five: connected track ----------------------------------- */
+.cis-row { position: relative; display: flex; align-items: flex-start; justify-content: space-between; margin-top: 18px; padding: 0 2px; }
+.cis-slot { display: flex; flex-direction: column; align-items: center; gap: 7px; width: 58px; flex: none; }
+.cis-slot-art { position: relative; width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: #fff; border: 1.5px dashed rgba(217, 162, 27, .55); color: #292569; transition: border-color .25s ease, background .25s ease; }
+.cis-slot.is-done .cis-slot-art { background: #FFF3DC; border: 2px solid #FCC25D; animation: cisPop .55s cubic-bezier(.2, 1.4, .4, 1) both; animation-delay: var(--d, 0ms); }
+.cis-lottie { display: block; width: 50px; height: 50px; border-radius: 50%; overflow: hidden; }
+.cis-lottie svg { display: block; }
+.cis-slot-empty { font-size: 14px; font-weight: 800; color: rgba(41, 37, 105, .55); }
+.cis-slot.is-today .cis-slot-art { border-style: solid; border-color: #FCC25D; box-shadow: 0 0 0 3px rgba(252, 194, 93, .3); animation: cisRing 1.8s ease-in-out infinite; }
+.cis-slot.is-today .cis-slot-empty { color: #D9A21B; }
+.cis-slot.is-today.is-done .cis-slot-art { animation: cisPop .55s cubic-bezier(.2, 1.4, .4, 1) both; animation-delay: var(--d, 0ms); box-shadow: 0 0 0 3px rgba(252, 194, 93, .3); }
+.cis-slot-tick { position: absolute; right: -3px; bottom: -3px; width: 20px; height: 20px; border-radius: 50%; background: var(--success, #2a9568);
+  border: 2px solid #fff; display: flex; align-items: center; justify-content: center; }
+.cis-slot-day { font-size: 11px; font-weight: 700; color: rgba(41, 37, 105, .6); white-space: nowrap; }
+.cis-slot.is-done .cis-slot-day { color: #292569; }
+.cis-slot.is-today .cis-slot-day { color: #D9A21B; }
+.cis-link { flex: 1; height: 2px; margin-top: 26px; min-width: 8px; border-radius: 1px; background: rgba(41, 37, 105, .14); }
+.cis-link.on { background: #FCC25D; }
 @keyframes cisPop { 0% { transform: scale(.6); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-@keyframes cisRing { 0%, 100% { box-shadow: 0 0 0 3px rgba(253, 195, 93, .35); } 50% { box-shadow: 0 0 0 7px rgba(253, 195, 93, .12); } }
+@keyframes cisRing { 0%, 100% { box-shadow: 0 0 0 3px rgba(252, 194, 93, .3); } 50% { box-shadow: 0 0 0 7px rgba(252, 194, 93, .1); } }
 
 /* confetti burst inside the hero when the row is complete */
 .cis-confetti { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .cis-confetti-piece { position: absolute; top: -14px; width: 6px; height: 11px; border-radius: 2px; opacity: .9; animation: cisFall 2.8s linear infinite; }
 .cis-confetti-piece.p0 { background: #fdc35d; }
-.cis-confetti-piece.p1 { background: #fff; }
+.cis-confetti-piece.p1 { background: #292569; }
 .cis-confetti-piece.p2 { background: var(--ai-purple, #a78bfa); }
 .cis-confetti-piece.p3 { background: var(--success, #2a9568); }
 .cis-confetti-piece.p4 { background: var(--brand-rose, #c94f6d); }
 .cis-confetti-piece.p5 { background: #e7a64a; }
 @keyframes cisFall { 0% { transform: translateY(-14px) rotate(0deg); } 100% { transform: translateY(320px) rotate(320deg); } }
 
-/* ---- check-in CTA ---- */
-.cis-cta { width: 100%; }
+/* ---- check-in action, inside the hero ----------------------------------- */
+.cis-act { position: relative; margin-top: 18px; }
+.cis-cta { width: 100%; height: 48px; border-radius: 14px; font-size: 15px; font-weight: 800; }
 .cis-cta .cis-cta-pts { font-weight: 600; opacity: .85; }
-.cis-cta.is-done { background: var(--success-bg, #ecfdf3); color: var(--success, #2a9568); cursor: default; }
-.cis-cta-note { margin: 8px 0 0; font-size: 12px; color: var(--gray-500); text-align: center; }
+.cis-status { display: flex; align-items: center; justify-content: center; gap: 8px; height: 46px; border-radius: 14px; font-size: 14px; font-weight: 800;
+  background: rgba(42, 149, 104, .1); color: var(--success, #2a9568); border: 1px solid rgba(42, 149, 104, .22); }
+.cis-cta-note { margin: 8px 0 0; font-size: 12px; color: rgba(41, 37, 105, .6); text-align: center; }
 
 /* ---- streak-at-risk banner (fixed amber + cream, same in both themes, mirrors .rdb-risk-banner) ---- */
-.cis-risk-banner { margin: 16px 0 0; background: linear-gradient(135deg, #FDD07A, #FCC25D 60%, #E8A63A); border-radius: 16px; padding: 16px 18px; color: #3D2A00;
+.cis-risk-banner { margin: 0 0 14px; background: linear-gradient(135deg, #FDD07A, #FCC25D 60%, #E8A63A); border-radius: 16px; padding: 16px 18px; color: #3D2A00;
   box-shadow: 0 10px 26px rgba(232,166,58,.26); }
 .cis-risk-head { display: flex; align-items: center; gap: 10px; font-size: 17px; font-weight: 700; line-height: 1.3; }
 .cis-risk-clock { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; margin: 8px 0 0; color: rgba(61,42,0,.82); }
@@ -74,39 +87,64 @@ img { max-width: 100%; }
 .cis-notif-title span { font-weight: 500; color: #7a7f8e; }
 .cis-notif-text { font-size: 13px; margin-top: 3px; color: #3f4453; line-height: 1.45; }
 
-/* ---- stats ---- */
-.cis-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
-.cis-stat { display: flex; flex-direction: column; gap: 4px; margin-bottom: 0; padding: 14px; }
-.cis-stat-ico { width: 30px; height: 30px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;
-  background: var(--brand-gold-100, #f7efe3); color: var(--brand-gold); }
-.cis-stat-value { font-size: 17px; font-weight: 800; color: var(--gray-900); font-variant-numeric: tabular-nums; }
+/* ---- stats strip: one card, three columns ------------------------------- */
+.cis-stats { display: grid; grid-template-columns: repeat(3, 1fr); padding: 14px 6px; margin-bottom: 18px; }
+.cis-stat { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 6px; text-align: center; }
+.cis-stat + .cis-stat { border-left: 1px solid var(--border-default, #e6e8ef); }
+.cis-stat-ico { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 4px;
+  background: #FFF3DC; color: #D9A21B; }
+.cis-stat-value { font-size: 18px; font-weight: 800; color: var(--gray-900); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
 .cis-stat-label { font-size: 11px; color: var(--gray-500); }
 
-/* ---- next milestone ---- */
+/* ---- next milestone ------------------------------------------------------ */
 .cis-milestone { display: flex; flex-direction: column; gap: 10px; }
 .cis-milestone-head { display: flex; align-items: center; gap: 12px; }
-.cis-milestone-ico { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #f4ad3d 0%, #e7820a 100%); color: #fff; }
+.cis-milestone-ico { width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  background: #FFF3DC; border: 1px solid rgba(217, 162, 27, .35); color: #D9A21B; }
 .cis-milestone-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .cis-milestone-main .ti { font-size: 14px; font-weight: 700; color: var(--gray-900); }
 .cis-milestone-main .su { font-size: 11px; color: var(--gray-500); }
-.cis-milestone-count { font-size: 13px; font-weight: 800; color: var(--gray-900); font-variant-numeric: tabular-nums; }
-.cis-milestone-count small { font-weight: 600; color: var(--gray-500); }
+.cis-milestone-count { font-size: 15px; font-weight: 800; color: #292569; font-variant-numeric: tabular-nums; }
+.cis-milestone-count small { font-size: 12px; font-weight: 600; color: var(--gray-500); }
+.cis-milestone .ml-progress-track { height: 8px; border-radius: 4px; background: #FFF3DC; }
+.cis-milestone .ml-progress-fill { background: linear-gradient(90deg, #FDD07A, #E8A63A); border-radius: 4px; }
 .cis-milestone-foot { font-size: 12px; color: var(--gray-600); }
 .cis-milestone-foot b { color: var(--gray-900); }
 
-/* ---- streak freeze ---- */
+/* ---- streak freeze ------------------------------------------------------- */
 .cis-freeze { display: flex; align-items: center; gap: 12px; }
-.cis-freeze-ico { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-  background: rgba(59, 130, 246, .12); color: var(--info, #3b82f6); }
+.cis-freeze-ico { width: 44px; height: 44px; border-radius: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(59, 130, 246, .1); border: 1px solid rgba(59, 130, 246, .22); color: var(--info, #3b82f6); }
 .cis-freeze-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
 .cis-freeze-main .ti { font-size: 14px; font-weight: 700; color: var(--gray-900); }
 .cis-freeze-main .su { font-size: 11px; color: var(--gray-500); }
 .cis-freeze .ml-btn { flex-shrink: 0; }
-.cis-freeze.is-frozen .cis-freeze-ico { background: var(--info, #3b82f6); color: #fff; }
+.cis-freeze.is-frozen .cis-freeze-ico { background: var(--info, #3b82f6); color: #fff; border-color: transparent; }
 
-/* ---- dark: gold chips need ink, success pill needs a tinted surface ---- */
-[data-theme="dark"] .cis-stat-ico { background: rgba(206, 153, 87, .16); }
-[data-theme="dark"] .cis-cta.is-done { background: rgba(52, 199, 123, .16); color: #6fdc9f; }
-[data-theme="dark"] .cis-freeze-ico { background: rgba(96, 165, 250, .18); color: #93c5fd; }
-[data-theme="dark"] .cis-milestone-ico { color: #1a1736; }
+/* ---- dark: the hero goes back to navy; chips get tinted surfaces --------- */
+[data-theme="dark"] .cis-hero { background: radial-gradient(120% 90% at 50% 0%, #3a3480 0%, #292569 55%, #1b1848 100%); color: #fff; border-color: transparent; box-shadow: 0 14px 32px rgba(0, 0, 0, .35); }
+[data-theme="dark"] .cis-hero-doc { background: rgba(252, 194, 93, .14); }
+[data-theme="dark"] .cis-kicker { background: rgba(252, 194, 93, .14); border-color: rgba(252, 194, 93, .3); color: #FDD98F; }
+[data-theme="dark"] .cis-hero h2 { color: #fff; }
+[data-theme="dark"] .cis-hero h2 b { color: #fdc35d; }
+[data-theme="dark"] .cis-hero-sub { color: rgba(255, 255, 255, .78); }
+[data-theme="dark"] .cis-slot-art { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .25); color: #fff; }
+[data-theme="dark"] .cis-slot.is-done .cis-slot-art { background: rgba(252, 194, 93, .16); border-color: rgba(252, 194, 93, .6); }
+[data-theme="dark"] .cis-slot-empty { color: rgba(255, 255, 255, .6); }
+[data-theme="dark"] .cis-slot-tick { border-color: #292569; }
+[data-theme="dark"] .cis-slot-day { color: rgba(255, 255, 255, .7); }
+[data-theme="dark"] .cis-slot.is-done .cis-slot-day { color: #fff; }
+[data-theme="dark"] .cis-slot.is-today .cis-slot-day, [data-theme="dark"] .cis-slot.is-today .cis-slot-empty { color: #fdc35d; }
+[data-theme="dark"] .cis-link { background: rgba(255, 255, 255, .18); }
+[data-theme="dark"] .cis-link.on { background: #FCC25D; }
+[data-theme="dark"] .cis-confetti-piece.p1 { background: #fff; }
+[data-theme="dark"] .cis-status { background: rgba(52, 199, 123, .16); color: #6fdc9f; border-color: rgba(52, 199, 123, .3); }
+[data-theme="dark"] .cis-cta-note { color: rgba(255, 255, 255, .62); }
+[data-theme="dark"] .cis-stat-ico, [data-theme="dark"] .cis-milestone-ico { background: rgba(252, 194, 93, .16); border-color: rgba(252, 194, 93, .3); color: #FDD98F; }
+[data-theme="dark"] .cis-milestone-count { color: #FDD98F; }
+[data-theme="dark"] .cis-milestone .ml-progress-track { background: rgba(252, 194, 93, .14); }
+[data-theme="dark"] .cis-freeze-ico { background: rgba(96, 165, 250, .18); color: #93c5fd; border-color: rgba(96, 165, 250, .3); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cis-slot.is-done .cis-slot-art, .cis-slot.is-today .cis-slot-art, .cis-confetti-piece { animation: none; }
+}

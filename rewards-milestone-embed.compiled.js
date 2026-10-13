@@ -5,9 +5,17 @@
      · LeagueRail  — "<X> League · Your league · rolling 30-day points" title
                      over the six gem badges (locked ones greyed), tap → Leaderboard
      · MilestonePath — the vertical league/milestone journey with each badge's
-                     benefit bundle; the member's next league is expanded, the
+                     one-time perk; the member's next league is expanded, the
                      rest collapse to a one-line summary and toggle on tap; a
                      "?" opens the how-it-works sheet.
+     · PointsWeek  — "Last 7 days" card (2026-10-13, Ben's idea, replaced the
+                     Recent Activity ledger rows): points earned in the rolling
+                     last 7 × 24h on a half-ring gauge against the member's
+                     weekly goal, a per-day mini strip and the pace to the next
+                     league. Reads PFLoyalty.getRollingPoints / getDailyPoints.
+     · Tour        — first-visit coach-mark tour of every section (2026-10-13):
+                     spotlight + card per [data-tour] element, Next/Back/Skip,
+                     once per member (pf-rewards-tour-seen), ?tour=1 replays.
    Exposed on window.PFRewardsEmbed so both page bundles can render them.
    Classes prefixed rme-. Needs lottie-web, PFLeague and PFLoyalty on the page.
    =========================================================================== */
@@ -135,7 +143,8 @@
         "--lg-soft": cur.soft
       },
       "aria-label": cur.name + " League",
-      "data-screen-label": "League badges"
+      "data-screen-label": "League badges",
+      "data-tour": "league"
     }, /*#__PURE__*/React.createElement("div", {
       className: "rme-league-head"
     }, /*#__PURE__*/React.createElement("h2", {
@@ -228,9 +237,9 @@
       color: "var(--gray-600)"
     }))), /*#__PURE__*/React.createElement("p", {
       className: "rme-help-p"
-    }, "One journey, no choices to make — each milestone is a league badge. Its full bundle of benefits unlocks automatically the moment your Lifetime Points reach it, and you keep it forever."), /*#__PURE__*/React.createElement("p", {
+    }, "Six levels, one journey — from Jade at 0 pts to Sapphire at 60,000 pts. Each league badge unlocks a single one-time perk the moment your Lifetime Points reach it."), /*#__PURE__*/React.createElement("p", {
       className: "rme-help-p"
-    }, "Points never get spent, so nothing here ever locks back up."), /*#__PURE__*/React.createElement("button", {
+    }, "Points are lifetime: they are never spent and never expire, so every perk you unlock stays yours for good."), /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "rme-help-ok",
       onClick: onClose
@@ -273,7 +282,8 @@
     } : null;
     const reached = status === "passed" ? whenLabel(reachedAt) : null;
     const n = milestone.benefits.length;
-    const summary = n ? n === 1 ? milestone.benefits[0].title : n + " benefits · " + milestone.benefits[0].title + " +" + (n - 1) : "No benefits listed";
+    /* the model: one one-time perk per league (an admin can still list more) */
+    const summary = n ? "One-time perk · " + milestone.benefits[0].title + (n > 1 ? " +" + (n - 1) : "") : "No perk listed";
     const tag = status === "passed" ? (milestone.threshold > 0 ? "Badge earned — yours for good" : "Your starting league") + (reached && milestone.threshold > 0 ? " · " + reached : "") : status === "current" ? "Next league — unlocks automatically" : "Locked";
     return /*#__PURE__*/React.createElement("div", {
       className: "rme-node rme-node-" + status + (league ? " rme-node-league" : "") + (open ? " is-open" : ""),
@@ -305,7 +315,7 @@
       className: "rme-node-head",
       "aria-expanded": open,
       onClick: onToggle,
-      "aria-label": milestone.name + (league ? " League" : "") + ", " + (milestone.threshold > 0 ? fmt(milestone.threshold) + " points" : "start") + ". " + tag + ". " + (open ? "Hide" : "Show") + " benefits"
+      "aria-label": milestone.name + (league ? " League" : "") + ", " + (milestone.threshold > 0 ? fmt(milestone.threshold) + " points" : "start") + ". " + tag + ". " + (open ? "Hide" : "Show") + " perk"
     }, league ? /*#__PURE__*/React.createElement(Gem, {
       src: league.lottie,
       size: 40,
@@ -335,7 +345,9 @@
       color: "var(--gray-400)"
     })))), open && /*#__PURE__*/React.createElement("div", {
       className: "rme-benefits"
-    }, milestone.benefits.map((b, i) => /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "rme-benefit-kicker"
+    }, status === "passed" ? "Your one-time perk — unlocked" : "One-time perk at " + (milestone.threshold > 0 ? fmt(milestone.threshold) + " pts" : "the start")), milestone.benefits.map((b, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
       className: "rme-benefit"
     }, /*#__PURE__*/React.createElement("span", {
@@ -432,7 +444,7 @@
       color: "var(--success)"
     }), /*#__PURE__*/React.createElement("div", {
       className: "rme-next-note"
-    }, "You've walked the whole path — ", /*#__PURE__*/React.createElement("b", null, "every benefit is yours"), ".")), /*#__PURE__*/React.createElement("div", {
+    }, "You've walked the whole path — ", /*#__PURE__*/React.createElement("b", null, "every perk is yours for good"), ".")), /*#__PURE__*/React.createElement("div", {
       className: "rme-nodes"
     }, progress.path.map((m, i) => {
       const status = passed.has(m.key) ? "passed" : m.key === currentKey ? "current" : "locked";
@@ -450,9 +462,356 @@
       onClose: () => setHelpOpen(false)
     }));
   }
+
+  /* ------------------------------------------------------- last 7 days */
+  const WK_R = 80,
+    WK_LEN = Math.PI * WK_R; /* half-ring radius / arc length */
+  const WK_ARC = "M20 100 A80 80 0 0 1 180 100";
+  function wkReduceMotion() {
+    return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+  function PointsWeek({
+    state: stateProp,
+    title
+  }) {
+    const [own, setOwn] = useState(() => PF.getState());
+    useEffect(() => {
+      if (stateProp) return;
+      const refresh = () => setOwn(PF.getState());
+      window.addEventListener("pf:points-earned", refresh);
+      window.addEventListener("storage", refresh);
+      return () => {
+        window.removeEventListener("pf:points-earned", refresh);
+        window.removeEventListener("storage", refresh);
+      };
+    }, [stateProp]);
+    const state = stateProp || own;
+    const pts = useMemo(() => PF.getRollingPoints ? PF.getRollingPoints(state, 7) : 0, [state]);
+    const days = useMemo(() => PF.getDailyPoints ? PF.getDailyPoints(state, 7) : [], [state]);
+    const tier = state.user && state.user.membershipTier;
+    let mult = 1;
+    try {
+      mult = PF.tierMultiplierFor(null, tier) || 1;
+    } catch (e) {}
+    let goal = 500;
+    try {
+      goal = Math.max(1, Math.round((PF.getConfig().weeklyPointsTarget || 500) * mult));
+    } catch (e) {}
+    const pct = Math.max(0, Math.min(100, Math.round(pts / goal * 100)));
+    const reached = pts >= goal;
+    /* pace to the next league at this week's rate */
+    let pace = null;
+    try {
+      const p = LG ? LG.getProgress() : null;
+      if (p && p.next && pts > 0) pace = {
+        league: p.next.name,
+        need: p.need,
+        days: Math.max(1, Math.ceil(p.need / (pts / 7)))
+      };else if (p && !p.next) pace = {
+        top: true
+      };
+    } catch (e) {}
+    /* the ring fills on mount (one CSS transition); still under reduced motion */
+    const [on, setOn] = useState(() => wkReduceMotion());
+    useEffect(() => {
+      if (on) return;
+      const t = requestAnimationFrame(() => setOn(true));
+      return () => cancelAnimationFrame(t);
+    }, []);
+    const offset = WK_LEN * (1 - (on ? pct : 0) / 100);
+    const maxDay = Math.max(1, ...days.map(d => d.points));
+    const dayLabel = d => d.date.toLocaleDateString("en-GB", {
+      weekday: "short",
+      day: "numeric",
+      month: "short"
+    });
+    return /*#__PURE__*/React.createElement("section", {
+      className: "rme-wk" + (reached ? " is-reached" : ""),
+      "aria-label": title || "Last 7 days",
+      "data-screen-label": "Last 7 days",
+      "data-tour": "week"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "rme-wk-gauge",
+      role: "meter",
+      "aria-valuemin": 0,
+      "aria-valuemax": goal,
+      "aria-valuenow": Math.min(pts, goal),
+      "aria-label": fmt(pts) + " points earned in the last 7 days, weekly goal " + fmt(goal)
+    }, /*#__PURE__*/React.createElement("svg", {
+      viewBox: "0 0 200 110",
+      "aria-hidden": "true",
+      focusable: "false"
+    }, /*#__PURE__*/React.createElement("path", {
+      className: "rme-wk-track",
+      d: WK_ARC
+    }), /*#__PURE__*/React.createElement("path", {
+      className: "rme-wk-fill",
+      d: WK_ARC,
+      style: {
+        strokeDasharray: WK_LEN,
+        strokeDashoffset: offset
+      }
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "rme-wk-val"
+    }, /*#__PURE__*/React.createElement("b", null, fmt(pts)), /*#__PURE__*/React.createElement("span", null, "pts"), /*#__PURE__*/React.createElement("i", null, "earned in the last 7 days"))), /*#__PURE__*/React.createElement("div", {
+      className: "rme-wk-scale",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("span", null, "0"), /*#__PURE__*/React.createElement("span", null, fmt(goal), " goal")), /*#__PURE__*/React.createElement("div", {
+      className: "rme-wk-note"
+    }, reached ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:check-circle",
+      size: 15,
+      color: "var(--success, #2a9568)"
+    }), /*#__PURE__*/React.createElement("span", null, "Weekly goal reached · ", /*#__PURE__*/React.createElement("b", null, fmt(pts - goal), " pts"), " over")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:target",
+      size: 15,
+      color: "#9C6A0E"
+    }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, fmt(goal - pts), " pts"), " to your weekly goal"))), /*#__PURE__*/React.createElement("div", {
+      className: "rme-wk-days",
+      role: "list",
+      "aria-label": "Points per day"
+    }, days.map(d => /*#__PURE__*/React.createElement("div", {
+      key: d.key,
+      role: "listitem",
+      className: "rme-wk-day" + (d.today ? " is-today" : "") + (d.points ? "" : " is-empty"),
+      title: dayLabel(d) + " · " + fmt(d.points) + " pts",
+      "aria-label": dayLabel(d) + ": " + fmt(d.points) + " points"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "rme-wk-bar"
+    }, /*#__PURE__*/React.createElement("i", {
+      style: {
+        height: (d.points ? Math.max(3, Math.round(d.points / maxDay * 34)) : 0) + "px"
+      }
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "rme-wk-lb"
+    }, d.today ? "Today" : d.date.toLocaleDateString("en-GB", {
+      weekday: "narrow"
+    }))))), pace && !pace.top ? /*#__PURE__*/React.createElement("div", {
+      className: "rme-wk-pace"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:trending-up",
+      size: 14,
+      color: "currentColor"
+    }), /*#__PURE__*/React.createElement("span", null, "At this pace, ", /*#__PURE__*/React.createElement("b", null, pace.league, " League"), " in about ", pace.days, " ", pace.days === 1 ? "day" : "days", " · ", fmt(pace.need), " pts to go")) : null, pace && pace.top ? /*#__PURE__*/React.createElement("div", {
+      className: "rme-wk-pace"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:trophy",
+      size: 14,
+      color: "currentColor"
+    }), /*#__PURE__*/React.createElement("span", null, "Top of the path — every perk is yours for good")) : null);
+  }
+
+  /* ---------------------------------------------------------------- tour */
+  const TOUR_SEEN = "pf-rewards-tour-seen";
+  const TOUR_STEPS = [{
+    key: "league",
+    title: "Your league badge",
+    body: "Six gem leagues, Jade to Sapphire. Your lifetime points decide which one you hold — tap a gem to open the leaderboard."
+  }, {
+    key: "leaderboard",
+    title: "Where you rank",
+    body: "Your place in this league on rolling 30-day points, and who's just ahead of you."
+  }, {
+    key: "stats",
+    title: "Points and streak",
+    body: "Points are lifetime — never spent, never expired. Check in daily to keep the streak alive."
+  }, {
+    key: "earn",
+    title: "Ways to Earn",
+    body: "Every point-earning action in one list. Tap any row to see how it works."
+  }, {
+    key: "path",
+    title: "Milestone Path",
+    body: "Each of the six leagues unlocks one one-time perk the moment you reach it."
+  }, {
+    key: "rewards",
+    title: "My Rewards",
+    body: "Your unlocked perk codes live here, ready to use."
+  }, {
+    key: "week",
+    title: "Last 7 days",
+    body: "Points earned this week against your weekly goal, and your pace to the next league."
+  }];
+  function rwReduce() {
+    return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  }
+  function tourSeen() {
+    try {
+      return localStorage.getItem(TOUR_SEEN) === "1";
+    } catch (e) {
+      return true;
+    }
+  }
+  function markTourSeen() {
+    try {
+      localStorage.setItem(TOUR_SEEN, "1");
+    } catch (e) {}
+  }
+  function tourForced() {
+    try {
+      return new URLSearchParams(location.search).get("tour") === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+  /* the page decides when it's quiet (welcome modal closed, no check-in
+     takeover) and renders <Tour host={screenEl|null} onDone/> */
+  function Tour({
+    host,
+    onDone
+  }) {
+    const steps = useMemo(() => TOUR_STEPS.filter(st => document.querySelector('[data-tour="' + st.key + '"]')), []);
+    const [i, setI] = useState(0);
+    const [rect, setRect] = useState(null);
+    const cardRef = useRef(null);
+    const step = steps[i];
+    const finish = () => {
+      markTourSeen();
+      onDone();
+    };
+    const measure = () => {
+      if (!step) return;
+      const el = document.querySelector('[data-tour="' + step.key + '"]');
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const h = host ? host.getBoundingClientRect() : {
+        left: 0,
+        top: 0,
+        width: window.innerWidth,
+        height: window.innerHeight
+      };
+      const sx = host ? h.width / host.offsetWidth || 1 : 1; /* device frame is CSS-scaled */
+      setRect({
+        left: (r.left - h.left) / sx,
+        top: (r.top - h.top) / sx,
+        width: r.width / sx,
+        height: r.height / sx,
+        hostH: h.height / sx,
+        hostW: h.width / sx
+      });
+    };
+    useEffect(() => {
+      if (!step) return;
+      const el = document.querySelector('[data-tour="' + step.key + '"]');
+      if (el) el.scrollIntoView({
+        block: "center",
+        behavior: "smooth"
+      });
+      const t1 = setTimeout(measure, 380),
+        t2 = setTimeout(measure, 700);
+      const onR = () => measure();
+      window.addEventListener("resize", onR);
+      const sc = host ? host.querySelector(".lm-scroll") : null;
+      if (sc) sc.addEventListener("scroll", onR);else window.addEventListener("scroll", onR, true);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        window.removeEventListener("resize", onR);
+        if (sc) sc.removeEventListener("scroll", onR);else window.removeEventListener("scroll", onR, true);
+      };
+    }, [i]);
+    useEffect(() => {
+      const onKey = e => {
+        if (e.key === "Escape") finish();
+        if (e.key === "ArrowRight") setI(x => Math.min(steps.length - 1, x + 1));
+        if (e.key === "ArrowLeft") setI(x => Math.max(0, x - 1));
+      };
+      document.addEventListener("keydown", onKey);
+      return () => document.removeEventListener("keydown", onKey);
+    }, [steps.length]);
+    if (!step) return null;
+    const last = i === steps.length - 1;
+    const pad = 8;
+    const cardH = cardRef.current ? cardRef.current.offsetHeight : 170;
+    const below = rect ? rect.top + rect.height + pad + 12 + cardH < rect.hostH : true;
+    const cardTop = rect ? below ? rect.top + rect.height + pad + 12 : Math.max(12, rect.top - pad - 12 - cardH) : 80;
+    const cardLeft = rect ? Math.max(12, Math.min(rect.left, rect.hostW - 12 - 320)) : 12;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "rme-tour" + (host ? " in-host" : ""),
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-label": "Rewards tour, step " + (i + 1) + " of " + steps.length
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "rme-tour-scrim",
+      onClick: finish
+    }), rect && /*#__PURE__*/React.createElement("div", {
+      className: "rme-tour-spot",
+      style: {
+        left: rect.left - pad,
+        top: rect.top - pad,
+        width: rect.width + pad * 2,
+        height: rect.height + pad * 2
+      }
+    }), /*#__PURE__*/React.createElement("div", {
+      ref: cardRef,
+      className: "rme-tour-card" + (rect && !below ? " above" : ""),
+      style: {
+        top: cardTop,
+        left: cardLeft
+      },
+      key: step.key
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "rme-tour-top"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "rme-tour-doc",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(Gem, {
+      src: "assets/lottie/drtim-wave.json?v=20261013b",
+      size: 96,
+      play: !rwReduce(),
+      className: "rme-tour-doc-anim"
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "rme-tour-tx"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "rme-tour-n"
+    }, i + 1, " of ", steps.length), /*#__PURE__*/React.createElement("b", null, step.title), /*#__PURE__*/React.createElement("p", null, step.body))), /*#__PURE__*/React.createElement("div", {
+      className: "rme-tour-row"
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "rme-tour-skip",
+      onClick: finish
+    }, last ? "" : "Skip tour"), /*#__PURE__*/React.createElement("span", {
+      className: "rme-tour-dots",
+      "aria-hidden": "true"
+    }, steps.map((st, k) => /*#__PURE__*/React.createElement("i", {
+      key: st.key,
+      className: k === i ? "on" : ""
+    }))), /*#__PURE__*/React.createElement("span", {
+      className: "rme-tour-btns"
+    }, i > 0 && /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "rme-tour-back",
+      "aria-label": "Back",
+      onClick: () => setI(i - 1)
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:chevron-left",
+      size: 16,
+      color: "currentColor"
+    })), /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "rme-tour-next",
+      onClick: () => last ? finish() : setI(i + 1)
+    }, last ? "Done" : "Next", !last && /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:chevron-right",
+      size: 14,
+      color: "currentColor"
+    }))))));
+  }
+  /* page helper: true when the tour should run (first visit or ?tour=1) */
+  function shouldTour() {
+    return tourForced() || !tourSeen();
+  }
+  function quietForTour() {
+    return !document.querySelector(".pf-dci-root.is-open, .pf-dci-screen, .rdb-welcome-scrim, .rw-welcome-scrim");
+  }
   window.PFRewardsEmbed = {
     LeagueRail,
     MilestonePath,
-    HelpSheet
+    HelpSheet,
+    PointsWeek,
+    Tour,
+    shouldTour,
+    quietForTour,
+    markTourSeen
   };
 })();

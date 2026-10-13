@@ -207,7 +207,7 @@
       start: "MinuteTakerStartSessionMobile.html",
       session: "MinuteTakerSessionMobile.html",
       review: "MinuteTakerNoteReviewMobile.html",
-      archive: "MinuteTakerArchive.html",
+      archive: "MinuteTakerArchiveMobile.html",
       agents: "AgentMobile.html",
     },
   };

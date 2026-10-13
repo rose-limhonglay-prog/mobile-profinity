@@ -53,7 +53,8 @@ const VER_NAV = [{
   active: true
 }, {
   icon: "lucide:users-round",
-  label: "Agents"
+  label: "Agents",
+  chevron: true
 }, {
   icon: "lucide:calendar",
   label: "Events"

@@ -84,11 +84,12 @@ function MTSView() {
   const patient = getParamMTS("patient") || ctx.patient || "Sarah Jenkins";
   const consentGiven = getParamMTS("consent") ? true : ctx.consentGiven !== undefined ? ctx.consentGiven : true;
   const meta = MTS_PATIENT_META[patient] || (ctx.isNewPatient ? MTS_META_FALLBACK : MTS_PATIENT_META["Sarah Jenkins"]);
-  const [started, setStarted] = useStateMTS(false);
+  const [started, setStarted] = useStateMTS(getParamMTS("autostart") === "1"); /* ?autostart=1 for demos / screenshots */
   const [seconds, setSeconds] = useStateMTS(0);
   const [paused, setPaused] = useStateMTS(false);
   const [lineCount, setLineCount] = useStateMTS(0);
   const [ending, setEnding] = useStateMTS(false);
+  const [confirmEnd, setConfirmEnd] = useStateMTS(getParamMTS("confirm") === "1");
   const scrollRef = useRefMTS(null);
   useEffectMTS(() => {
     if (!started || paused || ending) return undefined;
@@ -105,6 +106,7 @@ function MTSView() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [lineCount]);
   function endSession() {
+    setConfirmEnd(false);
     setEnding(true);
     window.setTimeout(() => {
       const savedCtx = mtsLoadContext();
@@ -147,7 +149,31 @@ function MTSView() {
     onClick: () => setStarted(true)
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:circle"
-  }), "Start Recording Session")) : /*#__PURE__*/React.createElement("div", {
+  }), "Start Recording Session")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "mts-live-strip"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mts-orb" + (paused ? " is-paused" : ""),
+    role: "img",
+    "aria-label": paused ? "Paused" : "Listening"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mts-orb-halo",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "mts-orb-body",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "c1"
+  }), /*#__PURE__*/React.createElement("i", {
+    className: "c2"
+  }), /*#__PURE__*/React.createElement("i", {
+    className: "c3"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mts-live-caption"
+  }, paused ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:pause"
+  }), "Paused · audio isn't being captured") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "mts-live-dot"
+  }), "Listening · diarising clinician and patient"))), /*#__PURE__*/React.createElement("div", {
     className: "mts-transcript",
     ref: scrollRef
   }, /*#__PURE__*/React.createElement("div", {
@@ -165,9 +191,7 @@ function MTSView() {
     className: "mts-bubble-text"
   }, line.text)))), !paused && !ending && lineCount < MTS_SCRIPT.length && /*#__PURE__*/React.createElement("div", {
     className: "mts-transcript-meta mts-listening"
-  }, "~ Listening to live audio feed…"), paused && /*#__PURE__*/React.createElement("div", {
-    className: "mts-transcript-meta mts-listening"
-  }, "|| Audio capture paused")), /*#__PURE__*/React.createElement("div", {
+  }, "Transcribing…"))), /*#__PURE__*/React.createElement("div", {
     className: "mts-footer"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mts-model-tag"
@@ -185,7 +209,7 @@ function MTSView() {
   }), paused ? "Resume" : "Pause"), started && /*#__PURE__*/React.createElement("button", {
     className: "mts-btn mts-btn-danger",
     type: "button",
-    onClick: endSession,
+    onClick: () => setConfirmEnd(true),
     disabled: ending
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:square"
@@ -198,6 +222,33 @@ function MTSView() {
     className: "mts-overlay"
   }, /*#__PURE__*/React.createElement("div", {
     className: "mts-spinner"
-  }), /*#__PURE__*/React.createElement("p", null, "Generating structured SOAP note…")));
+  }), /*#__PURE__*/React.createElement("p", null, "Generating your structured note…")), started && confirmEnd && !ending && /*#__PURE__*/React.createElement("div", {
+    className: "mts-confirm-scrim",
+    onClick: () => setConfirmEnd(false)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mts-confirm",
+    role: "alertdialog",
+    "aria-modal": "true",
+    "aria-labelledby": "mts-confirm-title",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mts-confirm-ic"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:circle-stop"
+  })), /*#__PURE__*/React.createElement("h3", {
+    id: "mts-confirm-title"
+  }, "End the Minute Taker session?"), /*#__PURE__*/React.createElement("p", null, "Minute Taker will stop listening and write up the note from the ", fmtClock(seconds), " recorded so far. You can review and edit it before anything is saved."), /*#__PURE__*/React.createElement("div", {
+    className: "mts-confirm-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "mts-btn mts-btn-ghost",
+    type: "button",
+    onClick: () => setConfirmEnd(false)
+  }, "Keep recording"), /*#__PURE__*/React.createElement("button", {
+    className: "mts-btn mts-btn-danger",
+    type: "button",
+    onClick: endSession
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:check"
+  }), "End and write note")))));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(MTSView, null));
