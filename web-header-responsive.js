@@ -25,7 +25,10 @@
      ====================================================================== */
   var WEB_TWIN = {
     "ProfileMobile.html": "Profile.html", "LearningMobile.html": "MyLearning.html",
-    "EventsMobile.html": "EventsWeb.html", "CommunityMobile.html": "Community.html",
+    "EventsMobile.html": "EventsWeb.html",
+    "CourseDetail.html?title=Membership+Training&instr=Dr.+Tim+Pearce": "CourseWeb.html?title=Membership+Training&instr=Dr.+Tim+Pearce",
+    "CourseDetail.html?title=Technique+Tuesday&instr=Dr.+Tim+Pearce": "CourseWeb.html?title=Technique+Tuesday&instr=Dr.+Tim+Pearce",
+    "CommunityMobile.html": "Community.html",
     "DirectMessage.html": "MessagesWeb.html", "PaymentsMobile.html": "PaymentsWeb.html",
     "MySaved.html": "SavedWeb.html", "NotificationSettings.html": "NotificationSettingsWeb.html",
     "ChatSupport.html": "ChatSupportWeb.html", "AccountSettings.html": "AccountSettingsWeb.html",
@@ -40,8 +43,8 @@
   var TIER_NAME = { confidence: "Confidence", mastery: "Mastery", freedom: "Freedom", sovereign: "Sovereign" };
   var MEMBERSHIP_TIERS = ["confidence", "mastery", "freedom"];
   var MEMBERSHIP_ROWS = [
-    { label: "Membership Training", icon: "lucide:graduation-cap", href: "LearningMobile.html" },
-    { label: "Technique Tuesday",   icon: "lucide:calendar-check", href: "EventsMobile.html" },
+    { label: "Membership Training", icon: "lucide:graduation-cap", href: "CourseDetail.html?title=Membership+Training&instr=Dr.+Tim+Pearce" },
+    { label: "Technique Tuesday",   icon: "lucide:calendar-check", href: "CourseDetail.html?title=Technique+Tuesday&instr=Dr.+Tim+Pearce" },
     { label: "Complications Help",  icon: "lucide:shield-alert",   href: "DirectMessage.html" },
     { label: "AI Coach",            icon: "lucide:sparkles",       href: "LearningMobile.html" }];
   var FREEDOM_LECTURE_ROW = { label: "Freedom Path Lectures", icon: "lucide:presentation", href: "LearningMobile.html" };

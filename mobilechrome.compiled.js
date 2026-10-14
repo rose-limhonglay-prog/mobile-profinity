@@ -70,11 +70,11 @@
   const SM_MEMBERSHIP_ROWS_C = [{
     label: "Membership Training",
     icon: "lucide:graduation-cap",
-    href: "LearningMobile.html"
+    href: "CourseDetail.html?title=Membership+Training&instr=Dr.+Tim+Pearce"
   }, {
     label: "Technique Tuesday",
     icon: "lucide:calendar-check",
-    href: "EventsMobile.html"
+    href: "CourseDetail.html?title=Technique+Tuesday&instr=Dr.+Tim+Pearce"
   }, {
     label: "Complications Help",
     icon: "lucide:shield-alert",
