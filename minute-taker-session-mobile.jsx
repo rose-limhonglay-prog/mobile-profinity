@@ -18,7 +18,7 @@ const MTSEM_SCRIPT = [
   { who: "patient", text: "No, nothing like that. Just a dull ache across my forehead." },
   { who: "clinician", text: "Okay. Let's keep the current plan for your back and I'll add a posture check. If the headaches persist, we'll look at an ergonomic assessment." },
 ];
-const MTSEM_STEPS = ["Finalising transcript", "Structuring the note", "Checking clinical terms"];
+const MTSEM_STEPS = ["Saving the recording", "Finalising transcript", "Structuring the note", "Checking clinical terms"];
 
 function mtsemTime(startedAt, offsetSec) {
   try {
@@ -70,7 +70,7 @@ function MTSEMView() {
     if (!ending) return undefined;
     if (step >= MTSEM_STEPS.length) {
       const t = window.setTimeout(() => {
-        MTE.mergeCtx({ patient, id, consentGiven: consent, durationSeconds: seconds, transcriptLines: lineCount, endedAt: Date.now() });
+        MTE.mergeCtx({ patient, id, consentGiven: consent, durationSeconds: seconds, transcriptLines: lineCount, endedAt: Date.now(), recordingKept: true });
         MTE.go(MTE.routes.review + "?patient=" + encodeURIComponent(patient) + "&id=" + encodeURIComponent(id) + "&generated=1");
       }, 500);
       return () => window.clearTimeout(t);

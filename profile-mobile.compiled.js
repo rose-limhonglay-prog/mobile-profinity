@@ -1144,16 +1144,51 @@ function PMTargetsCard({
       }));
     } catch (e) {}
   }
+
+  /* Unticking takes the points back (user, 2026-10-14): a negative ledger
+     line in the engine, the header pill re-reads, and the "wrong answer"
+     sound (points-sound.js pf:answer-wrong) makes the deduction felt. The
+     target's `awarded` flag clears so a re-tick pays again. */
+  function reverseTargetPoints(t) {
+    const pts = PM_PRIORITY[t.priority].pts;
+    const label = "Today's target unticked: " + t.text;
+    const engine = window.PFLoyalty;
+    if (engine && engine.deductPoints) {
+      try {
+        engine.deductPoints(pts, label, "evt_daily_target_undo");
+      } catch (e) {}
+    }
+    try {
+      window.dispatchEvent(new CustomEvent("pf:points-earned", {
+        detail: {
+          amount: -pts,
+          label,
+          actionId: "evt_daily_target_undo",
+          booked: true,
+          sound: "none"
+        }
+      }));
+    } catch (e) {}
+    try {
+      window.dispatchEvent(new CustomEvent("pf:answer-wrong", {
+        detail: {
+          label
+        }
+      }));
+    } catch (e) {}
+  }
   function toggle(id) {
     const cur = state.targets.find(t => t.id === id);
     const paying = !!(cur && !cur.done && !cur.awarded);
+    const reversing = !!(cur && cur.done && cur.awarded);
     if (paying) awardTargetPoints(cur);
+    if (reversing) reverseTargetPoints(cur);
     setState(s => ({
       ...s,
       targets: s.targets.map(t => t.id === id ? {
         ...t,
         done: !t.done,
-        awarded: t.awarded || paying
+        awarded: reversing ? false : t.awarded || paying
       } : t)
     }));
     setSettling(id);
@@ -2673,6 +2708,80 @@ function useHeaderHidePM(scrollRef) {
   }, []);
   return state;
 }
+
+/* Profile setup state (user, 2026-10-14): "new" = a member who hasn't set up
+   her profile yet (every checklist step open, +15 pts promised), "done" =
+   checklist finished and hidden. Absent = the prototype default (one step
+   pre-completed). Finishing the checklist banks a flat +15 pts once
+   (pf-profile-setup-awarded) and flips the state to "done". The Dev mode row
+   at the foot of the profile switches states and reloads. */
+const PM_SETUP_KEY = "pf-profile-setup";
+const PM_SETUP_AWARDED_KEY = "pf-profile-setup-awarded";
+const PM_SETUP_POINTS = 15;
+function pmSetupState() {
+  try {
+    const v = localStorage.getItem(PM_SETUP_KEY);
+    return v === "new" || v === "done" ? v : null;
+  } catch (e) {
+    return null;
+  }
+}
+function pmSetSetupState(v) {
+  try {
+    if (v) localStorage.setItem(PM_SETUP_KEY, v);else localStorage.removeItem(PM_SETUP_KEY);
+  } catch (e) {}
+}
+function pmAwardSetupBonus() {
+  try {
+    if (localStorage.getItem(PM_SETUP_AWARDED_KEY) === "1") return 0;
+    localStorage.setItem(PM_SETUP_AWARDED_KEY, "1");
+  } catch (e) {}
+  const engine = window.PFLoyalty;
+  if (engine && engine.awardPoints) engine.awardPoints(PM_SETUP_POINTS, "Profile set up", "evt_profile_setup");
+  try {
+    window.dispatchEvent(new CustomEvent("pf:points-earned", {
+      detail: {
+        amount: PM_SETUP_POINTS,
+        label: "Profile set up",
+        actionId: "evt_profile_setup",
+        booked: true
+      }
+    }));
+  } catch (e) {}
+  pmSetSetupState("done");
+  return PM_SETUP_POINTS;
+}
+const PM_DEV_SETUP = [["new", "New member"], [null, "Default"], ["done", "Profile set up"]];
+function PMDevSetupRow() {
+  const cur = pmSetupState();
+  function pick(v) {
+    if (v === cur) return;
+    pmSetSetupState(v);
+    try {
+      if (v !== "done") localStorage.removeItem(PM_SETUP_AWARDED_KEY);
+    } catch (e) {}
+    location.reload();
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-dev",
+    role: "group",
+    "aria-label": "Dev mode: profile setup state"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-dev-h"
+  }, /*#__PURE__*/React.createElement("i", {
+    "aria-hidden": "true"
+  }), "Dev mode · Profile state"), /*#__PURE__*/React.createElement("div", {
+    className: "pm-dev-chips"
+  }, PM_DEV_SETUP.map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+    key: String(k),
+    type: "button",
+    className: "pm-dev-chip" + (cur === k ? " on" : ""),
+    "aria-pressed": cur === k,
+    onClick: () => pick(k)
+  }, l))), /*#__PURE__*/React.createElement("p", {
+    className: "pm-dev-note"
+  }, "New member = profile not set up yet (every step open, +", PM_SETUP_POINTS, " pts on completion). Prototype only."));
+}
 const PM_STEPS_INIT = [{
   ti: "Add a profile photo",
   su: "Priority action",
@@ -4191,7 +4300,8 @@ function StepSheet({
 /* Raw-JSON Lottie (the /embed iframe caches aggressively). Mirrors AULottie in auth-mobile.jsx. */
 function PMLottie({
   src,
-  size
+  size,
+  slice
 }) {
   const host = React.useRef(null);
   React.useEffect(() => {
@@ -4203,7 +4313,10 @@ function PMLottie({
         renderer: "svg",
         loop: true,
         autoplay: true,
-        path: src
+        path: src,
+        rendererSettings: slice ? {
+          preserveAspectRatio: "xMidYMid slice"
+        } : undefined
       });
     };
     if (window.lottie) start();else {
@@ -4266,7 +4379,7 @@ function ProfileCompleteCard({
     className: "pm-steps-success-h"
   }, "Profile Complete!"), /*#__PURE__*/React.createElement("p", {
     className: "pm-steps-success-sub"
-  }, "Your profile is fully set up. You're ready to connect with the community."), /*#__PURE__*/React.createElement("button", {
+  }, "Your profile is fully set up and the +", pointsAwarded || PM_SETUP_POINTS, " pts are banked. You're ready to connect with the community."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-steps-success-btn",
     onClick: onDismiss
@@ -4334,11 +4447,16 @@ function ProfileSteps({
   assessState,
   onAssessPatch
 }) {
-  const [steps, setSteps] = useStatePM(() => PM_STEPS_INIT.map(s => ({
+  const setupState = pmSetupState();
+  const [steps, setSteps] = useStatePM(() => PM_STEPS_INIT.map((s, i) => setupState === "new" ? {
+    ...s,
+    state: i === 0 ? "priority" : "todo",
+    su: i === 0 ? "Priority action" : "Incomplete"
+  } : {
     ...s
-  })));
+  }));
   const [activeIdx, setActiveIdx] = useStatePM(null);
-  const [dismissed, setDismissed] = useStatePM(false);
+  const [dismissed, setDismissed] = useStatePM(setupState === "done");
   const [exiting, setExiting] = useStatePM(false);
   const [hubOpen, setHubOpen] = useStatePM(false);
   const [openAssessKey, setOpenAssessKey] = useStatePM(null);
@@ -4431,10 +4549,13 @@ function ProfileSteps({
   const totalSlices = total + 1;
   const allDone = done === total && assessDone === assessAvail.length;
   const pct = Math.round((done + assessFraction) / totalSlices * 100);
+
+  /* Finishing the whole setup banks a flat +15 pts (user, 2026-10-14; was the
+     300-pt evt_profile_complete action) — once, then the state flips to "done". */
   const [profilePoints, setProfilePoints] = useStatePM(0);
   useEffectPM(() => {
     if (!allDone) return;
-    awardStepPoints("evt_profile_complete", setProfilePoints);
+    setProfilePoints(pmAwardSetupBonus() || PM_SETUP_POINTS);
   }, [allDone]);
 
   /* Picks up whatever admin-verification.jsx last wrote to the shared
@@ -4510,14 +4631,35 @@ function ProfileSteps({
     1: "evt_bio_write",
     3: "evt_license_verify"
   };
+  /* steps without a Ways-to-Earn action of their own (photo, location, social
+     profiles) pay a flat +15 pts each (user, 2026-10-14), same Dr Tim pill */
+  const PM_STEP_FLAT_PTS = 15;
+  function awardFlatStepPoints(idx) {
+    const engine = window.PFLoyalty;
+    const label = steps[idx] && steps[idx].ti || "Profile step";
+    if (engine && engine.awardPoints) engine.awardPoints(PM_STEP_FLAT_PTS, label, "evt_profile_step");
+    try {
+      window.dispatchEvent(new CustomEvent("pf:points-earned", {
+        detail: {
+          amount: PM_STEP_FLAT_PTS,
+          label,
+          actionId: "evt_profile_step",
+          booked: true
+        }
+      }));
+    } catch (e) {}
+    showStepReward(PM_STEP_FLAT_PTS, idx);
+  }
   function markDone(idx) {
+    const wasDone = steps[idx] && steps[idx].state === "done";
     setSteps(prev => prev.map((s, i) => i === idx ? {
       ...s,
       state: "done",
       su: "Complete"
     } : s));
     setActiveIdx(null);
-    if (PM_STEP_ACTIONS[idx]) awardStepPoints(PM_STEP_ACTIONS[idx], pts => showStepReward(pts, idx));
+    if (wasDone) return;
+    if (PM_STEP_ACTIONS[idx]) awardStepPoints(PM_STEP_ACTIONS[idx], pts => showStepReward(pts, idx));else awardFlatStepPoints(idx);
   }
   function awardStepPoints(actionId, setReward) {
     const engine = window.PFLoyalty;
@@ -4613,13 +4755,15 @@ function ProfileSteps({
     className: "pm-steps-collapsed-top"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "pm-steps-h"
-  }, "Complete your profile"), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+  }, "Complete your profile", /*#__PURE__*/React.createElement("span", {
+    className: "pm-steps-bonus"
+  }, "+", PM_SETUP_POINTS, " pts")), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 20,
     color: "var(--gray-400)"
   })), /*#__PURE__*/React.createElement("p", {
     className: "pm-steps-sub"
-  }, done + assessDone, " of ", totalSlices, " complete"), /*#__PURE__*/React.createElement("div", {
+  }, done + assessDone, " of ", totalSlices, " complete · finish every step for +", PM_SETUP_POINTS, " pts"), /*#__PURE__*/React.createElement("div", {
     className: "pm-steps-track",
     role: "progressbar",
     "aria-valuenow": pct,
@@ -4701,7 +4845,9 @@ function ProfileSteps({
     className: "ti"
   }, s.ti), /*#__PURE__*/React.createElement("span", {
     className: "su"
-  }, s.su)), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+  }, s.su, s.state !== "done" && !PM_STEP_ACTIONS[i] ? /*#__PURE__*/React.createElement("span", {
+    className: "pm-step-pts"
+  }, "+", PM_STEP_FLAT_PTS, " pts") : null)), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 18,
     color: "var(--gray-400)"
@@ -4768,9 +4914,12 @@ function ProfileSteps({
   })));
 }
 
-/* ---- Small "just earned points" pill (owl animation), overlaid on the
-   checklist above the step that earned it (no layout shift), for individual
-   profile steps like Bio/About rather than the full profile-complete modal ---- */
+/* ---- Small "just earned points" pill, overlaid on the checklist above the
+   step that earned it (no layout shift), for individual profile steps like
+   Bio/About rather than the full profile-complete modal. The animation is
+   the check-in Dr Tim (same JSON as the newsfeed "+N" float; user 2026-10-14:
+   "it should be the Dr Tim animation, not the owl") ---- */
+const PM_PTS_DOC_SRC = "assets/lottie/checkin-welcome.json?v=20260917c";
 function PMPointsToast({
   points,
   onDone
@@ -4794,8 +4943,9 @@ function PMPointsToast({
   }, /*#__PURE__*/React.createElement("span", {
     className: "pm-pts-toast-ic"
   }, /*#__PURE__*/React.createElement(PMLottie, {
-    src: "https://lottie.host/cc6c5973-9f61-481c-85ed-0fe2089a9176/CwHL9yTPJJ.json",
-    size: 40
+    src: PM_PTS_DOC_SRC,
+    size: 40,
+    slice: true
   })), /*#__PURE__*/React.createElement("span", {
     className: "pm-pts-toast-txt"
   }, "+", points, " points")));
@@ -7534,7 +7684,7 @@ function PMScreen() {
     name: "lucide:log-out",
     size: 20,
     color: "var(--error)"
-  }), "Logout")), /*#__PURE__*/React.createElement(PMTabBar, {
+  }), "Logout"), /*#__PURE__*/React.createElement(PMDevSetupRow, null)), /*#__PURE__*/React.createElement(PMTabBar, {
     compact: chromeHidden
   }), /*#__PURE__*/React.createElement(SideMenuPM, {
     open: menuOpen,

@@ -184,10 +184,14 @@
   }
 
   /* --------------------------------------------------------------- points -- */
+  /* quietAwards: set while autoComplete runs a quiet (direct course visit)
+     completion — points still book, but no sound (user, 2026-10-14: the
+     reward sound belongs to the Success Path, not the course page). */
+  var quietAwards = false;
   function book(amount, label, actionId) {
     if (!amount) return;
     try { if (window.PFLoyalty && window.PFLoyalty.awardPoints) window.PFLoyalty.awardPoints(amount, label, actionId); } catch (e) {}
-    try { window.dispatchEvent(new CustomEvent("pf:points-earned", { detail: { amount: amount, label: label, actionId: actionId, booked: true, sound: actionId === "evt_sp_milestone" ? "none" : "correct" } })); } catch (e) {}
+    try { window.dispatchEvent(new CustomEvent("pf:points-earned", { detail: { amount: amount, label: label, actionId: actionId, booked: true, sound: (quietAwards || actionId === "evt_sp_milestone") ? "none" : "correct" } })); } catch (e) {}
   }
 
   /* ----------------------------------------------------------------- tick -- */
@@ -451,6 +455,19 @@
   /* the hub pages only — the course pages now render the same journey UI,
      so the DOM is no longer a safe tell */
   function onHubPage() { return /SuccessPath/i.test(location.pathname); }
+  /* Did the member arrive at this course page FROM the Success Path (user,
+     2026-10-14)? Only then does finishing a lesson get the +N reward splash and
+     the jump back to the path. Someone who opened the course directly gets the
+     skill completed quietly — no splash, no redirect — so it's not annoying.
+     Tells: ?from=path (path → lesson/course links), ?sp=path / ?skill= (deep
+     links into the path), or the path's journey UI being open on the page. */
+  function fromPath() {
+    try {
+      var q = new URLSearchParams(location.search);
+      if (q.get("from") === "path" || q.get("sp") === "path" || q.get("skill")) return true;
+    } catch (e) {}
+    return !!document.querySelector(".sp-j");
+  }
   /* Skills only ever complete on the Success Path page (user, 2026-10-05):
      finishing the lessons elsewhere sends the member back here first. */
   /* opts.inline (course page, 2026-10-07): the page hosts the path itself
@@ -464,12 +481,16 @@
     var ready = s.activities.filter(function (a) { return a.status === "ready" && !un[a.id]; });
     if (!ready.length) return [];
     autoBusy = true;
+    var quiet = !onHubPage() && !fromPath();   /* came straight to the course: complete silently */
     var completed = [], milestone = null;
+    quietAwards = quiet;
     ready.forEach(function (a) {
       var r = tick(slug, a.id, { deferCelebrate: true });
       if (r && r.ok && !r.already) { completed.push(a); if (r.milestone) milestone = r.milestone; }
     });
-    emit({ type: "auto", slug: slug, ids: completed.map(function (a) { return a.id; }) });
+    quietAwards = false;
+    emit({ type: "auto", slug: slug, ids: completed.map(function (a) { return a.id; }), quiet: quiet });
+    if (quiet) { autoBusy = false; return completed; }
     var i = 0;
     (function nextSplash() {
       if (i < completed.length) { var a = completed[i++]; setTimeout(function () { skillSplash(slug, a, nextSplash); }, i === 1 ? 350 : 150); return; }
@@ -529,6 +550,7 @@
       var ready = s.activities.filter(function (a) { return a.status === "ready"; });
       if (!ready.length) return;
       if (window.PF_SP_INLINE_PATH) { setTimeout(function () { autoComplete("8d-lip-design", { inline: true }); }, 500); return; }
+      if (!fromPath()) { autoComplete("8d-lip-design", { inline: true }); return; }   /* direct visit: quiet completion, stay on the page */
       setTimeout(function () { (window.pfGo || function (u) { location.href = u; })(hubUrl("8d-lip-design", ready[0].id)); }, 900);
     }, 250);
   });

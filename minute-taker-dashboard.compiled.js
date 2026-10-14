@@ -1,9 +1,11 @@
 /* ===========================================================================
    PROfinity — Minute Taker · Clinician Dashboard (web)
    Landing hub for the Minute Taker ambient documentation agent: gradient
-   hero with today's numbers + Start session, Upcoming / Saved sessions toggle
-   with patient avatars, voice-profile ring, recent patients. Web twin of
-   MinuteTakerDashboardMobile (minute-taker-dashboard-mobile.jsx).
+   hero with today's numbers + Start session, saved sessions list
+   with patient avatars + row kebab (note / archive / download), recent
+   patients (voice profile removed 2026-10-12). Web twin of
+   MinuteTakerDashboardMobile (minute-taker-dashboard-mobile.jsx). Chrome
+   (sidebar + header) comes from minute-taker-web-shell.jsx (window.PFMTW).
    PRD: Minute Taker Assistant Agent v1.0 — Screen 1 (Sec. 3.1 / MT-K02, MT-K03).
    Classes prefixed mtd- to avoid clashes with other pages.
    =========================================================================== */
@@ -11,98 +13,12 @@ const {
   useState: useStateMTD
 } = React;
 function getParamMTD(name) {
-  try {
-    return new URLSearchParams(window.location.search).get(name) || "";
-  } catch (e) {
-    return "";
-  }
+  return window.PFMTW.getParam(name) || "";
 }
 function goMTD(url) {
-  (window.pfGo || function (u) {
-    window.location.href = u;
-  })(url);
+  window.PFMTW.go(url);
 }
-
-/* ------------------------------------------------------------- sidebar */
-const MT_NAV = [{
-  icon: "lucide:layout-grid",
-  label: "Dashboard"
-}, {
-  icon: "lucide:users",
-  label: "Patients"
-}, {
-  icon: "lucide:archive",
-  label: "Archive"
-}];
-const MT_NAV_LINKS = {
-  "Dashboard": "MinuteTakerDashboard.html",
-  "Patients": "MinuteTakerPatientContext.html",
-  "Archive": "MinuteTakerArchive.html"
-};
-function MTDSidebar({
-  active
-}) {
-  return /*#__PURE__*/React.createElement("aside", {
-    className: "mtd-sidebar"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mtd-back",
-    onClick: () => goMTD("Agent.html")
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:arrow-left"
-  }), "All agents"), /*#__PURE__*/React.createElement("div", {
-    className: "mtd-logo"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mtd-logo-mark"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:mic"
-  })), /*#__PURE__*/React.createElement("span", null, "Minute Taker")), MT_NAV.map(item => /*#__PURE__*/React.createElement("button", {
-    key: item.label,
-    className: "mtd-navitem" + (item.label === active ? " is-active" : ""),
-    type: "button",
-    onClick: item.label !== active ? () => goMTD(MT_NAV_LINKS[item.label]) : undefined
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: item.icon
-  }), /*#__PURE__*/React.createElement("span", null, item.label))), /*#__PURE__*/React.createElement("div", {
-    className: "mtd-side-foot"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:shield-check"
-  }), /*#__PURE__*/React.createElement("span", null, "Audio is transcribed live and never stored. Notes reach the EMR only after you approve them.")));
-}
-function MTDHeader({
-  title
-}) {
-  return /*#__PURE__*/React.createElement("header", {
-    className: "mtd-header"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:panel-left",
-    style: {
-      fontSize: 22,
-      color: "var(--gray-500)",
-      cursor: "pointer"
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "mtd-header-title"
-  }, title), /*#__PURE__*/React.createElement("div", {
-    className: "mtd-spacer"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "mtd-bell"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:bell"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "mtd-bell-badge"
-  }, "2")), /*#__PURE__*/React.createElement("div", {
-    className: "mtd-user"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtd-user-name"
-  }, "Dr. Katie Smith"), /*#__PURE__*/React.createElement("div", {
-    className: "mtd-user-role"
-  }, "Clinician")), /*#__PURE__*/React.createElement("img", {
-    className: "mtd-user-avatar",
-    src: "assets/avatar-katy.jpg",
-    alt: "Dr. Katie Smith"
-  }));
-}
+const MTW = window.PFMTW;
 
 /* ---------------------------------------------------------------- data */
 const MTD_SESSIONS = [{
@@ -184,6 +100,26 @@ const MTD_SESSIONS = [{
   status: "Saved",
   type: "Acne protocol · S1"
 }, {
+  sid: "s10",
+  patient: "Priya Natarajan",
+  id: "MT-77310",
+  day: "earlier",
+  when: "6 weeks ago",
+  time: "13:15",
+  duration: "45 min",
+  status: "Saved",
+  type: "New patient consult"
+}, {
+  sid: "s11",
+  patient: "Marcus Thorne",
+  id: "MT-77198",
+  day: "earlier",
+  when: "7 weeks ago",
+  time: "11:30",
+  duration: "35 min",
+  status: "Saved",
+  type: "Rosacea follow-up"
+}, {
   sid: "s9",
   patient: "Amir Khan",
   id: "MT-76980",
@@ -193,20 +129,19 @@ const MTD_SESSIONS = [{
   duration: "30 min",
   status: "Saved",
   type: "Rosacea review"
-}];
-const MTD_UPCOMING = [{
-  patient: "Priya Natarajan",
-  time: "11:15",
+}, {
+  sid: "s12",
+  patient: "Eleanor Vance",
+  id: "MT-77213",
+  day: "earlier",
+  when: "3 months ago",
+  time: "09:15",
+  duration: "30 min",
+  status: "Saved",
   type: "Skin consult"
-}, {
-  patient: "Amir Khan",
-  time: "14:30",
-  type: "Rosacea follow-up"
-}, {
-  patient: "Sarah Jenkins",
-  time: "16:00",
-  type: "Post-op check"
 }];
+/* the dashboard shows the 10 most recent sessions; "See all sessions" opens the archive (full list + search) */
+const MTD_RECENT_MAX = 10;
 const MTD_RECENT = [{
   name: "Eleanor Vance",
   sub: "Today",
@@ -289,25 +224,38 @@ const MTD_MENU = [{
   key: "note",
   icon: "lucide:file-text",
   label: "Clinical note",
-  needsNote: true
+  sub: "Open and review the note",
+  busy: "Still being written"
+}, {
+  key: "share",
+  icon: "lucide:share-2",
+  label: "Share",
+  sub: "Email, text or apps",
+  busy: "Available once the note is ready"
 }, {
   key: "archive",
   icon: "lucide:archive",
-  label: "Archive"
+  label: "Archive",
+  sub: "Move this session to the archive"
 }, {
   key: "download",
   icon: "lucide:download",
   label: "Download",
-  needsNote: true
+  sub: "Save the note as a PDF",
+  busy: "Available once the note is ready"
 }];
 function MTDSessionRow({
   row,
   onArchive,
+  onShare,
   onToast
 }) {
   const meta = MTD_STATUS[row.status];
   const disabled = row.status === "Processing";
-  const [menu, setMenu] = useStateMTD(false);
+  const [menu, setMenu] = useStateMTD(() => {
+    const m = getParamMTD("menu");
+    return !!m && (m === row.sid || m === row.id);
+  });
   const wrapRef = React.useRef(null);
   const open = () => goMTD("MinuteTakerNoteReview.html?patient=" + encodeURIComponent(row.patient) + "&id=" + row.id);
   React.useEffect(() => {
@@ -327,7 +275,7 @@ function MTDSessionRow({
   }, [menu]);
   function act(key) {
     setMenu(false);
-    if (key === "note") open();else if (key === "archive") onArchive(row);else if (key === "download") onToast("Downloading the note as a PDF…");
+    if (key === "note") open();else if (key === "share") onShare(row);else if (key === "archive") onArchive(row);else if (key === "download") onToast("Downloading the note as a PDF…");
   }
   return /*#__PURE__*/React.createElement("div", {
     className: "mtd-trow" + (disabled ? " is-processing" : "")
@@ -368,15 +316,22 @@ function MTDSessionRow({
   })), menu && /*#__PURE__*/React.createElement("div", {
     className: "mtd-menu",
     role: "menu"
-  }, MTD_MENU.map(it => /*#__PURE__*/React.createElement("button", {
-    key: it.key,
-    type: "button",
-    role: "menuitem",
-    disabled: disabled && it.needsNote,
-    onClick: () => act(it.key)
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: it.icon
-  }), it.label))))));
+  }, MTD_MENU.map(it => {
+    const off = disabled && !!it.busy;
+    return /*#__PURE__*/React.createElement("button", {
+      key: it.key,
+      type: "button",
+      role: "menuitem",
+      disabled: off,
+      onClick: () => act(it.key)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "mtd-menu-ic"
+    }, /*#__PURE__*/React.createElement("iconify-icon", {
+      icon: it.icon
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "mtd-menu-text"
+    }, /*#__PURE__*/React.createElement("strong", null, it.label), /*#__PURE__*/React.createElement("span", null, off ? it.busy : it.sub)));
+  })))));
 }
 function MTDView() {
   const [search, setSearch] = useStateMTD("");
@@ -388,14 +343,15 @@ function MTDView() {
     clearTimeout(toastRef.current);
     toastRef.current = setTimeout(() => setToast(null), 2200);
   };
-  const [view, setView] = useStateMTD(getParamMTD("view") === "saved" ? "saved" : "upcoming");
   const sessions = MTD_SESSIONS.filter(s => !archived.includes(s.sid));
+  const recent = sessions.slice(0, MTD_RECENT_MAX);
   const today = sessions.filter(s => s.day === "today");
-  const ready = sessions.filter(s => s.status === "Note Ready").length;
   const archiveRow = row => {
     setArchived(a => a.concat(row.sid));
     showToast("Moved to the archive");
   };
+  /* ?share=<session id> opens the share modal straight away (demo / screenshots) */
+  const [shareRow, setShareRow] = useStateMTD(() => MTD_SESSIONS.find(s => s.id === getParamMTD("share") || s.sid === getParamMTD("share")) || null);
   function startSession() {
     const target = search.trim() || "Sarah Jenkins";
     goMTD("MinuteTakerPatientContext.html?patient=" + encodeURIComponent(target));
@@ -426,7 +382,7 @@ function MTDView() {
     className: "mtd-hero-main"
   }, /*#__PURE__*/React.createElement("div", {
     className: "mtd-hero-eyebrow"
-  }, mtdToday()), /*#__PURE__*/React.createElement("h1", null, mtdGreeting(), ", Dr Smith"), /*#__PURE__*/React.createElement("p", null, today.length + MTD_UPCOMING.length, " consultations today · ", ready, " note ready to review"), /*#__PURE__*/React.createElement("div", {
+  }, mtdToday()), /*#__PURE__*/React.createElement("h1", null, mtdGreeting(), ", Dr Smith"), /*#__PURE__*/React.createElement("div", {
     className: "mtd-search-wrap"
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:search"
@@ -445,17 +401,7 @@ function MTDView() {
     className: "mtd-start-mic"
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:mic"
-  })), "Start session"))), /*#__PURE__*/React.createElement("div", {
-    className: "mtd-stats"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtd-stat"
-  }, /*#__PURE__*/React.createElement("strong", null, today.length + MTD_UPCOMING.length), /*#__PURE__*/React.createElement("span", null, "Today")), /*#__PURE__*/React.createElement("div", {
-    className: "mtd-stat"
-  }, /*#__PURE__*/React.createElement("strong", null, ready), /*#__PURE__*/React.createElement("span", null, "To review")), /*#__PURE__*/React.createElement("div", {
-    className: "mtd-stat"
-  }, /*#__PURE__*/React.createElement("strong", null, "2", /*#__PURE__*/React.createElement("em", null, "m")), /*#__PURE__*/React.createElement("span", null, "Avg. write-up")), /*#__PURE__*/React.createElement("div", {
-    className: "mtd-stat"
-  }, /*#__PURE__*/React.createElement("strong", null, "98", /*#__PURE__*/React.createElement("em", null, "%")), /*#__PURE__*/React.createElement("span", null, "Voice match")))), /*#__PURE__*/React.createElement("div", {
+  })), "Start session")))), /*#__PURE__*/React.createElement("div", {
     className: "mtd-grid"
   }, /*#__PURE__*/React.createElement("div", {
     className: "mtd-main-col"
@@ -469,31 +415,7 @@ function MTDView() {
     className: "mtd-ti"
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:calendar-days"
-  })), "Sessions"), /*#__PURE__*/React.createElement("a", {
-    href: "MinuteTakerArchive.html",
-    onClick: e => {
-      e.preventDefault();
-      goMTD("MinuteTakerArchive.html");
-    }
-  }, "View archive ", /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:arrow-up-right"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "mtd-seg",
-    role: "tablist",
-    "aria-label": "Sessions view"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    role: "tab",
-    "aria-selected": view === "upcoming",
-    className: "mtd-seg-btn" + (view === "upcoming" ? " is-on" : ""),
-    onClick: () => setView("upcoming")
-  }, "Upcoming", /*#__PURE__*/React.createElement("em", null, MTD_UPCOMING.length)), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    role: "tab",
-    "aria-selected": view === "saved",
-    className: "mtd-seg-btn" + (view === "saved" ? " is-on" : ""),
-    onClick: () => setView("saved")
-  }, "Saved", /*#__PURE__*/React.createElement("em", null, sessions.length))), /*#__PURE__*/React.createElement("div", {
+  })), "Sessions")), /*#__PURE__*/React.createElement("div", {
     className: "mtd-thead"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mtd-th"
@@ -503,37 +425,21 @@ function MTDView() {
     className: "mtd-th"
   }, "Status"), /*#__PURE__*/React.createElement("span", {
     className: "mtd-th"
-  }, "Action")), view === "upcoming" ? MTD_UPCOMING.map((u, i) => /*#__PURE__*/React.createElement("div", {
-    key: u.patient + u.time,
-    className: "mtd-trow mtd-trow-upcoming"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtd-cell-patient"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mtd-upcoming-time"
-  }, /*#__PURE__*/React.createElement("strong", null, u.time), /*#__PURE__*/React.createElement("span", null, i === 0 ? "next" : "today")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "mtd-patient-cell"
-  }, u.patient), /*#__PURE__*/React.createElement("div", {
-    className: "mtd-when-cell"
-  }, u.type))), /*#__PURE__*/React.createElement("span", {
-    className: "mtd-when-cell mtd-cell-time"
-  }, "Not started"), /*#__PURE__*/React.createElement("span", {
-    className: "mtd-status-pill mtd-status-muted"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:calendar"
-  }), "Scheduled"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mtd-row-btn mtd-row-btn-primary",
-    onClick: () => goMTD("MinuteTakerPatientContext.html?patient=" + encodeURIComponent(u.patient))
-  }, "Prepare", /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:chevron-right"
-  })))) : sessions.map(row => /*#__PURE__*/React.createElement(MTDSessionRow, {
+  }, "Action")), recent.map(row => /*#__PURE__*/React.createElement(MTDSessionRow, {
     key: row.sid,
     row: row,
     onArchive: archiveRow,
+    onShare: setShareRow,
     onToast: showToast
-  })), view === "saved" && sessions.length === 0 && /*#__PURE__*/React.createElement("div", {
+  })), sessions.length === 0 && /*#__PURE__*/React.createElement("div", {
     className: "mtd-empty"
-  }, "Everything has been archived."))), /*#__PURE__*/React.createElement("div", {
+  }, "Everything has been archived."), sessions.length > 0 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtd-seeall",
+    onClick: () => goMTD("MinuteTakerArchive.html")
+  }, "See all sessions", /*#__PURE__*/React.createElement("em", null, sessions.length), /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:chevron-right"
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "mtd-side-col"
   }, /*#__PURE__*/React.createElement("div", {
     className: "mtd-card"
@@ -576,7 +482,19 @@ function MTDView() {
     className: "mtd-recent-main"
   }, /*#__PURE__*/React.createElement("span", null, "New patient"), /*#__PURE__*/React.createElement("small", null, "Start with a blank record")), /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:chevron-right"
-  })))))), /*#__PURE__*/React.createElement("div", {
+  })))))), shareRow && window.PFMTShare && /*#__PURE__*/React.createElement(window.PFMTShare.Share, {
+    variant: "modal",
+    patient: shareRow.patient,
+    id: shareRow.id,
+    hasRecording: shareRow.status !== "Processing",
+    note: {
+      type: shareRow.type,
+      date: shareRow.when ? shareRow.when + " " + shareRow.time : "Today " + shareRow.time,
+      duration: shareRow.duration
+    },
+    onClose: () => setShareRow(null),
+    onToast: m => showToast(m)
+  }), /*#__PURE__*/React.createElement("div", {
     className: "mtd-toast" + (toast ? " is-on" : ""),
     role: "status",
     "aria-live": "polite"
@@ -585,14 +503,10 @@ function MTDView() {
   }), toast)));
 }
 function MTDApp() {
-  return /*#__PURE__*/React.createElement("div", {
+  return /*#__PURE__*/React.createElement(MTW.Shell, {
+    active: "Dashboard",
+    title: "Minute Taker",
     className: "mtd-shell"
-  }, /*#__PURE__*/React.createElement(MTDSidebar, {
-    active: "Dashboard"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "mtd-main"
-  }, /*#__PURE__*/React.createElement(MTDHeader, {
-    title: "Minute Taker"
-  }), /*#__PURE__*/React.createElement(MTDView, null)));
+  }, /*#__PURE__*/React.createElement(MTDView, null));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(MTDApp, null));

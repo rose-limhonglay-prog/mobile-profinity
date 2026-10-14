@@ -1,9 +1,10 @@
 /* ===========================================================================
    PROfinity — Minute Taker (mobile) · Start Session
-   Step 1 of 2: pick the patient (vertical list, or add a new one through the
-   "New patient" sheet — user, 2026-10-01), check the demographics + clinical
-   snapshot, add an optional AI primer, confirm recording consent, then
-   continue to the live session. Runs on window.PFMT.
+   Step 1 of 2, simplified 2026-10-14 for older clinicians: big name fields
+   for a new patient (the usual case), allergies/conditions behind one Add/Edit
+   sheet, "Seen this patient before?" finder BELOW the form (recent list no
+   longer on top), a short "what is this visit about?" box, one consent tick
+   and a big Continue button. Runs on window.PFMT.
    Classes prefixed mtssm-.
    =========================================================================== */
 const { useState: useStateMTSSM, useEffect: useEffectMTSSM, useRef: useRefMTSSM } = React;
@@ -32,88 +33,78 @@ function mtssmSplit(name) {
 function MTSSMView() {
   const toast = MTS.useToast();
   const param = MTS.getParam("patient");
-  const initial = param === MTSSM_NEW ? MTSSM_NEW : (MTS.PATIENTS[param] ? param : (param ? MTSSM_NEW : "Sarah Jenkins"));
+  /* Simplified 2026-10-14 (user): most sessions are for someone new, so the page opens on
+     big name fields. Previous patients live behind one "Find a previous patient" row
+     below the form instead of a list on top. Large type + big targets for older clinicians. */
+  const initial = MTS.PATIENTS[param] ? param : MTSSM_NEW;
   const [selected, setSelected] = useStateMTSSM(initial);
   const isNew = selected === MTSSM_NEW;
   const base = isNew ? MTS.BLANK_PATIENT : MTS.PATIENTS[selected];
 
   const [form, setForm] = useStateMTSSM(() => {
-    const [fn, ln] = mtssmSplit(isNew ? (param && param !== MTSSM_NEW ? param : "") : selected);
-    return { firstName: fn, lastName: ln, dob: base.dob, phone: base.phone };
+    /* One "Patient name" field since 2026-10-14 (user): first + last were two boxes before. */
+    const name = isNew ? (param && param !== MTSSM_NEW ? param : "") : selected;
+    return { name, dob: base.dob, phone: base.phone, email: base.email || "" };
   });
   const [primer, setPrimer] = useStateMTSSM(base.primer);
-  const [useContext, setUseContext] = useStateMTSSM(true);
   const [consent, setConsent] = useStateMTSSM(false);
+  const [finding, setFinding] = useStateMTSSM(false);
   const [query, setQuery] = useStateMTSSM("");
-  // "New patient" sheet — null = closed, otherwise the draft being typed. Deep links
-  // (?patient=__new__ or an unknown name) open it straight away, prefilled.
-  const [draft, setDraft] = useStateMTSSM(() => {
-    if (!isNew) return null;
-    const [fn, ln] = mtssmSplit(param && param !== MTSSM_NEW ? param : "");
-    return { target: MTSSM_NEW, firstName: fn, lastName: ln, dob: "", phone: "", allergies: [], conditions: [] };
-  });
-  // per-patient edits made through the details sheet this visit (keyed by patient / __new__):
-  // demographics live in `form`, the clinical snapshot lives here (user, 2026-10-02)
+  const [draft, setDraft] = useStateMTSSM(null);
   const [edits, setEdits] = useStateMTSSM({});
   const snap = edits[selected] || base;
+  const searchRef = useRefMTSSM(null);
 
-  // previous-meeting patients, most recent first; search widens to every patient on file
   const q = query.trim().toLowerCase();
   const recent = MTS.PATIENT_NAMES.slice().sort((a, b) => mtssmRecency(MTS.PATIENTS[a].lastVisit) - mtssmRecency(MTS.PATIENTS[b].lastVisit));
   const shown = q
     ? recent.filter((n) => n.toLowerCase().includes(q) || String(MTS.PATIENTS[n].id).toLowerCase().includes(q))
     : recent.slice(0, MTSSM_RECENT_MAX);
 
-  const typedName = (form.firstName + " " + form.lastName).trim();
+  const typedName = String(form.name || "").trim().replace(/\s+/g, " ");
   const patientName = isNew ? (typedName || "New patient") : (typedName || selected);
-  const firstName = form.firstName.trim() || (isNew ? "the patient" : selected.split(" ")[0]);
+  const firstName = mtssmSplit(typedName)[0] || (isNew ? "the patient" : selected.split(" ")[0]);
+  const hasSnapshot = snap.allergies.length > 0 || snap.conditions.length > 0;
+  const canStart = consent && !!typedName;
 
   function pick(value) {
     setSelected(value);
     const next = value === MTSSM_NEW ? MTS.BLANK_PATIENT : MTS.PATIENTS[value];
-    const [fn, ln] = mtssmSplit(value === MTSSM_NEW ? "" : value);
-    setForm({ firstName: fn, lastName: ln, dob: next.dob, phone: next.phone });
+    setForm({ name: value === MTSSM_NEW ? "" : value, dob: next.dob, phone: next.phone, email: next.email || "" });
     setPrimer(next.primer);
     setConsent(false);
+    setFinding(false);
+    setQuery("");
   }
-
-  /* details sheet — "add" starts a blank record; "edit" opens the selected patient (new or on file) prefilled */
-  function openAdd(prefill) {
-    setDraft({ target: MTSSM_NEW, firstName: "", lastName: "", dob: "", phone: "", allergies: [], conditions: [], ...(prefill || {}) });
+  function clearPatient() { pick(MTSSM_NEW); }
+  function openFind() {
+    setFinding(true);
+    window.setTimeout(() => { if (searchRef.current) searchRef.current.focus(); }, 80);
   }
   function openEdit() {
     setDraft({ target: selected, ...form, allergies: snap.allergies.slice(), conditions: snap.conditions.slice() });
   }
-  function cancelAdd() {
-    setDraft(null);
-    // backed out of a brand-new record with nothing typed → fall back to the most recent patient
-    if (isNew && !typedName) pick(recent[0]);
-  }
+  function cancelAdd() { setDraft(null); }
   function confirmAdd() {
-    if (!draft || !draft.firstName.trim()) return;
-    const clean = { firstName: draft.firstName.trim(), lastName: draft.lastName.trim(), dob: draft.dob.trim(), phone: draft.phone.trim() };
-    const snapshot = { allergies: draft.allergies.slice(), conditions: draft.conditions.slice() };
-    const editingExisting = draft.target !== MTSSM_NEW;
-    const editingNew = !editingExisting && isNew && !!typedName;
-    if (!editingExisting) setSelected(MTSSM_NEW);
+    if (!draft || !String(draft.name || "").trim()) return;
+    const clean = { name: String(draft.name || "").trim(), dob: draft.dob.trim(), phone: draft.phone.trim(), email: String(draft.email || "").trim() };
     setForm(clean);
-    setEdits((m) => ({ ...m, [draft.target]: snapshot }));
-    if (!editingExisting && !editingNew) { setPrimer(""); setConsent(false); }
-    setQuery("");
+    setEdits((m) => ({ ...m, [draft.target]: { allergies: draft.allergies.slice(), conditions: draft.conditions.slice() } }));
     setDraft(null);
-    toast.show(editingExisting || editingNew ? "Details updated." : (clean.firstName + " " + clean.lastName).trim() + " added as a new patient.", "ok");
+    toast.show("Details updated.", "ok");
   }
 
   function start() {
+    if (!typedName) { toast.show("Type the patient's name first."); return; }
     if (!consent) { toast.show("Confirm the patient's consent first."); return; }
-    MTS.saveCtx({ patient: patientName, id: base.id, primer, useContext, isNewPatient: isNew, consentGiven: true, startedAt: Date.now() });
+    MTS.saveCtx({ patient: patientName, id: base.id, phone: form.phone.trim(), email: form.email.trim(), primer, useContext: true, isNewPatient: isNew, consentGiven: true, startedAt: Date.now() });
     MTS.go(MTS.routes.session + "?patient=" + encodeURIComponent(patientName));
   }
 
   const field = (key, label, extra) => (
-    <label className="mt-field">
+    <label className="mt-field mtssm-big-field">
       <span>{label}</span>
-      <input value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} {...extra} />
+      <input value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} autoComplete="off" {...extra} />
     </label>
   );
 
@@ -123,144 +114,116 @@ function MTSSMView() {
         left={<TextBtnS onClick={() => MTS.go(MTS.routes.dashboard)}>Cancel</TextBtnS>}
         title="New session"
         sub="Step 1 of 2 · Patient & consent"
-        right={
-          <button type="button" className={"mtssm-add" + (isNew ? " is-on" : "")} onClick={() => (isNew ? openEdit() : openAdd())} aria-haspopup="dialog" aria-expanded={!!draft}>
-            <IcS name="lucide:user-plus" size={15} />{isNew && typedName ? "Edit patient" : "Add patient"}
-          </button>
-        }
       />
 
       <div className="mt-scroll">
-        <div className="mt-section-label">Who is this session for?</div>
-        <label className="mtssm-search">
-          <IcS name="lucide:search" size={16} />
-          <input type="search" value={query} placeholder="Search patients by name or ID" onChange={(e) => setQuery(e.target.value)} autoComplete="off" />
-          {query && <button type="button" className="mtssm-search-clear" onClick={() => setQuery("")} aria-label="Clear search"><IcS name="lucide:x" size={14} /></button>}
-        </label>
-        <div className="mtssm-list-head">
-          <span>{q ? (shown.length ? shown.length + (shown.length === 1 ? " match" : " matches") : "No matches") : "Recent patients"}</span>
-          {!q && <span className="mtssm-list-hint">From previous meetings</span>}
-        </div>
-        <div className="mtssm-list" role="list">
-          {isNew && (
-            <button type="button" className="mtssm-row mtssm-row-new is-on" role="listitem" aria-current="true" onClick={openEdit}>
-              <AvatarS isNew size={40} />
-              <span className="mtssm-row-text">
-                <span className="mtssm-row-name">{typedName || "New patient"}</span>
-                <span className="mtssm-row-meta">New record · tap to edit details</span>
-              </span>
-              <span className="mtssm-row-check" aria-hidden="true"><IcS name="lucide:check" size={13} /></span>
-            </button>
-          )}
-          {shown.map((name) => {
-            const on = selected === name;
-            const p = MTS.PATIENTS[name];
-            return (
-              <button key={name} type="button" role="listitem" className={"mtssm-row" + (on ? " is-on" : "")} onClick={() => pick(name)} aria-pressed={on}>
-                <AvatarS name={name} size={40} />
-                <span className="mtssm-row-text">
-                  <span className="mtssm-row-name">{name}</span>
-                  <span className="mtssm-row-meta">{p.gender} · {p.age} yrs · Last visit {String(p.lastVisit).toLowerCase()}</span>
-                </span>
-                <span className="mtssm-row-check" aria-hidden="true">{on && <IcS name="lucide:check" size={13} />}</span>
-              </button>
-            );
-          })}
-          {q && !shown.length && (
-            <div className="mtssm-empty">
-              <span>No patient named “{query.trim()}”.</span>
-              <button type="button" className="mt-btn mt-btn-ghost" onClick={() => { const [fn, ln] = mtssmSplit(query); openAdd({ firstName: fn, lastName: ln }); }}>
-                <IcS name="lucide:user-plus" size={16} />Add “{query.trim()}”
-              </button>
-            </div>
-          )}
-        </div>
+        <h2 className="mtssm-q">Who is this session for?</h2>
 
-        {/* selected patient — summary, demographics and clinical snapshot in one container (user, 2026-09-30) */}
         <section className="mt-card mtssm-details mt-fade-in" key={selected}>
-          <div className="mtssm-patient">
-            <AvatarS name={isNew ? patientName : selected} isNew={isNew && !typedName} tone={isNew ? "new" : undefined} size={56} />
-            <div className="mt-grow">
-              <div className="mtssm-patient-name">{patientName}</div>
-              <div className="mtssm-patient-meta">{isNew ? "No prior visits on file" : base.gender + " · " + base.age + " yrs · " + base.id}</div>
-              {!isNew && (
-                <div className="mtssm-patient-chips">
-                  <span className="mt-pill mt-pill-muted"><IcS name="lucide:clock" size={12} />Last visit {base.lastVisit}</span>
-                  <span className="mt-pill mt-pill-muted">{base.visits} visits</span>
-                </div>
-              )}
+          {!isNew ? (
+            <div className="mtssm-patient">
+              <AvatarS name={selected} size={56} />
+              <div className="mt-grow">
+                <div className="mtssm-patient-name">{selected}</div>
+                <div className="mtssm-patient-meta">{base.gender} · {base.age} yrs · Last visit {String(base.lastVisit).toLowerCase()}</div>
+              </div>
+              <button type="button" className="mtssm-clear" onClick={clearPatient} aria-label="Choose someone else"><IcS name="lucide:x" size={18} /></button>
             </div>
+          ) : (
+            <div className="mtssm-new-head">
+              <AvatarS isNew size={48} />
+              <span className="mt-grow">New patient</span>
+            </div>
+          )}
+
+          <div className="mtssm-fields">
+            {field("name", "Patient name", { placeholder: "First and last name", autoCapitalize: "words" })}
+            {field("dob", "Date of birth", { placeholder: "e.g. 12 Apr 1960" })}
+            {field("phone", "Mobile number", { placeholder: "07700 …", inputMode: "tel" })}
+            {field("email", "Email", { placeholder: "name@example.com", inputMode: "email", type: "email", autoCapitalize: "none" })}
           </div>
 
-          <div className="mtssm-part">
-            <div className="mt-card-head">
-              <span className="mt-card-title"><span className="mt-ti"><IcS name="lucide:id-card" size={15} /></span>Demographics</span>
-              <button type="button" className="mt-link mtssm-edit-link" onClick={openEdit}><IcS name="lucide:pencil" size={13} />Edit</button>
+          <div className="mtssm-snap">
+            <div className="mtssm-snap-head">
+              <span className="mtssm-snap-title"><IcS name="lucide:heart-pulse" size={16} />Allergies & conditions</span>
+              <button type="button" className="mtssm-snap-edit" onClick={openEdit}><IcS name={hasSnapshot ? "lucide:pencil" : "lucide:plus"} size={14} />{hasSnapshot ? "Edit" : "Add"}</button>
             </div>
-            <div className="mtssm-grid">
-              {field("firstName", "First name", { placeholder: "First" })}
-              {field("lastName", "Last name", { placeholder: "Last" })}
-              {field("dob", "Date of birth", { placeholder: "DD Mon YYYY" })}
-              {field("phone", "Phone", { placeholder: "07700 …", inputMode: "tel" })}
-            </div>
-          </div>
-
-          <div className="mtssm-part">
-            <div className="mt-card-head">
-              <span className="mt-card-title"><span className="mt-ti"><IcS name="lucide:heart-pulse" size={15} /></span>Clinical snapshot</span>
-              <button type="button" className="mt-link mtssm-edit-link" onClick={openEdit}><IcS name="lucide:pencil" size={13} />Edit</button>
-            </div>
-            <div className="mtssm-snap-label">Alerts & allergies</div>
             <div className="mtssm-pills">
-              {snap.allergies.length === 0 && <span className="mt-pill mt-pill-muted">{isNew ? "Not recorded yet" : "Nothing on file"}</span>}
+              {!hasSnapshot && <span className="mt-pill mt-pill-muted">{isNew ? "Nothing added yet" : "Nothing on file"}</span>}
               {snap.allergies.map((a) => a.severity
                 ? <span key={a.label} className="mt-pill mt-pill-danger"><IcS name="lucide:triangle-alert" size={12} />{a.label} · {a.severity}</span>
                 : <span key={a.label} className="mt-pill mt-pill-muted"><IcS name="lucide:check" size={12} />{a.label}</span>)}
-            </div>
-            <div className="mtssm-snap-label">Active conditions</div>
-            <div className="mtssm-pills">
-              {snap.conditions.length === 0 && <span className="mt-pill mt-pill-muted">{isNew ? "Not recorded yet" : "None on file"}</span>}
               {snap.conditions.map((c) => <span key={c} className="mt-pill mt-pill-ok">{c}</span>)}
             </div>
           </div>
         </section>
 
+        {isNew && !finding && (
+          <button type="button" className="mtssm-find" onClick={openFind}>
+            <span className="mt-ti"><IcS name="lucide:search" size={18} /></span>
+            <span className="mt-grow">Seen this patient before?<small>Find their record instead of typing</small></span>
+            <IcS name="lucide:chevron-right" size={20} />
+          </button>
+        )}
+        {isNew && finding && (
+          <section className="mt-card mtssm-finder mt-fade-in">
+            <div className="mtssm-finder-head">
+              <span>Find a previous patient</span>
+              <button type="button" className="mtssm-snap-edit" onClick={() => { setFinding(false); setQuery(""); }}>Close</button>
+            </div>
+            <label className="mtssm-search">
+              <IcS name="lucide:search" size={18} />
+              <input ref={searchRef} type="search" value={query} placeholder="Type a name" onChange={(e) => setQuery(e.target.value)} autoComplete="off" />
+              {query && <button type="button" className="mtssm-search-clear" onClick={() => setQuery("")} aria-label="Clear search"><IcS name="lucide:x" size={14} /></button>}
+            </label>
+            <div className="mtssm-list" role="list">
+              {shown.map((name) => {
+                const p = MTS.PATIENTS[name];
+                return (
+                  <button key={name} type="button" role="listitem" className="mtssm-row" onClick={() => pick(name)}>
+                    <AvatarS name={name} size={44} />
+                    <span className="mtssm-row-text">
+                      <span className="mtssm-row-name">{name}</span>
+                      <span className="mtssm-row-meta">Last visit {String(p.lastVisit).toLowerCase()}</span>
+                    </span>
+                    <IcS name="lucide:chevron-right" size={18} />
+                  </button>
+                );
+              })}
+              {q && !shown.length && <div className="mtssm-empty"><span>No patient named “{query.trim()}”. Type their details above instead.</span></div>}
+            </div>
+          </section>
+        )}
+
         <section className="mt-card mtssm-primer">
           <div className="mt-card-head">
-            <span className="mt-card-title"><span className="mt-ti"><IcS name="lucide:sparkles" size={15} /></span>AI session primer</span>
+            <span className="mt-card-title"><span className="mt-ti"><IcS name="lucide:sparkles" size={15} /></span>What is this visit about?</span>
             <span className="mtssm-optional">Optional</span>
           </div>
-          <p className="mt-hint">Tell Minute Taker what this visit is about. It shapes what the note focuses on.</p>
           <label className="mt-field mtssm-primer-field">
-            <textarea rows={4} value={primer} placeholder={isNew ? "e.g. First consultation for skin concerns. Cover history, goals and expectations." : ""} onChange={(e) => setPrimer(e.target.value)} />
+            <textarea rows={3} value={primer} placeholder="e.g. Follow-up after lip filler. Check healing and talk about the next step." onChange={(e) => setPrimer(e.target.value)} />
           </label>
-          <div className="mt-switch-row" onClick={() => setUseContext((v) => !v)} role="switch" aria-checked={useContext} tabIndex={0}
-            onKeyDown={(e) => { if (e.key === " " || e.key === "Enter") { e.preventDefault(); setUseContext((v) => !v); } }}>
-            <span>Use this context for the session</span>
-            <span className={"mt-switch" + (useContext ? " is-on" : "")} />
-          </div>
         </section>
 
         <section className={"mt-card mtssm-consent" + (consent ? " is-on" : "")}>
           <button type="button" className="mtssm-consent-btn" onClick={() => setConsent((v) => !v)} aria-pressed={consent}>
-            <span className={"mt-check" + (consent ? " is-on" : "")}>{consent && <IcS name="lucide:check" size={16} />}</span>
+            <span className={"mt-check" + (consent ? " is-on" : "")}>{consent && <IcS name="lucide:check" size={18} />}</span>
             <span className="mt-grow">
-              <span className="mtssm-consent-title">Recording consent</span>
-              <span className="mtssm-consent-text">{isNew ? "The patient" : firstName} has been told this consultation will be recorded and transcribed, and agrees.</span>
+              <span className="mtssm-consent-title">{firstName === "the patient" ? "The patient" : firstName} agrees to be recorded</span>
+              <span className="mtssm-consent-text">You have told them this visit is recorded and written up as a note.</span>
             </span>
           </button>
-          <div className="mtssm-consent-foot"><IcS name="lucide:shield-check" size={14} />Required before Minute Taker can listen. Audio is never stored.</div>
         </section>
         <div className="mt-spacer" />
       </div>
 
       <div className="mt-bottom">
-        <button type="button" className="mt-btn mt-btn-primary mt-btn-block" disabled={!consent} onClick={start}>
-          Continue to recording<IcS name="lucide:arrow-right" size={18} />
+        <button type="button" className="mt-btn mt-btn-primary mt-btn-block mtssm-start" disabled={!canStart} onClick={start}>
+          Continue to recording<IcS name="lucide:arrow-right" size={20} />
         </button>
-        <p className="mt-bottom-note">{consent ? "Recording only starts when you tap the mic on the next screen." : "Confirm consent to continue."}</p>
+        <p className="mt-bottom-note">{!typedName ? "Type the patient's name to continue." : !consent ? "Tick the consent box to continue." : "Recording starts when you tap the mic on the next screen."}</p>
       </div>
-      {draft && <MTSSMAddSheet draft={draft} setDraft={setDraft} mode={draft.target !== MTSSM_NEW ? "existing" : (isNew && typedName ? "new-edit" : "new")} onCancel={cancelAdd} onConfirm={confirmAdd} />}
+      {draft && <MTSSMAddSheet draft={draft} setDraft={setDraft} mode={draft.target !== MTSSM_NEW ? "existing" : "new-edit"} onCancel={cancelAdd} onConfirm={confirmAdd} />}
       {toast.node}
     </div>
   );
@@ -328,7 +291,7 @@ function MTSSMAddSheet({ draft, setDraft, mode, onCancel, onConfirm }) {
     window.addEventListener("keydown", onKey);
     return () => { clearTimeout(t); window.removeEventListener("keydown", onKey); };
   }, []);
-  const canSave = !!draft.firstName.trim();
+  const canSave = !!String(draft.name || "").trim();
   const set = (key) => (e) => setDraft({ ...draft, [key]: e.target.value });
   const submit = (e) => { e.preventDefault(); if (canSave) onConfirm(); };
   return (
@@ -344,10 +307,10 @@ function MTSSMAddSheet({ draft, setDraft, mode, onCancel, onConfirm }) {
           <button type="button" className="mtssm-sheet-x" onClick={onCancel} aria-label="Close"><IcS name="lucide:x" size={18} /></button>
         </div>
         <div className="mtssm-grid">
-          <label className="mt-field"><span>First name</span><input ref={firstRef} value={draft.firstName} placeholder="First" autoComplete="off" onChange={set("firstName")} /></label>
-          <label className="mt-field"><span>Last name</span><input value={draft.lastName} placeholder="Last" autoComplete="off" onChange={set("lastName")} /></label>
+          <label className="mt-field mtssm-span"><span>Patient name</span><input ref={firstRef} value={draft.name} placeholder="First and last name" autoCapitalize="words" autoComplete="off" onChange={set("name")} /></label>
           <label className="mt-field"><span>Date of birth</span><input value={draft.dob} placeholder="DD Mon YYYY" autoComplete="off" onChange={set("dob")} /></label>
           <label className="mt-field"><span>Phone</span><input value={draft.phone} placeholder="07700 …" inputMode="tel" autoComplete="off" onChange={set("phone")} /></label>
+          <label className="mt-field mtssm-span"><span>Email</span><input value={draft.email || ""} type="email" placeholder="name@example.com" inputMode="email" autoCapitalize="none" autoComplete="off" onChange={set("email")} /></label>
         </div>
         <div className="mtssm-sheet-sub"><IcS name="lucide:heart-pulse" size={14} />Clinical snapshot<span>Optional</span></div>
         <MTSSMTagInput label="Alerts & allergies" placeholder="e.g. Penicillin" tone="danger" withSeverity

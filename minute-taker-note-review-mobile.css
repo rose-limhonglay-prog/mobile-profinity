@@ -59,3 +59,27 @@
 .mtnrm-sheet h3 { margin: 6px 0 0; font-size: 18px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.01em; }
 .mtnrm-sheet p { margin: 0 0 10px; font-size: 13.5px; line-height: 1.5; color: var(--mt-mute); }
 .mtnrm-sheet .mt-btn-ghost { height: 50px; border-radius: 16px; font-size: 15px; }
+
+/* share button in the head (2026-10-14) */
+.mtnrm-share { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--mt-line); background: var(--mt-card); color: var(--mt-accent-ink);
+  font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mtnrm-share:active { background: var(--mt-sunken); }
+
+/* session recording card, kept with the note (2026-10-14) */
+.mtnrm-rec { margin-top: 12px; padding: 14px 16px 12px; }
+.mtnrm-rec-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+.mtnrm-rec-title { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.01em; }
+.mtnrm-rec-title .mt-ti { width: 30px; height: 30px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; background: var(--mt-accent-soft); color: var(--mt-accent-ink); }
+.mtnrm-rec-kept { font-size: 12px; font-weight: 700; color: var(--mt-ok); background: var(--mt-ok-bg); padding: 5px 10px; border-radius: 999px; }
+.mtnrm-rec-player { display: flex; align-items: center; gap: 12px; }
+.mtnrm-rec-play { flex: none; width: 52px; height: 52px; border-radius: 50%; border: none; background: var(--mt-accent); color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 8px 20px rgba(108,99,255,.3); transition: transform .14s ease; }
+.mtnrm-rec-play:active { transform: scale(.94); }
+.mtnrm-rec-play.is-on { background: var(--mt-navy); box-shadow: none; }
+.mtnrm-rec-track { flex: 1; min-width: 0; cursor: pointer; outline: none; }
+.mtnrm-rec-bars { position: relative; display: flex; align-items: center; gap: 2px; height: 40px; }
+.mtnrm-rec-bars i { flex: 1; min-width: 0; border-radius: 2px; background: var(--mt-line); }
+.mtnrm-rec-bars::after { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: var(--pct); background: var(--mt-accent); mix-blend-mode: multiply; opacity: .9; pointer-events: none; border-radius: 2px; }
+.mtnrm-rec-times { display: flex; justify-content: space-between; margin-top: 4px; font-size: 11.5px; font-weight: 600; color: var(--mt-mute); font-variant-numeric: tabular-nums; }
+.mtnrm-rec-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--mt-line-2); font-size: 12.5px; color: var(--mt-mute); }
+.mtnrm-rec-foot .mt-link { display: inline-flex; align-items: center; gap: 4px; }

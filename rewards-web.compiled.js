@@ -5,7 +5,7 @@
    gems, points-based via the Milestone Path), streak-at-risk banner, Lifetime
    Points / Active Streak stat tiles (streak → CheckInStreak), "Your league"
    card (leaderboard snapshot: own league + rank) with a Milestone Path button
-   beneath, "Jump back in" quick nav (My Rewards), a "Last 7 days" points gauge (PFRewardsEmbed.PointsWeek, replaced Recent Activity 2026-10-13) and a "Your points" side card — on the
+   beneath, a "Last 7 days" points gauge (PFRewardsEmbed.PointsWeek, replaced Recent Activity 2026-10-13) and a "Your points" side card — on the
    web page shell (TopNav + centered two-column layout). Points-only since
    2026-09-24: no Spendable Credits, no Rewards Store.
    instead of the phone frame. Reads/writes the same localStorage-backed
@@ -368,10 +368,9 @@ function FeatureTilesRW({
     milestone = PF_RW.getMilestoneProgress ? PF_RW.getMilestoneProgress(state) : null;
   } catch (e) {}
   const mpNote = milestone ? milestone.next ? PF_RW.formatNumber(milestone.remaining) + " pts to go" : "Every badge earned" : "Badges & benefits";
-  const vouchers = (state.redeemedVouchers || []).length;
-  const mrNote = vouchers ? vouchers + " unlocked" : "Course discounts";
-  /* Ways to Earn is back on the dashboard (user 2026-10-09) as a full-width
-     row above the two tiles — twin of RdbFeatureTiles in rewards-dashboard.jsx. */
+  /* Ways to Earn (back since 2026-10-09) and Milestone Path sit side by side
+     as two equal tiles (user, 2026-10-14 "align"; My Rewards went 2026-10-13) —
+     twin of RdbFeatureTiles in rewards-dashboard.jsx. */
   const earnCount = (() => {
     try {
       return PF_RW.getConfig().actions.filter(a => a.active).length;
@@ -384,21 +383,14 @@ function FeatureTilesRW({
     note: earnCount ? earnCount + " ways to earn points" : "Every way to earn points",
     icon: "lucide:coins",
     href: "WaysToEarn.html?ret=RewardsWeb.html",
-    wide: true,
     tour: "earn"
   }, {
-    label: "Milestone Path",
+    label: "My Rewards",
     note: mpNote,
-    icon: "lucide:milestone",
+    icon: "lucide:gift",
     href: "MilestonePath.html?ret=RewardsWeb.html",
     tour: "path"
-  }, {
-    label: "My Rewards",
-    note: mrNote,
-    icon: "lucide:ticket",
-    href: "MyRewards.html",
-    tour: "rewards"
-  }];
+  } /* the Milestone Path page, renamed My Rewards (user, 2026-10-14) */];
   return /*#__PURE__*/React.createElement("div", {
     className: "rw-feats"
   }, items.map(it => /*#__PURE__*/React.createElement("button", {
@@ -425,8 +417,8 @@ function FeatureTilesRW({
 }
 
 /* ------------------------------------------------------------ stat tiles */
-/* Lifetime Points tile: the header points pill's coffee-break Dr Tim Lottie + ring crop (was the smiley) */
-const RW_MASCOT_SRC = "assets/lottie/drtim-coffee.json?v=20261013a";
+/* Lifetime Points tile: the header points pill's smiling-face Lottie (was a coin-stack iframe) */
+const RW_MASCOT_SRC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
 function EngagementCardsRW({
   state
 }) {
@@ -490,53 +482,6 @@ function EngagementCardsRW({
       className: "rw-card rw-eng-card"
     }, inner);
   }));
-}
-
-/* -------------------------------------------------------------- quicknav */
-function QuickNavRW({
-  state,
-  league
-}) {
-  const redeemed = (state.redeemedVouchers || []).length;
-  // Leaderboard + Milestone Path live in the aside snapshot card
-  const items = [{
-    label: "My Rewards",
-    desc: redeemed > 0 ? "Your unlocked discount codes" : "Nothing unlocked yet",
-    icon: "lucide:ticket",
-    href: "MyRewards.html",
-    note: redeemed > 0 ? String(redeemed) : null
-  }];
-  return /*#__PURE__*/React.createElement("div", {
-    className: "rw-quicknav"
-  }, items.map(it => /*#__PURE__*/React.createElement("button", {
-    key: it.label,
-    className: "rw-quicknav-item",
-    type: "button",
-    onClick: () => goRW(it.href)
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "rw-quicknav-icon"
-  }, /*#__PURE__*/React.createElement(IconifyRW, {
-    name: it.icon,
-    size: 22,
-    color: "#fff"
-  }), it.dot ? /*#__PURE__*/React.createElement("span", {
-    className: "rw-quicknav-dot",
-    "aria-hidden": "true"
-  }) : null), /*#__PURE__*/React.createElement("span", {
-    className: "rw-quicknav-copy"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "rw-quicknav-label"
-  }, it.label, it.note ? /*#__PURE__*/React.createElement("i", {
-    className: "rw-quicknav-note"
-  }, it.note) : null, it.dot ? /*#__PURE__*/React.createElement("span", {
-    className: "rw-sr-only"
-  }, " — new rewards available") : null), /*#__PURE__*/React.createElement("span", {
-    className: "rw-quicknav-desc"
-  }, it.desc)), /*#__PURE__*/React.createElement(IconifyRW, {
-    name: "lucide:chevron-right",
-    size: 18,
-    color: "var(--gray-400)"
-  }))));
 }
 
 /* --------------------------------------------------------------- welcome */
@@ -658,12 +603,15 @@ function WelcomeModalRW({
   }, "Welcome to Rewards, ", first, "!"), /*#__PURE__*/React.createElement("p", null, "Every check-in, post and lesson earns points. ", next ? /*#__PURE__*/React.createElement(React.Fragment, null, "Reach ", /*#__PURE__*/React.createElement("strong", null, rwPts(next.requires)), " to move up to ", /*#__PURE__*/React.createElement("strong", null, next.name, " League"), " and unlock its one-time perk. Points are lifetime — never spent, never expired.") : null), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "rw-welcome-btn",
-    onClick: () => setStep(2)
+    onClick: () => {
+      onClose();
+      goRW("WaysToEarn.html?ret=RewardsWeb.html");
+    }
   }, "See ways to earn", /*#__PURE__*/React.createElement(IconifyRW, {
     name: "lucide:arrow-right",
     size: 15,
     color: "#3D2A00"
-  })), /*#__PURE__*/React.createElement("button", {
+  })), "   ", /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "rw-welcome-skip",
     onClick: onClose
@@ -742,7 +690,7 @@ function PointsCardRW({
     className: "rw-btn rw-btn-coral",
     type: "button",
     onClick: () => goRW("MilestonePath.html?ret=RewardsWeb.html")
-  }, "View Milestone Path", /*#__PURE__*/React.createElement(IconifyRW, {
+  }, "View My Rewards", /*#__PURE__*/React.createElement(IconifyRW, {
     name: "lucide:arrow-right",
     size: 16,
     color: "#3D2A00"

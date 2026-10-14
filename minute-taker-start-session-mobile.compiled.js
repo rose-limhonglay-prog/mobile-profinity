@@ -1,9 +1,10 @@
 /* ===========================================================================
    PROfinity — Minute Taker (mobile) · Start Session
-   Step 1 of 2: pick the patient (vertical list, or add a new one through the
-   "New patient" sheet — user, 2026-10-01), check the demographics + clinical
-   snapshot, add an optional AI primer, confirm recording consent, then
-   continue to the live session. Runs on window.PFMT.
+   Step 1 of 2, simplified 2026-10-14 for older clinicians: big name fields
+   for a new patient (the usual case), allergies/conditions behind one Add/Edit
+   sheet, "Seen this patient before?" finder BELOW the form (recent list no
+   longer on top), a short "what is this visit about?" box, one consent tick
+   and a big Continue button. Runs on window.PFMT.
    Classes prefixed mtssm-.
    =========================================================================== */
 const {
@@ -41,76 +42,61 @@ function mtssmSplit(name) {
 function MTSSMView() {
   const toast = MTS.useToast();
   const param = MTS.getParam("patient");
-  const initial = param === MTSSM_NEW ? MTSSM_NEW : MTS.PATIENTS[param] ? param : param ? MTSSM_NEW : "Sarah Jenkins";
+  /* Simplified 2026-10-14 (user): most sessions are for someone new, so the page opens on
+     big name fields. Previous patients live behind one "Find a previous patient" row
+     below the form instead of a list on top. Large type + big targets for older clinicians. */
+  const initial = MTS.PATIENTS[param] ? param : MTSSM_NEW;
   const [selected, setSelected] = useStateMTSSM(initial);
   const isNew = selected === MTSSM_NEW;
   const base = isNew ? MTS.BLANK_PATIENT : MTS.PATIENTS[selected];
   const [form, setForm] = useStateMTSSM(() => {
-    const [fn, ln] = mtssmSplit(isNew ? param && param !== MTSSM_NEW ? param : "" : selected);
+    /* One "Patient name" field since 2026-10-14 (user): first + last were two boxes before. */
+    const name = isNew ? param && param !== MTSSM_NEW ? param : "" : selected;
     return {
-      firstName: fn,
-      lastName: ln,
+      name,
       dob: base.dob,
-      phone: base.phone
+      phone: base.phone,
+      email: base.email || ""
     };
   });
   const [primer, setPrimer] = useStateMTSSM(base.primer);
-  const [useContext, setUseContext] = useStateMTSSM(true);
   const [consent, setConsent] = useStateMTSSM(false);
+  const [finding, setFinding] = useStateMTSSM(false);
   const [query, setQuery] = useStateMTSSM("");
-  // "New patient" sheet — null = closed, otherwise the draft being typed. Deep links
-  // (?patient=__new__ or an unknown name) open it straight away, prefilled.
-  const [draft, setDraft] = useStateMTSSM(() => {
-    if (!isNew) return null;
-    const [fn, ln] = mtssmSplit(param && param !== MTSSM_NEW ? param : "");
-    return {
-      target: MTSSM_NEW,
-      firstName: fn,
-      lastName: ln,
-      dob: "",
-      phone: "",
-      allergies: [],
-      conditions: []
-    };
-  });
-  // per-patient edits made through the details sheet this visit (keyed by patient / __new__):
-  // demographics live in `form`, the clinical snapshot lives here (user, 2026-10-02)
+  const [draft, setDraft] = useStateMTSSM(null);
   const [edits, setEdits] = useStateMTSSM({});
   const snap = edits[selected] || base;
-
-  // previous-meeting patients, most recent first; search widens to every patient on file
+  const searchRef = useRefMTSSM(null);
   const q = query.trim().toLowerCase();
   const recent = MTS.PATIENT_NAMES.slice().sort((a, b) => mtssmRecency(MTS.PATIENTS[a].lastVisit) - mtssmRecency(MTS.PATIENTS[b].lastVisit));
   const shown = q ? recent.filter(n => n.toLowerCase().includes(q) || String(MTS.PATIENTS[n].id).toLowerCase().includes(q)) : recent.slice(0, MTSSM_RECENT_MAX);
-  const typedName = (form.firstName + " " + form.lastName).trim();
+  const typedName = String(form.name || "").trim().replace(/\s+/g, " ");
   const patientName = isNew ? typedName || "New patient" : typedName || selected;
-  const firstName = form.firstName.trim() || (isNew ? "the patient" : selected.split(" ")[0]);
+  const firstName = mtssmSplit(typedName)[0] || (isNew ? "the patient" : selected.split(" ")[0]);
+  const hasSnapshot = snap.allergies.length > 0 || snap.conditions.length > 0;
+  const canStart = consent && !!typedName;
   function pick(value) {
     setSelected(value);
     const next = value === MTSSM_NEW ? MTS.BLANK_PATIENT : MTS.PATIENTS[value];
-    const [fn, ln] = mtssmSplit(value === MTSSM_NEW ? "" : value);
     setForm({
-      firstName: fn,
-      lastName: ln,
+      name: value === MTSSM_NEW ? "" : value,
       dob: next.dob,
-      phone: next.phone
+      phone: next.phone,
+      email: next.email || ""
     });
     setPrimer(next.primer);
     setConsent(false);
+    setFinding(false);
+    setQuery("");
   }
-
-  /* details sheet — "add" starts a blank record; "edit" opens the selected patient (new or on file) prefilled */
-  function openAdd(prefill) {
-    setDraft({
-      target: MTSSM_NEW,
-      firstName: "",
-      lastName: "",
-      dob: "",
-      phone: "",
-      allergies: [],
-      conditions: [],
-      ...(prefill || {})
-    });
+  function clearPatient() {
+    pick(MTSSM_NEW);
+  }
+  function openFind() {
+    setFinding(true);
+    window.setTimeout(() => {
+      if (searchRef.current) searchRef.current.focus();
+    }, 80);
   }
   function openEdit() {
     setDraft({
@@ -122,38 +108,31 @@ function MTSSMView() {
   }
   function cancelAdd() {
     setDraft(null);
-    // backed out of a brand-new record with nothing typed → fall back to the most recent patient
-    if (isNew && !typedName) pick(recent[0]);
   }
   function confirmAdd() {
-    if (!draft || !draft.firstName.trim()) return;
+    if (!draft || !String(draft.name || "").trim()) return;
     const clean = {
-      firstName: draft.firstName.trim(),
-      lastName: draft.lastName.trim(),
+      name: String(draft.name || "").trim(),
       dob: draft.dob.trim(),
-      phone: draft.phone.trim()
+      phone: draft.phone.trim(),
+      email: String(draft.email || "").trim()
     };
-    const snapshot = {
-      allergies: draft.allergies.slice(),
-      conditions: draft.conditions.slice()
-    };
-    const editingExisting = draft.target !== MTSSM_NEW;
-    const editingNew = !editingExisting && isNew && !!typedName;
-    if (!editingExisting) setSelected(MTSSM_NEW);
     setForm(clean);
     setEdits(m => ({
       ...m,
-      [draft.target]: snapshot
+      [draft.target]: {
+        allergies: draft.allergies.slice(),
+        conditions: draft.conditions.slice()
+      }
     }));
-    if (!editingExisting && !editingNew) {
-      setPrimer("");
-      setConsent(false);
-    }
-    setQuery("");
     setDraft(null);
-    toast.show(editingExisting || editingNew ? "Details updated." : (clean.firstName + " " + clean.lastName).trim() + " added as a new patient.", "ok");
+    toast.show("Details updated.", "ok");
   }
   function start() {
+    if (!typedName) {
+      toast.show("Type the patient's name first.");
+      return;
+    }
     if (!consent) {
       toast.show("Confirm the patient's consent first.");
       return;
@@ -161,8 +140,10 @@ function MTSSMView() {
     MTS.saveCtx({
       patient: patientName,
       id: base.id,
+      phone: form.phone.trim(),
+      email: form.email.trim(),
       primer,
-      useContext,
+      useContext: true,
       isNewPatient: isNew,
       consentGiven: true,
       startedAt: Date.now()
@@ -170,13 +151,14 @@ function MTSSMView() {
     MTS.go(MTS.routes.session + "?patient=" + encodeURIComponent(patientName));
   }
   const field = (key, label, extra) => /*#__PURE__*/React.createElement("label", {
-    className: "mt-field"
+    className: "mt-field mtssm-big-field"
   }, /*#__PURE__*/React.createElement("span", null, label), /*#__PURE__*/React.createElement("input", {
     value: form[key],
     onChange: e => setForm({
       ...form,
       [key]: e.target.value
     }),
+    autoComplete: "off",
     ...extra
   }));
   return /*#__PURE__*/React.createElement("div", {
@@ -186,188 +168,76 @@ function MTSSMView() {
       onClick: () => MTS.go(MTS.routes.dashboard)
     }, "Cancel"),
     title: "New session",
-    sub: "Step 1 of 2 · Patient & consent",
-    right: /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "mtssm-add" + (isNew ? " is-on" : ""),
-      onClick: () => isNew ? openEdit() : openAdd(),
-      "aria-haspopup": "dialog",
-      "aria-expanded": !!draft
-    }, /*#__PURE__*/React.createElement(IcS, {
-      name: "lucide:user-plus",
-      size: 15
-    }), isNew && typedName ? "Edit patient" : "Add patient")
+    sub: "Step 1 of 2 · Patient & consent"
   }), /*#__PURE__*/React.createElement("div", {
     className: "mt-scroll"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mt-section-label"
-  }, "Who is this session for?"), /*#__PURE__*/React.createElement("label", {
-    className: "mtssm-search"
-  }, /*#__PURE__*/React.createElement(IcS, {
-    name: "lucide:search",
-    size: 16
-  }), /*#__PURE__*/React.createElement("input", {
-    type: "search",
-    value: query,
-    placeholder: "Search patients by name or ID",
-    onChange: e => setQuery(e.target.value),
-    autoComplete: "off"
-  }), query && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mtssm-search-clear",
-    onClick: () => setQuery(""),
-    "aria-label": "Clear search"
-  }, /*#__PURE__*/React.createElement(IcS, {
-    name: "lucide:x",
-    size: 14
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "mtssm-list-head"
-  }, /*#__PURE__*/React.createElement("span", null, q ? shown.length ? shown.length + (shown.length === 1 ? " match" : " matches") : "No matches" : "Recent patients"), !q && /*#__PURE__*/React.createElement("span", {
-    className: "mtssm-list-hint"
-  }, "From previous meetings")), /*#__PURE__*/React.createElement("div", {
-    className: "mtssm-list",
-    role: "list"
-  }, isNew && /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mtssm-row mtssm-row-new is-on",
-    role: "listitem",
-    "aria-current": "true",
-    onClick: openEdit
-  }, /*#__PURE__*/React.createElement(AvatarS, {
-    isNew: true,
-    size: 40
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "mtssm-row-text"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mtssm-row-name"
-  }, typedName || "New patient"), /*#__PURE__*/React.createElement("span", {
-    className: "mtssm-row-meta"
-  }, "New record · tap to edit details")), /*#__PURE__*/React.createElement("span", {
-    className: "mtssm-row-check",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(IcS, {
-    name: "lucide:check",
-    size: 13
-  }))), shown.map(name => {
-    const on = selected === name;
-    const p = MTS.PATIENTS[name];
-    return /*#__PURE__*/React.createElement("button", {
-      key: name,
-      type: "button",
-      role: "listitem",
-      className: "mtssm-row" + (on ? " is-on" : ""),
-      onClick: () => pick(name),
-      "aria-pressed": on
-    }, /*#__PURE__*/React.createElement(AvatarS, {
-      name: name,
-      size: 40
-    }), /*#__PURE__*/React.createElement("span", {
-      className: "mtssm-row-text"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "mtssm-row-name"
-    }, name), /*#__PURE__*/React.createElement("span", {
-      className: "mtssm-row-meta"
-    }, p.gender, " · ", p.age, " yrs · Last visit ", String(p.lastVisit).toLowerCase())), /*#__PURE__*/React.createElement("span", {
-      className: "mtssm-row-check",
-      "aria-hidden": "true"
-    }, on && /*#__PURE__*/React.createElement(IcS, {
-      name: "lucide:check",
-      size: 13
-    })));
-  }), q && !shown.length && /*#__PURE__*/React.createElement("div", {
-    className: "mtssm-empty"
-  }, /*#__PURE__*/React.createElement("span", null, "No patient named “", query.trim(), "”."), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mt-btn mt-btn-ghost",
-    onClick: () => {
-      const [fn, ln] = mtssmSplit(query);
-      openAdd({
-        firstName: fn,
-        lastName: ln
-      });
-    }
-  }, /*#__PURE__*/React.createElement(IcS, {
-    name: "lucide:user-plus",
-    size: 16
-  }), "Add “", query.trim(), "”"))), /*#__PURE__*/React.createElement("section", {
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "mtssm-q"
+  }, "Who is this session for?"), /*#__PURE__*/React.createElement("section", {
     className: "mt-card mtssm-details mt-fade-in",
     key: selected
-  }, /*#__PURE__*/React.createElement("div", {
+  }, !isNew ? /*#__PURE__*/React.createElement("div", {
     className: "mtssm-patient"
   }, /*#__PURE__*/React.createElement(AvatarS, {
-    name: isNew ? patientName : selected,
-    isNew: isNew && !typedName,
-    tone: isNew ? "new" : undefined,
+    name: selected,
     size: 56
   }), /*#__PURE__*/React.createElement("div", {
     className: "mt-grow"
   }, /*#__PURE__*/React.createElement("div", {
     className: "mtssm-patient-name"
-  }, patientName), /*#__PURE__*/React.createElement("div", {
+  }, selected), /*#__PURE__*/React.createElement("div", {
     className: "mtssm-patient-meta"
-  }, isNew ? "No prior visits on file" : base.gender + " · " + base.age + " yrs · " + base.id), !isNew && /*#__PURE__*/React.createElement("div", {
-    className: "mtssm-patient-chips"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mt-pill mt-pill-muted"
-  }, /*#__PURE__*/React.createElement(IcS, {
-    name: "lucide:clock",
-    size: 12
-  }), "Last visit ", base.lastVisit), /*#__PURE__*/React.createElement("span", {
-    className: "mt-pill mt-pill-muted"
-  }, base.visits, " visits")))), /*#__PURE__*/React.createElement("div", {
-    className: "mtssm-part"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mt-card-head"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mt-card-title"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mt-ti"
-  }, /*#__PURE__*/React.createElement(IcS, {
-    name: "lucide:id-card",
-    size: 15
-  })), "Demographics"), /*#__PURE__*/React.createElement("button", {
+  }, base.gender, " · ", base.age, " yrs · Last visit ", String(base.lastVisit).toLowerCase())), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "mt-link mtssm-edit-link",
-    onClick: openEdit
+    className: "mtssm-clear",
+    onClick: clearPatient,
+    "aria-label": "Choose someone else"
   }, /*#__PURE__*/React.createElement(IcS, {
-    name: "lucide:pencil",
-    size: 13
-  }), "Edit")), /*#__PURE__*/React.createElement("div", {
-    className: "mtssm-grid"
-  }, field("firstName", "First name", {
-    placeholder: "First"
-  }), field("lastName", "Last name", {
-    placeholder: "Last"
+    name: "lucide:x",
+    size: 18
+  }))) : /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-new-head"
+  }, /*#__PURE__*/React.createElement(AvatarS, {
+    isNew: true,
+    size: 48
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "mt-grow"
+  }, "New patient")), /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-fields"
+  }, field("name", "Patient name", {
+    placeholder: "First and last name",
+    autoCapitalize: "words"
   }), field("dob", "Date of birth", {
-    placeholder: "DD Mon YYYY"
-  }), field("phone", "Phone", {
+    placeholder: "e.g. 12 Apr 1960"
+  }), field("phone", "Mobile number", {
     placeholder: "07700 …",
     inputMode: "tel"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "mtssm-part"
+  }), field("email", "Email", {
+    placeholder: "name@example.com",
+    inputMode: "email",
+    type: "email",
+    autoCapitalize: "none"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-snap"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mt-card-head"
+    className: "mtssm-snap-head"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "mt-card-title"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mt-ti"
+    className: "mtssm-snap-title"
   }, /*#__PURE__*/React.createElement(IcS, {
     name: "lucide:heart-pulse",
-    size: 15
-  })), "Clinical snapshot"), /*#__PURE__*/React.createElement("button", {
+    size: 16
+  }), "Allergies & conditions"), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "mt-link mtssm-edit-link",
+    className: "mtssm-snap-edit",
     onClick: openEdit
   }, /*#__PURE__*/React.createElement(IcS, {
-    name: "lucide:pencil",
-    size: 13
-  }), "Edit")), /*#__PURE__*/React.createElement("div", {
-    className: "mtssm-snap-label"
-  }, "Alerts & allergies"), /*#__PURE__*/React.createElement("div", {
+    name: hasSnapshot ? "lucide:pencil" : "lucide:plus",
+    size: 14
+  }), hasSnapshot ? "Edit" : "Add")), /*#__PURE__*/React.createElement("div", {
     className: "mtssm-pills"
-  }, snap.allergies.length === 0 && /*#__PURE__*/React.createElement("span", {
+  }, !hasSnapshot && /*#__PURE__*/React.createElement("span", {
     className: "mt-pill mt-pill-muted"
-  }, isNew ? "Not recorded yet" : "Nothing on file"), snap.allergies.map(a => a.severity ? /*#__PURE__*/React.createElement("span", {
+  }, isNew ? "Nothing added yet" : "Nothing on file"), snap.allergies.map(a => a.severity ? /*#__PURE__*/React.createElement("span", {
     key: a.label,
     className: "mt-pill mt-pill-danger"
   }, /*#__PURE__*/React.createElement(IcS, {
@@ -379,16 +249,81 @@ function MTSSMView() {
   }, /*#__PURE__*/React.createElement(IcS, {
     name: "lucide:check",
     size: 12
-  }), a.label))), /*#__PURE__*/React.createElement("div", {
-    className: "mtssm-snap-label"
-  }, "Active conditions"), /*#__PURE__*/React.createElement("div", {
-    className: "mtssm-pills"
-  }, snap.conditions.length === 0 && /*#__PURE__*/React.createElement("span", {
-    className: "mt-pill mt-pill-muted"
-  }, isNew ? "Not recorded yet" : "None on file"), snap.conditions.map(c => /*#__PURE__*/React.createElement("span", {
+  }), a.label)), snap.conditions.map(c => /*#__PURE__*/React.createElement("span", {
     key: c,
     className: "mt-pill mt-pill-ok"
-  }, c))))), /*#__PURE__*/React.createElement("section", {
+  }, c))))), isNew && !finding && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtssm-find",
+    onClick: openFind
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mt-ti"
+  }, /*#__PURE__*/React.createElement(IcS, {
+    name: "lucide:search",
+    size: 18
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "mt-grow"
+  }, "Seen this patient before?", /*#__PURE__*/React.createElement("small", null, "Find their record instead of typing")), /*#__PURE__*/React.createElement(IcS, {
+    name: "lucide:chevron-right",
+    size: 20
+  })), isNew && finding && /*#__PURE__*/React.createElement("section", {
+    className: "mt-card mtssm-finder mt-fade-in"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-finder-head"
+  }, /*#__PURE__*/React.createElement("span", null, "Find a previous patient"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtssm-snap-edit",
+    onClick: () => {
+      setFinding(false);
+      setQuery("");
+    }
+  }, "Close")), /*#__PURE__*/React.createElement("label", {
+    className: "mtssm-search"
+  }, /*#__PURE__*/React.createElement(IcS, {
+    name: "lucide:search",
+    size: 18
+  }), /*#__PURE__*/React.createElement("input", {
+    ref: searchRef,
+    type: "search",
+    value: query,
+    placeholder: "Type a name",
+    onChange: e => setQuery(e.target.value),
+    autoComplete: "off"
+  }), query && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtssm-search-clear",
+    onClick: () => setQuery(""),
+    "aria-label": "Clear search"
+  }, /*#__PURE__*/React.createElement(IcS, {
+    name: "lucide:x",
+    size: 14
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-list",
+    role: "list"
+  }, shown.map(name => {
+    const p = MTS.PATIENTS[name];
+    return /*#__PURE__*/React.createElement("button", {
+      key: name,
+      type: "button",
+      role: "listitem",
+      className: "mtssm-row",
+      onClick: () => pick(name)
+    }, /*#__PURE__*/React.createElement(AvatarS, {
+      name: name,
+      size: 44
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "mtssm-row-text"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "mtssm-row-name"
+    }, name), /*#__PURE__*/React.createElement("span", {
+      className: "mtssm-row-meta"
+    }, "Last visit ", String(p.lastVisit).toLowerCase())), /*#__PURE__*/React.createElement(IcS, {
+      name: "lucide:chevron-right",
+      size: 18
+    }));
+  }), q && !shown.length && /*#__PURE__*/React.createElement("div", {
+    className: "mtssm-empty"
+  }, /*#__PURE__*/React.createElement("span", null, "No patient named “", query.trim(), "”. Type their details above instead.")))), /*#__PURE__*/React.createElement("section", {
     className: "mt-card mtssm-primer"
   }, /*#__PURE__*/React.createElement("div", {
     className: "mt-card-head"
@@ -399,31 +334,15 @@ function MTSSMView() {
   }, /*#__PURE__*/React.createElement(IcS, {
     name: "lucide:sparkles",
     size: 15
-  })), "AI session primer"), /*#__PURE__*/React.createElement("span", {
+  })), "What is this visit about?"), /*#__PURE__*/React.createElement("span", {
     className: "mtssm-optional"
-  }, "Optional")), /*#__PURE__*/React.createElement("p", {
-    className: "mt-hint"
-  }, "Tell Minute Taker what this visit is about. It shapes what the note focuses on."), /*#__PURE__*/React.createElement("label", {
+  }, "Optional")), /*#__PURE__*/React.createElement("label", {
     className: "mt-field mtssm-primer-field"
   }, /*#__PURE__*/React.createElement("textarea", {
-    rows: 4,
+    rows: 3,
     value: primer,
-    placeholder: isNew ? "e.g. First consultation for skin concerns. Cover history, goals and expectations." : "",
+    placeholder: "e.g. Follow-up after lip filler. Check healing and talk about the next step.",
     onChange: e => setPrimer(e.target.value)
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "mt-switch-row",
-    onClick: () => setUseContext(v => !v),
-    role: "switch",
-    "aria-checked": useContext,
-    tabIndex: 0,
-    onKeyDown: e => {
-      if (e.key === " " || e.key === "Enter") {
-        e.preventDefault();
-        setUseContext(v => !v);
-      }
-    }
-  }, /*#__PURE__*/React.createElement("span", null, "Use this context for the session"), /*#__PURE__*/React.createElement("span", {
-    className: "mt-switch" + (useContext ? " is-on" : "")
   }))), /*#__PURE__*/React.createElement("section", {
     className: "mt-card mtssm-consent" + (consent ? " is-on" : "")
   }, /*#__PURE__*/React.createElement("button", {
@@ -435,36 +354,31 @@ function MTSSMView() {
     className: "mt-check" + (consent ? " is-on" : "")
   }, consent && /*#__PURE__*/React.createElement(IcS, {
     name: "lucide:check",
-    size: 16
+    size: 18
   })), /*#__PURE__*/React.createElement("span", {
     className: "mt-grow"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mtssm-consent-title"
-  }, "Recording consent"), /*#__PURE__*/React.createElement("span", {
+  }, firstName === "the patient" ? "The patient" : firstName, " agrees to be recorded"), /*#__PURE__*/React.createElement("span", {
     className: "mtssm-consent-text"
-  }, isNew ? "The patient" : firstName, " has been told this consultation will be recorded and transcribed, and agrees."))), /*#__PURE__*/React.createElement("div", {
-    className: "mtssm-consent-foot"
-  }, /*#__PURE__*/React.createElement(IcS, {
-    name: "lucide:shield-check",
-    size: 14
-  }), "Required before Minute Taker can listen. Audio is never stored.")), /*#__PURE__*/React.createElement("div", {
+  }, "You have told them this visit is recorded and written up as a note.")))), /*#__PURE__*/React.createElement("div", {
     className: "mt-spacer"
   })), /*#__PURE__*/React.createElement("div", {
     className: "mt-bottom"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "mt-btn mt-btn-primary mt-btn-block",
-    disabled: !consent,
+    className: "mt-btn mt-btn-primary mt-btn-block mtssm-start",
+    disabled: !canStart,
     onClick: start
   }, "Continue to recording", /*#__PURE__*/React.createElement(IcS, {
     name: "lucide:arrow-right",
-    size: 18
+    size: 20
   })), /*#__PURE__*/React.createElement("p", {
     className: "mt-bottom-note"
-  }, consent ? "Recording only starts when you tap the mic on the next screen." : "Confirm consent to continue.")), draft && /*#__PURE__*/React.createElement(MTSSMAddSheet, {
+  }, !typedName ? "Type the patient's name to continue." : !consent ? "Tick the consent box to continue." : "Recording starts when you tap the mic on the next screen.")), draft && /*#__PURE__*/React.createElement(MTSSMAddSheet, {
     draft: draft,
     setDraft: setDraft,
-    mode: draft.target !== MTSSM_NEW ? "existing" : isNew && typedName ? "new-edit" : "new",
+    mode: draft.target !== MTSSM_NEW ? "existing" : "new-edit",
     onCancel: cancelAdd,
     onConfirm: confirmAdd
   }), toast.node);
@@ -589,7 +503,7 @@ function MTSSMAddSheet({
       window.removeEventListener("keydown", onKey);
     };
   }, []);
-  const canSave = !!draft.firstName.trim();
+  const canSave = !!String(draft.name || "").trim();
   const set = key => e => setDraft({
     ...draft,
     [key]: e.target.value
@@ -632,20 +546,14 @@ function MTSSMAddSheet({
   }))), /*#__PURE__*/React.createElement("div", {
     className: "mtssm-grid"
   }, /*#__PURE__*/React.createElement("label", {
-    className: "mt-field"
-  }, /*#__PURE__*/React.createElement("span", null, "First name"), /*#__PURE__*/React.createElement("input", {
+    className: "mt-field mtssm-span"
+  }, /*#__PURE__*/React.createElement("span", null, "Patient name"), /*#__PURE__*/React.createElement("input", {
     ref: firstRef,
-    value: draft.firstName,
-    placeholder: "First",
+    value: draft.name,
+    placeholder: "First and last name",
+    autoCapitalize: "words",
     autoComplete: "off",
-    onChange: set("firstName")
-  })), /*#__PURE__*/React.createElement("label", {
-    className: "mt-field"
-  }, /*#__PURE__*/React.createElement("span", null, "Last name"), /*#__PURE__*/React.createElement("input", {
-    value: draft.lastName,
-    placeholder: "Last",
-    autoComplete: "off",
-    onChange: set("lastName")
+    onChange: set("name")
   })), /*#__PURE__*/React.createElement("label", {
     className: "mt-field"
   }, /*#__PURE__*/React.createElement("span", null, "Date of birth"), /*#__PURE__*/React.createElement("input", {
@@ -661,6 +569,16 @@ function MTSSMAddSheet({
     inputMode: "tel",
     autoComplete: "off",
     onChange: set("phone")
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "mt-field mtssm-span"
+  }, /*#__PURE__*/React.createElement("span", null, "Email"), /*#__PURE__*/React.createElement("input", {
+    value: draft.email || "",
+    type: "email",
+    placeholder: "name@example.com",
+    inputMode: "email",
+    autoCapitalize: "none",
+    autoComplete: "off",
+    onChange: set("email")
   }))), /*#__PURE__*/React.createElement("div", {
     className: "mtssm-sheet-sub"
   }, /*#__PURE__*/React.createElement(IcS, {

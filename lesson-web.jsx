@@ -675,7 +675,7 @@ function LessonWebApp() {
                 <IconLW name="lucide:chevron-left" size={16} color={INK_LW.heading} />Previous
               </button>
               <div className="lw-spacer" />
-              <button type="button" className="cd-btn cd-btn-fill lw-cta" disabled={quizLocked || (!next && isDone)} onClick={advance}>
+              <button type="button" className="cd-btn cd-btn-fill lw-cta" disabled={quizLocked} onClick={!next && isDone ? () => setCelebrate(true) : advance}>
                 <IconLW name={isDone && next ? "fluent:play-16-filled" : "lucide:check"} size={16} color={INK_LW.onNavy} />{cta}
               </button>
             </div>

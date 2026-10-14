@@ -74,3 +74,11 @@ img { max-width: 100%; }
 
 /* ghost button (was inline in milestone-splash.jsx) */
 .spl-btn-ghost { background: var(--spl-ghost-bg) !important; color: var(--spl-ghost-ink) !important; }
+
+/* ---- league milestone: the unlocked gem is the hero (2026-10-14; was the doctor) ---- */
+.spl-hero.is-gem { width: 220px; height: 220px; margin-bottom: 14px; display: flex; align-items: center; justify-content: center; }
+.spl-hero.is-gem .spl-lottie { position: relative; z-index: 1; width: 200px; height: 200px; filter: drop-shadow(0 18px 30px color-mix(in srgb, var(--lg-accent, #FDC35D) 45%, transparent)); }
+.spl-gem-halo { position: absolute; inset: 6%; border-radius: 50%; background: radial-gradient(closest-side, color-mix(in srgb, var(--lg-accent, #FDC35D) 38%, transparent), transparent 72%); animation: splHalo 2.4s ease-in-out infinite; }
+@keyframes splHalo { 0%, 100% { transform: scale(.92); opacity: .7; } 50% { transform: scale(1.08); opacity: 1; } }
+.spl-gem-check { position: absolute; right: 18px; bottom: 22px; z-index: 2; width: 38px; height: 38px; border-radius: 50%; background: #1F7A52; border: 3px solid var(--surface-card, #fff); display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 6px 16px rgba(12,25,40,.18); animation: splPop .5s .45s cubic-bezier(.2,1.4,.3,1) both; }
+@media (prefers-reduced-motion: reduce) { .spl-gem-halo, .spl-gem-check { animation: none; } }

@@ -345,7 +345,7 @@ img{max-width:100%}
 .pm-steps-success-btn:hover{background:var(--brand-navy-700,#1f1c52)}
 .pm-steps-success-btn:active{transform:scale(.99)}
 
-/* ===== per-step points toast (owl) ===== */
+/* ===== per-step points toast (Dr Tim, 2026-10-14; was the owl) ===== */
 /* Overlay reward pill: each step sits in a relative slot; the pill is
    absolutely positioned so it floats over the top edge of the step that just
    paid out (straddling the gap above it) without shifting the list. */
@@ -361,7 +361,8 @@ img{max-width:100%}
 .pm-pts-toast-exit .pm-pts-toast{animation:pm-pts-toast-out .3s ease forwards}
 @keyframes pm-pts-toast-in{from{opacity:0;transform:translateY(-10px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes pm-pts-toast-out{to{opacity:0;transform:translateY(-6px) scale(.96)}}
-.pm-pts-toast-ic{display:flex;flex:none}
+.pm-pts-toast-ic{display:flex;flex:none;width:40px;height:40px;border-radius:50%;overflow:hidden;background:#FFF3DC;box-shadow:inset 0 0 0 1.5px #FCC25D}
+.pm-pts-toast-ic>span,.pm-pts-toast-ic svg{display:block;width:100%!important;height:100%!important}
 .pm-pts-toast-txt{font-family:var(--font-sans);font-weight:var(--fw-bold);font-size:15px;color:var(--brand-navy);white-space:nowrap}
 
 /* ===== step bottom sheet modal ===== */
@@ -1154,9 +1155,9 @@ img{max-width:100%}
 .m-pts-ic-fb{display:flex;align-items:center;justify-content:center;width:30px;height:30px}
 /* the syringe artwork fills ~80–100% of its 2160px canvas as it pumps, so the
    svg only gets a slight nudge up to read at icon size in the 30px slot */
-.m-pts-ic-anim{position:absolute;inset:0;border-radius:50%;overflow:hidden;background:#FFF3DC;box-shadow:inset 0 0 0 1.5px #FCC25D;opacity:0;transition:opacity .2s ease}
+.m-pts-ic-anim{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s ease}
 .m-pts-ic-anim.on{opacity:1}
-.m-pts-ic-anim svg{display:block;width:30px!important;height:30px!important;transform:scale(3.8)!important;transform-origin:50% 14.7%!important}
+.m-pts-ic-anim svg{display:block;width:30px!important;height:30px!important;transform:scale(1.25);transform-origin:50% 50%;overflow:visible}
 .m-pts-n{display:inline-block;font-variant-numeric:tabular-nums;transform-origin:50% 50%}
 .m-pts-n.pop{animation:m-pts-pop .6s cubic-bezier(.22,.61,.36,1)}
 @keyframes m-pts-pop{0%{transform:scale(1)}35%{transform:scale(1.22);color:#F2C14E}100%{transform:scale(1)}}
@@ -1390,3 +1391,23 @@ img{max-width:100%}
 .pm-goal-card .cf-free-copy,.pm-goal-card .cf-track-copy{flex:1 1 0;min-width:0}
 .pm-goal-card .cf-free .cf-btn-free,.pm-goal-card .cf-track-cta{flex:0 0 100%;width:100%;justify-content:center;text-align:center;box-sizing:border-box}
 .pm-goal-card .cf-track-cta{min-height:38px;font-size:13px}
+
+/* ---- profile setup: +15 promise chip + Dev mode state row (2026-10-14) ---- */
+.pm-steps-bonus{display:inline-flex;align-items:center;margin-left:8px;padding:2px 8px;border-radius:999px;background:#FFF3DC;color:#9C6A0E;font-family:var(--font-sans);font-weight:var(--fw-bold,700);font-size:11px;letter-spacing:.02em;vertical-align:middle}
+[data-theme="dark"] .pm-steps-bonus{background:rgba(252,194,93,.16);color:#FDD98F}
+.pm-dev{margin:14px 20px 30px;padding:12px;border-radius:14px;border:1px dashed var(--border-strong,#d5d8e4);background:var(--surface-sunken)}
+.pm-dev-h{display:flex;align-items:center;gap:7px;margin-bottom:9px;font-family:var(--font-sans);font-weight:var(--fw-bold,700);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-500)}
+.pm-dev-h i{width:7px;height:7px;border-radius:50%;background:#FDC35D;box-shadow:0 0 0 3px rgba(253,195,93,.25)}
+.pm-dev-chips{display:flex;flex-wrap:wrap;gap:6px}
+.pm-dev-chip{min-height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--border-default);background:var(--surface-card);color:var(--text-heading);font-family:var(--font-sans);font-weight:var(--fw-semibold,600);font-size:12.5px;cursor:pointer}
+.pm-dev-chip:active{transform:scale(.97)}
+.pm-dev-chip.on{background:var(--brand-navy);border-color:var(--brand-navy);color:#fff}
+[data-theme="dark"] .pm-dev-chip.on{background:#FDC35D;border-color:#FDC35D;color:#1b1848}
+.pm-dev-note{margin:9px 0 0;font-family:var(--font-sans);font-size:11.5px;line-height:1.4;color:var(--gray-500)}
+
+/* +15 pts hint on checklist steps that pay the flat bonus (2026-10-14) */
+.pm-step-pts{display:inline-flex;align-items:center;margin-left:8px;padding:1px 7px;border-radius:999px;background:#FFF3DC;color:#9C6A0E;font-family:var(--font-sans);font-weight:var(--fw-bold,700);font-size:11px;vertical-align:middle}
+[data-theme="dark"] .pm-step-pts{background:rgba(252,194,93,.16);color:#FDD98F}
+
+/* reversed points (a Today's Target unticked, 2026-10-14) */
+.m-pts-delta.is-neg{color:#D33F3F}

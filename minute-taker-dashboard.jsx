@@ -1,72 +1,20 @@
 /* ===========================================================================
    PROfinity — Minute Taker · Clinician Dashboard (web)
    Landing hub for the Minute Taker ambient documentation agent: gradient
-   hero with today's numbers + Start session, Upcoming / Saved sessions toggle
-   with patient avatars, voice-profile ring, recent patients. Web twin of
-   MinuteTakerDashboardMobile (minute-taker-dashboard-mobile.jsx).
+   hero with today's numbers + Start session, saved sessions list
+   with patient avatars + row kebab (note / archive / download), recent
+   patients (voice profile removed 2026-10-12). Web twin of
+   MinuteTakerDashboardMobile (minute-taker-dashboard-mobile.jsx). Chrome
+   (sidebar + header) comes from minute-taker-web-shell.jsx (window.PFMTW).
    PRD: Minute Taker Assistant Agent v1.0 — Screen 1 (Sec. 3.1 / MT-K02, MT-K03).
    Classes prefixed mtd- to avoid clashes with other pages.
    =========================================================================== */
 const { useState: useStateMTD } = React;
 
-function getParamMTD(name) { try { return new URLSearchParams(window.location.search).get(name) || ""; } catch (e) { return ""; } }
-function goMTD(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
+function getParamMTD(name) { return window.PFMTW.getParam(name) || ""; }
+function goMTD(url) { window.PFMTW.go(url); }
 
-/* ------------------------------------------------------------- sidebar */
-const MT_NAV = [
-  { icon: "lucide:layout-grid", label: "Dashboard" },
-  { icon: "lucide:users", label: "Patients" },
-  { icon: "lucide:archive", label: "Archive" },
-];
-const MT_NAV_LINKS = {
-  "Dashboard": "MinuteTakerDashboard.html",
-  "Patients": "MinuteTakerPatientContext.html",
-  "Archive": "MinuteTakerArchive.html",
-};
-
-function MTDSidebar({ active }) {
-  return (
-    <aside className="mtd-sidebar">
-      <button type="button" className="mtd-back" onClick={() => goMTD("Agent.html")}>
-        <iconify-icon icon="lucide:arrow-left"></iconify-icon>All agents
-      </button>
-      <div className="mtd-logo">
-        <span className="mtd-logo-mark"><iconify-icon icon="lucide:mic"></iconify-icon></span>
-        <span>Minute Taker</span>
-      </div>
-      {MT_NAV.map((item) => (
-        <button key={item.label} className={"mtd-navitem" + (item.label === active ? " is-active" : "")} type="button"
-          onClick={item.label !== active ? () => goMTD(MT_NAV_LINKS[item.label]) : undefined}>
-          <iconify-icon icon={item.icon}></iconify-icon>
-          <span>{item.label}</span>
-        </button>
-      ))}
-      <div className="mtd-side-foot">
-        <iconify-icon icon="lucide:shield-check"></iconify-icon>
-        <span>Audio is transcribed live and never stored. Notes reach the EMR only after you approve them.</span>
-      </div>
-    </aside>
-  );
-}
-
-function MTDHeader({ title }) {
-  return (
-    <header className="mtd-header">
-      <iconify-icon icon="lucide:panel-left" style={{ fontSize: 22, color: "var(--gray-500)", cursor: "pointer" }}></iconify-icon>
-      <span className="mtd-header-title">{title}</span>
-      <div className="mtd-spacer" />
-      <div className="mtd-bell">
-        <iconify-icon icon="lucide:bell"></iconify-icon>
-        <span className="mtd-bell-badge">2</span>
-      </div>
-      <div className="mtd-user">
-        <div className="mtd-user-name">Dr. Katie Smith</div>
-        <div className="mtd-user-role">Clinician</div>
-      </div>
-      <img className="mtd-user-avatar" src="assets/avatar-katy.jpg" alt="Dr. Katie Smith" />
-    </header>
-  );
-}
+const MTW = window.PFMTW;
 
 /* ---------------------------------------------------------------- data */
 const MTD_SESSIONS = [
@@ -78,13 +26,13 @@ const MTD_SESSIONS = [
   { sid: "s6", patient: "Eleanor Vance", id: "MT-77213", day: "earlier", when: "2 weeks ago", time: "11:00", duration: "40 min", status: "Saved", type: "Injectables · session 1" },
   { sid: "s7", patient: "Sarah Jenkins", id: "MT-84729", day: "earlier", when: "3 weeks ago", time: "09:00", duration: "50 min", status: "Saved", type: "Knee arthroscopy review" },
   { sid: "s8", patient: "David Cho", id: "MT-77042", day: "earlier", when: "4 weeks ago", time: "15:30", duration: "25 min", status: "Saved", type: "Acne protocol · S1" },
+  { sid: "s10", patient: "Priya Natarajan", id: "MT-77310", day: "earlier", when: "6 weeks ago", time: "13:15", duration: "45 min", status: "Saved", type: "New patient consult" },
+  { sid: "s11", patient: "Marcus Thorne", id: "MT-77198", day: "earlier", when: "7 weeks ago", time: "11:30", duration: "35 min", status: "Saved", type: "Rosacea follow-up" },
   { sid: "s9", patient: "Amir Khan", id: "MT-76980", day: "earlier", when: "2 months ago", time: "10:00", duration: "30 min", status: "Saved", type: "Rosacea review" },
+  { sid: "s12", patient: "Eleanor Vance", id: "MT-77213", day: "earlier", when: "3 months ago", time: "09:15", duration: "30 min", status: "Saved", type: "Skin consult" },
 ];
-const MTD_UPCOMING = [
-  { patient: "Priya Natarajan", time: "11:15", type: "Skin consult" },
-  { patient: "Amir Khan", time: "14:30", type: "Rosacea follow-up" },
-  { patient: "Sarah Jenkins", time: "16:00", type: "Post-op check" },
-];
+/* the dashboard shows the 10 most recent sessions; "See all sessions" opens the archive (full list + search) */
+const MTD_RECENT_MAX = 10;
 const MTD_RECENT = [
   { name: "Eleanor Vance", sub: "Today", tone: "teal" },
   { name: "Sarah Jenkins", sub: "3 weeks ago", tone: "violet" },
@@ -108,14 +56,15 @@ function MTDAvatar({ name, size = 40, tone }) {
 
 /* ---------------------------------------------------------------- view */
 const MTD_MENU = [
-  { key: "note", icon: "lucide:file-text", label: "Clinical note", needsNote: true },
-  { key: "archive", icon: "lucide:archive", label: "Archive" },
-  { key: "download", icon: "lucide:download", label: "Download", needsNote: true },
+  { key: "note", icon: "lucide:file-text", label: "Clinical note", sub: "Open and review the note", busy: "Still being written" },
+  { key: "share", icon: "lucide:share-2", label: "Share", sub: "Email, text or apps", busy: "Available once the note is ready" },
+  { key: "archive", icon: "lucide:archive", label: "Archive", sub: "Move this session to the archive" },
+  { key: "download", icon: "lucide:download", label: "Download", sub: "Save the note as a PDF", busy: "Available once the note is ready" },
 ];
-function MTDSessionRow({ row, onArchive, onToast }) {
+function MTDSessionRow({ row, onArchive, onShare, onToast }) {
   const meta = MTD_STATUS[row.status];
   const disabled = row.status === "Processing";
-  const [menu, setMenu] = useStateMTD(false);
+  const [menu, setMenu] = useStateMTD(() => { const m = getParamMTD("menu"); return !!m && (m === row.sid || m === row.id); });
   const wrapRef = React.useRef(null);
   const open = () => goMTD("MinuteTakerNoteReview.html?patient=" + encodeURIComponent(row.patient) + "&id=" + row.id);
   React.useEffect(() => {
@@ -128,6 +77,7 @@ function MTDSessionRow({ row, onArchive, onToast }) {
   function act(key) {
     setMenu(false);
     if (key === "note") open();
+    else if (key === "share") onShare(row);
     else if (key === "archive") onArchive(row);
     else if (key === "download") onToast("Downloading the note as a PDF…");
   }
@@ -154,11 +104,15 @@ function MTDSessionRow({ row, onArchive, onToast }) {
           </button>
           {menu && (
             <div className="mtd-menu" role="menu">
-              {MTD_MENU.map((it) => (
-                <button key={it.key} type="button" role="menuitem" disabled={disabled && it.needsNote} onClick={() => act(it.key)}>
-                  <iconify-icon icon={it.icon}></iconify-icon>{it.label}
-                </button>
-              ))}
+              {MTD_MENU.map((it) => {
+                const off = disabled && !!it.busy;
+                return (
+                  <button key={it.key} type="button" role="menuitem" disabled={off} onClick={() => act(it.key)}>
+                    <span className="mtd-menu-ic"><iconify-icon icon={it.icon}></iconify-icon></span>
+                    <span className="mtd-menu-text"><strong>{it.label}</strong><span>{off ? it.busy : it.sub}</span></span>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -173,11 +127,12 @@ function MTDView() {
   const [toast, setToast] = useStateMTD(null);
   const toastRef = React.useRef(null);
   const showToast = (msg) => { setToast(msg); clearTimeout(toastRef.current); toastRef.current = setTimeout(() => setToast(null), 2200); };
-  const [view, setView] = useStateMTD(getParamMTD("view") === "saved" ? "saved" : "upcoming");
   const sessions = MTD_SESSIONS.filter((s) => !archived.includes(s.sid));
+  const recent = sessions.slice(0, MTD_RECENT_MAX);
   const today = sessions.filter((s) => s.day === "today");
-  const ready = sessions.filter((s) => s.status === "Note Ready").length;
   const archiveRow = (row) => { setArchived((a) => a.concat(row.sid)); showToast("Moved to the archive"); };
+  /* ?share=<session id> opens the share modal straight away (demo / screenshots) */
+  const [shareRow, setShareRow] = useStateMTD(() => MTD_SESSIONS.find((s) => s.id === getParamMTD("share") || s.sid === getParamMTD("share")) || null);
 
   function startSession() {
     const target = search.trim() || "Sarah Jenkins";
@@ -194,7 +149,6 @@ function MTDView() {
         <div className="mtd-hero-main">
           <div className="mtd-hero-eyebrow">{mtdToday()}</div>
           <h1>{mtdGreeting()}, Dr Smith</h1>
-          <p>{today.length + MTD_UPCOMING.length} consultations today · {ready} note ready to review</p>
           <div className="mtd-search-wrap">
             <iconify-icon icon="lucide:search"></iconify-icon>
             <input placeholder="Search patients by name, ID or DOB to start a session…" value={search}
@@ -204,12 +158,6 @@ function MTDView() {
             </button>
           </div>
         </div>
-        <div className="mtd-stats">
-          <div className="mtd-stat"><strong>{today.length + MTD_UPCOMING.length}</strong><span>Today</span></div>
-          <div className="mtd-stat"><strong>{ready}</strong><span>To review</span></div>
-          <div className="mtd-stat"><strong>2<em>m</em></strong><span>Avg. write-up</span></div>
-          <div className="mtd-stat"><strong>98<em>%</em></strong><span>Voice match</span></div>
-        </div>
       </section>
 
       <div className="mtd-grid">
@@ -217,32 +165,17 @@ function MTDView() {
           <div className="mtd-card">
             <div className="mtd-card-head">
               <span className="mtd-card-title-text"><span className="mtd-ti"><iconify-icon icon="lucide:calendar-days"></iconify-icon></span>Sessions</span>
-              <a href="MinuteTakerArchive.html" onClick={(e) => { e.preventDefault(); goMTD("MinuteTakerArchive.html"); }}>View archive <iconify-icon icon="lucide:arrow-up-right"></iconify-icon></a>
-            </div>
-            <div className="mtd-seg" role="tablist" aria-label="Sessions view">
-              <button type="button" role="tab" aria-selected={view === "upcoming"} className={"mtd-seg-btn" + (view === "upcoming" ? " is-on" : "")} onClick={() => setView("upcoming")}>Upcoming<em>{MTD_UPCOMING.length}</em></button>
-              <button type="button" role="tab" aria-selected={view === "saved"} className={"mtd-seg-btn" + (view === "saved" ? " is-on" : "")} onClick={() => setView("saved")}>Saved<em>{sessions.length}</em></button>
             </div>
             <div className="mtd-thead">
               <span className="mtd-th">Patient</span><span className="mtd-th">Time</span><span className="mtd-th">Status</span><span className="mtd-th">Action</span>
             </div>
-            {view === "upcoming" ? MTD_UPCOMING.map((u, i) => (
-              <div key={u.patient + u.time} className="mtd-trow mtd-trow-upcoming">
-                <div className="mtd-cell-patient">
-                  <span className="mtd-upcoming-time"><strong>{u.time}</strong><span>{i === 0 ? "next" : "today"}</span></span>
-                  <div>
-                    <div className="mtd-patient-cell">{u.patient}</div>
-                    <div className="mtd-when-cell">{u.type}</div>
-                  </div>
-                </div>
-                <span className="mtd-when-cell mtd-cell-time">Not started</span>
-                <span className="mtd-status-pill mtd-status-muted"><iconify-icon icon="lucide:calendar"></iconify-icon>Scheduled</span>
-                <button type="button" className="mtd-row-btn mtd-row-btn-primary" onClick={() => goMTD("MinuteTakerPatientContext.html?patient=" + encodeURIComponent(u.patient))}>
-                  Prepare<iconify-icon icon="lucide:chevron-right"></iconify-icon>
-                </button>
-              </div>
-            )) : sessions.map((row) => <MTDSessionRow key={row.sid} row={row} onArchive={archiveRow} onToast={showToast} />)}
-            {view === "saved" && sessions.length === 0 && <div className="mtd-empty">Everything has been archived.</div>}
+            {recent.map((row) => <MTDSessionRow key={row.sid} row={row} onArchive={archiveRow} onShare={setShareRow} onToast={showToast} />)}
+            {sessions.length === 0 && <div className="mtd-empty">Everything has been archived.</div>}
+            {sessions.length > 0 && (
+              <button type="button" className="mtd-seeall" onClick={() => goMTD("MinuteTakerArchive.html")}>
+                See all sessions<em>{sessions.length}</em><iconify-icon icon="lucide:chevron-right"></iconify-icon>
+              </button>
+            )}
           </div>
         </div>
 
@@ -268,21 +201,18 @@ function MTDView() {
           </div>
         </div>
       </div>
+      {shareRow && window.PFMTShare && (
+        <window.PFMTShare.Share variant="modal" patient={shareRow.patient} id={shareRow.id} hasRecording={shareRow.status !== "Processing"}
+          note={{ type: shareRow.type, date: shareRow.when ? shareRow.when + " " + shareRow.time : "Today " + shareRow.time, duration: shareRow.duration }}
+          onClose={() => setShareRow(null)} onToast={(m) => showToast(m)} />
+      )}
       <div className={"mtd-toast" + (toast ? " is-on" : "")} role="status" aria-live="polite">{toast && <><iconify-icon icon="lucide:check-circle-2"></iconify-icon>{toast}</>}</div>
     </div>
   );
 }
 
 function MTDApp() {
-  return (
-    <div className="mtd-shell">
-      <MTDSidebar active="Dashboard" />
-      <div className="mtd-main">
-        <MTDHeader title="Minute Taker" />
-        <MTDView />
-      </div>
-    </div>
-  );
+  return <MTW.Shell active="Dashboard" title="Minute Taker" className="mtd-shell"><MTDView /></MTW.Shell>;
 }
 
 ReactDOM.createRoot(document.getElementById("pf-root")).render(<MTDApp />);

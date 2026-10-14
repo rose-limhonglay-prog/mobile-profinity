@@ -266,6 +266,14 @@
       return null;
     }
   }
+
+  /* every perk has its own landing page (2026-10-13): RewardLanding.html on
+     the phone, RewardLandingWeb.html on the desktop Rewards page */
+  const RME_WEB = /Web\.html$/i.test(location.pathname);
+  function openReward(key) {
+    const ret = location.pathname.split("/").pop() || (RME_WEB ? "RewardsWeb.html" : "RewardsDashboard.html");
+    go((RME_WEB ? "RewardLandingWeb.html" : "RewardLanding.html") + "?reward=" + encodeURIComponent(key) + "&ret=" + encodeURIComponent(ret));
+  }
   function Node({
     milestone,
     status,
@@ -275,6 +283,14 @@
     onToggle
   }) {
     const league = leagueFor(milestone.key);
+    const redeemed = (() => {
+      try {
+        const pk = PF.getPerk ? PF.getPerk(milestone.key) : null;
+        return !!(pk && pk.status === "redeemed");
+      } catch (e) {
+        return false;
+      }
+    })();
     const vars = league ? {
       "--lg-accent": league.accent,
       "--lg-deep": league.deep,
@@ -347,14 +363,17 @@
       className: "rme-benefits"
     }, /*#__PURE__*/React.createElement("span", {
       className: "rme-benefit-kicker"
-    }, status === "passed" ? "Your one-time perk — unlocked" : "One-time perk at " + (milestone.threshold > 0 ? fmt(milestone.threshold) + " pts" : "the start")), milestone.benefits.map((b, i) => /*#__PURE__*/React.createElement("div", {
+    }, status === "passed" ? "Your one-time perk — unlocked" : "One-time perk at " + (milestone.threshold > 0 ? fmt(milestone.threshold) + " pts" : "the start")), milestone.benefits.map((b, i) => /*#__PURE__*/React.createElement("button", {
       key: i,
-      className: "rme-benefit"
+      type: "button",
+      className: "rme-benefit rme-benefit-link",
+      onClick: () => openReward(milestone.key),
+      "aria-label": "Open " + b.title
     }, /*#__PURE__*/React.createElement("span", {
       className: "rme-benefit-ic",
       "aria-hidden": "true"
     }, /*#__PURE__*/React.createElement(Icon, {
-      name: status === "locked" ? "lucide:lock" : "lucide:gift",
+      name: redeemed ? "lucide:ticket" : status === "locked" ? "lucide:lock" : "lucide:gift",
       size: 15,
       color: status === "locked" ? "var(--gray-400)" : "var(--brand-gold)"
     })), /*#__PURE__*/React.createElement("div", {
@@ -365,7 +384,13 @@
       className: "rme-benefit-desc"
     }, b.description), b.delivery ? /*#__PURE__*/React.createElement("div", {
       className: "rme-benefit-delivery"
-    }, b.delivery) : null))))));
+    }, b.delivery) : null, /*#__PURE__*/React.createElement("span", {
+      className: "rme-benefit-cta" + (status === "passed" && !redeemed ? " is-redeem" : "")
+    }, redeemed ? "Redeemed · view your reward" : status === "passed" ? "Redeem this perk" : "See this reward", /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:chevron-right",
+      size: 14,
+      color: "currentColor"
+    }))))))));
   }
 
   /* ----------------------------------------------------------- the path */
@@ -621,12 +646,8 @@
     body: "Every point-earning action in one list. Tap any row to see how it works."
   }, {
     key: "path",
-    title: "Milestone Path",
-    body: "Each of the six leagues unlocks one one-time perk the moment you reach it."
-  }, {
-    key: "rewards",
     title: "My Rewards",
-    body: "Your unlocked perk codes live here, ready to use."
+    body: "Each of the six leagues unlocks one one-time perk the moment you reach it — redeem them here."
   }, {
     key: "week",
     title: "Last 7 days",

@@ -586,3 +586,54 @@ body.lc-navy-status .ios-statusbar svg [stroke]:not([stroke="none"]) { stroke: #
 .lc-upgrade-btn:active { filter: brightness(.94); }
 /* the progress strip sits on the course page too — give it the same side margins as the CTAs */
 .lc-scroll > .lc-cprog { margin-top: 6px; }
+
+/* ---- Course complete: full-screen splash (2026-10-14), the Reward Splash UI with Dr Tim ---- */
+.lc-cele {
+  --cele-bg: radial-gradient(120% 90% at 50% 0%, #3a3480 0%, #292569 55%, #1b1848 100%);
+  --cele-ink: #ffffff; --cele-muted: rgba(255,255,255,.78); --cele-kicker: #e7a769; --cele-points: #fdc35d; --cele-unit: #f0c98a;
+  --cele-glow: rgba(253,195,93,.40); --cele-close-bg: rgba(255,255,255,.14); --cele-perks-bg: rgba(255,255,255,.08); --cele-perks-bd: rgba(255,255,255,.16);
+  --cele-ghost-bg: rgba(255,255,255,.14); --cele-ghost-ink: #ffffff; --cele-tile: #2b2745;
+  position: absolute; inset: 0; z-index: 70; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 28px 34px; text-align: center; background: var(--cele-bg); color: var(--cele-ink); animation: lc-cele-fade .25s ease both; }
+.lc-light .lc-cele {
+  --cele-bg: radial-gradient(120% 90% at 50% 0%, #fff6e6 0%, #ffffff 52%, #f3f1fa 100%);
+  --cele-ink: #1a1736; --cele-muted: #5f5e78; --cele-kicker: #b8874a; --cele-points: #b8874a; --cele-unit: #a07640;
+  --cele-glow: rgba(253,195,93,.34); --cele-close-bg: rgba(26,23,54,.08); --cele-perks-bg: #ffffff; --cele-perks-bd: rgba(26,23,54,.10);
+  --cele-ghost-bg: rgba(26,23,54,.08); --cele-ghost-ink: #1a1736; --cele-tile: #FFF3DC; }
+@keyframes lc-cele-fade { from { opacity: 0; } to { opacity: 1; } }
+.lc-cele-close { position: absolute; top: calc(22px + env(safe-area-inset-top, 0px)); right: 20px; width: 38px; height: 38px; border-radius: 50%; border: 0; background: var(--cele-close-bg); color: var(--cele-ink);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 5; }
+[data-ios-device] .lc-cele-close { top: 62px; }
+.lc-cele-glow { position: absolute; left: 50%; top: 30%; width: 340px; height: 260px; transform: translate(-50%, -50%); border-radius: 50%; background: radial-gradient(closest-side, var(--cele-glow), rgba(253,195,93,0)); pointer-events: none; }
+.lc-cele-confetti { position: absolute; display: block; pointer-events: none; z-index: 3; will-change: transform, opacity; }
+.lc-cele-body { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 340px; }
+/* Dr Tim cheering in the same rounded tile crop as DailyGoal's hero */
+.lc-cele-hero { position: relative; width: 220px; height: 220px; margin: 0 auto 16px; border-radius: 42px; overflow: hidden; background: var(--cele-tile); border: 3px solid #FCC25D;
+  box-shadow: 0 18px 44px rgba(217,162,27,.26), inset 0 0 0 6px rgba(255,255,255,.14); animation: lc-cele-pop .7s cubic-bezier(.2,1.4,.4,1) both .05s; }
+.lc-cele-lottie { display: block; width: 100%; height: 100%; }
+.lc-cele-lottie svg { display: block; width: 100% !important; height: 100% !important; }
+@keyframes lc-cele-pop { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: scale(1); } }
+.lc-cele-kicker { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--cele-kicker); margin-bottom: 8px; }
+.lc-cele-title { margin: 0 0 8px; font-family: var(--font-sans); font-size: 30px; line-height: 1.05; font-weight: 800; letter-spacing: -.02em; color: var(--cele-ink); }
+.lc-cele-sub { margin: 0 0 14px; font-size: 14px; line-height: 1.5; color: var(--cele-muted); max-width: 300px; }
+.lc-cele-sub b { color: var(--cele-ink); font-weight: 700; }
+.lc-cele-pts { display: inline-flex; align-items: baseline; gap: 5px; margin: 0 0 16px; padding: 8px 18px; border-radius: 999px; background: #FDC35D; color: #1b1848; box-shadow: 0 10px 24px rgba(253,195,93,.45); }
+.lc-cele-pts b { font-size: 24px; font-weight: 800; line-height: 1; }
+.lc-cele-pts i { font-style: normal; font-size: 13px; font-weight: 700; }
+.lc-cele-perks { width: 100%; display: flex; flex-direction: column; gap: 12px; background: var(--cele-perks-bg); border: 1px solid var(--cele-perks-bd); border-radius: 18px; padding: 16px 18px; }
+.lc-cele-perk { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; text-align: left; color: var(--cele-ink); line-height: 1.35; }
+.lc-cele-perk svg, .lc-cele-perk iconify-icon { flex: none; }
+.lc-cele-ctas { position: relative; z-index: 2; width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+.lc-cele-btn { height: 52px; border-radius: 16px; border: 0; font-family: inherit; font-size: 15.5px; font-weight: 700; cursor: pointer; }
+.lc-cele-btn-gold { background: linear-gradient(135deg, #f4ad3d 0%, #e7820a 100%); color: #fff; box-shadow: 0 10px 24px rgba(231,130,10,.3); }
+.lc-cele-btn-ghost { background: var(--cele-ghost-bg); color: var(--cele-ghost-ink); }
+@media (prefers-reduced-motion: reduce) { .lc-cele, .lc-cele-hero { animation: none; } }
+
+/* ---- Dev mode · Course progress row (2026-10-14) ---- */
+.lc-dev { margin: 16px 20px 8px; padding: 12px; border-radius: 14px; border: 1px dashed var(--lc-line-2); background: var(--lc-card); }
+.lc-dev-h { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; font-weight: var(--fw-bold); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--lc-text-3); }
+.lc-dev-h i { width: 7px; height: 7px; border-radius: 50%; background: #FDC35D; box-shadow: 0 0 0 3px rgba(253,195,93,.25); }
+.lc-dev-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.lc-dev-chip { min-height: 30px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--lc-line-2); background: var(--lc-card-2); color: var(--lc-text); font-family: inherit; font-weight: var(--fw-semibold); font-size: 12.5px; cursor: pointer; }
+.lc-dev-chip:active { transform: scale(.97); }
+.lc-dev-note { margin: 9px 0 0; font-size: 11.5px; line-height: 1.4; color: var(--lc-text-3); }

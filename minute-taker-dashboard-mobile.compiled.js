@@ -96,6 +96,26 @@ const MTDM_SESSIONS = [{
   status: "Saved",
   type: "Acne protocol · S1"
 }, {
+  sid: "s10",
+  patient: "Priya Natarajan",
+  id: "MT-77310",
+  day: "earlier",
+  when: "6 weeks ago",
+  time: "13:15",
+  duration: "45 min",
+  status: "Saved",
+  type: "New patient consult"
+}, {
+  sid: "s11",
+  patient: "Marcus Thorne",
+  id: "MT-77198",
+  day: "earlier",
+  when: "7 weeks ago",
+  time: "11:30",
+  duration: "35 min",
+  status: "Saved",
+  type: "Rosacea follow-up"
+}, {
   sid: "s9",
   patient: "Amir Khan",
   id: "MT-76980",
@@ -105,24 +125,21 @@ const MTDM_SESSIONS = [{
   duration: "30 min",
   status: "Saved",
   type: "Rosacea review"
-}];
-const MTDM_UPCOMING = [{
-  patient: "Priya Natarajan",
-  time: "11:15",
+}, {
+  sid: "s12",
+  patient: "Eleanor Vance",
+  id: "MT-77213",
+  day: "earlier",
+  when: "3 months ago",
+  time: "09:15",
+  duration: "30 min",
+  status: "Saved",
   type: "Skin consult"
-}, {
-  patient: "Amir Khan",
-  time: "14:30",
-  type: "Rosacea follow-up"
-}, {
-  patient: "Sarah Jenkins",
-  time: "16:00",
-  type: "Post-op check"
 }];
+/* the dashboard shows the 10 most recent sessions; "See all sessions" opens the archive (full list + search) */
+const MTDM_RECENT_MAX = 10;
 const MTDM_RECENT = ["Eleanor Vance", "Sarah Jenkins", "David Cho", "Marcus Thorne"];
-function MTDMHero({
-  counts
-}) {
+function MTDMHero() {
   return /*#__PURE__*/React.createElement("section", {
     className: "mtdm-hero mt-fade-in",
     "aria-label": "Today"
@@ -147,17 +164,7 @@ function MTDMHero({
     className: "mtdm-hero-eyebrow"
   }, MT.todayLabel()), /*#__PURE__*/React.createElement("h1", {
     className: "mtdm-hero-title"
-  }, MT.greeting(), ",", /*#__PURE__*/React.createElement("br", null), "Dr Smith"), /*#__PURE__*/React.createElement("p", {
-    className: "mtdm-hero-sub"
-  }, counts.today, " consultations today · ", counts.ready, " note ready to review"), /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-stats"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-stat"
-  }, /*#__PURE__*/React.createElement("strong", null, counts.today), /*#__PURE__*/React.createElement("span", null, "Today")), /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-stat"
-  }, /*#__PURE__*/React.createElement("strong", null, counts.ready), /*#__PURE__*/React.createElement("span", null, "To review")), /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-stat"
-  }, /*#__PURE__*/React.createElement("strong", null, "2", /*#__PURE__*/React.createElement("em", null, "m")), /*#__PURE__*/React.createElement("span", null, "Avg. write-up"))), /*#__PURE__*/React.createElement("button", {
+  }, MT.greeting(), ",", /*#__PURE__*/React.createElement("br", null), "Dr Smith"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "mt-btn mt-btn-light mt-btn-block mtdm-start",
     onClick: () => MT.go(MT.routes.start)
@@ -171,14 +178,70 @@ function MTDMHero({
     size: 18
   })));
 }
+
+/* row kebab → anchored dropdown: Clinical note · Share · Archive · Download */
+const MTDM_MENU = [{
+  key: "note",
+  icon: "lucide:file-text",
+  label: "Clinical note",
+  sub: "Open and review the note",
+  busy: "Still being written"
+}, {
+  key: "share",
+  icon: "lucide:share-2",
+  label: "Share",
+  sub: "Email, text or apps",
+  busy: "Available once the note is ready"
+}, {
+  key: "archive",
+  icon: "lucide:archive",
+  label: "Archive",
+  sub: "Move this session to the archive"
+}, {
+  key: "download",
+  icon: "lucide:download",
+  label: "Download",
+  sub: "Save the note as a PDF",
+  busy: "Available once the note is ready"
+}];
 function MTDMSessionRow({
   row,
   onOpen,
-  onMenu
+  menuOpen,
+  onMenu,
+  onAction
 }) {
   const processing = row.status === "Processing";
+  const wrapRef = React.useRef(null);
+  const [flip, setFlip] = useStateMTDM(false);
+  React.useEffect(() => {
+    if (!menuOpen) return undefined;
+    /* open upwards when the row sits in the bottom third of the scroller */
+    try {
+      const r = wrapRef.current.getBoundingClientRect();
+      const scroller = wrapRef.current.closest(".mt-scroll") || document.documentElement;
+      const sr = scroller.getBoundingClientRect ? scroller.getBoundingClientRect() : {
+        bottom: window.innerHeight
+      };
+      setFlip(sr.bottom - r.bottom < 260);
+    } catch (e) {
+      setFlip(false);
+    }
+    const off = e => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) onMenu(null);
+    };
+    const esc = e => {
+      if (e.key === "Escape") onMenu(null);
+    };
+    document.addEventListener("pointerdown", off);
+    document.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("pointerdown", off);
+      document.removeEventListener("keydown", esc);
+    };
+  }, [menuOpen]);
   return /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-row" + (processing ? " is-processing" : "")
+    className: "mtdm-row" + (processing ? " is-processing" : "") + (menuOpen ? " has-menu" : "")
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "mtdm-row-tap",
@@ -197,78 +260,29 @@ function MTDMSessionRow({
   }, row.when ? row.when + " " + row.time : row.time + " · " + row.duration, " · ", row.type)), /*#__PURE__*/React.createElement(StatusPillD, {
     status: row.status,
     compact: true
-  })), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "mtdm-kebab-wrap",
+    ref: wrapRef
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "mtdm-row-kebab",
+    className: "mtdm-row-kebab" + (menuOpen ? " is-on" : ""),
     "aria-label": "More options for " + row.patient,
-    "aria-haspopup": "dialog",
-    onClick: () => onMenu(row)
+    "aria-haspopup": "menu",
+    "aria-expanded": menuOpen,
+    onClick: () => onMenu(menuOpen ? null : row)
   }, /*#__PURE__*/React.createElement(IcD, {
     name: "lucide:ellipsis-vertical",
     size: 18
-  })));
-}
-
-/* kebab bottom sheet: Clinical note · Archive · Download */
-const MTDM_MENU = [{
-  key: "note",
-  icon: "lucide:file-text",
-  label: "Clinical note",
-  sub: "Open and review the note",
-  busy: "Still being written"
-}, {
-  key: "archive",
-  icon: "lucide:archive",
-  label: "Archive",
-  sub: "Move this session to the archive"
-}, {
-  key: "download",
-  icon: "lucide:download",
-  label: "Download",
-  sub: "Save the note as a PDF",
-  busy: "Available once the note is ready"
-}];
-function MTDMRowMenu({
-  row,
-  onClose,
-  onAction
-}) {
-  if (!row) return null;
-  const processing = row.status === "Processing";
-  return /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-scrim",
-    onClick: onClose
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-sheet",
-    role: "dialog",
-    "aria-modal": "true",
-    "aria-label": "Options for " + row.patient,
-    onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mtdm-sheet-grab",
-    "aria-hidden": "true"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-sheet-head"
-  }, /*#__PURE__*/React.createElement(AvatarD, {
-    name: row.patient,
-    size: 40
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-sheet-title"
-  }, /*#__PURE__*/React.createElement("strong", null, row.patient), /*#__PURE__*/React.createElement("span", null, row.when ? row.when + " " + row.time : row.time + " · " + row.duration, " · ", row.type)), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mtdm-sheet-x",
-    "aria-label": "Close",
-    onClick: onClose
-  }, /*#__PURE__*/React.createElement(IcD, {
-    name: "lucide:x",
-    size: 16
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-menu"
+  })), menuOpen && /*#__PURE__*/React.createElement("div", {
+    className: "mtdm-menu" + (flip ? " is-up" : ""),
+    role: "menu",
+    "aria-label": "Options for " + row.patient
   }, MTDM_MENU.map(it => {
     const off = processing && !!it.busy;
     return /*#__PURE__*/React.createElement("button", {
       key: it.key,
       type: "button",
+      role: "menuitem",
       className: "mtdm-menu-item",
       disabled: off,
       onClick: () => onAction(it.key, row)
@@ -276,27 +290,21 @@ function MTDMRowMenu({
       className: "mtdm-menu-ic"
     }, /*#__PURE__*/React.createElement(IcD, {
       name: it.icon,
-      size: 18
+      size: 17
     })), /*#__PURE__*/React.createElement("span", {
       className: "mtdm-menu-text"
-    }, /*#__PURE__*/React.createElement("strong", null, it.label), /*#__PURE__*/React.createElement("span", null, off ? it.busy : it.sub)), /*#__PURE__*/React.createElement(IcD, {
-      name: "lucide:chevron-right",
-      size: 16
-    }));
+    }, /*#__PURE__*/React.createElement("strong", null, it.label), /*#__PURE__*/React.createElement("span", null, off ? it.busy : it.sub)));
   }))));
 }
 function MTDMView() {
   const toast = MT.useToast();
   const [archived, setArchived] = useStateMTDM([]);
-  /* ?menu=<session id> opens a row's sheet straight away (demo / screenshots) */
+  /* ?menu=<session id> opens a row's dropdown straight away; ?share=<session id> opens the share sheet (demo / screenshots) */
   const [menuRow, setMenuRow] = useStateMTDM(() => MTDM_SESSIONS.find(s => s.id === MT.getParam("menu") || s.sid === MT.getParam("menu")) || null);
-  const [view, setView] = useStateMTDM(MT.getParam("view") === "saved" ? "saved" : "upcoming");
+  const [shareRow, setShareRow] = useStateMTDM(() => MTDM_SESSIONS.find(s => s.id === MT.getParam("share") || s.sid === MT.getParam("share")) || null);
   const sessions = MTDM_SESSIONS.filter(s => !archived.includes(s.sid));
+  const recent = sessions.slice(0, MTDM_RECENT_MAX);
   const today = sessions.filter(s => s.day === "today");
-  const counts = {
-    today: today.length + MTDM_UPCOMING.length,
-    ready: sessions.filter(s => s.status === "Note Ready").length
-  };
   function openSession(row) {
     MT.go(MT.routes.review + "?patient=" + encodeURIComponent(row.patient) + "&id=" + row.id);
   }
@@ -306,6 +314,10 @@ function MTDMView() {
       return;
     }
     setMenuRow(null);
+    if (key === "share") {
+      setShareRow(row);
+      return;
+    }
     if (key === "archive") {
       setArchived(a => a.concat(row.sid));
       toast.show("Moved to the archive", "ok");
@@ -329,11 +341,32 @@ function MTDMView() {
     })
   }), /*#__PURE__*/React.createElement("div", {
     className: "mt-scroll"
-  }, /*#__PURE__*/React.createElement(MTDMHero, {
-    counts: counts
-  }), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(MTDMHero, null), /*#__PURE__*/React.createElement("div", {
     className: "mt-section-label"
-  }, "Recent patients"), /*#__PURE__*/React.createElement("div", {
+  }, "Sessions"), /*#__PURE__*/React.createElement("section", {
+    className: "mt-card mtdm-list"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtdm-view",
+    key: "saved"
+  }, recent.map(row => /*#__PURE__*/React.createElement(MTDMSessionRow, {
+    key: row.sid,
+    row: row,
+    onOpen: openSession,
+    menuOpen: !!menuRow && menuRow.sid === row.sid,
+    onMenu: setMenuRow,
+    onAction: menuAction
+  })), sessions.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "mtdm-empty"
+  }, "Everything has been archived.")), sessions.length > 0 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtdm-seeall",
+    onClick: () => MT.go(MT.routes.archive)
+  }, "See all sessions", /*#__PURE__*/React.createElement("em", null, sessions.length), /*#__PURE__*/React.createElement(IcD, {
+    name: "lucide:chevron-right",
+    size: 18
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mt-section-label"
+  }, "Previous patients"), /*#__PURE__*/React.createElement("div", {
     className: "mtdm-rail",
     role: "list"
   }, MTDM_RECENT.map(name => {
@@ -365,78 +398,26 @@ function MTDMView() {
   }, "New"), /*#__PURE__*/React.createElement("span", {
     className: "mtdm-chip-sub"
   }, "patient"))), /*#__PURE__*/React.createElement("div", {
-    className: "mt-section-label mtdm-label-row"
-  }, /*#__PURE__*/React.createElement("span", null, "Sessions"), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mt-link",
-    onClick: () => MT.go(MT.routes.archive)
-  }, "View archive", /*#__PURE__*/React.createElement(IcD, {
-    name: "lucide:arrow-up-right",
-    size: 14
-  }))), /*#__PURE__*/React.createElement("section", {
-    className: "mt-card mtdm-list"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-seg",
-    role: "tablist",
-    "aria-label": "Sessions view"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    role: "tab",
-    "aria-selected": view === "upcoming",
-    className: "mtdm-seg-btn" + (view === "upcoming" ? " is-on" : ""),
-    onClick: () => setView("upcoming")
-  }, "Upcoming", /*#__PURE__*/React.createElement("em", null, MTDM_UPCOMING.length)), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    role: "tab",
-    "aria-selected": view === "saved",
-    className: "mtdm-seg-btn" + (view === "saved" ? " is-on" : ""),
-    onClick: () => setView("saved")
-  }, "Saved", /*#__PURE__*/React.createElement("em", null, sessions.length))), view === "upcoming" ? /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-view mt-fade-in",
-    key: "upcoming"
-  }, MTDM_UPCOMING.map((u, i) => /*#__PURE__*/React.createElement("div", {
-    key: u.patient + u.time,
-    className: "mtdm-row is-upcoming"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mtdm-row-tap",
-    onClick: () => MT.go(MT.routes.start + "?patient=" + encodeURIComponent(u.patient))
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mtdm-upcoming-time"
-  }, /*#__PURE__*/React.createElement("strong", null, u.time), /*#__PURE__*/React.createElement("span", null, i === 0 ? "next" : "today")), /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-row-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mtdm-row-name"
-  }, u.patient), /*#__PURE__*/React.createElement("span", {
-    className: "mtdm-row-meta"
-  }, u.type, " · not started")), /*#__PURE__*/React.createElement("span", {
-    className: "mt-pill mt-pill-muted"
-  }, /*#__PURE__*/React.createElement(IcD, {
-    name: "lucide:calendar",
-    size: 12
-  }), "Scheduled"))))) : /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-view mt-fade-in",
-    key: "saved"
-  }, sessions.map(row => /*#__PURE__*/React.createElement(MTDMSessionRow, {
-    key: row.sid,
-    row: row,
-    onOpen: openSession,
-    onMenu: setMenuRow
-  })), sessions.length === 0 && /*#__PURE__*/React.createElement("div", {
-    className: "mtdm-empty"
-  }, "Everything has been archived."))), /*#__PURE__*/React.createElement("div", {
     className: "mt-trust"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mt-ti"
   }, /*#__PURE__*/React.createElement(IcD, {
     name: "lucide:shield-check",
     size: 15
-  })), /*#__PURE__*/React.createElement("span", null, "Notes are written to your EMR after you approve them. Audio is transcribed live and never stored.")), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("span", null, "Notes save to your EMR automatically. Recordings are kept with the note for 30 days, then deleted.")), /*#__PURE__*/React.createElement("div", {
     className: "mt-spacer"
-  })), /*#__PURE__*/React.createElement(MTDMRowMenu, {
-    row: menuRow,
-    onClose: () => setMenuRow(null),
-    onAction: menuAction
+  })), shareRow && window.PFMTShare && /*#__PURE__*/React.createElement(window.PFMTShare.Share, {
+    variant: "sheet",
+    patient: shareRow.patient,
+    id: shareRow.id,
+    hasRecording: shareRow.status !== "Processing",
+    note: {
+      type: shareRow.type,
+      date: shareRow.when ? shareRow.when + " " + shareRow.time : "Today " + shareRow.time,
+      duration: shareRow.duration
+    },
+    onClose: () => setShareRow(null),
+    onToast: (m, t) => toast.show(m, t)
   }), toast.node);
 }
 function MTDMApp() {

@@ -21,7 +21,9 @@ const MTAM_SESSIONS = [
   { patient: "Sarah Jenkins", id: "MT-84729", daysAgo: 22, time: "09:00", duration: "50 min", status: "Saved", type: "Knee arthroscopy review", kind: "Review" },
   { patient: "David Cho", id: "MT-77042", daysAgo: 29, time: "15:30", duration: "25 min", status: "Saved", type: "Acne protocol · S1", kind: "Treatment" },
   { patient: "Priya Natarajan", id: "MT-77310", daysAgo: 41, time: "13:15", duration: "45 min", status: "Saved", type: "New patient consult", kind: "Consult" },
+  { patient: "Marcus Thorne", id: "MT-77198", daysAgo: 50, time: "11:30", duration: "35 min", status: "Saved", type: "Rosacea follow-up", kind: "Follow-up" },
   { patient: "Amir Khan", id: "MT-76980", daysAgo: 63, time: "10:00", duration: "30 min", status: "Saved", type: "Rosacea review", kind: "Review" },
+  { patient: "Eleanor Vance", id: "MT-77213", daysAgo: 75, time: "09:15", duration: "30 min", status: "Saved", type: "Skin consult", kind: "Consult" },
 ];
 const MTAM_PERIODS = [
   { key: "all", label: "All time", max: Infinity },
@@ -61,6 +63,7 @@ function MTAMRow({ row, onOpen }) {
         <span className="mtam-row-when">{mtamDateLabel(row.daysAgo)} · {row.time} · {row.duration}</span>
       </div>
       <div className="mtam-row-side">
+        {!processing && <span className="mtam-row-audio" title="Recording kept" aria-label="Recording kept"><IcA name="lucide:mic" size={12} /></span>}
         <StatusPillA status={row.status} compact />
         <IcA name="lucide:chevron-right" size={16} />
       </div>
@@ -184,7 +187,7 @@ function MTAMView() {
 
         <div className="mt-trust">
           <span className="mt-ti"><IcA name="lucide:shield-check" size={15} /></span>
-          <span>Notes stay in your EMR. The archive only lists sessions you approved, and audio is never stored.</span>
+          <span>Notes stay in your EMR. The archive lists the sessions you approved, each with its recording kept for 30 days.</span>
         </div>
         <div className="mt-spacer" />
       </div>

@@ -2223,6 +2223,288 @@ function LXCourseProgress({
     color: LX_INK.muted
   })))));
 }
+
+/* ---- Course complete (user, 2026-10-14: "once the quiz is passed, show the
+   course complete") — full-screen celebration over the course page: confetti
+   burst, graduation cap in a gold ring, the course name, lessons + quiz, the
+   evt_course_complete points (booked once per course), then View certificate
+   (CertificateWeb.html, the one certificate page) / Back to My Learning. ---- */
+function lxBurst(root) {
+  if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const colors = ["#CE9957", "#F4C97B", "#FF8FAE", "#5ED3B1", "#8DC5FF", "#FFFFFF"];
+  const w = root.clientWidth,
+    h = root.clientHeight;
+  for (let i = 0; i < 70; i++) {
+    const p = document.createElement("span");
+    p.className = "lc-cele-confetti";
+    const size = 6 + Math.random() * 8,
+      round = Math.random() > 0.5;
+    p.style.cssText = "left:" + w / 2 + "px;top:" + h * 0.34 + "px;width:" + size + "px;height:" + (round ? size : size * 0.5) + "px;background:" + colors[i % colors.length] + ";border-radius:" + (round ? "50%" : "2px");
+    root.appendChild(p);
+    const ang = Math.random() * Math.PI * 2,
+      dist = 110 + Math.random() * Math.min(w, h) * 0.5;
+    const dx = Math.cos(ang) * dist,
+      dy = Math.sin(ang) * dist * 0.8;
+    const a = p.animate([{
+      transform: "translate(0,0) scale(.4)",
+      opacity: 0
+    }, {
+      opacity: 1,
+      offset: .08
+    }, {
+      transform: "translate(" + dx.toFixed(0) + "px," + dy.toFixed(0) + "px) rotate(" + (Math.random() * 720 - 360).toFixed(0) + "deg)",
+      opacity: 1,
+      offset: .55
+    }, {
+      transform: "translate(" + (dx * 1.1).toFixed(0) + "px," + (dy + 220).toFixed(0) + "px) rotate(" + (Math.random() * 900 - 450).toFixed(0) + "deg)",
+      opacity: 0
+    }], {
+      duration: 1900 + Math.random() * 800,
+      delay: Math.random() * 160,
+      easing: "cubic-bezier(.15,.7,.3,1)",
+      fill: "forwards"
+    });
+    a.onfinish = () => p.remove();
+  }
+}
+function lxCourseCompletePoints(slug) {
+  const key = "pf-course-complete-awarded";
+  let awarded = {};
+  try {
+    awarded = JSON.parse(localStorage.getItem(key) || "{}") || {};
+  } catch (e) {}
+  if (awarded[slug]) return awarded[slug];
+  const engine = window.PFLoyalty;
+  let pts = 0;
+  if (engine && engine.completeAction) {
+    try {
+      const res = engine.completeAction("evt_course_complete");
+      if (res && res.ok && !res.capped) pts = res.pointsAwarded || 0;
+    } catch (e) {}
+  }
+  awarded[slug] = pts;
+  try {
+    localStorage.setItem(key, JSON.stringify(awarded));
+  } catch (e) {}
+  if (pts) {
+    try {
+      window.dispatchEvent(new CustomEvent("pf:points-earned", {
+        detail: {
+          amount: pts,
+          label: "Course complete",
+          actionId: "evt_course_complete",
+          booked: true
+        }
+      }));
+    } catch (e) {}
+  }
+  return pts;
+}
+const LX_CELE_LOTTIE = "assets/lottie/drtim-doctor.json?v=20261014b"; /* bust-only Dr Tim doctor, same as DailyGoal's hero */
+function LXCeleLottie() {
+  const host = useRefLX(null);
+  useEffectLX(() => {
+    let anim, iv;
+    const start = () => {
+      if (!window.lottie || !host.current) return;
+      anim = window.lottie.loadAnimation({
+        container: host.current,
+        renderer: "svg",
+        loop: true,
+        autoplay: true,
+        path: LX_CELE_LOTTIE
+      });
+    };
+    if (window.lottie) start();else {
+      if (!document.querySelector('script[src*="lottie.min.js"]')) {
+        const sc = document.createElement("script");
+        sc.src = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
+        document.head.appendChild(sc);
+      }
+      iv = setInterval(() => {
+        if (window.lottie) {
+          clearInterval(iv);
+          start();
+        }
+      }, 120);
+      setTimeout(() => clearInterval(iv), 8000);
+    }
+    return () => {
+      if (iv) clearInterval(iv);
+      if (anim) anim.destroy();
+    };
+  }, []);
+  return /*#__PURE__*/React.createElement("span", {
+    ref: host,
+    className: "lc-cele-lottie",
+    "aria-hidden": "true"
+  });
+}
+/* Full-screen Course complete splash (user, 2026-10-14: "whole screen, not a
+   modal, same UI as the gamification splash screens, with the Dr Tim
+   animation"): the Reward Splash layout — close X, glow, confetti, Dr Tim
+   cheering in the Daily Goal tile crop, kicker / title / sub, the +N points
+   pill, a perks card, gold primary + ghost. White/cream on the light course
+   shell, navy gradient on the dark one (same tokens as MilestoneSplash). */
+function LXCourseComplete({
+  course,
+  flat,
+  onClose
+}) {
+  const root = useRefLX(null);
+  const [pts] = useStateLX(() => lxCourseCompletePoints(course.slug));
+  const quiz = flat.filter(l => l.kind === "quiz").length;
+  const first = (() => {
+    try {
+      const n = window.PFLearnShared && window.PFLearnShared.ME && window.PFLearnShared.ME.name || "Katy";
+      return n.split(" ")[0];
+    } catch (e) {
+      return "Katy";
+    }
+  })();
+  useEffectLX(() => {
+    const t1 = setTimeout(() => lxBurst(root.current), 300),
+      t2 = setTimeout(() => lxBurst(root.current), 1300);
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lc-cele",
+    ref: root,
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": "Course complete",
+    "data-screen-label": "Course complete"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-cele-close",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:x",
+    size: 20,
+    color: "currentColor"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lc-cele-glow",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "lc-cele-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lc-cele-hero"
+  }, /*#__PURE__*/React.createElement(LXCeleLottie, null)), /*#__PURE__*/React.createElement("div", {
+    className: "lc-cele-kicker"
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:graduation-cap",
+    size: 13,
+    color: "currentColor"
+  }), " Course complete"), /*#__PURE__*/React.createElement("h1", {
+    className: "lc-cele-title"
+  }, "You did it, ", first, "!"), /*#__PURE__*/React.createElement("p", {
+    className: "lc-cele-sub"
+  }, "You've finished every lesson in ", /*#__PURE__*/React.createElement("b", null, course.title), quiz ? " and passed the final quiz" : "", "."), pts > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "lc-cele-pts"
+  }, /*#__PURE__*/React.createElement("b", null, "+", pts), /*#__PURE__*/React.createElement("i", null, "pts")), /*#__PURE__*/React.createElement("div", {
+    className: "lc-cele-perks"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lc-cele-perk"
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:check-circle",
+    size: 18,
+    color: "var(--brand-gold)"
+  }), /*#__PURE__*/React.createElement("span", null, "Your certificate is ready to view and share")), /*#__PURE__*/React.createElement("div", {
+    className: "lc-cele-perk"
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:check-circle",
+    size: 18,
+    color: "var(--brand-gold)"
+  }), /*#__PURE__*/React.createElement("span", null, course.title, " now shows under Achievements on your profile")), /*#__PURE__*/React.createElement("div", {
+    className: "lc-cele-perk"
+  }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
+    name: "lucide:check-circle",
+    size: 18,
+    color: "var(--brand-gold)"
+  }), /*#__PURE__*/React.createElement("span", null, flat.length, " lessons", quiz ? " and the final quiz" : "", " banked towards your next league")))), /*#__PURE__*/React.createElement("div", {
+    className: "lc-cele-ctas"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-cele-btn lc-cele-btn-gold",
+    onClick: () => goLX("CertificateWeb.html?course=" + encodeURIComponent(course.slug))
+  }, "View certificate"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-cele-btn lc-cele-btn-ghost",
+    onClick: () => goLX("LearningMobile.html")
+  }, "Back to My Learning")));
+}
+
+/* Dev mode · Course progress (user, 2026-10-14): replay the course from
+   scratch — clears this course's lessons from pf-lessons-done, resets its
+   Success Path state + the one-off course-complete award, then reloads.
+   "Jump to final quiz" marks everything but the last lesson done. Prototype only. */
+function LXDevRow({
+  course,
+  flat
+}) {
+  const done = readDoneLX();
+  const doneHere = flat.filter(l => done.indexOf(l.name) !== -1).length;
+  function clearAward() {
+    try {
+      const k = "pf-course-complete-awarded";
+      const a = JSON.parse(localStorage.getItem(k) || "{}") || {};
+      delete a[course.slug];
+      localStorage.setItem(k, JSON.stringify(a));
+    } catch (e) {}
+  }
+  function fromScratch() {
+    const names = flat.map(l => l.name);
+    writeDoneLX(readDoneLX().filter(n => names.indexOf(n) === -1));
+    try {
+      if (SPE_LX) {
+        SPE_LX.reset(course.slug);
+        SPE_LX.resetLessons(course.slug);
+      }
+    } catch (e) {}
+    clearAward();
+    try {
+      sessionStorage.removeItem("pf-sp-focus");
+    } catch (e) {}
+    goLX(location.pathname + "?course=" + encodeURIComponent(course.slug));
+  }
+  function toQuiz() {
+    const names = flat.slice(0, -1).map(l => l.name);
+    const cur = readDoneLX();
+    writeDoneLX(cur.concat(names.filter(n => cur.indexOf(n) === -1)));
+    clearAward();
+    goLX(location.pathname + "?course=" + encodeURIComponent(course.slug)); /* the page opens on the first unfinished lesson = the quiz */
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "lc-dev",
+    role: "group",
+    "aria-label": "Dev mode: course progress"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lc-dev-h"
+  }, /*#__PURE__*/React.createElement("i", {
+    "aria-hidden": "true"
+  }), "Dev mode · Course progress"), /*#__PURE__*/React.createElement("div", {
+    className: "lc-dev-chips"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-dev-chip",
+    onClick: fromScratch
+  }, "Start from scratch"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lc-dev-chip",
+    onClick: toQuiz
+  }, "Jump to final quiz")), /*#__PURE__*/React.createElement("p", {
+    className: "lc-dev-note"
+  }, doneHere, " of ", flat.length, " lessons done. Start from scratch clears them, the Success Path and the course-complete bonus. Prototype only."));
+}
 function LXPlayer({
   course,
   flat,
@@ -2233,7 +2515,8 @@ function LXPlayer({
   onMarkDone,
   onToast,
   onShare,
-  onOpenPath
+  onOpenPath,
+  onCourseComplete
 }) {
   const item = flat[idx];
   const next = flat[idx + 1] || null;
@@ -2252,11 +2535,16 @@ function LXPlayer({
   const complete = () => {
     if (isDone) return;
     onMarkDone(item.name);
+    /* the last lesson (the success path quiz) completing IS finishing the course */
+    if (!next && onCourseComplete) {
+      onCourseComplete();
+      return;
+    }
     onToast(kind === "quiz" ? "Quiz passed — lesson complete" : kind === "pdf" ? "Document reviewed ✓" : "Lesson complete ✓");
   };
   const advance = () => {
     onMarkDone(item.name);
-    if (next) onSelect(idx + 1);else {
+    if (next) onSelect(idx + 1);else if (onCourseComplete) onCourseComplete();else {
       onToast("Course complete — certificate on its way 🎓");
       onClose();
     }
@@ -2428,7 +2716,7 @@ function LXPlayer({
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lc-btn lc-btn-fill",
-    disabled: quizLocked || !next && isDone,
+    disabled: quizLocked,
     onClick: advance
   }, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
     name: isDone && next ? "fluent:play-16-filled" : "lucide:check",
@@ -2446,6 +2734,8 @@ function CourseDetailConfidence() {
   /* Success Path: full-screen path (?sp=path opens it on load) + a toast when a
      completed lesson unlocks a skill tick */
   const [spOpen, setSpOpen] = useStateLX(() => LX_PARAMS.get("sp") === "path");
+  /* course-complete celebration (?complete=1 previews it) */
+  const [celebrate, setCelebrate] = useStateLX(() => LX_PARAMS.get("complete") === "1");
   /* this page hosts the Success Path itself: a lesson that completes a skill
      shows the reward splash here, then success-path.js asks us to reopen the
      path at the next skill (user, 2026-10-07) */
@@ -2684,8 +2974,7 @@ function CourseDetailConfidence() {
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "lc-btn lc-btn-fill",
-    onClick: continueLesson,
-    disabled: !next && curDone
+    onClick: !next && curDone ? () => setCelebrate(true) : continueLesson
   }, continueLabel, /*#__PURE__*/React.createElement(DSLX.IconifyIcon, {
     name: "lucide:arrow-right",
     size: 17,
@@ -2739,6 +3028,9 @@ function CourseDetailConfidence() {
   }), /*#__PURE__*/React.createElement(LXAvaCard, {
     lessonName: cur.name,
     courseTitle: course.title
+  }), /*#__PURE__*/React.createElement(LXDevRow, {
+    course: course,
+    flat: flat
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 12
@@ -2756,7 +3048,15 @@ function CourseDetailConfidence() {
     onOpenPath: () => {
       closePlayer();
       setSpOpen(true);
+    },
+    onCourseComplete: () => {
+      closePlayer();
+      setCelebrate(true);
     }
+  }), celebrate && !locked && /*#__PURE__*/React.createElement(LXCourseComplete, {
+    course: course,
+    flat: flat,
+    onClose: () => setCelebrate(false)
   }), spOpen && spOnLX(course.slug) && /*#__PURE__*/React.createElement(SPUI_LX.PathSheet, {
     slug: course.slug,
     onClose: () => setSpOpen(false),

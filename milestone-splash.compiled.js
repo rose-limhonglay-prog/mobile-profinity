@@ -36,7 +36,7 @@ function goSPL(url) {
    that plays twice then fades. */
 const SPL_LOTTIE = "assets/lottie/checkin-wink.json?v=20260918a";
 /* sign-up: the same waving character as the Goal Reached screen (user-supplied, 1:1) */
-const SPL_SIGNUP_LOTTIE = "assets/lottie/drtim-cheer.json?v=20261013a"; /* Dr Tim cheering (was the waving girl, 2026-10-13) */
+const SPL_SIGNUP_LOTTIE = "assets/lottie/drtim-doctor.json?v=20261014b"; /* Dr Tim cheering (was the waving girl, 2026-10-13) */
 const SPL_CONFETTI = "https://lottie.host/1b8bdd21-9711-48bb-873f-3889b01b43c8/jrTeYYuQqi.json";
 function useLottieSPL(host, opts) {
   useEffectSPL(() => {
@@ -254,6 +254,18 @@ function pickRewardSPL() {
   } catch (e) {/* ignore */}
   const items = payload && payload.items || [];
   let item = items.find(m => (!kind || m.type === kind) && (!key || m.key === key)) || null;
+  /* a league promotion from the router carries only key/title — hydrate the
+     league so the hero can show its gem (user, 2026-10-14: not Dr Tim) */
+  if (item && item.type === "league" && !(item.league && item.league.lottie) && window.PFLeague && window.PFLeague.getLeague) {
+    try {
+      const lg = window.PFLeague.getLeague(item.key);
+      if (lg) item = {
+        ...item,
+        league: lg,
+        color: item.color || lg.accent
+      };
+    } catch (e) {}
+  }
   if (!item && kind === "achievement") {
     const b = (cfg.achievementBadges || []).find(x => x.key === key);
     if (b) item = {
@@ -277,18 +289,35 @@ function pickRewardSPL() {
       league: lg
     };
   }
+  /* level milestones ARE the league badges (user, 2026-10-14: the old
+     bronze/silver/gold level ladder rendered "undefined Unlocked!") — show the
+     league gem the member holds, or the one ?key= names */
+  if (!item && window.PFLeague) {
+    let lg = null;
+    try {
+      lg = (key && window.PFLeague.getLeague ? window.PFLeague.getLeague(key) : null) || (window.PFLeague.getCurrent ? window.PFLeague.getCurrent() : null);
+    } catch (e) {}
+    if (lg) item = {
+      type: "league",
+      key: lg.key,
+      league: lg,
+      color: lg.accent,
+      title: lg.name + " League Unlocked!",
+      sub: "You've crossed " + PF.formatNumber(lg.requires || 0) + " Lifetime Points as a PROfinity clinician."
+    };
+  }
   if (!item) {
     const state = PF.getState();
     const progress = PF.getBadgeProgress(state);
-    let level = progress.current || cfg.levelBadges[0];
+    let level = progress.current || cfg.levelBadges[0] || {};
     if (kind === "level" && key) level = (cfg.levelBadges || []).find(x => x.key === key) || level;
     item = {
       type: "level",
       key: level.key,
       badge: level,
       color: level.color,
-      title: level.splashTitle || level.name + " Unlocked!",
-      sub: "You've crossed " + PF.formatNumber(level.threshold) + " Lifetime Points as a PROfinity clinician."
+      title: level.splashTitle || (level.name || "Milestone") + " Unlocked!",
+      sub: "You've crossed " + PF.formatNumber(level.threshold || 0) + " Lifetime Points as a PROfinity clinician."
     };
   }
   return item;
@@ -379,7 +408,7 @@ function MilestoneSplashScreen() {
     primaryTo = "BadgeGallery.html";
   } else if (item.type === "league") {
     const lg = item.league || {};
-    kicker = "League Promotion";
+    kicker = item.title && /Unlocked/.test(item.title) ? "Milestone Reached" : "League Promotion";
     title = item.title || "Welcome to the " + (lg.name || "next") + " League";
     sub = item.sub || "You've been promoted — a new leaderboard, new rivals and your one-time perk unlocked.";
     /* the league's one-time perk (Milestone Path, matched by key) leads the list */
@@ -388,11 +417,18 @@ function MilestoneSplashScreen() {
       const m = (PF.getConfig().milestonePath || []).find(x => x.key === lg.key);
       perkTitle = m && m.benefits && m.benefits[0] ? m.benefits[0].title : null;
     } catch (e) {}
-    perks = [perkTitle ? "One-time perk unlocked: " + perkTitle : null, "A fresh leaderboard against " + (lg.name || "your new") + " rivals", "League gem shown on your profile"].filter(Boolean);
-    icon = "lucide:trophy";
+    /* just the perk (user, 2026-10-14: the "fresh leaderboard" / "gem on your profile" lines were removed) */
+    perks = [perkTitle ? "One-time perk unlocked: " + perkTitle : null].filter(Boolean);
+    icon = null; /* the league gem itself is the hero */
     color = item.color || lg.accent || "var(--brand-gold)";
-    primary = "See the Leaderboard";
-    primaryTo = "Leaderboard.html";
+    /* promotion → the new league's board; a milestone-style unlock (kicker "Milestone Reached") → My Rewards (user, 2026-10-14) */
+    if (kicker === "League Promotion") {
+      primary = "View Leaderboard";
+      primaryTo = "Leaderboard.html?league=" + encodeURIComponent(lg.key || "") + "&ret=" + encodeURIComponent(ret);
+    } else {
+      primary = "View My Rewards";
+      primaryTo = "MilestonePath.html?ret=" + encodeURIComponent(ret);
+    }
   } else {
     const level = item.badge || {};
     kicker = "Milestone Reached";
@@ -401,8 +437,8 @@ function MilestoneSplashScreen() {
     perks = level.splashPerks || [(PF.getConfig().tierMultipliers[state.user.membershipTier] || 1) + "x tier multiplier active", "New badge added to your gallery", "Featured in this month's Community spotlight"];
     icon = "lucide:gem";
     color = item.color || level.color || "var(--brand-gold)";
-    primary = "View My Badges";
-    primaryTo = "BadgeGallery.html";
+    primary = "View My Rewards";
+    primaryTo = "MilestonePath.html?ret=" + encodeURIComponent(ret);
   }
   const shownPoints = useCountUpSPL(bigPoints, 1100, 450);
   return /*#__PURE__*/React.createElement("div", {
@@ -422,8 +458,24 @@ function MilestoneSplashScreen() {
   }), /*#__PURE__*/React.createElement(SplConfetti, null), /*#__PURE__*/React.createElement("div", {
     className: "spl-body"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "spl-hero" + (item.type === "signup" || item.type === "login" ? " is-square" : "")
-  }, /*#__PURE__*/React.createElement(SplLottie, {
+    className: "spl-hero" + (item.type === "signup" || item.type === "login" ? " is-square" : "") + (item.type === "league" ? " is-gem" : ""),
+    style: item.type === "league" && item.league ? {
+      "--lg-accent": item.league.accent,
+      "--lg-soft": item.league.soft
+    } : null
+  }, item.type === "league" && item.league && item.league.lottie ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "spl-gem-halo",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement(SplLottie, {
+    src: item.league.lottie
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "spl-gem-check",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSSPL.IconifyIcon, {
+    name: "lucide:check",
+    size: 18,
+    color: "#fff"
+  }))) : /*#__PURE__*/React.createElement(SplLottie, {
     src: item.type === "signup" || item.type === "login" ? SPL_SIGNUP_LOTTIE : SPL_LOTTIE
   }), icon && /*#__PURE__*/React.createElement("span", {
     className: "spl-medal",

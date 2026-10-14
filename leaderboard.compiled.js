@@ -129,11 +129,15 @@ function LBLottie({
 /* Swipeable rail of the six gem badges. The member's own badge and the ones
    below it are earned; everything above is greyed and locked. Tapping a badge
    shows that league's board. */
+/* every badge carries its own indicator (user, 2026-10-14): locked = how many
+   more lifetime pts the member needs to reach that league, mine = "You",
+   earned = a tick */
 function LBLeagueRail({
   leagues,
   myIndex,
   selected,
-  onSelect
+  onSelect,
+  needFor
 }) {
   const railRef = useRefLB(null);
   useEffectLB(() => {
@@ -168,7 +172,7 @@ function LBLeagueRail({
         "--lg-accent": l.accent,
         "--lg-soft": l.soft
       },
-      "aria-label": l.name + " League" + (locked ? ", locked" : mine ? ", your league" : ""),
+      "aria-label": l.name + " League" + (locked ? ", locked, " + (needFor ? PF_LB.formatNumber(needFor(i)) + " more points to unlock" : "") : mine ? ", your league" : ", earned"),
       onClick: () => onSelect(i)
     }, /*#__PURE__*/React.createElement("span", {
       className: "lb-rail-gem"
@@ -184,7 +188,17 @@ function LBLeagueRail({
       color: "#fff"
     }))), mine && /*#__PURE__*/React.createElement("span", {
       className: "lb-rail-you"
-    }, "You"));
+    }, "You"), locked && needFor && /*#__PURE__*/React.createElement("span", {
+      className: "lb-rail-need",
+      "aria-hidden": "true"
+    }, "+", PF_LB.formatNumber(needFor(i)), " pts"), !mine && !locked && /*#__PURE__*/React.createElement("span", {
+      className: "lb-rail-got",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(DSLB.IconifyIcon, {
+      name: "lucide:check",
+      size: 10,
+      color: "currentColor"
+    }), "Earned"));
   }));
 }
 function prizeForLB(config, rank) {
@@ -397,7 +411,8 @@ function LeaderboardScreen() {
     leagues: leagues,
     myIndex: myIndex,
     selected: selected,
-    onSelect: setSelected
+    onSelect: setSelected,
+    needFor: needFor
   }), /*#__PURE__*/React.createElement(LBPodium, {
     rows: top3,
     prizeFor: prizeFor

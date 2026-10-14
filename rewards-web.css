@@ -245,7 +245,33 @@ img{max-width:100%}
   .rw-quicknav-item,.rw-next-reward,.rw-btn,.rw-league,.rw-league-progress,.rw-eng-link,.rw-feat{transition:none}
   .rw-toast,.rw-welcome,.rw-welcome-scrim{animation:none}
 }
-/* Lifetime Points tile: the header pill's coffee-break Dr Tim, same gold-ring crop as .m-pts-ic-anim (!important: lottie-web inline transform) */
-.rw-eng-lottie--face .rw-gem-anim{border-radius:50%;overflow:hidden;background:#FFF3DC;box-shadow:inset 0 0 0 2px #FCC25D}
-.rw-eng-lottie--face svg{display:block;transform:scale(3.8)!important;transform-origin:50% 14.7%!important}
-[data-theme="dark"] .rw-eng-lottie--face .rw-gem-anim{background:#2b2745}
+/* Lifetime Points tile: header-pill smiley (lottie-web), nudged up like .m-pts-ic-anim */
+.rw-eng-lottie--face svg{display:block;transform:scale(1.22);transform-origin:50% 50%;overflow:visible}
+
+/* ---- welcome modal is WHITE in light mode (user, 2026-10-14); the navy gradient stays for dark ---- */
+.rw-welcome{background:var(--surface-card,#fff);color:#1b1848;box-shadow:0 30px 80px rgba(12,14,40,.28)}
+.rw-welcome-doc::before{background:#FFF3DC;box-shadow:inset 0 0 0 2px rgba(252,194,93,.55)}
+.rw-welcome p{color:var(--gray-600)}
+.rw-welcome p strong{color:#9C6A0E}
+.rw-welcome-skip{color:var(--gray-600)}
+.rw-welcome-skip:hover{color:#1b1848}
+.rw-welcome-back{background:var(--gray-100)}
+.rw-welcome-back svg,.rw-welcome-back iconify-icon{color:#1b1848!important}
+.rw-welcome-steps i{background:var(--gray-200)}
+.rw-welcome-list li{background:var(--gray-50);border-color:var(--border-default)}
+.rw-welcome-list .ic{background:#FFF3DC}
+.rw-welcome-list .lb{color:#1b1848}
+.rw-welcome-list .pt{color:#9C6A0E}
+[data-theme="dark"] .rw-welcome{background:linear-gradient(150deg,#292569,#3F4E86);color:#fff;box-shadow:0 30px 80px rgba(12,14,40,.45),inset 0 1px 0 rgba(255,255,255,.12)}
+[data-theme="dark"] .rw-welcome-doc::before{background:rgba(255,255,255,.10);box-shadow:inset 0 1px 0 rgba(255,255,255,.18)}
+[data-theme="dark"] .rw-welcome p{color:rgba(255,255,255,.84)}
+[data-theme="dark"] .rw-welcome p strong,[data-theme="dark"] .rw-welcome-list .pt{color:#FCC25D}
+[data-theme="dark"] .rw-welcome-skip{color:rgba(255,255,255,.72)}
+[data-theme="dark"] .rw-welcome-skip:hover{color:#fff}
+[data-theme="dark"] .rw-welcome-back{background:rgba(255,255,255,.12)}
+[data-theme="dark"] .rw-welcome-back svg,[data-theme="dark"] .rw-welcome-back iconify-icon{color:#fff!important}
+[data-theme="dark"] .rw-welcome-steps i{background:rgba(255,255,255,.3)}
+[data-theme="dark"] .rw-welcome-steps i.on{background:#FCC25D}
+[data-theme="dark"] .rw-welcome-list li{background:rgba(255,255,255,.10);border-color:rgba(255,255,255,.08)}
+[data-theme="dark"] .rw-welcome-list .ic{background:rgba(252,194,93,.16)}
+[data-theme="dark"] .rw-welcome-list .lb{color:#fff}

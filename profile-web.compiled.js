@@ -1142,16 +1142,51 @@ function PWTargetsCard({
       }));
     } catch (e) {}
   }
+
+  /* Unticking takes the points back (user, 2026-10-14): a negative ledger
+     line in the engine, the header pill re-reads, and the "wrong answer"
+     sound (points-sound.js pf:answer-wrong) makes the deduction felt. The
+     target's `awarded` flag clears so a re-tick pays again. */
+  function reverseTargetPoints(t) {
+    const pts = PW_PRIORITY[t.priority].pts;
+    const label = "Today's target unticked: " + t.text;
+    const engine = window.PFLoyalty;
+    if (engine && engine.deductPoints) {
+      try {
+        engine.deductPoints(pts, label, "evt_daily_target_undo");
+      } catch (e) {}
+    }
+    try {
+      window.dispatchEvent(new CustomEvent("pf:points-earned", {
+        detail: {
+          amount: -pts,
+          label,
+          actionId: "evt_daily_target_undo",
+          booked: true,
+          sound: "none"
+        }
+      }));
+    } catch (e) {}
+    try {
+      window.dispatchEvent(new CustomEvent("pf:answer-wrong", {
+        detail: {
+          label
+        }
+      }));
+    } catch (e) {}
+  }
   function toggle(id) {
     const cur = state.targets.find(t => t.id === id);
     const paying = !!(cur && !cur.done && !cur.awarded);
+    const reversing = !!(cur && cur.done && cur.awarded);
     if (paying) awardTargetPoints(cur);
+    if (reversing) reverseTargetPoints(cur);
     setState(s => ({
       ...s,
       targets: s.targets.map(t => t.id === id ? {
         ...t,
         done: !t.done,
-        awarded: t.awarded || paying
+        awarded: reversing ? false : t.awarded || paying
       } : t)
     }));
     setSettling(id);

@@ -19,7 +19,7 @@
   "use strict";
 
   var REWARDS_URL = "RewardsWeb.html";
-  var LOTTIE_SRC = "assets/lottie/drtim-coffee.json?v=20261013a";   /* coffee-break Dr Tim avatar, see assets/lottie/drtim-coffee.build.py (2026-10-13) */
+  var LOTTIE_SRC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";   /* smiling face (the Dr Tim avatar was reverted 2026-10-13) */
   var LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
   var FALLBACK_TOTAL = 14000, FALLBACK_FULL = 20000;
 
@@ -124,7 +124,7 @@
     pill.classList.remove("earn"); void pill.offsetWidth; pill.classList.add("earn");
     var old = pill.querySelector(".m-pts-delta"); if (old) old.remove();
     var d = document.createElement("span");
-    d.className = "m-pts-delta"; d.setAttribute("aria-hidden", "true"); d.textContent = "+" + amt;
+    d.className = "m-pts-delta" + (amt < 0 ? " is-neg" : ""); d.setAttribute("aria-hidden", "true"); d.textContent = amt < 0 ? "\u2212" + Math.abs(amt) : "+" + amt;
     pill.appendChild(d);
     setTimeout(function () { d.remove(); pill.classList.remove("earn"); }, 1500);
   }
@@ -157,7 +157,7 @@
     pill.className = "m-pts pf-web-pts";
     pill.innerHTML =
       '<span class="m-pts-ic" aria-hidden="true">' +
-        '<span class="m-pts-ic-fb"><iconify-icon icon="lucide:user-round" width="16" height="16" style="color:#FCC25D"></iconify-icon></span>' +
+        '<span class="m-pts-ic-fb"><iconify-icon icon="lucide:smile" width="18" height="18" style="color:#FCC25D"></iconify-icon></span>' +
         '<span class="m-pts-ic-anim"></span>' +
       '</span>' +
       '<span class="m-pts-n"></span>';

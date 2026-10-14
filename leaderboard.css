@@ -116,6 +116,14 @@ img { max-width: 100%; }
 .lb-rail-you { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
   color: #fff; background: var(--lg-accent); border-radius: 999px; padding: 2px 8px; margin-top: -2px; }
 .lb-rail-item.mine:not(.sel) .lb-rail-you { background: var(--gray-450); }
+/* per-badge indicators (2026-10-14): pts still needed / earned tick */
+.lb-rail-need { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 10.5px; letter-spacing: .02em; white-space: nowrap; padding: 2px 8px; border-radius: 999px;
+  background: var(--gray-100); color: var(--gray-600); }
+.lb-rail-item.sel .lb-rail-need { background: var(--lg-soft); color: var(--lg-deep, var(--gray-800)); }
+.lb-rail-got { display: inline-flex; align-items: center; gap: 3px; font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 10px; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px;
+  background: #E7F6EE; color: #1F7A52; }
+[data-theme="dark"] .lb-rail-need { background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); }
+[data-theme="dark"] .lb-rail-got { background: #12291F; color: #5BD39A; }
 @media (prefers-reduced-motion: reduce) { .lb-rail-item, .lb-rail-gem { transition: none; } }
 
 /* selected league tints the podium's first-place card and the standing card */

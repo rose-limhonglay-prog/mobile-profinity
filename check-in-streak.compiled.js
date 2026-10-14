@@ -5,8 +5,8 @@
    the cheering Dr Tim Lottie once the day is banked, presented by the
    coffee-break Dr Tim (assets/lottie/drtim-coffee.json, same ring crop as the
    header points pill). Redesigned 2026-10-13 as a light cream + gold hero
-   with the check-in action inside it (navy hero kept for dark mode). Check-in,
-   streak freeze and the Streak Master milestone all run through window.PFLoyalty.
+   with the check-in action inside it (navy hero kept for dark mode). Check-in and
+   the Streak Master milestone both run through window.PFLoyalty.
    Suffixed -CIS to avoid clashes with other pages.
    =========================================================================== */
 const {
@@ -90,51 +90,8 @@ function CisLottie({
   });
 }
 
-/* hero presenter: the coffee-break Dr Tim, cropped to face + mug by the CSS
-   ring (.cis-hero-doc) exactly like the header points pill */
-const CIS_DOC_LOTTIE = "assets/lottie/drtim-coffee.json?v=20261013a";
-function CisDoc() {
-  const host = useRefCIS(null);
-  useEffectCIS(() => {
-    let anim,
-      iv,
-      dead = false;
-    const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-    const start = () => {
-      if (dead || !window.lottie || !host.current) return;
-      anim = window.lottie.loadAnimation({
-        container: host.current,
-        renderer: "svg",
-        loop: !still,
-        autoplay: !still,
-        path: CIS_DOC_LOTTIE
-      });
-      if (still) anim.addEventListener("DOMLoaded", () => anim.goToAndStop(0, true));
-    };
-    if (window.lottie) start();else {
-      iv = setInterval(() => {
-        if (window.lottie) {
-          clearInterval(iv);
-          iv = null;
-          start();
-        }
-      }, 120);
-      setTimeout(() => {
-        if (iv) clearInterval(iv);
-      }, 8000);
-    }
-    return () => {
-      dead = true;
-      if (iv) clearInterval(iv);
-      if (anim) anim.destroy();
-    };
-  }, []);
-  return /*#__PURE__*/React.createElement("span", {
-    ref: host,
-    className: "cis-doc-anim",
-    "aria-hidden": "true"
-  });
-}
+/* (the coffee-break Dr Tim presenter that sat beside the headline was removed 2026-10-14 at the user's request) */
+
 function sameDayCIS(a, b) {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
 }
@@ -241,10 +198,164 @@ function CisStreakRiskBanner({
     body: "Last call! Your streak expires in 2 hours."
   })));
 }
+
+/* ---- streak calendar (user, 2026-10-14): tapping the five-day track opens a
+   month view of every check-in day. Days come from the ledger's
+   evt_mobile_checkin entries plus the current consecutive run ending at
+   streak.lastCheckIn (the engine keeps no per-day history beyond that). */
+function cisKey(d) {
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function cisCheckedDays(state) {
+  const set = new Set();
+  (state.ledger || []).forEach(t => {
+    if (t.actionId === "evt_mobile_checkin" && t.ts) set.add(cisKey(new Date(t.ts)));
+  });
+  const streak = state.streak || {};
+  if (streak.current && streak.lastCheckIn) {
+    const last = new Date(streak.lastCheckIn);
+    for (let i = 0; i < streak.current; i++) {
+      const d = new Date(last);
+      d.setDate(last.getDate() - i);
+      set.add(cisKey(d));
+    }
+  }
+  return set;
+}
+function CisCalendarSheet({
+  open,
+  onClose,
+  state
+}) {
+  const today = new Date();
+  const [cursor, setCursor] = useStateCIS(() => new Date(today.getFullYear(), today.getMonth(), 1));
+  useEffectCIS(() => {
+    if (!open) return;
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+  if (!open) return null;
+  const checked = cisCheckedDays(state);
+  const streak = state.streak || {
+    current: 0,
+    longest: 0
+  };
+  const y = cursor.getFullYear(),
+    m = cursor.getMonth();
+  const first = new Date(y, m, 1);
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const lead = (first.getDay() + 6) % 7; /* Monday-first grid */
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(y, m, d));
+  while (cells.length % 7) cells.push(null);
+  const inMonth = cells.filter(d => d && checked.has(cisKey(d))).length;
+  const monthLabel = cursor.toLocaleDateString("en-GB", {
+    month: "long",
+    year: "numeric"
+  });
+  const isFutureMonth = y > today.getFullYear() || y === today.getFullYear() && m >= today.getMonth();
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cis-scrim",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cis-sheet",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-labelledby": "cis-cal-title",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cis-sheet-handle",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cis-cal-head"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cis-cal-nav",
+    "aria-label": "Previous month",
+    onClick: () => setCursor(new Date(y, m - 1, 1))
+  }, /*#__PURE__*/React.createElement(DSCIS.IconifyIcon, {
+    name: "lucide:chevron-left",
+    size: 18,
+    color: "currentColor"
+  })), /*#__PURE__*/React.createElement("h3", {
+    id: "cis-cal-title"
+  }, monthLabel), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cis-cal-nav",
+    "aria-label": "Next month",
+    disabled: isFutureMonth,
+    onClick: () => setCursor(new Date(y, m + 1, 1))
+  }, /*#__PURE__*/React.createElement(DSCIS.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 18,
+    color: "currentColor"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "cis-cal-dow",
+    "aria-hidden": "true"
+  }, ["M", "T", "W", "T", "F", "S", "S"].map((d, i) => /*#__PURE__*/React.createElement("span", {
+    key: i
+  }, d))), /*#__PURE__*/React.createElement("div", {
+    className: "cis-cal-grid",
+    role: "grid",
+    "aria-label": "Check-ins in " + monthLabel
+  }, cells.map((d, i) => {
+    if (!d) return /*#__PURE__*/React.createElement("span", {
+      key: i,
+      className: "cis-cal-cell is-blank",
+      "aria-hidden": "true"
+    });
+    const k = cisKey(d);
+    const done = checked.has(k);
+    const isToday = sameDayCIS(d, today);
+    const future = d > today && !isToday;
+    const prevDone = checked.has(cisKey(new Date(y, m, d.getDate() - 1))) && d.getDay() !== 1;
+    const nextDone = checked.has(cisKey(new Date(y, m, d.getDate() + 1))) && d.getDay() !== 0;
+    return /*#__PURE__*/React.createElement("span", {
+      key: i,
+      role: "gridcell",
+      className: "cis-cal-cell" + (done ? " is-done" : "") + (isToday ? " is-today" : "") + (future ? " is-future" : "") + (done && prevDone ? " link-l" : "") + (done && nextDone ? " link-r" : ""),
+      "aria-label": d.toLocaleDateString("en-GB", {
+        weekday: "long",
+        day: "numeric",
+        month: "long"
+      }) + (done ? ": checked in" : "")
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "cis-cal-day"
+    }, done ? /*#__PURE__*/React.createElement(DSCIS.IconifyIcon, {
+      name: "lucide:check",
+      size: 14,
+      color: "currentColor"
+    }) : d.getDate()));
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "cis-cal-stats"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, inMonth), /*#__PURE__*/React.createElement("span", null, "check-ins this month")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, streak.current || 0), /*#__PURE__*/React.createElement("span", null, "current streak")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, streak.longest || streak.current || 0), /*#__PURE__*/React.createElement("span", null, "longest streak"))), /*#__PURE__*/React.createElement("p", {
+    className: "cis-cal-note"
+  }, /*#__PURE__*/React.createElement(DSCIS.IconifyIcon, {
+    name: "lucide:flame",
+    size: 13,
+    color: "currentColor"
+  }), "Gold days are check-ins. Keep them touching to grow the streak."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "ml-btn ml-btn-navy cis-cal-ok",
+    onClick: onClose
+  }, "Done")));
+}
 function CheckInStreakScreen() {
   const [config] = useStateCIS(() => PF_CIS.getConfig());
   const [state, setState] = useStateCIS(() => PF_CIS.getState());
   const [toast, setToast] = useStateCIS(null);
+  /* ?calendar=1 opens the streak calendar straight away (demo / screenshots) */
+  const [calOpen, setCalOpen] = useStateCIS(() => {
+    try {
+      return new URLSearchParams(location.search).get("calendar") === "1";
+    } catch (e) {
+      return false;
+    }
+  });
   const refresh = () => setState(PF_CIS.getState());
 
   /* Stay in step with the rest of the prototype — the engine lives in localStorage. */
@@ -298,11 +409,6 @@ function CheckInStreakScreen() {
     } catch (e) {/* older WebView */}
     if (window.PFRewards) window.PFRewards.fromAction(res);else if (res.leveledUp) setTimeout(() => goCIS("MilestoneSplash.html"), 900);
   };
-  const freeze = () => {
-    const res = PF_CIS.spendCreditsToFreezeStreak();
-    refresh();
-    flash(res.ok ? "Streak frozen for 2 days" : res.reason);
-  };
   const headline = current === 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, "Start your ", /*#__PURE__*/React.createElement("b", null, "streak")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, current), " in a row!");
   const sub = current === 0 ? "Check in today to start your streak. Five days running clears the Mobile Check-In guardrail." : rowComplete ? checkedInToday ? "Five days running and the Mobile Check-In guardrail is cleared. Come back tomorrow to keep the row alive." : "Five days running. Check in today to make it " + (current + 1) + " and keep the row alive." : CIS_SLOTS - current + " more " + (CIS_SLOTS - current === 1 ? "day" : "days") + " to make it five in a row.";
   return /*#__PURE__*/React.createElement("div", {
@@ -323,24 +429,20 @@ function CheckInStreakScreen() {
   }, /*#__PURE__*/React.createElement("section", {
     className: "cis-hero",
     "aria-label": current + " day check-in streak"
-  }, rowComplete && /*#__PURE__*/React.createElement("div", {
-    className: "cis-confetti",
-    "aria-hidden": "true"
-  }, Array.from({
-    length: 14
-  }).map((_, i) => /*#__PURE__*/React.createElement("span", {
-    key: i,
-    className: "cis-confetti-piece p" + i % 6,
-    style: {
-      left: 4 + i * 6.8 + "%",
-      animationDelay: i * 0.17 + "s"
-    }
-  }))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "cis-hero-top"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cis-hero-doc",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(CisDoc, null)), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cis-cal-btn",
+    "aria-label": "View streak calendar",
+    "aria-haspopup": "dialog",
+    "aria-expanded": calOpen,
+    onClick: () => setCalOpen(true)
+  }, /*#__PURE__*/React.createElement(DSCIS.IconifyIcon, {
+    name: "lucide:calendar-days",
+    size: 20,
+    color: "currentColor"
+  })), /*#__PURE__*/React.createElement("div", {
     className: "cis-hero-tx"
   }, /*#__PURE__*/React.createElement("div", {
     className: "cis-kicker"
@@ -350,22 +452,23 @@ function CheckInStreakScreen() {
     color: "currentColor"
   }), " Daily check-in"), /*#__PURE__*/React.createElement("h2", null, headline), /*#__PURE__*/React.createElement("p", {
     className: "cis-hero-sub"
-  }, sub))), /*#__PURE__*/React.createElement("div", {
+  }, sub))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
     className: "cis-row",
-    role: "list",
-    "aria-label": "Last five check-in days"
+    "aria-label": "Last five check-in days. Open the streak calendar",
+    "aria-haspopup": "dialog",
+    "aria-expanded": calOpen,
+    onClick: () => setCalOpen(true)
   }, slots.map(s => /*#__PURE__*/React.createElement(React.Fragment, {
     key: s.i
   }, s.i > 0 && /*#__PURE__*/React.createElement("span", {
     className: "cis-link" + (s.done ? " on" : ""),
     "aria-hidden": "true"
-  }), /*#__PURE__*/React.createElement("div", {
-    role: "listitem",
+  }), /*#__PURE__*/React.createElement("span", {
     className: "cis-slot" + (s.done ? " is-done" : "") + (s.today ? " is-today" : ""),
     style: {
       "--d": s.i * 110 + "ms"
-    },
-    "aria-label": s.label + (s.done ? ": checked in" : ": not yet")
+    }
   }, /*#__PURE__*/React.createElement("span", {
     className: "cis-slot-art"
   }, s.done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CisLottie, {
@@ -389,14 +492,7 @@ function CheckInStreakScreen() {
     className: "cis-slot-day"
   }, s.label))))), /*#__PURE__*/React.createElement("div", {
     className: "cis-act"
-  }, checkedInToday ? /*#__PURE__*/React.createElement("div", {
-    className: "cis-status",
-    role: "status"
-  }, /*#__PURE__*/React.createElement(DSCIS.IconifyIcon, {
-    name: "lucide:check",
-    size: 18,
-    color: "currentColor"
-  }), " Checked in today") : /*#__PURE__*/React.createElement("button", {
+  }, !checkedInToday && /*#__PURE__*/React.createElement("button", {
     className: "ml-btn ml-btn-navy cis-cta",
     type: "button",
     onClick: checkIn,
@@ -484,37 +580,6 @@ function CheckInStreakScreen() {
   })), /*#__PURE__*/React.createElement("div", {
     className: "cis-milestone-foot"
   }, toGo > 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, toGo, " more ", toGo === 1 ? "day" : "days"), master.reward ? " unlocks " + master.reward : "") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, "Unlocked"), master.reward ? " — " + master.reward : ""))), /*#__PURE__*/React.createElement("div", {
-    className: "ml-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Protect your streak")), /*#__PURE__*/React.createElement("div", {
-    className: "ml-card cis-freeze" + (streak.frozen ? " is-frozen" : "")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cis-freeze-ico"
-  }, /*#__PURE__*/React.createElement(DSCIS.IconifyIcon, {
-    name: "lucide:snowflake",
-    size: 20,
-    color: "currentColor"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "cis-freeze-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ti"
-  }, streak.frozen ? "Streak frozen" : "Streak freeze"), /*#__PURE__*/React.createElement("span", {
-    className: "su"
-  }, streak.frozen && streak.frozenUntil ? "Safe until " + new Date(streak.frozenUntil).toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short"
-  }) : "Miss a day without breaking your streak · keeps it safe for 2 days")), streak.frozen ? /*#__PURE__*/React.createElement("span", {
-    className: "cis-freeze-on"
-  }, /*#__PURE__*/React.createElement(DSCIS.IconifyIcon, {
-    name: "lucide:lock",
-    size: 16,
-    color: "var(--gray-400)"
-  })) : /*#__PURE__*/React.createElement("button", {
-    className: "ml-btn ml-btn-sm ml-btn-ghost",
-    type: "button",
-    onClick: freeze,
-    disabled: state.spendableCredits < config.streakFreezeCost
-  }, "Freeze")), /*#__PURE__*/React.createElement("div", {
     className: "ml-demo-bar"
   }, /*#__PURE__*/React.createElement("button", {
     className: "ml-demo-btn",
@@ -561,7 +626,11 @@ function CheckInStreakScreen() {
     style: {
       height: 8
     }
-  })), toast && /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement(CisCalendarSheet, {
+    open: calOpen,
+    onClose: () => setCalOpen(false),
+    state: state
+  }), toast && /*#__PURE__*/React.createElement("div", {
     className: "ml-toast",
     role: "status"
   }, /*#__PURE__*/React.createElement(DSCIS.IconifyIcon, {

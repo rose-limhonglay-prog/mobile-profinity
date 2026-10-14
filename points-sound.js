@@ -365,6 +365,8 @@
     if (delayMs) setTimeout(fire, delayMs); else fire();
   }
   window.addEventListener("pf:milestone", function () { playKind("milestone", 120); });
+  /* a league perk redeemed on its landing page (reward-landing.jsx) → same fanfare */
+  window.addEventListener("pf:perk-redeemed", function () { playKind("milestone", 150); });
   window.addEventListener("pf:celebration", function () { playKind("combined", 150); });
 
   window.PFPointsSound = {

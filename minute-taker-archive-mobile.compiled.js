@@ -103,6 +103,15 @@ const MTAM_SESSIONS = [{
   type: "New patient consult",
   kind: "Consult"
 }, {
+  patient: "Marcus Thorne",
+  id: "MT-77198",
+  daysAgo: 50,
+  time: "11:30",
+  duration: "35 min",
+  status: "Saved",
+  type: "Rosacea follow-up",
+  kind: "Follow-up"
+}, {
   patient: "Amir Khan",
   id: "MT-76980",
   daysAgo: 63,
@@ -111,6 +120,15 @@ const MTAM_SESSIONS = [{
   status: "Saved",
   type: "Rosacea review",
   kind: "Review"
+}, {
+  patient: "Eleanor Vance",
+  id: "MT-77213",
+  daysAgo: 75,
+  time: "09:15",
+  duration: "30 min",
+  status: "Saved",
+  type: "Skin consult",
+  kind: "Consult"
 }];
 const MTAM_PERIODS = [{
   key: "all",
@@ -182,7 +200,14 @@ function MTAMRow({
     className: "mtam-row-when"
   }, mtamDateLabel(row.daysAgo), " · ", row.time, " · ", row.duration)), /*#__PURE__*/React.createElement("div", {
     className: "mtam-row-side"
-  }, /*#__PURE__*/React.createElement(StatusPillA, {
+  }, !processing && /*#__PURE__*/React.createElement("span", {
+    className: "mtam-row-audio",
+    title: "Recording kept",
+    "aria-label": "Recording kept"
+  }, /*#__PURE__*/React.createElement(IcA, {
+    name: "lucide:mic",
+    size: 12
+  })), /*#__PURE__*/React.createElement(StatusPillA, {
     status: row.status,
     compact: true
   }), /*#__PURE__*/React.createElement(IcA, {
@@ -379,7 +404,7 @@ function MTAMView() {
   }, /*#__PURE__*/React.createElement(IcA, {
     name: "lucide:shield-check",
     size: 15
-  })), /*#__PURE__*/React.createElement("span", null, "Notes stay in your EMR. The archive only lists sessions you approved, and audio is never stored.")), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("span", null, "Notes stay in your EMR. The archive lists the sessions you approved, each with its recording kept for 30 days.")), /*#__PURE__*/React.createElement("div", {
     className: "mt-spacer"
   })));
 }

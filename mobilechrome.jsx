@@ -116,10 +116,9 @@
 
   /* ===== header points pill ===================================================
      The member's lifetime gamification points, sat between the logo and the
-     search icon. Icon is the coffee-break Dr Tim avatar Lottie (assets/lottie/drtim-coffee.json:
-     lottie.host piZS1V88dq recoloured to his palette + glasses + "Dr Tim Pearce" coat
-     signature, built by assets/lottie/drtim-coffee.build.py; replaced the smiley 2026-10-13) cropped to
-     head-and-shoulders inside a gold ring, fed as raw JSON through
+     search icon. Icon is the smiling-face Lottie (lottie.host ArWGbXL6R3; the coffee-break
+     Dr Tim avatar tried on 2026-10-13 was reverted the same day at the user's request) fed
+     as raw JSON through
      lottie-web (never the lottie.host /embed iframe — it caches hard and
      ignores re-publishes). Reads window.PFLoyalty when loyalty-engine.js is on
      the page and falls back to the engine's seeded headline otherwise; a
@@ -128,7 +127,7 @@
 
      The number reads gold (#D9A21B, #F5C542 in dark mode) and the earn tint is the artwork's amber (#FCC25D); the tooltip
      still reads lifetime points against the engine's beakerFullPoints scale. */
-  const PTS_LOTTIE_SRCC = "assets/lottie/drtim-coffee.json?v=20261013a";
+  const PTS_LOTTIE_SRCC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
   const PTS_LOTTIE_LIBC = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
   const PTS_FALLBACKC = 14000;
   const PTS_FULL_FALLBACKC = 20000;
@@ -191,7 +190,7 @@
     }, []);
     return (
       <span className="m-pts-ic" aria-hidden="true">
-        {!ready && <span className="m-pts-ic-fb"><DSC.IconifyIcon name="lucide:user-round" size={16} color="#FCC25D" /></span>}
+        {!ready && <span className="m-pts-ic-fb"><DSC.IconifyIcon name="lucide:smile" size={18} color="#FCC25D" /></span>}
         <span ref={host} className={"m-pts-ic-anim" + (ready ? " on" : "")} />
       </span>);
   }
@@ -257,7 +256,7 @@
         <button type="button" tabIndex={-1} className={"m-pts" + (delta && on ? " earn" : "")} onClick={() => goC("RewardsDashboard.html")}>
           <PointsIconC />
           <span key={bump} className={"m-pts-n" + (bump ? " pop" : "")}>{shown.toLocaleString("en-GB")}</span>
-          {delta && on && <span key={delta.key} className="m-pts-delta" aria-hidden="true">+{delta.amt}</span>}
+          {delta && on && <span key={delta.key} className={"m-pts-delta" + (delta.amt < 0 ? " is-neg" : "")} aria-hidden="true">{delta.amt < 0 ? "−" + Math.abs(delta.amt) : "+" + delta.amt}</span>}
         </button>
       </div>, host);
   }
@@ -323,7 +322,7 @@
           onClick={() => goC("RewardsDashboard.html")}>
           <PointsIconC />
           <span key={bump} className={"m-pts-n" + (bump ? " pop" : "")}>{shown.toLocaleString("en-GB")}</span>
-          {delta && <span key={delta.key} className="m-pts-delta" aria-hidden="true">+{delta.amt}</span>}
+          {delta && <span key={delta.key} className={"m-pts-delta" + (delta.amt < 0 ? " is-neg" : "")} aria-hidden="true">{delta.amt < 0 ? "−" + Math.abs(delta.amt) : "+" + delta.amt}</span>}
         </button>
         {tallyHost && <PointsTallyC host={tallyHost} on={tally} shown={shown} bump={bump} delta={delta} />}
       </React.Fragment>);

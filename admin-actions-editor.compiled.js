@@ -865,7 +865,7 @@ const SIM_LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2
 const SIM_LOTTIE = {
   wink: "assets/lottie/checkin-wink.json?v=20260918a",
   welcome: "assets/lottie/checkin-welcome.json?v=20260917c",
-  wave: "assets/lottie/drtim-cheer.json?v=20261013a"
+  wave: "assets/lottie/drtim-doctor.json?v=20261014b"
 };
 let simLottieLib = null;
 function simLoadLottie() {

@@ -1,163 +1,147 @@
 /* ===========================================================================
-   PROfinity — Minute Taker · Archive & Search with AI Copilot
-   Searchable session history + natural-language cross-session AI Copilot.
-   PRD Screen 6 (Sec. 3.6 / MT-K08, MT-K09).
-   Classes prefixed mta- to avoid clashes with other pages.
+   PROfinity — Minute Taker (web) · Archive & Search with AI Copilot
+   Web twin of MinuteTakerArchiveMobile (minute-taker-archive-mobile.jsx):
+   search + period / type filters over every past session grouped by day,
+   each row opening the note review, plus an AI Copilot card that answers
+   across the sessions in view. Runs on window.PFMTW. Classes prefixed mta-.
    =========================================================================== */
 const {
   useState: useStateMTA,
   useMemo: useMemoMTA
 } = React;
-function goMTA(url) {
-  (window.pfGo || function (u) {
-    window.location.href = u;
-  })(url);
-}
-const MT_NAV = [{
-  icon: "lucide:layout-grid",
-  label: "Dashboard"
-}, {
-  icon: "lucide:users",
-  label: "Patients"
-}, {
-  icon: "lucide:archive",
-  label: "Archive"
-}];
-const MT_NAV_LINKS = {
-  "Dashboard": "MinuteTakerDashboard.html",
-  "Patients": "MinuteTakerPatientContext.html",
-  "Archive": "MinuteTakerArchive.html"
-};
-function MTASidebar() {
-  return /*#__PURE__*/React.createElement("aside", {
-    className: "mta-sidebar"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mta-logo"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:mic",
-    class: "mta-logo-icon"
-  }), /*#__PURE__*/React.createElement("span", null, "Minute Taker")), MT_NAV.map(item => /*#__PURE__*/React.createElement("button", {
-    key: item.label,
-    className: "mta-navitem" + (item.label === "Archive" ? " is-active" : ""),
-    type: "button",
-    onClick: item.label !== "Archive" ? () => goMTA(MT_NAV_LINKS[item.label]) : undefined
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: item.icon
-  }), /*#__PURE__*/React.createElement("span", null, item.label))));
-}
-function MTAHeader() {
-  return /*#__PURE__*/React.createElement("header", {
-    className: "mta-header"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:panel-left",
-    style: {
-      fontSize: 22,
-      color: "var(--gray-500)",
-      cursor: "pointer"
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "mta-header-title"
-  }, "Minute Taker"), /*#__PURE__*/React.createElement("div", {
-    className: "mta-spacer"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "mta-user"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mta-user-name"
-  }, "Dr. Katie Smith"), /*#__PURE__*/React.createElement("div", {
-    className: "mta-user-role"
-  }, "Clinician")), /*#__PURE__*/React.createElement("img", {
-    className: "mta-user-avatar",
-    src: "assets/avatar-katy.jpg",
-    alt: "Dr. Katie Smith"
-  }));
-}
+const MTA = window.PFMTW;
+const {
+  Avatar: AvatarA,
+  StatusPill: StatusPillA,
+  Seg: SegA,
+  Shell: ShellA
+} = MTA;
 
-/* same sessions as the mobile archive (minute-taker-archive-mobile.jsx); daysAgo keeps dates current */
-function mtaIso(daysAgo) {
-  const d = new Date();
-  d.setDate(d.getDate() - daysAgo);
-  return d.toISOString().slice(0, 10);
-}
+/* same sessions as the mobile archive; daysAgo keeps the groups correct whatever today's date is */
 const MTA_SESSIONS = [{
-  daysAgo: 0,
   patient: "Eleanor Vance",
-  type: "Follow-up",
-  detail: "Injectables follow-up",
-  duration: "45 min",
-  status: "Completed"
-}, {
+  id: "MT-77213",
   daysAgo: 0,
+  time: "09:30",
+  duration: "45 min",
+  status: "Note Ready",
+  type: "Injectables follow-up",
+  kind: "Follow-up"
+}, {
   patient: "Marcus Thorne",
-  type: "Initial Consult",
-  detail: "New patient consult",
+  id: "MT-77198",
+  daysAgo: 0,
+  time: "08:00",
   duration: "30 min",
-  status: "Pending"
+  status: "Processing",
+  type: "New patient consult",
+  kind: "Consult"
 }, {
-  daysAgo: 1,
   patient: "Sarah Jenkins",
-  type: "Review",
-  detail: "Post-op review",
+  id: "MT-84729",
+  daysAgo: 1,
+  time: "16:15",
   duration: "55 min",
-  status: "Completed"
+  status: "Saved",
+  type: "Post-op review",
+  kind: "Review"
 }, {
+  patient: "David Cho",
+  id: "MT-77042",
   daysAgo: 1,
-  patient: "David Cho",
-  type: "Treatment",
-  detail: "Acne protocol · S2",
+  time: "14:00",
   duration: "20 min",
-  status: "Completed"
+  status: "Saved",
+  type: "Acne protocol · S2",
+  kind: "Treatment"
 }, {
+  patient: "Priya Natarajan",
+  id: "MT-77310",
   daysAgo: 5,
-  patient: "Priya Natarajan",
-  type: "Initial Consult",
-  detail: "Skin consult",
+  time: "10:45",
   duration: "35 min",
-  status: "Completed"
+  status: "Saved",
+  type: "Skin consult",
+  kind: "Consult"
 }, {
-  daysAgo: 13,
   patient: "Eleanor Vance",
-  type: "Treatment",
-  detail: "Injectables · session 1",
+  id: "MT-77213",
+  daysAgo: 13,
+  time: "11:00",
   duration: "40 min",
-  status: "Completed"
+  status: "Saved",
+  type: "Injectables · session 1",
+  kind: "Treatment"
 }, {
-  daysAgo: 22,
   patient: "Sarah Jenkins",
-  type: "Review",
-  detail: "Knee arthroscopy review",
+  id: "MT-84729",
+  daysAgo: 22,
+  time: "09:00",
   duration: "50 min",
-  status: "Completed"
+  status: "Saved",
+  type: "Knee arthroscopy review",
+  kind: "Review"
 }, {
-  daysAgo: 29,
   patient: "David Cho",
-  type: "Treatment",
-  detail: "Acne protocol · S1",
+  id: "MT-77042",
+  daysAgo: 29,
+  time: "15:30",
   duration: "25 min",
-  status: "Completed"
+  status: "Saved",
+  type: "Acne protocol · S1",
+  kind: "Treatment"
 }, {
-  daysAgo: 41,
   patient: "Priya Natarajan",
-  type: "Initial Consult",
-  detail: "New patient consult",
+  id: "MT-77310",
+  daysAgo: 41,
+  time: "13:15",
   duration: "45 min",
-  status: "Completed"
+  status: "Saved",
+  type: "New patient consult",
+  kind: "Consult"
 }, {
-  daysAgo: 63,
+  patient: "Marcus Thorne",
+  id: "MT-77198",
+  daysAgo: 50,
+  time: "11:30",
+  duration: "35 min",
+  status: "Saved",
+  type: "Rosacea follow-up",
+  kind: "Follow-up"
+}, {
   patient: "Amir Khan",
-  type: "Review",
-  detail: "Rosacea review",
+  id: "MT-76980",
+  daysAgo: 63,
+  time: "10:00",
   duration: "30 min",
-  status: "Completed"
-}].map(s => ({
-  ...s,
-  date: mtaIso(s.daysAgo)
-}));
-const MTA_TYPES = ["All Types", "Initial Consult", "Follow-up", "Review", "Treatment"];
-const MTA_RANGES = ["All Time", "Last 7 Days", "Last 30 Days"];
-function mtaDaysAgo(s) {
-  return s.daysAgo;
-}
-const MTA_COPILOT_ANSWERS = [{
+  status: "Saved",
+  type: "Rosacea review",
+  kind: "Review"
+}, {
+  patient: "Eleanor Vance",
+  id: "MT-77213",
+  daysAgo: 75,
+  time: "09:15",
+  duration: "30 min",
+  status: "Saved",
+  type: "Skin consult",
+  kind: "Consult"
+}];
+const MTA_PERIODS = [{
+  key: "all",
+  label: "All time",
+  max: Infinity
+}, {
+  key: "7",
+  label: "7 days",
+  max: 7
+}, {
+  key: "30",
+  label: "30 days",
+  max: 30
+}];
+const MTA_KINDS = ["All types", "Consult", "Follow-up", "Review", "Treatment"];
+const MTA_COPILOT = [{
   match: /rosacea|amir/i,
   text: "Amir Khan's rosacea review (2 months ago) recorded fewer flares on the current regimen, with good tolerance and no new triggers. The plan was to continue unchanged and review again in 3 months."
 }, {
@@ -173,135 +157,240 @@ const MTA_COPILOT_ANSWERS = [{
   match: /.*/,
   text: "Across the sessions in view, most visits were routine follow-ups with stable findings and no urgent flags. Ask about a patient, condition or treatment to narrow this down."
 }];
-function mtaAnswerFor(q) {
-  const found = MTA_COPILOT_ANSWERS.find(a => a.match.test(q));
-  return found.text;
+function mtaDateLabel(daysAgo) {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return d.toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short"
+  });
+}
+function mtaGroup(daysAgo) {
+  if (daysAgo === 0) return "Today";
+  if (daysAgo === 1) return "Yesterday";
+  if (daysAgo < 7) return "This week";
+  if (daysAgo < 30) return "This month";
+  return "Older";
+}
+function MTARow({
+  row,
+  onOpen
+}) {
+  const processing = row.status === "Processing";
+  const meta = MTA.STATUS[row.status];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "mta-row" + (processing ? " is-processing" : "")
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mta-cell-patient"
+  }, /*#__PURE__*/React.createElement(AvatarA, {
+    name: row.patient,
+    size: 42
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-grow"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mta-row-name"
+  }, row.patient), /*#__PURE__*/React.createElement("div", {
+    className: "mta-row-meta"
+  }, row.type, !processing && /*#__PURE__*/React.createElement("span", {
+    className: "mta-audio",
+    title: "Recording kept"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:mic"
+  }), "Audio")))), /*#__PURE__*/React.createElement("span", {
+    className: "mta-row-when"
+  }, /*#__PURE__*/React.createElement("strong", null, mtaDateLabel(row.daysAgo)), /*#__PURE__*/React.createElement("span", null, row.time, " · ", row.duration)), /*#__PURE__*/React.createElement("span", {
+    className: "mtw-pill mtw-pill-muted mta-kind"
+  }, row.kind), /*#__PURE__*/React.createElement(StatusPillA, {
+    status: row.status
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mta-row-btn" + (processing ? " is-disabled" : ""),
+    disabled: processing,
+    onClick: processing ? undefined : () => onOpen(row),
+    "aria-label": (meta ? meta.cta : "Open") + " for " + row.patient
+  }, meta ? meta.cta : "Open", /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:chevron-right"
+  })));
+}
+function MTACopilot({
+  count
+}) {
+  const [q, setQ] = useStateMTA("");
+  const [busy, setBusy] = useStateMTA(false);
+  const [answer, setAnswer] = useStateMTA(null);
+  function ask() {
+    if (!q.trim() || busy) return;
+    setBusy(true);
+    setAnswer(null);
+    window.setTimeout(() => {
+      setAnswer(MTA_COPILOT.find(a => a.match.test(q)).text);
+      setBusy(false);
+    }, 1100);
+  }
+  return /*#__PURE__*/React.createElement("section", {
+    className: "mtw-card mta-copilot mtw-sticky"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtw-card-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtw-card-title"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtw-ti"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:sparkles"
+  })), "AI Copilot")), /*#__PURE__*/React.createElement("p", {
+    className: "mtw-hint"
+  }, "Ask a question across the ", count, " session", count === 1 ? "" : "s", " in view, e.g. \"How has David's acne responded?\""), /*#__PURE__*/React.createElement("label", {
+    className: "mtw-field mta-copilot-field"
+  }, /*#__PURE__*/React.createElement("textarea", {
+    rows: 4,
+    placeholder: "Summarise every rosacea plan from the last 3 months…",
+    value: q,
+    onChange: e => setQ(e.target.value),
+    onKeyDown: e => {
+      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) ask();
+    }
+  })), busy && /*#__PURE__*/React.createElement("div", {
+    className: "mta-copilot-loading"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mta-spinner"
+  }), "Reading sessions…"), answer && !busy && /*#__PURE__*/React.createElement("div", {
+    className: "mta-copilot-answer mtw-fade-in"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:sparkles"
+  }), /*#__PURE__*/React.createElement("span", null, answer)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtw-btn mtw-btn-soft mtw-btn-block",
+    onClick: ask,
+    disabled: busy || !q.trim()
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:wand-sparkles"
+  }), "Generate insight"));
 }
 function MTAView() {
   const [search, setSearch] = useStateMTA("");
-  const [range, setRange] = useStateMTA("All Time");
-  const [type, setType] = useStateMTA("All Types");
-  const [question, setQuestion] = useStateMTA("");
-  const [generating, setGenerating] = useStateMTA(false);
-  const [insight, setInsight] = useStateMTA(null);
+  const [period, setPeriod] = useStateMTA("all");
+  const [kind, setKind] = useStateMTA("All types");
+  const max = MTA_PERIODS.find(p => p.key === period).max;
   const filtered = useMemoMTA(() => {
+    const q = search.trim().toLowerCase();
     return MTA_SESSIONS.filter(s => {
-      const q = search.trim().toLowerCase();
-      if (q && !s.patient.toLowerCase().includes(q) && !s.type.toLowerCase().includes(q) && !s.detail.toLowerCase().includes(q)) return false;
-      if (type !== "All Types" && s.type !== type) return false;
-      if (range === "Last 7 Days" && mtaDaysAgo(s) > 7) return false;
-      if (range === "Last 30 Days" && mtaDaysAgo(s) > 30) return false;
+      if (s.daysAgo > max) return false;
+      if (kind !== "All types" && s.kind !== kind) return false;
+      if (q && !(s.patient.toLowerCase().includes(q) || s.type.toLowerCase().includes(q) || s.id.toLowerCase().includes(q))) return false;
       return true;
     });
-  }, [search, range, type]);
-  function generateInsight() {
-    if (!question.trim()) return;
-    setGenerating(true);
-    setInsight(null);
-    window.setTimeout(() => {
-      setInsight(mtaAnswerFor(question));
-      setGenerating(false);
-    }, 1100);
+  }, [search, max, kind]);
+  const groups = useMemoMTA(() => {
+    const out = [];
+    filtered.forEach(s => {
+      const g = mtaGroup(s.daysAgo);
+      const last = out[out.length - 1];
+      if (last && last.label === g) last.rows.push(s);else out.push({
+        label: g,
+        rows: [s]
+      });
+    });
+    return out;
+  }, [filtered]);
+  const toReview = MTA_SESSIONS.filter(s => s.status === "Note Ready").length;
+  function openSession(row) {
+    MTA.go(MTA.routes.review + "?patient=" + encodeURIComponent(row.patient) + "&id=" + row.id);
+  }
+  function clear() {
+    setSearch("");
+    setPeriod("all");
+    setKind("All types");
   }
   return /*#__PURE__*/React.createElement("div", {
-    className: "mta-shell"
-  }, /*#__PURE__*/React.createElement(MTASidebar, null), /*#__PURE__*/React.createElement("div", {
-    className: "mta-main"
-  }, /*#__PURE__*/React.createElement(MTAHeader, null), /*#__PURE__*/React.createElement("div", {
-    className: "mta-view"
+    className: "mtw-view"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mta-page-head"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", null, "Archive & Search"), /*#__PURE__*/React.createElement("p", null, "Review and manage past clinical sessions and notes.")), /*#__PURE__*/React.createElement("button", {
-    className: "mta-btn mta-btn-primary",
+    className: "mtw-page-head"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", null, "Archive"), /*#__PURE__*/React.createElement("p", null, MTA_SESSIONS.length, " sessions · ", toReview, " to review")), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-page-head-actions"
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    onClick: () => goMTA("MinuteTakerPatientContext.html")
+    className: "mtw-btn mtw-btn-primary",
+    onClick: () => MTA.go(MTA.routes.start)
   }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:plus"
-  }), "Start New Session")), /*#__PURE__*/React.createElement("div", {
-    className: "mta-content-grid"
+    icon: "lucide:mic"
+  }), "Start session"))), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-grid"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mta-list-col"
+    className: "mtw-col"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mta-filter-bar"
+    className: "mta-filters"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mta-search-wrap"
+    className: "mtw-search mta-search"
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:search"
   }), /*#__PURE__*/React.createElement("input", {
-    placeholder: "Search patient/keyword…",
+    className: "mtw-input",
+    placeholder: "Search patient, note or ID…",
     value: search,
-    onChange: e => setSearch(e.target.value)
-  })), /*#__PURE__*/React.createElement("select", {
-    value: range,
-    onChange: e => setRange(e.target.value)
-  }, MTA_RANGES.map(r => /*#__PURE__*/React.createElement("option", {
-    key: r,
-    value: r
-  }, r))), /*#__PURE__*/React.createElement("select", {
-    value: type,
-    onChange: e => setType(e.target.value)
-  }, MTA_TYPES.map(t => /*#__PURE__*/React.createElement("option", {
-    key: t,
-    value: t
-  }, t)))), /*#__PURE__*/React.createElement("div", {
-    className: "mta-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mta-row-grid mta-thead"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mta-th"
-  }, "Date"), /*#__PURE__*/React.createElement("span", {
-    className: "mta-th"
-  }, "Patient"), /*#__PURE__*/React.createElement("span", {
-    className: "mta-th"
-  }, "Type"), /*#__PURE__*/React.createElement("span", {
-    className: "mta-th"
-  }, "Duration"), /*#__PURE__*/React.createElement("span", {
-    className: "mta-th"
-  }, "Status"), /*#__PURE__*/React.createElement("span", {
-    className: "mta-th"
-  }, "Action")), filtered.map((s, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
-    className: "mta-row-grid mta-trow"
-  }, /*#__PURE__*/React.createElement("span", null, s.date), /*#__PURE__*/React.createElement("span", {
-    className: "mta-patient-cell"
-  }, s.patient), /*#__PURE__*/React.createElement("span", {
-    title: s.detail
-  }, s.type), /*#__PURE__*/React.createElement("span", null, s.duration), /*#__PURE__*/React.createElement("span", {
-    className: "mta-status-pill " + (s.status === "Completed" ? "success" : "warning")
-  }, s.status), /*#__PURE__*/React.createElement("button", {
+    onChange: e => setSearch(e.target.value),
+    autoComplete: "off"
+  }), search && /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "mta-view-link",
-    onClick: () => goMTA("MinuteTakerNoteReview.html?patient=" + encodeURIComponent(s.patient))
-  }, "View Note"))), filtered.length === 0 && /*#__PURE__*/React.createElement("div", {
-    className: "mta-empty"
-  }, "No sessions match your filters."))), /*#__PURE__*/React.createElement("div", {
-    className: "mta-copilot-col"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mta-card mta-copilot-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mta-card-head"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mta-card-title-text"
+    className: "mtw-search-clear",
+    "aria-label": "Clear search",
+    onClick: () => setSearch("")
   }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:sparkles"
-  }), "AI Copilot")), /*#__PURE__*/React.createElement("p", {
-    className: "mta-copilot-hint"
-  }, "Generate insights across selected sessions."), /*#__PURE__*/React.createElement("textarea", {
-    rows: 5,
-    placeholder: "Ask the AI a question about these sessions: e.g. 'Summarise all treatment plans for patients with hypertension over the last 3 months.'",
-    value: question,
-    onChange: e => setQuestion(e.target.value)
-  }), generating && /*#__PURE__*/React.createElement("div", {
-    className: "mta-copilot-loading"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mta-copilot-spinner"
-  }), "Analyzing sessions…"), insight && !generating && /*#__PURE__*/React.createElement("div", {
-    className: "mta-copilot-answer"
-  }, insight), /*#__PURE__*/React.createElement("button", {
-    className: "mta-btn mta-btn-primary mta-copilot-btn",
+    icon: "lucide:x"
+  }))), /*#__PURE__*/React.createElement(SegA, {
+    items: MTA_PERIODS,
+    value: period,
+    onChange: setPeriod,
+    label: "Period",
+    className: "mta-period"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "mta-chips",
+    role: "list"
+  }, MTA_KINDS.map(k => /*#__PURE__*/React.createElement("button", {
+    key: k,
     type: "button",
-    onClick: generateInsight,
-    disabled: generating || !question.trim()
-  }, "Generate Insight")))))));
+    role: "listitem",
+    className: "mta-chip" + (kind === k ? " is-on" : ""),
+    onClick: () => setKind(k)
+  }, k))), groups.map(g => /*#__PURE__*/React.createElement("section", {
+    key: g.label,
+    className: "mta-group mtw-fade-in"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtw-section-label mta-label-row"
+  }, /*#__PURE__*/React.createElement("span", null, g.label), /*#__PURE__*/React.createElement("span", {
+    className: "mta-count"
+  }, g.rows.length)), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-card mta-list"
+  }, g.rows.map((row, i) => /*#__PURE__*/React.createElement(MTARow, {
+    key: row.id + "-" + row.daysAgo + "-" + i,
+    row: row,
+    onOpen: openSession
+  }))))), filtered.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "mta-empty mtw-fade-in"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mta-empty-ic"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:archive-x"
+  })), /*#__PURE__*/React.createElement("strong", null, "No sessions match"), /*#__PURE__*/React.createElement("span", null, "Try another name, a wider period or a different type."), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtw-btn mtw-btn-ghost mtw-btn-sm",
+    onClick: clear
+  }, "Clear filters")), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-trust"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtw-ti"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:shield-check"
+  })), /*#__PURE__*/React.createElement("span", null, "Notes stay in your EMR. The archive lists the sessions you approved, each with its recording kept for 30 days."))), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-col"
+  }, /*#__PURE__*/React.createElement(MTACopilot, {
+    count: filtered.length
+  }))));
 }
-ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(MTAView, null));
+function MTAApp() {
+  return /*#__PURE__*/React.createElement(ShellA, {
+    active: "Archive",
+    title: "Archive"
+  }, /*#__PURE__*/React.createElement(MTAView, null));
+}
+ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(MTAApp, null));

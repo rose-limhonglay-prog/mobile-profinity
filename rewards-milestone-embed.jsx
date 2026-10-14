@@ -141,8 +141,16 @@
   }
   function leagueFor(key) { try { return LG && LG.getLeague ? LG.getLeague(key) : null; } catch (e) { return null; } }
 
+  /* every perk has its own landing page (2026-10-13): RewardLanding.html on
+     the phone, RewardLandingWeb.html on the desktop Rewards page */
+  const RME_WEB = /Web\.html$/i.test(location.pathname);
+  function openReward(key) {
+    const ret = location.pathname.split("/").pop() || (RME_WEB ? "RewardsWeb.html" : "RewardsDashboard.html");
+    go((RME_WEB ? "RewardLandingWeb.html" : "RewardLanding.html") + "?reward=" + encodeURIComponent(key) + "&ret=" + encodeURIComponent(ret));
+  }
   function Node({ milestone, status, isLast, reachedAt, open, onToggle }) {
     const league = leagueFor(milestone.key);
+    const redeemed = (() => { try { const pk = PF.getPerk ? PF.getPerk(milestone.key) : null; return !!(pk && pk.status === "redeemed"); } catch (e) { return false; } })();
     const vars = league ? { "--lg-accent": league.accent, "--lg-deep": league.deep, "--lg-soft": league.soft } : null;
     const reached = status === "passed" ? whenLabel(reachedAt) : null;
     const n = milestone.benefits.length;
@@ -177,14 +185,15 @@
             <div className="rme-benefits">
               <span className="rme-benefit-kicker">{status === "passed" ? "Your one-time perk — unlocked" : "One-time perk at " + (milestone.threshold > 0 ? fmt(milestone.threshold) + " pts" : "the start")}</span>
               {milestone.benefits.map((b, i) => (
-                <div key={i} className="rme-benefit">
-                  <span className="rme-benefit-ic" aria-hidden="true"><Icon name={status === "locked" ? "lucide:lock" : "lucide:gift"} size={15} color={status === "locked" ? "var(--gray-400)" : "var(--brand-gold)"} /></span>
+                <button key={i} type="button" className="rme-benefit rme-benefit-link" onClick={() => openReward(milestone.key)} aria-label={"Open " + b.title}>
+                  <span className="rme-benefit-ic" aria-hidden="true"><Icon name={redeemed ? "lucide:ticket" : status === "locked" ? "lucide:lock" : "lucide:gift"} size={15} color={status === "locked" ? "var(--gray-400)" : "var(--brand-gold)"} /></span>
                   <div className="rme-benefit-copy">
                     <div className="rme-benefit-title">{b.title}</div>
                     <div className="rme-benefit-desc">{b.description}</div>
                     {b.delivery ? <div className="rme-benefit-delivery">{b.delivery}</div> : null}
+                    <span className={"rme-benefit-cta" + (status === "passed" && !redeemed ? " is-redeem" : "")}>{redeemed ? "Redeemed · view your reward" : status === "passed" ? "Redeem this perk" : "See this reward"}<Icon name="lucide:chevron-right" size={14} color="currentColor" /></span>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -317,8 +326,7 @@
     { key: "leaderboard", title: "Where you rank",       body: "Your place in this league on rolling 30-day points, and who's just ahead of you." },
     { key: "stats",       title: "Points and streak",    body: "Points are lifetime — never spent, never expired. Check in daily to keep the streak alive." },
     { key: "earn",        title: "Ways to Earn",         body: "Every point-earning action in one list. Tap any row to see how it works." },
-    { key: "path",        title: "Milestone Path",       body: "Each of the six leagues unlocks one one-time perk the moment you reach it." },
-    { key: "rewards",     title: "My Rewards",           body: "Your unlocked perk codes live here, ready to use." },
+    { key: "path",        title: "My Rewards",           body: "Each of the six leagues unlocks one one-time perk the moment you reach it — redeem them here." },
     { key: "week",        title: "Last 7 days",          body: "Points earned this week against your weekly goal, and your pace to the next league." }
   ];
   function rwReduce() { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }

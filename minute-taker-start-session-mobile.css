@@ -2,73 +2,70 @@
    PROfinity — Minute Taker (mobile) · Start Session
    Builds on minute-taker-mobile.css (mt- atoms). Classes prefixed mtssm-.
    =========================================================================== */
-/* header "Add patient" button */
-.mtssm-add { display: inline-flex; align-items: center; gap: 5px; height: 32px; padding: 0 10px; margin-right: -4px; border-radius: 999px; border: 1.5px solid var(--mt-accent);
-  background: var(--mt-card); color: var(--mt-accent-ink); font-family: inherit; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; -webkit-tap-highlight-color: transparent;
-  transition: background .14s ease, color .14s ease; }
+/* simplified large-type layout (user, 2026-10-14) */
 .mtssm-screen .mt-top-sub { white-space: nowrap; }
-.mtssm-add:active { transform: scale(.96); }
-.mtssm-add.is-on { background: var(--mt-accent); color: #fff; }
+.mtssm-q { margin: 8px 4px 12px; font-size: 22px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.02em; line-height: 1.2; }
 
-/* search + recent patients */
-.mtssm-search { position: relative; display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border-radius: 14px; border: 1.5px solid var(--mt-line);
-  background: var(--mt-card); color: var(--mt-mute); margin-bottom: 10px; transition: border-color .14s ease, box-shadow .14s ease; }
-.mtssm-search:focus-within { border-color: var(--mt-accent); box-shadow: 0 0 0 3px rgba(108,99,255,.14); }
-.mtssm-search input { flex: 1; min-width: 0; border: none; background: transparent; font-family: inherit; font-size: 14.5px; color: var(--mt-ink); outline: none; -webkit-appearance: none; }
+/* patient card: on-file header or "New patient", big fields, allergies/conditions */
+.mtssm-details { padding: 16px; }
+.mtssm-patient { display: flex; align-items: center; gap: 14px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--mt-line-2); }
+.mtssm-patient-name { font-size: 19px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.01em; }
+.mtssm-patient-meta { margin-top: 3px; font-size: 14px; color: var(--mt-mute); }
+.mtssm-clear { flex: none; width: 40px; height: 40px; border-radius: 50%; border: none; background: var(--mt-sunken); color: var(--mt-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mtssm-new-head { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--mt-line-2); font-size: 17px; font-weight: 700; color: var(--mt-ink); }
+.mtssm-fields { display: flex; flex-direction: column; gap: 14px; }
+.mtssm-big-field > span { font-size: 14px; font-weight: 700; color: var(--mt-ink-2); }
+.mtssm-big-field input { height: 54px; font-size: 18px; border-radius: 14px; }
+.mtssm-snap { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--mt-line-2); }
+.mtssm-snap-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.mtssm-snap-title { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; font-weight: 700; color: var(--mt-ink); }
+.mtssm-snap-title > * { color: var(--mt-accent-ink); }
+.mtssm-snap-edit { display: inline-flex; align-items: center; gap: 5px; height: 36px; padding: 0 14px; border-radius: 999px; border: 1.5px solid var(--mt-line); background: var(--mt-card); color: var(--mt-accent-ink);
+  font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mtssm-snap-edit:active { background: var(--mt-sunken); }
+.mtssm-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.mtssm-pills .mt-pill { font-size: 13px; padding: 7px 12px; }
+
+/* "Seen this patient before?" row + inline finder */
+.mtssm-find { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 14px; padding: 14px 16px; border-radius: 18px; text-align: left;
+  border: 1.5px dashed var(--mt-line); background: var(--mt-card); color: var(--mt-ink); font-family: inherit; font-size: 16px; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mtssm-find:active { background: var(--mt-sunken); }
+.mtssm-find .mt-ti { flex: none; width: 40px; height: 40px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; background: var(--mt-accent-soft); color: var(--mt-accent-ink); }
+.mtssm-find small { display: block; margin-top: 2px; font-size: 13.5px; font-weight: 500; color: var(--mt-mute); }
+.mtssm-find > :last-child { color: var(--mt-faint); }
+.mtssm-finder { margin-top: 14px; padding: 16px; }
+.mtssm-finder-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; font-size: 16px; font-weight: 700; color: var(--mt-ink); }
+.mtssm-search { position: relative; display: flex; align-items: center; gap: 10px; height: 54px; padding: 0 14px; border-radius: 14px; border: 1.5px solid var(--mt-line);
+  background: var(--mt-sunken); color: var(--mt-mute); margin-bottom: 10px; transition: border-color .14s ease, box-shadow .14s ease; }
+.mtssm-search:focus-within { border-color: var(--mt-accent); background: var(--mt-card); box-shadow: 0 0 0 3px rgba(108,99,255,.14); }
+.mtssm-search input { flex: 1; min-width: 0; border: none; background: transparent; font-family: inherit; font-size: 18px; color: var(--mt-ink); outline: none; -webkit-appearance: none; }
 .mtssm-search input::placeholder { color: var(--mt-faint); }
 .mtssm-search input::-webkit-search-cancel-button { display: none; }
-.mtssm-search-clear { width: 24px; height: 24px; border-radius: 50%; border: none; background: var(--mt-sunken); color: var(--mt-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
-.mtssm-list-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 2px 8px; font-size: 12px; font-weight: 700; color: var(--mt-mute); }
-.mtssm-list-hint { font-weight: 500; color: var(--mt-faint); }
-.mtssm-empty { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 12px; border-radius: 16px; border: 1px dashed var(--mt-line); font-size: 13.5px; color: var(--mt-mute); text-align: center; }
-.mtssm-empty .mt-btn { display: inline-flex; align-items: center; gap: 6px; }
+.mtssm-search-clear { width: 28px; height: 28px; border-radius: 50%; border: none; background: var(--mt-line); color: var(--mt-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.mtssm-list { display: flex; flex-direction: column; }
+.mtssm-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 6px; border: none; border-top: 1px solid var(--mt-line-2); background: none; text-align: left; font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; color: var(--mt-faint); }
+.mtssm-row:first-child { border-top: none; }
+.mtssm-row:active { background: var(--mt-sunken); }
+.mtssm-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mtssm-row-name { font-size: 17px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mtssm-row-meta { font-size: 14px; color: var(--mt-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mtssm-empty { padding: 16px 8px; font-size: 15px; line-height: 1.45; color: var(--mt-mute); text-align: center; }
 
-/* patient picker — one patient per row, full names aligned vertically (user, 2026-09-30) */
-.mtssm-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
-.mtssm-row { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; border-radius: 16px;
-  border: 1.5px solid var(--mt-line); background: var(--mt-card); text-align: left; font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent;
-  transition: transform .14s ease, border-color .14s ease, box-shadow .14s ease, background .14s ease; }
-.mtssm-row:active { transform: scale(.985); }
-.mtssm-row.is-on { border-color: var(--mt-accent); background: var(--mt-accent-soft); box-shadow: 0 0 0 3px rgba(108,99,255,.14); }
-.mtssm-row-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.mtssm-row-name { font-size: 15px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mtssm-row.is-on .mtssm-row-name { color: var(--mt-accent-ink); }
-.mtssm-row-meta { font-size: 12px; color: var(--mt-mute); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mtssm-row-check { flex: none; width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--mt-line); background: var(--mt-card); color: #fff;
-  display: inline-flex; align-items: center; justify-content: center; transition: background .14s ease, border-color .14s ease; }
-.mtssm-row.is-on .mtssm-row-check { background: var(--mt-accent); border-color: var(--mt-accent); }
-.mtssm-row-new { border-style: dashed; }
-.mtssm-row-new.is-on { border-style: solid; }
-
-.mtssm-patient { display: flex; align-items: center; gap: 14px; }
-/* one container for summary + demographics + clinical snapshot */
-.mtssm-details { padding: 16px; }
-.mtssm-part { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--mt-line-2); }
-.mtssm-part .mt-card-head { margin-bottom: 10px; }
-.mtssm-patient-name { font-size: 17px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.01em; }
-.mtssm-patient-meta { margin-top: 2px; font-size: 12.5px; color: var(--mt-mute); }
-.mtssm-patient-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-
-.mtssm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px; }
-
-.mtssm-snap-label { font-size: 12px; font-weight: 700; color: var(--mt-mute); margin: 2px 0 8px; }
-.mtssm-snap-label + .mtssm-pills { margin-bottom: 14px; }
-.mtssm-pills { display: flex; flex-wrap: wrap; gap: 6px; }
-.mtssm-pills:last-child { margin-bottom: 0; }
-
-.mtssm-optional { font-size: 11.5px; font-weight: 600; color: var(--mt-faint); }
-.mtssm-primer .mt-hint { margin-bottom: 10px; }
-.mtssm-primer-field textarea { min-height: 96px; font-size: 14px; }
-
-.mtssm-consent { border-color: var(--mt-line); background: var(--mt-card); transition: border-color .18s ease, background .18s ease, box-shadow .18s ease; }
+/* visit box + consent */
+.mtssm-primer { margin-top: 14px; }
+.mtssm-primer .mt-card-title { font-size: 16px; }
+.mtssm-optional { font-size: 13px; font-weight: 600; color: var(--mt-faint); }
+.mtssm-primer-field textarea { min-height: 84px; font-size: 17px; line-height: 1.5; }
+.mtssm-consent { margin-top: 14px; border-color: var(--mt-line); background: var(--mt-card); transition: border-color .18s ease, background .18s ease, box-shadow .18s ease; }
 .mtssm-consent.is-on { border-color: var(--mt-accent); background: var(--mt-accent-soft); box-shadow: 0 0 0 3px rgba(108,99,255,.12); }
-.mtssm-consent-btn { display: flex; align-items: flex-start; gap: 12px; width: 100%; border: none; background: none; padding: 0; text-align: left; font-family: inherit; cursor: pointer;
-  -webkit-tap-highlight-color: transparent; }
-.mtssm-consent-btn .mt-check { margin-top: 2px; }
-.mtssm-consent-title { display: block; font-size: 15px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.01em; }
-.mtssm-consent-text { display: block; margin-top: 3px; font-size: 13px; line-height: 1.45; color: var(--mt-ink-2); }
-.mtssm-consent-foot { display: flex; align-items: center; gap: 6px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--mt-line-2); font-size: 11.5px; color: var(--mt-mute); }
-.mtssm-consent.is-on .mtssm-consent-foot { border-top-color: rgba(108,99,255,.25); color: var(--mt-accent-ink); }
+.mtssm-consent-btn { display: flex; align-items: flex-start; gap: 14px; width: 100%; border: none; background: none; padding: 2px 0; text-align: left; font-family: inherit; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mtssm-consent-btn .mt-check { margin-top: 1px; width: 30px; height: 30px; }
+.mtssm-consent-title { display: block; font-size: 17px; font-weight: 700; color: var(--mt-ink); letter-spacing: -.01em; line-height: 1.3; }
+.mtssm-consent-text { display: block; margin-top: 4px; font-size: 15px; line-height: 1.45; color: var(--mt-ink-2); }
+.mtssm-start { height: 58px; font-size: 18px; }
+.mtssm-screen .mt-bottom-note { font-size: 14px; }
+.mtssm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 10px; }
+.mtssm-span { grid-column: 1 / -1; }
 
 /* "New patient" sheet (user, 2026-10-01): modal over the picker, same scrim/sheet language as the note-review Discard sheet */
 .mtssm-scrim { position: absolute; inset: 0; z-index: 30; background: rgba(12,25,40,.45); display: flex; align-items: flex-end; animation: mt-fade .18s ease both; }

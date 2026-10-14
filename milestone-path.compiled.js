@@ -78,6 +78,11 @@ function goMP(url) {
     window.location.href = u;
   })(url);
 }
+/* each perk's landing page (2026-10-13); desktop members (ret=…Web.html) get the web twin */
+function landingMP(key) {
+  const web = /Web\.html/i.test(retMP());
+  return (web ? "RewardLandingWeb.html" : "RewardLanding.html") + "?reward=" + encodeURIComponent(key) + "&ret=" + encodeURIComponent("MilestonePath.html" + (web ? "?ret=" + retMP() : ""));
+}
 function retMP() {
   try {
     const r = new URLSearchParams(location.search).get("ret");
@@ -101,11 +106,18 @@ function MilestoneNodeMP({
   milestone,
   status,
   isLast,
-  reachedAt,
-  onOpen
+  reachedAt
 }) {
-  // status: "passed" | "current" | "locked"
+  // status: "passed" | "current" | "locked"; redeemed = the perk's voucher has been minted on its landing page
   const reached = status === "passed" ? whenMP(reachedAt) : null;
+  const redeemed = (() => {
+    try {
+      const pk = PF_MP.getPerk ? PF_MP.getPerk(milestone.key) : null;
+      return !!(pk && pk.status === "redeemed");
+    } catch (e) {
+      return false;
+    }
+  })();
   const league = leagueMP(milestone.key);
   const vars = league ? {
     "--lg-accent": league.accent,
@@ -159,19 +171,13 @@ function MilestoneNodeMP({
     key: i,
     type: "button",
     className: "mp-benefit-row",
-    onClick: () => onOpen({
-      benefit: b,
-      index: i,
-      milestone,
-      status,
-      reachedAt
-    }),
+    onClick: () => goMP(landingMP(milestone.key)),
     "aria-label": b.title + (status === "passed" ? ", unlocked" : ", locked") + ". View reward"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mp-benefit-ic",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
-    name: status === "locked" ? "lucide:lock" : "lucide:gift",
+    name: redeemed ? "lucide:ticket" : status === "locked" ? "lucide:lock" : "lucide:gift",
     size: 15,
     color: status === "locked" ? "var(--gray-400)" : "var(--brand-gold)"
   })), /*#__PURE__*/React.createElement("span", {
@@ -182,7 +188,9 @@ function MilestoneNodeMP({
     className: "mp-benefit-desc"
   }, b.description), b.delivery ? /*#__PURE__*/React.createElement("span", {
     className: "mp-benefit-delivery"
-  }, b.delivery) : null), /*#__PURE__*/React.createElement("span", {
+  }, b.delivery) : null, /*#__PURE__*/React.createElement("span", {
+    className: "mp-benefit-cta" + (status === "passed" && !redeemed ? " is-redeem" : "")
+  }, redeemed ? "Redeemed · view your reward" : status === "passed" ? "Redeem this perk" : "See this reward")), /*#__PURE__*/React.createElement("span", {
     className: "mp-benefit-chev",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
@@ -204,188 +212,9 @@ function MilestoneNodeMP({
   }, "Locked")));
 }
 
-/* Tapping a benefit row opens this reward sheet (user, 2026-09-24): what the
-   reward is, which league unlocks it, unlocked / N pts to go, and a CTA that
-   takes the member where the reward is used. */
-function rewardActionMP(b) {
-  const t = ((b.title || "") + " " + (b.delivery || "")).toLowerCase();
-  if (/credit|discount|voucher|checkout/.test(t)) return {
-    label: "View my reward code",
-    href: "MyRewards.html",
-    icon: "lucide:ticket"
-  };
-  if (/directory|profile/.test(t)) return {
-    label: "View your profile",
-    href: "ProfileMobile.html",
-    icon: "lucide:user"
-  };
-  if (/mentorship|dinner|concierge|calendar/.test(t)) return {
-    label: "Book via concierge",
-    href: "ChatSupport.html",
-    icon: "lucide:calendar"
-  };
-  if (/event|seat|ticket/.test(t)) return {
-    label: "See upcoming events",
-    href: "EventsMobile.html",
-    icon: "lucide:calendar"
-  };
-  if (/leaderboard/.test(t)) return {
-    label: "Open the leaderboard",
-    href: "Leaderboard.html",
-    icon: "lucide:bar-chart-3"
-  };
-  if (/bundle|digital|tools/.test(t)) return {
-    label: "Open My Learning",
-    href: "LearningMobile.html",
-    icon: "lucide:book-open"
-  };
-  return null;
-}
-function RewardSheetMP({
-  item,
-  state,
-  onClose
-}) {
-  useEffectMP(() => {
-    if (!item) return;
-    const onKey = e => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [item, onClose]);
-  if (!item) return null;
-  const {
-    benefit: b,
-    milestone: m,
-    status
-  } = item;
-  const league = leagueMP(m.key);
-  const vars = league ? {
-    "--lg-accent": league.accent,
-    "--lg-deep": league.deep,
-    "--lg-soft": league.soft
-  } : null;
-  const pts = state.lifetimePoints || 0;
-  const remaining = Math.max(0, m.threshold - pts);
-  const unlocked = status === "passed";
-  const reached = unlocked ? whenMP(item.reachedAt) : null;
-  const action = unlocked ? rewardActionMP(b) : null;
-  const floor = (() => {
-    try {
-      const path = PF_MP.getMilestoneProgress(state).path;
-      const i = path.findIndex(x => x.key === m.key);
-      return i > 0 ? path[i - 1].threshold : 0;
-    } catch (e) {
-      return 0;
-    }
-  })();
-  const pct = unlocked ? 100 : Math.max(0, Math.min(100, Math.round((pts - floor) / Math.max(1, m.threshold - floor) * 100)));
-  return /*#__PURE__*/React.createElement("div", {
-    className: "mp-scrim",
-    onClick: onClose
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mp-help-sheet mp-rw-sheet" + (unlocked ? " is-unlocked" : " is-locked"),
-    style: vars,
-    role: "dialog",
-    "aria-modal": "true",
-    "aria-labelledby": "mp-rw-title",
-    onClick: e => e.stopPropagation()
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-help-handle",
-    "aria-hidden": "true"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "mp-rw-head"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-rw-gem",
-    "aria-hidden": "true"
-  }, league ? /*#__PURE__*/React.createElement(GemMP, {
-    src: league.lottie,
-    size: 56,
-    play: unlocked
-  }) : /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
-    name: "lucide:gift",
-    size: 26,
-    color: "var(--brand-gold)"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "mp-rw-head-tx"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-rw-league"
-  }, m.name, league ? " League" : "", " · ", m.threshold > 0 ? PF_MP.formatNumber(m.threshold) + " pts" : "Start"), /*#__PURE__*/React.createElement("h2", {
-    id: "mp-rw-title"
-  }, b.title)), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mp-help-close",
-    "aria-label": "Close",
-    onClick: onClose
-  }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
-    name: "lucide:x",
-    size: 18,
-    color: "var(--gray-600)"
-  }))), /*#__PURE__*/React.createElement("p", {
-    className: "mp-help-p"
-  }, b.description), b.delivery ? /*#__PURE__*/React.createElement("div", {
-    className: "mp-rw-row"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-rw-row-ic"
-  }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
-    name: "lucide:gift",
-    size: 15,
-    color: "var(--brand-gold)"
-  })), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "How you get it"), /*#__PURE__*/React.createElement("i", null, b.delivery))) : null, /*#__PURE__*/React.createElement("div", {
-    className: "mp-rw-status" + (unlocked ? " on" : "")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-rw-status-ic",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
-    name: unlocked ? "lucide:check-circle" : "lucide:lock",
-    size: 16,
-    color: unlocked ? "var(--lg-deep, var(--success))" : "var(--gray-500)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "mp-rw-status-tx"
-  }, /*#__PURE__*/React.createElement("b", null, unlocked ? "Unlocked — yours for good" : status === "current" ? PF_MP.formatNumber(remaining) + " pts to unlock" : "Unlocks at " + PF_MP.formatNumber(m.threshold) + " pts"), /*#__PURE__*/React.createElement("i", null, unlocked ? reached ? "Earned " + reached : "Earned with your " + m.name + " badge" : PF_MP.formatNumber(pts) + " of " + PF_MP.formatNumber(m.threshold) + " lifetime pts · " + PF_MP.formatNumber(remaining) + " to go"))), !unlocked ? /*#__PURE__*/React.createElement("div", {
-    className: "ml-progress-track mp-rw-track",
-    role: "progressbar",
-    "aria-valuemin": 0,
-    "aria-valuemax": 100,
-    "aria-valuenow": pct
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "ml-progress-fill",
-    style: {
-      width: pct + "%"
-    }
-  })) : null, unlocked && action ? /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mp-help-ok mp-rw-cta",
-    onClick: () => {
-      onClose();
-      goMP(action.href);
-    }
-  }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
-    name: action.icon,
-    size: 16,
-    color: "#fff"
-  }), action.label) : unlocked ? /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mp-help-ok",
-    onClick: onClose
-  }, "Got it") : /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mp-help-ok mp-rw-cta",
-    onClick: () => {
-      onClose();
-      goMP("WaysToEarn.html");
-    }
-  }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
-    name: "lucide:sparkles",
-    size: 16,
-    color: "#fff"
-  }), "Earn points faster"), !unlocked ? /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mp-rw-later",
-    onClick: onClose
-  }, "Maybe later") : null));
-}
+/* Tapping a benefit row opens the reward's own landing page
+   (RewardLanding.html?reward=<key>, 2026-10-13); the in-page reward sheet it
+   replaced lived here until then. */
 
 /* Header "?" opens this — the how-it-works copy used to sit in an always-on
    intro card above the progress; the user asked for it behind a help button. */
@@ -542,25 +371,11 @@ function LeagueProgressMP() {
 function MilestonePathScreen() {
   const [state, setState] = useStateMP(() => PF_MP.getState());
   const [helpOpen, setHelpOpen] = useStateMP(false);
-  // ?reward=<milestoneKey>:<benefitIndex> opens a reward sheet on load (demo / QA)
-  const [reward, setReward] = useStateMP(null);
+  // ?reward=<milestoneKey> → that perk's landing page (the in-page sheet went 2026-10-13)
   useEffectMP(() => {
     try {
-      const q = new URLSearchParams(location.search).get("reward");
-      if (!q) return;
-      const [key, idx] = q.split(":");
-      const prog = PF_MP.getMilestoneProgress(PF_MP.getState());
-      const m = prog.path.find(x => x.key === key);
-      const b = m && m.benefits[Number(idx) || 0];
-      if (!b) return;
-      const st = prog.passed.some(x => x.key === key) ? "passed" : prog.next && prog.next.key === key ? "current" : "locked";
-      setReward({
-        benefit: b,
-        index: Number(idx) || 0,
-        milestone: m,
-        status: st,
-        reachedAt: (PF_MP.getState().milestonesReachedAt || {})[key]
-      });
+      const raw = new URLSearchParams(location.search).get("reward");
+      if (raw) goMP(landingMP(raw.split(":")[0]));
     } catch (e) {}
   }, []);
   // other tabs / the points pill may book points while this is open
@@ -579,6 +394,7 @@ function MilestonePathScreen() {
   const currentKey = progress.next ? progress.next.key : null;
   const reachedAt = state.milestonesReachedAt || {};
   const allDone = !progress.next;
+  const redeemedCount = (state.redeemedVouchers || []).filter(v => /^perk:/.test(v.itemId || "")).length;
   return /*#__PURE__*/React.createElement("div", {
     className: "ml-screen mp-screen",
     "data-screen-label": "Milestone Path"
@@ -592,18 +408,18 @@ function MilestonePathScreen() {
     name: "lucide:chevron-left",
     size: 24,
     color: "var(--gray-900)"
-  })), /*#__PURE__*/React.createElement("h1", null, "Milestone Path"), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("h1", null, "My Rewards"), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "ml-top-action mp-help-btn",
-    "aria-label": "How the Milestone Path works",
-    "aria-haspopup": "dialog",
-    "aria-expanded": helpOpen,
-    onClick: () => setHelpOpen(true)
+    className: "ml-top-action mp-redeemed-btn",
+    "aria-label": "Redeemed rewards, " + redeemedCount + " redeemed",
+    onClick: () => goMP("MyRewards.html?ret=MilestonePath.html")
   }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
-    name: "lucide:circle-help",
+    name: "lucide:ticket",
     size: 20,
     color: "var(--gray-900)"
-  }))), /*#__PURE__*/React.createElement("div", {
+  }), redeemedCount > 0 ? /*#__PURE__*/React.createElement("span", {
+    className: "mp-redeemed-badge"
+  }, redeemedCount) : null)), /*#__PURE__*/React.createElement("div", {
     className: "ml-scroll mp-scroll"
   }, /*#__PURE__*/React.createElement(LeagueProgressMP, null), /*#__PURE__*/React.createElement("div", {
     className: "mp-path"
@@ -614,8 +430,7 @@ function MilestonePathScreen() {
       milestone: m,
       status: status,
       isLast: i === path.length - 1,
-      reachedAt: reachedAt[m.key],
-      onOpen: setReward
+      reachedAt: reachedAt[m.key]
     });
   })), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -624,10 +439,6 @@ function MilestonePathScreen() {
   })), /*#__PURE__*/React.createElement(MilestoneHelpSheetMP, {
     open: helpOpen,
     onClose: () => setHelpOpen(false)
-  }), /*#__PURE__*/React.createElement(RewardSheetMP, {
-    item: reward,
-    state: state,
-    onClose: () => setReward(null)
   }));
 }
 function useDeviceScaleMP() {

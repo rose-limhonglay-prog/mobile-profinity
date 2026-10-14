@@ -95,7 +95,6 @@
 [data-theme="dark"] .m-iconbtn:active { background: rgba(206, 153, 87, 0.22); }
 [data-theme="dark"] .m-pts { background: rgba(252, 194, 93, 0.16); color: #F5C542; }
 [data-theme="dark"] .m-pts-delta { color: #F5C542; }
-[data-theme="dark"] .m-pts-ic-anim { background: #2b2745; box-shadow: inset 0 0 0 1.5px #FCC25D; }
 [data-theme="dark"] .pf-pts-float { color: #F5C542; text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 10px rgba(245,197,66,.35); }
 [data-theme="dark"] .pf-pts-float.is-free { text-shadow: 0 1px 0 rgba(0,0,0,.7), 0 0 3px rgba(0,0,0,.6), 0 0 14px rgba(245,197,66,.45); }
 [data-theme="dark"] .m-pts.earn { background: rgba(252, 194, 93, 0.28); }

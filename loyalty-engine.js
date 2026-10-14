@@ -142,7 +142,8 @@
      to a single entry per league; the member UI calls it "your one-time perk". */
   var DEFAULT_MILESTONE_PATH = [
     { key: "jade", name: "Jade", threshold: 0, benefits: [
-      { title: "Jade League Leaderboard", description: "Your starting league. Compete with fellow newcomers on the Jade board and start banking lifetime points from day one.", delivery: "Active from your first check-in" }
+      /* user, 2026-10-14: the starting-league perk is a Mastery discount (was the "Jade League Leaderboard" blurb) */
+      { title: "5% off Mastery membership", description: "Your welcome perk: a one-time 5% discount when you subscribe to the Mastery tier — every course, the Clinical Skills pillar and the full Success Path.", delivery: "Discount code, applied once at Mastery checkout" }
     ] },
     { key: "topaz", name: "Topaz", threshold: 1500, benefits: [
       { title: "Aesthetic Clinical Tools Bundle", description: "Premium procedural video sets and clinical intake templates, unlocked once in your account and yours to keep.", delivery: "Instant digital unlock · one-time" }
@@ -162,7 +163,7 @@
   ];
   /* bump when DEFAULT_MILESTONE_PATH changes shape so a member's cached
      config is re-seeded (admin edits made after that still stick) */
-  var MILESTONE_PATH_VERSION = 3;
+  var MILESTONE_PATH_VERSION = 4;   /* 4: Jade perk = 5% off Mastery (2026-10-14) */
 
   var DEFAULT_ACHIEVEMENT_BADGES = [
     { key: "first_blood", name: "First Blood", icon: "lucide:zap", description: "Complete your very first point-earning action.", criteria: { type: "actionCount", actionId: null, count: 1 }, reward: "50 bonus points" },
@@ -742,6 +743,68 @@
     return getState();
   }
 
+  /* ------------------------------------------------- league perks (2026-10-13)
+     Each Milestone Path entry carries ONE one-time perk. It unlocks the moment
+     lifetimePoints crosses the threshold, and since 2026-10-13 the member
+     REDEEMS it from the perk's landing page (RewardLanding.html?reward=<key>):
+     redeemPerk mints a voucher into redeemedVouchers (itemId "perk:<key>") so
+     My Rewards / Redemption Success keep working, writes a ledger line and
+     fires pf:perk-redeemed (points-sound.js plays the milestone fanfare). */
+  function getPerk(key, state) {
+    state = state || getState();
+    var path = (getConfig().milestonePath || []).slice().sort(function (a, b) { return a.threshold - b.threshold; });
+    var idx = -1;
+    for (var i = 0; i < path.length; i++) if (path[i].key === key) idx = i;
+    if (idx < 0) return null;
+    var m = path[idx];
+    var benefit = (m.benefits || [])[0] || null;
+    var pts = state.lifetimePoints || 0;
+    var floor = idx > 0 ? path[idx - 1].threshold : 0;
+    var voucher = (state.redeemedVouchers || []).filter(function (v) { return v.itemId === "perk:" + key; })[0] || null;
+    var unlocked = pts >= m.threshold;
+    var pct = unlocked ? 100 : Math.max(0, Math.min(100, Math.round((pts - floor) / Math.max(1, m.threshold - floor) * 100)));
+    return {
+      key: key, milestone: m, benefit: benefit, index: idx, path: path,
+      prev: idx > 0 ? path[idx - 1] : null, next: idx < path.length - 1 ? path[idx + 1] : null,
+      status: voucher ? "redeemed" : unlocked ? "unlocked" : "locked",
+      voucher: voucher, remaining: Math.max(0, m.threshold - pts), pct: pct,
+      reachedAt: (state.milestonesReachedAt || {})[key] || null
+    };
+  }
+  function redeemPerk(key) {
+    var perk = getPerk(key);
+    if (!perk || !perk.benefit) return { ok: false, reason: "Perk not found." };
+    if (perk.status === "locked") return { ok: false, reason: formatNumber(perk.remaining) + " more points needed." };
+    if (perk.status === "redeemed") return { ok: true, voucher: perk.voucher, already: true };
+    var state = getState();
+    var code = "PF-" + key.slice(0, 3).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase() + "-" + Math.random().toString(36).slice(2, 6).toUpperCase();
+    var voucher = { code: code, itemId: "perk:" + key, itemName: perk.benefit.title, redeemedAt: nowIso(), perkKey: key, league: perk.milestone.name, delivery: perk.benefit.delivery || null, course: null };
+    var txn = { id: uid("txn"), ts: nowIso(), actionId: "redeem:perk:" + key, label: "Redeemed perk: " + perk.benefit.title, pointsDelta: 0, creditsDelta: 0, guardrailFlags: null, adminId: null, adjustmentReason: null };
+    setState({ ledger: state.ledger.concat([txn]), redeemedVouchers: (state.redeemedVouchers || []).concat([voucher]) });
+    try { window.dispatchEvent(new CustomEvent("pf:perk-redeemed", { detail: { key: key, voucher: voucher, perk: perk } })); } catch (e) { /* older WebView */ }
+    return { ok: true, voucher: voucher };
+  }
+
+  /* Reverse an earlier award (user, 2026-10-14: unticking a Today's Target
+     takes its points back). Negative ledger line, lifetime/rolling floored at 0. */
+  function deductPoints(amount, label, actionId) {
+    amount = Math.max(0, Math.round(+amount || 0));
+    if (!amount) return getState();
+    var state = getState();
+    var credits = Math.round(amount * getConfig().creditConversionRate);
+    var txn = {
+      id: uid("txn"), ts: nowIso(), actionId: actionId || "evt_points_reversed", label: label || "Points reversed",
+      pointsDelta: -amount, creditsDelta: -credits, guardrailFlags: null, adminId: null, adjustmentReason: null
+    };
+    var newState = setState({
+      lifetimePoints: Math.max(0, (state.lifetimePoints || 0) - amount),
+      spendableCredits: Math.max(0, (state.spendableCredits || 0) - credits),
+      rollingPoints30: Math.max(0, (state.rollingPoints30 || 0) - amount),
+      ledger: state.ledger.concat([txn])
+    });
+    return newState;
+  }
+
   function getCourseDiscount(slug) { var d = readJSON(COURSE_DISCOUNTS_KEY, {}); return d[slug] || null; }
   window.PFLoyalty = {
     getCourseDiscount: getCourseDiscount,
@@ -757,10 +820,11 @@
     getActionById: getActionById, tierMultiplierFor: tierMultiplierFor,
     getBadgeProgress: getBadgeProgress, getMilestoneProgress: getMilestoneProgress,
     completeAction: completeAction, redeemItem: redeemItem, manualAdjust: manualAdjust,
+    getPerk: getPerk, redeemPerk: redeemPerk,
     checkIn: checkIn, setStreakAtRisk: setStreakAtRisk, freezeStreak: freezeStreak,
     spendCreditsToFreezeStreak: spendCreditsToFreezeStreak, restoreBrokenStreak: restoreBrokenStreak,
     evaluateAchievements: evaluateAchievements,
-    getWeekPoints: getWeekPoints, getRollingPoints: getRollingPoints, getDailyPoints: getDailyPoints, awardPoints: awardPoints,
+    getWeekPoints: getWeekPoints, getRollingPoints: getRollingPoints, getDailyPoints: getDailyPoints, awardPoints: awardPoints, deductPoints: deductPoints,
     formatNumber: formatNumber
   };
 })();

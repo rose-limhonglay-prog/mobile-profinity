@@ -1,12 +1,14 @@
 /* ===========================================================================
    PROfinity — Minute Taker (mobile) · Clinical Note Review
    The AI-written note (Assessment [SOAP] / Data [DAP] / Summary) as editable lettered sections,
-   the raw transcript behind a toggle, Discard (in-page sheet) and Save to
-   EMR. Runs on window.PFMT. Classes prefixed mtnrm-.
+   the session recording (kept, playable), the raw transcript behind a toggle,
+   Share (email / text / apps). The note saves automatically (user,
+   2026-10-14): no Save / Discard, the header is a plain back button and
+   the recording sits at the top of the note. Runs on window.PFMT. Classes prefixed mtnrm-.
    =========================================================================== */
 const { useState: useStateMTNRM, useEffect: useEffectMTNRM } = React;
 const MTR = window.PFMT;
-const { Ic: IcR, Avatar: AvatarR, TopBar: TopBarR, TextBtn: TextBtnR, Shell: ShellR } = MTR;
+const { Ic: IcR, Avatar: AvatarR, TopBar: TopBarR, IconBtn: IconBtnR, Shell: ShellR } = MTR;
 
 const MTNRM_NOTES = {
   "Sarah Jenkins": {
@@ -165,17 +167,12 @@ function MTNRMView() {
   const [format, setFormat] = useStateMTNRM("soap");
   const [note, setNote] = useStateMTNRM({ soap: { ...record.soap }, dap: { ...record.dap }, summary: { summary: record.summary } });
   const [showTranscript, setShowTranscript] = useStateMTNRM(false);
-  const [confirmDiscard, setConfirmDiscard] = useStateMTNRM(false);
-  const [saving, setSaving] = useStateMTNRM(false);
+  /* ?share=1 opens the share sheet straight away (demo / screenshots) */
+  const [sharing, setSharing] = useStateMTNRM(MTR.getParam("share") === "1");
+  const recordingSeconds = generated && ctx.durationSeconds ? ctx.durationSeconds : mtnrmSeconds(record.duration);
 
   function update(key, value) {
     setNote((n) => ({ ...n, [format]: { ...n[format], [key]: value } }));
-  }
-  function save() {
-    if (saving) return;
-    setSaving(true);
-    toast.show("Saved to EMR", "ok");
-    window.setTimeout(() => MTR.go(MTR.routes.dashboard), 1200);
   }
 
   const fields = MTNRM_FIELDS[format];
@@ -184,10 +181,9 @@ function MTNRMView() {
   return (
     <div className="mt-screen mtnrm-screen">
       <TopBarR
-        left={<TextBtnR tone="danger" onClick={() => setConfirmDiscard(true)} disabled={saving}>Discard</TextBtnR>}
+        left={<IconBtnR icon="lucide:arrow-left" label="Back to sessions" onClick={() => MTR.go(MTR.routes.dashboard)} />}
         title="Clinical note"
-        sub={generated ? "Review before saving" : date}
-        right={<button type="button" className="mt-btn mt-btn-primary mt-btn-sm" onClick={save} disabled={saving}><IcR name="lucide:check" size={15} />Save</button>}
+        sub={generated ? "Saved automatically" : date}
       />
 
       <div className="mt-scroll">
@@ -197,8 +193,12 @@ function MTNRMView() {
             <div className="mtnrm-name">{patient}</div>
             <div className="mtnrm-meta">{id} · {duration} · {date}</div>
           </div>
+          <button type="button" className="mtnrm-share" onClick={() => setSharing(true)} aria-haspopup="dialog"><IcR name="lucide:share-2" size={16} />Share</button>
         </section>
-        <div className="mtnrm-ai"><IcR name="lucide:sparkles" size={13} />AI-written from the live transcript. Edit anything before it reaches the chart.</div>
+        <div className="mtnrm-ai"><IcR name="lucide:sparkles" size={13} />AI-written from the live transcript. Edit anything — changes save automatically.</div>
+
+        <MTNRMRecording seconds={recordingSeconds} patient={patient} date={date} onToast={(m) => toast.show(m)} />
+
 
         <div className="mtnrm-seg" role="tablist" aria-label="Note format" style={{ "--n": MTNRM_FORMATS.length, "--i": activeIndex }}>
           <span className="mtnrm-seg-thumb" aria-hidden="true" />
@@ -240,25 +240,65 @@ function MTNRMView() {
 
         <div className="mt-trust">
           <span className="mt-ti"><IcR name="lucide:shield-check" size={15} /></span>
-          <span>Saving writes this note to the patient's EMR record and clears the transcript from Minute Taker.</span>
+          <span>This note saves automatically to the patient's EMR record. The transcript and recording stay with it for 30 days.</span>
         </div>
         <div className="mt-spacer" />
       </div>
 
-      {confirmDiscard && (
-        <div className="mtnrm-scrim" onClick={() => setConfirmDiscard(false)}>
-          <div className="mtnrm-sheet" role="dialog" aria-modal="true" aria-labelledby="mtnrm-discard-title" onClick={(e) => e.stopPropagation()}>
-            <span className="mtnrm-sheet-grab" aria-hidden="true" />
-            <div className="mtnrm-sheet-icon"><IcR name="lucide:trash-2" size={22} /></div>
-            <h3 id="mtnrm-discard-title">Discard this note?</h3>
-            <p>The AI-written note and transcript for {patient.split(" ")[0]} will be deleted. This can't be undone.</p>
-            <button type="button" className="mt-btn mt-btn-danger mt-btn-block" onClick={() => MTR.go(MTR.routes.dashboard)}>Discard note</button>
-            <button type="button" className="mt-btn mt-btn-ghost mt-btn-block" onClick={() => setConfirmDiscard(false)}>Keep editing</button>
-          </div>
-        </div>
+      {sharing && window.PFMTShare && (
+        <window.PFMTShare.Share variant="sheet" patient={patient} id={id} hasRecording
+          note={{ type: record.type || "Clinical note", date, duration }}
+          onClose={() => setSharing(false)} onToast={(m, t) => toast.show(m, t)} />
       )}
       {toast.node}
     </div>
+  );
+}
+
+/* session recording, kept with the note (user, 2026-10-14): simulated player with play/pause, scrubbable bar and a download */
+function mtnrmSeconds(label) {
+  const m = /(\d+)m/.exec(label || ""), sec = /(\d+)s/.exec(label || "");
+  return (m ? +m[1] * 60 : 0) + (sec ? +sec[1] : 0) || 754;
+}
+function mtnrmClock(s) { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); }
+const MTNRM_BARS = Array.from({ length: 48 }, (_, i) => 22 + Math.round(60 * Math.abs(Math.sin(i * 0.7) * Math.cos(i * 0.23))));
+function MTNRMRecording({ seconds, patient, date, onToast }) {
+  const [playing, setPlaying] = useStateMTNRM(false);
+  const [pos, setPos] = useStateMTNRM(0);
+  useEffectMTNRM(() => {
+    if (!playing) return undefined;
+    const t = window.setInterval(() => setPos((p) => { if (p + 1 >= seconds) { setPlaying(false); return seconds; } return p + 1; }), 1000);
+    return () => window.clearInterval(t);
+  }, [playing, seconds]);
+  const pct = seconds ? Math.min(100, (pos / seconds) * 100) : 0;
+  function seek(e) {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    setPos(Math.round(Math.max(0, Math.min(1, x / r.width)) * seconds));
+  }
+  return (
+    <section className="mt-card mtnrm-rec" aria-label="Session recording">
+      <div className="mtnrm-rec-head">
+        <span className="mtnrm-rec-title"><span className="mt-ti"><IcR name="lucide:mic" size={15} /></span>Session recording</span>
+        <span className="mtnrm-rec-kept">Kept 30 days</span>
+      </div>
+      <div className="mtnrm-rec-player">
+        <button type="button" className={"mtnrm-rec-play" + (playing ? " is-on" : "")} onClick={() => { if (pos >= seconds) setPos(0); setPlaying((v) => !v); }} aria-label={playing ? "Pause" : "Play"}>
+          <IcR name={playing ? "lucide:pause" : "lucide:play"} size={20} />
+        </button>
+        <div className="mtnrm-rec-track" role="slider" aria-label="Position" aria-valuemin={0} aria-valuemax={seconds} aria-valuenow={pos} tabIndex={0} onClick={seek}
+          onKeyDown={(e) => { if (e.key === "ArrowRight") setPos((p) => Math.min(seconds, p + 15)); if (e.key === "ArrowLeft") setPos((p) => Math.max(0, p - 15)); }}>
+          <div className="mtnrm-rec-bars" aria-hidden="true" style={{ "--pct": pct + "%" }}>
+            {MTNRM_BARS.map((h, i) => <i key={i} style={{ height: h + "%" }} />)}
+          </div>
+          <div className="mtnrm-rec-times"><span>{mtnrmClock(pos)}</span><span>{mtnrmClock(seconds)}</span></div>
+        </div>
+      </div>
+      <div className="mtnrm-rec-foot">
+        <span>{patient.split(" ")[0]} · {date}</span>
+        <button type="button" className="mt-link" onClick={() => onToast("Downloading the recording…")}><IcR name="lucide:download" size={13} />Download audio</button>
+      </div>
+    </section>
   );
 }
 

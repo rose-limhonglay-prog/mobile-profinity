@@ -1529,8 +1529,8 @@ function LessonWebApp() {
   }), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "cd-btn cd-btn-fill lw-cta",
-    disabled: quizLocked || !next && isDone,
-    onClick: advance
+    disabled: quizLocked,
+    onClick: !next && isDone ? () => setCelebrate(true) : advance
   }, /*#__PURE__*/React.createElement(IconLW, {
     name: isDone && next ? "fluent:play-16-filled" : "lucide:check",
     size: 16,

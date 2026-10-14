@@ -131,3 +131,27 @@ img { max-width: 100%; }
 .mp-node-tag-locked { color: var(--gray-400); }
 .mp-node-when { color: var(--gray-500); font-weight: 600; }
 
+
+/* perk row → landing page CTA line (2026-10-13) */
+.mp-benefit-cta { display: block; margin-top: 7px; font-size: 12px; font-weight: 700; color: var(--lg-deep, var(--brand-navy)); }
+.mp-benefit-cta.is-redeem { display: inline-block; padding: 5px 10px; border-radius: 999px; background: var(--lg-deep, var(--brand-navy)); color: #fff; }
+.mp-node-locked .mp-benefit-cta { color: var(--gray-500); }
+[data-theme="dark"] .mp-benefit-cta { color: var(--lg-accent, #C2BCFF); }
+[data-theme="dark"] .mp-benefit-cta.is-redeem { background: var(--lg-accent, #C2BCFF); color: #131126; }
+
+/* "Redeemed rewards" sub page row under the league progress card (2026-10-14) */
+.mp-redeemed { display: flex; align-items: center; gap: 12px; width: calc(100% - 40px); margin: 12px 20px 0; padding: 12px 12px 12px 14px; border-radius: 16px; text-align: left; cursor: pointer; font-family: inherit;
+  background: var(--surface-card); border: 1px solid var(--border-default); box-shadow: 0 1px 3px rgba(12,12,13,.04); transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease; -webkit-tap-highlight-color: transparent; }
+.mp-redeemed:hover { border-color: var(--brand-navy); box-shadow: 0 8px 22px rgba(41,37,105,.12); transform: translateY(-1px); }
+.mp-redeemed:active { transform: scale(.99); }
+.mp-redeemed-ic { flex: none; width: 38px; height: 38px; border-radius: 11px; background: var(--brand-navy); display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(41,37,105,.26); }
+.mp-redeemed-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.mp-redeemed-tx b { font-size: 14px; font-weight: 800; color: var(--gray-900); letter-spacing: -.01em; }
+.mp-redeemed-tx i { font-style: normal; font-size: 12px; color: var(--gray-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-redeemed-n { flex: none; min-width: 24px; height: 24px; padding: 0 7px; border-radius: 999px; background: #E7F6EE; color: #1F7A52; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; }
+[data-theme="dark"] .mp-redeemed-ic { background: #C2BCFF; }
+[data-theme="dark"] .mp-redeemed-ic svg, [data-theme="dark"] .mp-redeemed-ic iconify-icon { color: #131126 !important; }
+[data-theme="dark"] .mp-redeemed-n { background: #12291F; color: #5BD39A; }
+
+.mp-redeemed-btn { position: relative; }
+.mp-redeemed-badge { position: absolute; top: -4px; right: -4px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px; background: #1F7A52; color: #fff; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; border: 2px solid var(--surface-page); }

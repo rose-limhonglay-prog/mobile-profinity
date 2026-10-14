@@ -172,7 +172,7 @@ img { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) { .rdb-welcome, .rdb-welcome-scrim { animation: none; } }
 
 /* Ways to Earn (full-width row, 2026-10-09) + two simple buttons: Milestone Path + My Rewards */
-.rdb-feats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0 18px; }
+.rdb-feats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0 18px; }
 .rdb-feat-wide { grid-column: 1 / -1; }
 .rdb-feat { display: flex; align-items: center; gap: 10px; padding: 12px 10px 12px 12px; border-radius: 16px; text-align: left; cursor: pointer; font-family: inherit;
   background: var(--surface-card); border: 1px solid var(--border-default); box-shadow: 0 1px 3px rgba(12,12,13,.04); transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease; -webkit-tap-highlight-color: transparent; }
@@ -233,8 +233,33 @@ img { max-width: 100%; }
 
 /* Lip-filler coral accent (matches the progress-card Lottie #FCC25D) */
 .rdb-screen .ml-btn-gold, .rdb-wallet-dd .ml-btn-gold { background: linear-gradient(135deg, #FDD07A 0%, #E8A63A 100%); color: #3D2A00; }
-/* Lifetime Points tile: the header pill's coffee-break Dr Tim, same gold-ring crop as .m-pts-ic-anim
-   (!important: lottie-web writes an inline transform on its svg) */
-.rdb-eng-lottie--face > span { border-radius: 50%; overflow: hidden; background: #FFF3DC; box-shadow: inset 0 0 0 2px #FCC25D; }
-.rdb-eng-lottie--face svg { display: block; transform: scale(3.8) !important; transform-origin: 50% 14.7% !important; }
-[data-theme="dark"] .rdb-eng-lottie--face > span { background: #2b2745; }
+/* Lifetime Points tile: header-pill smiley (lottie-web), nudged up like .m-pts-ic-anim */
+.rdb-eng-lottie--face svg { display: block; transform: scale(1.22); transform-origin: 50% 50%; overflow: visible; }
+
+/* ---- welcome modal is WHITE in light mode (user, 2026-10-14); the navy gradient stays for dark ---- */
+.rdb-welcome { background: var(--surface-card, #fff); color: #1b1848; box-shadow: 0 28px 70px rgba(12,14,40,.28); }
+.rdb-welcome-doc::before { background: #FFF3DC; box-shadow: inset 0 0 0 2px rgba(252,194,93,.55); }
+.rdb-welcome p { color: var(--gray-600); }
+.rdb-welcome p strong { color: #9C6A0E; }
+.rdb-welcome-skip { color: var(--gray-600); }
+.rdb-welcome-skip:hover { color: #1b1848; }
+.rdb-welcome-back { background: var(--gray-100); }
+.rdb-welcome-back svg, .rdb-welcome-back iconify-icon { color: #1b1848 !important; }
+.rdb-welcome-steps i { background: var(--gray-200); }
+.rdb-welcome-list li { background: var(--gray-50); border-color: var(--border-default); }
+.rdb-welcome-list .ic { background: #FFF3DC; }
+.rdb-welcome-list .lb { color: #1b1848; }
+.rdb-welcome-list .pt { color: #9C6A0E; }
+[data-theme="dark"] .rdb-welcome { background: linear-gradient(150deg, #292569, #3F4E86); color: #fff; box-shadow: 0 28px 70px rgba(12,14,40,.45), inset 0 1px 0 rgba(255,255,255,.12); }
+[data-theme="dark"] .rdb-welcome-doc::before { background: rgba(255,255,255,.10); box-shadow: inset 0 1px 0 rgba(255,255,255,.18); }
+[data-theme="dark"] .rdb-welcome p { color: rgba(255,255,255,.84); }
+[data-theme="dark"] .rdb-welcome p strong, [data-theme="dark"] .rdb-welcome-list .pt { color: #FCC25D; }
+[data-theme="dark"] .rdb-welcome-skip { color: rgba(255,255,255,.72); }
+[data-theme="dark"] .rdb-welcome-skip:hover { color: #fff; }
+[data-theme="dark"] .rdb-welcome-back { background: rgba(255,255,255,.12); }
+[data-theme="dark"] .rdb-welcome-back svg, [data-theme="dark"] .rdb-welcome-back iconify-icon { color: #fff !important; }
+[data-theme="dark"] .rdb-welcome-steps i { background: rgba(255,255,255,.3); }
+[data-theme="dark"] .rdb-welcome-steps i.on { background: #FCC25D; }
+[data-theme="dark"] .rdb-welcome-list li { background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.08); }
+[data-theme="dark"] .rdb-welcome-list .ic { background: rgba(252,194,93,.16); }
+[data-theme="dark"] .rdb-welcome-list .lb { color: #fff; }

@@ -79,7 +79,10 @@ function LBLottie({ src, size, play = true }) {
 /* Swipeable rail of the six gem badges. The member's own badge and the ones
    below it are earned; everything above is greyed and locked. Tapping a badge
    shows that league's board. */
-function LBLeagueRail({ leagues, myIndex, selected, onSelect }) {
+/* every badge carries its own indicator (user, 2026-10-14): locked = how many
+   more lifetime pts the member needs to reach that league, mine = "You",
+   earned = a tick */
+function LBLeagueRail({ leagues, myIndex, selected, onSelect, needFor }) {
   const railRef = useRefLB(null);
   useEffectLB(() => {
     const rail = railRef.current;
@@ -98,13 +101,15 @@ function LBLeagueRail({ leagues, myIndex, selected, onSelect }) {
           <button type="button" key={l.key} data-idx={i} role="tab" aria-selected={sel}
             className={"lb-rail-item" + (sel ? " sel" : "") + (locked ? " locked" : "") + (mine ? " mine" : "")}
             style={{ "--lg-accent": l.accent, "--lg-soft": l.soft }}
-            aria-label={l.name + " League" + (locked ? ", locked" : mine ? ", your league" : "")}
+            aria-label={l.name + " League" + (locked ? ", locked, " + (needFor ? PF_LB.formatNumber(needFor(i)) + " more points to unlock" : "") : mine ? ", your league" : ", earned")}
             onClick={() => onSelect(i)}>
             <span className="lb-rail-gem">
               <LBLottie src={l.lottie} size={sel ? 96 : 66} play={sel} />
               {locked && <span className="lb-rail-lock"><DSLB.IconifyIcon name="lucide:lock" size={16} color="#fff" /></span>}
             </span>
             {mine && <span className="lb-rail-you">You</span>}
+            {locked && needFor && <span className="lb-rail-need" aria-hidden="true">+{PF_LB.formatNumber(needFor(i))} pts</span>}
+            {!mine && !locked && <span className="lb-rail-got" aria-hidden="true"><DSLB.IconifyIcon name="lucide:check" size={10} color="currentColor" />Earned</span>}
           </button>
         );
       })}
@@ -242,7 +247,7 @@ function LeaderboardScreen() {
           </p>
         </div>
 
-        <LBLeagueRail leagues={leagues} myIndex={myIndex} selected={selected} onSelect={setSelected} />
+        <LBLeagueRail leagues={leagues} myIndex={myIndex} selected={selected} onSelect={setSelected} needFor={needFor} />
 
         <LBPodium rows={top3} prizeFor={prizeFor} />
 

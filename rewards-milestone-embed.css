@@ -185,3 +185,12 @@
 [data-theme="dark"] .rme-tour-next { background: #FCC25D; color: #131126; }
 [data-theme="dark"] .rme-tour-n { background: rgba(252,194,93,.16); color: #FDD98F; }
 @media (prefers-reduced-motion: reduce) { .rme-tour-card { animation: none; transition: none; } .rme-tour-spot { transition: none; } }
+
+/* ---- perk rows are links to the reward's landing page (2026-10-13) ---- */
+.rme-benefit-link { width: 100%; text-align: left; border: none; background: none; font-family: inherit; cursor: pointer; border-radius: 14px; padding: 10px; margin: -10px 0 0 -10px; width: calc(100% + 20px); transition: background .14s ease; }
+.rme-benefit-link:hover { background: var(--lg-soft, var(--gray-50)); }
+.rme-benefit-link + .rme-benefit-link { margin-top: 0; }
+.rme-benefit-cta { display: inline-flex; align-items: center; gap: 3px; margin-top: 8px; font-size: 12.5px; font-weight: 700; color: var(--lg-deep, var(--brand-navy)); }
+.rme-benefit-cta.is-redeem { color: #fff; background: var(--lg-deep, var(--brand-navy)); padding: 6px 10px 6px 12px; border-radius: 999px; }
+[data-theme="dark"] .rme-benefit-cta { color: var(--lg-accent, #C2BCFF); }
+[data-theme="dark"] .rme-benefit-cta.is-redeem { color: #131126; background: var(--lg-accent, #C2BCFF); }

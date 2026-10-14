@@ -5,8 +5,8 @@
    the cheering Dr Tim Lottie once the day is banked, presented by the
    coffee-break Dr Tim (assets/lottie/drtim-coffee.json, same ring crop as the
    header points pill). Redesigned 2026-10-13 as a light cream + gold hero
-   with the check-in action inside it (navy hero kept for dark mode). Check-in,
-   streak freeze and the Streak Master milestone all run through window.PFLoyalty.
+   with the check-in action inside it (navy hero kept for dark mode). Check-in and
+   the Streak Master milestone both run through window.PFLoyalty.
    Suffixed -CIS to avoid clashes with other pages.
    =========================================================================== */
 const { useState: useStateCIS, useEffect: useEffectCIS, useRef: useRefCIS, useMemo: useMemoCIS } = React;
@@ -51,25 +51,7 @@ function CisLottie({ size, delay }) {
   return <span ref={host} className="cis-lottie" style={{ width: size, height: size }} aria-hidden="true" />;
 }
 
-/* hero presenter: the coffee-break Dr Tim, cropped to face + mug by the CSS
-   ring (.cis-hero-doc) exactly like the header points pill */
-const CIS_DOC_LOTTIE = "assets/lottie/drtim-coffee.json?v=20261013a";
-function CisDoc() {
-  const host = useRefCIS(null);
-  useEffectCIS(() => {
-    let anim, iv, dead = false;
-    const still = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-    const start = () => {
-      if (dead || !window.lottie || !host.current) return;
-      anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: !still, autoplay: !still, path: CIS_DOC_LOTTIE });
-      if (still) anim.addEventListener("DOMLoaded", () => anim.goToAndStop(0, true));
-    };
-    if (window.lottie) start();
-    else { iv = setInterval(() => { if (window.lottie) { clearInterval(iv); iv = null; start(); } }, 120); setTimeout(() => { if (iv) clearInterval(iv); }, 8000); }
-    return () => { dead = true; if (iv) clearInterval(iv); if (anim) anim.destroy(); };
-  }, []);
-  return <span ref={host} className="cis-doc-anim" aria-hidden="true" />;
-}
+/* (the coffee-break Dr Tim presenter that sat beside the headline was removed 2026-10-14 at the user's request) */
 
 function sameDayCIS(a, b) { return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate(); }
 function dayLabelCIS(d, today) {
@@ -139,10 +121,86 @@ function CisStreakRiskBanner({ streak }) {
   );
 }
 
+/* ---- streak calendar (user, 2026-10-14): tapping the five-day track opens a
+   month view of every check-in day. Days come from the ledger's
+   evt_mobile_checkin entries plus the current consecutive run ending at
+   streak.lastCheckIn (the engine keeps no per-day history beyond that). */
+function cisKey(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+function cisCheckedDays(state) {
+  const set = new Set();
+  (state.ledger || []).forEach((t) => { if (t.actionId === "evt_mobile_checkin" && t.ts) set.add(cisKey(new Date(t.ts))); });
+  const streak = state.streak || {};
+  if (streak.current && streak.lastCheckIn) {
+    const last = new Date(streak.lastCheckIn);
+    for (let i = 0; i < streak.current; i++) { const d = new Date(last); d.setDate(last.getDate() - i); set.add(cisKey(d)); }
+  }
+  return set;
+}
+function CisCalendarSheet({ open, onClose, state }) {
+  const today = new Date();
+  const [cursor, setCursor] = useStateCIS(() => new Date(today.getFullYear(), today.getMonth(), 1));
+  useEffectCIS(() => {
+    if (!open) return;
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+  if (!open) return null;
+  const checked = cisCheckedDays(state);
+  const streak = state.streak || { current: 0, longest: 0 };
+  const y = cursor.getFullYear(), m = cursor.getMonth();
+  const first = new Date(y, m, 1);
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const lead = (first.getDay() + 6) % 7;                 /* Monday-first grid */
+  const cells = [];
+  for (let i = 0; i < lead; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(new Date(y, m, d));
+  while (cells.length % 7) cells.push(null);
+  const inMonth = cells.filter((d) => d && checked.has(cisKey(d))).length;
+  const monthLabel = cursor.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+  const isFutureMonth = y > today.getFullYear() || (y === today.getFullYear() && m >= today.getMonth());
+  return (
+    <div className="cis-scrim" onClick={onClose}>
+      <div className="cis-sheet" role="dialog" aria-modal="true" aria-labelledby="cis-cal-title" onClick={(e) => e.stopPropagation()}>
+        <span className="cis-sheet-handle" aria-hidden="true" />
+        <div className="cis-cal-head">
+          <button type="button" className="cis-cal-nav" aria-label="Previous month" onClick={() => setCursor(new Date(y, m - 1, 1))}><DSCIS.IconifyIcon name="lucide:chevron-left" size={18} color="currentColor" /></button>
+          <h3 id="cis-cal-title">{monthLabel}</h3>
+          <button type="button" className="cis-cal-nav" aria-label="Next month" disabled={isFutureMonth} onClick={() => setCursor(new Date(y, m + 1, 1))}><DSCIS.IconifyIcon name="lucide:chevron-right" size={18} color="currentColor" /></button>
+        </div>
+        <div className="cis-cal-dow" aria-hidden="true">{["M", "T", "W", "T", "F", "S", "S"].map((d, i) => <span key={i}>{d}</span>)}</div>
+        <div className="cis-cal-grid" role="grid" aria-label={"Check-ins in " + monthLabel}>
+          {cells.map((d, i) => {
+            if (!d) return <span key={i} className="cis-cal-cell is-blank" aria-hidden="true" />;
+            const k = cisKey(d); const done = checked.has(k); const isToday = sameDayCIS(d, today); const future = d > today && !isToday;
+            const prevDone = checked.has(cisKey(new Date(y, m, d.getDate() - 1))) && d.getDay() !== 1;
+            const nextDone = checked.has(cisKey(new Date(y, m, d.getDate() + 1))) && d.getDay() !== 0;
+            return (
+              <span key={i} role="gridcell" className={"cis-cal-cell" + (done ? " is-done" : "") + (isToday ? " is-today" : "") + (future ? " is-future" : "") + (done && prevDone ? " link-l" : "") + (done && nextDone ? " link-r" : "")}
+                aria-label={d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }) + (done ? ": checked in" : "")}>
+                <span className="cis-cal-day">{done ? <DSCIS.IconifyIcon name="lucide:check" size={14} color="currentColor" /> : d.getDate()}</span>
+              </span>
+            );
+          })}
+        </div>
+        <div className="cis-cal-stats">
+          <div><b>{inMonth}</b><span>check-ins this month</span></div>
+          <div><b>{streak.current || 0}</b><span>current streak</span></div>
+          <div><b>{streak.longest || streak.current || 0}</b><span>longest streak</span></div>
+        </div>
+        <p className="cis-cal-note"><DSCIS.IconifyIcon name="lucide:flame" size={13} color="currentColor" />Gold days are check-ins. Keep them touching to grow the streak.</p>
+        <button type="button" className="ml-btn ml-btn-navy cis-cal-ok" onClick={onClose}>Done</button>
+      </div>
+    </div>
+  );
+}
+
 function CheckInStreakScreen() {
   const [config] = useStateCIS(() => PF_CIS.getConfig());
   const [state, setState] = useStateCIS(() => PF_CIS.getState());
   const [toast, setToast] = useStateCIS(null);
+  /* ?calendar=1 opens the streak calendar straight away (demo / screenshots) */
+  const [calOpen, setCalOpen] = useStateCIS(() => { try { return new URLSearchParams(location.search).get("calendar") === "1"; } catch (e) { return false; } });
   const refresh = () => setState(PF_CIS.getState());
 
   /* Stay in step with the rest of the prototype — the engine lives in localStorage. */
@@ -178,12 +236,6 @@ function CheckInStreakScreen() {
     if (window.PFRewards) window.PFRewards.fromAction(res); else if (res.leveledUp) setTimeout(() => goCIS("MilestoneSplash.html"), 900);
   };
 
-  const freeze = () => {
-    const res = PF_CIS.spendCreditsToFreezeStreak();
-    refresh();
-    flash(res.ok ? "Streak frozen for 2 days" : res.reason);
-  };
-
   const headline = current === 0
     ? <>Start your <b>streak</b></>
     : <><b>{current}</b> in a row!</>;
@@ -202,13 +254,11 @@ function CheckInStreakScreen() {
       </div>
       <div className="ml-scroll cis-scroll">
         <section className="cis-hero" aria-label={current + " day check-in streak"}>
-          {rowComplete && (
-            <div className="cis-confetti" aria-hidden="true">
-              {Array.from({ length: 14 }).map((_, i) => <span key={i} className={"cis-confetti-piece p" + (i % 6)} style={{ left: (4 + i * 6.8) + "%", animationDelay: (i * 0.17) + "s" }} />)}
-            </div>
-          )}
           <div className="cis-hero-top">
-            <span className="cis-hero-doc" aria-hidden="true"><CisDoc /></span>
+            {/* streak calendar lives top-right of the hero (user, 2026-10-14) */}
+            <button type="button" className="cis-cal-btn" aria-label="View streak calendar" aria-haspopup="dialog" aria-expanded={calOpen} onClick={() => setCalOpen(true)}>
+              <DSCIS.IconifyIcon name="lucide:calendar-days" size={20} color="currentColor" />
+            </button>
             <div className="cis-hero-tx">
               <div className="cis-kicker"><DSCIS.IconifyIcon name="lucide:flame" size={12} color="currentColor" /> Daily check-in</div>
               <h2>{headline}</h2>
@@ -216,26 +266,26 @@ function CheckInStreakScreen() {
             </div>
           </div>
 
-          <div className="cis-row" role="list" aria-label="Last five check-in days">
+          <button type="button" className="cis-row" aria-label="Last five check-in days. Open the streak calendar" aria-haspopup="dialog" aria-expanded={calOpen} onClick={() => setCalOpen(true)}>
             {slots.map((s) => (
               <React.Fragment key={s.i}>
                 {s.i > 0 && <span className={"cis-link" + (s.done ? " on" : "")} aria-hidden="true" />}
-                <div role="listitem" className={"cis-slot" + (s.done ? " is-done" : "") + (s.today ? " is-today" : "")} style={{ "--d": (s.i * 110) + "ms" }} aria-label={s.label + (s.done ? ": checked in" : ": not yet")}>
+                <span className={"cis-slot" + (s.done ? " is-done" : "") + (s.today ? " is-today" : "")} style={{ "--d": (s.i * 110) + "ms" }}>
                   <span className="cis-slot-art">
                     {s.done
                       ? <><CisLottie size={50} delay={s.i * 180} /><span className="cis-slot-tick"><DSCIS.IconifyIcon name="lucide:check" size={11} color="#fff" /></span></>
                       : <span className="cis-slot-empty">{s.label === "Today" ? <DSCIS.IconifyIcon name="lucide:calendar-check" size={20} color="currentColor" /> : s.date.toLocaleDateString("en-GB", { weekday: "narrow" })}</span>}
                   </span>
                   <span className="cis-slot-day">{s.label}</span>
-                </div>
+                </span>
               </React.Fragment>
             ))}
-          </div>
+          </button>
+
 
           <div className="cis-act">
-            {checkedInToday
-              ? <div className="cis-status" role="status"><DSCIS.IconifyIcon name="lucide:check" size={18} color="currentColor" /> Checked in today</div>
-              : <button className="ml-btn ml-btn-navy cis-cta" type="button" onClick={checkIn} aria-label={"Check in today for " + projected + " points"}><DSCIS.IconifyIcon name="lucide:zap" size={18} color="currentColor" /> Check in today <span className="cis-cta-pts">· +{projected} pts</span></button>}
+            {/* no "Checked in today" pill once booked — just the note (user, 2026-10-14) */}
+            {!checkedInToday && <button className="ml-btn ml-btn-navy cis-cta" type="button" onClick={checkIn} aria-label={"Check in today for " + projected + " points"}><DSCIS.IconifyIcon name="lucide:zap" size={18} color="currentColor" /> Check in today <span className="cis-cta-pts">· +{projected} pts</span></button>}
             <p className="cis-cta-note">{checkedInToday ? "Your streak is safe until tomorrow." : "Check in once a day to keep the row growing."}</p>
           </div>
         </section>
@@ -271,18 +321,6 @@ function CheckInStreakScreen() {
           <div className="cis-milestone-foot">{toGo > 0 ? <><b>{toGo} more {toGo === 1 ? "day" : "days"}</b>{master.reward ? " unlocks " + master.reward : ""}</> : <><b>Unlocked</b>{master.reward ? " — " + master.reward : ""}</>}</div>
         </div>
 
-        <div className="ml-sec-h"><h2>Protect your streak</h2></div>
-        <div className={"ml-card cis-freeze" + (streak.frozen ? " is-frozen" : "")}>
-          <span className="cis-freeze-ico"><DSCIS.IconifyIcon name="lucide:snowflake" size={20} color="currentColor" /></span>
-          <span className="cis-freeze-main">
-            <span className="ti">{streak.frozen ? "Streak frozen" : "Streak freeze"}</span>
-            <span className="su">{streak.frozen && streak.frozenUntil ? "Safe until " + new Date(streak.frozenUntil).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }) : "Miss a day without breaking your streak · keeps it safe for 2 days"}</span>
-          </span>
-          {streak.frozen
-            ? <span className="cis-freeze-on"><DSCIS.IconifyIcon name="lucide:lock" size={16} color="var(--gray-400)" /></span>
-            : <button className="ml-btn ml-btn-sm ml-btn-ghost" type="button" onClick={freeze} disabled={state.spendableCredits < config.streakFreezeCost}>Freeze</button>}
-        </div>
-
         <div className="ml-demo-bar">
           <button className="ml-demo-btn" type="button" onClick={() => { PF_CIS.setState({ streak: Object.assign({}, streak, { current: 3, lastCheckIn: new Date(Date.now() - 20 * 3600000).toISOString(), frozen: false }) }); refresh(); }}>Demo: 3 of 5</button>
           <button className="ml-demo-btn" type="button" onClick={() => { PF_CIS.setState({ streak: Object.assign({}, streak, { current: 5, lastCheckIn: new Date(Date.now() - 20 * 3600000).toISOString(), frozen: false }) }); refresh(); }}>Demo: 5 in a row</button>
@@ -291,6 +329,7 @@ function CheckInStreakScreen() {
         </div>
         <div style={{ height: 8 }} />
       </div>
+      <CisCalendarSheet open={calOpen} onClose={() => setCalOpen(false)} state={state} />
       {toast && <div className="ml-toast" role="status"><DSCIS.IconifyIcon name="lucide:zap" size={16} color="#fff" />{toast}</div>}
     </div>
   );

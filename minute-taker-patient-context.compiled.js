@@ -1,262 +1,121 @@
 /* ===========================================================================
-   PROfinity — Minute Taker · Patient Context & Profile
-   Pre-session priming: demographics, clinical snapshot alerts, editable AI
-   session primer. PRD Screen 2 (Sec. 3.2 / MT-K02). New patients are created
-   through the "New patient" modal (user, 2026-10-01), never inline.
-   Classes prefixed mtp- to avoid clashes with other pages.
+   PROfinity — Minute Taker (web) · Start Session (patient & consent)
+   Web twin of MinuteTakerStartSessionMobile (minute-taker-start-session-mobile.jsx).
+   Step 1 of 2, simplified 2026-10-14 (big fields for a new patient, previous-patient
+   finder below the form). Older notes: pick the patient (searchable recent-patient list, or add a new
+   one through the "New patient" modal — user, 2026-10-01), check the
+   demographics + clinical snapshot, add an optional AI primer, confirm
+   recording consent, then continue to the live session.
+   Runs on window.PFMTW. Classes prefixed mtp-.
    =========================================================================== */
 const {
   useState: useStateMTP,
   useEffect: useEffectMTP,
   useRef: useRefMTP
 } = React;
-function goMTP(url) {
-  (window.pfGo || function (u) {
-    window.location.href = u;
-  })(url);
-}
-function getParamMTP(name) {
-  try {
-    return new URLSearchParams(window.location.search).get(name);
-  } catch (e) {
-    return null;
-  }
-}
-const MTP_PATIENTS = {
-  "Sarah Jenkins": {
-    id: "MT-84729",
-    gender: "Female",
-    age: 38,
-    dob: "1985-04-12",
-    phone: "(555) 123-4567",
-    email: "s.jenkins@example.com",
-    allergies: [{
-      label: "Penicillin (Severe)",
-      severe: true
-    }, {
-      label: "Latex (Mild)",
-      severe: false
-    }],
-    conditions: ["Hypertension", "Type 2 Diabetes"],
-    primer: "Patient is following up on a recent knee arthroscopy (3 weeks post-op). Focus on pain levels, mobility improvements, and any signs of infection. Note any adjustments to physical therapy routine."
-  },
-  "Eleanor Vance": {
-    id: "MT-77213",
-    gender: "Female",
-    age: 61,
-    dob: "1965-03-02",
-    phone: "(555) 234-8890",
-    email: "e.vance@example.com",
-    allergies: [{
-      label: "NKDA",
-      severe: false
-    }],
-    conditions: ["Osteoarthritis", "Hypothyroidism"],
-    primer: "Follow-up on cosmetic injectable series. Assess symmetry, bruising, and overall patient satisfaction versus prior session."
-  },
-  "Marcus Thorne": {
-    id: "MT-77198",
-    gender: "Male",
-    age: 45,
-    dob: "1980-11-19",
-    phone: "(555) 345-1122",
-    email: "m.thorne@example.com",
-    allergies: [{
-      label: "Sulfa drugs (Moderate)",
-      severe: true
-    }],
-    conditions: ["None on file"],
-    primer: "New patient consultation for laser resurfacing. Discuss downtime expectations and post-procedure care."
-  },
-  "David Cho": {
-    id: "MT-77042",
-    gender: "Male",
-    age: 29,
-    dob: "1996-06-30",
-    phone: "(555) 456-7788",
-    email: "d.cho@example.com",
-    allergies: [{
-      label: "NKDA",
-      severe: false
-    }],
-    conditions: ["Mild acne (ongoing)"],
-    primer: "Second session of acne treatment protocol. Check for irritation and compare against progress photos."
-  }
-};
-const MTP_PATIENT_NAMES = Object.keys(MTP_PATIENTS);
-const MTP_NEW_KEY = "__new__";
-const MTP_BLANK_PATIENT = {
-  id: null,
-  gender: "-",
-  age: "-",
-  dob: "",
-  phone: "",
-  email: "",
-  allergies: [],
-  conditions: [],
-  primer: ""
-};
-const MTP_BLANK_DRAFT = {
-  firstName: "",
-  lastName: "",
-  dob: "",
-  phone: "",
-  email: "",
-  allergies: [],
-  conditions: []
-};
-const MTP_SEVERITIES = ["Mild", "Moderate", "Severe"];
-function mtpSaveContext(data) {
-  try {
-    sessionStorage.setItem("mtSession", JSON.stringify(data));
-  } catch (e) {}
-}
-function mtpLoadContext() {
-  try {
-    return JSON.parse(sessionStorage.getItem("mtSession") || "{}");
-  } catch (e) {
-    return {};
-  }
-}
+const MTS = window.PFMTW;
+const {
+  Avatar: AvatarS,
+  Shell: ShellS
+} = MTS;
+const MTP_NEW = "__new__";
 
-/* ------------------------------------------------------------- sidebar */
-const MT_NAV = [{
-  icon: "lucide:layout-grid",
-  label: "Dashboard"
-}, {
-  icon: "lucide:users",
-  label: "Patients"
-}, {
-  icon: "lucide:archive",
-  label: "Archive"
-}];
-const MT_NAV_LINKS = {
-  "Dashboard": "MinuteTakerDashboard.html",
-  "Patients": "MinuteTakerPatientContext.html",
-  "Archive": "MinuteTakerArchive.html"
-};
-function MTPSidebar() {
-  return /*#__PURE__*/React.createElement("aside", {
-    className: "mtp-sidebar"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtp-logo"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:mic",
-    class: "mtp-logo-icon"
-  }), /*#__PURE__*/React.createElement("span", null, "Minute Taker")), MT_NAV.map(item => /*#__PURE__*/React.createElement("button", {
-    key: item.label,
-    className: "mtp-navitem" + (item.label === "Patients" ? " is-active" : ""),
-    type: "button",
-    onClick: item.label !== "Patients" ? () => goMTP(MT_NAV_LINKS[item.label]) : undefined
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: item.icon
-  }), /*#__PURE__*/React.createElement("span", null, item.label))));
+/* recency rank from the free-text lastVisit label — lower = more recent */
+function mtpRecency(label) {
+  const s = String(label || "").toLowerCase();
+  if (!s) return 9999;
+  if (s === "today") return 0;
+  if (s === "yesterday") return 1;
+  const m = s.match(/(\d+)\s*(day|week|month|year)/);
+  if (!m) return 9998;
+  const n = +m[1];
+  const u = m[2];
+  return u === "day" ? n : u === "week" ? n * 7 : u === "month" ? n * 30 : n * 365;
 }
-function MTPHeader() {
-  return /*#__PURE__*/React.createElement("header", {
-    className: "mtp-header"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:panel-left",
-    style: {
-      fontSize: 22,
-      color: "var(--gray-500)",
-      cursor: "pointer"
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "mtp-header-title"
-  }, "Minute Taker"), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-spacer"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-user"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtp-user-name"
-  }, "Dr. Katie Smith"), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-user-role"
-  }, "Clinician")), /*#__PURE__*/React.createElement("img", {
-    className: "mtp-user-avatar",
-    src: "assets/avatar-katy.jpg",
-    alt: "Dr. Katie Smith"
-  }));
-}
-
-/* ---------------------------------------------------------------- toast */
-function MTPToast({
-  text
-}) {
-  if (!text) return null;
-  return /*#__PURE__*/React.createElement("div", {
-    className: "mtp-toast"
-  }, text);
-}
-
-/* ----------------------------------------------------------------- view */
-function mtpSplitName(name) {
-  return name.split(" ").length > 1 ? [name.split(" ")[0], name.split(" ").slice(1).join(" ")] : [name, ""];
+const MTP_RECENT_MAX = 5;
+function mtpSplit(name) {
+  const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  return parts.length > 1 ? [parts[0], parts.slice(1).join(" ")] : [parts[0] || "", ""];
 }
 function MTPView() {
-  const initialPatient = getParamMTP("patient") || "Sarah Jenkins";
-  const [selectedPatient, setSelectedPatient] = useStateMTP(initialPatient);
-  const isNewPatient = selectedPatient === MTP_NEW_KEY;
-  const base = isNewPatient ? MTP_BLANK_PATIENT : MTP_PATIENTS[selectedPatient] || MTP_PATIENTS["Sarah Jenkins"];
-  const [firstName, lastName] = mtpSplitName(isNewPatient ? "" : selectedPatient);
-  const [form, setForm] = useStateMTP({
-    firstName,
-    lastName,
-    dob: base.dob,
-    phone: base.phone,
-    email: base.email
+  const toast = MTS.useToast();
+  const param = MTS.getParam("patient");
+  /* Simplified 2026-10-14 (user), web twin of minute-taker-start-session-mobile.jsx: big
+     name fields for a new patient (the usual case), allergies/conditions behind one
+     Add/Edit modal, "Seen this patient before?" finder BELOW the form, short visit box,
+     one consent tick and a big Continue button. */
+  const initial = MTS.PATIENTS[param] ? param : MTP_NEW;
+  const [selected, setSelected] = useStateMTP(initial);
+  const isNew = selected === MTP_NEW;
+  const base = isNew ? MTS.BLANK_PATIENT : MTS.PATIENTS[selected];
+  const [form, setForm] = useStateMTP(() => {
+    /* One "Patient name" field since 2026-10-14 (user): first + last were two boxes before. */
+    const name = isNew ? param && param !== MTP_NEW ? param : "" : selected;
+    return {
+      name,
+      dob: base.dob,
+      phone: base.phone,
+      email: base.email || ""
+    };
   });
   const [primer, setPrimer] = useStateMTP(base.primer);
-  const [useContext, setUseContext] = useStateMTP(true);
-  const [consentGiven, setConsentGiven] = useStateMTP(false);
-  const [toast, setToast] = useStateMTP(null);
-  // "New patient" modal — null = closed, otherwise the draft being typed.
-  // ?patient=__new__ (dashboard "New patient" row) opens it straight away.
-  const [draft, setDraft] = useStateMTP(() => isNewPatient ? {
-    ...MTP_BLANK_DRAFT,
-    target: MTP_NEW_KEY
-  } : null);
-  // per-patient edits made through the details modal this visit (keyed by patient / __new__):
-  // demographics live in `form`, the clinical snapshot lives here (user, 2026-10-02)
+  const [consent, setConsent] = useStateMTP(false);
+  const [finding, setFinding] = useStateMTP(false);
+  const [query, setQuery] = useStateMTP("");
+  const [draft, setDraft] = useStateMTP(null);
   const [edits, setEdits] = useStateMTP({});
-  const snap = edits[selectedPatient] || base;
-  const hasTypedName = !!(form.firstName.trim() || form.lastName.trim());
-  const patientName = isNewPatient ? form.firstName.trim() || form.lastName.trim() ? (form.firstName + " " + form.lastName).trim() : "New Patient" : (form.firstName + " " + form.lastName).trim() || selectedPatient;
-
-  /* details modal — "new" starts a blank record; "edit" opens the selected patient (new or on file) prefilled */
-  function openNewPatient(prefill) {
-    setDraft({
-      ...MTP_BLANK_DRAFT,
-      target: MTP_NEW_KEY,
-      ...(prefill || {})
+  const snap = edits[selected] || base;
+  const searchRef = useRefMTP(null);
+  const q = query.trim().toLowerCase();
+  const recent = MTS.PATIENT_NAMES.slice().sort((a, b) => mtpRecency(MTS.PATIENTS[a].lastVisit) - mtpRecency(MTS.PATIENTS[b].lastVisit));
+  const shown = q ? recent.filter(n => n.toLowerCase().includes(q) || String(MTS.PATIENTS[n].id).toLowerCase().includes(q)) : recent.slice(0, MTP_RECENT_MAX);
+  const typedName = String(form.name || "").trim().replace(/\s+/g, " ");
+  const patientName = isNew ? typedName || "New patient" : typedName || selected;
+  const firstName = mtpSplit(typedName)[0] || (isNew ? "the patient" : selected.split(" ")[0]);
+  const hasSnapshot = snap.allergies.length > 0 || snap.conditions.length > 0;
+  const canStart = consent && !!typedName;
+  function pick(value) {
+    setSelected(value);
+    const next = value === MTP_NEW ? MTS.BLANK_PATIENT : MTS.PATIENTS[value];
+    setForm({
+      name: value === MTP_NEW ? "" : value,
+      dob: next.dob,
+      phone: next.phone,
+      email: next.email || ""
     });
+    setPrimer(next.primer);
+    setConsent(false);
+    setFinding(false);
+    setQuery("");
   }
-  function openEditPatient() {
+  function clearPatient() {
+    pick(MTP_NEW);
+  }
+  function openFind() {
+    setFinding(true);
+    window.setTimeout(() => {
+      if (searchRef.current) searchRef.current.focus();
+    }, 80);
+  }
+  function openEdit() {
     setDraft({
-      ...MTP_BLANK_DRAFT,
-      target: selectedPatient,
+      target: selected,
       ...form,
       allergies: snap.allergies.slice(),
       conditions: snap.conditions.slice()
     });
   }
-  function cancelNewPatient() {
+  function cancelAdd() {
     setDraft(null);
-    // backed out of a brand-new record with nothing typed → fall back to the first patient on file
-    if (isNewPatient && !hasTypedName) handlePatientPick(MTP_PATIENT_NAMES[0]);
   }
-  function confirmNewPatient() {
-    if (!draft || !draft.firstName.trim()) return;
+  function confirmAdd() {
+    if (!draft || !String(draft.name || "").trim()) return;
     const clean = {
-      firstName: draft.firstName.trim(),
-      lastName: draft.lastName.trim(),
+      name: String(draft.name || "").trim(),
       dob: draft.dob.trim(),
       phone: draft.phone.trim(),
-      email: draft.email.trim()
+      email: String(draft.email || "").trim()
     };
-    const editingExisting = draft.target !== MTP_NEW_KEY;
-    const editingNew = !editingExisting && isNewPatient && hasTypedName;
-    if (!editingExisting) setSelectedPatient(MTP_NEW_KEY);
     setForm(clean);
     setEdits(m => ({
       ...m,
@@ -265,250 +124,272 @@ function MTPView() {
         conditions: draft.conditions.slice()
       }
     }));
-    if (!editingExisting && !editingNew) {
-      setPrimer("");
-      setConsentGiven(false);
-    }
     setDraft(null);
-    flashToast(editingExisting || editingNew ? "Details updated." : (clean.firstName + " " + clean.lastName).trim() + " added as a new patient.");
+    toast.show("Details updated.", "ok");
   }
-  function handlePatientPick(value) {
-    if (value === MTP_NEW_KEY) {
-      if (isNewPatient) openEditPatient();else openNewPatient();
+  useEffectMTP(() => {
+    if (!draft) return undefined;
+    const esc = e => {
+      if (e.key === "Escape") cancelAdd();
+    };
+    document.addEventListener("keydown", esc);
+    return () => document.removeEventListener("keydown", esc);
+  }, [draft]);
+  function start() {
+    if (!typedName) {
+      toast.show("Type the patient's name first.");
       return;
     }
-    setSelectedPatient(value);
-    const next = value === MTP_NEW_KEY ? MTP_BLANK_PATIENT : MTP_PATIENTS[value] || MTP_BLANK_PATIENT;
-    const [fn, ln] = mtpSplitName(value === MTP_NEW_KEY ? "" : value);
-    setForm({
-      firstName: fn,
-      lastName: ln,
-      dob: next.dob,
-      phone: next.phone,
-      email: next.email
-    });
-    setPrimer(next.primer);
-    setConsentGiven(false);
-  }
-  function flashToast(msg) {
-    setToast(msg);
-    window.setTimeout(() => setToast(null), 2200);
-  }
-  function saveDraft() {
-    mtpSaveContext({
-      patient: patientName,
-      id: base.id,
-      primer,
-      useContext,
-      isNewPatient
-    });
-    flashToast("Draft saved.");
-  }
-  function startSession() {
-    if (!consentGiven) {
-      flashToast("Please confirm patient consent before starting the session.");
+    if (!consent) {
+      toast.show("Confirm the patient's consent first.");
       return;
     }
-    mtpSaveContext({
+    MTS.saveCtx({
       patient: patientName,
       id: base.id,
+      phone: form.phone.trim(),
+      email: form.email.trim(),
       primer,
-      useContext,
-      isNewPatient,
-      consentGiven: true
+      useContext: true,
+      isNewPatient: isNew,
+      consentGiven: true,
+      startedAt: Date.now()
     });
-    goMTP("MinuteTakerSession.html?patient=" + encodeURIComponent(patientName));
+    MTS.go(MTS.routes.session + "?patient=" + encodeURIComponent(patientName));
   }
-  return /*#__PURE__*/React.createElement("div", {
-    className: "mtp-view"
-  }, /*#__PURE__*/React.createElement("button", {
+  const field = (key, label, extra) => /*#__PURE__*/React.createElement("label", {
+    className: "mtw-field mtp-big-field" + (extra && extra.className ? " " + extra.className : "")
+  }, /*#__PURE__*/React.createElement("span", null, label), /*#__PURE__*/React.createElement("input", {
+    value: form[key],
+    onChange: e => setForm({
+      ...form,
+      [key]: e.target.value
+    }),
+    autoComplete: "off",
+    ...extra,
+    className: undefined
+  }));
+  const continueBtn = /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "mtp-back",
-    onClick: () => goMTP("MinuteTakerDashboard.html")
+    className: "mtw-btn mtw-btn-primary mtp-start",
+    disabled: !canStart,
+    onClick: start
+  }, "Continue to recording", /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:arrow-right"
+  }));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "mtw-view mtp-view"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtw-page-head"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtw-crumb",
+    onClick: () => MTS.go(MTS.routes.dashboard)
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:arrow-left"
-  }), "Back"), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-page-head"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
-    className: "mtp-patient-idtag"
-  }, isNewPatient ? "New Patient" : "ID: " + base.id), /*#__PURE__*/React.createElement("h1", null, "Start Session")), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-page-head-actions"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "mtp-btn mtp-btn-ghost",
-    type: "button",
-    onClick: saveDraft
-  }, "Save Draft"), /*#__PURE__*/React.createElement("button", {
-    className: "mtp-btn mtp-btn-primary",
-    type: "button",
-    disabled: !consentGiven,
-    onClick: startSession
-  }, "Start Session", /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:arrow-right"
-  })))), /*#__PURE__*/React.createElement("div", {
+  }), "Dashboard"), /*#__PURE__*/React.createElement("h1", null, "Who is this session for?"), /*#__PURE__*/React.createElement("p", null, "Step 1 of 2 · Type the patient's details, tick consent, then continue.")), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-page-head-actions"
+  }, continueBtn)), /*#__PURE__*/React.createElement("div", {
     className: "mtp-grid"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mtp-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtp-section-label"
-  }, "Select Patient"), /*#__PURE__*/React.createElement("label", {
-    className: "mtp-field"
-  }, /*#__PURE__*/React.createElement("span", null, "Patient"), /*#__PURE__*/React.createElement("select", {
-    className: "mtp-select",
-    value: selectedPatient,
-    onChange: e => handlePatientPick(e.target.value)
-  }, MTP_PATIENT_NAMES.map(name => /*#__PURE__*/React.createElement("option", {
-    key: name,
-    value: name
-  }, name)), /*#__PURE__*/React.createElement("option", {
-    value: MTP_NEW_KEY
-  }, "+ New Patient"))), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-patient-header"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtp-patient-avatar"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: isNewPatient ? "lucide:user-plus" : "lucide:user"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-patient-header-text"
+    className: "mtw-col"
+  }, /*#__PURE__*/React.createElement("section", {
+    className: "mtw-card mtp-details mtw-fade-in",
+    key: selected
+  }, !isNew ? /*#__PURE__*/React.createElement("div", {
+    className: "mtp-patient"
+  }, /*#__PURE__*/React.createElement(AvatarS, {
+    name: selected,
+    size: 56
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-grow"
   }, /*#__PURE__*/React.createElement("div", {
     className: "mtp-patient-name"
-  }, patientName || "New Patient"), /*#__PURE__*/React.createElement("div", {
+  }, selected), /*#__PURE__*/React.createElement("div", {
     className: "mtp-patient-meta"
-  }, isNewPatient ? "No prior visits on file" : base.gender + ", " + base.age + " yrs")), /*#__PURE__*/React.createElement("button", {
-    className: "mtp-btn mtp-btn-ghost mtp-btn-sm",
+  }, base.gender, " · ", base.age, " yrs · Last visit ", String(base.lastVisit).toLowerCase())), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    onClick: openEditPatient
+    className: "mtp-clear",
+    onClick: clearPatient,
+    "aria-label": "Choose someone else",
+    title: "Choose someone else"
   }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:pencil"
-  }), "Edit")), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-section-label"
-  }, "Demographics"), /*#__PURE__*/React.createElement("label", {
-    className: "mtp-field"
-  }, /*#__PURE__*/React.createElement("span", null, "First Name"), /*#__PURE__*/React.createElement("input", {
-    value: form.firstName,
-    onChange: e => setForm({
-      ...form,
-      firstName: e.target.value
-    })
-  })), /*#__PURE__*/React.createElement("label", {
-    className: "mtp-field"
-  }, /*#__PURE__*/React.createElement("span", null, "Last Name"), /*#__PURE__*/React.createElement("input", {
-    value: form.lastName,
-    onChange: e => setForm({
-      ...form,
-      lastName: e.target.value
-    })
-  })), /*#__PURE__*/React.createElement("label", {
-    className: "mtp-field"
-  }, /*#__PURE__*/React.createElement("span", null, "Date of Birth"), /*#__PURE__*/React.createElement("input", {
-    value: form.dob,
-    onChange: e => setForm({
-      ...form,
-      dob: e.target.value
-    })
-  })), /*#__PURE__*/React.createElement("label", {
-    className: "mtp-field"
-  }, /*#__PURE__*/React.createElement("span", null, "Phone"), /*#__PURE__*/React.createElement("input", {
-    value: form.phone,
-    onChange: e => setForm({
-      ...form,
-      phone: e.target.value
-    })
-  })), /*#__PURE__*/React.createElement("label", {
-    className: "mtp-field"
-  }, /*#__PURE__*/React.createElement("span", null, "Email"), /*#__PURE__*/React.createElement("input", {
-    value: form.email,
-    onChange: e => setForm({
-      ...form,
-      email: e.target.value
-    })
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-side-col"
+    icon: "lucide:x"
+  }))) : /*#__PURE__*/React.createElement("div", {
+    className: "mtp-new-head"
+  }, /*#__PURE__*/React.createElement(AvatarS, {
+    isNew: true,
+    size: 48
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "mtw-grow"
+  }, "New patient")), /*#__PURE__*/React.createElement("div", {
+    className: "mtp-fields"
+  }, field("name", "Patient name", {
+    placeholder: "First and last name",
+    autoCapitalize: "words",
+    className: "mtp-span"
+  }), field("dob", "Date of birth", {
+    placeholder: "e.g. 12 Apr 1960"
+  }), field("phone", "Mobile number", {
+    placeholder: "07700 …",
+    inputMode: "tel"
+  }), field("email", "Email", {
+    placeholder: "name@example.com",
+    inputMode: "email",
+    type: "email",
+    autoCapitalize: "none",
+    className: "mtp-span"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "mtp-snap"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mtp-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtp-card-head"
+    className: "mtp-snap-head"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "mtp-card-title-text"
-  }, "Clinical Snapshot"), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-card-head-actions"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "mtp-btn mtp-btn-ghost mtp-btn-sm",
-    type: "button",
-    onClick: openEditPatient
+    className: "mtp-snap-title"
   }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:pencil"
-  }), "Edit"), !isNewPatient && /*#__PURE__*/React.createElement("button", {
-    className: "mtp-btn mtp-btn-ghost mtp-btn-sm",
+    icon: "lucide:heart-pulse"
+  }), "Allergies & conditions"), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    onClick: () => flashToast("EHR sync requested.")
+    className: "mtw-btn mtw-btn-ghost mtw-btn-sm",
+    onClick: openEdit
   }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:refresh-cw"
-  }), "Sync EHR"))), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-snapshot-cols"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "mtp-snapshot-label"
-  }, "Alerts & Allergies"), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-pill-row"
-  }, snap.allergies.length === 0 && /*#__PURE__*/React.createElement("span", {
-    className: "mtp-pill mtp-pill-neutral"
-  }, isNewPatient ? "Not recorded yet" : "No records on file"), snap.allergies.map(a => /*#__PURE__*/React.createElement("span", {
+    icon: hasSnapshot ? "lucide:pencil" : "lucide:plus"
+  }), hasSnapshot ? "Edit" : "Add")), /*#__PURE__*/React.createElement("div", {
+    className: "mtp-pills"
+  }, !hasSnapshot && /*#__PURE__*/React.createElement("span", {
+    className: "mtw-pill mtw-pill-muted"
+  }, isNew ? "Nothing added yet" : "Nothing on file"), snap.allergies.map(a => a.severity ? /*#__PURE__*/React.createElement("span", {
     key: a.label,
-    className: "mtp-pill" + (a.severe || a.severity ? " mtp-pill-danger" : " mtp-pill-neutral")
-  }, a.label, a.severity ? " (" + a.severity + ")" : "")))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "mtp-snapshot-label"
-  }, "Active Conditions"), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-pill-row"
-  }, snap.conditions.length === 0 && /*#__PURE__*/React.createElement("span", {
-    className: "mtp-pill mtp-pill-neutral"
-  }, isNewPatient ? "Not recorded yet" : "No records on file"), snap.conditions.map(c => /*#__PURE__*/React.createElement("span", {
+    className: "mtw-pill mtw-pill-danger"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:triangle-alert"
+  }), a.label, " · ", a.severity) : /*#__PURE__*/React.createElement("span", {
+    key: a.label,
+    className: "mtw-pill mtw-pill-muted"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:check"
+  }), a.label)), snap.conditions.map(c => /*#__PURE__*/React.createElement("span", {
     key: c,
-    className: "mtp-pill mtp-pill-success"
-  }, c)))))), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtp-card-head"
+    className: "mtw-pill mtw-pill-ok"
+  }, c))))), isNew && !finding && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtp-find",
+    onClick: openFind
   }, /*#__PURE__*/React.createElement("span", {
-    className: "mtp-card-title-text"
-  }, "AI Session Primer")), /*#__PURE__*/React.createElement("p", {
-    className: "mtp-primer-hint"
-  }, "Provide specific instructions or context for the AI before recording starts."), /*#__PURE__*/React.createElement("textarea", {
-    className: "mtp-primer-box",
-    rows: 5,
+    className: "mtw-ti"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:search"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "mtw-grow"
+  }, "Seen this patient before?", /*#__PURE__*/React.createElement("small", null, "Find their record instead of typing")), /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:chevron-right"
+  })), isNew && finding && /*#__PURE__*/React.createElement("section", {
+    className: "mtw-card mtp-finder mtw-fade-in"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtp-finder-head"
+  }, /*#__PURE__*/React.createElement("span", null, "Find a previous patient"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtw-link",
+    onClick: () => {
+      setFinding(false);
+      setQuery("");
+    }
+  }, "Close")), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-search"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:search"
+  }), /*#__PURE__*/React.createElement("input", {
+    ref: searchRef,
+    className: "mtw-input mtp-find-input",
+    type: "search",
+    value: query,
+    placeholder: "Type a name",
+    onChange: e => setQuery(e.target.value),
+    autoComplete: "off"
+  }), query && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtw-search-clear",
+    onClick: () => setQuery(""),
+    "aria-label": "Clear search"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:x"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mtp-list",
+    role: "list"
+  }, shown.map(name => {
+    const pt = MTS.PATIENTS[name];
+    return /*#__PURE__*/React.createElement("button", {
+      key: name,
+      type: "button",
+      role: "listitem",
+      className: "mtp-row",
+      onClick: () => pick(name)
+    }, /*#__PURE__*/React.createElement(AvatarS, {
+      name: name,
+      size: 44
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "mtp-row-text"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "mtp-row-name"
+    }, name), /*#__PURE__*/React.createElement("span", {
+      className: "mtp-row-meta"
+    }, "Last visit ", String(pt.lastVisit).toLowerCase())), /*#__PURE__*/React.createElement("iconify-icon", {
+      icon: "lucide:chevron-right"
+    }));
+  }), q && !shown.length && /*#__PURE__*/React.createElement("div", {
+    className: "mtp-empty"
+  }, /*#__PURE__*/React.createElement("span", null, "No patient named “", query.trim(), "”. Type their details above instead."))))), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-col"
+  }, /*#__PURE__*/React.createElement("section", {
+    className: "mtw-card mtp-primer"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtw-card-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtw-card-title"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtw-ti"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:sparkles"
+  })), "What is this visit about?"), /*#__PURE__*/React.createElement("span", {
+    className: "mtp-optional"
+  }, "Optional")), /*#__PURE__*/React.createElement("label", {
+    className: "mtw-field mtp-primer-field"
+  }, /*#__PURE__*/React.createElement("textarea", {
+    rows: 4,
     value: primer,
-    placeholder: isNewPatient ? "Add any context for the AI ahead of this first visit…" : "",
+    placeholder: "e.g. Follow-up after lip filler. Check healing and talk about the next step.",
     onChange: e => setPrimer(e.target.value)
-  }), /*#__PURE__*/React.createElement("label", {
-    className: "mtp-checkbox"
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "checkbox",
-    checked: useContext,
-    onChange: e => setUseContext(e.target.checked)
-  }), /*#__PURE__*/React.createElement("span", null, "Use this context for the upcoming session"))), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-card mtp-consent-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtp-card-head"
+  }))), /*#__PURE__*/React.createElement("section", {
+    className: "mtw-card mtp-consent" + (consent ? " is-on" : "")
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtp-consent-btn",
+    onClick: () => setConsent(v => !v),
+    "aria-pressed": consent
   }, /*#__PURE__*/React.createElement("span", {
-    className: "mtp-card-title-text"
-  }, "Recording Consent")), /*#__PURE__*/React.createElement("p", {
-    className: "mtp-primer-hint"
-  }, "Minute Taker will listen in and transcribe this consultation to generate the clinical note. Confirm the patient has been informed and consents before starting."), /*#__PURE__*/React.createElement("label", {
-    className: "mtp-checkbox mtp-consent-checkbox"
-  }, /*#__PURE__*/React.createElement("input", {
-    type: "checkbox",
-    checked: consentGiven,
-    onChange: e => setConsentGiven(e.target.checked)
-  }), /*#__PURE__*/React.createElement("span", null, "Patient has been informed and consents to this session being recorded and transcribed"))))), draft && /*#__PURE__*/React.createElement(MTPNewPatientModal, {
+    className: "mtw-check" + (consent ? " is-on" : "")
+  }, consent && /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:check"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "mtw-grow"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtp-consent-title"
+  }, firstName === "the patient" ? "The patient" : firstName, " agrees to be recorded"), /*#__PURE__*/React.createElement("span", {
+    className: "mtp-consent-text"
+  }, "You have told them this visit is recorded and written up as a note. The recording is kept with the note for 30 days."))), /*#__PURE__*/React.createElement("div", {
+    className: "mtp-continue"
+  }, continueBtn, /*#__PURE__*/React.createElement("span", {
+    className: "mtp-continue-note"
+  }, !typedName ? "Type the patient's name to continue." : !consent ? "Tick the consent box to continue." : "Recording starts when you click the mic on the next screen."))))), draft && /*#__PURE__*/React.createElement(MTPNewPatientModal, {
     draft: draft,
     setDraft: setDraft,
-    mode: draft.target !== MTP_NEW_KEY ? "existing" : isNewPatient && hasTypedName ? "new-edit" : "new",
-    onCancel: cancelNewPatient,
-    onConfirm: confirmNewPatient
-  }), /*#__PURE__*/React.createElement(MTPToast, {
-    text: toast
-  }));
+    mode: draft.target !== MTP_NEW ? "existing" : "new-edit",
+    onCancel: cancelAdd,
+    onConfirm: confirmAdd
+  }), toast.node);
 }
 
 /* chip-style list input used for the new-record clinical snapshot (user, 2026-10-02) */
+const MTP_SEVERITIES = ["Mild", "Moderate", "Severe"];
 function MTPTagInput({
   label,
   placeholder,
@@ -546,6 +427,7 @@ function MTPTagInput({
   }, label), /*#__PURE__*/React.createElement("div", {
     className: "mtp-tags-row"
   }, /*#__PURE__*/React.createElement("input", {
+    className: "mtw-input",
     value: text,
     placeholder: placeholder,
     autoComplete: "off",
@@ -572,14 +454,16 @@ function MTPTagInput({
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:plus"
   }))), (items.length > 0 || quick) && /*#__PURE__*/React.createElement("div", {
-    className: "mtp-pill-row mtp-tags-pills"
+    className: "mtp-pills mtp-tags-pills"
   }, items.map(it => {
     const k = keyOf(it);
-    const cls = isObj ? it.severity || it.severe ? "mtp-pill-danger" : "mtp-pill-neutral" : "mtp-pill-" + tone;
+    const cls = isObj ? it.severity ? "mtw-pill-danger" : "mtw-pill-muted" : "mtw-pill-" + tone;
     return /*#__PURE__*/React.createElement("span", {
       key: k,
-      className: "mtp-pill " + cls
-    }, k, isObj && it.severity ? " (" + it.severity + ")" : "", /*#__PURE__*/React.createElement("button", {
+      className: "mtw-pill " + cls
+    }, isObj && it.severity && /*#__PURE__*/React.createElement("iconify-icon", {
+      icon: "lucide:triangle-alert"
+    }), k, isObj && it.severity ? " · " + it.severity : "", /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "mtp-tag-x",
       onClick: () => remove(k),
@@ -589,7 +473,7 @@ function MTPTagInput({
     })));
   }), quick && !quickOn && items.length === 0 && /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "mtp-pill mtp-pill-neutral mtp-tag-quick",
+    className: "mtw-pill mtw-pill-muted mtp-tag-quick",
     onClick: () => onChange([quick.value])
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:check"
@@ -620,7 +504,7 @@ function MTPNewPatientModal({
       window.removeEventListener("keydown", onKey);
     };
   }, []);
-  const canSave = !!draft.firstName.trim();
+  const canSave = !!String(draft.name || "").trim();
   const set = key => e => setDraft({
     ...draft,
     [key]: e.target.value
@@ -630,10 +514,10 @@ function MTPNewPatientModal({
     if (canSave) onConfirm();
   };
   return /*#__PURE__*/React.createElement("div", {
-    className: "mtp-modal-scrim",
+    className: "mtw-scrim",
     onClick: onCancel
   }, /*#__PURE__*/React.createElement("form", {
-    className: "mtp-modal",
+    className: "mtw-modal mtp-modal",
     role: "dialog",
     "aria-modal": "true",
     "aria-labelledby": "mtp-new-title",
@@ -641,13 +525,13 @@ function MTPNewPatientModal({
     onSubmit: submit
   }, /*#__PURE__*/React.createElement("div", {
     className: "mtp-modal-head"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtp-patient-avatar mtp-modal-avatar"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: existing ? "lucide:user" : "lucide:user-plus"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-modal-head-text"
-  }, /*#__PURE__*/React.createElement("h2", {
+  }, /*#__PURE__*/React.createElement(AvatarS, {
+    name: existing ? draft.target : undefined,
+    isNew: !existing,
+    size: 46
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-grow"
+  }, /*#__PURE__*/React.createElement("h3", {
     id: "mtp-new-title"
   }, editing ? "Edit patient details" : "New patient"), /*#__PURE__*/React.createElement("p", null, existing ? "Changes apply to " + draft.target.split(" ")[0] + "'s record for this session." : editing ? "Update the record for this first visit." : "Start a blank record for someone not yet on file.")), /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -657,43 +541,39 @@ function MTPNewPatientModal({
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:x"
   }))), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-modal-grid"
+    className: "mtp-fields"
   }, /*#__PURE__*/React.createElement("label", {
-    className: "mtp-field"
-  }, /*#__PURE__*/React.createElement("span", null, "First Name"), /*#__PURE__*/React.createElement("input", {
+    className: "mtw-field mtp-span"
+  }, /*#__PURE__*/React.createElement("span", null, "Patient name"), /*#__PURE__*/React.createElement("input", {
     ref: firstRef,
-    value: draft.firstName,
-    placeholder: "First",
+    value: draft.name,
+    placeholder: "First and last name",
+    autoCapitalize: "words",
     autoComplete: "off",
-    onChange: set("firstName")
+    onChange: set("name")
   })), /*#__PURE__*/React.createElement("label", {
-    className: "mtp-field"
-  }, /*#__PURE__*/React.createElement("span", null, "Last Name"), /*#__PURE__*/React.createElement("input", {
-    value: draft.lastName,
-    placeholder: "Last",
-    autoComplete: "off",
-    onChange: set("lastName")
-  })), /*#__PURE__*/React.createElement("label", {
-    className: "mtp-field"
-  }, /*#__PURE__*/React.createElement("span", null, "Date of Birth"), /*#__PURE__*/React.createElement("input", {
+    className: "mtw-field"
+  }, /*#__PURE__*/React.createElement("span", null, "Date of birth"), /*#__PURE__*/React.createElement("input", {
     value: draft.dob,
-    placeholder: "YYYY-MM-DD",
+    placeholder: "DD Mon YYYY",
     autoComplete: "off",
     onChange: set("dob")
   })), /*#__PURE__*/React.createElement("label", {
-    className: "mtp-field"
+    className: "mtw-field"
   }, /*#__PURE__*/React.createElement("span", null, "Phone"), /*#__PURE__*/React.createElement("input", {
     value: draft.phone,
-    placeholder: "(555) 000-0000",
+    placeholder: "07700 …",
     inputMode: "tel",
     autoComplete: "off",
     onChange: set("phone")
   })), /*#__PURE__*/React.createElement("label", {
-    className: "mtp-field mtp-modal-span"
+    className: "mtw-field mtp-span"
   }, /*#__PURE__*/React.createElement("span", null, "Email"), /*#__PURE__*/React.createElement("input", {
-    value: draft.email,
+    value: draft.email || "",
+    type: "email",
     placeholder: "name@example.com",
     inputMode: "email",
+    autoCapitalize: "none",
     autoComplete: "off",
     onChange: set("email")
   }))), /*#__PURE__*/React.createElement("div", {
@@ -701,7 +581,7 @@ function MTPNewPatientModal({
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:heart-pulse"
   }), "Clinical snapshot", /*#__PURE__*/React.createElement("span", null, "Optional")), /*#__PURE__*/React.createElement(MTPTagInput, {
-    label: "Alerts & Allergies",
+    label: "Alerts & allergies",
     placeholder: "e.g. Penicillin",
     tone: "danger",
     withSeverity: true,
@@ -717,9 +597,9 @@ function MTPNewPatientModal({
       }
     }
   }), /*#__PURE__*/React.createElement(MTPTagInput, {
-    label: "Active Conditions",
+    label: "Active conditions",
     placeholder: "e.g. Hypertension",
-    tone: "success",
+    tone: "ok",
     items: draft.conditions,
     onChange: conditions => setDraft({
       ...draft,
@@ -730,24 +610,24 @@ function MTPNewPatientModal({
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:info"
   }), "Anything you add here is shown as an alert during the session and in the note."), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-modal-actions"
+    className: "mtw-modal-actions mtp-modal-actions"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "mtp-btn mtp-btn-ghost",
+    className: "mtw-btn mtw-btn-ghost",
     onClick: onCancel
   }, "Cancel"), /*#__PURE__*/React.createElement("button", {
     type: "submit",
-    className: "mtp-btn mtp-btn-primary",
+    className: "mtw-btn mtw-btn-primary",
     disabled: !canSave
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: editing ? "lucide:check" : "lucide:user-plus"
   }), editing ? "Save details" : "Add patient"))));
 }
 function MTPApp() {
-  return /*#__PURE__*/React.createElement("div", {
-    className: "mtp-shell"
-  }, /*#__PURE__*/React.createElement(MTPSidebar, null), /*#__PURE__*/React.createElement("div", {
-    className: "mtp-main"
-  }, /*#__PURE__*/React.createElement(MTPHeader, null), /*#__PURE__*/React.createElement(MTPView, null)));
+  return /*#__PURE__*/React.createElement(ShellS, {
+    active: "Patients",
+    title: "New session",
+    sub: "Step 1 of 2 · Patient & consent"
+  }, /*#__PURE__*/React.createElement(MTPView, null));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(MTPApp, null));

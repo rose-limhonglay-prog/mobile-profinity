@@ -167,7 +167,7 @@ const IMG = {
   p1img2: "assets/post1-img2.png",
   p1img3: "assets/post1-img3.png",
   p1img4: "assets/post1-img4.png",
-  ffSqImg1Swap: "assets/ff-sqimg1-toxin-swap.jpg",
+  ffSqImg1Swap: "assets/post4-img1.png",
   p2img1: "assets/post2-img1.png",
   p2img2: "assets/post2-img2.png",
   p2img3: "assets/post2-img3.png",
@@ -1647,7 +1647,10 @@ const SAMPLE_CAROUSEL_POST = {
    timestamp normally goes. Pinned to the top of every tier's feed. */
 const LIVE_NOW_POST = {
   id: "ff_livenow1", author: MIRANDA, time: "",
-  liveNow: { viewers: "142", frame: "assets/live-preview-camera.jpg" },
+  /* No camera frame on purpose: the stage shows the broadcaster's initials
+     on a navy gradient (see LiveNowMedia) instead of a stock photo. Add
+     `frame: "<img>"` back to show a real preview. */
+  liveNow: { viewers: "142" },
   hashtags: [],
   body: "",
   likes: "318", comments: "42", shares: "12", actioned: false,
@@ -2378,7 +2381,7 @@ const TIER_TAG_POSTS = [
   id: "tt_confidence", author: { name: "Dr. Sarah Collins", avatar: "assets/avatar-sarah-collins.jpg", seals: ["gb", "verified", "skinfluencer"] },
   bucket: "follow", tierTag: "confidence", time: "3h",
   hashtags: ["protocol", "case-study", "patient"],
-  media: [IMG.toxin], aspect: "portrait",
+  media: ["assets/course-complications.jpg"], aspect: "portrait",
   body: "Early vascular compromise doesn't always look dramatic — blanching can be subtle, and pain out of proportion on injection is often the first real signal, well before any change in skin colour. My chairside rule: if the pain doesn't match the injection, stop and reassess before you go any further. Hyaluronidase, a warm compress and your emergency protocol sheet should be within arm's reach on every filler list, not just the ones you're nervous about.",
   likes: "612", comments: "58", shares: "34", actioned: false,
   commentList: thread("Printing this out for the treatment room today — thank you.")
@@ -5114,12 +5117,19 @@ function WebReelModal({ sample, playing, setPlaying, muted, setMuted, onClose })
    cropped portrait, a pulsing LIVE badge top-left and the viewer count
    top-right — no scrubber/play UI since there's nothing to seek. Double-tap
    still loves the post like any other media. */
+function pfInitials(name) {
+  const parts = String(name || "").replace(/^(Dr|Mr|Mrs|Ms|Miss)\.?\s+/i, "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+}
 function LiveNowMedia({ live, author, onLoveReact }) {
   const { wrap, heartNode } = useDoubleTapLove(onLoveReact || (() => {}));
   return (
     <div className="pf-livenow" onClick={wrap(null)} role="img"
     aria-label={(author ? author.name : "A member") + " is live now, " + live.viewers + " watching"}>
-      <img src={live.frame} alt="" />
+      {live.frame
+        ? <img src={live.frame} alt="" />
+        : <div className="pf-livenow-initials" aria-hidden="true"><span>{pfInitials(author && author.name)}</span></div>}
       <span className="pf-livenow-badge"><span className="pf-livenow-dot" aria-hidden="true" />LIVE</span>
       <span className="pf-livenow-viewers">
         <IconifyIcon name="lucide:eye" size={13} color="var(--white)" />{live.viewers}

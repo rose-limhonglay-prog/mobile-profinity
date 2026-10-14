@@ -170,3 +170,34 @@ body { background: #d9dae1; -webkit-font-smoothing: antialiased; text-rendering:
 .mt-divider { height: 1px; background: var(--mt-line-2); margin: 12px 0; }
 .mt-fade-in { animation: mt-fade .32s ease both; }
 @keyframes mt-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ---------------------------------------------------------------- larger type for older clinicians (user, 2026-10-14)
+   Modest bump across every Minute Taker mobile page: body copy 15–16px, labels 13–14px,
+   52px+ primary buttons, 44px tap targets. Page CSS may go bigger still. */
+.mt-top-title { font-size: 18px; }
+.mt-top-sub { font-size: 13px; }
+.mt-textbtn { font-size: 16px; }
+.mt-card-title { font-size: 16px; }
+.mt-link { font-size: 14px; }
+.mt-section-label { font-size: 13px; }
+.mt-hint { font-size: 14px; }
+.mt-pill { font-size: 12.5px; padding: 6px 11px; }
+.mt-btn { font-size: 16.5px; height: 54px; }
+.mt-btn-ghost, .mt-btn-soft { font-size: 15px; height: 46px; }
+.mt-btn-sm { font-size: 14px; height: 40px; }
+.mt-bottom-note { font-size: 13.5px; }
+.mt-field > span { font-size: 13.5px; }
+.mt-field input, .mt-field textarea, .mt-input { font-size: 16px; }
+.mt-switch-row { font-size: 15px; }
+.mt-trust { font-size: 13px; }
+.mt-iconbtn { width: 44px; height: 44px; }
+.mtdm-row-name { font-size: 16.5px; }
+.mtdm-row-meta { font-size: 13.5px; }
+.mtdm-row-kebab { width: 44px; height: 44px; }
+.mtam-row-name { font-size: 16.5px; }
+.mtam-row-meta, .mtam-row-when { font-size: 13.5px; }
+.mtnrm-sec textarea { font-size: 16px; }
+.mtnrm-field-label { font-size: 15.5px; }
+.mtnrm-turn-text { font-size: 14.5px; }
+.mtnrm-name { font-size: 18px; }
+.mtnrm-meta { font-size: 13.5px; }

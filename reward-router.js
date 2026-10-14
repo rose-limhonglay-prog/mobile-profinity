@@ -222,7 +222,7 @@
      via pf:milestone. lottie-web is loaded on demand like daily-checkin.js. */
   var SPLASH_MS = 2500;                        /* user rule: overlay only, gone after 2–3s */
   var SPLASH_LOTTIE = "assets/lottie/checkin-wink.json?v=20260918a";
-  var SPLASH_WAVE_LOTTIE = "assets/lottie/drtim-cheer.json?v=20261013a";   /* sign-up / login: Dr Tim cheering (was the waving girl, 2026-10-13) */
+  var SPLASH_WAVE_LOTTIE = "assets/lottie/drtim-doctor.json?v=20261014b";   /* sign-up / login: Dr Tim cheering (was the waving girl, 2026-10-13) */
   var SPLASH_CONFETTI = "https://lottie.host/1b8bdd21-9711-48bb-873f-3889b01b43c8/jrTeYYuQqi.json";
   var HANDOFF_KEY = "pf-celebration-handoff";  /* auth pages → newsfeed: { type: "signup"|"login", tour, ts } */
   var SIGNUP_POINTS = 100, SIGNUP_KEY = "pf-signup-bonus";
@@ -274,6 +274,7 @@
     ".pf-rsp-glow{position:absolute;left:50%;top:34%;width:320px;height:240px;transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;background:radial-gradient(closest-side,var(--rsp-glow),rgba(253,195,93,0))}" +
     ".pf-rsp-hero{position:relative;width:272px;height:204px;margin:0 auto 6px;transform:scale(.6);opacity:0;transition:transform .55s cubic-bezier(.2,1.4,.4,1) .05s,opacity .3s ease .05s}" +
     ".pf-rsp-hero.is-square{width:236px;height:236px;margin-bottom:10px}" +
+    ".pf-rsp-hero.is-gem .pf-rsp-lottie{filter:drop-shadow(0 18px 30px rgba(253,195,93,.45))}" +
     ".pf-rsp-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3;transition:opacity .6s ease}" +
     ".pf-rsp-confetti.is-done{opacity:0}.pf-rsp-confetti svg{display:block;width:100%!important;height:100%!important}" +
     ".pf-rsp-pts{position:relative;display:flex;align-items:baseline;justify-content:center;gap:8px;margin:0 0 8px;line-height:1;color:var(--rsp-points)}" +
@@ -324,6 +325,8 @@
     hideSplash();
     ensureSplashCss();
     var c = splashCopy(m);
+    /* league promotion: the hero is the league's gem, not the doctor (user, 2026-10-14) */
+    var gem = m.type === "league" && m.league && m.league.lottie ? m.league.lottie : null;
     var host = findHost() || document.body;
     var wrap = document.createElement("div");
     wrap.className = "pf-rsp";
@@ -332,8 +335,8 @@
     wrap.innerHTML =
       '<span class="pf-rsp-glow" aria-hidden="true"></span>' +
       '<div class="pf-rsp-confetti" aria-hidden="true"></div>' +
-      '<div class="pf-rsp-hero' + (c.wave ? " is-square" : "") + '" aria-hidden="true"><span class="pf-rsp-lottie"></span>' +
-        (c.icon ? '<span class="pf-rsp-medal" style="background:' + esc(c.color) + '"><iconify-icon icon="' + esc(c.icon) + '" width="26" height="26"></iconify-icon></span>' : "") + "</div>" +
+      '<div class="pf-rsp-hero' + ((c.wave || gem) ? " is-square" : "") + (gem ? " is-gem" : "") + '" aria-hidden="true"><span class="pf-rsp-lottie"></span>' +
+        (c.icon && !gem ? '<span class="pf-rsp-medal" style="background:' + esc(c.color) + '"><iconify-icon icon="' + esc(c.icon) + '" width="26" height="26"></iconify-icon></span>' : "") + "</div>" +
       (c.kicker ? '<p class="pf-rsp-k">' + esc(c.kicker) + "</p>" : "") +
       (c.points ? '<p class="pf-rsp-pts" aria-label="+' + esc(c.points) + ' points"><b>+0</b><i>points</i></p>' : "") +
       '<h2 class="pf-rsp-t">' + esc(c.title) + "</h2>" +
@@ -352,7 +355,7 @@
       ensureLottie().then(function (lottie) {
         if (splashEl !== wrap) return;
         var mount = wrap.querySelector(".pf-rsp-lottie");
-        try { splashAnim = lottie.loadAnimation({ container: mount, renderer: "svg", loop: true, autoplay: true, path: c.wave ? SPLASH_WAVE_LOTTIE : SPLASH_LOTTIE }); } catch (e) {}
+        try { splashAnim = lottie.loadAnimation({ container: mount, renderer: "svg", loop: true, autoplay: true, path: gem || (c.wave ? SPLASH_WAVE_LOTTIE : SPLASH_LOTTIE) }); } catch (e) {}
         /* one confetti burst, then the layer fades */
         var cm = wrap.querySelector(".pf-rsp-confetti");
         try {

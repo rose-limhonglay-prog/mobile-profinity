@@ -1,8 +1,10 @@
 /* ===========================================================================
    PROfinity — Minute Taker (mobile) · Clinical Note Review
    The AI-written note (Assessment [SOAP] / Data [DAP] / Summary) as editable lettered sections,
-   the raw transcript behind a toggle, Discard (in-page sheet) and Save to
-   EMR. Runs on window.PFMT. Classes prefixed mtnrm-.
+   the session recording (kept, playable), the raw transcript behind a toggle,
+   Share (email / text / apps). The note saves automatically (user,
+   2026-10-14): no Save / Discard, the header is a plain back button and
+   the recording sits at the top of the note. Runs on window.PFMT. Classes prefixed mtnrm-.
    =========================================================================== */
 const {
   useState: useStateMTNRM,
@@ -13,7 +15,7 @@ const {
   Ic: IcR,
   Avatar: AvatarR,
   TopBar: TopBarR,
-  TextBtn: TextBtnR,
+  IconBtn: IconBtnR,
   Shell: ShellR
 } = MTR;
 const MTNRM_NOTES = {
@@ -254,8 +256,9 @@ function MTNRMView() {
     }
   });
   const [showTranscript, setShowTranscript] = useStateMTNRM(false);
-  const [confirmDiscard, setConfirmDiscard] = useStateMTNRM(false);
-  const [saving, setSaving] = useStateMTNRM(false);
+  /* ?share=1 opens the share sheet straight away (demo / screenshots) */
+  const [sharing, setSharing] = useStateMTNRM(MTR.getParam("share") === "1");
+  const recordingSeconds = generated && ctx.durationSeconds ? ctx.durationSeconds : mtnrmSeconds(record.duration);
   function update(key, value) {
     setNote(n => ({
       ...n,
@@ -265,33 +268,18 @@ function MTNRMView() {
       }
     }));
   }
-  function save() {
-    if (saving) return;
-    setSaving(true);
-    toast.show("Saved to EMR", "ok");
-    window.setTimeout(() => MTR.go(MTR.routes.dashboard), 1200);
-  }
   const fields = MTNRM_FIELDS[format];
   const activeIndex = MTNRM_FORMATS.findIndex(f => f.key === format);
   return /*#__PURE__*/React.createElement("div", {
     className: "mt-screen mtnrm-screen"
   }, /*#__PURE__*/React.createElement(TopBarR, {
-    left: /*#__PURE__*/React.createElement(TextBtnR, {
-      tone: "danger",
-      onClick: () => setConfirmDiscard(true),
-      disabled: saving
-    }, "Discard"),
+    left: /*#__PURE__*/React.createElement(IconBtnR, {
+      icon: "lucide:arrow-left",
+      label: "Back to sessions",
+      onClick: () => MTR.go(MTR.routes.dashboard)
+    }),
     title: "Clinical note",
-    sub: generated ? "Review before saving" : date,
-    right: /*#__PURE__*/React.createElement("button", {
-      type: "button",
-      className: "mt-btn mt-btn-primary mt-btn-sm",
-      onClick: save,
-      disabled: saving
-    }, /*#__PURE__*/React.createElement(IcR, {
-      name: "lucide:check",
-      size: 15
-    }), "Save")
+    sub: generated ? "Saved automatically" : date
   }), /*#__PURE__*/React.createElement("div", {
     className: "mt-scroll"
   }, /*#__PURE__*/React.createElement("section", {
@@ -305,12 +293,25 @@ function MTNRMView() {
     className: "mtnrm-name"
   }, patient), /*#__PURE__*/React.createElement("div", {
     className: "mtnrm-meta"
-  }, id, " · ", duration, " · ", date))), /*#__PURE__*/React.createElement("div", {
+  }, id, " · ", duration, " · ", date)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtnrm-share",
+    onClick: () => setSharing(true),
+    "aria-haspopup": "dialog"
+  }, /*#__PURE__*/React.createElement(IcR, {
+    name: "lucide:share-2",
+    size: 16
+  }), "Share")), /*#__PURE__*/React.createElement("div", {
     className: "mtnrm-ai"
   }, /*#__PURE__*/React.createElement(IcR, {
     name: "lucide:sparkles",
     size: 13
-  }), "AI-written from the live transcript. Edit anything before it reaches the chart."), /*#__PURE__*/React.createElement("div", {
+  }), "AI-written from the live transcript. Edit anything — changes save automatically."), /*#__PURE__*/React.createElement(MTNRMRecording, {
+    seconds: recordingSeconds,
+    patient: patient,
+    date: date,
+    onToast: m => toast.show(m)
+  }), /*#__PURE__*/React.createElement("div", {
     className: "mtnrm-seg",
     role: "tablist",
     "aria-label": "Note format",
@@ -379,36 +380,124 @@ function MTNRMView() {
   }, /*#__PURE__*/React.createElement(IcR, {
     name: "lucide:shield-check",
     size: 15
-  })), /*#__PURE__*/React.createElement("span", null, "Saving writes this note to the patient's EMR record and clears the transcript from Minute Taker.")), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("span", null, "This note saves automatically to the patient's EMR record. The transcript and recording stay with it for 30 days.")), /*#__PURE__*/React.createElement("div", {
     className: "mt-spacer"
-  })), confirmDiscard && /*#__PURE__*/React.createElement("div", {
-    className: "mtnrm-scrim",
-    onClick: () => setConfirmDiscard(false)
+  })), sharing && window.PFMTShare && /*#__PURE__*/React.createElement(window.PFMTShare.Share, {
+    variant: "sheet",
+    patient: patient,
+    id: id,
+    hasRecording: true,
+    note: {
+      type: record.type || "Clinical note",
+      date,
+      duration
+    },
+    onClose: () => setSharing(false),
+    onToast: (m, t) => toast.show(m, t)
+  }), toast.node);
+}
+
+/* session recording, kept with the note (user, 2026-10-14): simulated player with play/pause, scrubbable bar and a download */
+function mtnrmSeconds(label) {
+  const m = /(\d+)m/.exec(label || ""),
+    sec = /(\d+)s/.exec(label || "");
+  return (m ? +m[1] * 60 : 0) + (sec ? +sec[1] : 0) || 754;
+}
+function mtnrmClock(s) {
+  s = Math.max(0, Math.round(s));
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+const MTNRM_BARS = Array.from({
+  length: 48
+}, (_, i) => 22 + Math.round(60 * Math.abs(Math.sin(i * 0.7) * Math.cos(i * 0.23))));
+function MTNRMRecording({
+  seconds,
+  patient,
+  date,
+  onToast
+}) {
+  const [playing, setPlaying] = useStateMTNRM(false);
+  const [pos, setPos] = useStateMTNRM(0);
+  useEffectMTNRM(() => {
+    if (!playing) return undefined;
+    const t = window.setInterval(() => setPos(p => {
+      if (p + 1 >= seconds) {
+        setPlaying(false);
+        return seconds;
+      }
+      return p + 1;
+    }), 1000);
+    return () => window.clearInterval(t);
+  }, [playing, seconds]);
+  const pct = seconds ? Math.min(100, pos / seconds * 100) : 0;
+  function seek(e) {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    setPos(Math.round(Math.max(0, Math.min(1, x / r.width)) * seconds));
+  }
+  return /*#__PURE__*/React.createElement("section", {
+    className: "mt-card mtnrm-rec",
+    "aria-label": "Session recording"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mtnrm-sheet",
-    role: "dialog",
-    "aria-modal": "true",
-    "aria-labelledby": "mtnrm-discard-title",
-    onClick: e => e.stopPropagation()
+    className: "mtnrm-rec-head"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "mtnrm-sheet-grab",
-    "aria-hidden": "true"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "mtnrm-sheet-icon"
+    className: "mtnrm-rec-title"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mt-ti"
   }, /*#__PURE__*/React.createElement(IcR, {
-    name: "lucide:trash-2",
-    size: 22
-  })), /*#__PURE__*/React.createElement("h3", {
-    id: "mtnrm-discard-title"
-  }, "Discard this note?"), /*#__PURE__*/React.createElement("p", null, "The AI-written note and transcript for ", patient.split(" ")[0], " will be deleted. This can't be undone."), /*#__PURE__*/React.createElement("button", {
+    name: "lucide:mic",
+    size: 15
+  })), "Session recording"), /*#__PURE__*/React.createElement("span", {
+    className: "mtnrm-rec-kept"
+  }, "Kept 30 days")), /*#__PURE__*/React.createElement("div", {
+    className: "mtnrm-rec-player"
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "mt-btn mt-btn-danger mt-btn-block",
-    onClick: () => MTR.go(MTR.routes.dashboard)
-  }, "Discard note"), /*#__PURE__*/React.createElement("button", {
+    className: "mtnrm-rec-play" + (playing ? " is-on" : ""),
+    onClick: () => {
+      if (pos >= seconds) setPos(0);
+      setPlaying(v => !v);
+    },
+    "aria-label": playing ? "Pause" : "Play"
+  }, /*#__PURE__*/React.createElement(IcR, {
+    name: playing ? "lucide:pause" : "lucide:play",
+    size: 20
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "mtnrm-rec-track",
+    role: "slider",
+    "aria-label": "Position",
+    "aria-valuemin": 0,
+    "aria-valuemax": seconds,
+    "aria-valuenow": pos,
+    tabIndex: 0,
+    onClick: seek,
+    onKeyDown: e => {
+      if (e.key === "ArrowRight") setPos(p => Math.min(seconds, p + 15));
+      if (e.key === "ArrowLeft") setPos(p => Math.max(0, p - 15));
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtnrm-rec-bars",
+    "aria-hidden": "true",
+    style: {
+      "--pct": pct + "%"
+    }
+  }, MTNRM_BARS.map((h, i) => /*#__PURE__*/React.createElement("i", {
+    key: i,
+    style: {
+      height: h + "%"
+    }
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mtnrm-rec-times"
+  }, /*#__PURE__*/React.createElement("span", null, mtnrmClock(pos)), /*#__PURE__*/React.createElement("span", null, mtnrmClock(seconds))))), /*#__PURE__*/React.createElement("div", {
+    className: "mtnrm-rec-foot"
+  }, /*#__PURE__*/React.createElement("span", null, patient.split(" ")[0], " · ", date), /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "mt-btn mt-btn-ghost mt-btn-block",
-    onClick: () => setConfirmDiscard(false)
-  }, "Keep editing"))), toast.node);
+    className: "mt-link",
+    onClick: () => onToast("Downloading the recording…")
+  }, /*#__PURE__*/React.createElement(IcR, {
+    name: "lucide:download",
+    size: 13
+  }), "Download audio")));
 }
 function MTNRMApp() {
   return /*#__PURE__*/React.createElement(ShellR, {

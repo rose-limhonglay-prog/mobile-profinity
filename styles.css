@@ -1166,6 +1166,12 @@ img{max-width:100%}
    (unlike the edge-to-edge reels) so it reads as a window into a broadcast */
 .pf-livenow{position:relative;margin:4px 8px 12px;border-radius:14px;overflow:hidden;background:#000;cursor:pointer}
 .pf-livenow img{display:block;width:100%;height:auto;aspect-ratio:2/3;object-fit:cover;object-position:62% 30%}
+/* Initials stage: shown when the live post carries no camera frame */
+.pf-livenow-initials{display:flex;align-items:center;justify-content:center;width:100%;aspect-ratio:2/3;
+  background:radial-gradient(120% 90% at 50% 0%,#24355c 0%,#0C1928 60%,#070e1a 100%)}
+.pf-livenow-initials span{display:flex;align-items:center;justify-content:center;width:36%;aspect-ratio:1;border-radius:50%;
+  background:rgba(255,255,255,.08);border:2px solid rgba(252,194,93,.55);color:#FCC25D;
+  font-family:var(--font-sans);font-size:clamp(40px,14vw,64px);font-weight:var(--fw-bold);letter-spacing:.04em;line-height:1}
 .pf-livenow-badge{position:absolute;top:12px;left:12px;z-index:2;display:inline-flex;align-items:center;gap:6px;
   padding:5px 11px;border-radius:var(--r-pill);background:var(--error);color:var(--white);
   font-family:var(--font-sans);font-size:12px;font-weight:var(--fw-bold);letter-spacing:.04em;

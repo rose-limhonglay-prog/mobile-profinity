@@ -383,7 +383,7 @@ const IMG = {
   p1img2: "assets/post1-img2.png",
   p1img3: "assets/post1-img3.png",
   p1img4: "assets/post1-img4.png",
-  ffSqImg1Swap: "assets/ff-sqimg1-toxin-swap.jpg",
+  ffSqImg1Swap: "assets/post4-img1.png",
   p2img1: "assets/post2-img1.png",
   p2img2: "assets/post2-img2.png",
   p2img3: "assets/post2-img3.png",
@@ -3569,9 +3569,11 @@ const LIVE_NOW_POST = {
   id: "ff_livenow1",
   author: MIRANDA,
   time: "",
+  /* No camera frame on purpose: the stage shows the broadcaster's initials
+     on a navy gradient (see LiveNowMedia) instead of a stock photo. Add
+     `frame: "<img>"` back to show a real preview. */
   liveNow: {
-    viewers: "142",
-    frame: "assets/live-preview-camera.jpg"
+    viewers: "142"
   },
   hashtags: [],
   body: "",
@@ -4875,7 +4877,7 @@ const TIER_TAG_POSTS = [{
   tierTag: "confidence",
   time: "3h",
   hashtags: ["protocol", "case-study", "patient"],
-  media: [IMG.toxin],
+  media: ["assets/course-complications.jpg"],
   aspect: "portrait",
   body: "Early vascular compromise doesn't always look dramatic — blanching can be subtle, and pain out of proportion on injection is often the first real signal, well before any change in skin colour. My chairside rule: if the pain doesn't match the injection, stop and reassess before you go any further. Hyaluronidase, a warm compress and your emergency protocol sheet should be within arm's reach on every filler list, not just the ones you're nervous about.",
   likes: "612",
@@ -9638,6 +9640,11 @@ function WebReelModal({
    cropped portrait, a pulsing LIVE badge top-left and the viewer count
    top-right — no scrubber/play UI since there's nothing to seek. Double-tap
    still loves the post like any other media. */
+function pfInitials(name) {
+  const parts = String(name || "").replace(/^(Dr|Mr|Mrs|Ms|Miss)\.?\s+/i, "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "?";
+  return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : "")).toUpperCase();
+}
 function LiveNowMedia({
   live,
   author,
@@ -9652,10 +9659,13 @@ function LiveNowMedia({
     onClick: wrap(null),
     role: "img",
     "aria-label": (author ? author.name : "A member") + " is live now, " + live.viewers + " watching"
-  }, /*#__PURE__*/React.createElement("img", {
+  }, live.frame ? /*#__PURE__*/React.createElement("img", {
     src: live.frame,
     alt: ""
-  }), /*#__PURE__*/React.createElement("span", {
+  }) : /*#__PURE__*/React.createElement("div", {
+    className: "pf-livenow-initials",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", null, pfInitials(author && author.name))), /*#__PURE__*/React.createElement("span", {
     className: "pf-livenow-badge"
   }, /*#__PURE__*/React.createElement("span", {
     className: "pf-livenow-dot",

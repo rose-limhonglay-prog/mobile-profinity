@@ -78,3 +78,10 @@ img { max-width: 100%; }
 .mr-btn-primary:hover { background: var(--brand-navy-700); }
 
 @media (prefers-reduced-motion: reduce) { .mr-scrim, .mr-sheet { animation: none; } }
+
+/* ---- redeemed league perks (2026-10-14): gem thumbnail + league tint ---- */
+.mr-gem { display: block; }
+.mr-row-league .mr-thumb { background: var(--lg-soft, var(--gray-75)); }
+.mr-row-league .mr-code-row { border-color: color-mix(in srgb, var(--lg-accent, var(--border-default)) 45%, var(--border-default)); }
+.mr-foot { display: flex; align-items: flex-start; gap: 8px; margin: 14px 4px 0; font-size: 12px; line-height: 1.45; color: var(--gray-500); }
+.mr-foot iconify-icon, .mr-foot svg { flex: none; margin-top: 1px; }

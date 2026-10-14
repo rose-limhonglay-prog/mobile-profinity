@@ -753,7 +753,7 @@ function Hub({ slug = "8d-lip-design", variant = "mobile", onBack }) {
     /* from=path: the course page sends the member back here after the skill splash */
     window.location.href = (variant === "web" ? "LessonWeb.html?course=" : "CourseDetail.html?play=1&course=") + slug + qs + "&from=path";
   };
-  const courseUrl = (variant === "web" ? "CourseWeb.html?course=" : "CourseDetail.html?course=") + slug;
+  const courseUrl = (variant === "web" ? "CourseWeb.html?course=" : "CourseDetail.html?course=") + slug + "&from=path";   /* from=path: the course knows the member came via the Success Path (splash allowed) */
   const only = tab === "starter" ? ["M1"] : null;
   const skillsN = levelListSP(s, only).reduce((t, m) => t + m.total, 0);
   const levelsN = levelListSP(s, only).length;

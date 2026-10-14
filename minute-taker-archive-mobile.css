@@ -59,3 +59,6 @@
 /* accent mic button in the top bar (shell has no accent tone) */
 .mtam-screen .mt-iconbtn-accent { background: var(--mt-accent); border-color: var(--mt-accent); color: #fff; box-shadow: 0 6px 16px rgba(108,99,255,.3); }
 .mtam-screen .mt-iconbtn-accent:active { background: var(--mt-accent-deep); }
+
+/* recording kept with the note (2026-10-14) */
+.mtam-row-audio { width: 22px; height: 22px; border-radius: 50%; background: var(--mt-accent-soft); color: var(--mt-accent-ink); display: inline-flex; align-items: center; justify-content: center; }

@@ -1,181 +1,130 @@
 /* ===========================================================================
-   PROfinity — Minute Taker · Post-Session Clinical Note Review
-   AI-generated structured note (Assessment [SOAP] / Data [DAP] / Summary), editable fields, raw
-   transcript sidebar with search. PRD Screen 5 (Sec. 3.5 / MT-K06, MT-K07).
-   Classes prefixed mtn- to avoid clashes with other pages.
+   PROfinity — Minute Taker (web) · Clinical Note Review
+   Web twin of MinuteTakerNoteReviewMobile (minute-taker-note-review-mobile.jsx):
+   the AI-written note (Assessment [SOAP] / Data [DAP] / Summary) as editable
+   lettered sections, the kept session recording + raw transcript beside it,
+   Share (email / text / apps). The note saves automatically (user,
+   2026-10-14): no Save / Discard, the recording leads the note column.
+   Runs on window.PFMTW. Classes prefixed mtn-.
    =========================================================================== */
 const {
   useState: useStateMTN,
+  useEffect: useEffectMTN,
   useMemo: useMemoMTN
 } = React;
-function goMTN(url) {
-  (window.pfGo || function (u) {
-    window.location.href = u;
-  })(url);
-}
-function getParamMTN(name) {
-  try {
-    return new URLSearchParams(window.location.search).get(name);
-  } catch (e) {
-    return null;
-  }
-}
-function mtnLoadContext() {
-  try {
-    return JSON.parse(sessionStorage.getItem("mtSession") || "{}");
-  } catch (e) {
-    return {};
-  }
-}
-function mtnFmtClock(totalSeconds) {
-  const m = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
-  const s = (totalSeconds % 60).toString().padStart(2, "0");
-  return m + "m " + s + "s";
-}
-
-/* ------------------------------------------------------------- sidebar */
-const MT_NAV = [{
-  icon: "lucide:layout-grid",
-  label: "Dashboard"
-}, {
-  icon: "lucide:users",
-  label: "Patients"
-}, {
-  icon: "lucide:archive",
-  label: "Archive"
-}];
-const MT_NAV_LINKS = {
-  "Dashboard": "MinuteTakerDashboard.html",
-  "Patients": "MinuteTakerPatientContext.html",
-  "Archive": "MinuteTakerArchive.html"
-};
-function MTNSidebar() {
-  return /*#__PURE__*/React.createElement("aside", {
-    className: "mtn-sidebar"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtn-logo"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:mic",
-    class: "mtn-logo-icon"
-  }), /*#__PURE__*/React.createElement("span", null, "Minute Taker")), MT_NAV.map(item => /*#__PURE__*/React.createElement("button", {
-    key: item.label,
-    className: "mtn-navitem" + (item.label === "Dashboard" ? " is-active" : ""),
-    type: "button",
-    onClick: item.label !== "Dashboard" ? () => goMTN(MT_NAV_LINKS[item.label]) : undefined
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: item.icon
-  }), /*#__PURE__*/React.createElement("span", null, item.label))));
-}
-function MTNHeader() {
-  return /*#__PURE__*/React.createElement("header", {
-    className: "mtn-header"
-  }, /*#__PURE__*/React.createElement("iconify-icon", {
-    icon: "lucide:panel-left",
-    style: {
-      fontSize: 22,
-      color: "var(--gray-500)",
-      cursor: "pointer"
-    }
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "mtn-header-title"
-  }, "Minute Taker"), /*#__PURE__*/React.createElement("div", {
-    className: "mtn-spacer"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "mtn-user"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtn-user-name"
-  }, "Dr. Katie Smith"), /*#__PURE__*/React.createElement("div", {
-    className: "mtn-user-role"
-  }, "Clinician")), /*#__PURE__*/React.createElement("img", {
-    className: "mtn-user-avatar",
-    src: "assets/avatar-katy.jpg",
-    alt: "Dr. Katie Smith"
-  }));
-}
-
-/* ---------------------------------------------------------------- data */
+const MTR = window.PFMTW;
+const {
+  Avatar: AvatarR,
+  Seg: SegR,
+  Shell: ShellR
+} = MTR;
 const MTN_NOTES = {
   "Sarah Jenkins": {
-    ptId: "MT-84729",
     date: "Today",
-    transcriptSource: "session",
+    duration: "12m 40s",
     soap: {
-      subjective: "Patient reports lower back pain has improved since last adjustment. New complaint of afternoon tension headaches, described as a dull ache across the forehead, no associated visual disturbances. Possible correlation with compensatory neck posture noted.",
-      objective: "Alert, cooperative, in no acute distress. Discussion focused on symptom history; no new exam findings recorded this visit.",
-      assessment: "1. Low back pain — improving, responding to current treatment plan.\n2. New tension-type headaches — likely related to postural compensation for back pain; no red-flag features reported.",
-      plan: "- Continue current back pain treatment plan.\n- Monitor headache frequency; consider postural/ergonomic assessment if persistent.\n- Follow up in 3 weeks or sooner if visual disturbances or worsening symptoms occur."
+      subjective: "Lower back pain has improved since the last adjustment. New complaint of afternoon tension headaches: dull ache across the forehead, no visual disturbances. Possible link with compensatory neck posture discussed.",
+      objective: "Alert, cooperative, in no acute distress. Discussion focused on symptom history; no new examination findings recorded this visit.",
+      assessment: "1. Low back pain: improving, responding to the current plan.\n2. New tension-type headaches: likely postural compensation; no red-flag features reported.",
+      plan: "• Continue the current back-pain treatment plan.\n• Monitor headache frequency; ergonomic and postural assessment if persistent.\n• Follow up in 3 weeks, or sooner if symptoms worsen."
     },
     dap: {
-      data: "Lower back pain improved since last adjustment. New afternoon tension headaches, dull frontal ache, no visual disturbances. Possible link to neck posture compensating for back pain.",
+      data: "Lower back pain improved since last adjustment. New afternoon tension headaches, dull frontal ache, no visual disturbances.",
       assessment: "Improving low back pain; new likely tension-type headache without red-flag features.",
-      plan: "Continue back pain plan; monitor headaches; postural review if persistent; follow up in 3 weeks."
+      plan: "Continue back-pain plan; monitor headaches; postural review if persistent; follow up in 3 weeks."
     },
-    summary: "Sarah's lower back pain continues to improve. She's noticed new afternoon tension headaches, likely linked to neck posture while compensating for the back pain — no visual disturbances reported. Plan is to continue the current treatment and monitor the headaches, with follow-up in three weeks."
+    summary: "Sarah's lower back pain continues to improve. She has noticed new afternoon tension headaches, likely linked to neck posture, with no visual disturbances. The plan is to continue the current treatment and monitor, with a follow-up in three weeks."
+  },
+  "Eleanor Vance": {
+    date: "Today, 09:30",
+    duration: "45m 10s",
+    soap: {
+      subjective: "Returns for review two weeks after the second session of the injectable series. Reports mild bruising over the left cheek that settled within five days. Very pleased with the softening of the nasolabial folds; asks about the marionette lines next.",
+      objective: "Symmetry good at rest and on animation. No residual bruising or nodules on palpation. Photographs taken and compared with the baseline set.",
+      assessment: "Expected post-treatment course, no complications. Result in line with the agreed plan.",
+      plan: "• No further treatment today.\n• Discuss marionette-line options at the next visit with updated photographs.\n• Review in 6 weeks; contact the clinic sooner for swelling, asymmetry or pain."
+    },
+    dap: {
+      data: "Two weeks post second injectable session. Mild bruising resolved in five days. Pleased with nasolabial result. Symmetry good; no nodules.",
+      assessment: "Uncomplicated recovery; result as planned.",
+      plan: "Review in 6 weeks; discuss marionette lines then; safety-net advice given."
+    },
+    summary: "Eleanor is recovering well after her second injectable session. Bruising settled quickly and she is happy with the result. No treatment today; marionette lines to be discussed at the six-week review."
+  },
+  "David Cho": {
+    date: "Yesterday, 14:00",
+    duration: "20m 05s",
+    soap: {
+      subjective: "Second session of the acne protocol. Reports less irritation than after session one and fewer new lesions over the past fortnight. Using the prescribed cleanser twice daily.",
+      objective: "Reduced inflammatory lesions across the forehead and cheeks compared with the progress photographs. Mild dryness at the jawline, no post-inflammatory marks.",
+      assessment: "Acne responding to the protocol; mild dryness from the topical regime.",
+      plan: "• Continue the protocol; add a bland moisturiser at night.\n• Session three in 4 weeks with updated photographs."
+    },
+    dap: {
+      data: "Session two of acne protocol. Less irritation, fewer new lesions. Mild jawline dryness.",
+      assessment: "Responding well; mild dryness.",
+      plan: "Continue; add night moisturiser; session three in 4 weeks."
+    },
+    summary: "David's acne is responding to the protocol with fewer new lesions and less irritation. Mild dryness at the jawline is being managed with a night moisturiser. Session three is booked in four weeks."
   },
   "_default": {
-    ptId: "PT-88321",
-    date: "Oct 24, 2023",
-    durationLabel: "14m 22s",
-    transcriptSource: "generic",
+    date: "Today",
+    duration: "14m 22s",
     soap: {
-      subjective: "Patient presents for routine follow-up regarding essential hypertension. Reports feeling generally well over past 3 months. Denies chest pain or shortness of breath. Mentions occasional morning headaches.",
-      objective: "Vitals: BP 134/84 mmHg, HR 72 bpm, RR 16, Temp 98.4F. General: Alert, oriented x3. CV: Regular rate and rhythm. Lungs: Clear to auscultation. Extremities: No edema.",
-      assessment: "1. Essential hypertension, primary: Currently stable and reasonably well-controlled.\n2. Occasional headaches: Likely tension-type or related to mild caffeine withdrawal.",
-      plan: "- Continue Lisinopril 10mg PO daily. Adhere to low-sodium diet and regular aerobic exercise.\n- Return to clinic in 6 months for follow-up."
+      subjective: "Presents for routine follow-up. Reports feeling generally well over the past three months. Denies chest pain or shortness of breath. Mentions occasional morning headaches.",
+      objective: "BP 134/84 mmHg, HR 72 bpm, RR 16, Temp 36.9 °C. Alert and oriented. Regular heart rate and rhythm. Chest clear to auscultation.",
+      assessment: "1. Essential hypertension: stable and reasonably well controlled.\n2. Occasional headaches: likely tension-type or mild caffeine withdrawal.",
+      plan: "• Continue current medication, low-sodium diet and regular aerobic exercise.\n• Return to clinic in 6 months."
     },
     dap: {
-      data: "BP 134/84, HR 72, RR 16, Temp 98.4F. Feeling well, no chest pain or SOB. Occasional morning headaches.",
-      assessment: "Hypertension stable and well-controlled. Headaches likely tension-type or caffeine-withdrawal related.",
-      plan: "Continue Lisinopril 10mg daily, low-sodium diet, regular exercise. Return in 6 months."
+      data: "BP 134/84, HR 72. Feeling well, no chest pain or SOB. Occasional morning headaches.",
+      assessment: "Hypertension stable and well controlled. Headaches likely tension-type.",
+      plan: "Continue current regimen with lifestyle measures. Return in 6 months."
     },
-    summary: "Routine hypertension follow-up. Patient feels well overall with occasional morning headaches, likely benign. Blood pressure stable on current regimen. Continue Lisinopril 10mg daily with lifestyle measures; recheck in 6 months."
+    summary: "Routine follow-up. Feeling well overall with occasional morning headaches. Blood pressure stable on the current regimen. Continue medication and lifestyle measures; recheck in six months."
   }
 };
 const MTN_TRANSCRIPTS = {
   "Sarah Jenkins": [{
-    who: "Clinician",
+    who: "clinician",
     t: "10:01",
-    text: "Good morning, Sarah. I have the consent form marked as accepted. Before we begin, how have you been feeling since our last adjustment?"
+    text: "Good morning, Sarah. How have you been feeling since our last adjustment?"
   }, {
-    who: "Patient",
+    who: "patient",
     t: "10:01",
-    text: "Morning, Dr. Smith. Honestly, it's been a mixed bag. The lower back pain has definitely improved, but I've been getting these tension headaches in the afternoon."
+    text: "The lower back pain has improved, but I've been getting tension headaches in the afternoon."
   }, {
-    who: "Clinician",
+    who: "clinician",
     t: "10:02",
-    text: "I see. Tension headaches can sometimes be related to neck posture, especially if you've been compensating for the back pain. Let's make a note of that. Are the headaches accompanied by visual disturbances?"
+    text: "Tension headaches can relate to neck posture. Any visual disturbances?"
   }, {
-    who: "Patient",
+    who: "patient",
     t: "10:03",
-    text: "No, nothing like that. Just a dull ache right across my forehead."
+    text: "No, just a dull ache right across my forehead."
+  }, {
+    who: "clinician",
+    t: "10:04",
+    text: "Okay. Let's keep the current plan for your back and I'll add a posture check."
   }],
   "_default": [{
-    who: "Clinician",
+    who: "clinician",
     t: "00:15",
-    text: "Hi Robert, good to see you again. How have you been?"
+    text: "Good to see you again. How have you been?"
   }, {
-    who: "Patient",
+    who: "patient",
     t: "00:22",
-    text: "I've been doing pretty well, Dr. Smith. Can't complain."
+    text: "Doing pretty well, Dr Smith. Can't complain."
   }, {
-    who: "Clinician",
-    t: "01:04",
-    text: "Good to hear. Let's check your blood pressure and go through how the last few months have been."
-  }, {
-    who: "Patient",
-    t: "01:20",
-    text: "Sure — I've had the odd morning headache, but nothing serious."
-  }, {
-    who: "Clinician",
+    who: "clinician",
     t: "02:10",
-    text: "Noted. We'll keep an eye on that. Any chest pain, shortness of breath, or swelling in your legs?"
+    text: "Any chest pain, shortness of breath, or swelling in your legs?"
   }, {
-    who: "Patient",
+    who: "patient",
     t: "02:18",
     text: "No, none of that."
   }]
 };
-const MTN_TABS = [{
+const MTN_FORMATS = [{
   key: "soap",
   label: "Assessment"
 }, {
@@ -185,184 +134,409 @@ const MTN_TABS = [{
   key: "summary",
   label: "Summary"
 }];
+const MTN_FIELDS = {
+  soap: [{
+    key: "subjective",
+    letter: "S",
+    label: "Subjective",
+    tone: "violet"
+  }, {
+    key: "objective",
+    letter: "O",
+    label: "Objective",
+    tone: "teal"
+  }, {
+    key: "assessment",
+    letter: "A",
+    label: "Assessment",
+    tone: "amber"
+  }, {
+    key: "plan",
+    letter: "P",
+    label: "Plan",
+    tone: "green"
+  }],
+  dap: [{
+    key: "data",
+    letter: "D",
+    label: "Data",
+    tone: "violet"
+  }, {
+    key: "assessment",
+    letter: "A",
+    label: "Assessment",
+    tone: "amber"
+  }, {
+    key: "plan",
+    letter: "P",
+    label: "Plan",
+    tone: "green"
+  }],
+  summary: [{
+    key: "summary",
+    letter: "S",
+    label: "Visit summary",
+    tone: "violet"
+  }]
+};
+
+/* lettered section with an auto-fitting textarea (twin of the mobile MTNRMField) */
 function MTNField({
-  label,
+  meta,
   value,
   onChange,
   edited
 }) {
+  const ref = React.useRef(null);
+  useEffectMTN(() => {
+    const fit = () => {
+      const el = ref.current;
+      if (!el) return;
+      el.style.height = "auto";
+      el.style.height = el.scrollHeight + "px";
+    };
+    fit();
+    const raf = requestAnimationFrame(fit);
+    const late = window.setTimeout(fit, 350);
+    window.addEventListener("resize", fit);
+    window.addEventListener("load", fit);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    if (document.fonts && document.fonts.addEventListener) document.fonts.addEventListener("loadingdone", fit);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(late);
+      window.removeEventListener("resize", fit);
+      window.removeEventListener("load", fit);
+      if (document.fonts && document.fonts.removeEventListener) document.fonts.removeEventListener("loadingdone", fit);
+    };
+  }, [value]);
   return /*#__PURE__*/React.createElement("div", {
-    className: "mtn-field"
+    className: "mtn-sec"
   }, /*#__PURE__*/React.createElement("div", {
+    className: "mtn-sec-rail",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtn-letter mtw-tone-" + meta.tone
+  }, meta.letter), /*#__PURE__*/React.createElement("i", {
+    className: "mtn-sec-line"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "mtn-sec-body"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtn-sec-head"
+  }, /*#__PURE__*/React.createElement("span", {
     className: "mtn-field-label"
-  }, label, edited && /*#__PURE__*/React.createElement("span", {
-    className: "mtn-edited-badge"
+  }, meta.label), edited && /*#__PURE__*/React.createElement("span", {
+    className: "mtw-pill mtw-pill-warn"
   }, "Edited")), /*#__PURE__*/React.createElement("textarea", {
+    ref: ref,
+    rows: 2,
     value: value,
     onChange: onChange,
-    rows: label === "PLAN" || label === "OBJECTIVE" ? 4 : 3
-  }));
+    "aria-label": meta.label
+  })));
 }
 function MTNView() {
-  const patientName = getParamMTN("patient") || mtnLoadContext().patient || "_default";
-  const isGenerated = getParamMTN("generated") === "1";
-  const record = MTN_NOTES[patientName] || MTN_NOTES["_default"];
-  const transcript = MTN_TRANSCRIPTS[patientName] || MTN_TRANSCRIPTS["_default"];
-  const ptId = getParamMTN("id") || record.ptId;
-  const ctx = mtnLoadContext();
-  const dateLabel = record.date === "Today" ? "Today" : record.date;
-  const durationLabel = record.transcriptSource === "session" && ctx.durationSeconds ? mtnFmtClock(ctx.durationSeconds) : record.durationLabel || "12m 40s";
+  const toast = MTR.useToast();
+  const ctx = MTR.loadCtx();
+  const param = MTR.getParam("patient");
+  const patient = param || ctx.patient || "Sarah Jenkins";
+  const first = patient.split(" ")[0];
+  const generated = MTR.getParam("generated") === "1";
+  const p = MTR.PATIENTS[patient];
+  const id = MTR.getParam("id") || p && p.id || ctx.id || "MT-00000";
+  const record = MTN_NOTES[patient] || MTN_NOTES["_default"];
+  const transcript = MTN_TRANSCRIPTS[patient] || MTN_TRANSCRIPTS["_default"];
+  const duration = generated && ctx.durationSeconds ? MTR.fmtClock(ctx.durationSeconds, "words") : record.duration;
+  const date = generated ? "Just now" : record.date;
+  const original = {
+    soap: {
+      ...record.soap
+    },
+    dap: {
+      ...record.dap
+    },
+    summary: {
+      summary: record.summary
+    }
+  };
   const [format, setFormat] = useStateMTN("soap");
-  const [soap, setSoap] = useStateMTN(record.soap);
-  const [dap, setDap] = useStateMTN(record.dap);
-  const [summary, setSummary] = useStateMTN(record.summary);
+  const [note, setNote] = useStateMTN(() => ({
+    soap: {
+      ...record.soap
+    },
+    dap: {
+      ...record.dap
+    },
+    summary: {
+      summary: record.summary
+    }
+  }));
   const [search, setSearch] = useStateMTN("");
-  const [toast, setToast] = useStateMTN(null);
-  const filteredTranscript = useMemoMTN(() => {
+  /* ?share=1 opens the share modal straight away (demo / screenshots) */
+  const [sharing, setSharing] = useStateMTN(MTR.getParam("share") === "1");
+  const filtered = useMemoMTN(() => {
     const q = search.trim().toLowerCase();
     if (!q) return transcript;
-    return transcript.filter(l => l.text.toLowerCase().includes(q) || l.who.toLowerCase().includes(q));
-  }, [search, transcript]);
-  function flashToast(msg) {
-    setToast(msg);
-    window.setTimeout(() => setToast(null), 2200);
+    return transcript.filter(l => l.text.toLowerCase().includes(q) || (l.who === "clinician" ? "you" : first.toLowerCase()).includes(q));
+  }, [search, transcript, first]);
+  function update(key, value) {
+    setNote(n => ({
+      ...n,
+      [format]: {
+        ...n[format],
+        [key]: value
+      }
+    }));
   }
-  function saveToEMR() {
-    flashToast("Note finalized and marked clinician-confirmed. Ready for EMR sync.");
-    window.setTimeout(() => goMTN("MinuteTakerDashboard.html"), 1400);
-  }
-  function discard() {
-    if (window.confirm("Discard this AI-generated note? This cannot be undone.")) {
-      goMTN("MinuteTakerDashboard.html");
-    }
-  }
-  const soapEdited = JSON.stringify(soap) !== JSON.stringify(record.soap);
+  const fields = MTN_FIELDS[format];
+  const formatLabel = MTN_FORMATS.find(f => f.key === format).label;
+  const formatEdited = JSON.stringify(note[format]) !== JSON.stringify(original[format]);
   return /*#__PURE__*/React.createElement("div", {
-    className: "mtn-shell"
-  }, /*#__PURE__*/React.createElement(MTNSidebar, null), /*#__PURE__*/React.createElement("div", {
-    className: "mtn-main"
-  }, /*#__PURE__*/React.createElement(MTNHeader, null), /*#__PURE__*/React.createElement("div", {
-    className: "mtn-view"
+    className: "mtw-view mtn-view"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mtn-page-head"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
-    className: "mtn-title-row"
-  }, /*#__PURE__*/React.createElement("h1", null, "Clinical Note Review"), /*#__PURE__*/React.createElement("span", {
-    className: "mtn-ai-badge"
+    className: "mtw-page-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtn-head"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtw-crumb",
+    onClick: () => MTR.go(MTR.routes.dashboard)
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:arrow-left"
+  }), "Dashboard"), /*#__PURE__*/React.createElement("div", {
+    className: "mtn-head-row"
+  }, /*#__PURE__*/React.createElement(AvatarR, {
+    name: patient,
+    size: 52
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-grow"
+  }, /*#__PURE__*/React.createElement("h1", null, patient), /*#__PURE__*/React.createElement("p", null, id, " · ", duration, " · ", date)))), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-page-head-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtw-btn mtw-btn-ghost",
+    onClick: () => setSharing(true),
+    "aria-haspopup": "dialog"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:share-2"
+  }), "Share"), /*#__PURE__*/React.createElement("span", {
+    className: "mtn-autosave"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:check"
+  }), "Saved automatically"))), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-grid mtn-grid"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtw-col"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtn-ai"
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:sparkles"
-  }), "AI Generated")), /*#__PURE__*/React.createElement("p", null, patientName === "_default" ? "Robert Fox" : patientName, " · ", ptId, " · ", dateLabel, " (", durationLabel, ")", isGenerated && " · just generated")), /*#__PURE__*/React.createElement("div", {
-    className: "mtn-page-head-actions"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "mtn-btn mtn-btn-ghost",
-    type: "button",
-    onClick: discard
-  }, "Discard"), /*#__PURE__*/React.createElement("button", {
-    className: "mtn-btn mtn-btn-primary",
-    type: "button",
-    onClick: saveToEMR
-  }, "Save to EMR"))), /*#__PURE__*/React.createElement("div", {
-    className: "mtn-content-grid"
+  }), "AI-written from the live transcript. Edit anything — changes save automatically."), /*#__PURE__*/React.createElement(MTNRecording, {
+    seconds: generated && ctx.durationSeconds ? ctx.durationSeconds : mtnSeconds(record.duration),
+    patient: patient,
+    date: date,
+    onToast: m => toast.show(m)
+  }), /*#__PURE__*/React.createElement(SegR, {
+    items: MTN_FORMATS,
+    value: format,
+    onChange: setFormat,
+    label: "Note format"
+  }), /*#__PURE__*/React.createElement("section", {
+    className: "mtw-card mtn-note mtw-fade-in",
+    key: format,
+    "aria-label": "Clinical note sections"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mtn-notes-col"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtn-tabs"
-  }, MTN_TABS.map(t => /*#__PURE__*/React.createElement("button", {
-    key: t.key,
-    type: "button",
-    className: "mtn-tab" + (format === t.key ? " is-active" : ""),
-    onClick: () => setFormat(t.key)
-  }, t.label))), format === "soap" && /*#__PURE__*/React.createElement("div", {
-    className: "mtn-card"
-  }, /*#__PURE__*/React.createElement(MTNField, {
-    label: "SUBJECTIVE",
-    value: soap.subjective,
-    onChange: e => setSoap({
-      ...soap,
-      subjective: e.target.value
-    })
-  }), /*#__PURE__*/React.createElement(MTNField, {
-    label: "OBJECTIVE",
-    value: soap.objective,
-    onChange: e => setSoap({
-      ...soap,
-      objective: e.target.value
-    })
-  }), /*#__PURE__*/React.createElement(MTNField, {
-    label: "ASSESSMENT",
-    value: soap.assessment,
-    onChange: e => setSoap({
-      ...soap,
-      assessment: e.target.value
-    })
-  }), /*#__PURE__*/React.createElement(MTNField, {
-    label: "PLAN",
-    value: soap.plan,
-    onChange: e => setSoap({
-      ...soap,
-      plan: e.target.value
-    })
-  }), soapEdited && /*#__PURE__*/React.createElement("div", {
-    className: "mtn-original-link",
-    onClick: () => setSoap(record.soap)
-  }, "↺ Reset to original AI draft")), format === "dap" && /*#__PURE__*/React.createElement("div", {
-    className: "mtn-card"
-  }, /*#__PURE__*/React.createElement(MTNField, {
-    label: "DATA",
-    value: dap.data,
-    onChange: e => setDap({
-      ...dap,
-      data: e.target.value
-    })
-  }), /*#__PURE__*/React.createElement(MTNField, {
-    label: "ASSESSMENT",
-    value: dap.assessment,
-    onChange: e => setDap({
-      ...dap,
-      assessment: e.target.value
-    })
-  }), /*#__PURE__*/React.createElement(MTNField, {
-    label: "PLAN",
-    value: dap.plan,
-    onChange: e => setDap({
-      ...dap,
-      plan: e.target.value
-    })
-  })), format === "summary" && /*#__PURE__*/React.createElement("div", {
-    className: "mtn-card"
-  }, /*#__PURE__*/React.createElement(MTNField, {
-    label: "SUMMARY",
-    value: summary,
-    onChange: e => setSummary(e.target.value)
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "mtn-transcript-col"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtn-card mtn-transcript-card"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mtn-card-head"
+    className: "mtn-note-head"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "mtn-card-title-text"
-  }, "Raw Transcript")), /*#__PURE__*/React.createElement("div", {
-    className: "mtn-transcript-search"
+    className: "mtn-note-title"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:sparkles"
+  }), formatLabel, " note"), formatEdited && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtw-link",
+    onClick: () => setNote(n => ({
+      ...n,
+      [format]: {
+        ...original[format]
+      }
+    }))
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:rotate-ccw"
+  }), "Reset to the AI draft")), fields.map(meta => /*#__PURE__*/React.createElement(MTNField, {
+    key: meta.key,
+    meta: meta,
+    value: note[format][meta.key],
+    edited: note[format][meta.key] !== original[format][meta.key],
+    onChange: e => update(meta.key, e.target.value)
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-trust"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtw-ti"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:shield-check"
+  })), /*#__PURE__*/React.createElement("span", null, "This note saves automatically to the patient's EMR record. The transcript and recording stay with it for 30 days."))), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-col"
+  }, /*#__PURE__*/React.createElement("section", {
+    className: "mtw-card mtn-transcript mtw-sticky"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtw-card-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtw-card-title"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtw-ti"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:file-text"
+  })), "Raw transcript"), /*#__PURE__*/React.createElement("span", {
+    className: "mtn-transcript-meta"
+  }, transcript.length, " turns · verbatim")), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-search mtn-search"
   }, /*#__PURE__*/React.createElement("iconify-icon", {
     icon: "lucide:search"
   }), /*#__PURE__*/React.createElement("input", {
-    placeholder: "Search transcript…",
+    className: "mtw-input",
+    placeholder: "Search the transcript…",
     value: search,
     onChange: e => setSearch(e.target.value)
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "mtn-transcript-list"
-  }, filteredTranscript.map((l, i) => /*#__PURE__*/React.createElement("div", {
+  }), search && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtw-search-clear",
+    "aria-label": "Clear search",
+    onClick: () => setSearch("")
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:x"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mtn-turns"
+  }, filtered.map((l, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
-    className: "mtn-transcript-line " + (l.who === "Clinician" ? "clin" : "pat")
+    className: "mtn-turn " + l.who
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtn-turn-t"
+  }, l.t), /*#__PURE__*/React.createElement("div", {
+    className: "mtw-grow"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "mtn-transcript-line-head"
-  }, l.who, " ", l.t), /*#__PURE__*/React.createElement("div", {
-    className: "mtn-transcript-line-text"
-  }, l.text))), filteredTranscript.length === 0 && /*#__PURE__*/React.createElement("div", {
+    className: "mtn-turn-who"
+  }, l.who === "clinician" ? "You" : first), /*#__PURE__*/React.createElement("div", {
+    className: "mtn-turn-text"
+  }, l.text)))), filtered.length === 0 && /*#__PURE__*/React.createElement("div", {
     className: "mtn-transcript-empty"
-  }, "No matches found."))))))), toast && /*#__PURE__*/React.createElement("div", {
-    className: "mtn-toast"
-  }, toast));
+  }, "No matches in the transcript."))))), sharing && window.PFMTShare && /*#__PURE__*/React.createElement(window.PFMTShare.Share, {
+    variant: "modal",
+    patient: patient,
+    id: id,
+    hasRecording: true,
+    note: {
+      type: record.type || "Clinical note",
+      date,
+      duration
+    },
+    onClose: () => setSharing(false),
+    onToast: (m, t) => toast.show(m, t)
+  }), toast.node);
 }
-ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(MTNView, null));
+
+/* session recording, kept with the note (user, 2026-10-14): simulated player with play/pause, scrubbable bar and a download */
+function mtnSeconds(label) {
+  const m = /(\d+)m/.exec(label || ""),
+    sec = /(\d+)s/.exec(label || "");
+  return (m ? +m[1] * 60 : 0) + (sec ? +sec[1] : 0) || 754;
+}
+function mtnClock(s) {
+  s = Math.max(0, Math.round(s));
+  return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+}
+const MTN_BARS = Array.from({
+  length: 56
+}, (_, i) => 22 + Math.round(60 * Math.abs(Math.sin(i * 0.7) * Math.cos(i * 0.23))));
+function MTNRecording({
+  seconds,
+  patient,
+  date,
+  onToast
+}) {
+  const [playing, setPlaying] = useStateMTN(false);
+  const [pos, setPos] = useStateMTN(0);
+  useEffectMTN(() => {
+    if (!playing) return undefined;
+    const t = window.setInterval(() => setPos(p => {
+      if (p + 1 >= seconds) {
+        setPlaying(false);
+        return seconds;
+      }
+      return p + 1;
+    }), 1000);
+    return () => window.clearInterval(t);
+  }, [playing, seconds]);
+  const pct = seconds ? Math.min(100, pos / seconds * 100) : 0;
+  function seek(e) {
+    const r = e.currentTarget.getBoundingClientRect();
+    setPos(Math.round(Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * seconds));
+  }
+  return /*#__PURE__*/React.createElement("section", {
+    className: "mtw-card mtn-rec",
+    "aria-label": "Session recording"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtw-card-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtw-card-title"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mtw-ti"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:mic"
+  })), "Session recording"), /*#__PURE__*/React.createElement("span", {
+    className: "mtw-pill mtw-pill-ok"
+  }, "Kept 30 days")), /*#__PURE__*/React.createElement("div", {
+    className: "mtn-rec-player"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtn-rec-play" + (playing ? " is-on" : ""),
+    onClick: () => {
+      if (pos >= seconds) setPos(0);
+      setPlaying(v => !v);
+    },
+    "aria-label": playing ? "Pause" : "Play"
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: playing ? "lucide:pause" : "lucide:play"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "mtn-rec-track",
+    role: "slider",
+    "aria-label": "Position",
+    "aria-valuemin": 0,
+    "aria-valuemax": seconds,
+    "aria-valuenow": pos,
+    tabIndex: 0,
+    onClick: seek,
+    onKeyDown: e => {
+      if (e.key === "ArrowRight") setPos(p => Math.min(seconds, p + 15));
+      if (e.key === "ArrowLeft") setPos(p => Math.max(0, p - 15));
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mtn-rec-bars",
+    "aria-hidden": "true",
+    style: {
+      "--pct": pct + "%"
+    }
+  }, MTN_BARS.map((h, i) => /*#__PURE__*/React.createElement("i", {
+    key: i,
+    style: {
+      height: h + "%"
+    }
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "mtn-rec-times"
+  }, /*#__PURE__*/React.createElement("span", null, mtnClock(pos)), /*#__PURE__*/React.createElement("span", null, mtnClock(seconds))))), /*#__PURE__*/React.createElement("div", {
+    className: "mtn-rec-foot"
+  }, /*#__PURE__*/React.createElement("span", null, patient.split(" ")[0], " · ", date), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mtw-link",
+    onClick: () => onToast("Downloading the recording…")
+  }, /*#__PURE__*/React.createElement("iconify-icon", {
+    icon: "lucide:download"
+  }), "Download audio")));
+}
+function MTNApp() {
+  return /*#__PURE__*/React.createElement(ShellR, {
+    active: "Dashboard",
+    title: "Clinical note",
+    sub: "Minute Taker"
+  }, /*#__PURE__*/React.createElement(MTNView, null));
+}
+ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(MTNApp, null));

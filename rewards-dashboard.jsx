@@ -91,14 +91,14 @@ function StreakRiskBanner({ state }) {
   );
 }
 
-/* Lifetime Points mascot: the coffee-break Dr Tim avatar (assets/lottie/drtim-coffee.json,
-   same file + crop as the header points pill since 2026-10-13; was the smiling face) fed as raw
+/* Lifetime Points mascot: a looping smiling-face Lottie (lottie.host ArWGbXL6R3, same as the
+   header points pill; the Dr Tim avatar was reverted 2026-10-13) fed as raw
    JSON through lottie-web — never the /embed iframe, which caches hard and
    ignores re-publishes. Replaced the shared smiling-beaker (PointsIconC) on
    2026-09-08; the header points pill (mobile.jsx / mobilechrome.jsx) has its
    same smiling-face Lottie, number in gold #D9A21B. The tooltip still
    reports lifetime points against the engine's beakerFullPoints scale. */
-const RDB_MASCOT_SRC = "assets/lottie/drtim-coffee.json?v=20261013a";
+const RDB_MASCOT_SRC = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
 const RDB_LOTTIE_LIB = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
 let rdbMascotPromise = null;
 function rdbMascotData() {
@@ -202,7 +202,7 @@ function RdbEngagementCards({ state }) {
   return (
     <div className="rdb-eng-grid" data-tour="stats">
       <div className="ml-card rdb-eng-card">
-        {/* same coffee-break Dr Tim Lottie + ring crop as the header points pill */}
+        {/* same smiling-face Lottie as the header points pill (was the coin-stack iframe) */}
         <span className="rdb-eng-lottie rdb-eng-lottie--face" aria-hidden="true"><RdbLeagueLottie src={RDB_MASCOT_SRC} size={38} /></span>
         {/* amber like the header points pill + a "pts" unit, so the number reads as points at a glance */}
         <div className="rdb-eng-value rdb-eng-value--pts">{PF_RDB.formatNumber(state.lifetimePoints)}<span className="rdb-eng-unit">pts</span></div>
@@ -269,22 +269,20 @@ function RdbLeagueCard({ state }) {
   );
 }
 
-/* Two simple buttons under the stat tiles (user, 2026-09-24 "make both
+/* Simple buttons under the stat tiles (user, 2026-09-24 "make both
    buttons simple"): navy icon, label, one-line note, chevron. No league
-   name, gem, tint or progress bar. */
+   name, gem, tint or progress bar. My Rewards tile REMOVED 2026-10-13 (user);
+   MyRewards.html stays reachable from the Milestone Path. */
 function RdbFeatureTiles({ state }) {
   let milestone = null;
   try { milestone = PF_RDB.getMilestoneProgress ? PF_RDB.getMilestoneProgress(state) : null; } catch (e) {}
   const mpNote = milestone ? (milestone.next ? PF_RDB.formatNumber(milestone.remaining) + " pts to go" : "Every badge earned") : "Badges & benefits";
-  const vouchers = (state.redeemedVouchers || []).length;
-  const mrNote = vouchers ? vouchers + " unlocked" : "Course discounts";
-  /* Ways to Earn is back on the dashboard (user 2026-10-09) as a full-width
-     row above the two tiles: the list of every point-earning action. */
+  /* Ways to Earn (back since 2026-10-09) and Milestone Path sit side by side
+     as two equal tiles (user, 2026-10-14 "align" — My Rewards went 2026-10-13). */
   const earnCount = (() => { try { return PF_RDB.getConfig().actions.filter((a) => a.active).length; } catch (e) { return 0; } })();
   const items = [
-    { label: "Ways to Earn", note: earnCount ? earnCount + " ways to earn points" : "Every way to earn points", icon: "lucide:coins", href: "WaysToEarn.html", wide: true, tour: "earn" },
-    { label: "Milestone Path", note: mpNote, icon: "lucide:milestone", href: "MilestonePath.html", tour: "path" },
-    { label: "My Rewards", note: mrNote, icon: "lucide:ticket", href: "MyRewards.html", tour: "rewards" }
+    { label: "Ways to Earn", note: earnCount ? earnCount + " ways to earn" : "Every way to earn", icon: "lucide:coins", href: "WaysToEarn.html", tour: "earn" },
+    { label: "My Rewards", note: mpNote, icon: "lucide:gift", href: "MilestonePath.html", tour: "path" }   /* the Milestone Path page, renamed My Rewards (user, 2026-10-14) */
   ];
   return (
     <div className="rdb-feats">
@@ -361,7 +359,7 @@ function RdbWelcomeModal({ state, onClose, initialStep }) {
             <span className="rdb-welcome-doc" aria-hidden="true"><RdbLeagueLottie src="assets/lottie/checkin-welcome.json" size={176} /></span>
             <b id="rdb-welcome-title">Welcome to Rewards, {first}!</b>
             <p>Every check-in, post and lesson earns points. {next ? <React.Fragment>Reach <strong>{PF_RDB.formatNumber(next.requires)} pts</strong> to move up to <strong>{next.name} League</strong> and unlock its one-time perk. Points are lifetime — never spent, never expired.</React.Fragment> : null}</p>
-            <button type="button" className="rdb-welcome-btn" onClick={() => setStep(2)}>See ways to earn<DSRDB.IconifyIcon name="lucide:arrow-right" size={14} color="#3D2A00" /></button>
+            <button type="button" className="rdb-welcome-btn" onClick={() => { onClose(); goRDB("WaysToEarn.html"); }}>See ways to earn<DSRDB.IconifyIcon name="lucide:arrow-right" size={14} color="#3D2A00" /></button>   {/* straight to the Ways to Earn page (user, 2026-10-14; was the in-modal step 2) */}
             <button type="button" className="rdb-welcome-skip" onClick={onClose}>Explore my Rewards</button>
           </React.Fragment>
         ) : (
