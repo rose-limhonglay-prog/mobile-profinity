@@ -32,7 +32,7 @@ const CS_WEB_HREFS = {
   "PaymentsMobile.html": "AccountSettingsWeb.html",
   "InvoicesMobile.html": "AccountSettingsWeb.html",
   "LearningMobile.html": "MyLearning.html",
-  "MyRewards.html": "RewardsWeb.html"
+  "MilestonePath.html": "RewardsWeb.html"
 };
 function hrefCS(href) { return CS_WEB ? (CS_WEB_HREFS[href] || href) : href; }
 const CS_ME = { name: "Katy Wilson", role: "Registered Nurse", avatar: "assets/avatar-katy.jpg" };
@@ -95,7 +95,7 @@ const CS_TOPICS = [
     links: [{ label: "Go to My Learning", href: "LearningMobile.html" }] },
   { id: "rewards", label: "Points & rewards", sub: "Missing points, vouchers, badges", icon: "lucide:gift",
     reply: "Points normally land within a minute of an action. If something's missing, tell me what you did and roughly when — I'll check the ledger.",
-    links: [{ label: "My rewards", href: "MyRewards.html" }] },
+    links: [{ label: "My rewards", href: "MilestonePath.html" }] },
   { id: "technical", label: "Technical issue", sub: "Something isn't working", icon: "lucide:wrench",
     reply: "Sorry about that. What were you doing when it happened, and are you on the app or the web? A screenshot helps a lot too.",
     links: [] },

@@ -373,7 +373,7 @@
     }, status === "passed" ? "Your one-time perk — unlocked" : "One-time perk at " + (milestone.threshold > 0 ? fmt(milestone.threshold) + " pts" : "the start")), milestone.benefits.map((b, i) => /*#__PURE__*/React.createElement("button", {
       key: i,
       type: "button",
-      className: "rme-benefit rme-benefit-link",
+      className: "rme-benefit rme-benefit-link" + (redeemed ? " is-redeemed" : ""),
       onClick: () => openReward(milestone.key),
       "aria-label": "Open " + b.title
     }, /*#__PURE__*/React.createElement("span", {
@@ -385,15 +385,22 @@
       color: status === "locked" ? "var(--gray-400)" : "var(--brand-gold)"
     })), /*#__PURE__*/React.createElement("div", {
       className: "rme-benefit-copy"
-    }, /*#__PURE__*/React.createElement("div", {
+    }, redeemed && /*#__PURE__*/React.createElement("span", {
+      className: "rme-benefit-tag",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:check",
+      size: 11,
+      color: "currentColor"
+    }), "Redeemed"), /*#__PURE__*/React.createElement("div", {
       className: "rme-benefit-title"
     }, b.title), /*#__PURE__*/React.createElement("div", {
       className: "rme-benefit-desc"
     }, b.description), b.delivery ? /*#__PURE__*/React.createElement("div", {
       className: "rme-benefit-delivery"
     }, b.delivery) : null, /*#__PURE__*/React.createElement("span", {
-      className: "rme-benefit-cta" + (status === "passed" && !redeemed ? " is-redeem" : "")
-    }, redeemed ? "Redeemed · view your reward" : status === "passed" ? "Redeem this perk" : "See this reward", /*#__PURE__*/React.createElement(Icon, {
+      className: "rme-benefit-cta" + (status === "passed" && !redeemed ? " is-redeem" : redeemed ? " is-view" : "")
+    }, redeemed ? "View" : status === "passed" ? "Redeem this perk" : "See this reward", /*#__PURE__*/React.createElement(Icon, {
       name: "lucide:chevron-right",
       size: 14,
       color: "currentColor"

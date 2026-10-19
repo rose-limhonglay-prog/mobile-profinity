@@ -133,7 +133,7 @@ function RedemptionSuccessScreen() {
         <div className="rsc-ctas" style={{ "--rsc-i": 3 }}>
           <button className="ml-btn rsc-btn-primary" type="button" onClick={() => goRSC(checkoutUrl)}>{course ? "Use it now" : "Back to Dashboard"}<DSRSC.IconifyIcon name="lucide:arrow-right" size={16} color="#fff" /></button>
           <button className="ml-btn ml-btn-ghost rsc-btn-ghost" type="button" onClick={() => goRSC("RewardsDashboard.html")}>Back to Dashboard</button>
-          <button className="rsc-link" type="button" onClick={() => goRSC("MyRewards.html")}>View all my rewards<DSRSC.IconifyIcon name="lucide:chevron-right" size={14} color="var(--brand-navy)" /></button>
+          <button className="rsc-link" type="button" onClick={() => goRSC("MilestonePath.html")}>View all my rewards<DSRSC.IconifyIcon name="lucide:chevron-right" size={14} color="var(--brand-navy)" /></button>
         </div>
       </div>
     </div>

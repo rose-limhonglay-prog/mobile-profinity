@@ -279,7 +279,7 @@ function RedemptionSuccessScreen() {
   }, "Back to Dashboard"), /*#__PURE__*/React.createElement("button", {
     className: "rsc-link",
     type: "button",
-    onClick: () => goRSC("MyRewards.html")
+    onClick: () => goRSC("MilestonePath.html")
   }, "View all my rewards", /*#__PURE__*/React.createElement(DSRSC.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 14,

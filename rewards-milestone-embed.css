@@ -194,6 +194,11 @@
 .rme-benefit-link { width: 100%; text-align: left; border: none; background: none; font-family: inherit; cursor: pointer; border-radius: 14px; padding: 10px; margin: -10px 0 0 -10px; width: calc(100% + 20px); transition: background .14s ease; }
 .rme-benefit-link:hover { background: var(--lg-soft, var(--gray-50)); }
 .rme-benefit-link + .rme-benefit-link { margin-top: 0; }
+/* redeemed perk: NOT grayed (user, 2026-10-20) — "Redeemed" tag + outlined View button, mirrors MilestonePath.html */
+.rme-benefit-tag { display: inline-flex; align-items: center; gap: 3px; margin-bottom: 4px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 800; letter-spacing: .02em; background: #E4F5E8; color: #137A5B; }
+.rme-benefit-cta.is-view { padding: 5px 8px 5px 12px; border-radius: 999px; border: 1.5px solid var(--lg-deep, var(--brand-navy)); }
+[data-theme="dark"] .rme-benefit-tag { background: #12291F; color: #5BD39A; }
+[data-theme="dark"] .rme-benefit-cta.is-view { border-color: var(--lg-accent, #C2BCFF); }
 .rme-benefit-cta { display: inline-flex; align-items: center; gap: 3px; margin-top: 8px; font-size: 12.5px; font-weight: 700; color: var(--lg-deep, var(--brand-navy)); }
 .rme-benefit-cta.is-redeem { color: #fff; background: var(--lg-deep, var(--brand-navy)); padding: 6px 10px 6px 12px; border-radius: 999px; }
 [data-theme="dark"] .rme-benefit-cta { color: var(--lg-accent, #C2BCFF); }

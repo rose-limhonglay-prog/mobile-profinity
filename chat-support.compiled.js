@@ -42,7 +42,7 @@ const CS_WEB_HREFS = {
   "PaymentsMobile.html": "AccountSettingsWeb.html",
   "InvoicesMobile.html": "AccountSettingsWeb.html",
   "LearningMobile.html": "MyLearning.html",
-  "MyRewards.html": "RewardsWeb.html"
+  "MilestonePath.html": "RewardsWeb.html"
 };
 function hrefCS(href) {
   return CS_WEB ? CS_WEB_HREFS[href] || href : href;
@@ -155,7 +155,7 @@ const CS_TOPICS = [{
   reply: "Points normally land within a minute of an action. If something's missing, tell me what you did and roughly when — I'll check the ledger.",
   links: [{
     label: "My rewards",
-    href: "MyRewards.html"
+    href: "MilestonePath.html"
   }]
 }, {
   id: "technical",

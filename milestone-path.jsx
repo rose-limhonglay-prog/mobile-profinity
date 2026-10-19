@@ -85,11 +85,16 @@ function MilestoneNodeMP({ milestone, status, isLast, reachedAt }) {
               aria-label={b.title + (redeemed ? ", redeemed" : status === "passed" ? ", ready to redeem" : ", locked") + ". Open reward"}>
               {/* no icon tile (user, 2026-10-19) — title + button only */}
               <span className="mp-prize-tx">
+                {redeemed && <span className="mp-prize-tag" aria-hidden="true"><DSMP.IconifyIcon name="lucide:check" size={11} color="currentColor" />Redeemed</span>}
                 <span className="mp-prize-title">{b.title}</span>
                 {/* one-line description, no button (user, 2026-10-19); the card itself opens the reward */}
                 <span className="mp-prize-desc">{b.description}</span>
               </span>
-              <span className="mp-prize-chev" aria-hidden="true"><DSMP.IconifyIcon name="lucide:chevron-right" size={20} color="currentColor" /></span>
+              {/* redeemed: keep the league colours (user, 2026-10-20 "dont grayed out"),
+                  a small tag says it's done and a View button still opens the reward page */}
+              {redeemed
+                ? <span className="mp-prize-view" aria-hidden="true">View<DSMP.IconifyIcon name="lucide:chevron-right" size={14} color="currentColor" /></span>
+                : <span className="mp-prize-chev" aria-hidden="true"><DSMP.IconifyIcon name="lucide:chevron-right" size={20} color="currentColor" /></span>}
             </button>
           ))}
         </div>
@@ -206,7 +211,6 @@ function MilestonePathScreen() {
   const currentKey = progress.next ? progress.next.key : null;
   const reachedAt = state.milestonesReachedAt || {};
   const allDone = !progress.next;
-  const redeemedCount = (state.redeemedVouchers || []).filter((v) => /^perk:/.test(v.itemId || "")).length;
 
   return (
     <div className="ml-screen mp-screen" data-screen-label="Milestone Path">
@@ -214,11 +218,9 @@ function MilestonePathScreen() {
         <button className="ml-back" aria-label="Back" onClick={() => goMP(retMP())}><DSMP.IconifyIcon name="lucide:chevron-left" size={24} color="var(--gray-900)" /></button>
         <h1>My Rewards</h1>
         <PointsPillMP state={state} />
-        {/* Redeemed rewards sub page lives top-right (user, 2026-10-14; replaced the "?" help button) */}
-        <button type="button" className="ml-top-action mp-redeemed-btn" aria-label={"Redeemed rewards, " + redeemedCount + " redeemed"} onClick={() => goMP("MyRewards.html?ret=MilestonePath.html")}>
-          <DSMP.IconifyIcon name="lucide:ticket" size={20} color="var(--gray-900)" />
-          {redeemedCount > 0 ? <span className="mp-redeemed-badge">{redeemedCount}</span> : null}
-        </button>
+        {/* Redeemed rewards sub page (MyRewards.html) DELETED 2026-10-20 (user: "i dont
+            think we need the redeemed page") — redeemed perks are grayed out in the
+            path below and each reward's landing page shows its code */}
       </div>
       <div className="ml-scroll mp-scroll">
         {/* the Ruby → Emerald progress card was removed (user, 2026-10-19); the

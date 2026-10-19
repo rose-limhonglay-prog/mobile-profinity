@@ -270,7 +270,7 @@ function RdbLeagueCard({ state }) {
 /* Simple buttons under the stat tiles (user, 2026-09-24 "make both
    buttons simple"): navy icon, label, one-line note, chevron. No league
    name, gem, tint or progress bar. My Rewards tile REMOVED 2026-10-13 (user);
-   MyRewards.html stays reachable from the Milestone Path. */
+   the Redeemed rewards page (MyRewards.html) was deleted 2026-10-20. */
 function RdbFeatureTiles({ state }) {
   let milestone = null;
   try { milestone = PF_RDB.getMilestoneProgress ? PF_RDB.getMilestoneProgress(state) : null; } catch (e) {}

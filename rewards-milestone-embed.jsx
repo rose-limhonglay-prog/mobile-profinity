@@ -189,13 +189,14 @@
             <div className="rme-benefits">
               <span className="rme-benefit-kicker">{status === "passed" ? "Your one-time perk — unlocked" : "One-time perk at " + (milestone.threshold > 0 ? fmt(milestone.threshold) + " pts" : "the start")}</span>
               {milestone.benefits.map((b, i) => (
-                <button key={i} type="button" className="rme-benefit rme-benefit-link" onClick={() => openReward(milestone.key)} aria-label={"Open " + b.title}>
+                <button key={i} type="button" className={"rme-benefit rme-benefit-link" + (redeemed ? " is-redeemed" : "")} onClick={() => openReward(milestone.key)} aria-label={"Open " + b.title}>
                   <span className="rme-benefit-ic" aria-hidden="true"><Icon name={redeemed ? "lucide:ticket" : status === "locked" ? "lucide:lock" : "lucide:gift"} size={15} color={status === "locked" ? "var(--gray-400)" : "var(--brand-gold)"} /></span>
                   <div className="rme-benefit-copy">
+                    {redeemed && <span className="rme-benefit-tag" aria-hidden="true"><Icon name="lucide:check" size={11} color="currentColor" />Redeemed</span>}
                     <div className="rme-benefit-title">{b.title}</div>
                     <div className="rme-benefit-desc">{b.description}</div>
                     {b.delivery ? <div className="rme-benefit-delivery">{b.delivery}</div> : null}
-                    <span className={"rme-benefit-cta" + (status === "passed" && !redeemed ? " is-redeem" : "")}>{redeemed ? "Redeemed · view your reward" : status === "passed" ? "Redeem this perk" : "See this reward"}<Icon name="lucide:chevron-right" size={14} color="currentColor" /></span>
+                    <span className={"rme-benefit-cta" + (status === "passed" && !redeemed ? " is-redeem" : redeemed ? " is-view" : "")}>{redeemed ? "View" : status === "passed" ? "Redeem this perk" : "See this reward"}<Icon name="lucide:chevron-right" size={14} color="currentColor" /></span>
                   </div>
                 </button>
               ))}

@@ -175,11 +175,25 @@ function MilestoneNodeMP({
     "aria-label": b.title + (redeemed ? ", redeemed" : status === "passed" ? ", ready to redeem" : ", locked") + ". Open reward"
   }, /*#__PURE__*/React.createElement("span", {
     className: "mp-prize-tx"
-  }, /*#__PURE__*/React.createElement("span", {
+  }, redeemed && /*#__PURE__*/React.createElement("span", {
+    className: "mp-prize-tag",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
+    name: "lucide:check",
+    size: 11,
+    color: "currentColor"
+  }), "Redeemed"), /*#__PURE__*/React.createElement("span", {
     className: "mp-prize-title"
   }, b.title), /*#__PURE__*/React.createElement("span", {
     className: "mp-prize-desc"
-  }, b.description)), /*#__PURE__*/React.createElement("span", {
+  }, b.description)), redeemed ? /*#__PURE__*/React.createElement("span", {
+    className: "mp-prize-view",
+    "aria-hidden": "true"
+  }, "View", /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 14,
+    color: "currentColor"
+  })) : /*#__PURE__*/React.createElement("span", {
     className: "mp-prize-chev",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
@@ -390,7 +404,6 @@ function MilestonePathScreen() {
   const currentKey = progress.next ? progress.next.key : null;
   const reachedAt = state.milestonesReachedAt || {};
   const allDone = !progress.next;
-  const redeemedCount = (state.redeemedVouchers || []).filter(v => /^perk:/.test(v.itemId || "")).length;
   return /*#__PURE__*/React.createElement("div", {
     className: "ml-screen mp-screen",
     "data-screen-label": "Milestone Path"
@@ -406,18 +419,7 @@ function MilestonePathScreen() {
     color: "var(--gray-900)"
   })), /*#__PURE__*/React.createElement("h1", null, "My Rewards"), /*#__PURE__*/React.createElement(PointsPillMP, {
     state: state
-  }), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "ml-top-action mp-redeemed-btn",
-    "aria-label": "Redeemed rewards, " + redeemedCount + " redeemed",
-    onClick: () => goMP("MyRewards.html?ret=MilestonePath.html")
-  }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
-    name: "lucide:ticket",
-    size: 20,
-    color: "var(--gray-900)"
-  }), redeemedCount > 0 ? /*#__PURE__*/React.createElement("span", {
-    className: "mp-redeemed-badge"
-  }, redeemedCount) : null)), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     className: "ml-scroll mp-scroll"
   }, /*#__PURE__*/React.createElement("div", {
     className: "mp-path"
