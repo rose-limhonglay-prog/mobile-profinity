@@ -7,8 +7,8 @@
 /* ---- league rail ---- */
 .rme-league { margin: 18px 0 4px; }
 .rme-league-head { text-align: center; }
-.rme-league-title { margin: 0 0 2px; font-family: var(--font-sans); font-weight: 800; font-size: 24px; letter-spacing: -.01em; }
-.rme-league-sub { margin: 0; font-size: 13px; color: var(--gray-500); }
+.rme-league-title { margin: 0 0 2px; font-family: var(--font-sans); font-weight: 800; font-size: 26px; letter-spacing: -.01em; }
+.rme-league-sub { margin: 0; font-size: 14px; color: var(--gray-500); }
 .rme-rail { display: flex; align-items: center; justify-content: flex-start; gap: 4px; margin: 4px -20px 0; padding: 14px 20px 6px; overflow-x: auto; scroll-snap-type: x proximity;
   scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .rme-rail::-webkit-scrollbar { display: none; }
@@ -23,6 +23,9 @@
 .rme-rail-item.locked .rme-rail-gem > .rme-gem { filter: grayscale(1) brightness(.72) contrast(.85); opacity: .55; }
 .rme-rail-lock { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 30px; height: 30px; border-radius: 50%;
   background: rgba(30,32,40,.78); border: 2px solid rgba(255,255,255,.7); display: flex; align-items: center; justify-content: center; }
+.rme-rail-pts { font-size: 12.5px; font-weight: 700; color: var(--gray-500); white-space: nowrap; margin-top: 2px; }
+.rme-rail-item.locked .rme-rail-pts { color: var(--gray-400); }
+.rme-rail-item.mine .rme-rail-pts { font-size: 14px; color: var(--lg-deep, var(--gray-900)); }
 .rme-rail-you { font-weight: 800; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: var(--lg-accent); border-radius: 999px; padding: 2px 8px; margin-top: -2px; }
 /* desktop: the six gems fit, so centre them and drop the edge bleed */
 .rw-main .rme-league { margin: 0; padding: 22px 20px 12px; background: var(--surface-card); border: 1px solid var(--border-default); border-radius: 18px; }
@@ -117,7 +120,7 @@
 /* ---- "Last 7 days" gauge card (2026-10-13, replaced Recent Activity) ----
    Half-ring meter: amber fill, lighter step of the same amber for the track,
    value in the page's points amber, per-day mini bars, pace line. */
-.rme-wk { position: relative; border-radius: 18px; padding: 16px 16px 14px; background: var(--surface-card); border: 1px solid var(--border-default); box-shadow: 0 1px 4px rgba(16,24,40,.04); }
+.rme-wk { position: relative; border-radius: 18px; padding: 18px 16px 16px; background: var(--surface-card); border: 1px solid var(--border-default); box-shadow: 0 1px 4px rgba(16,24,40,.04); }
 .rme-wk-gauge { position: relative; width: 100%; max-width: 280px; margin: 0 auto; }
 .rme-wk-gauge svg { display: block; width: 100%; height: auto; overflow: visible; }
 .rme-wk-track, .rme-wk-fill { fill: none; stroke-width: 14; stroke-linecap: round; }
@@ -127,29 +130,30 @@
 .rme-wk-val { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; line-height: 1; pointer-events: none; }
 /* hero figure (user 2026-10-13 "make the points big"): the number is the card */
 /* number + unit in ink, not amber (user 2026-10-13) — the ring carries the colour */
-.rme-wk-val b { font-size: 52px; font-weight: 800; letter-spacing: -.03em; color: var(--gray-900, #111); font-variant-numeric: tabular-nums; }
-.rme-wk-val span { margin-top: 2px; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--gray-900, #111); opacity: .75; }
-.rme-wk-val i { margin-top: 4px; font-style: normal; font-size: 12px; color: var(--gray-500); }
-.rme-wk-scale { display: flex; justify-content: space-between; max-width: 280px; margin: 2px auto 0; padding: 0 10px; font-size: 11px; font-weight: 600; color: var(--gray-400); font-variant-numeric: tabular-nums; }
-.rme-wk-note { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; font-size: 12.5px; color: var(--gray-600); }
-.rme-wk-note b { color: var(--gray-900); font-weight: 800; font-variant-numeric: tabular-nums; }
-.rme-wk-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-default); }
-.rme-wk-day { display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 0; cursor: default; }
-.rme-wk-bar { display: flex; align-items: flex-end; width: 100%; max-width: 56px; height: 34px; border-radius: 6px; background: var(--gray-75, #f4f4f7); overflow: hidden; }
-.rme-wk-bar i { display: block; width: 100%; border-radius: 4px 4px 0 0; background: #D9A21B; opacity: .8; }
-.rme-wk-day.is-today .rme-wk-bar i { opacity: 1; }
-.rme-wk-day.is-empty .rme-wk-bar i { display: none; }
-.rme-wk-lb { font-size: 10px; font-weight: 700; color: var(--gray-400); white-space: nowrap; }
+/* fun + simple (2026-10-19): big number, one line, a gold coin per earned day */
+.rme-wk-val b { font-size: 58px; font-weight: 800; letter-spacing: -.03em; color: var(--gray-900, #111); font-variant-numeric: tabular-nums; }
+.rme-wk-val i { margin-top: 6px; font-style: normal; font-size: 15px; font-weight: 600; color: var(--gray-600); }
+.rme-wk-note { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 14px; font-size: 17px; font-weight: 600; color: var(--gray-900); }
+.rme-wk-note b { font-weight: 800; font-variant-numeric: tabular-nums; }
+.rme-wk-note-ic { flex: none; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: linear-gradient(145deg, #E8B64A, #C8912A); box-shadow: 0 4px 10px rgba(200,145,42,.3); }
+.rme-wk-note-ic.is-done { background: linear-gradient(145deg, #4FC08D, #2a9568); box-shadow: 0 4px 10px rgba(42,149,104,.3); }
+.rme-wk-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-default); }
+.rme-wk-day { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; cursor: default; }
+.rme-wk-coin { box-sizing: border-box; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--gray-75, #f4f4f7); border: 2px dashed var(--gray-300, #d7d7de); }
+.rme-wk-day.is-earned .rme-wk-coin { border: 0; background: radial-gradient(circle at 35% 30%, #FFE39A, #D9A21B 60%, #B8860B); box-shadow: 0 4px 10px rgba(217,162,27,.35), inset 0 -2px 0 rgba(0,0,0,.12); animation: rme-wk-pop .5s cubic-bezier(.34,1.56,.64,1) both; animation-delay: calc(var(--i, 0) * 70ms); }
+.rme-wk-day.is-today .rme-wk-coin { outline: 3px solid rgba(217,162,27,.35); outline-offset: 2px; }
+.rme-wk-day.is-today.is-empty .rme-wk-coin { border-color: #D9A21B; }
+.rme-wk-lb { font-size: 12px; font-weight: 700; color: var(--gray-500); white-space: nowrap; }
 .rme-wk-day.is-today .rme-wk-lb { color: #9C6A0E; }
-.rme-wk-pace { display: flex; align-items: center; gap: 7px; margin-top: 12px; padding: 9px 11px; border-radius: 12px; background: #FFF7E6; color: #7A5400; font-size: 12px; }
+.rme-wk-pace { display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 12px 14px; border-radius: 14px; background: #FFF7E6; color: #7A5400; font-size: 15px; }
 .rme-wk-pace b { font-weight: 800; }
+@keyframes rme-wk-pop { from { transform: scale(.4); opacity: 0; } to { transform: none; opacity: 1; } }
 .rme-benefit-kicker { display: block; margin: 0 0 8px; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--lg-deep, #9C6A0E); }
-@media (prefers-reduced-motion: reduce) { .rme-wk-fill { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .rme-wk-fill { transition: none; } .rme-wk-day.is-earned .rme-wk-coin { animation: none; } }
 [data-theme="dark"] .rme-wk-track { stroke: rgba(252,194,93,.16); }
 [data-theme="dark"] .rme-wk-fill { stroke: #FCC25D; }
-[data-theme="dark"] .rme-wk-val b, [data-theme="dark"] .rme-wk-val span { color: var(--gray-900, #fff); }
-[data-theme="dark"] .rme-wk-bar { background: var(--surface-sunken, rgba(255,255,255,.06)); }
-[data-theme="dark"] .rme-wk-bar i { background: #FCC25D; }
+[data-theme="dark"] .rme-wk-val b, [data-theme="dark"] .rme-wk-note { color: var(--gray-900, #fff); }
+[data-theme="dark"] .rme-wk-coin { background: var(--surface-sunken, rgba(255,255,255,.06)); border-color: rgba(255,255,255,.18); }
 [data-theme="dark"] .rme-wk-day.is-today .rme-wk-lb, [data-theme="dark"] .rme-wk-note iconify-icon { color: #FDD98F; }
 [data-theme="dark"] .rme-wk-pace { background: rgba(252,194,93,.12); color: #FDD98F; }
 

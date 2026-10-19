@@ -145,19 +145,18 @@ function MembershipCard() {
   return (
     <section className="lrn2-mem" data-screen-label="My Membership · Confidence">
       <div className="lrn2-mem-left">
-        <button type="button" className="lrn2-mem-head" onClick={() => go(P.hubWeb)} aria-label="Open My Membership">
+        {/* static header — the My Membership hub page it used to open was removed (user, 2026-10-19) */}
+        <div className="lrn2-mem-head lrn2-mem-head-static">
           <span className="lrn2-mem-badge"><IconifyIcon name="lucide:shield-check" size={15} color="#2B3440" />Confidence</span>
           <span className="lrn2-mem-head-tx">
             <span className="lrn2-mem-kicker">My Membership</span>
             <span className="lrn2-mem-title">Welcome back, {ME.name.split(" ")[0]}</span>
           </span>
-          <span className="lrn2-mem-arrow" aria-hidden="true"><IconifyIcon name="lucide:chevron-right" size={20} color="currentColor" /></span>
-        </button>
+        </div>
         <div className="lrn2-mem-prog" role="progressbar" aria-valuenow={prog.pct} aria-valuemin={0} aria-valuemax={100} aria-label="Membership learning progress">
           <span className="lrn2-mem-bar"><span style={{ width: Math.max(2, prog.pct) + "%" }} /></span>
           <span className="lrn2-mem-stat"><b>{prog.done}</b> of {prog.total} lessons · {PFM_W.fmtHours(prog.secs)} watched · {prog.tt.done} of {prog.tt.total} Tuesdays</span>
         </div>
-        <button type="button" className="lrn2-mem-open" onClick={() => go(P.hubWeb)}>Open My Membership<IconifyIcon name="lucide:arrow-right" size={16} color="currentColor" /></button>
       </div>
       <div className="lrn2-mem-grid">
         {tiles.map((t) =>

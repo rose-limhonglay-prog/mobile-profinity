@@ -653,8 +653,8 @@ function LCTabBar({
 
 /* ---------------------------------------------------------------- my membership · technique tuesdays -- */
 /* Entry point into the Confidence membership journey (2026-10-15):
-   My Learning → My Membership (MembershipConfidence.html) → Technique
-   Tuesdays (TechniqueTuesdays.html) → lesson. Data is the REAL PROfinity
+   My Learning → Technique Tuesdays (TechniqueTuesdays.html) → lesson. (The
+   My Membership hub row/page was removed 2026-10-19 at the user's request.) Data is the REAL PROfinity
    Membership course via window.PFMembership (membership-data.js, loaded by
    the shell after learning-shared.js): lesson titles, numbers, durations and
    intros come from the app seed; nothing here is invented. The membership
@@ -668,7 +668,6 @@ const M_LC = window.PFMembership || null;
 if (M_LC && M_LC.seed) M_LC.seed(); /* idempotent demo baseline, before first render */
 
 const LC_MEMBERSHIP_URLS = {
-  hub: "MembershipConfidence.html",
   tuesdays: "TechniqueTuesdays.html"
 };
 
@@ -733,37 +732,6 @@ function LCTechniqueTuesdays({
     className: "lcm-sec",
     "data-screen-label": "Technique Tuesdays"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "lcm-sec-h lcm-sec-h-eyebrow"
-  }, /*#__PURE__*/React.createElement("h2", {
-    className: "lcm-eyebrow lcm-eyebrow-gold"
-  }, "My membership"), /*#__PURE__*/React.createElement("span", {
-    className: "sub"
-  }, M_LC.TIER_NAME)), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lcm-card lcm-mem",
-    onClick: () => goLC(withThemeLC(LC_MEMBERSHIP_URLS.hub)),
-    "aria-label": "Open my Confidence membership"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lcm-res-ic",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
-    name: "lucide:graduation-cap",
-    size: 22,
-    color: LC_INK.gold
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "lcm-res-tx"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lcm-res-title"
-  }, M_LC.TITLE), /*#__PURE__*/React.createElement("span", {
-    className: "lcm-res-sub"
-  }, "Learning Map, ", M_LC.MODULES.length, " modules and the weekly live session — everything in Confidence.")), /*#__PURE__*/React.createElement("span", {
-    className: "lcm-prog-arrow",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 20,
-    color: LC_INK.muted
-  }))), /*#__PURE__*/React.createElement("div", {
     className: "lcm-sec-h lcm-tt-h"
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
     className: "lcm-eyebrow lcm-eyebrow-gold"

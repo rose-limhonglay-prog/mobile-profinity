@@ -153,3 +153,39 @@ img { max-width: 100%; }
   .wte-st, .wte-st-ic, .wte-st-tick { transition: none; }
   .wte-row, .wte-earn { transition: none; }
 }
+
+/* ---- Dr Tim demo video (2026-10-19) ---- */
+.wte-demo-btn { position: relative; flex: none; width: 44px; height: 44px; padding: 0; border-radius: 50%; border: 2px solid #FCC25D; background: #FFF3DC; cursor: pointer; overflow: visible; -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 4px 12px rgba(252,194,93,.35); transition: transform .18s cubic-bezier(.34,1.56,.64,1); }
+.wte-demo-btn:active { transform: scale(.94); }
+.wte-demo-av { position: absolute; inset: 0; border-radius: 50%; overflow: hidden; display: block; }
+.wte-demo-av .wte-doc-anim { width: 100% !important; height: 100% !important; }
+.wte-demo-play { position: absolute; right: -3px; bottom: -3px; width: 18px; height: 18px; border-radius: 50%; background: var(--brand-navy); border: 2px solid var(--surface-page, #fff); display: flex; align-items: center; justify-content: center; padding-left: 1px; }
+.wte-demo .wte-sheet-head { margin-bottom: 14px; }
+.wte-video { position: relative; border-radius: 20px; padding: 16px 16px 56px; overflow: hidden; color: #fff;
+  background: radial-gradient(120% 90% at 85% 10%, rgba(252,194,93,.28), transparent 55%), linear-gradient(150deg, #2B2A6B, #171640); box-shadow: 0 16px 36px rgba(23,22,64,.35); }
+.wte-video-tag { position: absolute; top: 12px; left: 14px; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: rgba(255,255,255,.14); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.wte-video-dot { width: 8px; height: 8px; border-radius: 50%; background: #FF5A5F; box-shadow: 0 0 0 0 rgba(255,90,95,.6); animation: wte-rec 1.4s ease-out infinite; }
+.wte-video:not(.is-playing) .wte-video-dot { animation: none; opacity: .5; }
+@keyframes wte-rec { 0% { box-shadow: 0 0 0 0 rgba(255,90,95,.6); } 100% { box-shadow: 0 0 0 8px rgba(255,90,95,0); } }
+.wte-video-body { display: flex; align-items: center; gap: 14px; margin-top: 30px; min-height: 128px; }
+.wte-video-doc { flex: none; width: 112px; height: 112px; border-radius: 50%; overflow: hidden; background: #FFF3DC; border: 3px solid #FCC25D; box-shadow: 0 10px 24px rgba(0,0,0,.3); transition: transform .35s cubic-bezier(.34,1.56,.64,1); }
+.wte-video-doc.is-happy { transform: scale(1.06); box-shadow: 0 0 0 8px rgba(252,194,93,.2), 0 10px 24px rgba(0,0,0,.3); }
+.wte-video-doc .wte-doc-anim { width: 100% !important; height: 100% !important; }
+.wte-video-cap { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; animation: wte-cap-in .45s cubic-bezier(.2,.9,.2,1) both; }
+@keyframes wte-cap-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.wte-video-ic { width: 36px; height: 36px; border-radius: 12px; background: #FCC25D; display: flex; align-items: center; justify-content: center; margin-bottom: 2px; }
+.wte-video-cap b { font-size: 20px; font-weight: 800; line-height: 1.2; letter-spacing: -.01em; }
+.wte-video-cap i { font-style: normal; font-size: 15px; color: rgba(255,255,255,.78); }
+.wte-video-bar { position: absolute; left: 16px; right: 72px; bottom: 22px; display: flex; gap: 5px; }
+.wte-video-seg { flex: 1; height: 6px; padding: 0; border: none; border-radius: 999px; background: rgba(255,255,255,.22); overflow: hidden; cursor: pointer; }
+.wte-video-fill { display: block; height: 100%; width: 0; border-radius: 999px; background: #FCC25D; }
+.wte-video-seg.is-now .wte-video-fill { animation: wte-fill linear forwards; }
+.wte-video-seg.is-done .wte-video-fill { width: 100%; animation: none; }
+@keyframes wte-fill { from { width: 0; } to { width: 100%; } }
+.wte-video-play { position: absolute; right: 16px; bottom: 12px; width: 44px; height: 44px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); background: rgba(255,255,255,.14); display: flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(4px); }
+.wte-video-play:active { transform: scale(.94); }
+.wte-video-replay { position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: none; background: #FCC25D; color: #3D2A00; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; animation: wte-cap-in .4s ease both; }
+@media (prefers-reduced-motion: reduce) { .wte-video-dot, .wte-video-cap, .wte-video-replay { animation: none; } .wte-video-doc { transition: none; } }
+[data-theme="dark"] .wte-demo-btn { background: rgba(255,255,255,.1); border-color: rgba(252,194,93,.7); }
+[data-theme="dark"] .wte-demo-play { border-color: var(--surface-page, #0C1928); }

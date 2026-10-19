@@ -70,31 +70,30 @@ function MilestoneNodeMP({ milestone, status, isLast, reachedAt }) {
       <div className="mp-node-body">
         <div className="mp-node-head">
           <span className="mp-node-title">
-            {league ? <GemMP src={league.lottie} size={40} play={status === "current"} /> : null}
+            {league ? <GemMP src={league.lottie} size={48} play={status === "current"} /> : null}
             <span className="mp-node-name">{milestone.name}{league ? <small> League</small> : null}</span>
           </span>
           <span className="mp-node-pts"><DSMP.IconifyIcon name="lucide:star" size={12} color="currentColor" />{milestone.threshold > 0 ? PF_MP.formatNumber(milestone.threshold) + " pts" : "Start"}</span>
         </div>
+        {/* prize cards (user, 2026-10-19 "bigger title, less text, fun"): just the
+            reward's name and one button — the description and how-you-get-it
+            copy live on the reward's landing page (RewardLanding.html) */}
         <div className="mp-node-benefits">
           {milestone.benefits.map((b, i) => (
-            <button key={i} type="button" className="mp-benefit-row" onClick={() => goMP(landingMP(milestone.key))}
-              aria-label={b.title + (status === "passed" ? ", unlocked" : ", locked") + ". View reward"}>
-              <span className="mp-benefit-ic" aria-hidden="true">
-                <DSMP.IconifyIcon name={redeemed ? "lucide:ticket" : status === "locked" ? "lucide:lock" : "lucide:gift"} size={15} color={status === "locked" ? "var(--gray-400)" : "var(--brand-gold)"} />
+            <button key={i} type="button" className={"mp-prize" + (status === "locked" ? " is-locked" : "") + (status === "passed" && !redeemed ? " is-ready" : "") + (redeemed ? " is-redeemed" : "")}
+              onClick={() => goMP(landingMP(milestone.key))}
+              aria-label={b.title + (redeemed ? ", redeemed" : status === "passed" ? ", ready to redeem" : ", locked") + ". Open reward"}>
+              {/* no icon tile (user, 2026-10-19) — title + button only */}
+              <span className="mp-prize-tx">
+                <span className="mp-prize-title">{b.title}</span>
+                {/* one-line description, no button (user, 2026-10-19); the card itself opens the reward */}
+                <span className="mp-prize-desc">{b.description}</span>
               </span>
-              <span className="mp-benefit-copy">
-                <span className="mp-benefit-title">{b.title}</span>
-                <span className="mp-benefit-desc">{b.description}</span>
-                {b.delivery ? <span className="mp-benefit-delivery">{b.delivery}</span> : null}
-                <span className={"mp-benefit-cta" + (status === "passed" && !redeemed ? " is-redeem" : "")}>{redeemed ? "Redeemed · view your reward" : status === "passed" ? "Redeem this perk" : "See this reward"}</span>
-              </span>
-              <span className="mp-benefit-chev" aria-hidden="true"><DSMP.IconifyIcon name="lucide:chevron-right" size={16} color="var(--gray-400)" /></span>
+              <span className="mp-prize-chev" aria-hidden="true"><DSMP.IconifyIcon name="lucide:chevron-right" size={20} color="currentColor" /></span>
             </button>
           ))}
         </div>
-        {status === "passed" && <div className="mp-node-tag mp-node-tag-passed"><DSMP.IconifyIcon name="lucide:check-circle" size={12} color="currentColor" />{milestone.threshold > 0 ? "Badge earned — yours for good" : "Your starting league"}{reached && milestone.threshold > 0 ? <span className="mp-node-when"> · {reached}</span> : null}</div>}
-        {status === "current" && <div className="mp-node-tag mp-node-tag-current">Next league — unlocks automatically</div>}
-        {status === "locked" && <div className="mp-node-tag mp-node-tag-locked">Locked</div>}
+        {/* status tags ("Earned · date" / "Next" / "Locked") removed (user, 2026-10-19) — the rail dots already say it */}
       </div>
     </div>
   );
@@ -123,8 +122,8 @@ function MilestoneHelpSheetMP({ open, onClose }) {
           <h2 id="mp-help-title">How the path works</h2>
           <button type="button" className="mp-help-close" aria-label="Close" onClick={onClose}><DSMP.IconifyIcon name="lucide:x" size={18} color="var(--gray-600)" /></button>
         </div>
-        <p className="mp-help-p">Six levels, one journey — from Jade at 0 pts to Sapphire at 60,000 pts. The moment your Lifetime Points reach a league you move up and its single one-time perk unlocks.</p>
-        <p className="mp-help-p">Points are lifetime: they are never spent and never expire, so every perk you unlock stays yours for good.</p>
+        <p className="mp-help-p">Six leagues, Jade to Sapphire. Each one unlocks a reward.</p>
+        <p className="mp-help-p">Your points never expire.</p>
         <button type="button" className="mp-help-ok" onClick={onClose}>Got it</button>
       </div>
     </div>
@@ -159,16 +158,27 @@ function LeagueProgressMP() {
         <span className="ml-progress-track mp-lg-track" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={p.pct}>
           <span className="ml-progress-fill" style={{ width: p.pct + "%", background: "linear-gradient(90deg, var(--lg-accent), var(--nx-accent))" }} />
         </span>
-        <span className="mp-lg-scale">
-          <span>{PF_MP.formatNumber(p.points)}{next ? " of " + PF_MP.formatNumber(next.requires) : ""} pts</span>
-          <span style={{ color: "var(--nx-deep)" }}>{next ? "Unlocks at " + PF_MP.formatNumber(next.requires) + " pts" : "Complete"}</span>
-        </span>
-        <span className="mp-lg-note">{next ? PF_MP.formatNumber(p.need) + " more pts to " + next.name + " League" : "You've reached Sapphire — the whole path, every benefit, is yours."}</span>
+        {/* one short line (user, 2026-10-19) — the of/unlocks-at scale row is gone */}
+        <span className="mp-lg-note">{next ? <React.Fragment><b>{PF_MP.formatNumber(p.need)} pts</b> to go</React.Fragment> : "You're at the top!"}</span>
       </span>
       <span className={"mp-lg-gem next" + (next ? " locked" : "")}>
         <GemMP src={edge.lottie} size={60} play={false} />
         {next ? <span className="mp-lg-lock"><DSMP.IconifyIcon name="lucide:lock" size={12} color="#fff" /></span> : null}
       </span>
+    </button>
+  );
+}
+
+/* header points pill (user, 2026-10-19): the member's lifetime points next to
+   the Redeemed-rewards button — same smiley Lottie + amber number as the
+   PointsPillC in the shared mobile header. Tap → Rewards dashboard. */
+const MP_PTS_LOTTIE = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
+function PointsPillMP({ state }) {
+  const pts = Math.max(0, Math.round(state.lifetimePoints || 0));
+  return (
+    <button type="button" className="mp-pts" aria-label={PF_MP.formatNumber(pts) + " points. Open Rewards"} onClick={() => goMP("RewardsDashboard.html")}>
+      <span className="mp-pts-ic" aria-hidden="true"><GemMP src={MP_PTS_LOTTIE} size={30} play={true} /></span>
+      <span className="mp-pts-n">{PF_MP.formatNumber(pts)}</span>
     </button>
   );
 }
@@ -203,6 +213,7 @@ function MilestonePathScreen() {
       <div className="ml-top">
         <button className="ml-back" aria-label="Back" onClick={() => goMP(retMP())}><DSMP.IconifyIcon name="lucide:chevron-left" size={24} color="var(--gray-900)" /></button>
         <h1>My Rewards</h1>
+        <PointsPillMP state={state} />
         {/* Redeemed rewards sub page lives top-right (user, 2026-10-14; replaced the "?" help button) */}
         <button type="button" className="ml-top-action mp-redeemed-btn" aria-label={"Redeemed rewards, " + redeemedCount + " redeemed"} onClick={() => goMP("MyRewards.html?ret=MilestonePath.html")}>
           <DSMP.IconifyIcon name="lucide:ticket" size={20} color="var(--gray-900)" />
@@ -210,7 +221,8 @@ function MilestonePathScreen() {
         </button>
       </div>
       <div className="ml-scroll mp-scroll">
-        <LeagueProgressMP />
+        {/* the Ruby → Emerald progress card was removed (user, 2026-10-19); the
+            Rewards dashboard's league rail already shows this */}
         <div className="mp-path">
           {path.map((m, i) => {
             const status = passedKeys.has(m.key) ? "passed" : m.key === currentKey ? "current" : "locked";

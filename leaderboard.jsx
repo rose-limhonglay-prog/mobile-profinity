@@ -109,7 +109,7 @@ function LBLeagueRail({ leagues, myIndex, selected, onSelect, needFor }) {
             </span>
             {mine && <span className="lb-rail-you">You</span>}
             {locked && needFor && <span className="lb-rail-need" aria-hidden="true">+{PF_LB.formatNumber(needFor(i))} pts</span>}
-            {!mine && !locked && <span className="lb-rail-got" aria-hidden="true"><DSLB.IconifyIcon name="lucide:check" size={10} color="currentColor" />Earned</span>}
+            {!mine && !locked && <span className="lb-rail-got" aria-hidden="true">{l.name}</span>}   {/* league name, not "Earned" (user, 2026-10-19) */}
           </button>
         );
       })}
@@ -139,10 +139,10 @@ function LBPodium({ rows, prizeFor }) {
           </span>
           <ProfileLinkLB author={lbAuthor(r)} className="pf-prof-av"><DSLB.Avatar name={r.name} src={r.avatar} size={r.rank === 1 ? 62 : 52}
             style={LB_RANK_AV[r.rank] ? { flex: "none", background: LB_RANK_AV[r.rank] } : { flex: "none" }} /></ProfileLinkLB>
-          <span className="lb-pod-rank">#{r.rank}</span>
+          {/* "#N" under the avatar removed (user, 2026-10-19) — the medal above already shows the place */}
           <span className="lb-pod-name"><ProfileLinkLB author={lbAuthor(r)} className="pf-prof-nm">{r.name}{r.isKaty ? " (You)" : ""}</ProfileLinkLB></span>
           <span className="lb-pod-pts">{PF_LB.formatNumber(r.points)} pts</span>
-          {prizeFor(r.rank) && <span className="lb-pod-prize">{prizeFor(r.rank)}</span>}
+          {/* prize line under each member removed (user, 2026-10-19) */}
         </div>
       ))}
     </div>
@@ -162,7 +162,7 @@ function LBRow({ r, meRef, prizeFor }) {
         style={r.isKaty ? { flex: "none", background: "linear-gradient(135deg,#FDBF38,#F39E3D)" } : { flex: "none" }} /></ProfileLinkLB>
       <span className="tx">
         <b><ProfileLinkLB author={lbAuthor(r)} className="pf-prof-nm">{r.name}{r.isKaty ? " (You)" : ""}</ProfileLinkLB></b>
-        {prizeFor(r.rank) && <i>{prizeFor(r.rank)}</i>}
+        {/* prize line removed (user, 2026-10-19) */}
       </span>
       <span className="pts">{PF_LB.formatNumber(r.points)}</span>
       <span className="tr" role="img" aria-label={t.label}>
@@ -225,7 +225,6 @@ function LeaderboardScreen() {
   const prizeFor = (rank) => prizeForLB(config, rank);
   const top3 = ranked.slice(0, 3);
   const me = ranked.find((r) => r.isKaty);
-  const ahead = me ? ranked.find((r) => r.rank === me.rank - 1) : null;
   const needFor = (idx) => Math.max(0, leagues[idx].requires - progress.points);
 
   const vars = { "--lg-accent": league.accent, "--lg-deep": league.deep, "--lg-soft": league.soft };
@@ -241,9 +240,9 @@ function LeaderboardScreen() {
         <div className="lb-league-head" data-screen-label="League title">
           <h2 className="lb-league-title" style={{ color: league.deep }}>{league.name} League</h2>
           <p className="lb-sub">
-            {isMine ? (progress.preview ? "Preview · " : "Your league · ") + "rolling 30-day points"
-              : locked ? "Locked · " + PF_LB.formatNumber(needFor(selected)) + " more pts to unlock"
-              : "Earned · you've moved up from here"}
+            {isMine ? (progress.preview ? "Preview" : "Your league")
+              : locked ? PF_LB.formatNumber(needFor(selected)) + " pts to unlock"
+              : "Earned"}
           </p>
         </div>
 
@@ -251,16 +250,7 @@ function LeaderboardScreen() {
 
         <LBPodium rows={top3} prizeFor={prizeFor} />
 
-        {isMine && me && (
-          <div className="lb-you" data-screen-label="Your standing">
-            <span className="ic"><DSLB.IconifyIcon name="lucide:flag" size={20} color="var(--brand-navy)" /></span>
-            <span className="tx">
-              <b>You're #{me.rank} with {PF_LB.formatNumber(me.points)} pts</b>
-              <i>{ahead ? PF_LB.formatNumber(ahead.points - me.points) + " pts behind " + ahead.name : "You're leading the board!"}</i>
-            </span>
-            <button type="button" className="lb-you-cta" onClick={() => goLB("RewardsDashboard.html")}>Earn points</button>
-          </div>
-        )}
+        {/* "You're #N with X pts · behind Y" strip removed (user, 2026-10-19) — the podium / Top 10 row already mark "(You)" */}
         {locked && (
           <div className="lb-you lb-you-locked" data-screen-label="Locked league">
             <span className="ic"><DSLB.IconifyIcon name="lucide:lock" size={20} color="var(--brand-navy)" /></span>

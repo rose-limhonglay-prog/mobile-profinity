@@ -121,7 +121,7 @@ function enrichMR(voucher, items, purchased) {
     used,
     image: item && item.image ? item.image : null,
     title: perk && perk.benefit ? perk.benefit.title : course ? course.title : voucher.itemName,
-    sub: perk ? perk.milestone.name + (league ? " League" : "") + " perk" + (voucher.delivery ? " · " + voucher.delivery : "") : course ? "Save " + poundsMR(saving) + " · " + poundsMR(course.price - saving) + " instead of " + poundsMR(course.price) : voucher.itemName,
+    sub: perk ? perk.milestone.name + (league ? " League" : "") : course ? "Save " + poundsMR(saving) + " · " + poundsMR(course.price - saving) + " instead of " + poundsMR(course.price) : voucher.itemName,
     href: perkKey ? "RewardLanding.html?reward=" + encodeURIComponent(perkKey) + "&ret=" + encodeURIComponent("MyRewards.html?ret=" + retMR()) : course ? "CourseCheckout.html?course=" + encodeURIComponent(course.slug) + "&title=" + encodeURIComponent(course.title) + "&price=" + course.price : null
   };
 }
@@ -191,6 +191,58 @@ function RewardRow({
     color: "var(--brand-navy)"
   }), copiedCode === r.voucher.code ? "Copied" : "Copy")));
 }
+
+/* every league perk with its live status (unlocked / redeemed / locked) */
+function perksMR(state) {
+  try {
+    const path = (PF_MR.getConfig().milestonePath || []).slice().sort((a, b) => a.threshold - b.threshold);
+    return path.map(m => PF_MR.getPerk(m.key, state)).filter(p => p && p.benefit);
+  } catch (e) {
+    return [];
+  }
+}
+function landingMR(key) {
+  return "RewardLanding.html?reward=" + encodeURIComponent(key) + "&ret=" + encodeURIComponent("MyRewards.html?ret=" + retMR());
+}
+
+/* "Ready to redeem" prize card (2026-10-19, user: "make this page fun and
+   exciting, add the redeemable rewards") — league-tinted, gem, big title,
+   one-line description, pulsing dot; tap → the perk's landing page */
+function ReadyCardMR({
+  perk,
+  index
+}) {
+  const league = leagueMR(perk.key);
+  const vars = league ? {
+    "--lg-accent": league.accent,
+    "--lg-deep": league.deep,
+    "--lg-soft": league.soft,
+    "--i": index
+  } : {
+    "--i": index
+  };
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mr-ready",
+    style: vars,
+    onClick: () => goMR(landingMR(perk.key)),
+    "aria-label": perk.benefit.title + ", ready to redeem. Open reward"
+  }, league ? /*#__PURE__*/React.createElement("span", {
+    className: "mr-ready-gem"
+  }, /*#__PURE__*/React.createElement(GemMR, {
+    src: league.lottie,
+    size: 52
+  })) : null, /*#__PURE__*/React.createElement("span", {
+    className: "mr-ready-tx"
+  }, /*#__PURE__*/React.createElement("b", null, perk.benefit.title), /*#__PURE__*/React.createElement("i", null, perk.benefit.description)), /*#__PURE__*/React.createElement("span", {
+    className: "mr-ready-go",
+    "aria-hidden": "true"
+  }, "Redeem", /*#__PURE__*/React.createElement(DSMR.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 16,
+    color: "currentColor"
+  })));
+}
 function MyRewardsScreen() {
   const [state, setState] = useStateMR(() => PF_MR.getState());
   const [config] = useStateMR(() => PF_MR.getConfig());
@@ -199,23 +251,22 @@ function MyRewardsScreen() {
     const refresh = () => setState(PF_MR.getState());
     window.addEventListener("storage", refresh);
     window.addEventListener("pf:perk-redeemed", refresh);
+    window.addEventListener("pf:points-earned", refresh);
     return () => {
       window.removeEventListener("storage", refresh);
       window.removeEventListener("pf:perk-redeemed", refresh);
+      window.removeEventListener("pf:points-earned", refresh);
     };
   }, []);
   const rows = useMemoMR(() => {
     const purchased = purchasedMR();
     return (state.redeemedVouchers || []).slice().reverse().map(v => enrichMR(v, config.storeItems || [], purchased));
   }, [state, config]);
-  const ready = rows.filter(r => !r.used).length;
-  const total = (() => {
-    try {
-      return PF_MR.getMilestoneProgress(state).path.length;
-    } catch (e) {
-      return 6;
-    }
-  })();
+  const perks = useMemoMR(() => perksMR(state), [state]);
+  const readyPerks = perks.filter(p => p.status === "unlocked");
+  const nextPerk = perks.find(p => p.status === "locked") || null;
+  const nextLeague = nextPerk ? leagueMR(nextPerk.key) : null;
+  const nothing = readyPerks.length === 0 && rows.length === 0;
   return /*#__PURE__*/React.createElement("div", {
     className: "ml-screen mr-screen",
     "data-screen-label": "Redeemed rewards"
@@ -229,39 +280,86 @@ function MyRewardsScreen() {
     name: "lucide:chevron-left",
     size: 24,
     color: "var(--gray-900)"
-  })), /*#__PURE__*/React.createElement("h1", null, "Redeemed rewards"), /*#__PURE__*/React.createElement("span", null)), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("h1", null, "Your rewards"), /*#__PURE__*/React.createElement("span", null)), /*#__PURE__*/React.createElement("div", {
     className: "ml-scroll mr-scroll"
-  }, rows.length > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "mr-summary"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, rows.length), /*#__PURE__*/React.createElement("span", null, "redeemed")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, ready), /*#__PURE__*/React.createElement("span", null, "ready to use")), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, Math.max(0, total - rows.length)), /*#__PURE__*/React.createElement("span", null, "still to unlock"))), rows.length === 0 ? /*#__PURE__*/React.createElement("div", {
-    className: "mr-empty"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "mr-hero" + (readyPerks.length ? " is-ready" : "")
   }, /*#__PURE__*/React.createElement("span", {
-    className: "mr-empty-ic"
+    className: "mr-hero-ic",
+    "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSMR.IconifyIcon, {
-    name: "lucide:ticket",
-    size: 30,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("h2", null, "Nothing redeemed yet"), /*#__PURE__*/React.createElement("p", null, "Each league on My Rewards unlocks one perk. Redeem it on the perk's page and its code will show up here."), /*#__PURE__*/React.createElement("button", {
-    className: "ml-btn mr-btn mr-btn-primary",
-    type: "button",
-    style: {
-      width: "auto"
-    },
-    onClick: () => goMR(retMR())
-  }, "Back to My Rewards")) : /*#__PURE__*/React.createElement("div", {
+    name: readyPerks.length ? "lucide:gift" : rows.length ? "lucide:party-popper" : "lucide:sparkles",
+    size: 34,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "mr-hero-tx"
+  }, readyPerks.length ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, readyPerks.length === 1 ? "1 reward" : readyPerks.length + " rewards", " waiting!"), /*#__PURE__*/React.createElement("i", null, "Tap one to redeem it.")) : rows.length ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, "All redeemed!"), /*#__PURE__*/React.createElement("i", null, "Your codes are below.")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, "No rewards yet"), /*#__PURE__*/React.createElement("i", null, "Earn points to unlock your first one.")))), readyPerks.length > 0 && /*#__PURE__*/React.createElement("section", {
+    className: "mr-sec",
+    "aria-label": "Ready to redeem"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "mr-sec-h"
+  }, "Ready to redeem"), /*#__PURE__*/React.createElement("div", {
+    className: "mr-ready-list"
+  }, readyPerks.map((p, i) => /*#__PURE__*/React.createElement(ReadyCardMR, {
+    key: p.key,
+    perk: p,
+    index: i
+  })))), rows.length > 0 && /*#__PURE__*/React.createElement("section", {
+    className: "mr-sec",
+    "aria-label": "Redeemed"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "mr-sec-h"
+  }, "Redeemed"), /*#__PURE__*/React.createElement("div", {
     className: "mr-list"
   }, rows.map(r => /*#__PURE__*/React.createElement(RewardRow, {
     key: r.voucher.code,
     r: r,
     copiedCode: copiedCode,
     onCopy: copy
-  }))), rows.length > 0 && /*#__PURE__*/React.createElement("p", {
+  }))), /*#__PURE__*/React.createElement("p", {
     className: "mr-foot"
   }, /*#__PURE__*/React.createElement(DSMR.IconifyIcon, {
     name: "lucide:shield-check",
     size: 14,
     color: "var(--gray-500)"
-  }), "Tap a reward to open its page, use the code or email it to yourself."), /*#__PURE__*/React.createElement("div", {
+  }), "Tap a reward to use its code.")), nextPerk && /*#__PURE__*/React.createElement("section", {
+    className: "mr-sec",
+    "aria-label": "Next up"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "mr-sec-h"
+  }, "Next up"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mr-next",
+    style: nextLeague ? {
+      "--lg-accent": nextLeague.accent,
+      "--lg-deep": nextLeague.deep,
+      "--lg-soft": nextLeague.soft
+    } : null,
+    onClick: () => goMR(landingMR(nextPerk.key)),
+    "aria-label": nextPerk.benefit.title + ", " + PF_MR.formatNumber(nextPerk.remaining) + " points to go. Open reward"
+  }, nextLeague ? /*#__PURE__*/React.createElement("span", {
+    className: "mr-next-gem"
+  }, /*#__PURE__*/React.createElement(GemMR, {
+    src: nextLeague.lottie,
+    size: 44
+  })) : null, /*#__PURE__*/React.createElement("span", {
+    className: "mr-next-tx"
+  }, /*#__PURE__*/React.createElement("b", null, nextPerk.benefit.title), /*#__PURE__*/React.createElement("i", null, /*#__PURE__*/React.createElement("strong", null, PF_MR.formatNumber(nextPerk.remaining), " pts"), " to go"), /*#__PURE__*/React.createElement("span", {
+    className: "mr-next-track",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: nextPerk.pct + "%"
+    }
+  }))), /*#__PURE__*/React.createElement(DSMR.IconifyIcon, {
+    name: "lucide:lock",
+    size: 18,
+    color: "var(--gray-400)"
+  }))), nothing && /*#__PURE__*/React.createElement("button", {
+    className: "ml-btn mr-btn mr-btn-primary mr-earn-btn",
+    type: "button",
+    onClick: () => goMR("WaysToEarn.html?ret=MyRewards.html")
+  }, "See ways to earn"), /*#__PURE__*/React.createElement("div", {
     style: {
       height: 24
     }

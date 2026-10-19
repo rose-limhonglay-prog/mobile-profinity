@@ -213,7 +213,6 @@ function LM2MembershipSection({ done }) {
   const prog = React.useMemo(() => PFM_L.progress(done), [done]);
   const nu = React.useMemo(() => PFM_L.nextUp(done, watch), [done, watch]);
   const latest = PFM_L.ttLatest(1)[0];
-  const hub = PFM_L.PAGES.hub;
   const tiles = [
     { key: "tt", icon: "lucide:video", title: "Technique Tuesdays", sub: latest ? "New · Lesson " + latest.n : prog.tt.total + " sessions", href: PFM_L.PAGES.tuesdays, chip: true },
     { key: "content", icon: "lucide:library", title: "Membership content", sub: PFM_L.MODULES.length + " modules · " + prog.total + " lessons", href: PFM_L.courseUrl({ ret: "LearningMobile.html" }) },
@@ -221,14 +220,14 @@ function LM2MembershipSection({ done }) {
     { key: "map", icon: "lucide:map", title: "Learning Map", sub: "What's included, what's next", href: PFM_L.PAGES.map }];
   return (
     <section className="lm2-mem" data-screen-label="My Membership · Confidence">
-      <button type="button" className="lm2-mem-head" onClick={() => goL(hub)} aria-label="Open My Membership">
+      {/* static header — the My Membership hub page it used to open was removed (user, 2026-10-19) */}
+      <div className="lm2-mem-head lm2-mem-head-static">
         <span className="lm2-mem-badge"><IconifyL name="lucide:shield-check" size={14} color="#2B3440" />Confidence</span>
         <span className="lm2-mem-head-tx">
           <span className="lm2-mem-kicker">My Membership</span>
           <span className="lm2-mem-title">Welcome back, {PFLS_L.ME ? PFLS_L.ME.name : "Katy"}</span>
         </span>
-        <span className="lm2-mem-arrow" aria-hidden="true"><IconifyL name="lucide:chevron-right" size={20} color="currentColor" /></span>
-      </button>
+      </div>
       <div className="lm2-mem-prog" role="progressbar" aria-valuenow={prog.pct} aria-valuemin={0} aria-valuemax={100} aria-label="Membership learning progress">
         <span className="lm2-mem-bar"><span style={{ width: Math.max(2, prog.pct) + "%" }} /></span>
         <span className="lm2-mem-stat"><b>{prog.done}</b> of {prog.total} lessons · {PFM_L.fmtHours(prog.secs)} watched · {prog.tt.done} of {prog.tt.total} Tuesdays</span>

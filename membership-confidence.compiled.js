@@ -1,15 +1,16 @@
 /* ===========================================================================
    PROfinity — Confidence membership journey (mobile + web)
-   One bundle, three screens, picked by the shell before this script loads:
-     window.PF_MC_PAGE = "hub"      MembershipConfidence.html   My Membership dashboard
-                        "map"      MembershipMap.html          Membership Learning Map
+   One bundle, two screens, picked by the shell before this script loads:
+     window.PF_MC_PAGE = "map"      MembershipMap.html          Membership Learning Map
                         "tuesdays" TechniqueTuesdays.html      Technique Tuesday library
      window.PF_MC_WEB  = true      *Web.html twins — same screens inside the
                                    desktop TopNav shell (.mc-web layout)
 
-   Journey: My Learning → My Membership (hub) → Learning Map → Technique
-   Tuesdays / membership modules → lesson details (CourseDetail.html, the
-   existing Confidence reader) → video player (its LXPlayer, ?play=1).
+   Journey: My Learning → Technique Tuesdays / Learning Map → membership
+   modules → lesson details (CourseDetail.html, the existing Confidence
+   reader) → video player (its LXPlayer, ?play=1). The My Membership hub
+   page (MembershipConfidence.html) was removed on 2026-10-19 at the user's
+   request; both screens' back buttons return to My Learning.
    Every lesson link carries ?ret= so the reader's back button returns here.
 
    Data: membership-data.js (window.PFMembership) — the real PROfinity
@@ -27,7 +28,7 @@ const DSMC = window.ProfinityDesignSystem_c2b5cc;
 const M_MC = window.PFMembership;
 const PFLS_MC = window.PFLearnShared || {};
 const MC_WEB = !!window.PF_MC_WEB;
-const MC_PAGE = window.PF_MC_PAGE || "hub";
+const MC_PAGE = window.PF_MC_PAGE || "tuesdays";
 const MC_ME = PFLS_MC.ME || {
   name: "Katy",
   avatar: "assets/avatar-katy.jpg"
@@ -46,7 +47,6 @@ const IcMC = DSMC.IconifyIcon;
 function pageMC(key) {
   const P = M_MC.PAGES;
   if (MC_WEB) return {
-    hub: P.hubWeb,
     map: P.mapWeb,
     tuesdays: P.tuesdaysWeb,
     learning: P.learningWeb,
@@ -57,7 +57,6 @@ function pageMC(key) {
     tiers: "MembershipTier.html"
   }[key];
   return {
-    hub: P.hub,
     map: P.map,
     tuesdays: P.tuesdays,
     learning: P.learning,
@@ -104,47 +103,6 @@ function MCBadge({
     size: small ? 13 : 15,
     color: "#2B3440"
   }), "Confidence");
-}
-function MCRing({
-  pct,
-  size = 84,
-  stroke = 8,
-  label
-}) {
-  const r = (size - stroke) / 2,
-    c = 2 * Math.PI * r;
-  return /*#__PURE__*/React.createElement("svg", {
-    className: "mc-ring",
-    width: size,
-    height: size,
-    viewBox: "0 0 " + size + " " + size,
-    role: "img",
-    "aria-label": (label || "Membership progress") + " " + pct + "%"
-  }, /*#__PURE__*/React.createElement("circle", {
-    cx: size / 2,
-    cy: size / 2,
-    r: r,
-    fill: "none",
-    stroke: "var(--mc-ring-track)",
-    strokeWidth: stroke
-  }), /*#__PURE__*/React.createElement("circle", {
-    cx: size / 2,
-    cy: size / 2,
-    r: r,
-    fill: "none",
-    stroke: "var(--mc-ring)",
-    strokeWidth: stroke,
-    strokeLinecap: "round",
-    strokeDasharray: c,
-    strokeDashoffset: c * (1 - pct / 100),
-    transform: "rotate(-90 " + size / 2 + " " + size / 2 + ")"
-  }), /*#__PURE__*/React.createElement("text", {
-    x: "50%",
-    y: "50%",
-    dy: ".36em",
-    textAnchor: "middle",
-    className: "mc-ring-n"
-  }, pct, "%"));
 }
 
 /* Video thumbnail. The membership CDN posters are not public, so every card
@@ -458,206 +416,6 @@ function MCLiveStrip({
 }
 
 /* ================================================================ HUB ===== */
-function MCHubHero({
-  prog
-}) {
-  const hours = M_MC.fmtHours(prog.secs);
-  return /*#__PURE__*/React.createElement("section", {
-    className: "mc-hero",
-    "data-screen-label": "My Membership · Confidence"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mc-hero-head"
-  }, /*#__PURE__*/React.createElement(MCBadge, null), /*#__PURE__*/React.createElement("span", {
-    className: "mc-hero-since"
-  }, "Member library · ", M_MC.MODULES.length, " modules · ", prog.total, " lessons")), /*#__PURE__*/React.createElement("h1", {
-    className: "mc-hero-title"
-  }, "Welcome back, ", MC_ME.name), /*#__PURE__*/React.createElement("div", {
-    className: "mc-hero-prog"
-  }, /*#__PURE__*/React.createElement(MCRing, {
-    pct: prog.pct,
-    size: 88,
-    stroke: 9
-  }), /*#__PURE__*/React.createElement("ul", {
-    className: "mc-stats",
-    "aria-label": "Membership learning progress"
-  }, /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, prog.done), /*#__PURE__*/React.createElement("span", null, "of ", prog.total, " lessons")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, hours), /*#__PURE__*/React.createElement("span", null, "watched")), /*#__PURE__*/React.createElement("li", null, /*#__PURE__*/React.createElement("b", null, prog.tt.done), /*#__PURE__*/React.createElement("span", null, "of ", prog.tt.total, " Tuesdays")))), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mc-hero-map",
-    onClick: () => goMC(pageMC("map"))
-  }, /*#__PURE__*/React.createElement(IcMC, {
-    name: "lucide:map",
-    size: 16,
-    color: MC_GOLD
-  }), "View Learning Map", /*#__PURE__*/React.createElement(IcMC, {
-    name: "lucide:arrow-right",
-    size: 16,
-    color: MC_GOLD
-  })));
-}
-function MCQuickAccess({
-  prog
-}) {
-  const latest = M_MC.ttLatest(1)[0];
-  const items = [{
-    key: "tuesdays",
-    icon: "lucide:video",
-    title: "Technique Tuesdays",
-    sub: prog.tt.total + " sessions · " + M_MC.fmtHours(M_MC.ttTotalSecs()),
-    chip: latest ? "New · Lesson " + latest.n : null,
-    href: pageMC("tuesdays")
-  }, {
-    key: "map",
-    icon: "lucide:map",
-    title: "Learning Map",
-    sub: "What's included, what's next",
-    href: pageMC("map")
-  }, {
-    key: "content",
-    icon: "lucide:library",
-    title: "Membership content",
-    sub: M_MC.MODULES.length + " modules, full course view",
-    href: courseUrlMC()
-  }, {
-    key: "help",
-    icon: "lucide:shield-alert",
-    title: "Complications help",
-    sub: "Message the clinical team",
-    href: pageMC("dm")
-  }];
-  return /*#__PURE__*/React.createElement("section", {
-    className: "mc-sec",
-    "data-screen-label": "Quick access"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mc-sec-h"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mc-eyebrow"
-  }, "Quick access")), /*#__PURE__*/React.createElement("div", {
-    className: "mc-grid"
-  }, items.map(it => /*#__PURE__*/React.createElement("button", {
-    key: it.key,
-    type: "button",
-    className: "mc-card mc-tile mc-tile-" + it.key,
-    onClick: () => goMC(it.href)
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mc-tile-ic"
-  }, /*#__PURE__*/React.createElement(IcMC, {
-    name: it.icon,
-    size: 20,
-    color: MC_GOLD_INK
-  })), it.chip && /*#__PURE__*/React.createElement("span", {
-    className: "mc-chip mc-chip-new mc-tile-chip"
-  }, it.chip), /*#__PURE__*/React.createElement("span", {
-    className: "mc-tile-title"
-  }, it.title), /*#__PURE__*/React.createElement("span", {
-    className: "mc-tile-sub"
-  }, it.sub), /*#__PURE__*/React.createElement("span", {
-    className: "mc-tile-arrow",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(IcMC, {
-    name: "lucide:arrow-up-right",
-    size: 16,
-    color: "currentColor"
-  }))))));
-}
-function MCIncluded() {
-  const hrefFor = h => h === "map" ? pageMC("map") : h === "tuesdays" ? pageMC("tuesdays") : h === "DirectMessage.html" ? pageMC("dm") : h;
-  return /*#__PURE__*/React.createElement("section", {
-    className: "mc-sec",
-    "data-screen-label": "What's included"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "mc-sec-h"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mc-eyebrow"
-  }, "What's included in Confidence")), /*#__PURE__*/React.createElement("ul", {
-    className: "mc-card mc-list"
-  }, M_MC.INCLUDED.map(it => /*#__PURE__*/React.createElement("li", {
-    key: it.text
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mc-row",
-    onClick: () => goMC(hrefFor(it.href))
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mc-row-ic"
-  }, /*#__PURE__*/React.createElement(IcMC, {
-    name: it.icon,
-    size: 18,
-    color: MC_GOLD_INK
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "mc-row-tx"
-  }, it.text), /*#__PURE__*/React.createElement(IcMC, {
-    name: "lucide:chevron-right",
-    size: 18,
-    color: "var(--mc-muted)"
-  }))))));
-}
-function MCUpgrade() {
-  return /*#__PURE__*/React.createElement("section", {
-    className: "mc-sec",
-    "data-screen-label": "Unlock more with Mastery"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "mc-ramp",
-    onClick: () => goMC(pageMC("tiers"))
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mc-ramp-tx"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "mc-ramp-title"
-  }, "Unlock more with Mastery"), /*#__PURE__*/React.createElement("span", {
-    className: "mc-ramp-body"
-  }, "Every course in the catalogue, live case reviews and the Mastery community channels."), /*#__PURE__*/React.createElement("span", {
-    className: "mc-ramp-cta"
-  }, "See what's included")), /*#__PURE__*/React.createElement("span", {
-    className: "mc-ramp-arrow",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(IcMC, {
-    name: "lucide:arrow-right",
-    size: 18,
-    color: "#7A4A03"
-  }))));
-}
-function MembershipHub() {
-  const done = M_MC.useDone();
-  const watch = M_MC.useWatch();
-  const prog = useMemoMC(() => M_MC.progress(done), [done]);
-  const scrollRef = useRefMC(null);
-  const {
-    hidden
-  } = useScrollChromeMC(scrollRef);
-  const back = M_MC.ret(pageMC("learning"));
-  return /*#__PURE__*/React.createElement("div", {
-    className: "mc-screen",
-    "data-screen-label": "My Membership · Confidence"
-  }, !MC_WEB && /*#__PURE__*/React.createElement(MCHeader, {
-    title: "My Membership",
-    back: back
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "mc-scroll",
-    ref: scrollRef
-  }, MC_WEB && /*#__PURE__*/React.createElement(MCCrumb, {
-    items: [{
-      label: "My Learning",
-      href: pageMC("learning")
-    }, {
-      label: "My Membership"
-    }]
-  }), /*#__PURE__*/React.createElement(MCHubHero, {
-    prog: prog
-  }), /*#__PURE__*/React.createElement(MCNextUp, {
-    done: done,
-    watch: watch
-  }), /*#__PURE__*/React.createElement(MCQuickAccess, {
-    prog: prog
-  }), /*#__PURE__*/React.createElement(MCLiveStrip, {
-    withArt: true
-  }), /*#__PURE__*/React.createElement(MCUpgrade, null), /*#__PURE__*/React.createElement("div", {
-    style: {
-      height: 24
-    }
-  })), !MC_WEB && /*#__PURE__*/React.createElement(MCTabBar, {
-    compact: hidden
-  }));
-}
-
 /* ================================================================ MAP ===== */
 function moduleMetaMC(m, mp) {
   const secs = m.lessons.reduce((s, l) => s + (l.secs || 0), 0);
@@ -897,7 +655,7 @@ function MembershipMap() {
   }, !MC_WEB && /*#__PURE__*/React.createElement(MCHeader, {
     title: "Learning Map",
     eyebrow: "Confidence membership",
-    back: M_MC.ret(pageMC("hub")),
+    back: M_MC.ret(pageMC("learning")),
     right: help_btn
   }), /*#__PURE__*/React.createElement("div", {
     className: "mc-scroll",
@@ -906,9 +664,6 @@ function MembershipMap() {
     items: [{
       label: "My Learning",
       href: pageMC("learning")
-    }, {
-      label: "My Membership",
-      href: pageMC("hub")
     }, {
       label: "Learning Map"
     }],
@@ -1329,7 +1084,7 @@ function TechniqueTuesdays() {
   }, !MC_WEB && /*#__PURE__*/React.createElement(MCHeader, {
     title: "Technique Tuesday",
     eyebrow: "Confidence membership",
-    back: M_MC.ret(pageMC("hub")),
+    back: M_MC.ret(pageMC("learning")),
     right: searchBtn
   }), /*#__PURE__*/React.createElement("div", {
     className: "mc-scroll",
@@ -1338,9 +1093,6 @@ function TechniqueTuesdays() {
     items: [{
       label: "My Learning",
       href: pageMC("learning")
-    }, {
-      label: "My Membership",
-      href: pageMC("hub")
     }, {
       label: "Technique Tuesday"
     }],
@@ -1480,7 +1232,6 @@ function MCCrumb({
   })))), right);
 }
 const MC_SCREENS = {
-  hub: MembershipHub,
   map: MembershipMap,
   tuesdays: TechniqueTuesdays
 };
@@ -1505,7 +1256,7 @@ function useIsMobileMC() {
   return mobile;
 }
 function MembershipApp() {
-  const Screen = MC_SCREENS[MC_PAGE] || MembershipHub;
+  const Screen = MC_SCREENS[MC_PAGE] || TechniqueTuesdays;
   const mobile = useIsMobileMC();
   const scale = useDeviceScaleMC();
   const vars = {

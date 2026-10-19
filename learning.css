@@ -695,6 +695,7 @@ img{max-width:100%}
 .lrn2-mem-head{display:flex;align-items:center;gap:14px;width:100%;padding:0;border:none;background:none;cursor:pointer;text-align:left;color:var(--brand-navy)}
 .lrn2-mem-badge{flex:none;display:inline-flex;align-items:center;gap:6px;padding:7px 13px 7px 10px;border-radius:999px;font-family:var(--font-sans);font-size:13px;font-weight:var(--fw-bold);color:#2B3440;
   background:linear-gradient(135deg,#E6EAF0,#A7B1BF);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 2px 6px rgba(12,25,40,.18)}
+.lrn2-mem-head-static{cursor:default}
 .lrn2-mem-head-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 .lrn2-mem-kicker{font-family:var(--font-sans);font-size:11px;font-weight:var(--fw-bold);letter-spacing:.12em;text-transform:uppercase;color:#8A5303}
 .lrn2-mem-title{font-family:"Times New Roman",Times,serif;font-weight:var(--fw-bold);font-size:26px;line-height:1.15;color:var(--brand-navy)}

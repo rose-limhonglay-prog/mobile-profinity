@@ -372,8 +372,8 @@ function LCTabBar({ compact }) {
 
 /* ---------------------------------------------------------------- my membership · technique tuesdays -- */
 /* Entry point into the Confidence membership journey (2026-10-15):
-   My Learning → My Membership (MembershipConfidence.html) → Technique
-   Tuesdays (TechniqueTuesdays.html) → lesson. Data is the REAL PROfinity
+   My Learning → Technique Tuesdays (TechniqueTuesdays.html) → lesson. (The
+   My Membership hub row/page was removed 2026-10-19 at the user's request.) Data is the REAL PROfinity
    Membership course via window.PFMembership (membership-data.js, loaded by
    the shell after learning-shared.js): lesson titles, numbers, durations and
    intros come from the app seed; nothing here is invented. The membership
@@ -387,7 +387,6 @@ const M_LC = window.PFMembership || null;
 if (M_LC && M_LC.seed) M_LC.seed(); /* idempotent demo baseline, before first render */
 
 const LC_MEMBERSHIP_URLS = {
-  hub: "MembershipConfidence.html",
   tuesdays: "TechniqueTuesdays.html"
 };
 
@@ -425,24 +424,6 @@ function LCTechniqueTuesdays({ done }) {
 
   return (
     <section className="lcm-sec" data-screen-label="Technique Tuesdays">
-      {/* My Membership row — the Confidence hub (Learning Map, modules, live sessions) */}
-      <div className="lcm-sec-h lcm-sec-h-eyebrow">
-        <h2 className="lcm-eyebrow lcm-eyebrow-gold">My membership</h2>
-        <span className="sub">{M_LC.TIER_NAME}</span>
-      </div>
-      <button type="button" className="lcm-card lcm-mem" onClick={() => goLC(withThemeLC(LC_MEMBERSHIP_URLS.hub))} aria-label="Open my Confidence membership">
-        <span className="lcm-res-ic" aria-hidden="true">
-          <DSLC.IconifyIcon name="lucide:graduation-cap" size={22} color={LC_INK.gold} />
-        </span>
-        <span className="lcm-res-tx">
-          <span className="lcm-res-title">{M_LC.TITLE}</span>
-          <span className="lcm-res-sub">Learning Map, {M_LC.MODULES.length} modules and the weekly live session — everything in Confidence.</span>
-        </span>
-        <span className="lcm-prog-arrow" aria-hidden="true">
-          <DSLC.IconifyIcon name="lucide:chevron-right" size={20} color={LC_INK.muted} />
-        </span>
-      </button>
-
       {/* Technique Tuesdays banner — the latest real session, Watch now */}
       <div className="lcm-sec-h lcm-tt-h">
         <div>

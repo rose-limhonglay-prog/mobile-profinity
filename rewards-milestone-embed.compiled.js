@@ -135,6 +135,13 @@
       leagues = p.leagues,
       mine = p.index;
     const target = href || "Leaderboard.html";
+    /* points bracket per league (user, 2026-10-19: "the bracketing points in
+       every league") — "6,000 – 14,999" / "60,000+" for the last one */
+    const bracket = i => {
+      const l = leagues[i],
+        nx = leagues[i + 1];
+      return nx ? fmt(l.requires) + " – " + fmt(nx.requires - 1) : fmt(l.requires) + "+";
+    };
     return /*#__PURE__*/React.createElement("section", {
       className: "rme-league",
       style: {
@@ -154,7 +161,7 @@
       }
     }, cur.name, " League"), /*#__PURE__*/React.createElement("p", {
       className: "rme-league-sub"
-    }, (p.preview ? "Preview · " : "Your league · ") + "rolling 30-day points")), /*#__PURE__*/React.createElement("div", {
+    }, (p.preview ? "Preview · " : "") + bracket(mine) + " pts")), /*#__PURE__*/React.createElement("div", {
       className: "rme-rail",
       ref: railRef
     }, leagues.map((l, i) => {
@@ -183,9 +190,9 @@
         name: "lucide:lock",
         size: 16,
         color: "#fff"
-      }))), isMine && /*#__PURE__*/React.createElement("span", {
-        className: "rme-rail-you"
-      }, "You"));
+      }))), /*#__PURE__*/React.createElement("span", {
+        className: "rme-rail-pts"
+      }, l.name), "   ");
     })));
   }
 
@@ -237,9 +244,9 @@
       color: "var(--gray-600)"
     }))), /*#__PURE__*/React.createElement("p", {
       className: "rme-help-p"
-    }, "Six levels, one journey — from Jade at 0 pts to Sapphire at 60,000 pts. Each league badge unlocks a single one-time perk the moment your Lifetime Points reach it."), /*#__PURE__*/React.createElement("p", {
+    }, "Six leagues, Jade to Sapphire. Each one unlocks a reward."), /*#__PURE__*/React.createElement("p", {
       className: "rme-help-p"
-    }, "Points are lifetime: they are never spent and never expire, so every perk you unlock stays yours for good."), /*#__PURE__*/React.createElement("button", {
+    }, "Your points never expire."), /*#__PURE__*/React.createElement("button", {
       type: "button",
       className: "rme-help-ok",
       onClick: onClose
@@ -544,16 +551,22 @@
       return () => cancelAnimationFrame(t);
     }, []);
     const offset = WK_LEN * (1 - (on ? pct : 0) / 100);
-    const maxDay = Math.max(1, ...days.map(d => d.points));
+    /* "fun and simple" (user, 2026-10-19, members are mostly 60+): one big
+       number, one short line, a gold coin per day you earned something (no
+       bar heights, no 0/goal scale), and a one-line pace note. */
     const dayLabel = d => d.date.toLocaleDateString("en-GB", {
       weekday: "short",
       day: "numeric",
       month: "short"
     });
+    const dayName = d => d.today ? "Today" : d.date.toLocaleDateString("en-GB", {
+      weekday: "short"
+    });
+    const toGo = Math.max(0, goal - pts);
     return /*#__PURE__*/React.createElement("section", {
       className: "rme-wk" + (reached ? " is-reached" : ""),
-      "aria-label": title || "Last 7 days",
-      "data-screen-label": "Last 7 days",
+      "aria-label": title || "This week",
+      "data-screen-label": "This week",
       "data-tour": "week"
     }, /*#__PURE__*/React.createElement("div", {
       className: "rme-wk-gauge",
@@ -561,7 +574,7 @@
       "aria-valuemin": 0,
       "aria-valuemax": goal,
       "aria-valuenow": Math.min(pts, goal),
-      "aria-label": fmt(pts) + " points earned in the last 7 days, weekly goal " + fmt(goal)
+      "aria-label": fmt(pts) + " points this week, goal " + fmt(goal)
     }, /*#__PURE__*/React.createElement("svg", {
       viewBox: "0 0 200 110",
       "aria-hidden": "true",
@@ -578,80 +591,86 @@
       }
     })), /*#__PURE__*/React.createElement("div", {
       className: "rme-wk-val"
-    }, /*#__PURE__*/React.createElement("b", null, fmt(pts)), /*#__PURE__*/React.createElement("span", null, "pts"), /*#__PURE__*/React.createElement("i", null, "earned in the last 7 days"))), /*#__PURE__*/React.createElement("div", {
-      className: "rme-wk-scale",
-      "aria-hidden": "true"
-    }, /*#__PURE__*/React.createElement("span", null, "0"), /*#__PURE__*/React.createElement("span", null, fmt(goal), " goal")), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("b", null, fmt(pts)), /*#__PURE__*/React.createElement("i", null, "points this week"))), /*#__PURE__*/React.createElement("div", {
       className: "rme-wk-note"
-    }, reached ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
-      name: "lucide:check-circle",
-      size: 15,
-      color: "var(--success, #2a9568)"
-    }), /*#__PURE__*/React.createElement("span", null, "Weekly goal reached · ", /*#__PURE__*/React.createElement("b", null, fmt(pts - goal), " pts"), " over")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Icon, {
+    }, reached ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+      className: "rme-wk-note-ic is-done",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:party-popper",
+      size: 18,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("span", null, "Goal reached!")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+      className: "rme-wk-note-ic",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement(Icon, {
       name: "lucide:target",
-      size: 15,
-      color: "#9C6A0E"
-    }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, fmt(goal - pts), " pts"), " to your weekly goal"))), /*#__PURE__*/React.createElement("div", {
+      size: 18,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, fmt(toGo), " pts"), " to go"))), /*#__PURE__*/React.createElement("div", {
       className: "rme-wk-days",
       role: "list",
-      "aria-label": "Points per day"
-    }, days.map(d => /*#__PURE__*/React.createElement("div", {
+      "aria-label": "Points each day"
+    }, days.map((d, i) => /*#__PURE__*/React.createElement("div", {
       key: d.key,
       role: "listitem",
-      className: "rme-wk-day" + (d.today ? " is-today" : "") + (d.points ? "" : " is-empty"),
+      className: "rme-wk-day" + (d.today ? " is-today" : "") + (d.points ? " is-earned" : " is-empty"),
+      style: {
+        "--i": i
+      },
       title: dayLabel(d) + " · " + fmt(d.points) + " pts",
       "aria-label": dayLabel(d) + ": " + fmt(d.points) + " points"
     }, /*#__PURE__*/React.createElement("span", {
-      className: "rme-wk-bar"
-    }, /*#__PURE__*/React.createElement("i", {
-      style: {
-        height: (d.points ? Math.max(3, Math.round(d.points / maxDay * 34)) : 0) + "px"
-      }
-    })), /*#__PURE__*/React.createElement("span", {
+      className: "rme-wk-coin",
+      "aria-hidden": "true"
+    }, d.points ? /*#__PURE__*/React.createElement(Icon, {
+      name: "lucide:star",
+      size: 18,
+      color: "#fff"
+    }) : null), /*#__PURE__*/React.createElement("span", {
       className: "rme-wk-lb"
-    }, d.today ? "Today" : d.date.toLocaleDateString("en-GB", {
-      weekday: "narrow"
-    }))))), pace && !pace.top ? /*#__PURE__*/React.createElement("div", {
+    }, dayName(d))))), pace && !pace.top ? /*#__PURE__*/React.createElement("div", {
       className: "rme-wk-pace"
     }, /*#__PURE__*/React.createElement(Icon, {
-      name: "lucide:trending-up",
-      size: 14,
+      name: "lucide:rocket",
+      size: 18,
       color: "currentColor"
-    }), /*#__PURE__*/React.createElement("span", null, "At this pace, ", /*#__PURE__*/React.createElement("b", null, pace.league, " League"), " in about ", pace.days, " ", pace.days === 1 ? "day" : "days", " · ", fmt(pace.need), " pts to go")) : null, pace && pace.top ? /*#__PURE__*/React.createElement("div", {
+    }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, pace.league, " League"), " in about ", pace.days, " ", pace.days === 1 ? "day" : "days")) : null, pace && pace.top ? /*#__PURE__*/React.createElement("div", {
       className: "rme-wk-pace"
     }, /*#__PURE__*/React.createElement(Icon, {
       name: "lucide:trophy",
-      size: 14,
+      size: 18,
       color: "currentColor"
-    }), /*#__PURE__*/React.createElement("span", null, "Top of the path — every perk is yours for good")) : null);
+    }), /*#__PURE__*/React.createElement("span", null, "You're at the top!")) : null);
   }
 
   /* ---------------------------------------------------------------- tour */
   const TOUR_SEEN = "pf-rewards-tour-seen";
-  const TOUR_STEPS = [{
+  const TOUR_STEPS = [/* short and plain (user, 2026-10-19: members are mostly 60+) */
+  {
     key: "league",
-    title: "Your league badge",
-    body: "Six gem leagues, Jade to Sapphire. Your lifetime points decide which one you hold — tap a gem to open the leaderboard."
+    title: "Your badge",
+    body: "Earn points to move up a league."
   }, {
     key: "leaderboard",
-    title: "Where you rank",
-    body: "Your place in this league on rolling 30-day points, and who's just ahead of you."
+    title: "Your place",
+    body: "Where you are in your league."
   }, {
     key: "stats",
     title: "Points and streak",
-    body: "Points are lifetime — never spent, never expired. Check in daily to keep the streak alive."
+    body: "Your points never expire. Check in daily to keep your streak."
   }, {
     key: "earn",
     title: "Ways to Earn",
-    body: "Every point-earning action in one list. Tap any row to see how it works."
+    body: "Every way to earn points, in one list."
   }, {
     key: "path",
     title: "My Rewards",
-    body: "Each of the six leagues unlocks one one-time perk the moment you reach it — redeem them here."
+    body: "Each league unlocks a reward."
   }, {
     key: "week",
-    title: "Last 7 days",
-    body: "Points earned this week against your weekly goal, and your pace to the next league."
+    title: "This week",
+    body: "The points you earned this week."
   }];
   function rwReduce() {
     return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);

@@ -278,7 +278,6 @@
 /* ===== My membership · Technique Tuesdays entry (2026-10-15) =====
    Banner = the real "Technique Tuesday · Every week" artwork with a navy
    scrim; tiles are numbered placeholders for the non-public session posters. */
-.lcm-mem { margin-bottom: 26px; }
 .lcm-tt-h { align-items: flex-end; margin-bottom: 6px; }
 .lcm-tt-title { margin: 4px 0 0; font-family: var(--font-title); font-weight: var(--fw-bold); font-size: 24px; line-height: 1.15; color: var(--lcm-text); }
 .lcm-tt-all { flex: none; margin-bottom: 2px; padding: 6px 2px; border: none; background: none; cursor: pointer;

@@ -3,7 +3,7 @@
    Plain script exposing window.PFMembership. Load AFTER learning-shared.js
    (it registers the membership curriculum into PFLearnShared.CURRICULA) and
    BEFORE any page bundle that reads it: LearningMobile / MyLearning,
-   MembershipConfidence / MembershipMap / TechniqueTuesdays (+ web twins),
+   MembershipMap / TechniqueTuesdays (+ web twins),
    CourseDetail* / CourseWeb / LessonWeb.
 
    CONTENT IS REAL: every module and lesson below is the "PROfinity Membership"
@@ -238,8 +238,9 @@
 
   /* ---------------------------------------------------------------- URLs -- */
   M.PAGES = {
-    hub: "MembershipConfidence.html", map: "MembershipMap.html", tuesdays: "TechniqueTuesdays.html",
-    hubWeb: "MembershipConfidenceWeb.html", mapWeb: "MembershipMapWeb.html", tuesdaysWeb: "TechniqueTuesdaysWeb.html",
+    map: "MembershipMap.html", tuesdays: "TechniqueTuesdays.html",
+    mapWeb: "MembershipMapWeb.html", tuesdaysWeb: "TechniqueTuesdaysWeb.html",
+    /* the My Membership hub (MembershipConfidence(.Web).html) was removed 2026-10-19 */
     learning: "LearningMobile.html", learningWeb: "MyLearning.html", course: "CourseDetail.html", courseWeb: "CourseWeb.html", lessonWeb: "LessonWeb.html"
   };
   M.thisPage = function () { return window.location.pathname.split("/").pop() || "index.html"; };

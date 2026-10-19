@@ -194,11 +194,7 @@ function LBLeagueRail({
     }, "+", PF_LB.formatNumber(needFor(i)), " pts"), !mine && !locked && /*#__PURE__*/React.createElement("span", {
       className: "lb-rail-got",
       "aria-hidden": "true"
-    }, /*#__PURE__*/React.createElement(DSLB.IconifyIcon, {
-      name: "lucide:check",
-      size: 10,
-      color: "currentColor"
-    }), "Earned"));
+    }, l.name), "   ");
   }));
 }
 function prizeForLB(config, rank) {
@@ -240,17 +236,13 @@ function LBPodium({
       flex: "none"
     }
   })), /*#__PURE__*/React.createElement("span", {
-    className: "lb-pod-rank"
-  }, "#", r.rank), /*#__PURE__*/React.createElement("span", {
     className: "lb-pod-name"
   }, /*#__PURE__*/React.createElement(ProfileLinkLB, {
     author: lbAuthor(r),
     className: "pf-prof-nm"
   }, r.name, r.isKaty ? " (You)" : "")), /*#__PURE__*/React.createElement("span", {
     className: "lb-pod-pts"
-  }, PF_LB.formatNumber(r.points), " pts"), prizeFor(r.rank) && /*#__PURE__*/React.createElement("span", {
-    className: "lb-pod-prize"
-  }, prizeFor(r.rank)))));
+  }, PF_LB.formatNumber(r.points), " pts"))));
 }
 function LBRow({
   r,
@@ -287,7 +279,7 @@ function LBRow({
   }, /*#__PURE__*/React.createElement("b", null, /*#__PURE__*/React.createElement(ProfileLinkLB, {
     author: lbAuthor(r),
     className: "pf-prof-nm"
-  }, r.name, r.isKaty ? " (You)" : "")), prizeFor(r.rank) && /*#__PURE__*/React.createElement("i", null, prizeFor(r.rank))), /*#__PURE__*/React.createElement("span", {
+  }, r.name, r.isKaty ? " (You)" : ""))), /*#__PURE__*/React.createElement("span", {
     className: "pts"
   }, PF_LB.formatNumber(r.points)), /*#__PURE__*/React.createElement("span", {
     className: "tr",
@@ -373,7 +365,6 @@ function LeaderboardScreen() {
   const prizeFor = rank => prizeForLB(config, rank);
   const top3 = ranked.slice(0, 3);
   const me = ranked.find(r => r.isKaty);
-  const ahead = me ? ranked.find(r => r.rank === me.rank - 1) : null;
   const needFor = idx => Math.max(0, leagues[idx].requires - progress.points);
   const vars = {
     "--lg-accent": league.accent,
@@ -407,7 +398,7 @@ function LeaderboardScreen() {
     }
   }, league.name, " League"), /*#__PURE__*/React.createElement("p", {
     className: "lb-sub"
-  }, isMine ? (progress.preview ? "Preview · " : "Your league · ") + "rolling 30-day points" : locked ? "Locked · " + PF_LB.formatNumber(needFor(selected)) + " more pts to unlock" : "Earned · you've moved up from here")), /*#__PURE__*/React.createElement(LBLeagueRail, {
+  }, isMine ? progress.preview ? "Preview" : "Your league" : locked ? PF_LB.formatNumber(needFor(selected)) + " pts to unlock" : "Earned")), /*#__PURE__*/React.createElement(LBLeagueRail, {
     leagues: leagues,
     myIndex: myIndex,
     selected: selected,
@@ -416,22 +407,7 @@ function LeaderboardScreen() {
   }), /*#__PURE__*/React.createElement(LBPodium, {
     rows: top3,
     prizeFor: prizeFor
-  }), isMine && me && /*#__PURE__*/React.createElement("div", {
-    className: "lb-you",
-    "data-screen-label": "Your standing"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ic"
-  }, /*#__PURE__*/React.createElement(DSLB.IconifyIcon, {
-    name: "lucide:flag",
-    size: 20,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, "You're #", me.rank, " with ", PF_LB.formatNumber(me.points), " pts"), /*#__PURE__*/React.createElement("i", null, ahead ? PF_LB.formatNumber(ahead.points - me.points) + " pts behind " + ahead.name : "You're leading the board!")), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lb-you-cta",
-    onClick: () => goLB("RewardsDashboard.html")
-  }, "Earn points")), locked && /*#__PURE__*/React.createElement("div", {
+  }), locked && /*#__PURE__*/React.createElement("div", {
     className: "lb-you lb-you-locked",
     "data-screen-label": "Locked league"
   }, /*#__PURE__*/React.createElement("span", {

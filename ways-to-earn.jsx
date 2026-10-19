@@ -206,6 +206,81 @@ function HowItWorksStage({ steps, pts, ink, a, b }) {
   );
 }
 
+/* Dr Tim demo "video" (user, 2026-10-19): a header button with his animated
+   avatar opens a short auto-playing walkthrough of how the rewards work —
+   five captioned scenes over ~18s with a segmented progress bar, play/pause
+   and replay. Plain words, big type (members are mostly 60+). ?demo=1 opens it. */
+const WTE_DEMO_SCENES = [
+  { icon: "lucide:coins",        say: "Earn points every day.",       sub: "Check in, post, learn." },
+  { icon: "lucide:gem",          say: "Points move you up.",          sub: "Jade to Sapphire." },
+  { icon: "lucide:gift",         say: "Each league unlocks a reward.", sub: "Six leagues, six rewards." },
+  { icon: "lucide:ticket",       say: "Redeem it on My Rewards.",     sub: "Tap the reward, get your code." },
+  { icon: "lucide:shield-check", say: "Your points never expire.",    sub: "Keep earning, keep climbing." }
+];
+const WTE_DEMO_MS = 3600;
+function RewardsDemoSheet({ onClose }) {
+  const still = reduceMotionWTE();
+  const n = WTE_DEMO_SCENES.length;
+  const [i, setI] = useStateWTE(0);
+  const [playing, setPlaying] = useStateWTE(!still);
+  const [ended, setEnded] = useStateWTE(false);
+  const [tick, setTick] = useStateWTE(0);           // restarts the fill animation per scene
+  useEffectWTE(() => {
+    if (!playing || ended) return;
+    const t = setTimeout(() => {
+      if (i >= n - 1) { setEnded(true); setPlaying(false); }
+      else { setI(i + 1); setTick((x) => x + 1); }
+    }, WTE_DEMO_MS);
+    return () => clearTimeout(t);
+  }, [i, playing, ended]);
+  useEffectWTE(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  const jump = (k) => { setI(k); setTick((x) => x + 1); setEnded(false); setPlaying(!still); };
+  const replay = () => jump(0);
+  const toggle = () => { if (ended) return replay(); setPlaying((p) => !p); setTick((x) => x + 1); };
+  const sc = WTE_DEMO_SCENES[i];
+  return (
+    <div className="wte-scrim" onClick={onClose}>
+      <div className="wte-sheet wte-demo" role="dialog" aria-modal="true" aria-labelledby="wte-demo-title" onClick={(e) => e.stopPropagation()}>
+        <span className="wte-sheet-handle" aria-hidden="true" />
+        <div className="wte-sheet-head">
+          <div className="wte-sheet-tx">
+            <span className="wte-sheet-cat">Dr Tim shows you</span>
+            <h2 id="wte-demo-title">How rewards work</h2>
+          </div>
+          <button type="button" className="wte-sheet-close" aria-label="Close" onClick={onClose}><DSWTE.IconifyIcon name="lucide:x" size={18} color="var(--gray-600)" /></button>
+        </div>
+        <div className={"wte-video" + (playing ? " is-playing" : "") + (ended ? " is-ended" : "")} aria-live="polite">
+          <span className="wte-video-tag"><span className="wte-video-dot" />Demo</span>
+          <div className="wte-video-body">
+            <span className={"wte-video-doc" + (ended ? " is-happy" : "")}><DrTimWTE mood={ended ? "happy" : "welcome"} size={112} /></span>
+            <div className="wte-video-cap" key={i + ":" + ended}>
+              <span className="wte-video-ic"><DSWTE.IconifyIcon name={ended ? "lucide:party-popper" : sc.icon} size={22} color="#3D2A00" /></span>
+              <b>{ended ? "That's it!" : sc.say}</b>
+              <i>{ended ? "Go and earn your first points." : sc.sub}</i>
+            </div>
+          </div>
+          <div className="wte-video-bar" role="progressbar" aria-valuemin={1} aria-valuemax={n} aria-valuenow={i + 1} aria-label={"Scene " + (i + 1) + " of " + n}>
+            {WTE_DEMO_SCENES.map((s, k) => (
+              <button key={k} type="button" className={"wte-video-seg" + (k < i || ended ? " is-done" : k === i ? " is-now" : "")} aria-label={"Scene " + (k + 1)} onClick={() => jump(k)}>
+                <span key={tick} className="wte-video-fill" style={{ animationDuration: WTE_DEMO_MS + "ms", animationPlayState: playing && !ended ? "running" : "paused" }} />
+              </button>
+            ))}
+          </div>
+          <button type="button" className="wte-video-play" aria-label={ended ? "Replay" : playing ? "Pause" : "Play"} onClick={toggle}>
+            <DSWTE.IconifyIcon name={ended ? "lucide:rotate-ccw" : playing ? "lucide:pause" : "lucide:play"} size={20} color="#fff" />
+          </button>
+          {ended && <button type="button" className="wte-video-replay" onClick={replay}><DSWTE.IconifyIcon name="lucide:rotate-ccw" size={16} color="currentColor" />Watch again</button>}
+        </div>
+        <button type="button" className="wte-sheet-btn" onClick={onClose}><DSWTE.IconifyIcon name="lucide:check" size={16} color="currentColor" />Got it</button>
+      </div>
+    </div>
+  );
+}
+
 function HowItWorksSheet({ action, cat, projected, done, onEarn, onClose }) {
   const steps = sceneWTE(action);
   useEffectWTE(() => {
@@ -249,6 +324,7 @@ function WaysToEarnScreen() {
   const screenRef = useRefWTE(null);
   /* "How it works" sheet — ?how=<actionId> opens it on load */
   const [howId, setHowId] = useStateWTE(() => { try { return new URLSearchParams(location.search).get("how"); } catch (e) { return null; } });
+  const [demoOpen, setDemoOpen] = useStateWTE(() => { try { return new URLSearchParams(location.search).get("demo") === "1"; } catch (e) { return false; } });
   const closeHow = React.useCallback(() => setHowId(null), []);
 
   /* Stay in step with the rest of the prototype (Profile targets, Rewards
@@ -289,7 +365,11 @@ function WaysToEarnScreen() {
       <div className="ml-top">
         <button className="ml-back" aria-label="Back" onClick={() => goWTE(retWTE())}><DSWTE.IconifyIcon name="lucide:chevron-left" size={24} color="var(--gray-900)" /></button>
         <h1>Ways to Earn</h1>
-        <span />
+        {/* Dr Tim demo button (user, 2026-10-19): his animated avatar, tap → the how-rewards-work video sheet */}
+        <button type="button" className="wte-demo-btn" aria-label="Watch how rewards work" aria-haspopup="dialog" onClick={() => setDemoOpen(true)}>
+          <span className="wte-demo-av"><DrTimWTE mood="welcome" size={44} /></span>
+          <span className="wte-demo-play" aria-hidden="true"><DSWTE.IconifyIcon name="lucide:play" size={10} color="#fff" /></span>
+        </button>
       </div>
       <div className="ml-scroll wte-scroll">
 
@@ -332,6 +412,7 @@ function WaysToEarnScreen() {
         return <HowItWorksSheet action={a} cat={c} projected={Math.round(a.basePoints * PF_WTE.tierMultiplierFor(a, tier))} done={isExhaustedWTE(a, state)}
           onEarn={(act, el) => { earn(act, el); setHowId(null); }} onClose={closeHow} />;
       })()}
+      {demoOpen && <RewardsDemoSheet onClose={() => setDemoOpen(false)} />}
       {toast && <div className={"ml-toast wte-toast " + toast.kind} role="status"><DSWTE.IconifyIcon name={toast.kind === "win" ? "lucide:zap" : "lucide:clock"} size={16} color={toast.kind === "win" ? "#FDBF38" : "#fff"} />{toast.text}</div>}
     </div>
   );

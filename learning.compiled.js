@@ -255,11 +255,8 @@ function MembershipCard() {
     "data-screen-label": "My Membership · Confidence"
   }, /*#__PURE__*/React.createElement("div", {
     className: "lrn2-mem-left"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lrn2-mem-head",
-    onClick: () => go(P.hubWeb),
-    "aria-label": "Open My Membership"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lrn2-mem-head lrn2-mem-head-static"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lrn2-mem-badge"
   }, /*#__PURE__*/React.createElement(IconifyIcon, {
@@ -272,14 +269,7 @@ function MembershipCard() {
     className: "lrn2-mem-kicker"
   }, "My Membership"), /*#__PURE__*/React.createElement("span", {
     className: "lrn2-mem-title"
-  }, "Welcome back, ", ME.name.split(" ")[0])), /*#__PURE__*/React.createElement("span", {
-    className: "lrn2-mem-arrow",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:chevron-right",
-    size: 20,
-    color: "currentColor"
-  }))), /*#__PURE__*/React.createElement("div", {
+  }, "Welcome back, ", ME.name.split(" ")[0]))), /*#__PURE__*/React.createElement("div", {
     className: "lrn2-mem-prog",
     role: "progressbar",
     "aria-valuenow": prog.pct,
@@ -294,15 +284,7 @@ function MembershipCard() {
     }
   })), /*#__PURE__*/React.createElement("span", {
     className: "lrn2-mem-stat"
-  }, /*#__PURE__*/React.createElement("b", null, prog.done), " of ", prog.total, " lessons · ", PFM_W.fmtHours(prog.secs), " watched · ", prog.tt.done, " of ", prog.tt.total, " Tuesdays")), /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lrn2-mem-open",
-    onClick: () => go(P.hubWeb)
-  }, "Open My Membership", /*#__PURE__*/React.createElement(IconifyIcon, {
-    name: "lucide:arrow-right",
-    size: 16,
-    color: "currentColor"
-  }))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("b", null, prog.done), " of ", prog.total, " lessons · ", PFM_W.fmtHours(prog.secs), " watched · ", prog.tt.done, " of ", prog.tt.total, " Tuesdays"))), /*#__PURE__*/React.createElement("div", {
     className: "lrn2-mem-grid"
   }, tiles.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,

@@ -155,7 +155,7 @@ function MilestoneNodeMP({
     className: "mp-node-title"
   }, league ? /*#__PURE__*/React.createElement(GemMP, {
     src: league.lottie,
-    size: 40,
+    size: 48,
     play: status === "current"
   }) : null, /*#__PURE__*/React.createElement("span", {
     className: "mp-node-name"
@@ -170,46 +170,23 @@ function MilestoneNodeMP({
   }, milestone.benefits.map((b, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
     type: "button",
-    className: "mp-benefit-row",
+    className: "mp-prize" + (status === "locked" ? " is-locked" : "") + (status === "passed" && !redeemed ? " is-ready" : "") + (redeemed ? " is-redeemed" : ""),
     onClick: () => goMP(landingMP(milestone.key)),
-    "aria-label": b.title + (status === "passed" ? ", unlocked" : ", locked") + ". View reward"
+    "aria-label": b.title + (redeemed ? ", redeemed" : status === "passed" ? ", ready to redeem" : ", locked") + ". Open reward"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-benefit-ic",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
-    name: redeemed ? "lucide:ticket" : status === "locked" ? "lucide:lock" : "lucide:gift",
-    size: 15,
-    color: status === "locked" ? "var(--gray-400)" : "var(--brand-gold)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "mp-benefit-copy"
+    className: "mp-prize-tx"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "mp-benefit-title"
+    className: "mp-prize-title"
   }, b.title), /*#__PURE__*/React.createElement("span", {
-    className: "mp-benefit-desc"
-  }, b.description), b.delivery ? /*#__PURE__*/React.createElement("span", {
-    className: "mp-benefit-delivery"
-  }, b.delivery) : null, /*#__PURE__*/React.createElement("span", {
-    className: "mp-benefit-cta" + (status === "passed" && !redeemed ? " is-redeem" : "")
-  }, redeemed ? "Redeemed · view your reward" : status === "passed" ? "Redeem this perk" : "See this reward")), /*#__PURE__*/React.createElement("span", {
-    className: "mp-benefit-chev",
+    className: "mp-prize-desc"
+  }, b.description)), /*#__PURE__*/React.createElement("span", {
+    className: "mp-prize-chev",
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
     name: "lucide:chevron-right",
-    size: 16,
-    color: "var(--gray-400)"
-  }))))), status === "passed" && /*#__PURE__*/React.createElement("div", {
-    className: "mp-node-tag mp-node-tag-passed"
-  }, /*#__PURE__*/React.createElement(DSMP.IconifyIcon, {
-    name: "lucide:check-circle",
-    size: 12,
+    size: 20,
     color: "currentColor"
-  }), milestone.threshold > 0 ? "Badge earned — yours for good" : "Your starting league", reached && milestone.threshold > 0 ? /*#__PURE__*/React.createElement("span", {
-    className: "mp-node-when"
-  }, " · ", reached) : null), status === "current" && /*#__PURE__*/React.createElement("div", {
-    className: "mp-node-tag mp-node-tag-current"
-  }, "Next league — unlocks automatically"), status === "locked" && /*#__PURE__*/React.createElement("div", {
-    className: "mp-node-tag mp-node-tag-locked"
-  }, "Locked")));
+  })))))));
 }
 
 /* Tapping a benefit row opens the reward's own landing page
@@ -265,9 +242,9 @@ function MilestoneHelpSheetMP({
     color: "var(--gray-600)"
   }))), /*#__PURE__*/React.createElement("p", {
     className: "mp-help-p"
-  }, "Six levels, one journey — from Jade at 0 pts to Sapphire at 60,000 pts. The moment your Lifetime Points reach a league you move up and its single one-time perk unlocks."), /*#__PURE__*/React.createElement("p", {
+  }, "Six leagues, Jade to Sapphire. Each one unlocks a reward."), /*#__PURE__*/React.createElement("p", {
     className: "mp-help-p"
-  }, "Points are lifetime: they are never spent and never expire, so every perk you unlock stays yours for good."), /*#__PURE__*/React.createElement("button", {
+  }, "Your points never expire."), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "mp-help-ok",
     onClick: onClose
@@ -347,14 +324,8 @@ function LeagueProgressMP() {
       background: "linear-gradient(90deg, var(--lg-accent), var(--nx-accent))"
     }
   })), /*#__PURE__*/React.createElement("span", {
-    className: "mp-lg-scale"
-  }, /*#__PURE__*/React.createElement("span", null, PF_MP.formatNumber(p.points), next ? " of " + PF_MP.formatNumber(next.requires) : "", " pts"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "var(--nx-deep)"
-    }
-  }, next ? "Unlocks at " + PF_MP.formatNumber(next.requires) + " pts" : "Complete")), /*#__PURE__*/React.createElement("span", {
     className: "mp-lg-note"
-  }, next ? PF_MP.formatNumber(p.need) + " more pts to " + next.name + " League" : "You've reached Sapphire — the whole path, every benefit, is yours.")), /*#__PURE__*/React.createElement("span", {
+  }, next ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, PF_MP.formatNumber(p.need), " pts"), " to go") : "You're at the top!")), /*#__PURE__*/React.createElement("span", {
     className: "mp-lg-gem next" + (next ? " locked" : "")
   }, /*#__PURE__*/React.createElement(GemMP, {
     src: edge.lottie,
@@ -367,6 +338,31 @@ function LeagueProgressMP() {
     size: 12,
     color: "#fff"
   })) : null));
+}
+
+/* header points pill (user, 2026-10-19): the member's lifetime points next to
+   the Redeemed-rewards button — same smiley Lottie + amber number as the
+   PointsPillC in the shared mobile header. Tap → Rewards dashboard. */
+const MP_PTS_LOTTIE = "https://lottie.host/f5203bff-edd1-4727-a629-2a619bbe4edc/ArWGbXL6R3.json";
+function PointsPillMP({
+  state
+}) {
+  const pts = Math.max(0, Math.round(state.lifetimePoints || 0));
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "mp-pts",
+    "aria-label": PF_MP.formatNumber(pts) + " points. Open Rewards",
+    onClick: () => goMP("RewardsDashboard.html")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "mp-pts-ic",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(GemMP, {
+    src: MP_PTS_LOTTIE,
+    size: 30,
+    play: true
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "mp-pts-n"
+  }, PF_MP.formatNumber(pts)));
 }
 function MilestonePathScreen() {
   const [state, setState] = useStateMP(() => PF_MP.getState());
@@ -408,7 +404,9 @@ function MilestonePathScreen() {
     name: "lucide:chevron-left",
     size: 24,
     color: "var(--gray-900)"
-  })), /*#__PURE__*/React.createElement("h1", null, "My Rewards"), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("h1", null, "My Rewards"), /*#__PURE__*/React.createElement(PointsPillMP, {
+    state: state
+  }), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "ml-top-action mp-redeemed-btn",
     "aria-label": "Redeemed rewards, " + redeemedCount + " redeemed",
@@ -421,7 +419,7 @@ function MilestonePathScreen() {
     className: "mp-redeemed-badge"
   }, redeemedCount) : null)), /*#__PURE__*/React.createElement("div", {
     className: "ml-scroll mp-scroll"
-  }, /*#__PURE__*/React.createElement(LeagueProgressMP, null), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "mp-path"
   }, path.map((m, i) => {
     const status = passedKeys.has(m.key) ? "passed" : m.key === currentKey ? "current" : "locked";

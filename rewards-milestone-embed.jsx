@@ -80,11 +80,14 @@
     if (!p || !p.current) return null;
     const cur = p.current, leagues = p.leagues, mine = p.index;
     const target = href || "Leaderboard.html";
+    /* points bracket per league (user, 2026-10-19: "the bracketing points in
+       every league") — "6,000 – 14,999" / "60,000+" for the last one */
+    const bracket = (i) => { const l = leagues[i], nx = leagues[i + 1]; return nx ? fmt(l.requires) + " – " + fmt(nx.requires - 1) : fmt(l.requires) + "+"; };
     return (
       <section className="rme-league" style={{ "--lg-accent": cur.accent, "--lg-deep": cur.deep, "--lg-soft": cur.soft }} aria-label={cur.name + " League"} data-screen-label="League badges" data-tour="league">
         <div className="rme-league-head">
           <h2 className="rme-league-title" style={{ color: cur.deep }}>{cur.name} League</h2>
-          <p className="rme-league-sub">{(p.preview ? "Preview · " : "Your league · ") + "rolling 30-day points"}</p>
+          <p className="rme-league-sub">{(p.preview ? "Preview · " : "") + bracket(mine) + " pts"}</p>
         </div>
         <div className="rme-rail" ref={railRef}>
           {leagues.map((l, i) => {
@@ -99,7 +102,8 @@
                   <Gem src={l.lottie} size={isMine ? 96 : 66} play={isMine} />
                   {locked && <span className="rme-rail-lock"><Icon name="lucide:lock" size={16} color="#fff" /></span>}
                 </span>
-                {isMine && <span className="rme-rail-you">You</span>}
+                {/* "You" pill removed (user, 2026-10-19) — the big playing gem + coloured name mark your league */}
+                <span className="rme-rail-pts">{l.name}</span>   {/* league name under each gem (user, 2026-10-19; was the points bracket) */}
               </button>
             );
           })}
@@ -126,8 +130,8 @@
             <h2 id="rme-help-title">How the path works</h2>
             <button type="button" className="rme-help-close" aria-label="Close" onClick={onClose}><Icon name="lucide:x" size={18} color="var(--gray-600)" /></button>
           </div>
-          <p className="rme-help-p">Six levels, one journey — from Jade at 0 pts to Sapphire at 60,000 pts. Each league badge unlocks a single one-time perk the moment your Lifetime Points reach it.</p>
-          <p className="rme-help-p">Points are lifetime: they are never spent and never expire, so every perk you unlock stays yours for good.</p>
+          <p className="rme-help-p">Six leagues, Jade to Sapphire. Each one unlocks a reward.</p>
+          <p className="rme-help-p">Your points never expire.</p>
           <button type="button" className="rme-help-ok" onClick={onClose}>Got it</button>
         </div>
       </div>
@@ -286,35 +290,38 @@
     const [on, setOn] = useState(() => wkReduceMotion());
     useEffect(() => { if (on) return; const t = requestAnimationFrame(() => setOn(true)); return () => cancelAnimationFrame(t); }, []);
     const offset = WK_LEN * (1 - (on ? pct : 0) / 100);
-    const maxDay = Math.max(1, ...days.map((d) => d.points));
+    /* "fun and simple" (user, 2026-10-19, members are mostly 60+): one big
+       number, one short line, a gold coin per day you earned something (no
+       bar heights, no 0/goal scale), and a one-line pace note. */
     const dayLabel = (d) => d.date.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+    const dayName = (d) => d.today ? "Today" : d.date.toLocaleDateString("en-GB", { weekday: "short" });
+    const toGo = Math.max(0, goal - pts);
     return (
-      <section className={"rme-wk" + (reached ? " is-reached" : "")} aria-label={title || "Last 7 days"} data-screen-label="Last 7 days" data-tour="week">
+      <section className={"rme-wk" + (reached ? " is-reached" : "")} aria-label={title || "This week"} data-screen-label="This week" data-tour="week">
         <div className="rme-wk-gauge" role="meter" aria-valuemin={0} aria-valuemax={goal} aria-valuenow={Math.min(pts, goal)}
-          aria-label={fmt(pts) + " points earned in the last 7 days, weekly goal " + fmt(goal)}>
+          aria-label={fmt(pts) + " points this week, goal " + fmt(goal)}>
           <svg viewBox="0 0 200 110" aria-hidden="true" focusable="false">
             <path className="rme-wk-track" d={WK_ARC} />
             <path className="rme-wk-fill" d={WK_ARC} style={{ strokeDasharray: WK_LEN, strokeDashoffset: offset }} />
           </svg>
-          <div className="rme-wk-val"><b>{fmt(pts)}</b><span>pts</span><i>earned in the last 7 days</i></div>
+          <div className="rme-wk-val"><b>{fmt(pts)}</b><i>points this week</i></div>
         </div>
-        <div className="rme-wk-scale" aria-hidden="true"><span>0</span><span>{fmt(goal)} goal</span></div>
         <div className="rme-wk-note">
           {reached
-            ? <React.Fragment><Icon name="lucide:check-circle" size={15} color="var(--success, #2a9568)" /><span>Weekly goal reached · <b>{fmt(pts - goal)} pts</b> over</span></React.Fragment>
-            : <React.Fragment><Icon name="lucide:target" size={15} color="#9C6A0E" /><span><b>{fmt(goal - pts)} pts</b> to your weekly goal</span></React.Fragment>}
+            ? <React.Fragment><span className="rme-wk-note-ic is-done" aria-hidden="true"><Icon name="lucide:party-popper" size={18} color="#fff" /></span><span>Goal reached!</span></React.Fragment>
+            : <React.Fragment><span className="rme-wk-note-ic" aria-hidden="true"><Icon name="lucide:target" size={18} color="#fff" /></span><span><b>{fmt(toGo)} pts</b> to go</span></React.Fragment>}
         </div>
-        <div className="rme-wk-days" role="list" aria-label="Points per day">
-          {days.map((d) => (
-            <div key={d.key} role="listitem" className={"rme-wk-day" + (d.today ? " is-today" : "") + (d.points ? "" : " is-empty")}
+        <div className="rme-wk-days" role="list" aria-label="Points each day">
+          {days.map((d, i) => (
+            <div key={d.key} role="listitem" className={"rme-wk-day" + (d.today ? " is-today" : "") + (d.points ? " is-earned" : " is-empty")} style={{ "--i": i }}
               title={dayLabel(d) + " · " + fmt(d.points) + " pts"} aria-label={dayLabel(d) + ": " + fmt(d.points) + " points"}>
-              <span className="rme-wk-bar"><i style={{ height: (d.points ? Math.max(3, Math.round(d.points / maxDay * 34)) : 0) + "px" }} /></span>
-              <span className="rme-wk-lb">{d.today ? "Today" : d.date.toLocaleDateString("en-GB", { weekday: "narrow" })}</span>
+              <span className="rme-wk-coin" aria-hidden="true">{d.points ? <Icon name="lucide:star" size={18} color="#fff" /> : null}</span>
+              <span className="rme-wk-lb">{dayName(d)}</span>
             </div>
           ))}
         </div>
-        {pace && !pace.top ? <div className="rme-wk-pace"><Icon name="lucide:trending-up" size={14} color="currentColor" /><span>At this pace, <b>{pace.league} League</b> in about {pace.days} {pace.days === 1 ? "day" : "days"} · {fmt(pace.need)} pts to go</span></div> : null}
-        {pace && pace.top ? <div className="rme-wk-pace"><Icon name="lucide:trophy" size={14} color="currentColor" /><span>Top of the path — every perk is yours for good</span></div> : null}
+        {pace && !pace.top ? <div className="rme-wk-pace"><Icon name="lucide:rocket" size={18} color="currentColor" /><span><b>{pace.league} League</b> in about {pace.days} {pace.days === 1 ? "day" : "days"}</span></div> : null}
+        {pace && pace.top ? <div className="rme-wk-pace"><Icon name="lucide:trophy" size={18} color="currentColor" /><span>You're at the top!</span></div> : null}
       </section>
     );
   }
@@ -322,12 +329,13 @@
   /* ---------------------------------------------------------------- tour */
   const TOUR_SEEN = "pf-rewards-tour-seen";
   const TOUR_STEPS = [
-    { key: "league",      title: "Your league badge",    body: "Six gem leagues, Jade to Sapphire. Your lifetime points decide which one you hold — tap a gem to open the leaderboard." },
-    { key: "leaderboard", title: "Where you rank",       body: "Your place in this league on rolling 30-day points, and who's just ahead of you." },
-    { key: "stats",       title: "Points and streak",    body: "Points are lifetime — never spent, never expired. Check in daily to keep the streak alive." },
-    { key: "earn",        title: "Ways to Earn",         body: "Every point-earning action in one list. Tap any row to see how it works." },
-    { key: "path",        title: "My Rewards",           body: "Each of the six leagues unlocks one one-time perk the moment you reach it — redeem them here." },
-    { key: "week",        title: "Last 7 days",          body: "Points earned this week against your weekly goal, and your pace to the next league." }
+    /* short and plain (user, 2026-10-19: members are mostly 60+) */
+    { key: "league",      title: "Your badge",           body: "Earn points to move up a league." },
+    { key: "leaderboard", title: "Your place",           body: "Where you are in your league." },
+    { key: "stats",       title: "Points and streak",    body: "Your points never expire. Check in daily to keep your streak." },
+    { key: "earn",        title: "Ways to Earn",         body: "Every way to earn points, in one list." },
+    { key: "path",        title: "My Rewards",           body: "Each league unlocks a reward." },
+    { key: "week",        title: "This week",            body: "The points you earned this week." }
   ];
   function rwReduce() { return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches); }
   function tourSeen() { try { return localStorage.getItem(TOUR_SEEN) === "1"; } catch (e) { return true; } }

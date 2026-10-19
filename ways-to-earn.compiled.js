@@ -436,6 +436,174 @@ function HowItWorksStage({
     className: "wte-stage-float"
   }, "+", pts, " pts"));
 }
+
+/* Dr Tim demo "video" (user, 2026-10-19): a header button with his animated
+   avatar opens a short auto-playing walkthrough of how the rewards work —
+   five captioned scenes over ~18s with a segmented progress bar, play/pause
+   and replay. Plain words, big type (members are mostly 60+). ?demo=1 opens it. */
+const WTE_DEMO_SCENES = [{
+  icon: "lucide:coins",
+  say: "Earn points every day.",
+  sub: "Check in, post, learn."
+}, {
+  icon: "lucide:gem",
+  say: "Points move you up.",
+  sub: "Jade to Sapphire."
+}, {
+  icon: "lucide:gift",
+  say: "Each league unlocks a reward.",
+  sub: "Six leagues, six rewards."
+}, {
+  icon: "lucide:ticket",
+  say: "Redeem it on My Rewards.",
+  sub: "Tap the reward, get your code."
+}, {
+  icon: "lucide:shield-check",
+  say: "Your points never expire.",
+  sub: "Keep earning, keep climbing."
+}];
+const WTE_DEMO_MS = 3600;
+function RewardsDemoSheet({
+  onClose
+}) {
+  const still = reduceMotionWTE();
+  const n = WTE_DEMO_SCENES.length;
+  const [i, setI] = useStateWTE(0);
+  const [playing, setPlaying] = useStateWTE(!still);
+  const [ended, setEnded] = useStateWTE(false);
+  const [tick, setTick] = useStateWTE(0); // restarts the fill animation per scene
+  useEffectWTE(() => {
+    if (!playing || ended) return;
+    const t = setTimeout(() => {
+      if (i >= n - 1) {
+        setEnded(true);
+        setPlaying(false);
+      } else {
+        setI(i + 1);
+        setTick(x => x + 1);
+      }
+    }, WTE_DEMO_MS);
+    return () => clearTimeout(t);
+  }, [i, playing, ended]);
+  useEffectWTE(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  const jump = k => {
+    setI(k);
+    setTick(x => x + 1);
+    setEnded(false);
+    setPlaying(!still);
+  };
+  const replay = () => jump(0);
+  const toggle = () => {
+    if (ended) return replay();
+    setPlaying(p => !p);
+    setTick(x => x + 1);
+  };
+  const sc = WTE_DEMO_SCENES[i];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "wte-scrim",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "wte-sheet wte-demo",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-labelledby": "wte-demo-title",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "wte-sheet-handle",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "wte-sheet-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "wte-sheet-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "wte-sheet-cat"
+  }, "Dr Tim shows you"), /*#__PURE__*/React.createElement("h2", {
+    id: "wte-demo-title"
+  }, "How rewards work")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "wte-sheet-close",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSWTE.IconifyIcon, {
+    name: "lucide:x",
+    size: 18,
+    color: "var(--gray-600)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "wte-video" + (playing ? " is-playing" : "") + (ended ? " is-ended" : ""),
+    "aria-live": "polite"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "wte-video-tag"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "wte-video-dot"
+  }), "Demo"), /*#__PURE__*/React.createElement("div", {
+    className: "wte-video-body"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "wte-video-doc" + (ended ? " is-happy" : "")
+  }, /*#__PURE__*/React.createElement(DrTimWTE, {
+    mood: ended ? "happy" : "welcome",
+    size: 112
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "wte-video-cap",
+    key: i + ":" + ended
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "wte-video-ic"
+  }, /*#__PURE__*/React.createElement(DSWTE.IconifyIcon, {
+    name: ended ? "lucide:party-popper" : sc.icon,
+    size: 22,
+    color: "#3D2A00"
+  })), /*#__PURE__*/React.createElement("b", null, ended ? "That's it!" : sc.say), /*#__PURE__*/React.createElement("i", null, ended ? "Go and earn your first points." : sc.sub))), /*#__PURE__*/React.createElement("div", {
+    className: "wte-video-bar",
+    role: "progressbar",
+    "aria-valuemin": 1,
+    "aria-valuemax": n,
+    "aria-valuenow": i + 1,
+    "aria-label": "Scene " + (i + 1) + " of " + n
+  }, WTE_DEMO_SCENES.map((s, k) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    type: "button",
+    className: "wte-video-seg" + (k < i || ended ? " is-done" : k === i ? " is-now" : ""),
+    "aria-label": "Scene " + (k + 1),
+    onClick: () => jump(k)
+  }, /*#__PURE__*/React.createElement("span", {
+    key: tick,
+    className: "wte-video-fill",
+    style: {
+      animationDuration: WTE_DEMO_MS + "ms",
+      animationPlayState: playing && !ended ? "running" : "paused"
+    }
+  })))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "wte-video-play",
+    "aria-label": ended ? "Replay" : playing ? "Pause" : "Play",
+    onClick: toggle
+  }, /*#__PURE__*/React.createElement(DSWTE.IconifyIcon, {
+    name: ended ? "lucide:rotate-ccw" : playing ? "lucide:pause" : "lucide:play",
+    size: 20,
+    color: "#fff"
+  })), ended && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "wte-video-replay",
+    onClick: replay
+  }, /*#__PURE__*/React.createElement(DSWTE.IconifyIcon, {
+    name: "lucide:rotate-ccw",
+    size: 16,
+    color: "currentColor"
+  }), "Watch again")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "wte-sheet-btn",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(DSWTE.IconifyIcon, {
+    name: "lucide:check",
+    size: 16,
+    color: "currentColor"
+  }), "Got it")));
+}
 function HowItWorksSheet({
   action,
   cat,
@@ -545,6 +713,13 @@ function WaysToEarnScreen() {
       return null;
     }
   });
+  const [demoOpen, setDemoOpen] = useStateWTE(() => {
+    try {
+      return new URLSearchParams(location.search).get("demo") === "1";
+    } catch (e) {
+      return false;
+    }
+  });
   const closeHow = React.useCallback(() => setHowId(null), []);
 
   /* Stay in step with the rest of the prototype (Profile targets, Rewards
@@ -609,7 +784,25 @@ function WaysToEarnScreen() {
     name: "lucide:chevron-left",
     size: 24,
     color: "var(--gray-900)"
-  })), /*#__PURE__*/React.createElement("h1", null, "Ways to Earn"), /*#__PURE__*/React.createElement("span", null)), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("h1", null, "Ways to Earn"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "wte-demo-btn",
+    "aria-label": "Watch how rewards work",
+    "aria-haspopup": "dialog",
+    onClick: () => setDemoOpen(true)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "wte-demo-av"
+  }, /*#__PURE__*/React.createElement(DrTimWTE, {
+    mood: "welcome",
+    size: 44
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "wte-demo-play",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSWTE.IconifyIcon, {
+    name: "lucide:play",
+    size: 10,
+    color: "#fff"
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "ml-scroll wte-scroll"
   }, grouped.map((g, gi) => {
     const c = catWTE(g.name);
@@ -694,7 +887,9 @@ function WaysToEarnScreen() {
       },
       onClose: closeHow
     });
-  })(), toast && /*#__PURE__*/React.createElement("div", {
+  })(), demoOpen && /*#__PURE__*/React.createElement(RewardsDemoSheet, {
+    onClose: () => setDemoOpen(false)
+  }), toast && /*#__PURE__*/React.createElement("div", {
     className: "ml-toast wte-toast " + toast.kind,
     role: "status"
   }, /*#__PURE__*/React.createElement(DSWTE.IconifyIcon, {

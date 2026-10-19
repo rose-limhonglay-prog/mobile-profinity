@@ -412,7 +412,6 @@ function LM2MembershipSection({
   const prog = React.useMemo(() => PFM_L.progress(done), [done]);
   const nu = React.useMemo(() => PFM_L.nextUp(done, watch), [done, watch]);
   const latest = PFM_L.ttLatest(1)[0];
-  const hub = PFM_L.PAGES.hub;
   const tiles = [{
     key: "tt",
     icon: "lucide:video",
@@ -447,11 +446,8 @@ function LM2MembershipSection({
   return /*#__PURE__*/React.createElement("section", {
     className: "lm2-mem",
     "data-screen-label": "My Membership · Confidence"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "lm2-mem-head",
-    onClick: () => goL(hub),
-    "aria-label": "Open My Membership"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mem-head lm2-mem-head-static"
   }, /*#__PURE__*/React.createElement("span", {
     className: "lm2-mem-badge"
   }, /*#__PURE__*/React.createElement(IconifyL, {
@@ -464,14 +460,7 @@ function LM2MembershipSection({
     className: "lm2-mem-kicker"
   }, "My Membership"), /*#__PURE__*/React.createElement("span", {
     className: "lm2-mem-title"
-  }, "Welcome back, ", PFLS_L.ME ? PFLS_L.ME.name : "Katy")), /*#__PURE__*/React.createElement("span", {
-    className: "lm2-mem-arrow",
-    "aria-hidden": "true"
-  }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:chevron-right",
-    size: 20,
-    color: "currentColor"
-  }))), /*#__PURE__*/React.createElement("div", {
+  }, "Welcome back, ", PFLS_L.ME ? PFLS_L.ME.name : "Katy"))), /*#__PURE__*/React.createElement("div", {
     className: "lm2-mem-prog",
     role: "progressbar",
     "aria-valuenow": prog.pct,

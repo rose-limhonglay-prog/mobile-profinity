@@ -55,7 +55,7 @@ function enrichMR(voucher, items, purchased) {
   return { voucher, perkKey, perk, league, item, course, saving, used,
     image: item && item.image ? item.image : null,
     title: perk && perk.benefit ? perk.benefit.title : (course ? course.title : voucher.itemName),
-    sub: perk ? (perk.milestone.name + (league ? " League" : "") + " perk" + (voucher.delivery ? " · " + voucher.delivery : "")) : (course ? "Save " + poundsMR(saving) + " · " + poundsMR(course.price - saving) + " instead of " + poundsMR(course.price) : voucher.itemName),
+    sub: perk ? (perk.milestone.name + (league ? " League" : "")) : (course ? "Save " + poundsMR(saving) + " · " + poundsMR(course.price - saving) + " instead of " + poundsMR(course.price) : voucher.itemName),
     href: perkKey ? "RewardLanding.html?reward=" + encodeURIComponent(perkKey) + "&ret=" + encodeURIComponent("MyRewards.html?ret=" + retMR()) : (course ? "CourseCheckout.html?course=" + encodeURIComponent(course.slug) + "&title=" + encodeURIComponent(course.title) + "&price=" + course.price : null) };
 }
 
@@ -94,51 +94,109 @@ function RewardRow({ r, copiedCode, onCopy }) {
   );
 }
 
+/* every league perk with its live status (unlocked / redeemed / locked) */
+function perksMR(state) {
+  try {
+    const path = (PF_MR.getConfig().milestonePath || []).slice().sort((a, b) => a.threshold - b.threshold);
+    return path.map((m) => PF_MR.getPerk(m.key, state)).filter((p) => p && p.benefit);
+  } catch (e) { return []; }
+}
+function landingMR(key) { return "RewardLanding.html?reward=" + encodeURIComponent(key) + "&ret=" + encodeURIComponent("MyRewards.html?ret=" + retMR()); }
+
+/* "Ready to redeem" prize card (2026-10-19, user: "make this page fun and
+   exciting, add the redeemable rewards") — league-tinted, gem, big title,
+   one-line description, pulsing dot; tap → the perk's landing page */
+function ReadyCardMR({ perk, index }) {
+  const league = leagueMR(perk.key);
+  const vars = league ? { "--lg-accent": league.accent, "--lg-deep": league.deep, "--lg-soft": league.soft, "--i": index } : { "--i": index };
+  return (
+    <button type="button" className="mr-ready" style={vars} onClick={() => goMR(landingMR(perk.key))} aria-label={perk.benefit.title + ", ready to redeem. Open reward"}>
+      {league ? <span className="mr-ready-gem"><GemMR src={league.lottie} size={52} /></span> : null}
+      <span className="mr-ready-tx">
+        <b>{perk.benefit.title}</b>
+        <i>{perk.benefit.description}</i>
+      </span>
+      <span className="mr-ready-go" aria-hidden="true">Redeem<DSMR.IconifyIcon name="lucide:chevron-right" size={16} color="currentColor" /></span>
+    </button>
+  );
+}
+
 function MyRewardsScreen() {
   const [state, setState] = useStateMR(() => PF_MR.getState());
   const [config] = useStateMR(() => PF_MR.getConfig());
   const [copiedCode, copy] = useCopyMR();
   useEffectMR(() => {
     const refresh = () => setState(PF_MR.getState());
-    window.addEventListener("storage", refresh); window.addEventListener("pf:perk-redeemed", refresh);
-    return () => { window.removeEventListener("storage", refresh); window.removeEventListener("pf:perk-redeemed", refresh); };
+    window.addEventListener("storage", refresh); window.addEventListener("pf:perk-redeemed", refresh); window.addEventListener("pf:points-earned", refresh);
+    return () => { window.removeEventListener("storage", refresh); window.removeEventListener("pf:perk-redeemed", refresh); window.removeEventListener("pf:points-earned", refresh); };
   }, []);
   const rows = useMemoMR(() => {
     const purchased = purchasedMR();
     return (state.redeemedVouchers || []).slice().reverse().map((v) => enrichMR(v, config.storeItems || [], purchased));
   }, [state, config]);
-  const ready = rows.filter((r) => !r.used).length;
-  const total = (() => { try { return PF_MR.getMilestoneProgress(state).path.length; } catch (e) { return 6; } })();
+  const perks = useMemoMR(() => perksMR(state), [state]);
+  const readyPerks = perks.filter((p) => p.status === "unlocked");
+  const nextPerk = perks.find((p) => p.status === "locked") || null;
+  const nextLeague = nextPerk ? leagueMR(nextPerk.key) : null;
+  const nothing = readyPerks.length === 0 && rows.length === 0;
 
   return (
     <div className="ml-screen mr-screen" data-screen-label="Redeemed rewards">
       <div className="ml-top">
         <button className="ml-back" aria-label="Back" onClick={() => goMR(retMR())}><DSMR.IconifyIcon name="lucide:chevron-left" size={24} color="var(--gray-900)" /></button>
-        <h1>Redeemed rewards</h1>
+        <h1>Your rewards</h1>
         <span />
       </div>
       <div className="ml-scroll mr-scroll">
-        {rows.length > 0 && (
-          <div className="mr-summary">
-            <div><b>{rows.length}</b><span>redeemed</span></div>
-            <div><b>{ready}</b><span>ready to use</span></div>
-            <div><b>{Math.max(0, total - rows.length)}</b><span>still to unlock</span></div>
-          </div>
+        {/* hero: how many are waiting (2026-10-19) */}
+        <div className={"mr-hero" + (readyPerks.length ? " is-ready" : "")}>
+          <span className="mr-hero-ic" aria-hidden="true"><DSMR.IconifyIcon name={readyPerks.length ? "lucide:gift" : rows.length ? "lucide:party-popper" : "lucide:sparkles"} size={34} color="#fff" /></span>
+          <span className="mr-hero-tx">
+            {readyPerks.length
+              ? <React.Fragment><b>{readyPerks.length === 1 ? "1 reward" : readyPerks.length + " rewards"} waiting!</b><i>Tap one to redeem it.</i></React.Fragment>
+              : rows.length
+                ? <React.Fragment><b>All redeemed!</b><i>Your codes are below.</i></React.Fragment>
+                : <React.Fragment><b>No rewards yet</b><i>Earn points to unlock your first one.</i></React.Fragment>}
+          </span>
+        </div>
+
+        {readyPerks.length > 0 && (
+          <section className="mr-sec" aria-label="Ready to redeem">
+            <h2 className="mr-sec-h">Ready to redeem</h2>
+            <div className="mr-ready-list">
+              {readyPerks.map((p, i) => <ReadyCardMR key={p.key} perk={p} index={i} />)}
+            </div>
+          </section>
         )}
-        {rows.length === 0 ? (
-          <div className="mr-empty">
-            <span className="mr-empty-ic"><DSMR.IconifyIcon name="lucide:ticket" size={30} color="var(--brand-navy)" /></span>
-            <h2>Nothing redeemed yet</h2>
-            <p>Each league on My Rewards unlocks one perk. Redeem it on the perk's page and its code will show up here.</p>
-            <button className="ml-btn mr-btn mr-btn-primary" type="button" style={{ width: "auto" }} onClick={() => goMR(retMR())}>Back to My Rewards</button>
-          </div>
-        ) : (
-          <div className="mr-list">
-            {rows.map((r) => <RewardRow key={r.voucher.code} r={r} copiedCode={copiedCode} onCopy={copy} />)}
-          </div>
-        )}
+
         {rows.length > 0 && (
-          <p className="mr-foot"><DSMR.IconifyIcon name="lucide:shield-check" size={14} color="var(--gray-500)" />Tap a reward to open its page, use the code or email it to yourself.</p>
+          <section className="mr-sec" aria-label="Redeemed">
+            <h2 className="mr-sec-h">Redeemed</h2>
+            <div className="mr-list">
+              {rows.map((r) => <RewardRow key={r.voucher.code} r={r} copiedCode={copiedCode} onCopy={copy} />)}
+            </div>
+            <p className="mr-foot"><DSMR.IconifyIcon name="lucide:shield-check" size={14} color="var(--gray-500)" />Tap a reward to use its code.</p>
+          </section>
+        )}
+
+        {nextPerk && (
+          <section className="mr-sec" aria-label="Next up">
+            <h2 className="mr-sec-h">Next up</h2>
+            <button type="button" className="mr-next" style={nextLeague ? { "--lg-accent": nextLeague.accent, "--lg-deep": nextLeague.deep, "--lg-soft": nextLeague.soft } : null}
+              onClick={() => goMR(landingMR(nextPerk.key))} aria-label={nextPerk.benefit.title + ", " + PF_MR.formatNumber(nextPerk.remaining) + " points to go. Open reward"}>
+              {nextLeague ? <span className="mr-next-gem"><GemMR src={nextLeague.lottie} size={44} /></span> : null}
+              <span className="mr-next-tx">
+                <b>{nextPerk.benefit.title}</b>
+                <i><strong>{PF_MR.formatNumber(nextPerk.remaining)} pts</strong> to go</i>
+                <span className="mr-next-track" aria-hidden="true"><span style={{ width: nextPerk.pct + "%" }} /></span>
+              </span>
+              <DSMR.IconifyIcon name="lucide:lock" size={18} color="var(--gray-400)" />
+            </button>
+          </section>
+        )}
+
+        {nothing && (
+          <button className="ml-btn mr-btn mr-btn-primary mr-earn-btn" type="button" onClick={() => goMR("WaysToEarn.html?ret=MyRewards.html")}>See ways to earn</button>
         )}
         <div style={{ height: 24 }} />
       </div>

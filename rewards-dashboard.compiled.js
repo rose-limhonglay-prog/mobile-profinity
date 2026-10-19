@@ -143,20 +143,12 @@ function StreakRiskBanner({
     className: "rdb-risk-head"
   }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
     name: "lucide:flame",
-    size: 22,
+    size: 24,
     color: "#3D2A00"
-  }), /*#__PURE__*/React.createElement("span", null, "Your ", days, "-Day Streak is at Risk!")), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("span", null, "Keep your ", days, "-day streak!")), /*#__PURE__*/React.createElement("div", {
     className: "rdb-risk-clock",
     "aria-live": "off"
-  }, "Expires in ", fmtClock(remaining)), /*#__PURE__*/React.createElement("div", {
-    className: "rdb-notif-stack"
-  }, /*#__PURE__*/React.createElement(NotificationPreview, {
-    hoursLabel: "· 6h before",
-    body: "Don't lose your " + days + "-day streak — check in before it expires!"
-  }), /*#__PURE__*/React.createElement(NotificationPreview, {
-    hoursLabel: "· 2h before",
-    body: "Last call! Your streak expires in 2 hours."
-  })));
+  }, "Check in within ", fmtClock(remaining)));
 }
 
 /* Lifetime Points mascot: a looping smiling-face Lottie (lottie.host ArWGbXL6R3, same as the
@@ -366,11 +358,11 @@ function RdbEngagementCards({
     className: "rdb-eng-unit"
   }, "pts")), /*#__PURE__*/React.createElement("div", {
     className: "rdb-eng-label"
-  }, "Lifetime Points")), /*#__PURE__*/React.createElement("button", {
+  }, "Total points")), /*#__PURE__*/React.createElement("button", {
     className: "ml-card rdb-eng-card rdb-eng-link",
     type: "button",
     onClick: () => goRDB("CheckInStreak.html"),
-    "aria-label": "Active streak: " + state.streak.current + " days. Open check-in streak"
+    "aria-label": "Streak: " + state.streak.current + " days. Open check-in streak"
   }, /*#__PURE__*/React.createElement("span", {
     className: "rdb-eng-lottie",
     "aria-hidden": "true"
@@ -388,7 +380,7 @@ function RdbEngagementCards({
     className: "rdb-eng-value"
   }, state.streak.current, " Days"), /*#__PURE__*/React.createElement("div", {
     className: "rdb-eng-label"
-  }, "Active Streak ", /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
+  }, "Streak ", /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
     name: "lucide:chevron-right",
     size: 12,
     color: "var(--gray-400)"
@@ -438,9 +430,11 @@ function RdbLeagueLottie({
     "aria-hidden": "true"
   });
 }
-/* Leaderboard snapshot: only the member's own league — her gem, her rank in
-   that board (same 30-day rolling points the Leaderboard page ranks on) and
-   who's just ahead. Tapping opens the full leaderboard. */
+/* Leaderboard snapshot: only the member's own league — her gem and her rank
+   in that board (same 30-day rolling points the Leaderboard page ranks on),
+   written as plainly as possible: "You are top 3" (user, 2026-10-19 "make it
+   simple as possible" — the pts and "N behind Charlotte" line are gone).
+   Tapping opens the full leaderboard. */
 function rdbStandings(state) {
   const LG = window.PFLeague;
   if (!LG || !LG.getStandings) return null;
@@ -463,10 +457,8 @@ function RdbLeagueCard({
   const st = rdbStandings(state);
   if (!st || !st.me) return null;
   const cur = st.league,
-    me = st.me,
-    above = st.above;
+    me = st.me;
   const total = st.rows.length;
-  const gap = above ? above.points - me.points : 0;
   const ordinal = n => {
     const s = ["th", "st", "nd", "rd"],
       v = n % 100;
@@ -482,7 +474,7 @@ function RdbLeagueCard({
     },
     "data-tour": "leaderboard",
     onClick: () => goRDB("Leaderboard.html"),
-    "aria-label": "Leaderboard. You're " + ordinal(me.rank) + " of " + total + " in the " + cur.name + " League with " + PF_RDB.formatNumber(me.points) + " points. Open the leaderboard",
+    "aria-label": "Leaderboard. You are " + (me.rank === 1 ? "number 1" : "top " + me.rank) + " of " + total + " in the " + cur.name + " League. Open the leaderboard",
     "data-screen-label": "Leaderboard snapshot"
   }, /*#__PURE__*/React.createElement("span", {
     className: "rdb-league-gem"
@@ -493,9 +485,9 @@ function RdbLeagueCard({
     className: "rdb-league-tx"
   }, /*#__PURE__*/React.createElement("span", {
     className: "rdb-league-eyebrow"
-  }, "Leaderboard · ", cur.name, " League"), /*#__PURE__*/React.createElement("b", null, /*#__PURE__*/React.createElement("span", {
+  }, "Leaderboard"), /*#__PURE__*/React.createElement("b", null, "You are ", me.rank === 1 ? "#" : "top ", /*#__PURE__*/React.createElement("span", {
     className: "rdb-league-rank"
-  }, "#", me.rank), " of ", total), /*#__PURE__*/React.createElement("i", null, PF_RDB.formatNumber(me.points), " pts", above ? " · " + PF_RDB.formatNumber(gap) + " behind " + above.name.split(" ")[0] : " · You lead the league!")), /*#__PURE__*/React.createElement("span", {
+  }, me.rank)), /*#__PURE__*/React.createElement("i", null, cur.name, " League · ", total, " members")), /*#__PURE__*/React.createElement("span", {
     className: "rdb-league-cta"
   }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
     name: "lucide:chevron-right",
@@ -518,25 +510,23 @@ function RdbFeatureTiles({
   const mpNote = milestone ? milestone.next ? PF_RDB.formatNumber(milestone.remaining) + " pts to go" : "Every badge earned" : "Badges & benefits";
   /* Ways to Earn (back since 2026-10-09) and Milestone Path sit side by side
      as two equal tiles (user, 2026-10-14 "align" — My Rewards went 2026-10-13). */
-  const earnCount = (() => {
-    try {
-      return PF_RDB.getConfig().actions.filter(a => a.active).length;
-    } catch (e) {
-      return 0;
-    }
-  })();
-  const items = [{
+  const items = [
+  /* bigger tiles + a different icon colour per tile (user, 2026-10-19):
+     Ways to Earn = amber (coins), My Rewards = violet (gift) */
+  {
     label: "Ways to Earn",
-    note: earnCount ? earnCount + " ways to earn" : "Every way to earn",
+    note: "Get more points",
     icon: "lucide:coins",
     href: "WaysToEarn.html",
-    tour: "earn"
+    tour: "earn",
+    tone: "gold"
   }, {
     label: "My Rewards",
     note: mpNote,
     icon: "lucide:gift",
     href: "MilestonePath.html",
-    tour: "path"
+    tour: "path",
+    tone: "violet"
   } /* the Milestone Path page, renamed My Rewards (user, 2026-10-14) */];
   return /*#__PURE__*/React.createElement("div", {
     className: "rdb-feats"
@@ -544,6 +534,7 @@ function RdbFeatureTiles({
     key: it.label,
     type: "button",
     className: "rdb-feat" + (it.wide ? " rdb-feat-wide" : ""),
+    "data-tone": it.tone,
     "data-tour": it.tour,
     onClick: () => goRDB(it.href),
     "aria-label": it.label + ". " + it.note
@@ -552,7 +543,7 @@ function RdbFeatureTiles({
     "aria-hidden": "true"
   }, /*#__PURE__*/React.createElement(DSRDB.IconifyIcon, {
     name: it.icon,
-    size: 20,
+    size: 24,
     color: "#fff"
   })), /*#__PURE__*/React.createElement("span", {
     className: "rdb-feat-tx"
@@ -682,7 +673,7 @@ function RdbWelcomeModal({
     size: 176
   })), /*#__PURE__*/React.createElement("b", {
     id: "rdb-welcome-title"
-  }, "Welcome to Rewards, ", first, "!"), /*#__PURE__*/React.createElement("p", null, "Every check-in, post and lesson earns points. ", next ? /*#__PURE__*/React.createElement(React.Fragment, null, "Reach ", /*#__PURE__*/React.createElement("strong", null, PF_RDB.formatNumber(next.requires), " pts"), " to move up to ", /*#__PURE__*/React.createElement("strong", null, next.name, " League"), " and unlock its one-time perk. Points are lifetime — never spent, never expired.") : null), /*#__PURE__*/React.createElement("button", {
+  }, "Welcome to Rewards, ", first, "!"), /*#__PURE__*/React.createElement("p", null, "Check in, post and learn to earn points.", next ? /*#__PURE__*/React.createElement(React.Fragment, null, " Reach ", /*#__PURE__*/React.createElement("strong", null, next.name, " League"), " to unlock a reward.") : null), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "rdb-welcome-btn",
     onClick: () => {
@@ -697,7 +688,7 @@ function RdbWelcomeModal({
     type: "button",
     className: "rdb-welcome-skip",
     onClick: onClose
-  }, "Explore my Rewards")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+  }, "Not now")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "rdb-welcome-back",
     "aria-label": "Back",
@@ -713,7 +704,7 @@ function RdbWelcomeModal({
     className: "on"
   })), /*#__PURE__*/React.createElement("b", {
     id: "rdb-welcome-title"
-  }, "Ways to earn points"), /*#__PURE__*/React.createElement("p", null, "Your quickest wins", tier ? " as a " + tier + " member" : "", " — points land the moment you do them."), /*#__PURE__*/React.createElement("ul", {
+  }, "Ways to earn points"), /*#__PURE__*/React.createElement("p", null, "Quick ways to earn points."), /*#__PURE__*/React.createElement("ul", {
     className: "rdb-welcome-list"
   }, rdbStarterRows(state).map(r => /*#__PURE__*/React.createElement("li", {
     key: r.id
@@ -821,7 +812,7 @@ function RewardsDashboardHome() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "ml-sec-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Last 7 days")), window.PFRewardsEmbed && window.PFRewardsEmbed.PointsWeek ? /*#__PURE__*/React.createElement(window.PFRewardsEmbed.PointsWeek, {
+  }, /*#__PURE__*/React.createElement("h2", null, "This week")), window.PFRewardsEmbed && window.PFRewardsEmbed.PointsWeek ? /*#__PURE__*/React.createElement(window.PFRewardsEmbed.PointsWeek, {
     state: state
   }) : null), /*#__PURE__*/React.createElement("div", {
     className: "ml-demo-bar"
