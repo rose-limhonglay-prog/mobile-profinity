@@ -542,11 +542,12 @@ const SM_MEMBERSHIP_TIERS_M = ["confidence", "mastery", "freedom"];
 const SM_MEMBERSHIP_ROWS_M = [{
   label: "Membership Training",
   icon: "lucide:graduation-cap",
-  href: "CourseDetail.html?title=Membership+Training&instr=Dr.+Tim+Pearce"
-}, {
+  href: "CourseDetail.html?course=profinity-membership"
+}, /* the membership course itself (user, 2026-10-15) */
+{
   label: "Technique Tuesday",
   icon: "lucide:calendar-check",
-  href: "CourseDetail.html?title=Technique+Tuesday&instr=Dr.+Tim+Pearce"
+  href: "TechniqueTuesdays.html"
 }, {
   label: "Complications Help",
   icon: "lucide:shield-alert",

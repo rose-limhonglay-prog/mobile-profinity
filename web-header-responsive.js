@@ -43,8 +43,8 @@
   var TIER_NAME = { confidence: "Confidence", mastery: "Mastery", freedom: "Freedom", sovereign: "Sovereign" };
   var MEMBERSHIP_TIERS = ["confidence", "mastery", "freedom"];
   var MEMBERSHIP_ROWS = [
-    { label: "Membership Training", icon: "lucide:graduation-cap", href: "CourseDetail.html?title=Membership+Training&instr=Dr.+Tim+Pearce" },
-    { label: "Technique Tuesday",   icon: "lucide:calendar-check", href: "CourseDetail.html?title=Technique+Tuesday&instr=Dr.+Tim+Pearce" },
+    { label: "Membership Training", icon: "lucide:graduation-cap", href: "CourseWeb.html?course=profinity-membership" }, /* the membership course itself (user, 2026-10-15) */
+    { label: "Technique Tuesday",   icon: "lucide:calendar-check", href: "TechniqueTuesdaysWeb.html" },
     { label: "Complications Help",  icon: "lucide:shield-alert",   href: "DirectMessage.html" },
     { label: "AI Coach",            icon: "lucide:sparkles",       href: "LearningMobile.html" }];
   var FREEDOM_LECTURE_ROW = { label: "Freedom Path Lectures", icon: "lucide:presentation", href: "LearningMobile.html" };

@@ -1,0 +1,707 @@
+/* ===========================================================================
+   PROfinity — Confidence membership journey (mobile + web)
+   One bundle, three screens, picked by the shell before this script loads:
+     window.PF_MC_PAGE = "hub"      MembershipConfidence.html   My Membership dashboard
+                        "map"      MembershipMap.html          Membership Learning Map
+                        "tuesdays" TechniqueTuesdays.html      Technique Tuesday library
+     window.PF_MC_WEB  = true      *Web.html twins — same screens inside the
+                                   desktop TopNav shell (.mc-web layout)
+
+   Journey: My Learning → My Membership (hub) → Learning Map → Technique
+   Tuesdays / membership modules → lesson details (CourseDetail.html, the
+   existing Confidence reader) → video player (its LXPlayer, ?play=1).
+   Every lesson link carries ?ret= so the reader's back button returns here.
+
+   Data: membership-data.js (window.PFMembership) — the real PROfinity
+   Membership course (25 modules / 266 lessons) with pf-lessons-done
+   completion and the pf-membership-watch Continue Watching store. Suffixed
+   -MC because every page script shares one global scope.
+   =========================================================================== */
+const { useState: useStateMC, useEffect: useEffectMC, useRef: useRefMC, useMemo: useMemoMC } = React;
+const DSMC = window.ProfinityDesignSystem_c2b5cc;
+const M_MC = window.PFMembership;
+const PFLS_MC = window.PFLearnShared || {};
+const MC_WEB = !!window.PF_MC_WEB;
+const MC_PAGE = window.PF_MC_PAGE || "hub";
+const MC_ME = PFLS_MC.ME || { name: "Katy", avatar: "assets/avatar-katy.jpg" };
+const MC_NAVY = "#0C1928";
+const MC_GOLD = "#CE9957";
+const MC_GOLD_INK = "#8A5303";
+
+function goMC(url) { (window.pfGo || function (u) { window.location.href = u; })(url); }
+const IcMC = DSMC.IconifyIcon;
+
+/* page URLs by surface (mobile shells vs the web twins) */
+function pageMC(key) {
+  const P = M_MC.PAGES;
+  if (MC_WEB) return { hub: P.hubWeb, map: P.mapWeb, tuesdays: P.tuesdaysWeb, learning: P.learningWeb, events: M_MC.LIVE.eventsWebUrl, chat: "Community.html", dm: "MessagesWeb.html", directory: "ClinicianDirectory.html", tiers: "MembershipTier.html" }[key];
+  return { hub: P.hub, map: P.map, tuesdays: P.tuesdays, learning: P.learning, events: M_MC.LIVE.eventsUrl, chat: "CommunityMobile.html", dm: "DirectMessage.html", directory: "ClinicianDirectory.html", tiers: "MembershipTier.html" }[key];
+}
+/* lesson details (course page) / straight into the player */
+function lessonUrlMC(l, play) {
+  if (MC_WEB) {
+    const p = new URLSearchParams({ course: M_MC.SLUG, level: l.li, module: l.si, lesson: l.ni });
+    return (play ? M_MC.PAGES.lessonWeb : M_MC.PAGES.courseWeb) + "?" + p.toString();
+  }
+  return M_MC.lessonUrl(l, { play: !!play });
+}
+function courseUrlMC() { return MC_WEB ? M_MC.PAGES.courseWeb + "?course=" + M_MC.SLUG : M_MC.courseUrl(); }
+function moduleUrlMC(m, done) { const l = M_MC.moduleResume(m, done); return l ? lessonUrlMC(l, false) : courseUrlMC(); }
+
+/* ---------------------------------------------------------------- atoms -- */
+/* Confidence = silver (user rule); Mastery would be gold. */
+function MCBadge({ small }) {
+  return (
+    <span className={"mc-badge" + (small ? " mc-badge-sm" : "")} aria-label="Confidence membership">
+      <IcMC name="lucide:shield-check" size={small ? 13 : 15} color="#2B3440" />
+      Confidence
+    </span>);
+}
+
+function MCRing({ pct, size = 84, stroke = 8, label }) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  return (
+    <svg className="mc-ring" width={size} height={size} viewBox={"0 0 " + size + " " + size} role="img" aria-label={(label || "Membership progress") + " " + pct + "%"}>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--mc-ring-track)" strokeWidth={stroke} />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--mc-ring)" strokeWidth={stroke} strokeLinecap="round"
+        strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} transform={"rotate(-90 " + size / 2 + " " + size / 2 + ")"} />
+      <text x="50%" y="50%" dy=".36em" textAnchor="middle" className="mc-ring-n">{pct}%</text>
+    </svg>);
+}
+
+/* Video thumbnail. The membership CDN posters are not public, so every card
+   draws a numbered tile and says so — real artwork drops in via l.poster. */
+function MCThumb({ lesson, className, play, onPlay }) {
+  const tt = !!lesson.n;
+  const mod = M_MC.module(lesson.module);
+  return (
+    <span className={"mc-thumb" + (tt ? " mc-thumb-tt" : "") + (className ? " " + className : "")}>
+      {lesson.poster ? <img src={lesson.poster} alt="" loading="lazy" /> :
+      <span className="mc-thumb-art" aria-hidden="true">
+        {/* TT tiles: plain navy art — the "TT" mark and lesson number were removed (user, 2026-10-15) */}
+        {!tt && <IcMC name={mod ? mod.icon : "lucide:play"} size={26} color="rgba(255,255,255,.9)" />}
+      </span>}
+      {!lesson.poster && <span className="mc-thumb-ph" title="Thumbnail not provided yet — placeholder">Placeholder</span>}
+      {play &&
+      <button type="button" className="mc-thumb-play" aria-label={"Play " + M_MC.shortTitle(lesson)} onClick={(e) => { e.stopPropagation(); onPlay && onPlay(); }}>
+        <IcMC name="fluent:play-16-filled" size={16} color={MC_NAVY} />
+      </button>}
+    </span>);
+}
+
+function MCStatusChip({ status, pct }) {
+  if (status === "done") return <span className="mc-chip mc-chip-done"><IcMC name="lucide:check" size={11} color="currentColor" strokeWidth={3} />Completed</span>;
+  if (status === "live") return <span className="mc-chip mc-chip-live">{pct}% · In progress</span>;
+  if (status === "new") return <span className="mc-chip mc-chip-new">New this week</span>;
+  return <span className="mc-chip">Not started</span>;
+}
+
+function MCBar({ pct, className }) {
+  return <span className={"mc-bar" + (className ? " " + className : "")} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><span style={{ width: pct + "%" }} /></span>;
+}
+
+/* ---------------------------------------------------------------- chrome -- */
+function MCHeader({ title, back, right, eyebrow }) {
+  return (
+    <header className="mc-top" data-screen-label="Header">
+      <button type="button" className="mc-back" aria-label="Back" onClick={() => goMC(back)}>
+        <IcMC name="lucide:chevron-left" size={22} color="currentColor" />
+      </button>
+      <span className="mc-top-tx">
+        {eyebrow && <span className="mc-top-eyebrow">{eyebrow}</span>}
+        <span className="mc-top-title">{title}</span>
+      </span>
+      {right || <button type="button" className="mc-avatar" aria-label="Your profile" onClick={() => goMC(MC_WEB ? "Profile.html" : "ProfileMobile.html")}><img src={MC_ME.avatar} alt="" /></button>}
+    </header>);
+}
+
+const MC_TABS = [
+  { key: "Home", label: "Home", icon: "lucide:home", href: "NewsfeedMobile.html" },
+  { key: "Community", label: "Community", icon: "lucide:users", href: "CommunityMobile.html", dot: "12" },
+  { key: "Learning", label: "Learning", icon: "lucide:book-open", href: "LearningMobile.html" },
+  { key: "Profile", label: "Profile", icon: "lucide:user", href: "ProfileMobile.html" },
+  { key: "Agent", label: "Agents", icon: "lucide:sparkles", href: "AgentMobile.html" },
+  { key: "Rewards", label: "Rewards", icon: "lucide:gift", href: "RewardsDashboard.html" }];
+function MCTabBar({ compact }) {
+  return (
+    <nav className={"lm-tabs" + (compact ? " lm-tabs-compact" : "")} aria-label="Primary">
+      {MC_TABS.map((t) => {
+        const on = t.key === "Learning";
+        return (
+          <button key={t.key} type="button" className={"lm-tab" + (on ? " on" : "")} aria-current={on ? "page" : undefined} onClick={() => goMC(t.href)}>
+            <span className="ic"><IcMC name={t.icon} size={24} color={on ? "#fff" : "#000"} />{t.dot && <span className="dot">{t.dot}</span>}</span>
+            <span className="lbl">{t.label}</span>
+          </button>);
+      })}
+    </nav>);
+}
+
+function useScrollChromeMC(ref) {
+  const [state, setState] = useStateMC({ hidden: false, floating: false });
+  useEffectMC(() => {
+    const el = ref.current; if (!el) return;
+    let lastY = el.scrollTop;
+    const onScroll = () => {
+      const y = el.scrollTop, d = y - lastY;
+      setState((p) => { let hidden = p.hidden; if (y < 40) hidden = false; else if (d > 6) hidden = true; else if (d < -6) hidden = false; return { hidden, floating: y > 40 }; });
+      lastY = y;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+  return state;
+}
+
+/* ---------------------------------------------------------------- shared cards -- */
+/* "Up next" — the one thing to do now: resume a half-watched video, the next
+   Start-here step, or the newest Technique Tuesday. */
+function MCNextUp({ done, watch, compact }) {
+  const nu = useMemoMC(() => M_MC.nextUp(done, watch), [done, watch]);
+  const l = nu.lesson;
+  const mod = M_MC.module(l.module);
+  const resume = nu.kind === "resume";
+  return (
+    <section className={"mc-sec" + (compact ? " mc-sec-tight" : "")} data-screen-label="Continue learning">
+      <div className="mc-sec-h"><span className="mc-eyebrow">Continue learning</span></div>
+      <article className="mc-card mc-next">
+        <button type="button" className="mc-next-media" onClick={() => goMC(lessonUrlMC(l, true))} aria-label={"Play " + M_MC.shortTitle(l)}>
+          <MCThumb lesson={l} />
+          <span className="mc-next-play" aria-hidden="true"><IcMC name="fluent:play-16-filled" size={18} color={MC_NAVY} /></span>
+          {resume && <MCBar pct={nu.pct} className="mc-bar-overlay" />}
+        </button>
+        <div className="mc-next-tx">
+          <span className="mc-kicker">{nu.reason}</span>
+          <h3 className="mc-next-title">{M_MC.shortTitle(l)}</h3>
+          <p className="mc-next-meta">{l.n ? "Technique Tuesday · Lesson " + l.n : mod ? mod.name : ""}{l.secs ? " · " + M_MC.fmtSecs(l.secs) : ""}{resume ? " · " + nu.pct + "% watched" : ""}</p>
+          <div className="mc-next-actions">
+            <button type="button" className="mc-btn mc-btn-navy" onClick={() => goMC(lessonUrlMC(l, true))}>
+              <IcMC name="lucide:play" size={15} color="#fff" />{resume ? "Resume" : "Start"}
+            </button>
+            <button type="button" className="mc-btn mc-btn-ghost" onClick={() => goMC(lessonUrlMC(l, false))}>Lesson details</button>
+          </div>
+        </div>
+      </article>
+    </section>);
+}
+
+/* Technique Tuesday live strip — real schedule from the TT artwork */
+function MCLiveStrip({ withArt }) {
+  const live = M_MC.nextLive();
+  return (
+    <section className="mc-sec" data-screen-label="Next Technique Tuesday">
+      <div className={"mc-card mc-live" + (withArt ? " mc-live-art" : "")}>
+        {withArt && <img className="mc-live-img" src={M_MC.TT_ART} alt="Technique Tuesday — every week, 8 PM UK / 3 PM ET" />}
+        <div className="mc-live-body">
+          <span className="mc-live-dot" aria-hidden="true" />
+          <div className="mc-live-tx">
+            <span className="mc-kicker">Next live session · {live.when}</span>
+            <b className="mc-live-when">{live.label} · {live.time}</b>
+            <span className="mc-live-sub">{M_MC.LIVE.label} with {M_MC.HOST.name}. The replay lands in the library the next morning.</span>
+          </div>
+        </div>
+        <div className="mc-live-actions">
+          <button type="button" className="mc-btn mc-btn-gold" onClick={() => goMC(pageMC("events"))}><IcMC name="lucide:calendar-plus" size={15} color={MC_NAVY} />Add to calendar</button>
+          <button type="button" className="mc-btn mc-btn-ghost" onClick={() => goMC(pageMC("tuesdays"))}>Watch replays</button>
+        </div>
+      </div>
+    </section>);
+}
+
+/* ================================================================ HUB ===== */
+function MCHubHero({ prog }) {
+  const hours = M_MC.fmtHours(prog.secs);
+  return (
+    <section className="mc-hero" data-screen-label="My Membership · Confidence">
+      <div className="mc-hero-head">
+        <MCBadge />
+        <span className="mc-hero-since">Member library · {M_MC.MODULES.length} modules · {prog.total} lessons</span>
+      </div>
+      <h1 className="mc-hero-title">Welcome back, {MC_ME.name}</h1>
+      {/* hero sub-line removed (user, 2026-10-15) */}
+      <div className="mc-hero-prog">
+        <MCRing pct={prog.pct} size={88} stroke={9} />
+        <ul className="mc-stats" aria-label="Membership learning progress">
+          <li><b>{prog.done}</b><span>of {prog.total} lessons</span></li>
+          <li><b>{hours}</b><span>watched</span></li>
+          <li><b>{prog.tt.done}</b><span>of {prog.tt.total} Tuesdays</span></li>
+        </ul>
+      </div>
+      <button type="button" className="mc-hero-map" onClick={() => goMC(pageMC("map"))}>
+        <IcMC name="lucide:map" size={16} color={MC_GOLD} />View Learning Map<IcMC name="lucide:arrow-right" size={16} color={MC_GOLD} />
+      </button>
+    </section>);
+}
+
+function MCQuickAccess({ prog }) {
+  const latest = M_MC.ttLatest(1)[0];
+  const items = [
+    { key: "tuesdays", icon: "lucide:video", title: "Technique Tuesdays", sub: prog.tt.total + " sessions · " + M_MC.fmtHours(M_MC.ttTotalSecs()), chip: latest ? "New · Lesson " + latest.n : null, href: pageMC("tuesdays") },
+    { key: "map", icon: "lucide:map", title: "Learning Map", sub: "What's included, what's next", href: pageMC("map") },
+    { key: "content", icon: "lucide:library", title: "Membership content", sub: M_MC.MODULES.length + " modules, full course view", href: courseUrlMC() },
+    { key: "help", icon: "lucide:shield-alert", title: "Complications help", sub: "Message the clinical team", href: pageMC("dm") }];
+  return (
+    <section className="mc-sec" data-screen-label="Quick access">
+      <div className="mc-sec-h"><span className="mc-eyebrow">Quick access</span></div>
+      <div className="mc-grid">
+        {items.map((it) =>
+          <button key={it.key} type="button" className={"mc-card mc-tile mc-tile-" + it.key} onClick={() => goMC(it.href)}>
+            <span className="mc-tile-ic"><IcMC name={it.icon} size={20} color={MC_GOLD_INK} /></span>
+            {it.chip && <span className="mc-chip mc-chip-new mc-tile-chip">{it.chip}</span>}
+            <span className="mc-tile-title">{it.title}</span>
+            <span className="mc-tile-sub">{it.sub}</span>
+            <span className="mc-tile-arrow" aria-hidden="true"><IcMC name="lucide:arrow-up-right" size={16} color="currentColor" /></span>
+          </button>)}
+      </div>
+    </section>);
+}
+
+function MCIncluded() {
+  const hrefFor = (h) => h === "map" ? pageMC("map") : h === "tuesdays" ? pageMC("tuesdays") : h === "DirectMessage.html" ? pageMC("dm") : h;
+  return (
+    <section className="mc-sec" data-screen-label="What's included">
+      <div className="mc-sec-h"><span className="mc-eyebrow">What's included in Confidence</span></div>
+      <ul className="mc-card mc-list">
+        {M_MC.INCLUDED.map((it) =>
+          <li key={it.text}>
+            <button type="button" className="mc-row" onClick={() => goMC(hrefFor(it.href))}>
+              <span className="mc-row-ic"><IcMC name={it.icon} size={18} color={MC_GOLD_INK} /></span>
+              <span className="mc-row-tx">{it.text}</span>
+              <IcMC name="lucide:chevron-right" size={18} color="var(--mc-muted)" />
+            </button>
+          </li>)}
+      </ul>
+    </section>);
+}
+
+function MCUpgrade() {
+  return (
+    <section className="mc-sec" data-screen-label="Unlock more with Mastery">
+      <button type="button" className="mc-ramp" onClick={() => goMC(pageMC("tiers"))}>
+        <span className="mc-ramp-tx">
+          <span className="mc-ramp-title">Unlock more with Mastery</span>
+          <span className="mc-ramp-body">Every course in the catalogue, live case reviews and the Mastery community channels.</span>
+          <span className="mc-ramp-cta">See what's included</span>
+        </span>
+        <span className="mc-ramp-arrow" aria-hidden="true"><IcMC name="lucide:arrow-right" size={18} color="#7A4A03" /></span>
+      </button>
+    </section>);
+}
+
+function MembershipHub() {
+  const done = M_MC.useDone();
+  const watch = M_MC.useWatch();
+  const prog = useMemoMC(() => M_MC.progress(done), [done]);
+  const scrollRef = useRefMC(null);
+  const { hidden } = useScrollChromeMC(scrollRef);
+  const back = M_MC.ret(pageMC("learning"));
+  return (
+    <div className="mc-screen" data-screen-label="My Membership · Confidence">
+      {!MC_WEB && <MCHeader title="My Membership" back={back} />}
+      <div className="mc-scroll" ref={scrollRef}>
+        {MC_WEB && <MCCrumb items={[{ label: "My Learning", href: pageMC("learning") }, { label: "My Membership" }]} />}
+        <MCHubHero prog={prog} />
+        <MCNextUp done={done} watch={watch} />
+        <MCQuickAccess prog={prog} />
+        <MCLiveStrip withArt />
+        {/* What's included list (MCIncluded) removed from the hub (user, 2026-10-15) */}
+        <MCUpgrade />
+        <div style={{ height: 24 }} />
+      </div>
+      {!MC_WEB && <MCTabBar compact={hidden} />}
+    </div>);
+}
+
+/* ================================================================ MAP ===== */
+function moduleMetaMC(m, mp) {
+  const secs = m.lessons.reduce((s, l) => s + (l.secs || 0), 0);
+  const vids = m.lessons.filter((l) => l.kind === "video").length;
+  const parts = [m.lessons.length + (m.lessons.length === 1 ? " lesson" : " lessons")];
+  if (vids && vids !== m.lessons.length) parts.push(vids + " videos");
+  if (secs) parts.push(M_MC.fmtHours(secs));
+  return parts.join(" · ");
+}
+
+function MCModuleRow({ m, mp, done, latestNo }) {
+  const isTT = m.key === "technique-tuesday";
+  const cta = mp.status === "done" ? "Review" : mp.status === "live" ? "Continue" : "Start";
+  const open = () => goMC(isTT ? pageMC("tuesdays") : moduleUrlMC(m, done));
+  return (
+    <li className={"mc-mod mc-mod-" + mp.status}>
+      <button type="button" className="mc-mod-main" onClick={open} aria-label={m.name + ", " + mp.done + " of " + mp.total + " completed"}>
+        <span className="mc-mod-ic"><IcMC name={m.icon} size={19} color={mp.status === "done" ? "#fff" : MC_GOLD_INK} /></span>
+        <span className="mc-mod-tx">
+          <span className="mc-mod-name">{m.name}{isTT && latestNo && <span className="mc-chip mc-chip-new">New · Lesson {latestNo}</span>}</span>
+          <span className="mc-mod-meta">{moduleMetaMC(m, mp)}</span>
+          {m.blurb && <span className="mc-mod-blurb">{m.blurb}</span>}
+          <span className="mc-mod-prog"><MCBar pct={mp.pct} /><span className="mc-mod-count">{mp.done}/{mp.total}</span></span>
+        </span>
+      </button>
+      <div className="mc-mod-foot">
+        <MCStatusChip status={isTT && mp.done === 0 ? "new" : mp.status === "new" ? "idle" : mp.status} pct={mp.pct} />
+        <button type="button" className="mc-btn mc-btn-sm mc-btn-navy" onClick={open}>{isTT ? "Open library" : cta}<IcMC name="lucide:arrow-right" size={13} color="#fff" /></button>
+      </div>
+    </li>);
+}
+
+function MCStage({ stage, index, prog, done, open, onToggle, latestNo }) {
+  const mods = M_MC.stageModules(stage);
+  const sp = prog.stages[stage.key] || { done: 0, total: 0, pct: 0 };
+  const status = sp.done === 0 ? "new" : sp.done === sp.total ? "done" : "live";
+  return (
+    <li className={"mc-stage mc-stage-" + status + (open ? " open" : "")}>
+      <span className="mc-stage-node" aria-hidden="true">{status === "done" ? <IcMC name="lucide:check" size={14} color="#fff" strokeWidth={3} /> : index + 1}</span>
+      <button type="button" className="mc-stage-hd" aria-expanded={open} onClick={onToggle}>
+        <span className="mc-stage-ic"><IcMC name={stage.icon} size={18} color={MC_GOLD_INK} /></span>
+        <span className="mc-stage-tx">
+          <span className="mc-stage-name">{stage.name}</span>
+          <span className="mc-stage-sub">{stage.blurb}</span>
+          <span className="mc-stage-prog"><MCBar pct={sp.pct} /><span>{sp.done} of {sp.total}</span></span>
+        </span>
+        <IcMC name={open ? "lucide:chevron-up" : "lucide:chevron-down"} size={20} color="var(--mc-muted)" />
+      </button>
+      {open &&
+      <ul className="mc-mods">
+        {mods.map((m) => <MCModuleRow key={m.key} m={m} mp={prog.modules[m.key]} done={done} latestNo={latestNo} />)}
+      </ul>}
+    </li>);
+}
+
+function MCLegendSheet({ open, onClose }) {
+  if (!open) return null;
+  const rows = [
+    { chip: <MCStatusChip status="new" />, text: "A new Technique Tuesday replay has landed this week." },
+    { chip: <MCStatusChip status="live" pct={40} />, text: "You've started this module — Continue picks up at the next lesson." },
+    { chip: <MCStatusChip status="done" />, text: "Every lesson completed. Review re-opens the module." },
+    { chip: <MCStatusChip status="idle" />, text: "Included in Confidence, not started yet." }];
+  return (
+    <div className="mc-sheet-wrap" role="dialog" aria-modal="true" aria-label="How the Learning Map works">
+      <div className="mc-sheet-scrim" onClick={onClose} />
+      <div className="mc-sheet">
+        <span className="mc-sheet-handle" aria-hidden="true" />
+        <header className="mc-sheet-head"><h2>How the Learning Map works</h2><button type="button" className="mc-sheet-close" aria-label="Close" onClick={onClose}><IcMC name="lucide:x" size={20} color="currentColor" /></button></header>
+        <p className="mc-sheet-p">Every module below is included in your Confidence membership. Stages run top to bottom — start with <b>Start here</b>, then follow Technique Tuesday weekly and dip into the other stages as your clinic needs them.</p>
+        <ul className="mc-legend">{rows.map((r, i) => <li key={i}>{r.chip}<span>{r.text}</span></li>)}</ul>
+        <button type="button" className="mc-btn mc-btn-navy mc-sheet-ok" onClick={onClose}>Got it</button>
+      </div>
+    </div>);
+}
+
+function MembershipMap() {
+  const done = M_MC.useDone();
+  const watch = M_MC.useWatch();
+  const prog = useMemoMC(() => M_MC.progress(done), [done]);
+  const latest = M_MC.ttLatest(1)[0];
+  const [help, setHelp] = useStateMC(false);
+  /* Start here + Technique Tuesday open by default, plus any stage in progress */
+  const [openKeys, setOpenKeys] = useStateMC(() => {
+    const s = { start: true, tuesday: true };
+    M_MC.STAGES.forEach((st) => { const sp = prog.stages[st.key]; if (sp && sp.done > 0 && sp.done < sp.total) s[st.key] = true; });
+    return s;
+  });
+  const toggle = (k) => setOpenKeys((o) => ({ ...o, [k]: !o[k] }));
+  const scrollRef = useRefMC(null);
+  const { hidden } = useScrollChromeMC(scrollRef);
+  const counts = useMemoMC(() => {
+    const c = { done: 0, live: 0, new: 0 };
+    M_MC.MODULES.forEach((m) => { c[prog.modules[m.key].status] += 1; });
+    return c;
+  }, [prog]);
+  const help_btn = <button type="button" className="mc-top-ic" aria-label="How the Learning Map works" onClick={() => setHelp(true)}><IcMC name="lucide:help-circle" size={22} color="currentColor" /></button>;
+  return (
+    <div className="mc-screen" data-screen-label="Membership Learning Map">
+      {!MC_WEB && <MCHeader title="Learning Map" eyebrow="Confidence membership" back={M_MC.ret(pageMC("hub"))} right={help_btn} />}
+      <div className="mc-scroll" ref={scrollRef}>
+        {MC_WEB && <MCCrumb items={[{ label: "My Learning", href: pageMC("learning") }, { label: "My Membership", href: pageMC("hub") }, { label: "Learning Map" }]} right={help_btn} />}
+        <section className="mc-mapsum" data-screen-label="Map summary">
+          <div className="mc-mapsum-row">
+            <MCBadge small />
+            <span className="mc-mapsum-n"><b>{prog.done}</b> of {prog.total} lessons · {prog.pct}%</span>
+          </div>
+          <MCBar pct={prog.pct} className="mc-bar-lg" />
+          <ul className="mc-mapsum-pills" aria-label="Module status">
+            <li><i className="done" />{counts.done} completed</li>
+            <li><i className="live" />{counts.live} in progress</li>
+            <li><i className="new" />{counts.new} to start</li>
+          </ul>
+        </section>
+        <MCNextUp done={done} watch={watch} compact />
+        <section className="mc-sec" data-screen-label="Learning Map">
+          <div className="mc-sec-h"><span className="mc-eyebrow">Your membership, stage by stage</span><button type="button" className="mc-link" onClick={() => goMC(courseUrlMC())}>Full course view</button></div>
+          <ol className="mc-stages">
+            {M_MC.STAGES.map((st, i) => <MCStage key={st.key} stage={st} index={i} prog={prog} done={done} open={!!openKeys[st.key]} onToggle={() => toggle(st.key)} latestNo={latest && latest.n} />)}
+          </ol>
+        </section>
+        <div style={{ height: 24 }} />
+      </div>
+      {!MC_WEB && <MCTabBar compact={hidden} />}
+      <MCLegendSheet open={help} onClose={() => setHelp(false)} />
+    </div>);
+}
+
+/* ================================================================ TUESDAYS === */
+function MCVideoCard({ l, done, w, isNew, wide }) {
+  const isDone = done.indexOf(l.name) !== -1;
+  const pct = w ? M_MC.watchPct(w) : 0;
+  return (
+    <article className={"mc-card mc-vcard" + (wide ? " mc-vcard-wide" : "")}>
+      <button type="button" className="mc-vcard-media" onClick={() => goMC(lessonUrlMC(l, false))} aria-label={"Open " + M_MC.shortTitle(l)}>
+        <MCThumb lesson={l} play onPlay={() => goMC(lessonUrlMC(l, true))} />
+        {isNew && <span className="mc-chip mc-chip-new mc-vcard-new">New</span>}
+        {pct > 0 && !isDone && <MCBar pct={pct} className="mc-bar-overlay" />}
+      </button>
+      <div className="mc-vcard-tx">
+        <span className="mc-kicker">Lesson {l.n}{l.vault ? " · Vault" : ""}</span>
+        <button type="button" className="mc-vcard-title" onClick={() => goMC(lessonUrlMC(l, false))}>{M_MC.shortTitle(l)}</button>
+        <span className="mc-vcard-meta">
+          {l.secs ? <><IcMC name="lucide:clock" size={12} color="currentColor" />{M_MC.fmtSecs(l.secs)}</> : <span className="mc-ph-tag">Duration pending</span>}
+          {pct > 0 && !isDone && <span className="mc-vcard-left">· {M_MC.fmtSecs(Math.round((l.secs || 0) * (100 - pct) / 100))} left</span>}
+          {isDone && <span className="mc-vcard-done"><IcMC name="lucide:check" size={12} color="currentColor" strokeWidth={3} />Watched</span>}
+        </span>
+      </div>
+    </article>);
+}
+
+function MCVideoRow({ l, done, w }) {
+  const isDone = done.indexOf(l.name) !== -1;
+  const pct = w ? M_MC.watchPct(w) : 0;
+  const topics = (l.topics || []).map((k) => (M_MC.TOPICS.find((t) => t.key === k) || {}).name).filter(Boolean).slice(0, 2).join(" · ");
+  return (
+    <li className={"mc-vrow" + (isDone ? " done" : "")}>
+      <button type="button" className="mc-vrow-main" onClick={() => goMC(lessonUrlMC(l, false))}>
+        <MCThumb lesson={l} className="mc-thumb-sm" />
+        <span className="mc-vrow-tx">
+          <span className="mc-kicker">Lesson {l.n}{l.vault ? " · Vault" : ""}{isDone && <span className="mc-vrow-watched"><IcMC name="lucide:check" size={11} color="currentColor" strokeWidth={3} />Watched</span>}</span>
+          <span className="mc-vrow-title">{M_MC.shortTitle(l)}</span>
+          <span className="mc-vrow-meta">{l.secs ? M_MC.fmtSecs(l.secs) : <span className="mc-ph-tag">Duration pending</span>}{topics ? " · " + topics : ""}</span>
+          {pct > 0 && !isDone && <MCBar pct={pct} className="mc-bar-thin" />}
+        </span>
+      </button>
+      <button type="button" className="mc-vrow-play" aria-label={"Play " + M_MC.shortTitle(l)} onClick={() => goMC(lessonUrlMC(l, true))}>
+        <IcMC name="fluent:play-16-filled" size={14} color="currentColor" />
+      </button>
+    </li>);
+}
+
+const MC_PAGE_SIZE = 20;
+/* ---------------------------------------------------------------- upcoming live sessions + calendar -- */
+/* Technique Tuesday is live every Tuesday 8 PM UK (3 PM ET). The next three
+   dates come from PFMembership.nextLive(); the UTC instant is derived from
+   Europe/London so BST/GMT switches are right. Add to calendar mirrors the
+   Events page picker (Google / Apple / Outlook / .ics). */
+const MC_LIVE_MINS = 90;
+function mcLondonUTC(y, m, d, h) {
+  const guess = Date.UTC(y, m, d, h);
+  try {
+    const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", hour12: false }).formatToParts(new Date(guess));
+    const lh = parseInt((parts.find((x) => x.type === "hour") || {}).value, 10) % 24;
+    return new Date(guess - (lh - h) * 3600000);
+  } catch (e) { return new Date(guess); }
+}
+function mcUpcomingSessions(n) {
+  const first = M_MC.nextLive().date;
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const out = [];
+  for (let i = 0; i < (n || 3); i++) {
+    const d = new Date(first.getFullYear(), first.getMonth(), first.getDate() + i * 7);
+    const start = mcLondonUTC(d.getFullYear(), d.getMonth(), d.getDate(), 20);
+    const inDays = Math.round((d - today) / 864e5);
+    out.push({
+      id: "technique-tuesday-" + d.toISOString().slice(0, 10),
+      title: "Technique Tuesday · Live with " + M_MC.HOST.name,
+      day: d.getDate(), mon: months[d.getMonth()], weekday: days[d.getDay()],
+      label: days[d.getDay()] + " " + d.getDate() + " " + months[d.getMonth()],
+      when: inDays === 0 ? "Today" : inDays === 1 ? "Tomorrow" : "In " + inDays + " days",
+      time: M_MC.LIVE.time, start, end: new Date(start.getTime() + MC_LIVE_MINS * 60000)
+    });
+  }
+  return out;
+}
+function mcCalZ(x) { return x.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""); }
+function mcCalDetails(ev) {
+  return "Dr Tim Pearce's weekly live injection demonstration for PROfinity members. Bring your questions — the replay lands in Technique Tuesdays the next morning.\n\nOpen in the app: " + window.location.href.split("#")[0];
+}
+function mcGoogleUrl(ev) {
+  const q = new URLSearchParams({ action: "TEMPLATE", text: ev.title, details: mcCalDetails(ev), location: "PROfinity Academy — live in the app", dates: mcCalZ(ev.start) + "/" + mcCalZ(ev.end) });
+  return "https://calendar.google.com/calendar/render?" + q.toString();
+}
+function mcOutlookUrl(ev) {
+  const q = new URLSearchParams({ path: "/calendar/action/compose", rru: "addevent", subject: ev.title, body: mcCalDetails(ev), location: "PROfinity Academy — live in the app", startdt: ev.start.toISOString(), enddt: ev.end.toISOString() });
+  return "https://outlook.live.com/calendar/0/action/compose?" + q.toString();
+}
+function mcDownloadIcs(ev) {
+  const esc = (t) => String(t).replace(/\\/g, "\\\\").replace(/;/g, "\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//PROfinity Academy//Technique Tuesday//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VEVENT",
+    "UID:" + ev.id + "@profinity.app", "DTSTAMP:" + mcCalZ(new Date()), "DTSTART:" + mcCalZ(ev.start), "DTEND:" + mcCalZ(ev.end),
+    "SUMMARY:" + esc(ev.title), "DESCRIPTION:" + esc(mcCalDetails(ev)), "LOCATION:" + esc("PROfinity Academy — live in the app"), "END:VEVENT", "END:VCALENDAR"];
+  const blob = new Blob([lines.join("\r\n")], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = ev.id + ".ics";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+const MC_CAL_APPS = [
+  { k: "google", l: "Google Calendar", s: "Opens calendar.google.com with the session filled in", i: "logos:google-calendar" },
+  { k: "apple", l: "Apple Calendar", s: "Downloads a .ics you can open on iPhone or Mac", i: "lucide:calendar-days" },
+  { k: "outlook", l: "Outlook", s: "Opens Outlook on the web with the session filled in", i: "logos:microsoft-icon" },
+  { k: "ics", l: "Other calendar (.ics)", s: "Works with any calendar app", i: "lucide:download" }];
+function MCCalendarSheet({ ev, onClose }) {
+  const [picked, setPicked] = useStateMC(null);
+  useEffectMC(() => { const esc = (e) => e.key === "Escape" && onClose(); window.addEventListener("keydown", esc); return () => window.removeEventListener("keydown", esc); }, [onClose]);
+  const pick = (k) => {
+    try {
+      if (k === "google") window.open(mcGoogleUrl(ev), "_blank", "noopener");
+      else if (k === "outlook") window.open(mcOutlookUrl(ev), "_blank", "noopener");
+      else mcDownloadIcs(ev);
+    } catch (e) {}
+    setPicked(k);
+  };
+  return (
+    <div className="mc-sheet-wrap" role="dialog" aria-modal="true" aria-label="Add to calendar">
+      <div className="mc-sheet-scrim" onClick={onClose} />
+      <div className="mc-sheet">
+        <span className="mc-sheet-handle" aria-hidden="true" />
+        <header className="mc-sheet-head"><h2>Add to calendar</h2><button type="button" className="mc-sheet-close" aria-label="Close" onClick={onClose}><IcMC name="lucide:x" size={20} color="currentColor" /></button></header>
+        <div className="mc-cal-ev">
+          <span className="mc-upc-date"><b>{ev.day}</b><i>{ev.mon}</i></span>
+          <span className="mc-cal-ev-tx"><span className="t">{ev.title}</span><span className="s">{ev.weekday} · {ev.time} · {MC_LIVE_MINS} min</span></span>
+        </div>
+        <div className="mc-cal-apps">
+          {MC_CAL_APPS.map((a) =>
+            <button key={a.k} type="button" className={"mc-cal-app" + (picked === a.k ? " done" : "")} onClick={() => pick(a.k)}>
+              <span className="ic"><IcMC name={picked === a.k ? "lucide:check" : a.i} size={22} color={picked === a.k ? "#2E9E6B" : MC_NAVY} /></span>
+              <span className="tx"><span className="l">{a.l}</span><span className="s">{picked === a.k ? "Added — check your calendar app" : a.s}</span></span>
+              <IcMC name="lucide:chevron-right" size={18} color="var(--mc-muted)" />
+            </button>)}
+        </div>
+      </div>
+    </div>);
+}
+
+function TechniqueTuesdays() {
+  const done = M_MC.useDone();
+  const watch = M_MC.useWatch();
+  const all = useMemoMC(() => M_MC.ttLessons(), []);
+  const cont = useMemoMC(() => M_MC.continueWatching(done, watch), [done, watch]);
+  const latest = all.slice(0, 3);
+  const [q, setQ] = useStateMC("");
+  const [topic, setTopic] = useStateMC("all");
+  const [showN, setShowN] = useStateMC(MC_PAGE_SIZE);
+  const [searchOpen, setSearchOpen] = useStateMC(false);
+  const searchRef = useRefMC(null);
+  const live = M_MC.nextLive();
+  const scrollRef = useRefMC(null);
+  const { hidden } = useScrollChromeMC(scrollRef);
+  const chips = [{ key: "all", name: "All" }].concat(M_MC.TOPICS).concat([{ key: "vault", name: "Vault · 1–30" }, { key: "unwatched", name: "Unwatched" }]);
+  const qq = q.trim().toLowerCase();
+  const list = all.filter((l) => {
+    if (topic === "vault" && !l.vault) return false;
+    if (topic === "unwatched" && done.indexOf(l.name) !== -1) return false;
+    if (topic !== "all" && topic !== "vault" && topic !== "unwatched" && (l.topics || []).indexOf(topic) === -1) return false;
+    if (qq && M_MC.shortTitle(l).toLowerCase().indexOf(qq) === -1 && ("lesson " + l.n).indexOf(qq) === -1) return false;
+    return true;
+  });
+  const shown = list.slice(0, showN);
+  const watched = all.filter((l) => done.indexOf(l.name) !== -1).length;
+  useEffectMC(() => { setShowN(MC_PAGE_SIZE); }, [topic, qq]);
+  useEffectMC(() => { if (searchOpen && searchRef.current) searchRef.current.focus(); }, [searchOpen]);
+  const scrollToLib = () => { const el = document.getElementById("mc-library"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); };
+  const [cal, setCal] = useStateMC(null);
+  const upcoming = useMemoMC(() => mcUpcomingSessions(3), []);
+  const searchBtn = <button type="button" className="mc-top-ic" aria-label="Search sessions" onClick={() => { setSearchOpen(true); scrollToLib(); }}><IcMC name="lucide:search" size={21} color="currentColor" /></button>;
+  return (
+    <div className="mc-screen mc-screen-tt" data-screen-label="Technique Tuesday">
+      {!MC_WEB && <MCHeader title="Technique Tuesday" eyebrow="Confidence membership" back={M_MC.ret(pageMC("hub"))} right={searchBtn} />}
+      <div className="mc-scroll" ref={scrollRef}>
+        {MC_WEB && <MCCrumb items={[{ label: "My Learning", href: pageMC("learning") }, { label: "My Membership", href: pageMC("hub") }, { label: "Technique Tuesday" }]} right={searchBtn} />}
+        <section className="mc-tthero" data-screen-label="Upcoming events">
+          <img className="mc-tthero-img" src={M_MC.TT_ART} alt="" />
+          <div className="mc-tthero-body">
+            {/* Upcoming events (user, 2026-10-15): the next live Technique Tuesdays with a calendar picker;
+                the stats strip, Continue watching and Recently added rails were removed the same day */}
+            <span className="mc-kicker mc-kicker-gold">Upcoming events · Live every Tuesday</span>
+            <h1 className="mc-tthero-title">Technique Tuesday</h1>
+            <p className="mc-tthero-sub">Live injection demonstrations with {M_MC.HOST.name}. Next live <b>{upcoming[0].label}</b> · {M_MC.LIVE.time} · {upcoming[0].when.toLowerCase()}.</p>
+            {/* session rows removed (user, 2026-10-15) — the next date lives in the sub-line, Add to calendar opens the picker */}
+            <div className="mc-tthero-actions">
+              <button type="button" className="mc-btn mc-btn-gold" onClick={() => setCal(upcoming[0])}><IcMC name="lucide:calendar-plus" size={15} color={MC_NAVY} />Add to calendar</button>
+            </div>
+          </div>
+        </section>
+
+        <section className="mc-sec" id="mc-library" data-screen-label="Video library">
+          <div className="mc-sec-h"><span className="mc-eyebrow">Video library</span><span className="mc-sec-count">{list.length} of {all.length}</span></div>
+          {(searchOpen || q || MC_WEB) &&
+          <label className="mc-search">
+            <IcMC name="lucide:search" size={18} color="var(--mc-muted)" />
+            <input ref={searchRef} placeholder="Search sessions or “Lesson 84”" aria-label="Search Technique Tuesday sessions" value={q} onChange={(e) => setQ(e.target.value)} />
+            {q && <button type="button" className="mc-search-clear" aria-label="Clear" onClick={() => setQ("")}><IcMC name="lucide:x" size={16} color="currentColor" /></button>}
+          </label>}
+          <div className="mc-chips" role="tablist" aria-label="Filter by topic">
+            {chips.map((c) => <button key={c.key} type="button" role="tab" aria-selected={topic === c.key} className={"mc-chipbtn" + (topic === c.key ? " on" : "")} onClick={() => setTopic(c.key)}>{c.name}</button>)}
+          </div>
+          {shown.length ?
+          <ul className="mc-vlist">{shown.map((l) => <MCVideoRow key={l.name} l={l} done={done} w={watch[l.name]} />)}</ul> :
+          <div className="mc-empty"><IcMC name="lucide:search" size={22} color={MC_GOLD_INK} /><p>No sessions match{q ? " “" + q.trim() + "”" : ""}.</p><button type="button" className="mc-link" onClick={() => { setQ(""); setTopic("all"); }}>Clear filters</button></div>}
+          {list.length > shown.length &&
+          <button type="button" className="mc-btn mc-btn-ghost mc-more" onClick={() => setShowN((n) => n + MC_PAGE_SIZE)}>Show {Math.min(MC_PAGE_SIZE, list.length - shown.length)} more<IcMC name="lucide:chevron-down" size={16} color="currentColor" /></button>}
+          <p className="mc-foot-note"><IcMC name="lucide:info" size={13} color="currentColor" />Titles, lesson numbers and durations are the live membership content. Thumbnails are placeholders until the posters are supplied.</p>
+        </section>
+        <div style={{ height: 24 }} />
+      </div>
+      {cal && <MCCalendarSheet ev={cal} onClose={() => setCal(null)} />}
+      {!MC_WEB && <MCTabBar compact={hidden} />}
+    </div>);
+}
+
+/* ================================================================ WEB shell === */
+function MCCrumb({ items, right }) {
+  return (
+    <nav className="mc-crumb" aria-label="Breadcrumb">
+      <ol>
+        {items.map((it, i) => <li key={i}>{it.href ? <button type="button" onClick={() => goMC(it.href)}>{it.label}</button> : <span aria-current="page">{it.label}</span>}{i < items.length - 1 && <IcMC name="lucide:chevron-right" size={14} color="var(--mc-muted)" />}</li>)}
+      </ol>
+      {right}
+    </nav>);
+}
+
+const MC_SCREENS = { hub: MembershipHub, map: MembershipMap, tuesdays: TechniqueTuesdays };
+
+function useDeviceScaleMC() {
+  const calc = () => Math.min(1, (window.innerHeight - 40) / 956);
+  const [scale, setScale] = useStateMC(calc);
+  useEffectMC(() => { const u = () => setScale(calc()); window.addEventListener("resize", u); return () => window.removeEventListener("resize", u); }, []);
+  return scale;
+}
+function useIsMobileMC() {
+  const [mobile, setMobile] = useStateMC(() => window.matchMedia("(max-width:768px)").matches);
+  useEffectMC(() => { const mq = window.matchMedia("(max-width:768px)"); const h = (e) => setMobile(e.matches); mq.addEventListener("change", h); return () => mq.removeEventListener("change", h); }, []);
+  return mobile;
+}
+
+function MembershipApp() {
+  const Screen = MC_SCREENS[MC_PAGE] || MembershipHub;
+  const mobile = useIsMobileMC();
+  const scale = useDeviceScaleMC();
+  const vars = { "--action-primary": MC_NAVY, "--action-primary-hover": "#081120" };
+  if (MC_WEB) {
+    const { TopNav } = DSMC;
+    const navigate = (label) => { const u = { Home: "NewsfeedWeb.html", Profile: "Profile.html", "My Learning": "MyLearning.html", Community: "Community.html", Agent: "Agent.html", Rewards: "RewardsWeb.html" }[label]; if (u) goMC(u); };
+    useEffectMC(() => { document.querySelectorAll("#pf-root nav > button").forEach((b) => { if (b.textContent.trim() === "My Learning") b.setAttribute("data-pf-active", "1"); }); });
+    return (
+      <div className="app mc-web" style={vars}>
+        <TopNav active="My Learning" user={MC_ME} logoSrc="assets/profinity-icon-purple-gold.png" onNavigate={navigate} style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />
+        <div className="mc-web-page"><Screen /></div>
+      </div>);
+  }
+  if (mobile) return <div className="app" style={{ ...vars, background: "#F6F3EF" }}><Screen /></div>;
+  return (
+    <div className="app device-stage" style={{ ...vars, backgroundColor: "rgb(217, 218, 225)" }}>
+      <div style={{ transform: `scale(${scale})`, transformOrigin: "center center" }}>
+        <IOSDevice width={440} height={956}><Screen /></IOSDevice>
+      </div>
+    </div>);
+}
+
+ReactDOM.createRoot(document.getElementById("pf-root")).render(<MembershipApp />);

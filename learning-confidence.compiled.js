@@ -651,6 +651,254 @@ function LCTabBar({
   }));
 }
 
+/* ---------------------------------------------------------------- my membership · technique tuesdays -- */
+/* Entry point into the Confidence membership journey (2026-10-15):
+   My Learning → My Membership (MembershipConfidence.html) → Technique
+   Tuesdays (TechniqueTuesdays.html) → lesson. Data is the REAL PROfinity
+   Membership course via window.PFMembership (membership-data.js, loaded by
+   the shell after learning-shared.js): lesson titles, numbers, durations and
+   intros come from the app seed; nothing here is invented. The membership
+   CDN posters are not public, so cards draw a numbered tile — a placeholder,
+   not artwork. Sessions before Lesson 50 have no duration in the seed, so
+   their duration chip is simply omitted rather than guessed.
+   Watch progress (Continue watching) is the shared pf-membership-watch store
+   the lesson reader writes; completion is pf-lessons-done like everything
+   else on this page. The section renders nothing when the module is absent. */
+const M_LC = window.PFMembership || null;
+if (M_LC && M_LC.seed) M_LC.seed(); /* idempotent demo baseline, before first render */
+
+const LC_MEMBERSHIP_URLS = {
+  hub: "MembershipConfidence.html",
+  tuesdays: "TechniqueTuesdays.html"
+};
+
+/* Lesson details → straight into the player, in THIS variant, returning here. */
+function membershipLessonUrlLC(l, play) {
+  const p = {
+    course: M_LC.SLUG,
+    level: l.li,
+    module: l.si,
+    lesson: l.ni,
+    theme: LC_URLS.theme,
+    ret: LC_URLS.self
+  };
+  if (play) p.play = 1;
+  return LC_URLS.lesson + "?" + new URLSearchParams(p).toString();
+}
+function withThemeLC(url) {
+  return url + (url.indexOf("?") === -1 ? "?" : "&") + "theme=" + LC_URLS.theme;
+}
+
+/* Numbered tile standing in for the (non-public) session poster. */
+function LCTTTile({
+  lesson,
+  size,
+  pct
+}) {
+  return /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-tile" + (size ? " lcm-tt-tile-" + size : ""),
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-tile-n"
+  }, lesson.n), /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-tile-play"
+  }, /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
+    name: "fluent:play-16-filled",
+    size: size === "lg" ? 18 : 12,
+    color: "#fff"
+  })), pct > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-tile-bar"
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: pct + "%"
+    }
+  })));
+}
+function LCTechniqueTuesdays({
+  done
+}) {
+  if (!M_LC) return null;
+  const watch = M_LC.useWatch();
+  const tt = M_LC.ttLessons();
+  const latest = M_LC.ttLatest(3);
+  const featured = latest[0];
+  const resume = useMemoLC(() => M_LC.continueWatching(done, watch).filter(x => x.lesson.n).slice(0, 4), [done, watch]);
+  const ttDone = tt.filter(l => done.indexOf(l.name) !== -1).length;
+  const live = M_LC.nextLive();
+  const featuredPct = watch[featured.name] ? M_LC.watchPct(watch[featured.name]) : 0;
+  const featuredDone = done.indexOf(featured.name) !== -1;
+  const ctaFor = l => done.indexOf(l.name) !== -1 ? "Rewatch" : watch[l.name] && M_LC.watchPct(watch[l.name]) > 0 ? "Continue" : "Watch";
+  const openAll = () => goLC(withThemeLC(LC_MEMBERSHIP_URLS.tuesdays));
+  return /*#__PURE__*/React.createElement("section", {
+    className: "lcm-sec",
+    "data-screen-label": "Technique Tuesdays"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lcm-sec-h lcm-sec-h-eyebrow"
+  }, /*#__PURE__*/React.createElement("h2", {
+    className: "lcm-eyebrow lcm-eyebrow-gold"
+  }, "My membership"), /*#__PURE__*/React.createElement("span", {
+    className: "sub"
+  }, M_LC.TIER_NAME)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lcm-card lcm-mem",
+    onClick: () => goLC(withThemeLC(LC_MEMBERSHIP_URLS.hub)),
+    "aria-label": "Open my Confidence membership"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lcm-res-ic",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
+    name: "lucide:graduation-cap",
+    size: 22,
+    color: LC_INK.gold
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lcm-res-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lcm-res-title"
+  }, M_LC.TITLE), /*#__PURE__*/React.createElement("span", {
+    className: "lcm-res-sub"
+  }, "Learning Map, ", M_LC.MODULES.length, " modules and the weekly live session — everything in Confidence.")), /*#__PURE__*/React.createElement("span", {
+    className: "lcm-prog-arrow",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: LC_INK.muted
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "lcm-sec-h lcm-tt-h"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
+    className: "lcm-eyebrow lcm-eyebrow-gold"
+  }, "Technique Tuesdays"), /*#__PURE__*/React.createElement("h2", {
+    className: "lcm-tt-title"
+  }, "Weekly live injection demos")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lcm-tt-all",
+    onClick: openAll
+  }, "View all")), /*#__PURE__*/React.createElement("p", {
+    className: "lcm-tt-desc"
+  }, "Dr Tim's members-only training library: ", tt.length, " recorded sessions, a new one every Tuesday.", ttDone > 0 ? " You've completed " + ttDone + " so far." : ""), /*#__PURE__*/React.createElement("div", {
+    className: "lcm-tt-hero"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lcm-tt-art"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: M_LC.TT_ART,
+    alt: "Technique Tuesday — every week, 8 PM UK / 3 PM ET"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-chip lcm-tt-chip-live"
+  }, /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
+    name: "lucide:calendar",
+    size: 12,
+    color: "#fff"
+  }), "Next live · ", live.label, " · ", live.time.split(" · ")[0])), /*#__PURE__*/React.createElement("div", {
+    className: "lcm-tt-hero-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-hero-eyebrow"
+  }, "Latest session · Lesson ", featured.n), /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-hero-name"
+  }, M_LC.shortTitle(featured)), /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-hero-meta"
+  }, featured.dur && /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-chip lcm-tt-chip-card"
+  }, /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
+    name: "lucide:clock",
+    size: 12,
+    color: LC_INK.gold
+  }), featured.dur), /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-chip lcm-tt-chip-card"
+  }, /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
+    name: "lucide:user",
+    size: 12,
+    color: LC_INK.gold
+  }), M_LC.HOST.name), featuredDone && /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-chip lcm-tt-chip-done"
+  }, /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
+    name: "lucide:check",
+    size: 12,
+    color: "#fff",
+    strokeWidth: 3
+  }), "Completed")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lcm-tt-watch",
+    onClick: () => goLC(membershipLessonUrlLC(featured, true))
+  }, /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
+    name: "fluent:play-16-filled",
+    size: 15,
+    color: LC_INK.onGold
+  }), featuredDone ? "Rewatch" : featuredPct > 0 ? "Continue · " + featuredPct + "%" : "Watch now"))), resume.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "lcm-tt-sub",
+    "data-screen-label": "Continue watching"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lcm-sec-h lcm-sec-h-eyebrow"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "lcm-eyebrow lcm-eyebrow-gold"
+  }, "Continue watching"), /*#__PURE__*/React.createElement("span", {
+    className: "sub"
+  }, resume.length, " in progress")), /*#__PURE__*/React.createElement("div", {
+    className: "lcm-tt-rail"
+  }, resume.map(x => /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lcm-tt-rcard",
+    key: x.lesson.name,
+    onClick: () => goLC(membershipLessonUrlLC(x.lesson, true)),
+    "aria-label": "Resume Lesson " + x.lesson.n + ", " + x.pct + "% watched"
+  }, /*#__PURE__*/React.createElement(LCTTTile, {
+    lesson: x.lesson,
+    size: "lg",
+    pct: x.pct
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-rname"
+  }, M_LC.shortTitle(x.lesson)), /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-rmeta"
+  }, x.pct, "% watched", x.leftSecs ? " · " + M_LC.fmtSecs(x.leftSecs) + " left" : ""), /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-resume"
+  }, /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
+    name: "fluent:play-16-filled",
+    size: 12,
+    color: LC_INK.gold
+  }), "Resume"))))), /*#__PURE__*/React.createElement("div", {
+    className: "lcm-tt-sub",
+    "data-screen-label": "Recently added"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lcm-sec-h lcm-sec-h-eyebrow"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "lcm-eyebrow lcm-eyebrow-gold"
+  }, "Recently added"), /*#__PURE__*/React.createElement("span", {
+    className: "sub"
+  }, "Newest first")), /*#__PURE__*/React.createElement("ol", {
+    className: "lcm-rows lcm-tt-rows"
+  }, latest.map(l => {
+    const isDone = done.indexOf(l.name) !== -1;
+    const cta = ctaFor(l);
+    return /*#__PURE__*/React.createElement("li", {
+      key: l.name
+    }, /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "lcm-row lcm-tt-row" + (isDone ? " done" : ""),
+      onClick: () => goLC(membershipLessonUrlLC(l, true))
+    }, /*#__PURE__*/React.createElement(LCTTTile, {
+      lesson: l,
+      pct: watch[l.name] && !isDone ? M_LC.watchPct(watch[l.name]) : 0
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "lcm-tt-rowtx"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "lcm-row-title lcm-tt-rowname"
+    }, M_LC.shortTitle(l)), /*#__PURE__*/React.createElement("span", {
+      className: "lcm-tt-rowmeta"
+    }, "Lesson ", l.n, l.dur ? " · " + l.dur : "", isDone ? " · Completed" : "")), /*#__PURE__*/React.createElement("span", {
+      className: "lcm-tt-cta" + (cta === "Rewatch" ? " muted" : "")
+    }, cta)));
+  }))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lcm-tt-viewall",
+    onClick: openAll
+  }, "View all Technique Tuesdays", /*#__PURE__*/React.createElement("span", {
+    className: "lcm-tt-viewall-n"
+  }, tt.length), /*#__PURE__*/React.createElement(DSLC.IconifyIcon, {
+    name: "lucide:arrow-right",
+    size: 16,
+    color: LC_INK.gold
+  })));
+}
+
 /* ---------------------------------------------------------------- screen -- */
 function LearningConfidence() {
   const done = useLessonsDoneLC();
@@ -711,6 +959,8 @@ function LearningConfidence() {
     done: done,
     currentIdx: currentIdx,
     nextIdx: currentIdx
+  }), /*#__PURE__*/React.createElement(LCTechniqueTuesdays, {
+    done: done
   }), /*#__PURE__*/React.createElement(LCFreeResources, null), /*#__PURE__*/React.createElement(LCRampCard, {
     label: "Discover your journey",
     title: "Discover your journey",

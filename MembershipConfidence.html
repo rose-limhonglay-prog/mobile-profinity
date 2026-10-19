@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <script src="dark-mode-init.js"></script>
+  <title>PROfinity — My Membership (Confidence) · My Learning (mobile)</title>
+
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fonts.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/colors.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/typography.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/spacing.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fig-tokens.css" />
+  <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/styles.css" />
+  <!-- shell: body, device stage, .lm-tabs tab bar -->
+  <link rel="stylesheet" href="learning-mobile.css" />
+  <link rel="stylesheet" href="membership-confidence.css?v=20261015f" />
+  <link rel="stylesheet" href="dark-mode.css" />
+  <link rel="stylesheet" href="upload-tracker.css" />
+  <link rel="stylesheet" href="voice-call.css" />
+  <link rel="stylesheet" href="coach.css" />
+  <!-- real phone browser mode (mobile-web host / ?realdevice=1): no bezel, safe-area insets -->
+  <script src="real-device.js?v=20261008b"></script>
+  <link rel="stylesheet" href="real-device.css?v=20261015a" />
+</head>
+<body>
+  <div id="pf-root"></div>
+
+  <script src="vendor/react.production.min.js"></script>
+  <script src="vendor/react-dom.production.min.js"></script>
+  <!-- NOT the bare iconify-icon script: claims the data-iconify slot, bulk-loads
+       the icon collections, then boots the component so every glyph resolves. -->
+  <script>window.PF_ICONS_EXTRA = { lucide: ["shield-check", "map", "library", "shield-alert", "id-card", "video", "calendar-plus", "arrow-up-right", "arrow-right", "help-circle", "chevron-up", "chevron-down", "chevron-left", "chevron-right", "search", "x", "clock", "check", "play", "info", "flag", "trending-up", "heart-pulse", "archive", "file-text", "users", "image", "syringe", "rocket", "hourglass", "settings", "sliders-horizontal", "megaphone", "handshake", "sparkles", "scale", "flower", "clipboard-list", "pill", "book-open", "film", "message-square", "smartphone", "home", "user", "gift", "bell", "menu", "moon", "sun", "log-out", "message-circle", "heart", "user-plus", "calendar", "graduation-cap", "credit-card", "bookmark", "headset", "cpu", "crown", "gem"], fluent: ["play-16-filled"] };</script>
+  <script src="icons-preload.js" data-iconify></script>
+
+  <script src="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/_ds_bundle.js"></script>
+
+  <script src="pagetrans.js"></script>
+
+  <script src="ios-frame.compiled.js?v=20261008a"></script>
+  <!-- Screen flag — membership-confidence.jsx reads it at module scope. -->
+  <script>window.PF_MC_PAGE = "hub";</script>
+  <script src="loyalty-engine.js"></script>
+  <script src="upload-tracker.js"></script>
+  <script src="voice-call.js?v=2"></script>
+  <script src="learning-shared.js"></script>
+  <script src="membership-data.js?v=20261015a"></script>
+  <script src="membership-confidence.compiled.js?v=20261015g"></script>
+  <script src="coach.js"></script>
+
+</body>
+</html>

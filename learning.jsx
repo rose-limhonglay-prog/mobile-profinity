@@ -123,6 +123,54 @@ function Header() {
 }
 
 /* ---------------------------------------------------------------- goal ---- */
+/* ---------------------------------------------------------------- My Membership · Confidence -- */
+/* Web twin of the mobile LM2MembershipSection (learning-mobile.jsx): silver
+   Confidence badge, welcome, membership learning progress and four quick-access
+   tiles. Data from membership-data.js (window.PFMembership); hidden without it. */
+const PFM_W = window.PFMembership || null;
+function MembershipCard() {
+  if (!PFM_W) return null;
+  const [done] = PFL.useLessonsDone();
+  const watch = PFM_W.useWatch();
+  const prog = useMemoL(() => PFM_W.progress(done), [done]);
+  const nu = useMemoL(() => PFM_W.nextUp(done, watch), [done, watch]);
+  const latest = PFM_W.ttLatest(1)[0];
+  const P = PFM_W.PAGES;
+  const lessonUrl = (l, play) => (play ? P.lessonWeb : P.courseWeb) + "?" + new URLSearchParams({ course: PFM_W.SLUG, level: l.li, module: l.si, lesson: l.ni }).toString();
+  const tiles = [
+    { key: "tt", icon: "lucide:video", title: "Technique Tuesdays", sub: latest ? "New · Lesson " + latest.n : prog.tt.total + " sessions", href: P.tuesdaysWeb, chip: true },
+    { key: "content", icon: "lucide:library", title: "Membership content", sub: PFM_W.MODULES.length + " modules · " + prog.total + " lessons", href: P.courseWeb + "?course=" + PFM_W.SLUG },
+    { key: "continue", icon: "lucide:play", title: nu.kind === "resume" ? "Continue learning" : "Start next lesson", sub: PFM_W.shortTitle(nu.lesson), href: lessonUrl(nu.lesson, true) },
+    { key: "map", icon: "lucide:map", title: "Learning Map", sub: "What's included, what's next", href: P.mapWeb }];
+  return (
+    <section className="lrn2-mem" data-screen-label="My Membership · Confidence">
+      <div className="lrn2-mem-left">
+        <button type="button" className="lrn2-mem-head" onClick={() => go(P.hubWeb)} aria-label="Open My Membership">
+          <span className="lrn2-mem-badge"><IconifyIcon name="lucide:shield-check" size={15} color="#2B3440" />Confidence</span>
+          <span className="lrn2-mem-head-tx">
+            <span className="lrn2-mem-kicker">My Membership</span>
+            <span className="lrn2-mem-title">Welcome back, {ME.name.split(" ")[0]}</span>
+          </span>
+          <span className="lrn2-mem-arrow" aria-hidden="true"><IconifyIcon name="lucide:chevron-right" size={20} color="currentColor" /></span>
+        </button>
+        <div className="lrn2-mem-prog" role="progressbar" aria-valuenow={prog.pct} aria-valuemin={0} aria-valuemax={100} aria-label="Membership learning progress">
+          <span className="lrn2-mem-bar"><span style={{ width: Math.max(2, prog.pct) + "%" }} /></span>
+          <span className="lrn2-mem-stat"><b>{prog.done}</b> of {prog.total} lessons · {PFM_W.fmtHours(prog.secs)} watched · {prog.tt.done} of {prog.tt.total} Tuesdays</span>
+        </div>
+        <button type="button" className="lrn2-mem-open" onClick={() => go(P.hubWeb)}>Open My Membership<IconifyIcon name="lucide:arrow-right" size={16} color="currentColor" /></button>
+      </div>
+      <div className="lrn2-mem-grid">
+        {tiles.map((t) =>
+          <button key={t.key} type="button" className={"lrn2-mem-tile lrn2-mem-tile-" + t.key} onClick={() => go(t.href)}>
+            <span className="lrn2-mem-tile-ic"><IconifyIcon name={t.icon} size={18} color="#8A5303" /></span>
+            <span className="lrn2-mem-tile-title">{t.title}</span>
+            <span className={"lrn2-mem-tile-sub" + (t.chip ? " chip" : "")}>{t.sub}</span>
+          </button>)}
+      </div>
+    </section>
+  );
+}
+
 function GoalCard({ onHelp }) {
   return (
     <section className="lrn2-goal" data-screen-label={GOAL.title}>
@@ -578,6 +626,20 @@ function PromoLearningPath() {
   );
 }
 
+function PromoMembership() {
+  if (!PFM_W) return null;
+  return (
+    <button type="button" className="lrn2-promo navy lrn2-promo-mem" data-screen-label="Confidence membership" onClick={() => go(PFM_W.PAGES.courseWeb + "?course=" + PFM_W.SLUG)}>
+      <span className="ic"><IconifyIcon name="lucide:shield-check" size={24} color="var(--brand-gold)" /></span>
+      <div className="tx">
+        <h3>Confidence membership <span className="lrn2-mem-badge lrn2-mem-badge-xs">Confidence</span></h3>
+        <p>Technique Tuesday, treatments, protocols and the clinic-growth library &mdash; {PFM_W.MODULES.length} modules included in your membership.</p>
+      </div>
+      <span className="lrn2-navy-btn">Open membership course<IconifyIcon name="lucide:arrow-right" size={17} color="var(--brand-navy)" /></span>
+    </button>
+  );
+}
+
 function PromoUpgrade() {
   if (!NEXT_TIER) return null;
   const nextName = PFL.TIER_NAME[NEXT_TIER];
@@ -681,6 +743,8 @@ function MyLearningApp() {
 
         <GoalCard onHelp={() => setHelpOpen(true)} />
 
+        {CONFIDENCE_TIER && <MembershipCard />}
+
         {!noCoursesYet &&
           <div className="lrn-tabs">
             <Tabs tabs={TABS} active={tab} onChange={setTab} />
@@ -749,6 +813,7 @@ function MyLearningApp() {
         <section className="lrn2-promos">
           {!FREE_TIER && <PromoFreeResources unlocked={resourcesUnlocked} onStartSurvey={() => setSurveyOpen(true)} />}
           {!FREE_TIER && <PromoLearningPath />}
+          {!FREE_TIER && <PromoMembership />}
           <PromoUpgrade />
         </section>
       </div>

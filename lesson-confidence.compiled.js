@@ -404,12 +404,22 @@ function buildGenericCourseLX(params) {
     }]
   };
 }
-const LX_COURSE = LX_COURSES[LX_COURSE_PARAM] || (LX_PARAMS.get("title") ? buildGenericCourseLX(LX_PARAMS) : LX_8D);
+/* ?course=profinity-membership → the real Confidence membership course from
+   membership-data.js (window.PFMembership), when that script is on the shell */
+const LX_MEMBERSHIP = window.PFMembership && LX_COURSE_PARAM === window.PFMembership.SLUG ? window.PFMembership.curriculum() : null;
+const LX_COURSE = LX_COURSES[LX_COURSE_PARAM] || LX_MEMBERSHIP || (LX_PARAMS.get("title") ? buildGenericCourseLX(LX_PARAMS) : LX_8D);
 
 /* Back: this IS the course page, so back returns to the learning page — the
    Confidence one (same variant) when a Confidence shell pinned the theme,
    otherwise the standard My Learning page. */
-const LX_BACK_URL = window.PF_LC_LIGHT == null ? LX_LEARNING_URL : window.PF_LC_LIGHT ? "LearningMobileConfidenceLight.html" : "LearningMobileConfidence.html";
+const LX_BACK_DEFAULT = window.PF_LC_LIGHT == null ? LX_LEARNING_URL : window.PF_LC_LIGHT ? "LearningMobileConfidenceLight.html" : "LearningMobileConfidence.html";
+/* ?ret=<Page>.html[?…] (the membership hub / Learning Map / Technique Tuesday
+   pages send it) wins, so back returns to the page that opened the lesson. */
+function retLX() {
+  const r = LX_PARAMS.get("ret");
+  return r && /^[A-Za-z0-9_-]+\.html(\?[^#]*)?$/.test(r) ? r : null;
+}
+const LX_BACK_URL = retLX() || LX_BACK_DEFAULT;
 
 /* ?level=&module=&lesson=[&sub=] (the shape CourseDetail/Module/SubModule emit)
    → index into the flat lesson list; null when absent or out of range. */
@@ -1559,6 +1569,7 @@ function LXVideo({
   const [chrome, setChrome] = useStateLX(true);
   const hideTimer = useRefLX(null);
   const doneRef = useRefLX(false);
+  const watchRef = useRefLX(0);
   useEffectLX(() => {
     doneRef.current = false;
     setV({
@@ -1650,6 +1661,15 @@ function LXVideo({
       cur: e.currentTime,
       dur: e.duration || 0
     }));
+    /* membership lessons feed the Technique Tuesday "Continue watching" store
+       (pf-membership-watch) — at most once every 4s of playback */
+    if (course.membership && window.PFMembership && e.duration && e.currentTime > 0.5) {
+      const now = Date.now();
+      if (!watchRef.current || now - watchRef.current > 4000) {
+        watchRef.current = now;
+        window.PFMembership.setWatch(item.name, e.currentTime, e.duration);
+      }
+    }
     if (!doneRef.current && e.duration && e.currentTime / e.duration >= 0.9) {
       doneRef.current = true;
       onComplete();

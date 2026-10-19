@@ -327,8 +327,8 @@ const SM_MEMBERSHIP_TIERS_M = ["confidence", "mastery", "freedom"];
 /* Rows inside the "My Membership" card — identical across confidence/mastery/
    freedom; freedom appends one extra row (SM_FREEDOM_LECTURE_ROW_M). */
 const SM_MEMBERSHIP_ROWS_M = [
-{ label: "Membership Training", icon: "lucide:graduation-cap", href: "CourseDetail.html?title=Membership+Training&instr=Dr.+Tim+Pearce" },
-{ label: "Technique Tuesday",   icon: "lucide:calendar-check", href: "CourseDetail.html?title=Technique+Tuesday&instr=Dr.+Tim+Pearce" },
+{ label: "Membership Training", icon: "lucide:graduation-cap", href: "CourseDetail.html?course=profinity-membership" }, /* the membership course itself (user, 2026-10-15) */
+{ label: "Technique Tuesday",   icon: "lucide:calendar-check", href: "TechniqueTuesdays.html" },
 { label: "Complications Help",  icon: "lucide:shield-alert",   href: "DirectMessage.html" },
 { label: "AI Coach",            icon: "lucide:sparkles",       href: "LearningMobile.html" }];
 const SM_FREEDOM_LECTURE_ROW_M = { label: "Freedom Path Lectures", icon: "lucide:presentation", href: "LearningMobile.html" };

@@ -310,13 +310,15 @@
     var slug = raw ? resolveSlug(raw) : null;
     var base;
     if (slug && COURSES[slug]) base = COURSES[slug];
+    /* the real Confidence membership course (membership-data.js), when loaded */
+    else if (slug && window.PFMembership && slug === window.PFMembership.SLUG) base = window.PFMembership.curriculum();
     else if (params.get("title") || slug) base = buildGenericCourse(params, slug);
     else base = COURSE_8D;
     var course = Object.assign({}, base);
     course.price = PFLearn.price(course.slug, params.get("price"));
     course.dur = params.get("dur") || course.dur || null;
     course.instr = course.instr || INSTRUCTOR.name;
-    course.bespoke = !!COURSES[course.slug];
+    course.bespoke = !!COURSES[course.slug] || !!course.membership;
     return course;
   }
 

@@ -121,6 +121,14 @@ function resumeUrlL(c) {
 function withLiveProgressL(list, done) {
   const r = PFLS_L.resume(LM2_CONTINUE_SLUG, done);
   return list.map((c) => {
+    /* the Profinity Membership card resumes the real membership course (membership-data.js) */
+    if (c.title === "Profinity Membership" && PFM_L) {
+      const cur = PFM_L.curriculum();
+      const m = PFLS_L.resume(cur, done);
+      if (m.allDone) return { ...c, slug: cur.slug, curriculum: cur, completed: true, certificate: { issuedDate: "Today", id: "PF-MEM-0266", image: CERT_THUMB_L } };
+      if (m.started) return { ...c, slug: cur.slug, curriculum: cur, progress: m.pct, lesson: m.lessonNumber, modulesLeft: Math.max(1, cur.levels.length - m.item.li) };
+      return { ...c, slug: cur.slug, curriculum: cur };
+    }
     if (c.title !== "8D Lip Design") return c;
     if (r.allDone) return { ...c, slug: LM2_CONTINUE_SLUG, progress: undefined, completed: true, certificate: { issuedDate: "Today", id: "PF-8DL-0039", image: CERT_THUMB_L } };
     return { ...c, slug: LM2_CONTINUE_SLUG, progress: r.pct, lesson: r.lessonNumber, modulesLeft: Math.max(1, r.course.levels.filter((l) => (l.sections || []).length).length - r.item.li) };
@@ -189,6 +197,51 @@ function LM2Header({ freeTier, tier }) {
       {freeTier && <p className="lm2-head-sub">Your goal is to grow in aesthetics or medical school</p>}
     </div>);
 
+}
+
+/* ---------------------------------------------------------------- My Membership · Confidence -- */
+/* Confidence members' entry point to everything their membership includes
+   (user brief, 2026-10-15): silver tier badge (Confidence = silver), welcome,
+   membership learning progress, and four quick-access tiles — Technique
+   Tuesdays, membership content, continue learning, Learning Map. Data comes
+   from membership-data.js (window.PFMembership, the real PROfinity Membership
+   course); the section renders nothing when that script is absent. */
+const PFM_L = window.PFMembership || null;
+function LM2MembershipSection({ done }) {
+  if (!PFM_L) return null;
+  const watch = PFM_L.useWatch();
+  const prog = React.useMemo(() => PFM_L.progress(done), [done]);
+  const nu = React.useMemo(() => PFM_L.nextUp(done, watch), [done, watch]);
+  const latest = PFM_L.ttLatest(1)[0];
+  const hub = PFM_L.PAGES.hub;
+  const tiles = [
+    { key: "tt", icon: "lucide:video", title: "Technique Tuesdays", sub: latest ? "New · Lesson " + latest.n : prog.tt.total + " sessions", href: PFM_L.PAGES.tuesdays, chip: true },
+    { key: "content", icon: "lucide:library", title: "Membership content", sub: PFM_L.MODULES.length + " modules · " + prog.total + " lessons", href: PFM_L.courseUrl({ ret: "LearningMobile.html" }) },
+    { key: "continue", icon: "lucide:play", title: nu.kind === "resume" ? "Continue learning" : "Start next lesson", sub: PFM_L.shortTitle(nu.lesson), href: PFM_L.lessonUrl(nu.lesson, { play: true, ret: "LearningMobile.html" }) },
+    { key: "map", icon: "lucide:map", title: "Learning Map", sub: "What's included, what's next", href: PFM_L.PAGES.map }];
+  return (
+    <section className="lm2-mem" data-screen-label="My Membership · Confidence">
+      <button type="button" className="lm2-mem-head" onClick={() => goL(hub)} aria-label="Open My Membership">
+        <span className="lm2-mem-badge"><IconifyL name="lucide:shield-check" size={14} color="#2B3440" />Confidence</span>
+        <span className="lm2-mem-head-tx">
+          <span className="lm2-mem-kicker">My Membership</span>
+          <span className="lm2-mem-title">Welcome back, {PFLS_L.ME ? PFLS_L.ME.name : "Katy"}</span>
+        </span>
+        <span className="lm2-mem-arrow" aria-hidden="true"><IconifyL name="lucide:chevron-right" size={20} color="currentColor" /></span>
+      </button>
+      <div className="lm2-mem-prog" role="progressbar" aria-valuenow={prog.pct} aria-valuemin={0} aria-valuemax={100} aria-label="Membership learning progress">
+        <span className="lm2-mem-bar"><span style={{ width: Math.max(2, prog.pct) + "%" }} /></span>
+        <span className="lm2-mem-stat"><b>{prog.done}</b> of {prog.total} lessons · {PFM_L.fmtHours(prog.secs)} watched · {prog.tt.done} of {prog.tt.total} Tuesdays</span>
+      </div>
+      <div className="lm2-mem-grid">
+        {tiles.map((t) =>
+          <button key={t.key} type="button" className={"lm2-mem-tile lm2-mem-tile-" + t.key} onClick={() => goL(t.href)}>
+            <span className="lm2-mem-tile-ic"><IconifyL name={t.icon} size={17} color="#8A5303" /></span>
+            <span className="lm2-mem-tile-title">{t.title}</span>
+            <span className={"lm2-mem-tile-sub" + (t.chip ? " chip" : "")}>{t.sub}</span>
+          </button>)}
+      </div>
+    </section>);
 }
 
 function LM2GoalBanner({ data, onHelp }) {
@@ -573,6 +626,50 @@ function LM2LearningPathCard() {
 
 }
 
+/* Technique Tuesdays card in the promo stack (user, 2026-10-15 "add there the
+   TT"): the real artwork as a thumb, the newest real session, the library
+   count — opens TechniqueTuesdays.html. Members only (free accounts are not
+   entitled to the library, so the card is simply absent for them). */
+function LM2TechniqueTuesdayCard({ done }) {
+  if (!PFM_L) return null;
+  const tt = PFM_L.ttLessons();
+  const latest = tt[0];
+  const open = () => goL(PFM_L.PAGES.tuesdays);
+  /* white card like Free Resources (user, 2026-10-15): no artwork, navy ink */
+  return (
+    <section className="lm2-pathsec lm2-tt-sec" data-screen-label="Technique Tuesdays">
+      <div className="lm-unlock lm2-tt-card" onClick={open} role="link" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } }}>
+        <div className="lm-unlock-tx">
+          <span className="ti"><IconifyL name="lucide:video" size={15} color="var(--brand-navy)" style={{ marginRight: 6, verticalAlign: -2 }} />Technique Tuesdays<span className="lm2-tt-new">New · Lesson {latest.n}</span></span>
+          <span className="lm2-tt-name">{PFM_L.shortTitle(latest)}</span>
+          {/* count / watched / next-live line removed (user, 2026-10-15) */}
+        </div>
+        <button type="button" className="lm-unlock-btn" aria-label="Open Technique Tuesdays" onClick={(e) => { e.stopPropagation(); open(); }}>
+          <IconifyL name="lucide:arrow-right" size={20} color="#fff" />
+        </button>
+      </div>
+    </section>);
+}
+
+/* Confidence membership card in the promo stack (user, 2026-10-15) — same
+   navy path-card language as "Discover your journey"; opens the membership course. */
+function LM2MembershipPathCard() {
+  if (!PFM_L) return null;
+  const n = PFM_L.MODULES.length;
+  return (
+    <section className="lm2-pathsec" data-screen-label="My Membership">
+      {/* opens the PROfinity Membership course itself (user, 2026-10-15), not the hub */}
+      <button type="button" className="lm2-pathcard lm2-pathcard-mem" onClick={() => goL(PFM_L.courseUrl({ ret: "LearningMobile.html" }))}>
+        {/* no icon chip / tier tag (user, 2026-10-15) */}
+        <span className="tx">
+          <span className="ti">My Membership</span>
+          <span className="body">Technique Tuesday, treatments, protocols and the clinic-growth library — {n} modules included in your membership.</span>
+        </span>
+        <span className="arrow" aria-hidden="true"><IconifyL name="lucide:arrow-right" size={19} color="#fff" /></span>
+      </button>
+    </section>);
+}
+
 function LM2HelpSheet({ open, onClose }) {
   const closeRef = React.useRef(null);
   const lastFocused = React.useRef(null);
@@ -712,9 +809,14 @@ function LearningHome() {
 
         <LM2GoalBanner data={LM2_GOAL} onHelp={() => setHelpOpen(true)} />
 
+        {/* My Membership summary card (LM2MembershipSection) removed from the page (user, 2026-10-15 "remove this"); the bronze Confidence membership card + Technique Tuesdays card in the promo stack are the entry points now */}
+
         {!noCoursesYetL && <LM2SearchBar />}
 
         {showContinue && <LM2ContinueCard data={continueData} />}
+
+        {/* My Membership sits right under Continue Learning (user, 2026-10-15) */}
+        {!LM_FREE && <LM2MembershipPathCard />}
 
         {/* Nothing bought yet on a free account (user, 2026-10-08): no My Courses
             section at all — the free-resources panel stands on its own. */}
@@ -763,9 +865,13 @@ function LearningHome() {
             Courses browse card stays members-only. */}
         <LM2RelatedContent />
 
+        {!LM_FREE && <LM2TechniqueTuesdayCard done={done} />}
+
         {!LM_FREE && <LM2FreeResources unlocked={resourcesUnlocked} onStartSurvey={() => setSurveyOpen(true)} />}
 
+
         {!LM_FREE && <LM2LearningPathCard />}
+
 
         {nextTier && <LM2SubscribeCard isFree={LM_FREE} nextTier={nextTier} onSubscribe={() => goL("MembershipTier.html")} />}
 

@@ -74,9 +74,25 @@ const COURSE_CL = {
   ]
 };
 
+/* Real membership content (user, 2026-10-15): when membership-data.js is on
+   the shell, the curriculum section list, counts and duration come from the
+   actual PROfinity Membership course instead of the sketch above. */
+(function () {
+  var M = window.PFMembership;
+  if (!M) return;
+  var mods = M.MODULES;
+  var total = mods.reduce(function (n, m) { return n + m.lessons.length; }, 0);
+  COURSE_CL.sections = mods.map(function (m, i) {
+    return { title: m.name, open: i < 2, lessons: m.lessons.map(function (l) { return { name: l.name, kind: l.kind === "pdf" ? "article" : "video", dur: l.dur }; }) };
+  });
+  COURSE_CL.sectionsSummary = mods.length + " sections • " + total + " lectures";
+  COURSE_CL.duration = "132h 42m";
+  COURSE_CL.learn = COURSE_CL.learn || [];
+})();
+
 const META_CL = [
-  { icon: "lucide:clock", key: "Duration", value: "147h 34m" },
-  { icon: "lucide:layers", key: "Sections", value: "22 sections" },
+  { icon: "lucide:clock", key: "Duration", value: COURSE_CL.duration || "147h 34m" },
+  { icon: "lucide:layers", key: "Sections", value: COURSE_CL.sectionsSummary.split(" • ")[0] },
   { icon: "lucide:bar-chart-2", key: "Level", value: COURSE_CL.level },
   { icon: "lucide:award", key: "Certificate", value: "Included" }
 ];

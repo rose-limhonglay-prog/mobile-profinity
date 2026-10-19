@@ -687,3 +687,38 @@ img{max-width:100%}
 /* Nothing bought yet on a free account: the free-resources panel replaces the
    My Courses section, with the tabs and search gone above it. */
 .panel.lrn2-mc-panel.lrn2-start-free{margin-top:32px}
+
+/* ===== My Membership · Confidence entry card (web twin of .lm2-mem, 2026-10-15) ===== */
+.lrn2-mem{margin-top:22px;display:grid;grid-template-columns:minmax(300px,1fr) minmax(0,1.4fr);gap:24px;align-items:center;padding:24px 26px;border-radius:var(--r-lg);
+  background:var(--surface-card);border:1px solid rgba(206,153,87,.45);box-shadow:inset 0 3px 0 #CE9957,0 8px 24px rgba(12,25,40,.08)}
+.lrn2-mem-left{min-width:0}
+.lrn2-mem-head{display:flex;align-items:center;gap:14px;width:100%;padding:0;border:none;background:none;cursor:pointer;text-align:left;color:var(--brand-navy)}
+.lrn2-mem-badge{flex:none;display:inline-flex;align-items:center;gap:6px;padding:7px 13px 7px 10px;border-radius:999px;font-family:var(--font-sans);font-size:13px;font-weight:var(--fw-bold);color:#2B3440;
+  background:linear-gradient(135deg,#E6EAF0,#A7B1BF);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),0 2px 6px rgba(12,25,40,.18)}
+.lrn2-mem-head-tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.lrn2-mem-kicker{font-family:var(--font-sans);font-size:11px;font-weight:var(--fw-bold);letter-spacing:.12em;text-transform:uppercase;color:#8A5303}
+.lrn2-mem-title{font-family:"Times New Roman",Times,serif;font-weight:var(--fw-bold);font-size:26px;line-height:1.15;color:var(--brand-navy)}
+.lrn2-mem-arrow{flex:none;width:40px;height:40px;border-radius:50%;background:var(--surface-sunken);display:flex;align-items:center;justify-content:center;color:var(--brand-navy)}
+.lrn2-mem-prog{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.lrn2-mem-bar{display:block;height:7px;border-radius:4px;background:rgba(12,25,40,.1);overflow:hidden}
+.lrn2-mem-bar>span{display:block;height:100%;border-radius:4px;background:#CE9957}
+.lrn2-mem-stat{font-family:var(--font-sans);font-size:var(--fs-caption);color:var(--gray-600)}
+.lrn2-mem-stat b{font-family:"Times New Roman",Times,serif;font-size:17px;color:var(--brand-navy)}
+.lrn2-mem-open{display:inline-flex;align-items:center;gap:8px;height:44px;margin-top:16px;padding:0 18px;border:none;border-radius:var(--r-sm);background:var(--brand-navy);color:#fff;cursor:pointer;
+  font-family:var(--font-sans);font-size:var(--fs-body);font-weight:var(--fw-semibold)}
+.lrn2-mem-open:hover{background:var(--brand-navy-700)}
+.lrn2-mem-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.lrn2-mem-tile{display:flex;flex-direction:column;align-items:flex-start;gap:5px;min-height:112px;padding:14px;border:1px solid var(--border-default);border-radius:var(--r-md);background:var(--surface-page,#F6F3EF);cursor:pointer;text-align:left;color:var(--brand-navy)}
+.lrn2-mem-tile:hover{background:var(--surface-sunken)}
+.lrn2-mem-tile-ic{width:34px;height:34px;border-radius:10px;background:rgba(206,153,87,.16);display:flex;align-items:center;justify-content:center}
+.lrn2-mem-tile-title{margin-top:auto;font-family:var(--font-sans);font-size:15px;font-weight:var(--fw-bold);line-height:1.2}
+.lrn2-mem-tile-sub{font-family:var(--font-sans);font-size:12.5px;line-height:1.3;color:var(--gray-600);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lrn2-mem-tile-sub.chip{display:inline-flex;padding:3px 9px;border-radius:999px;background:var(--brand-navy);color:#fff;font-weight:var(--fw-bold);font-size:11px}
+.lrn2-mem-tile-tt{border-color:rgba(206,153,87,.5)}
+@media (max-width:900px){.lrn2-mem{grid-template-columns:1fr}}
+[data-theme="dark"] .lrn2-mem-tile{background:var(--surface-sunken)}
+[data-theme="dark"] .lrn2-mem-tile-sub.chip{background:#CE9957;color:#131126}
+[data-theme="dark"] .lrn2-mem-bar{background:rgba(255,255,255,.14)}
+.lrn2-promo-mem{background:linear-gradient(120deg,#0C1928,#1E3A5C);box-shadow:inset 0 3px 0 #CE9957}
+.lrn2-promo-mem .tx h3{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lrn2-mem-badge-xs{padding:4px 9px 4px 7px;font-size:11px}

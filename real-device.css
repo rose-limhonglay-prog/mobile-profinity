@@ -45,7 +45,7 @@ html[data-pf-appbn]{--pf-sat:0px;--pf-top:10px;--pf-top-lg:16px}
 /* 52/54px top bars */
 html:is([data-real-device],[data-pf-appbn]) :is(
   .m-top,.cm-top,.pm-top,.ev-head,.cp-top,.ac-head,.acc-top,.acc-cat-top,.lcm-top,.cd-head,.sr-head,
-  .cs-bar,.dm-page-head,.dm-info-head,.pm-edit-hd,.pm-qrs-hd,.ev-lobby-top,.ls-topbar,.cp-cover-picker
+  .cs-bar,.dm-page-head,.dm-info-head,.pm-edit-hd,.pm-qrs-hd,.ev-lobby-top,.ls-topbar,.cp-cover-picker,.mc-top
 ){padding-top:var(--pf-top) !important}
 /* 56–62px top bars */
 html:is([data-real-device],[data-pf-appbn]) :is(

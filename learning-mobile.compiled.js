@@ -152,6 +152,35 @@ function resumeUrlL(c) {
 function withLiveProgressL(list, done) {
   const r = PFLS_L.resume(LM2_CONTINUE_SLUG, done);
   return list.map(c => {
+    /* the Profinity Membership card resumes the real membership course (membership-data.js) */
+    if (c.title === "Profinity Membership" && PFM_L) {
+      const cur = PFM_L.curriculum();
+      const m = PFLS_L.resume(cur, done);
+      if (m.allDone) return {
+        ...c,
+        slug: cur.slug,
+        curriculum: cur,
+        completed: true,
+        certificate: {
+          issuedDate: "Today",
+          id: "PF-MEM-0266",
+          image: CERT_THUMB_L
+        }
+      };
+      if (m.started) return {
+        ...c,
+        slug: cur.slug,
+        curriculum: cur,
+        progress: m.pct,
+        lesson: m.lessonNumber,
+        modulesLeft: Math.max(1, cur.levels.length - m.item.li)
+      };
+      return {
+        ...c,
+        slug: cur.slug,
+        curriculum: cur
+      };
+    }
     if (c.title !== "8D Lip Design") return c;
     if (r.allDone) return {
       ...c,
@@ -365,6 +394,116 @@ function LM2Header({
   }), " ", LM_TIER_DISPLAY_NAME[tier], " Path")), freeTier && /*#__PURE__*/React.createElement("p", {
     className: "lm2-head-sub"
   }, "Your goal is to grow in aesthetics or medical school"));
+}
+
+/* ---------------------------------------------------------------- My Membership · Confidence -- */
+/* Confidence members' entry point to everything their membership includes
+   (user brief, 2026-10-15): silver tier badge (Confidence = silver), welcome,
+   membership learning progress, and four quick-access tiles — Technique
+   Tuesdays, membership content, continue learning, Learning Map. Data comes
+   from membership-data.js (window.PFMembership, the real PROfinity Membership
+   course); the section renders nothing when that script is absent. */
+const PFM_L = window.PFMembership || null;
+function LM2MembershipSection({
+  done
+}) {
+  if (!PFM_L) return null;
+  const watch = PFM_L.useWatch();
+  const prog = React.useMemo(() => PFM_L.progress(done), [done]);
+  const nu = React.useMemo(() => PFM_L.nextUp(done, watch), [done, watch]);
+  const latest = PFM_L.ttLatest(1)[0];
+  const hub = PFM_L.PAGES.hub;
+  const tiles = [{
+    key: "tt",
+    icon: "lucide:video",
+    title: "Technique Tuesdays",
+    sub: latest ? "New · Lesson " + latest.n : prog.tt.total + " sessions",
+    href: PFM_L.PAGES.tuesdays,
+    chip: true
+  }, {
+    key: "content",
+    icon: "lucide:library",
+    title: "Membership content",
+    sub: PFM_L.MODULES.length + " modules · " + prog.total + " lessons",
+    href: PFM_L.courseUrl({
+      ret: "LearningMobile.html"
+    })
+  }, {
+    key: "continue",
+    icon: "lucide:play",
+    title: nu.kind === "resume" ? "Continue learning" : "Start next lesson",
+    sub: PFM_L.shortTitle(nu.lesson),
+    href: PFM_L.lessonUrl(nu.lesson, {
+      play: true,
+      ret: "LearningMobile.html"
+    })
+  }, {
+    key: "map",
+    icon: "lucide:map",
+    title: "Learning Map",
+    sub: "What's included, what's next",
+    href: PFM_L.PAGES.map
+  }];
+  return /*#__PURE__*/React.createElement("section", {
+    className: "lm2-mem",
+    "data-screen-label": "My Membership · Confidence"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-mem-head",
+    onClick: () => goL(hub),
+    "aria-label": "Open My Membership"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mem-badge"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:shield-check",
+    size: 14,
+    color: "#2B3440"
+  }), "Confidence"), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mem-head-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mem-kicker"
+  }, "My Membership"), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mem-title"
+  }, "Welcome back, ", PFLS_L.ME ? PFLS_L.ME.name : "Katy")), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mem-arrow",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:chevron-right",
+    size: 20,
+    color: "currentColor"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mem-prog",
+    role: "progressbar",
+    "aria-valuenow": prog.pct,
+    "aria-valuemin": 0,
+    "aria-valuemax": 100,
+    "aria-label": "Membership learning progress"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mem-bar"
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: Math.max(2, prog.pct) + "%"
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mem-stat"
+  }, /*#__PURE__*/React.createElement("b", null, prog.done), " of ", prog.total, " lessons · ", PFM_L.fmtHours(prog.secs), " watched · ", prog.tt.done, " of ", prog.tt.total, " Tuesdays")), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mem-grid"
+  }, tiles.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.key,
+    type: "button",
+    className: "lm2-mem-tile lm2-mem-tile-" + t.key,
+    onClick: () => goL(t.href)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mem-tile-ic"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: t.icon,
+    size: 17,
+    color: "#8A5303"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mem-tile-title"
+  }, t.title), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mem-tile-sub" + (t.chip ? " chip" : "")
+  }, t.sub)))));
 }
 function LM2GoalBanner({
   data,
@@ -1119,6 +1258,93 @@ function LM2LearningPathCard() {
     color: "#fff"
   }))));
 }
+
+/* Technique Tuesdays card in the promo stack (user, 2026-10-15 "add there the
+   TT"): the real artwork as a thumb, the newest real session, the library
+   count — opens TechniqueTuesdays.html. Members only (free accounts are not
+   entitled to the library, so the card is simply absent for them). */
+function LM2TechniqueTuesdayCard({
+  done
+}) {
+  if (!PFM_L) return null;
+  const tt = PFM_L.ttLessons();
+  const latest = tt[0];
+  const open = () => goL(PFM_L.PAGES.tuesdays);
+  /* white card like Free Resources (user, 2026-10-15): no artwork, navy ink */
+  return /*#__PURE__*/React.createElement("section", {
+    className: "lm2-pathsec lm2-tt-sec",
+    "data-screen-label": "Technique Tuesdays"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-unlock lm2-tt-card",
+    onClick: open,
+    role: "link",
+    tabIndex: 0,
+    onKeyDown: e => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        open();
+      }
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "lm-unlock-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ti"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:video",
+    size: 15,
+    color: "var(--brand-navy)",
+    style: {
+      marginRight: 6,
+      verticalAlign: -2
+    }
+  }), "Technique Tuesdays", /*#__PURE__*/React.createElement("span", {
+    className: "lm2-tt-new"
+  }, "New · Lesson ", latest.n)), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-tt-name"
+  }, PFM_L.shortTitle(latest))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm-unlock-btn",
+    "aria-label": "Open Technique Tuesdays",
+    onClick: e => {
+      e.stopPropagation();
+      open();
+    }
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-right",
+    size: 20,
+    color: "#fff"
+  }))));
+}
+
+/* Confidence membership card in the promo stack (user, 2026-10-15) — same
+   navy path-card language as "Discover your journey"; opens the membership course. */
+function LM2MembershipPathCard() {
+  if (!PFM_L) return null;
+  const n = PFM_L.MODULES.length;
+  return /*#__PURE__*/React.createElement("section", {
+    className: "lm2-pathsec",
+    "data-screen-label": "My Membership"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-pathcard lm2-pathcard-mem",
+    onClick: () => goL(PFM_L.courseUrl({
+      ret: "LearningMobile.html"
+    }))
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ti"
+  }, "My Membership"), /*#__PURE__*/React.createElement("span", {
+    className: "body"
+  }, "Technique Tuesday, treatments, protocols and the clinic-growth library — ", n, " modules included in your membership.")), /*#__PURE__*/React.createElement("span", {
+    className: "arrow",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:arrow-right",
+    size: 19,
+    color: "#fff"
+  }))));
+}
 function LM2HelpSheet({
   open,
   onClose
@@ -1307,7 +1533,7 @@ function LearningHome() {
     onHelp: () => setHelpOpen(true)
   }), !noCoursesYetL && /*#__PURE__*/React.createElement(LM2SearchBar, null), showContinue && /*#__PURE__*/React.createElement(LM2ContinueCard, {
     data: continueData
-  }), noCoursesYetL ? /*#__PURE__*/React.createElement("section", {
+  }), !LM_FREE && /*#__PURE__*/React.createElement(LM2MembershipPathCard, null), noCoursesYetL ? /*#__PURE__*/React.createElement("section", {
     className: "lm2-courseband lm2-mc-band lm2-start-free",
     "data-screen-label": "Start with free resources"
   }, /*#__PURE__*/React.createElement(LM2StartFreeResources, null)) : /*#__PURE__*/React.createElement("section", {
@@ -1369,7 +1595,9 @@ function LearningHome() {
   })), /*#__PURE__*/React.createElement("p", null, tab === "In Progress" ? "No courses in progress yet." : "Complete a course to earn your first certificate.")))), LM_FREE && /*#__PURE__*/React.createElement(LM2FreeResources, {
     unlocked: resourcesUnlocked,
     onStartSurvey: () => setSurveyOpen(true)
-  }), /*#__PURE__*/React.createElement(LM2RelatedContent, null), !LM_FREE && /*#__PURE__*/React.createElement(LM2FreeResources, {
+  }), /*#__PURE__*/React.createElement(LM2RelatedContent, null), !LM_FREE && /*#__PURE__*/React.createElement(LM2TechniqueTuesdayCard, {
+    done: done
+  }), !LM_FREE && /*#__PURE__*/React.createElement(LM2FreeResources, {
     unlocked: resourcesUnlocked,
     onStartSurvey: () => setSurveyOpen(true)
   }), !LM_FREE && /*#__PURE__*/React.createElement(LM2LearningPathCard, null), nextTier && /*#__PURE__*/React.createElement(LM2SubscribeCard, {
