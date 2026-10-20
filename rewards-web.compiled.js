@@ -786,7 +786,7 @@ function RewardsWebApp() {
     flash("Checked in — your streak is safe!");
   };
   return /*#__PURE__*/React.createElement("div", {
-    className: "app wa-screen",
+    className: "app wa-screen pf-funbg",
     style: {
       "--action-primary": "var(--brand-navy)",
       "--action-primary-hover": "var(--brand-navy-700)"

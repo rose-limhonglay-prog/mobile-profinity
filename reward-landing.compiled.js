@@ -671,7 +671,7 @@ function RewardLandingScreen() {
     }
   })();
   return /*#__PURE__*/React.createElement("div", {
-    className: "ml-screen rl-screen",
+    className: "ml-screen rl-screen pf-funbg",
     "data-screen-label": "Reward"
   }, /*#__PURE__*/React.createElement("div", {
     className: "ml-top"
@@ -723,6 +723,12 @@ function RewardLandingWeb() {
   const {
     TopNav
   } = DSRL;
+  /* fun rewards background (2026-10-20): the page is a centred column, so the
+     wash goes on <body> — rewards-fun-bg.css styles body.pf-funbg */
+  useEffectRL(() => {
+    document.body.classList.add("pf-funbg");
+    return () => document.body.classList.remove("pf-funbg");
+  }, []);
   const navigate = label => {
     const u = {
       Home: "NewsfeedWeb.html",

@@ -213,7 +213,7 @@ function MilestonePathScreen() {
   const allDone = !progress.next;
 
   return (
-    <div className="ml-screen mp-screen" data-screen-label="Milestone Path">
+    <div className="ml-screen mp-screen pf-funbg" data-screen-label="Milestone Path">
       <div className="ml-top">
         <button className="ml-back" aria-label="Back" onClick={() => goMP(retMP())}><DSMP.IconifyIcon name="lucide:chevron-left" size={24} color="var(--gray-900)" /></button>
         <h1>My Rewards</h1>

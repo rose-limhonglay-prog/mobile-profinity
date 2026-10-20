@@ -361,7 +361,7 @@ function WaysToEarnScreen() {
   };
 
   return (
-    <div className="ml-screen wte-screen" data-screen-label="Ways to Earn" ref={screenRef}>
+    <div className="ml-screen wte-screen pf-funbg" data-screen-label="Ways to Earn" ref={screenRef}>
       <div className="ml-top">
         <button className="ml-back" aria-label="Back" onClick={() => goWTE(retWTE())}><DSWTE.IconifyIcon name="lucide:chevron-left" size={24} color="var(--gray-900)" /></button>
         <h1>Ways to Earn</h1>

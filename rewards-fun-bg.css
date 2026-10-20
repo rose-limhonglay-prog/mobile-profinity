@@ -1,0 +1,74 @@
+/* Fun background for the Rewards pages (user, 2026-10-20 "make a fun
+   background the rewards pages"): a warm cream wash, soft gold / teal /
+   pink colour blobs and a faint repeating tile of stars, coins, sparkles
+   and confetti. Pure CSS — one class per shell root, no JSX. Light =
+   cream, dark (the repo's [data-theme="dark"] only — no prefers-color-scheme,
+   dark-mode.css doesn't use it either) = navy with the same shapes dimmed. The tile drifts very
+   slowly (off under prefers-reduced-motion). Loaded AFTER dark-mode.css
+   on RewardsDashboard / RewardsWeb / MilestonePath / Leaderboard / WaysToEarn /
+   CheckInStreak / RewardLanding(.Web).html. */
+
+:root {
+  --pfb-base: #FFF8EA;
+  --pfb-blob-gold: rgba(252,194,93,.34);
+  --pfb-blob-teal: rgba(79,184,160,.20);
+  --pfb-blob-pink: rgba(242,124,154,.16);
+  --pfb-blob-violet: rgba(142,134,230,.16);
+  --pfb-tile: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22360%22 height=%22360%22 viewBox=%220 0 360 360%22%3E%3Cpolygon points=%2246.0,45.0 49.4,53.3 58.4,54.0 51.6,59.8 53.6,68.5 46.0,63.9 38.4,68.5 40.4,59.8 33.6,54.0 42.6,53.3%22 fill=%22%23E8A63A%22 fill-opacity=%220.341%22/%3E%3Ccircle cx=%22262%22 cy=%2284%22 r=%2210%22 fill=%22%23E8A63A%22 fill-opacity=%220.31%22/%3E%3Ccircle cx=%22262%22 cy=%2284%22 r=%226.2%22 fill=%22none%22 stroke=%22%23E8A63A%22 stroke-opacity=%220.31%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M152 23 Q154.42 31.58 163 34 Q154.42 36.42 152 45 Q149.58 36.42 141 34 Q149.58 31.58 152 23Z%22 fill=%22%233FB39A%22 fill-opacity=%220.341%22/%3E%3Ccircle cx=%2296%22 cy=%22128%22 r=%223.5%22 fill=%22%23F27C9A%22 fill-opacity=%220.372%22/%3E%3Ccircle cx=%22302%22 cy=%22206%22 r=%223%22 fill=%22%238E86E6%22 fill-opacity=%220.372%22/%3E%3Ccircle cx=%22206%22 cy=%22254%22 r=%223.5%22 fill=%22%23E8A63A%22 fill-opacity=%220.372%22/%3E%3Crect x=%2259.5%22 y=%22220.0%22 width=%229%22 height=%224%22 rx=%221.5%22 transform=%22rotate(-28 64 222)%22 fill=%22%23F27C9A%22 fill-opacity=%220.341%22/%3E%3Crect x=%22279.5%22 y=%22300.0%22 width=%229%22 height=%224%22 rx=%221.5%22 transform=%22rotate(22 284 302)%22 fill=%22%233FB39A%22 fill-opacity=%220.341%22/%3E%3Cpolygon points=%22194.8,163.4 195.3,169.6 201.0,172.0 195.3,174.4 194.8,180.6 190.7,175.9 184.7,177.3 187.9,172.0 184.7,166.7 190.7,168.1%22 fill=%22%238E86E6%22 fill-opacity=%220.31%22/%3E%3Cpath d=%22M122 283 Q123.98 290.02 131 292 Q123.98 293.98 122 301 Q120.02 293.98 113 292 Q120.02 290.02 122 283Z%22 fill=%22%23E8A63A%22 fill-opacity=%220.341%22/%3E%3Ccircle cx=%2228%22 cy=%22330%22 r=%227%22 fill=%22%233FB39A%22 fill-opacity=%220.279%22/%3E%3Ccircle cx=%2228%22 cy=%22330%22 r=%224.3%22 fill=%22none%22 stroke=%22%233FB39A%22 stroke-opacity=%220.279%22 stroke-width=%221.6%22/%3E%3Ccircle cx=%22236%22 cy=%2220%22 r=%222.5%22 fill=%22%233FB39A%22 fill-opacity=%220.372%22/%3E%3Crect x=%22326.0%22 y=%22146.25%22 width=%228%22 height=%223.5%22 rx=%221.5%22 transform=%22rotate(-15 330 148)%22 fill=%22%23E8A63A%22 fill-opacity=%220.31%22/%3E%3Ccircle cx=%22170%22 cy=%22110%22 r=%222.5%22 fill=%22%23F27C9A%22 fill-opacity=%220.341%22/%3E%3C/svg%3E");
+}
+:root[data-theme="dark"] {
+  --pfb-base: #0d0c1d;
+  --pfb-blob-gold: rgba(252,194,93,.16);
+  --pfb-blob-teal: rgba(79,184,160,.12);
+  --pfb-blob-pink: rgba(242,124,154,.10);
+  --pfb-blob-violet: rgba(142,134,230,.12);
+  --pfb-tile: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22360%22 height=%22360%22 viewBox=%220 0 360 360%22%3E%3Cpolygon points=%2246.0,45.0 49.4,53.3 58.4,54.0 51.6,59.8 53.6,68.5 46.0,63.9 38.4,68.5 40.4,59.8 33.6,54.0 42.6,53.3%22 fill=%22%23E8A63A%22 fill-opacity=%220.209%22/%3E%3Ccircle cx=%22262%22 cy=%2284%22 r=%2210%22 fill=%22%23E8A63A%22 fill-opacity=%220.19%22/%3E%3Ccircle cx=%22262%22 cy=%2284%22 r=%226.2%22 fill=%22none%22 stroke=%22%23E8A63A%22 stroke-opacity=%220.19%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M152 23 Q154.42 31.58 163 34 Q154.42 36.42 152 45 Q149.58 36.42 141 34 Q149.58 31.58 152 23Z%22 fill=%22%233FB39A%22 fill-opacity=%220.209%22/%3E%3Ccircle cx=%2296%22 cy=%22128%22 r=%223.5%22 fill=%22%23F27C9A%22 fill-opacity=%220.228%22/%3E%3Ccircle cx=%22302%22 cy=%22206%22 r=%223%22 fill=%22%238E86E6%22 fill-opacity=%220.228%22/%3E%3Ccircle cx=%22206%22 cy=%22254%22 r=%223.5%22 fill=%22%23E8A63A%22 fill-opacity=%220.228%22/%3E%3Crect x=%2259.5%22 y=%22220.0%22 width=%229%22 height=%224%22 rx=%221.5%22 transform=%22rotate(-28 64 222)%22 fill=%22%23F27C9A%22 fill-opacity=%220.209%22/%3E%3Crect x=%22279.5%22 y=%22300.0%22 width=%229%22 height=%224%22 rx=%221.5%22 transform=%22rotate(22 284 302)%22 fill=%22%233FB39A%22 fill-opacity=%220.209%22/%3E%3Cpolygon points=%22194.8,163.4 195.3,169.6 201.0,172.0 195.3,174.4 194.8,180.6 190.7,175.9 184.7,177.3 187.9,172.0 184.7,166.7 190.7,168.1%22 fill=%22%238E86E6%22 fill-opacity=%220.19%22/%3E%3Cpath d=%22M122 283 Q123.98 290.02 131 292 Q123.98 293.98 122 301 Q120.02 293.98 113 292 Q120.02 290.02 122 283Z%22 fill=%22%23E8A63A%22 fill-opacity=%220.209%22/%3E%3Ccircle cx=%2228%22 cy=%22330%22 r=%227%22 fill=%22%233FB39A%22 fill-opacity=%220.171%22/%3E%3Ccircle cx=%2228%22 cy=%22330%22 r=%224.3%22 fill=%22none%22 stroke=%22%233FB39A%22 stroke-opacity=%220.171%22 stroke-width=%221.6%22/%3E%3Ccircle cx=%22236%22 cy=%2220%22 r=%222.5%22 fill=%22%233FB39A%22 fill-opacity=%220.228%22/%3E%3Crect x=%22326.0%22 y=%22146.25%22 width=%228%22 height=%223.5%22 rx=%221.5%22 transform=%22rotate(-15 330 148)%22 fill=%22%23E8A63A%22 fill-opacity=%220.19%22/%3E%3Ccircle cx=%22170%22 cy=%22110%22 r=%222.5%22 fill=%22%23F27C9A%22 fill-opacity=%220.209%22/%3E%3C/svg%3E");
+}
+
+/* the layered background itself — shared by the three roots below. The
+   dark selector is listed too so it beats dark-mode.css's
+   `[data-theme="dark"] .app.wa-screen { background: … }` shorthand, which
+   would otherwise wipe the background-image on the web page. */
+.pf-funbg, .ml-screen.pf-funbg, [data-theme="dark"] .app.wa-screen.pf-funbg, [data-theme="dark"] body.pf-funbg {
+  background-color: var(--pfb-base);
+  background-image:
+    var(--pfb-tile),
+    radial-gradient(60% 38% at 8% 4%, var(--pfb-blob-gold), transparent 70%),
+    radial-gradient(48% 34% at 96% 22%, var(--pfb-blob-teal), transparent 70%),
+    radial-gradient(44% 32% at 4% 64%, var(--pfb-blob-pink), transparent 70%),
+    radial-gradient(52% 36% at 92% 90%, var(--pfb-blob-violet), transparent 70%),
+    radial-gradient(50% 30% at 50% 100%, var(--pfb-blob-gold), transparent 70%);
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 360px 360px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
+  animation: pf-funbg-drift 90s linear infinite;
+}
+@keyframes pf-funbg-drift { to { background-position: 360px 360px, 0 0, 0 0, 0 0, 0 0, 0 0; } }
+@media (prefers-reduced-motion: reduce) { .pf-funbg, .ml-screen.pf-funbg, [data-theme="dark"] .app.wa-screen.pf-funbg, [data-theme="dark"] body.pf-funbg { animation: none; } }
+
+/* ---- every mobile loyalty page root (.ml-screen): its scroller and header
+   bar paint --surface-page over the screen (e.g. `.lb-screen, .lb-scroll`,
+   `.wte-scroll`, `.cis-scroll`) — make them transparent so the wash shows.
+   Covers Leaderboard / Ways to Earn / Check-In Streak / Reward landing
+   (+ RewardLandingWeb, same bundle) since 2026-10-20 ("apply those
+   backgrounds in the other pages"). */
+.ml-screen.pf-funbg .ml-scroll, .ml-screen.pf-funbg .ml-top { background: transparent; }
+
+/* ---- RewardsDashboard.html (mobile) — the screen root was flat white */
+.lm-screen.rdb-screen { background-color: var(--pfb-base); }
+.rdb-screen .ml-top { background: transparent; }
+/* the frosted mobile header bar: tint it with the wash instead of flat white */
+.lm-screen.rdb-screen.pf-funbg .m-top { background: color-mix(in srgb, var(--pfb-base) 72%, transparent); }
+
+/* ---- MilestonePath.html ("My Rewards") — screen + scroller were --surface-page */
+.mp-screen.pf-funbg, .mp-screen.pf-funbg .mp-scroll { background-color: transparent; }
+.mp-screen.pf-funbg { background-color: var(--pfb-base); }
+.mp-screen.pf-funbg .ml-top { background: transparent; }
+
+/* ---- RewardsWeb.html — the .app shell paints the page */
+.app.wa-screen.pf-funbg, .ml-screen.pf-funbg, [data-theme="dark"] .app.wa-screen.pf-funbg, [data-theme="dark"] body.pf-funbg { background-color: var(--pfb-base); }
+body:has(> #pf-root > .app.pf-funbg), body:has(.app.wa-screen.pf-funbg) { background: var(--pfb-base); }
+
+/* ---- RewardLandingWeb.html — .rl-page is a centred column, so the bundle
+   puts .pf-funbg on <body>; pin the wash to the viewport while it scrolls */
+body.pf-funbg { background-attachment: fixed; }

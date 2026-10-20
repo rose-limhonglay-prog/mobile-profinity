@@ -783,7 +783,7 @@ function RewardsDashboardHome() {
   }, []);
   return /*#__PURE__*/React.createElement("div", {
     ref: screenRef,
-    className: "lm-screen rdb-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : ""),
+    className: "lm-screen rdb-screen pf-funbg" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : ""),
     "data-screen-label": "Rewards Dashboard"
   }, /*#__PURE__*/React.createElement(MobileChromeC, null), /*#__PURE__*/React.createElement("div", {
     className: "lm-scroll",

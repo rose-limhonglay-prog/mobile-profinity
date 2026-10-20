@@ -408,7 +408,7 @@ function RewardsWebApp() {
   };
 
   return (
-    <div className="app wa-screen" style={{ "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" }}>
+    <div className="app wa-screen pf-funbg" style={{ "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" }}>
       <TopNavRW active="Rewards" user={ME_RW} logoSrc="assets/profinity-icon-purple-gold.png"
         onNavigate={navigateRW}
         style={{ position: "sticky", top: 0, zIndex: 50, borderBottom: "1px solid var(--border-default)" }} />

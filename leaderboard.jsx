@@ -230,7 +230,7 @@ function LeaderboardScreen() {
   const vars = { "--lg-accent": league.accent, "--lg-deep": league.deep, "--lg-soft": league.soft };
 
   return (
-    <div className="ml-screen lb-screen" data-screen-label="Leaderboard" style={vars}>
+    <div className="ml-screen lb-screen pf-funbg" data-screen-label="Leaderboard" style={vars}>
       <div className="ml-top">
         <button className="ml-back" aria-label="Back" onClick={() => goLB("RewardsDashboard.html")}><DSLB.IconifyIcon name="lucide:chevron-left" size={24} color="var(--gray-900)" /></button>
         <h1>Leaderboard</h1>

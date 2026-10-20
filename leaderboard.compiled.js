@@ -372,7 +372,7 @@ function LeaderboardScreen() {
     "--lg-soft": league.soft
   };
   return /*#__PURE__*/React.createElement("div", {
-    className: "ml-screen lb-screen",
+    className: "ml-screen lb-screen pf-funbg",
     "data-screen-label": "Leaderboard",
     style: vars
   }, /*#__PURE__*/React.createElement("div", {

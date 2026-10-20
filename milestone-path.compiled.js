@@ -405,7 +405,7 @@ function MilestonePathScreen() {
   const reachedAt = state.milestonesReachedAt || {};
   const allDone = !progress.next;
   return /*#__PURE__*/React.createElement("div", {
-    className: "ml-screen mp-screen",
+    className: "ml-screen mp-screen pf-funbg",
     "data-screen-label": "Milestone Path"
   }, /*#__PURE__*/React.createElement("div", {
     className: "ml-top"

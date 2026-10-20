@@ -411,7 +411,7 @@ function RewardsDashboardHome() {
   const endTour = React.useCallback(() => { setTourOpen(false); setTourWanted(false); }, []);
 
   return (
-    <div ref={screenRef} className={"lm-screen rdb-screen" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="Rewards Dashboard">
+    <div ref={screenRef} className={"lm-screen rdb-screen pf-funbg" + (chromeFloat ? " chrome-float" : "") + (chromeHidden ? " chrome-hidden" : "")} data-screen-label="Rewards Dashboard">
       <MobileChromeC />
       <div className="lm-scroll" ref={scrollRef}>
         {/* page order (user, 2026-09-24): league rail + leaderboard snapshot first,

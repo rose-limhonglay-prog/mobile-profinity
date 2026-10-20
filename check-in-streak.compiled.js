@@ -412,7 +412,7 @@ function CheckInStreakScreen() {
   const headline = current === 0 ? /*#__PURE__*/React.createElement(React.Fragment, null, "Start your ", /*#__PURE__*/React.createElement("b", null, "streak")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("b", null, current), " in a row!");
   const sub = current === 0 ? "Check in today to start your streak. Five days running clears the Mobile Check-In guardrail." : rowComplete ? checkedInToday ? "Five days running and the Mobile Check-In guardrail is cleared. Come back tomorrow to keep the row alive." : "Five days running. Check in today to make it " + (current + 1) + " and keep the row alive." : CIS_SLOTS - current + " more " + (CIS_SLOTS - current === 1 ? "day" : "days") + " to make it five in a row.";
   return /*#__PURE__*/React.createElement("div", {
-    className: "ml-screen cis-screen",
+    className: "ml-screen cis-screen pf-funbg",
     "data-screen-label": "Check-In Streak"
   }, /*#__PURE__*/React.createElement("div", {
     className: "ml-top"

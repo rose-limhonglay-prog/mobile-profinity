@@ -771,7 +771,7 @@ function WaysToEarnScreen() {
     if (window.PFRewards) window.PFRewards.fromAction(res);else if (res.leveledUp) setTimeout(() => goWTE("MilestoneSplash.html"), 900);
   };
   return /*#__PURE__*/React.createElement("div", {
-    className: "ml-screen wte-screen",
+    className: "ml-screen wte-screen pf-funbg",
     "data-screen-label": "Ways to Earn",
     ref: screenRef
   }, /*#__PURE__*/React.createElement("div", {

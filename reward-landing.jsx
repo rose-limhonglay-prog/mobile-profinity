@@ -309,7 +309,7 @@ function useDeviceScaleRL() {
 function RewardLandingScreen() {
   const title = (() => { try { const p = PF_RL.getPerk(paramRL("reward") || ""); return p && p.milestone ? p.milestone.name + " perk" : "Reward"; } catch (e) { return "Reward"; } })();
   return (
-    <div className="ml-screen rl-screen" data-screen-label="Reward">
+    <div className="ml-screen rl-screen pf-funbg" data-screen-label="Reward">
       <div className="ml-top">
         <button className="ml-back" aria-label="Back" onClick={() => goRL(retRL())}><DSRL.IconifyIcon name="lucide:chevron-left" size={24} color="var(--gray-900)" /></button>
         <h1>{title}</h1>
@@ -335,6 +335,9 @@ function RewardLandingMobile() {
 }
 function RewardLandingWeb() {
   const { TopNav } = DSRL;
+  /* fun rewards background (2026-10-20): the page is a centred column, so the
+     wash goes on <body> — rewards-fun-bg.css styles body.pf-funbg */
+  useEffectRL(() => { document.body.classList.add("pf-funbg"); return () => document.body.classList.remove("pf-funbg"); }, []);
   const navigate = (label) => { const u = { Home: "NewsfeedWeb.html", Profile: "Profile.html", "My Learning": "MyLearning.html", Community: "Community.html", Agent: "Agent.html", Rewards: "RewardsWeb.html" }[label]; if (u) goRL(u); };
   return (
     <>

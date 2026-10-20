@@ -246,7 +246,7 @@ function CheckInStreakScreen() {
       : (CIS_SLOTS - current) + " more " + (CIS_SLOTS - current === 1 ? "day" : "days") + " to make it five in a row.";
 
   return (
-    <div className="ml-screen cis-screen" data-screen-label="Check-In Streak">
+    <div className="ml-screen cis-screen pf-funbg" data-screen-label="Check-In Streak">
       <div className="ml-top">
         <button className="ml-back" aria-label="Back" onClick={() => goCIS("RewardsDashboard.html")}><DSCIS.IconifyIcon name="lucide:chevron-left" size={24} color="var(--gray-900)" /></button>
         <h1>Check-In Streak</h1>
