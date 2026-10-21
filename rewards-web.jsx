@@ -426,7 +426,7 @@ function RewardsWebApp() {
             {/* page order (user, 2026-09-24): league rail first, then the stat
                 tiles, then a Milestone Path button (full path on MilestonePath.html) */}
             {window.PFRewardsEmbed ? <window.PFRewardsEmbed.LeagueRail href="Leaderboard.html" /> : null}
-            <EngagementCardsRW state={state} />
+            {/* Total points / Streak tiles REMOVED (user, 2026-10-20) — the header's points + streak pills carry them */}
             <FeatureTilesRW state={state} />
             {/* the league progress card moved to MilestonePath.html (user, 2026-09-24) */}
             <StreakRiskBannerRW state={state} onCheckIn={checkIn} />

@@ -72,41 +72,29 @@ const CM_CHANNELS = ["Confidence", "Mastery", "Freedom", "Inner Circle"];
 const CM_PREMIUM_CHANNELS = new Set(["Confidence", "Freedom", "Mastery", "Inner Circle"]);
 const CM_CHANNEL_BUCKET = { Confidence: "confidence", Mastery: "mastery", Freedom: "freedom", "Inner Circle": "inner" };
 
+/* MKT Oct 2026: channels are tabs now (was a channel name + small chevron
+   that opened a dropdown, which people missed). Horizontally scrollable
+   pills, the active one filled; premium channels keep their gold crown. */
 function CMHeader({ channel, setChannel }) {
-  const [open, setOpen] = React.useState(false);
+  const rowRef = React.useRef(null);
   React.useEffect(() => {
-    if (!open) return;
-    const close = () => setOpen(false);
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, [open]);
+    const row = rowRef.current;
+    const on = row && row.querySelector(".cm-chtab.on");
+    if (on && on.scrollIntoView) on.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+  }, [channel]);
   return (
-    <div className="cm-head">
-      <div className="cm-chsel">
-        <button type="button" className="ch cm-chbtn" aria-haspopup="listbox" aria-expanded={open}
-        onClick={(e) => { e.stopPropagation(); setOpen((o) => !o); }}>
-          {channel}
-          <span className={"cm-chchev" + (open ? " open" : "")}>
-            <DSCM.IconifyIcon name="lucide:chevron-down" size={18} color="#fff" />
-          </span>
-        </button>
-        {open &&
-        <div className="cm-chmenu" role="listbox" onClick={(e) => e.stopPropagation()}>
-            {CM_CHANNELS.map((c) =>
-          <button key={c} role="option" aria-selected={c === channel}
-          className={"cm-chitem" + (c === channel ? " on" : "")}
-          onClick={() => { setChannel(c); setOpen(false); }}>
-                <span className="cm-chitem-name">
-                  {c}
-                  {CM_PREMIUM_CHANNELS.has(c) &&
-                <DSCM.IconifyIcon name="fluent:crown-16-filled" size={14} color="var(--brand-gold)" />
-                }
-                </span>
-                {c === channel && <DSCM.IconifyIcon name="lucide:check" size={17} color="var(--brand-navy)" />}
-              </button>
-          )}
-          </div>
-        }
+    <div className="cm-head cm-head-tabs">
+      <div className="cm-chtabs" ref={rowRef} role="tablist" aria-label="Community channels">
+        {CM_CHANNELS.map((c) =>
+        <button key={c} type="button" role="tab" aria-selected={c === channel}
+        className={"cm-chtab" + (c === channel ? " on" : "")}
+        onClick={() => setChannel(c)}>
+            {CM_PREMIUM_CHANNELS.has(c) &&
+          <DSCM.IconifyIcon name="fluent:crown-16-filled" size={14} color={c === channel ? "var(--brand-gold, #E7C48A)" : "#C79A4B"} />
+          }
+            {c === "Confidence" ? "Confidence Chat" : c}
+          </button>
+        )}
       </div>
       <button type="button" className="cm-dir" aria-label="Clinician directory" title="Clinician directory"
         onClick={() => goCM("ClinicianDirectory.html")}>
@@ -114,6 +102,48 @@ function CMHeader({ channel, setChannel }) {
       </button>
     </div>);
 
+}
+
+/* Premium hero at the top of a paid channel (MKT: "Confidence Chat should
+   feel premium"). Navy-to-plum gradient, gold detailing, who's in the room
+   and what members get. Copy is draft for MKT. */
+const CM_CHANNEL_HERO = {
+  Confidence: { title: "Confidence Chat", tag: "Members' lounge", members: "1,203",
+    line: "Verified aesthetic clinicians sharing real cases, honest numbers and wins, with Dr Tim in the room every week.",
+    perks: ["Verified clinicians only", "Weekly Q&A with Dr Tim", "Case reviews"] },
+  Mastery: { title: "Mastery", tag: "Inner programme", members: "864",
+    line: "The Mastery cohort: deeper case work, advanced technique and direct mentoring.",
+    perks: ["Mastery members only", "Monthly masterclass", "Mentor feedback"] },
+  Freedom: { title: "Freedom", tag: "Freedom Path", members: "412",
+    line: "For clinicians building the business side: systems, team and time freedom.",
+    perks: ["Freedom Path members", "Business clinics", "Growth playbooks"] },
+  "Inner Circle": { title: "Inner Circle", tag: "By invitation", members: "96",
+    line: "A small, private room for PROfinity's most established clinic owners.",
+    perks: ["Invitation only", "Quarterly retreat", "Private mastermind"] }
+};
+const CM_HERO_FACES = ["assets/avatar-drtim.png", "assets/avatar-sarah-collins.jpg", "assets/avatar-amir-khan.jpg", "assets/avatar-priya-shah.jpg"];
+function CMChannelHero({ channel }) {
+  const h = CM_CHANNEL_HERO[channel];
+  if (!h) return null;
+  return (
+    <section className="cm-hero" aria-label={h.title}>
+      <div className="cm-hero-glow" aria-hidden="true" />
+      <div className="cm-hero-top">
+        <span className="cm-hero-tag"><DSCM.IconifyIcon name="fluent:crown-16-filled" size={13} color="#2A2569" />{h.tag}</span>
+        <span className="cm-hero-live"><span className="dot" />42 online</span>
+      </div>
+      <h2 className="cm-hero-ti">{h.title}</h2>
+      <p className="cm-hero-line">{h.line}</p>
+      <div className="cm-hero-foot">
+        <span className="cm-hero-faces">
+          {CM_HERO_FACES.map((f) => <img key={f} src={f} alt="" />)}
+        </span>
+        <span className="cm-hero-count"><b>{h.members}</b> members</span>
+      </div>
+      <ul className="cm-hero-perks">
+        {h.perks.map((p) => <li key={p}><DSCM.IconifyIcon name="lucide:check" size={13} color="#E7C48A" />{p}</li>)}
+      </ul>
+    </section>);
 }
 
 /* ===== "N new posts" pill =====
@@ -265,9 +295,12 @@ function CMScreen({ scrollRef }) {
   React.useLayoutEffect(() => {
     const s = scrollRef.current;
     const box = s && s.querySelector(".pf-pinned-box");
-    if (!box) { setPinnedH(0); return; }
+    /* the premium channel hero (CMChannelHero) also sits above the feed */
+    const hero = s && s.querySelector(".cm-hero");
+    const heroH = () => (hero ? hero.offsetHeight + 12 : 0);
+    if (!box) { setPinnedH(heroH()); return; }
     const head = box.querySelector(".pf-pinned-box-head") || box;
-    const measure = () => setPinnedH(head.offsetHeight + 30);
+    const measure = () => setPinnedH(head.offsetHeight + 30 + heroH());
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(head);
@@ -290,6 +323,7 @@ function CMScreen({ scrollRef }) {
       </div>
       <NewPostsPillCM count={newPosts} top={headerH + 12 + pinnedH} onTap={seeNewPosts} />
       <div className="cm-scroll" ref={scrollRef} style={{ paddingTop: headerH, paddingBottom: tabsH + 34 }}>
+        <CMChannelHero channel={channel} />
         <PFACM.Feed channel={bucket} />
         <div className="cm-end">End of newsfeed</div>
       </div>

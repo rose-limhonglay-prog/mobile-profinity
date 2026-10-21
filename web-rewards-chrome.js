@@ -174,11 +174,62 @@
   }
 
   /* --------------------------------------------------------------- boot */
+  /* Rewards page header (user, 2026-10-20): no search box, bell or messages —
+     the points pill, a streak pill and a settings button instead. Desktop
+     twin of the mobile PF_CHROME_REWARDS header in mobilechrome.jsx. */
+  /* the header streak flame (lottie.host "Streak icon update" COmLSCf8Io, blue),
+     loaded as raw JSON through lottie-web — the /embed URL is an HTML page */
+  var FLAME_SRC = "https://lottie.host/9f92eeef-b540-4344-afb9-0ea438a4f381/COmLSCf8Io.json";
+  var GEAR_SVG = '<svg class="pf-fun-gear" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><defs><linearGradient id="pfFunGearGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#B3A8FF"/><stop offset="1" stop-color="#5B4FD6"/></linearGradient></defs><path class="pf-fun-gear-body" d="M19.94 11.00 L22.17 11.28 L22.17 12.72 L19.94 13.00 L18.32 16.90 L19.70 18.69 L18.69 19.70 L16.90 18.32 L13.00 19.94 L12.72 22.17 L11.28 22.17 L11.00 19.94 L7.10 18.32 L5.31 19.70 L4.30 18.69 L5.68 16.90 L4.06 13.00 L1.83 12.72 L1.83 11.28 L4.06 11.00 L5.68 7.10 L4.30 5.31 L5.31 4.30 L7.10 5.68 L11.00 4.06 L11.28 1.83 L12.72 1.83 L13.00 4.06 L16.90 5.68 L18.69 4.30 L19.70 5.31 L18.32 7.10 Z" fill="url(#pfFunGearGrad)" stroke="url(#pfFunGearGrad)" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.4" fill="#FFF3D6"/><circle cx="12" cy="12" r="1.3" fill="#5B4FD6"/><path class="pf-fun-gear-spark" d="M19.2 2.2 L19.9 4.3 L22 5 L19.9 5.7 L19.2 7.8 L18.5 5.7 L16.4 5 L18.5 4.3 Z" fill="#FCC25D"/></svg>';
+  function bootFlame(host, fb) {
+    ensureLottieLib();
+    var go2 = function () {
+      var still = reduceMotion();
+      fetch(FLAME_SRC).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
+        if (!data || !window.lottie || !host) return;
+        var anim = window.lottie.loadAnimation({ container: host, renderer: "svg", loop: !still, autoplay: !still, animationData: data,
+          rendererSettings: { preserveAspectRatio: "xMidYMid meet", progressiveLoad: false } });
+        anim.addEventListener("DOMLoaded", function () { if (still) anim.goToAndStop(0, true); host.classList.add("on"); if (fb) fb.style.display = "none"; });
+      }).catch(function () {});
+    };
+    if (window.lottie) { go2(); return; }
+    var tries = 0, iv = setInterval(function () { tries++; if (window.lottie) { clearInterval(iv); go2(); } else if (tries > 65) clearInterval(iv); }, 120);
+  }
+  function readStreak() { try { var L = window.PFLoyalty, s = L && L.getState ? L.getState() : null; return s && s.streak ? (s.streak.current || 0) : 0; } catch (e) { return 0; } }
+  function rewardsHeader(h) {
+    if (!isRewardsPage() || h.cluster.querySelector(".pf-web-streak")) return;
+    /* hide via a header class + CSS (web-rewards-chrome.css): the TopNav is
+       React-rendered and would re-apply inline styles over a style="" hide */
+    h.header.classList.add("pf-hdr-rewards");
+    var streak = document.createElement("button");
+    streak.type = "button"; streak.className = "m-pts pf-web-pts pf-web-streak";
+    streak.innerHTML =
+      '<span class="m-pts-ic" aria-hidden="true">' +
+        '<span class="m-pts-ic-fb"><iconify-icon icon="lucide:flame" width="20" height="20" style="color:#43CBFF"></iconify-icon></span>' +
+        '<span class="m-pts-ic-anim pf-web-streak-anim"></span>' +
+      '</span><span class="m-pts-n"></span>';
+    bootFlame(streak.querySelector(".pf-web-streak-anim"), streak.querySelector(".m-pts-ic-fb"));
+    var sn = streak.querySelector(".m-pts-n");
+    var paintStreak = function () { var d = readStreak(); sn.textContent = d; streak.setAttribute("aria-label", d + "-day streak. Open check-in streak"); streak.title = d + "-day streak"; };
+    paintStreak();
+    streak.addEventListener("click", function () { go("CheckInStreak.html"); });
+    window.addEventListener("pf:points-earned", paintStreak);
+    window.addEventListener("storage", function (e) { if (!e.key || e.key === "pf-loyalty-state-v1") paintStreak(); });
+    var gear = document.createElement("button");
+    gear.type = "button"; gear.className = "pf-web-gear"; gear.setAttribute("aria-label", "Rewards settings"); gear.title = "Rewards settings";
+    gear.innerHTML = GEAR_SVG;   /* fun gear: violet gradient, cream hub, gold twinkle (user, 2026-10-20) */
+    gear.addEventListener("click", function () { go("RewardsSettingsWeb.html"); });
+    /* visible order: points pill (first child) · streak · settings · account */
+    var user = h.cluster.querySelector(".pf-hdr-user") || null;
+    h.cluster.insertBefore(streak, user);
+    h.cluster.insertBefore(gear, user);
+  }
   function install() {
     var h = findHeader();
     if (!h) return false;
     addNavItem(h.nav);
     addPill(h.cluster);
+    rewardsHeader(h);
     return true;
   }
   function boot() {

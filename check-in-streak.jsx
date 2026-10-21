@@ -2,7 +2,7 @@
    PROfinity — Katy · Check-In Streak ("5 in a row") · iPhone 17 Pro Max
    Celebrates the consecutive daily check-in streak the Mobile Check-In
    guardrail asks for: five day-slots on a connected track, each one playing
-   the cheering Dr Tim Lottie once the day is banked, presented by the
+   the blue streak-flame Lottie once the day is banked, presented by the
    coffee-break Dr Tim (assets/lottie/drtim-coffee.json, same ring crop as the
    header points pill). Redesigned 2026-10-13 as a light cream + gold hero
    with the check-in action inside it (navy hero kept for dark mode). Check-in and
@@ -13,9 +13,11 @@ const { useState: useStateCIS, useEffect: useEffectCIS, useRef: useRefCIS, useMe
 const DSCIS = window.ProfinityDesignSystem_c2b5cc;
 const PF_CIS = window.PFLoyalty;
 
-/* on-brand slot character: the cheering Dr Tim avatar (assets/lottie, same
-   file family as daily-checkin.js / the Rewards welcome modal) */
-const CIS_LOTTIE = "assets/lottie/checkin-happy.json";
+/* slot character: the blue streak flame (lottie.host COmLSCf8Io — the same
+   one the Rewards header streak pill plays). Replaced the cheering Dr Tim
+   avatar (assets/lottie/checkin-happy.json) on 2026-10-20 at the user's
+   request ("change the Dr Tim animation to the fire animation"). */
+const CIS_LOTTIE = "https://lottie.host/9f92eeef-b540-4344-afb9-0ea438a4f381/COmLSCf8Io.json";
 const CIS_SLOTS = 5;
 const CIS_DAY = 86400000;
 
@@ -36,8 +38,8 @@ function CisLottie({ size, delay }) {
       const start = () => {
         if (dead || !window.lottie || !host.current) return;
         anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: true, autoplay: false, animationData: JSON.parse(JSON.stringify(data)),
-          /* the avatar is a 4:3 scene — fill the round slot by height and crop the sides */
-          rendererSettings: { preserveAspectRatio: "xMidYMid slice" } });
+          /* the flame is a square scene — fit it inside the round slot */
+          rendererSettings: { preserveAspectRatio: "xMidYMid meet" } });
         timer = setTimeout(() => { if (!dead && anim) anim.play(); }, delay || 0);
       };
       if (window.lottie) start();

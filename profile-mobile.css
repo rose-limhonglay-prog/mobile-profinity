@@ -1411,3 +1411,25 @@ img{max-width:100%}
 
 /* reversed points (a Today's Target unticked, 2026-10-14) */
 .m-pts-delta.is-neg{color:#D33F3F}
+
+/* ---- MKT Oct 2026: mandatory profile picture + upload helper text ---- */
+.pm-edit-avlinks{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap}
+.pm-edit-avlink-rm{color:var(--gray-500)!important;font-weight:var(--fw-medium)!important}
+.pm-edit-avhelp{margin:-6px 0 0;max-width:320px;text-align:center;font-family:var(--font-sans);font-size:13px;line-height:1.45;color:var(--gray-500)}
+.pm-edit-averr{display:flex;align-items:center;gap:6px;margin:-4px 0 0;font-family:var(--font-sans);font-size:13px;font-weight:var(--fw-semibold);color:#d92d20}
+.pm-edit-avblock.is-err .pm-edit-avbtn{box-shadow:0 0 0 3px #fff,0 0 0 5px #d92d20}
+.pm-sheet-help{font-size:13px;text-align:center}
+/* ---- MKT Oct 2026: one-tap "Complete your profile" (next step CTA on the card) ---- */
+.pm-steps-collapsed .pm-steps-pct{margin-bottom:12px}
+/* white (user, 2026-10-21: navy → gold → grey → "set this in white") — quiet pill, dark text */
+.pm-steps-next{display:flex;align-items:center;gap:10px;width:100%;border:1px solid var(--border-default);cursor:pointer;text-align:left;
+  padding:12px 14px;border-radius:14px;background:var(--surface-card,#fff);color:var(--gray-900);font-family:var(--font-sans);  /* white (user, 2026-10-21) */
+  box-shadow:0 2px 8px rgba(16,24,40,.06);transition:transform .12s ease,background .12s ease}
+.pm-steps-next:active{transform:scale(.98);background:var(--gray-200)}
+.pm-steps-next-lb{flex:none;font-size:11px;font-weight:var(--fw-semibold);letter-spacing:.06em;text-transform:uppercase;
+  padding:3px 8px;border-radius:999px;background:var(--gray-300,#D5D7DE);color:var(--gray-700)}
+[data-theme="dark"] .pm-steps-next{background:var(--surface-card,#1e1c38);border-color:rgba(255,255,255,.12);color:#fff;box-shadow:none}
+[data-theme="dark"] .pm-steps-next-lb{background:rgba(255,255,255,.14);color:rgba(255,255,255,.8)}
+.pm-steps-next-ti{flex:1;min-width:0;font-size:15px;font-weight:var(--fw-semibold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm-steps-all{display:block;margin-top:10px;text-align:center;font-family:var(--font-sans);font-size:13px;font-weight:var(--fw-semibold);color:var(--brand-navy)}  /* navy, not purple (user, 2026-10-21) */
+[data-theme="dark"] .pm-steps-all{color:#C2BCFF}

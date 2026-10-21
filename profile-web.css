@@ -907,3 +907,10 @@
    Ava row + check-in sit at the bottom (no dead space under the milestone) */
 .cf-pw-goal .cf-milestone{padding:16px 18px;border-radius:16px;background:#FFFBF2;border:1px solid #F2E6CF}
 [data-theme="dark"] .cf-pw-goal .cf-milestone{background:rgba(253,195,93,.08);border-color:rgba(253,195,93,.2)}
+
+/* ---- MKT Oct 2026: mandatory profile picture + upload helper text ---- */
+.pw-edit-avlinks{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap}
+.pw-edit-avlink-rm{color:var(--gray-500)!important;font-weight:var(--fw-medium)!important}
+.pw-edit-avhelp{margin:-6px 0 0;max-width:320px;text-align:center;font-family:var(--font-sans);font-size:13px;line-height:1.45;color:var(--gray-500)}
+.pw-edit-averr{display:flex;align-items:center;gap:6px;margin:-4px 0 0;font-family:var(--font-sans);font-size:13px;font-weight:var(--fw-semibold);color:#d92d20}
+.pw-edit-avblock.is-err .pw-edit-avbtn{box-shadow:0 0 0 3px #fff,0 0 0 5px #d92d20}

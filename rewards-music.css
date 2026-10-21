@@ -1,0 +1,21 @@
+/* Floating ♪ switch for the Rewards page background music (rewards-music.js,
+   2026-10-20). Bottom-right; on the mobile shell it sits above the tab bar. */
+.pf-rmusic { position: fixed; right: 20px; bottom: 24px; z-index: 48; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border-default);
+  background: var(--surface-card, #fff); color: var(--brand-navy, #292569); display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+  box-shadow: 0 8px 20px rgba(16,24,40,.14); -webkit-tap-highlight-color: transparent; font: inherit; transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease; }
+.pf-rmusic:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(16,24,40,.18); }
+.pf-rmusic:active { transform: scale(.94); }
+.pf-rmusic:focus-visible { outline: 2px solid var(--focus-ring, rgba(108,99,255,.28)); outline-offset: 2px; }
+.pf-rmusic.is-mobile { right: 16px; bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+.pf-rmusic.is-mobile-plain { right: 16px; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); }
+.pf-rmusic iconify-icon { display: block; color: currentColor; }
+.pf-rmusic-fb { font-size: 18px; line-height: 1; }
+.pf-rmusic.is-off { color: var(--gray-500, #717680); opacity: .82; }
+/* a little pulse while the tune plays */
+.pf-rmusic:not(.is-off)::after { content: ""; position: absolute; inset: -4px; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--brand-gold, #D9A21B) 55%, transparent); animation: pf-rmusic-pulse 1.8s ease-out infinite; pointer-events: none; }
+@keyframes pf-rmusic-pulse { 0% { transform: scale(.85); opacity: .9; } 100% { transform: scale(1.25); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .pf-rmusic:not(.is-off)::after { animation: none; display: none; } }
+/* hide behind full-screen takeovers (check-in, daily goal) */
+body:has(.pf-dci-screen) .pf-rmusic, body:has(.rdb-welcome-scrim) .pf-rmusic { opacity: 0; pointer-events: none; }
+[data-theme="dark"] .pf-rmusic { background: #1e1c38; border-color: rgba(255,255,255,.1); color: #C2BCFF; box-shadow: 0 8px 20px rgba(0,0,0,.4); }
+[data-theme="dark"] .pf-rmusic.is-off { color: var(--gray-500, #8e8e9a); }

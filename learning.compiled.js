@@ -580,6 +580,30 @@ function courseStatus(c, featured) {
     pill: "Not started"
   };
 }
+/* MKT Oct 2026 — thumbnails: a cover that fails to load falls back to the
+   local membership still, then to a branded tile with the course initials. */
+const LRN_THUMB_FALLBACK = "assets/course-membership-banner.jpg";
+function LrnThumb({
+  src,
+  title
+}) {
+  const [stage, setStage] = useState(src ? 0 : 2);
+  useEffectL(() => {
+    setStage(src ? 0 : 2);
+  }, [src]);
+  if (stage === 2) {
+    const initials = String(title || "PF").split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+    return /*#__PURE__*/React.createElement("span", {
+      className: "lrn-thumb-tile",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("b", null, initials));
+  }
+  return /*#__PURE__*/React.createElement("img", {
+    src: stage === 0 ? src : LRN_THUMB_FALLBACK,
+    alt: "",
+    onError: () => setStage(s => s + 1)
+  });
+}
 function MyCourseCard({
   c,
   saved,
@@ -595,10 +619,17 @@ function MyCourseCard({
     className: "lrn2-mc-cover",
     onClick: cta.go,
     "aria-label": "Open " + c.title
-  }, /*#__PURE__*/React.createElement("img", {
+  }, /*#__PURE__*/React.createElement(LrnThumb, {
     src: c.image,
-    alt: ""
-  }), /*#__PURE__*/React.createElement(LevelBadge, {
+    title: c.title
+  }), c.inProgress && !c.completed && /*#__PURE__*/React.createElement("span", {
+    className: "lrn2-mc-coverbar",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: Math.max(3, c.progress || 0) + "%"
+    }
+  })), /*#__PURE__*/React.createElement(LevelBadge, {
     level: c.level,
     className: "lrn2-mc-lvl"
   }), c.completed ? /*#__PURE__*/React.createElement("span", {

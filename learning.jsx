@@ -327,6 +327,18 @@ function courseStatus(c, featured) {
   if (c.inProgress) return { key: "live", eyebrow: featured ? "Continue where you left off" : "In progress · Lesson " + resumeLessonNumber(c), pill: c.progress + "% complete" };
   return { key: "new", eyebrow: c.level ? c.level + " level" : "Not started", pill: "Not started" };
 }
+/* MKT Oct 2026 — thumbnails: a cover that fails to load falls back to the
+   local membership still, then to a branded tile with the course initials. */
+const LRN_THUMB_FALLBACK = "assets/course-membership-banner.jpg";
+function LrnThumb({ src, title }) {
+  const [stage, setStage] = useState(src ? 0 : 2);
+  useEffectL(() => { setStage(src ? 0 : 2); }, [src]);
+  if (stage === 2) {
+    const initials = String(title || "PF").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+    return <span className="lrn-thumb-tile" aria-hidden="true"><b>{initials}</b></span>;
+  }
+  return <img src={stage === 0 ? src : LRN_THUMB_FALLBACK} alt="" onError={() => setStage((s) => s + 1)} />;
+}
 function MyCourseCard({ c, saved, featured }) {
   const st = courseStatus(c, featured);
   const cta = courseCta(c);
@@ -334,7 +346,8 @@ function MyCourseCard({ c, saved, featured }) {
   return (
     <article className={"lrn2-mc lrn2-mc-" + st.key + (featured ? " lrn2-mc-featured" : "")}>
       <button type="button" className="lrn2-mc-cover" onClick={cta.go} aria-label={"Open " + c.title}>
-        <img src={c.image} alt="" />
+        <LrnThumb src={c.image} title={c.title} />
+        {c.inProgress && !c.completed && <span className="lrn2-mc-coverbar" aria-hidden="true"><span style={{ width: Math.max(3, c.progress || 0) + "%" }} /></span>}
         <LevelBadge level={c.level} className="lrn2-mc-lvl" />
         {c.completed
           ? <span className="lrn2-mc-ribbon" aria-hidden="true"><IconifyIcon name="lucide:award" size={22} color="#fff" /></span>

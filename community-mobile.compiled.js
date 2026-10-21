@@ -140,60 +140,43 @@ const CM_CHANNEL_BUCKET = {
   Freedom: "freedom",
   "Inner Circle": "inner"
 };
+
+/* MKT Oct 2026: channels are tabs now (was a channel name + small chevron
+   that opened a dropdown, which people missed). Horizontally scrollable
+   pills, the active one filled; premium channels keep their gold crown. */
 function CMHeader({
   channel,
   setChannel
 }) {
-  const [open, setOpen] = React.useState(false);
+  const rowRef = React.useRef(null);
   React.useEffect(() => {
-    if (!open) return;
-    const close = () => setOpen(false);
-    document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
-  }, [open]);
+    const row = rowRef.current;
+    const on = row && row.querySelector(".cm-chtab.on");
+    if (on && on.scrollIntoView) on.scrollIntoView({
+      block: "nearest",
+      inline: "center",
+      behavior: "smooth"
+    });
+  }, [channel]);
   return /*#__PURE__*/React.createElement("div", {
-    className: "cm-head"
+    className: "cm-head cm-head-tabs"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "cm-chsel"
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
-    className: "ch cm-chbtn",
-    "aria-haspopup": "listbox",
-    "aria-expanded": open,
-    onClick: e => {
-      e.stopPropagation();
-      setOpen(o => !o);
-    }
-  }, channel, /*#__PURE__*/React.createElement("span", {
-    className: "cm-chchev" + (open ? " open" : "")
-  }, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
-    name: "lucide:chevron-down",
-    size: 18,
-    color: "#fff"
-  }))), open && /*#__PURE__*/React.createElement("div", {
-    className: "cm-chmenu",
-    role: "listbox",
-    onClick: e => e.stopPropagation()
+    className: "cm-chtabs",
+    ref: rowRef,
+    role: "tablist",
+    "aria-label": "Community channels"
   }, CM_CHANNELS.map(c => /*#__PURE__*/React.createElement("button", {
     key: c,
-    role: "option",
+    type: "button",
+    role: "tab",
     "aria-selected": c === channel,
-    className: "cm-chitem" + (c === channel ? " on" : ""),
-    onClick: () => {
-      setChannel(c);
-      setOpen(false);
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cm-chitem-name"
-  }, c, CM_PREMIUM_CHANNELS.has(c) && /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
+    className: "cm-chtab" + (c === channel ? " on" : ""),
+    onClick: () => setChannel(c)
+  }, CM_PREMIUM_CHANNELS.has(c) && /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
     name: "fluent:crown-16-filled",
     size: 14,
-    color: "var(--brand-gold)"
-  })), c === channel && /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
-    name: "lucide:check",
-    size: 17,
-    color: "var(--brand-navy)"
-  }))))), /*#__PURE__*/React.createElement("button", {
+    color: c === channel ? "var(--brand-gold, #E7C48A)" : "#C79A4B"
+  }), c === "Confidence" ? "Confidence Chat" : c))), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "cm-dir",
     "aria-label": "Clinician directory",
@@ -204,6 +187,88 @@ function CMHeader({
     size: 22,
     color: "var(--brand-navy)"
   })));
+}
+
+/* Premium hero at the top of a paid channel (MKT: "Confidence Chat should
+   feel premium"). Navy-to-plum gradient, gold detailing, who's in the room
+   and what members get. Copy is draft for MKT. */
+const CM_CHANNEL_HERO = {
+  Confidence: {
+    title: "Confidence Chat",
+    tag: "Members' lounge",
+    members: "1,203",
+    line: "Verified aesthetic clinicians sharing real cases, honest numbers and wins, with Dr Tim in the room every week.",
+    perks: ["Verified clinicians only", "Weekly Q&A with Dr Tim", "Case reviews"]
+  },
+  Mastery: {
+    title: "Mastery",
+    tag: "Inner programme",
+    members: "864",
+    line: "The Mastery cohort: deeper case work, advanced technique and direct mentoring.",
+    perks: ["Mastery members only", "Monthly masterclass", "Mentor feedback"]
+  },
+  Freedom: {
+    title: "Freedom",
+    tag: "Freedom Path",
+    members: "412",
+    line: "For clinicians building the business side: systems, team and time freedom.",
+    perks: ["Freedom Path members", "Business clinics", "Growth playbooks"]
+  },
+  "Inner Circle": {
+    title: "Inner Circle",
+    tag: "By invitation",
+    members: "96",
+    line: "A small, private room for PROfinity's most established clinic owners.",
+    perks: ["Invitation only", "Quarterly retreat", "Private mastermind"]
+  }
+};
+const CM_HERO_FACES = ["assets/avatar-drtim.png", "assets/avatar-sarah-collins.jpg", "assets/avatar-amir-khan.jpg", "assets/avatar-priya-shah.jpg"];
+function CMChannelHero({
+  channel
+}) {
+  const h = CM_CHANNEL_HERO[channel];
+  if (!h) return null;
+  return /*#__PURE__*/React.createElement("section", {
+    className: "cm-hero",
+    "aria-label": h.title
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cm-hero-glow",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cm-hero-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cm-hero-tag"
+  }, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
+    name: "fluent:crown-16-filled",
+    size: 13,
+    color: "#2A2569"
+  }), h.tag), /*#__PURE__*/React.createElement("span", {
+    className: "cm-hero-live"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  }), "42 online")), /*#__PURE__*/React.createElement("h2", {
+    className: "cm-hero-ti"
+  }, h.title), /*#__PURE__*/React.createElement("p", {
+    className: "cm-hero-line"
+  }, h.line), /*#__PURE__*/React.createElement("div", {
+    className: "cm-hero-foot"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cm-hero-faces"
+  }, CM_HERO_FACES.map(f => /*#__PURE__*/React.createElement("img", {
+    key: f,
+    src: f,
+    alt: ""
+  }))), /*#__PURE__*/React.createElement("span", {
+    className: "cm-hero-count"
+  }, /*#__PURE__*/React.createElement("b", null, h.members), " members")), /*#__PURE__*/React.createElement("ul", {
+    className: "cm-hero-perks"
+  }, h.perks.map(p => /*#__PURE__*/React.createElement("li", {
+    key: p
+  }, /*#__PURE__*/React.createElement(DSCM.IconifyIcon, {
+    name: "lucide:check",
+    size: 13,
+    color: "#E7C48A"
+  }), p))));
 }
 
 /* ===== "N new posts" pill =====
@@ -408,12 +473,15 @@ function CMScreen({
   React.useLayoutEffect(() => {
     const s = scrollRef.current;
     const box = s && s.querySelector(".pf-pinned-box");
+    /* the premium channel hero (CMChannelHero) also sits above the feed */
+    const hero = s && s.querySelector(".cm-hero");
+    const heroH = () => hero ? hero.offsetHeight + 12 : 0;
     if (!box) {
-      setPinnedH(0);
+      setPinnedH(heroH());
       return;
     }
     const head = box.querySelector(".pf-pinned-box-head") || box;
-    const measure = () => setPinnedH(head.offsetHeight + 30);
+    const measure = () => setPinnedH(head.offsetHeight + 30 + heroH());
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(head);
@@ -452,7 +520,9 @@ function CMScreen({
       paddingTop: headerH,
       paddingBottom: tabsH + 34
     }
-  }, /*#__PURE__*/React.createElement(PFACM.Feed, {
+  }, /*#__PURE__*/React.createElement(CMChannelHero, {
+    channel: channel
+  }), /*#__PURE__*/React.createElement(PFACM.Feed, {
     channel: bucket
   }), /*#__PURE__*/React.createElement("div", {
     className: "cm-end"

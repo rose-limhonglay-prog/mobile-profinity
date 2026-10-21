@@ -46,3 +46,29 @@
 
 /* reversed points (a Today's Target unticked, 2026-10-14) */
 .m-pts-delta.is-neg{color:#D33F3F}
+
+/* Rewards page header (2026-10-20): streak pill + settings button; the search
+   box, bell and messages buttons are hidden by class (see rewardsHeader()) */
+.pf-hdr-rewards .pf-hdr-search{display:none!important}
+.pf-hdr-rewards .pf-hdr-cluster>button[aria-label="Search"],.pf-hdr-rewards .pf-hdr-cluster>button[aria-label="Notifications"],.pf-hdr-rewards .pf-hdr-cluster>button[aria-label^="Messages"]{display:none!important}
+.pf-web-streak{padding:0 12px 0 6px;color:#43CBFF;gap:2px}  /* #43CBFF = the blue of the COmLSCf8Io flame */
+.pf-web-streak .m-pts-ic{width:28px;height:28px}
+/* web-header-responsive.css orders the cluster (.m-pts 1 … .pf-hdr-user 5); slot the gear after the pills */
+header.pf-hdr .pf-hdr-cluster>.pf-web-gear{order:4}
+.pf-web-gear{width:40px;height:40px;border-radius:50%;border:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;background:var(--surface-sunken,#f0f1f5);color:var(--brand-navy,#292569);font:inherit}
+.pf-web-gear:hover{background:var(--gray-100)}
+.pf-web-gear:active{background:var(--gray-200)}
+.pf-web-gear iconify-icon{display:block;color:currentColor}
+[data-theme="dark"] .pf-web-streak{color:#6FD8FF}
+[data-theme="dark"] .pf-web-gear{background:rgba(206,153,87,.12);color:#C2BCFF}
+
+/* fun settings gear on the Rewards header (2026-10-20): slow spin, twinkle; quick spin on press */
+.pf-fun-gear{display:block;animation:pf-fun-gear-spin 14s linear infinite;transform-origin:12px 12px;transform-box:fill-box}
+.pf-fun-gear-body{transform-origin:12px 12px}
+.pf-fun-gear-spark{transform-origin:19.2px 5px;animation:pf-fun-gear-twinkle 2.2s ease-in-out infinite}
+.m-iconbtn:active .pf-fun-gear,.pf-web-gear:active .pf-fun-gear{animation-duration:1.2s}
+@keyframes pf-fun-gear-spin{to{transform:rotate(360deg)}}
+@keyframes pf-fun-gear-twinkle{0%,100%{transform:scale(.6);opacity:.55}50%{transform:scale(1.15);opacity:1}}
+@media (prefers-reduced-motion:reduce){.pf-fun-gear,.pf-fun-gear-spark{animation:none}}
+.pf-web-streak-anim svg{transform:scale(1)!important}  /* blue flame fills its canvas — no enlargement */
+.pf-web-gear{background:transparent}

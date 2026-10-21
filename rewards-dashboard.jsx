@@ -420,7 +420,8 @@ function RewardsDashboardHome() {
         <div style={{ padding: "0 20px" }}>
           {window.PFRewardsEmbed ? <window.PFRewardsEmbed.LeagueRail href="Leaderboard.html" /> : null}
           <RdbLeagueCard state={state} />
-          <div style={{ marginTop: 12 }}><RdbEngagementCards state={state} /></div>
+          {/* Total points / Streak tiles REMOVED (user, 2026-10-20 "we can remove this") —
+              the Rewards header now carries the points pill and the streak pill */}
           <RdbFeatureTiles state={state} />
         </div>
         {/* the Ruby→Emerald league progress card moved to MilestonePath.html (user, 2026-09-24) */}

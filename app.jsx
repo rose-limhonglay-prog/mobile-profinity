@@ -3490,6 +3490,25 @@ function WebPollEditor({ options, onChange, onRemove }) {
     </div>);
 }
 
+/* Mobile "prompt to post" (MKT Oct 2026): the phone feed only had the
+   floating + button, so nothing in the feed itself invited people to post.
+   A slim composer card at the top of the feed hands off to the full-screen
+   Create Post flow. */
+function MobilePostPrompt() {
+  const firstName = ME.name.split(" ")[0];
+  const go = (q) => (window.pfGo || function (u) { window.location.href = u; })("CreatePostMobile.html" + (q || ""));
+  return (
+    <div className="pf-mprompt" data-screen-label="Prompt to post">
+      <Avatar name={ME.name} src={ME.avatar} size={42} />
+      <button type="button" className="pf-mprompt-pill" onClick={() => go()}>
+        Share a win, a case or a question, {firstName}…
+      </button>
+      <button type="button" className="pf-mprompt-ic" aria-label="Add a photo" onClick={() => go()}>
+        <IconifyIcon name="fluent:image-multiple-24-filled" size={24} color="#3DBE5B" />
+      </button>
+    </div>);
+}
+
 function PostComposer({ onPost, superUser, devRole, onDevRole, lockedAdmin }) {
   const [v, setV] = useState("");
   const [images, setImages] = useState([]);
@@ -6866,7 +6885,9 @@ function FeedPost({ post, st, hideTags, pinned, canPin, onPin, pinScope, onToggl
         }
           {comments.map((c) =>
         <div key={c._id} style={{ marginTop: 16 }}>
-              <CommentItem {...c} reactions={null} reactionCount={null} replies={[]} />
+              {/* MKT Oct 2026: "N Likes" / "N Comments" on a comment are tappable (likes sheet / reply) */}
+              <CommentItem {...c} reactions={null} reactionCount={null} replies={[]}
+                onLikesClick={() => setLikesOpen(true)} onCommentsClick={() => setReplyFor(c._id)} />
               <div className="cmt-actions" style={{ marginLeft: 48 }}>
                 <ReactTrigger />
                 <span className="cmt-dot">·</span>
@@ -6908,7 +6929,7 @@ function FeedPost({ post, st, hideTags, pinned, canPin, onPin, pinScope, onToggl
           <div className="cmt-preview" role="button" tabIndex={0}
         onClick={() => setSheetOpen(true)}
         onKeyDown={(e) => {if (e.key === "Enter") setSheetOpen(true);}}>
-            <CommentItem {...comments[0]} reactions={null} reactionCount={null} replies={[]} />
+            <CommentItem {...comments[0]} reactions={null} reactionCount={null} replies={[]} onCommentsClick={() => setSheetOpen(true)} />
           </div>
           {comments.length > 1 &&
         <button type="button" className="cmt-viewmore" onClick={() => setSheetOpen(true)}>
@@ -7159,7 +7180,7 @@ function ChannelFeedCard({ post, st, pinned, canPin, onPin, pinScope, onToggleLi
           <div className="cmt-preview" role="button" tabIndex={0}
         onClick={() => setSheetOpen(true)}
         onKeyDown={(e) => {if (e.key === "Enter") setSheetOpen(true);}}>
-            <CommentItem {...comments[0]} reactions={null} reactionCount={null} replies={[]} />
+            <CommentItem {...comments[0]} reactions={null} reactionCount={null} replies={[]} onCommentsClick={() => setSheetOpen(true)} />
           </div>
           {comments.length > 1 &&
         <button type="button" className="cmt-viewmore" onClick={() => setSheetOpen(true)}>
@@ -8334,6 +8355,10 @@ function Feed({ channel } = {}) {
     <main className="feed" data-screen-label="Home feed">
       {!channel && !window.PF_EMBED && <PostComposer onPost={addPost} superUser={composerSuperUser}
       devRole={composerRole} onDevRole={setComposerRole} lockedAdmin={viewerCurrent.admin} />}
+      {/* prompt-to-post card: brought in from the MKT prototype 2026-10-21 then
+          switched OFF the same day (user: "remove this"); flag PF_POST_PROMPT
+          is no longer set on any shell */}
+      {!channel && window.PF_EMBED && window.PF_POST_PROMPT && <MobilePostPrompt />}
       {!channel && !window.PF_EMBED && PF_SHOW_DEV_PANELS &&
       <ComposerDevToggle role={composerRole} onChange={setComposerRole} lockedAdmin={viewerCurrent.admin} />}
       {!channel && PF_SHOW_DEV_PANELS &&

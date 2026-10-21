@@ -261,6 +261,62 @@
       </div>, host);
   }
 
+  /* Rewards-page header streak pill (user, 2026-10-20): flame + day count,
+     opens the Check-In Streak page. Only rendered when the shell sets
+     window.PF_CHROME_REWARDS (RewardsDashboard.html). */
+  function streakReadC() { try { const s = window.PFLoyalty && window.PFLoyalty.getState ? window.PFLoyalty.getState() : null; return s && s.streak ? (s.streak.current || 0) : 0; } catch (e) { return 0; } }
+  /* Header streak flame (user, 2026-10-20): lottie.host "Streak icon update" COmLSCf8Io (blue flame, replaced the Streak-tile flame at the user's request),
+     loaded as raw JSON through
+     lottie-web (never the /embed iframe). Falls back to the static lucide flame. */
+  const STREAK_LOTTIE_SRCC = "https://lottie.host/9f92eeef-b540-4344-afb9-0ea438a4f381/COmLSCf8Io.json";
+  let streakLottiePromiseC = null;
+  function streakLottieDataC() {
+    if (!streakLottiePromiseC) streakLottiePromiseC = fetch(STREAK_LOTTIE_SRCC).then((r) => r.ok ? r.json() : null).catch(() => { streakLottiePromiseC = null; return null; });
+    return streakLottiePromiseC;
+  }
+  function FlameIconC() {
+    const host = React.useRef(null);
+    const [ready, setReady] = useStateC(false);
+    useEffectC(() => {
+      let anim, iv, cancelled = false;
+      const still = ptsReduceMotionC();
+      function start() {
+        if (cancelled || !window.lottie || !host.current) return;
+        streakLottieDataC().then((data) => {
+          if (!data || cancelled || !host.current) return;
+          anim = window.lottie.loadAnimation({ container: host.current, renderer: "svg", loop: !still, autoplay: !still, animationData: data,
+            rendererSettings: { preserveAspectRatio: "xMidYMid meet", progressiveLoad: false } });
+          anim.addEventListener("DOMLoaded", () => { if (cancelled) return; if (still) anim.goToAndStop(0, true); setReady(true); });
+        });
+      }
+      ptsEnsureLottieLibC();
+      if (window.lottie) start();
+      else { iv = setInterval(() => { if (window.lottie) { clearInterval(iv); iv = null; start(); } }, 120); setTimeout(() => { if (iv) clearInterval(iv); }, 8000); }
+      return () => { cancelled = true; if (anim) anim.destroy(); if (iv) clearInterval(iv); };
+    }, []);
+    return (
+      <span className="m-pts-ic m-streak-ic" aria-hidden="true">
+        {!ready && <span className="m-pts-ic-fb"><DSC.IconifyIcon name="lucide:flame" size={20} color="#43CBFF" /></span>}
+        <span ref={host} className={"m-pts-ic-anim m-streak-anim" + (ready ? " on" : "")} />
+      </span>);
+  }
+  function FunGearC() { return (<svg className="pf-fun-gear" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><defs><linearGradient id="pfFunGearGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#B3A8FF"/><stop offset="1" stopColor="#5B4FD6"/></linearGradient></defs><path className="pf-fun-gear-body" d="M19.94 11.00 L22.17 11.28 L22.17 12.72 L19.94 13.00 L18.32 16.90 L19.70 18.69 L18.69 19.70 L16.90 18.32 L13.00 19.94 L12.72 22.17 L11.28 22.17 L11.00 19.94 L7.10 18.32 L5.31 19.70 L4.30 18.69 L5.68 16.90 L4.06 13.00 L1.83 12.72 L1.83 11.28 L4.06 11.00 L5.68 7.10 L4.30 5.31 L5.31 4.30 L7.10 5.68 L11.00 4.06 L11.28 1.83 L12.72 1.83 L13.00 4.06 L16.90 5.68 L18.69 4.30 L19.70 5.31 L18.32 7.10 Z" fill="url(#pfFunGearGrad)" stroke="url(#pfFunGearGrad)" strokeWidth="1.6" strokeLinejoin="round"/><circle cx="12" cy="12" r="3.4" fill="#FFF3D6"/><circle cx="12" cy="12" r="1.3" fill="#5B4FD6"/><path className="pf-fun-gear-spark" d="M19.2 2.2 L19.9 4.3 L22 5 L19.9 5.7 L19.2 7.8 L18.5 5.7 L16.4 5 L18.5 4.3 Z" fill="#FCC25D"/></svg>); }
+
+  function StreakPillC() {
+    const [days, setDays] = useStateC(streakReadC);
+    useEffectC(() => {
+      const refresh = () => setDays(streakReadC());
+      const onStorage = (e) => { if (!e.key || e.key === "pf-loyalty-state-v1") refresh(); };
+      window.addEventListener("pf:points-earned", refresh); window.addEventListener("storage", onStorage);
+      return () => { window.removeEventListener("pf:points-earned", refresh); window.removeEventListener("storage", onStorage); };
+    }, []);
+    return (
+      <button type="button" className="m-pts m-streak" aria-label={days + "-day streak. Open check-in streak"} title={days + "-day streak"} onClick={() => goC("CheckInStreak.html")}>
+        <FlameIconC />
+        <span className="m-pts-n">{days}</span>
+      </button>);
+  }
+
   function PointsPillC() {
     const [total, setTotal] = useStateC(ptsReadTotalC);
     const [full, setFull] = useStateC(ptsReadFullC);
@@ -364,15 +420,26 @@
         <img src="assets/profinity-icon-purple-gold.png" alt="PROfinity Academy" />
         <span className="grow" />
         <PointsPillC />
-        <button className="m-iconbtn" aria-label="Search" onClick={() => goC("SearchMobile.html")}><DSC.Icon name="search" size={20} color="var(--brand-navy)" /></button>
-        <button className="m-iconbtn" aria-label="Notifications" onClick={() => onBell && onBell()}>
-          <DSC.IconifyIcon name="lucide:bell" size={20} color="var(--brand-navy)" />
-          <span className="dot">12</span>
-        </button>
-        <button className="m-iconbtn" aria-label="Messages" onClick={() => onMessages && onMessages()}>
-          <DSC.IconifyIcon name="lucide:message-circle" size={20} color="var(--brand-navy)" />
-          <span className="dot">12</span>
-        </button>
+        {/* Rewards page header (user, 2026-10-20): no search / bell / messages —
+            points, the streak pill and a settings button instead */}
+        {window.PF_CHROME_REWARDS ? (
+          <React.Fragment>
+            <StreakPillC />
+            <button className="m-iconbtn m-gear" aria-label="Rewards settings" onClick={() => goC("RewardsSettings.html")}><FunGearC /></button>
+          </React.Fragment>
+        ) : (
+          <React.Fragment>
+            <button className="m-iconbtn" aria-label="Search" onClick={() => goC("SearchMobile.html")}><DSC.Icon name="search" size={20} color="var(--brand-navy)" /></button>
+            <button className="m-iconbtn" aria-label="Notifications" onClick={() => onBell && onBell()}>
+              <DSC.IconifyIcon name="lucide:bell" size={20} color="var(--brand-navy)" />
+              <span className="dot">12</span>
+            </button>
+            <button className="m-iconbtn" aria-label="Messages" onClick={() => onMessages && onMessages()}>
+              <DSC.IconifyIcon name="lucide:message-circle" size={20} color="var(--brand-navy)" />
+              <span className="dot">12</span>
+            </button>
+          </React.Fragment>
+        )}
       </header>);
   }
 

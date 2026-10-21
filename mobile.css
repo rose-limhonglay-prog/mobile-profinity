@@ -683,3 +683,46 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
 
 /* reversed points (a Today's Target unticked, 2026-10-14) */
 .m-pts-delta.is-neg{color:#D33F3F}
+
+/* ===========================================================================
+   MKT Oct 2026 — feed breathing room + clearer post separation
+   Posts become white cards on a lavender-grey canvas (was flat full-width
+   posts split by a 12px near-white band), with a touch more space inside.
+   =========================================================================== */
+:root{--pf-feed-canvas:#EEEDF5}
+[data-theme="dark"]{--pf-feed-canvas:var(--surface-page)}
+.m-scroll .feed{background:var(--pf-feed-canvas);gap:12px !important;padding:12px 0 24px !important}
+.m-scroll .feed > .post-wrap,.m-scroll .post-wrap{width:auto !important;margin:0 10px !important;border-radius:20px !important;overflow:hidden;
+  background:var(--surface-card) !important;padding:20px 18px !important;
+  box-shadow:0 1px 2px rgba(42,37,105,.05),0 4px 14px rgba(42,37,105,.05) !important;border:none !important}
+.m-scroll .post-wrap + .post-wrap{border-top:none !important}
+.m-scroll .post-wrap.has-chx{margin:0 10px !important;background:#EDF0FB !important}
+[data-theme="dark"] .m-scroll .post-wrap.has-chx{background:var(--surface-card) !important}
+.m-scroll .post-wrap .sm-video{margin:0 -18px !important;width:calc(100% + 36px) !important}
+.m-scroll .post-wrap .pf-clamp{line-height:1.55}
+/* prompt to post */
+.pf-mprompt{display:flex;align-items:center;gap:10px;margin:0 10px;padding:12px 12px 12px 14px;border-radius:20px;
+  background:var(--surface-card);box-shadow:0 1px 2px rgba(42,37,105,.05),0 4px 14px rgba(42,37,105,.05)}
+.pf-mprompt .avatar{flex:none}
+.pf-mprompt-pill{flex:1;min-width:0;text-align:left;border:1px solid var(--border-default);background:var(--surface-sunken);
+  border-radius:999px;padding:11px 16px;cursor:pointer;font-family:var(--font-sans);font-size:14px;color:var(--text-secondary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-mprompt-pill:active{background:var(--gray-100)}
+.pf-mprompt-ic{flex:none;border:none;background:none;padding:6px;cursor:pointer;line-height:0;border-radius:50%}
+.pf-mprompt-ic:active{background:var(--surface-sunken)}
+
+/* Rewards-page header streak pill (2026-10-20): same chip as .m-pts, flame + days */
+.m-streak{padding:0 12px 0 6px;color:#43CBFF;gap:2px}  /* #43CBFF = the blue of the COmLSCf8Io flame (user, 2026-10-20) */
+.m-streak .m-pts-ic{width:28px;height:28px}
+.m-streak .m-pts-n{font-size:16px}
+[data-theme="dark"] .m-streak{color:#6FD8FF}
+
+/* fun settings gear on the Rewards header (2026-10-20): slow spin, twinkle; quick spin on press */
+.pf-fun-gear{display:block;animation:pf-fun-gear-spin 14s linear infinite;transform-origin:12px 12px;transform-box:fill-box}
+.pf-fun-gear-body{transform-origin:12px 12px}
+.pf-fun-gear-spark{transform-origin:19.2px 5px;animation:pf-fun-gear-twinkle 2.2s ease-in-out infinite}
+.m-iconbtn:active .pf-fun-gear,.pf-web-gear:active .pf-fun-gear{animation-duration:1.2s}
+@keyframes pf-fun-gear-spin{to{transform:rotate(360deg)}}
+@keyframes pf-fun-gear-twinkle{0%,100%{transform:scale(.6);opacity:.55}50%{transform:scale(1.15);opacity:1}}
+@media (prefers-reduced-motion:reduce){.pf-fun-gear,.pf-fun-gear-spark{animation:none}}
+.m-streak-anim svg{transform:scale(1)!important}  /* the blue COmLSCf8Io flame fills its canvas — no enlargement (user, 2026-10-20 "too big") */

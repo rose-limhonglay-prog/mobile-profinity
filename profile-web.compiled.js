@@ -54,7 +54,8 @@ const PW_ME = {
   yearsExperience: "12",
   instagram: "@katywilson"
 };
-const PW_TITLE_OPTIONS = ["Doctor", "Nurse Practitioner", "Registered Nurse", "Aesthetic Practitioner", "Dentist", "Physician Associate"];
+/* MKT Oct 2026: the live app offers only Doctor / Professor / Nurse; widened to clinical roles. */
+const PW_TITLE_OPTIONS = ["Doctor", "Professor", "Nurse", "Dentist", "Pharmacist", "Aesthetic Practitioner", "Other"];
 const PW_PERSONAL_GOAL_QUESTIONS = ["Why did you choose to become an aesthetic practitioner, and what's the impact you dream of making for your clients?", "What's the one thing in your business that keeps you up at night, and how would solving it change your life?", "Who or what inspires you to keep pushing forward in your business, even on the toughest days?", "If you could wave a magic wand and change one thing about running your practice, what would it be?", "What does success as an aesthetic practitioner look like for you"];
 const PW_SERVICES = [{
   ti: "Botox (Anti-Wrinkle Injections)",
@@ -2592,7 +2593,9 @@ function PWHeaderBand({
     className: "pw-headerband-namerow"
   }, /*#__PURE__*/React.createElement("h1", null, m.name), /*#__PURE__*/React.createElement(VerificationSealsPW, {
     seals: m.seals,
-    size: 19
+    size: 19,
+    info: true,
+    ownerName: m.name
   })), /*#__PURE__*/React.createElement("div", {
     className: "pw-headerband-stats"
   }, m.followers, " followers · ", m.following, " following"), /*#__PURE__*/React.createElement("ul", {
@@ -4092,7 +4095,9 @@ function PWOtherHeaderBand({
     className: "pw-headerband-namerow"
   }, /*#__PURE__*/React.createElement("h1", null, user.name), user.seals && /*#__PURE__*/React.createElement(VerificationSealsPW, {
     seals: user.seals,
-    size: 19
+    size: 19,
+    info: true,
+    ownerName: user.name
   })), /*#__PURE__*/React.createElement("div", {
     className: "pw-headerband-stats"
   }, user.followers, " followers · ", user.following, " following · ", user.posts, " posts"), /*#__PURE__*/React.createElement("ul", {
@@ -5890,6 +5895,8 @@ function PWEditProfileModal({
     yearsExperience: profile.yearsExperience || ""
   }));
   const [avatar, setAvatar] = useStatePW(profile.avatar || "");
+  /* Profile picture is mandatory (MKT Oct 2026): Save is blocked until one is set. */
+  const [avatarErr, setAvatarErr] = useStatePW(false);
   const [bannersOpen, setBannersOpen] = useStatePW(!!openBanners);
   const [bannerCount, setBannerCount] = useStatePW(() => pwLoadBanners().length);
   const fileRef = React.useRef(null);
@@ -5908,10 +5915,15 @@ function PWEditProfileModal({
     if (!f) return;
     try {
       setAvatar(URL.createObjectURL(f));
+      setAvatarErr(false);
     } catch (err) {}
     e.target.value = "";
   }
   function handleSave() {
+    if (!avatar) {
+      setAvatarErr(true);
+      return;
+    }
     const patch = {
       name: form.fullName,
       bio: form.bio,
@@ -5957,7 +5969,7 @@ function PWEditProfileModal({
   }, "Save")), /*#__PURE__*/React.createElement("div", {
     className: "pw-edit-body"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "pw-edit-avblock"
+    className: "pw-edit-avblock" + (avatarErr ? " is-err" : "")
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-edit-avbtn",
@@ -5967,11 +5979,26 @@ function PWEditProfileModal({
     name: form.fullName || profile.name,
     src: avatar,
     size: 96
-  })), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pw-edit-avlinks"
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-edit-avlink",
     onClick: () => fileRef.current && fileRef.current.click()
-  }, "Edit picture"), /*#__PURE__*/React.createElement("input", {
+  }, avatar ? "Change profile picture" : "Add profile picture"), avatar && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-edit-avlink pw-edit-avlink-rm",
+    onClick: () => setAvatar("")
+  }, "Remove")), /*#__PURE__*/React.createElement("p", {
+    className: "pw-edit-avhelp"
+  }, "Required. Use a clear, front-facing headshot so colleagues recognise you. Square works best: at least 500 × 500 px, JPG or PNG."), avatarErr && /*#__PURE__*/React.createElement("p", {
+    className: "pw-edit-averr",
+    role: "alert"
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:alert-circle",
+    size: 15,
+    color: "currentColor"
+  }), "Add a profile picture to save your profile."), /*#__PURE__*/React.createElement("input", {
     ref: fileRef,
     type: "file",
     accept: "image/*",

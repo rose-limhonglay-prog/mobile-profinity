@@ -2672,8 +2672,25 @@ function VerificationSeals({
   size = 20,
   gap = 5,
   style = {},
+  info = false,
+  ownerName,
   ...rest
 }) {
+  /* MKT Oct 2026: tapping a badge expands it into the badge info sheet
+     (badge-info.js) instead of only flashing a tooltip; `info` adds an (i)
+     button after the row. Pages without badge-info.js keep the old tooltip. */
+  const openInfo = (focus) => {
+    const go = () => window.PFBadgeInfo.open(seals, { focus, name: ownerName });
+    if (window.PFBadgeInfo) { go(); return true; }
+    /* lazy-load the sheet so pages don't each need a <script> tag */
+    if (window.__pfBadgeInfoFailed) return false;
+    const sc = document.createElement("script");
+    sc.src = "badge-info.js?v=20261020a";
+    sc.onload = () => { if (window.PFBadgeInfo) go(); };
+    sc.onerror = () => { window.__pfBadgeInfoFailed = true; };
+    document.head.appendChild(sc);
+    return true;
+  };
   const [hoverIdx, setHoverIdx] = React.useState(null);
   const [pinnedIdx, setPinnedIdx] = React.useState(null);
   React.useEffect(() => {
@@ -2740,15 +2757,22 @@ function VerificationSeals({
       "aria-label": s.label,
       onMouseEnter: () => setHoverIdx(i),
       onMouseLeave: () => setHoverIdx((cur) => cur === i ? null : cur),
-      onClick: (e) => { e.stopPropagation(); setPinnedIdx((cur) => cur === i ? null : i); },
-      onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPinnedIdx((cur) => cur === i ? null : i); } },
+      onClick: (e) => { e.stopPropagation(); e.preventDefault(); setHoverIdx(null); if (!openInfo(kind)) setPinnedIdx((cur) => cur === i ? null : i); },
+      onKeyDown: (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); if (!openInfo(kind)) setPinnedIdx((cur) => cur === i ? null : i); } },
       style: {
         position: "relative",
         display: "inline-flex",
         cursor: "pointer"
       }
     }, inner, /*#__PURE__*/React.createElement(SealTip, { label: s.label, visible: open }));
-  }));
+  }), info && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-seal-info",
+    "aria-label": "What do these badges mean?",
+    title: "What do these badges mean?",
+    onClick: (e) => { e.stopPropagation(); e.preventDefault(); openInfo(); },
+    style: { border: "none", background: "none", padding: "0 2px", cursor: "pointer", display: "inline-flex", alignItems: "center", lineHeight: 0, color: "var(--gray-400)" }
+  }, /*#__PURE__*/React.createElement(__ds_scope.IconifyIcon, { name: "lucide:info", size: Math.max(16, Math.round(size * 0.85)), color: "currentColor" })));
 }
 Object.assign(__ds_scope, { VerificationSeals });
 })(); } catch (e) { __ds_ns.__errors.push({ path: "components/profile/VerificationSeals.jsx", error: String((e && e.message) || e) }); }
@@ -2765,6 +2789,8 @@ function CommentItem({
   text,
   likes,
   comments,
+  onLikesClick,
+  onCommentsClick,
   reactions,
   reactionCount,
   replies = [],
@@ -2815,7 +2841,14 @@ function CommentItem({
       fontSize: "var(--fs-caption)",
       color: "var(--gray-500)"
     }
-  }, likes != null && /*#__PURE__*/React.createElement("span", null, likes, " Likes"), comments != null && /*#__PURE__*/React.createElement("span", {
+  }, likes != null && /*#__PURE__*/React.createElement(onLikesClick ? "button" : "span", onLikesClick ? {
+    type: "button", className: "cmt-count-btn",
+    onClick: (e) => { e.stopPropagation(); onLikesClick(); }
+  } : null, likes, " Likes"), comments != null && /*#__PURE__*/React.createElement(onCommentsClick ? "button" : "span", onCommentsClick ? {
+    type: "button", className: "cmt-count-btn",
+    onClick: (e) => { e.stopPropagation(); onCommentsClick(); },
+    style: { marginLeft: 12 }
+  } : {
     style: {
       marginLeft: 12
     }

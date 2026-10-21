@@ -1853,7 +1853,9 @@ const PM_ME = {
   instagram: "@katywilson",
   tier: TIER_DISPLAY_NAME_PM[getUserTierPM()] || null
 };
-const PM_TITLE_OPTIONS = ["Doctor", "Nurse Practitioner", "Registered Nurse", "Aesthetic Practitioner", "Dentist", "Physician Associate"];
+
+/* MKT Oct 2026: the live app offers only Doctor / Professor / Nurse; widened to clinical roles. */
+const PM_TITLE_OPTIONS = ["Doctor", "Professor", "Nurse", "Dentist", "Pharmacist", "Aesthetic Practitioner", "Other"];
 const PM_PERSONAL_GOAL_QUESTIONS = ["Why did you choose to become an aesthetic practitioner, and what's the impact you dream of making for your clients?", "What's the one thing in your business that keeps you up at night, and how would solving it change your life?", "Who or what inspires you to keep pushing forward in your business, even on the toughest days?", "If you could wave a magic wand and change one thing about running your practice, what would it be?", "What does success as an aesthetic practitioner look like for you"];
 
 /* Membership ladder — the upgrade banner should point at the next rung up,
@@ -3507,7 +3509,9 @@ function PhotoStep({
     color: "#fff"
   }))), isDone && /*#__PURE__*/React.createElement("p", {
     className: "pm-sheet-note"
-  }, "Your profile photo is set. You can update it anytime."), /*#__PURE__*/React.createElement("div", {
+  }, "Your profile photo is set. You can update it anytime."), /*#__PURE__*/React.createElement("p", {
+    className: "pm-sheet-desc pm-sheet-help"
+  }, "A profile photo is required. Use a clear, front-facing headshot in good light. Square works best: at least 500 × 500 px, JPG or PNG."), /*#__PURE__*/React.createElement("div", {
     className: "pm-sheet-opts"
   }, /*#__PURE__*/React.createElement("button", {
     className: "pm-sheet-opt" + (chosen === "camera" ? " sel" : ""),
@@ -4745,12 +4749,19 @@ function ProfileSteps({
     } : undefined
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-steps-slider" + (expanded ? " expanded" : "")
-  }, /*#__PURE__*/React.createElement("button", {
-    type: "button",
+  }, /*#__PURE__*/React.createElement("div", {
+    role: "button",
+    tabIndex: expanded ? -1 : 0,
     ref: collapsedRef,
     className: "pm-steps pm-steps-pane pm-steps-collapsed",
     "aria-label": "Complete your profile — tap to view checklist",
-    onClick: () => setExpanded(true)
+    onClick: () => setExpanded(true),
+    onKeyDown: e => {
+      if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        setExpanded(true);
+      }
+    }
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-steps-collapsed-top"
   }, /*#__PURE__*/React.createElement("h3", {
@@ -4776,7 +4787,38 @@ function ProfileSteps({
     }
   })), /*#__PURE__*/React.createElement("p", {
     className: "pm-steps-pct"
-  }, pct, "% complete — tap to view checklist")), /*#__PURE__*/React.createElement("div", {
+  }, pct, "% complete"), (() => {
+    const order = steps.map((st, i) => i).filter(i => steps[i].state !== "done" && steps[i].state !== "pending");
+    const pri = order.find(i => steps[i].state === "priority");
+    const nextIdx = pri != null ? pri : order[0];
+    const next = nextIdx != null ? {
+      label: steps[nextIdx].ti,
+      go: () => setActiveIdx(nextIdx)
+    } : !assessAllDone ? {
+      label: "Get to know you",
+      go: () => setHubOpen(true)
+    } : null;
+    if (!next) return null;
+    return /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      className: "pm-steps-next",
+      tabIndex: expanded ? -1 : 0,
+      onClick: e => {
+        e.stopPropagation();
+        next.go();
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "pm-steps-next-lb"
+    }, "Next step"), /*#__PURE__*/React.createElement("span", {
+      className: "pm-steps-next-ti"
+    }, next.label), /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+      name: "lucide:arrow-right",
+      size: 18,
+      color: "currentColor"
+    }));
+  })(), /*#__PURE__*/React.createElement("span", {
+    className: "pm-steps-all"
+  }, "See all steps")), /*#__PURE__*/React.createElement("div", {
     ref: expandedRef,
     className: "pm-steps pm-steps-pane pm-steps-expanded",
     "aria-label": "Complete your profile checklist"
@@ -5927,7 +5969,9 @@ function OtherProfileScreen({
     className: "nm"
   }, user.name), user.seals && /*#__PURE__*/React.createElement(DSPM.VerificationSeals, {
     seals: user.seals,
-    size: 20
+    size: 20,
+    info: true,
+    ownerName: user.name
   })), (user.headline || user.flag || user.role || user.specialties && user.specialties.length || user.upcomingLive || user.bio) && /*#__PURE__*/React.createElement("div", {
     className: "pm-ig-bio"
   }, (user.headline || user.flag || user.role) && /*#__PURE__*/React.createElement("p", null, user.flag && /*#__PURE__*/React.createElement("span", {
@@ -6590,6 +6634,8 @@ function PMEditProfileScreen({
     instagram: profile.instagram || ""
   }));
   const [avatar, setAvatar] = useStatePM(profile.avatar || "");
+  /* Profile picture is mandatory (MKT Oct 2026): Save is blocked until one is set. */
+  const [avatarErr, setAvatarErr] = useStatePM(false);
   const [bannersOpen, setBannersOpen] = useStatePM(() => {
     if (openBanners) return true;
     try {
@@ -6611,10 +6657,15 @@ function PMEditProfileScreen({
     if (!f) return;
     try {
       setAvatar(URL.createObjectURL(f));
+      setAvatarErr(false);
     } catch (err) {}
     e.target.value = "";
   }
   function handleSave() {
+    if (!avatar) {
+      setAvatarErr(true);
+      return;
+    }
     const patch = {
       name: form.fullName,
       bio: form.bio,
@@ -6658,7 +6709,7 @@ function PMEditProfileScreen({
   }, "Save")), /*#__PURE__*/React.createElement("div", {
     className: "pm-edit-body"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "pm-edit-avblock"
+    className: "pm-edit-avblock" + (avatarErr ? " is-err" : "")
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-edit-avbtn",
@@ -6668,11 +6719,26 @@ function PMEditProfileScreen({
     name: form.fullName || profile.name,
     src: avatar,
     size: 96
-  })), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pm-edit-avlinks"
+  }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pm-edit-avlink",
     onClick: () => fileRef.current && fileRef.current.click()
-  }, "Edit Profile"), /*#__PURE__*/React.createElement("input", {
+  }, avatar ? "Change profile picture" : "Add profile picture"), avatar && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-edit-avlink pm-edit-avlink-rm",
+    onClick: () => setAvatar("")
+  }, "Remove")), /*#__PURE__*/React.createElement("p", {
+    className: "pm-edit-avhelp"
+  }, "Required. Use a clear, front-facing headshot so colleagues recognise you. Square works best: at least 500 × 500 px, JPG or PNG."), avatarErr && /*#__PURE__*/React.createElement("p", {
+    className: "pm-edit-averr",
+    role: "alert"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:alert-circle",
+    size: 15,
+    color: "currentColor"
+  }), "Add a profile picture to save your profile."), /*#__PURE__*/React.createElement("input", {
     ref: fileRef,
     type: "file",
     accept: "image/*",
@@ -7585,26 +7651,10 @@ function PMScreen() {
   }, m.name), /*#__PURE__*/React.createElement("span", {
     className: "pn"
   }, m.role), /*#__PURE__*/React.createElement(DSPM.VerificationSeals, {
-    seals: ["verified", "crown", "gold"],
-    size: 20
-  }), /*#__PURE__*/React.createElement(PMSealBadge, {
-    src: "assets/badge-m.svg",
-    alt: "Mastery badge",
-    label: "Mastery Badge",
-    width: 20,
-    height: 20,
-    style: {
-      marginLeft: -5
-    }
-  }), /*#__PURE__*/React.createElement(PMSealBadge, {
-    src: "assets/badge-skinfluencer.png",
-    alt: "PROfinity Skinfluencer badge",
-    label: "Skinfluencer",
-    width: 20,
-    height: 22,
-    style: {
-      marginLeft: -5
-    }
+    seals: ["verified", "crown", "gold", "mastery", "skinfluencer"],
+    size: 20,
+    info: true,
+    ownerName: m.name
   })), /*#__PURE__*/React.createElement("div", {
     className: "pm-ig-bio"
   }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {

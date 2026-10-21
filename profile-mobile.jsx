@@ -1086,7 +1086,8 @@ const PM_ME = {
   tier: TIER_DISPLAY_NAME_PM[getUserTierPM()] || null
 };
 
-const PM_TITLE_OPTIONS = ["Doctor", "Nurse Practitioner", "Registered Nurse", "Aesthetic Practitioner", "Dentist", "Physician Associate"];
+/* MKT Oct 2026: the live app offers only Doctor / Professor / Nurse; widened to clinical roles. */
+const PM_TITLE_OPTIONS = ["Doctor", "Professor", "Nurse", "Dentist", "Pharmacist", "Aesthetic Practitioner", "Other"];
 
 const PM_PERSONAL_GOAL_QUESTIONS = [
   "Why did you choose to become an aesthetic practitioner, and what's the impact you dream of making for your clients?",
@@ -2043,6 +2044,7 @@ function PhotoStep({ onComplete, isDone }) {
         <span className="pm-sheet-av-edit"><DSPM.IconifyIcon name="lucide:camera" size={15} color="#fff" /></span>
       </div>
       {isDone && <p className="pm-sheet-note">Your profile photo is set. You can update it anytime.</p>}
+      <p className="pm-sheet-desc pm-sheet-help">A profile photo is required. Use a clear, front-facing headshot in good light. Square works best: at least 500 × 500 px, JPG or PNG.</p>
       <div className="pm-sheet-opts">
         <button className={"pm-sheet-opt" + (chosen === "camera" ? " sel" : "")} onClick={() => setChosen("camera")}>
           <DSPM.IconifyIcon name="lucide:camera" size={22} color="var(--brand-navy)" /><span>Take a photo</span>
@@ -2757,7 +2759,12 @@ function ProfileSteps({ assessState, onAssessPatch }) {
     <>
       <div className="pm-steps-viewport" style={viewportH != null ? { height: viewportH + "px" } : undefined}>
         <div className={"pm-steps-slider" + (expanded ? " expanded" : "")}>
-          <button type="button" ref={collapsedRef} className="pm-steps pm-steps-pane pm-steps-collapsed" aria-label="Complete your profile — tap to view checklist" onClick={() => setExpanded(true)}>
+          {/* MKT Oct 2026: one tap to act. The card still opens the checklist,
+              but it now carries the next unfinished step as its own button, so
+              the member can go straight to it (was: card → checklist → step). */}
+          <div role="button" tabIndex={expanded ? -1 : 0} ref={collapsedRef} className="pm-steps pm-steps-pane pm-steps-collapsed" aria-label="Complete your profile — tap to view checklist"
+            onClick={() => setExpanded(true)}
+            onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setExpanded(true); } }}>
             <div className="pm-steps-collapsed-top">
               <h3 className="pm-steps-h">Complete your profile<span className="pm-steps-bonus">+{PM_SETUP_POINTS} pts</span></h3>
               <DSPM.IconifyIcon name="lucide:chevron-right" size={20} color="var(--gray-400)" />
@@ -2766,8 +2773,24 @@ function ProfileSteps({ assessState, onAssessPatch }) {
             <div className="pm-steps-track" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
               <span className="pm-steps-fill" style={{ width: pct + "%" }}></span>
             </div>
-            <p className="pm-steps-pct">{pct}% complete — tap to view checklist</p>
-          </button>
+            <p className="pm-steps-pct">{pct}% complete</p>
+            {(() => {
+              const order = steps.map((st, i) => i).filter((i) => steps[i].state !== "done" && steps[i].state !== "pending");
+              const pri = order.find((i) => steps[i].state === "priority");
+              const nextIdx = pri != null ? pri : order[0];
+              const next = nextIdx != null ? { label: steps[nextIdx].ti, go: () => setActiveIdx(nextIdx) } :
+                !assessAllDone ? { label: "Get to know you", go: () => setHubOpen(true) } : null;
+              if (!next) return null;
+              return (
+                <button type="button" className="pm-steps-next" tabIndex={expanded ? -1 : 0}
+                  onClick={(e) => { e.stopPropagation(); next.go(); }}>
+                  <span className="pm-steps-next-lb">Next step</span>
+                  <span className="pm-steps-next-ti">{next.label}</span>
+                  <DSPM.IconifyIcon name="lucide:arrow-right" size={18} color="currentColor" />
+                </button>);
+            })()}
+            <span className="pm-steps-all">See all steps</span>
+          </div>
 
           <div ref={expandedRef} className="pm-steps pm-steps-pane pm-steps-expanded" aria-label="Complete your profile checklist">
             <button type="button" className="pm-steps-back" onClick={() => setExpanded(false)}>
@@ -3495,7 +3518,7 @@ function OtherProfileScreen({ user, from }) {
           <div className="pm-ig-name">
             <span className="nm">{user.name}</span>
             {/* no role beside the name — the headline line below already says it */}
-            {user.seals && <DSPM.VerificationSeals seals={user.seals} size={20} />}
+            {user.seals && <DSPM.VerificationSeals seals={user.seals} size={20} info ownerName={user.name} />}
           </div>
 
           {/* Same bio block as the owner's profile: flag + headline,
@@ -3922,6 +3945,8 @@ function PMEditProfileScreen({ profile, onCancel, onSave, openBanners }) {
     instagram: profile.instagram || "",
   }));
   const [avatar, setAvatar] = useStatePM(profile.avatar || "");
+  /* Profile picture is mandatory (MKT Oct 2026): Save is blocked until one is set. */
+  const [avatarErr, setAvatarErr] = useStatePM(false);
   const [bannersOpen, setBannersOpen] = useStatePM(() => {
     if (openBanners) return true;
     try { return new URLSearchParams(window.location.search).get("banners") === "1"; } catch (e) { return false; }
@@ -3933,11 +3958,12 @@ function PMEditProfileScreen({ profile, onCancel, onSave, openBanners }) {
   function pickAvatar(e) {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
-    try { setAvatar(URL.createObjectURL(f)); } catch (err) {}
+    try { setAvatar(URL.createObjectURL(f)); setAvatarErr(false); } catch (err) {}
     e.target.value = "";
   }
 
   function handleSave() {
+    if (!avatar) { setAvatarErr(true); return; }
     const patch = {
       name: form.fullName, bio: form.bio, title: form.title, specialty: form.specialty,
       clinic: form.clinic, clinicNumber: form.clinicNumber, clinicAddress: form.clinicAddress,
@@ -3961,11 +3987,16 @@ function PMEditProfileScreen({ profile, onCancel, onSave, openBanners }) {
         <button type="button" className="pm-edit-done" onClick={handleSave}>Save</button>
       </header>
       <div className="pm-edit-body">
-        <div className="pm-edit-avblock">
+        <div className={"pm-edit-avblock" + (avatarErr ? " is-err" : "")}>
           <button type="button" className="pm-edit-avbtn" aria-label="Edit profile picture" onClick={() => fileRef.current && fileRef.current.click()}>
             <DSPM.Avatar name={form.fullName || profile.name} src={avatar} size={96} />
           </button>
-          <button type="button" className="pm-edit-avlink" onClick={() => fileRef.current && fileRef.current.click()}>Edit Profile</button>
+          <div className="pm-edit-avlinks">
+            <button type="button" className="pm-edit-avlink" onClick={() => fileRef.current && fileRef.current.click()}>{avatar ? "Change profile picture" : "Add profile picture"}</button>
+            {avatar && <button type="button" className="pm-edit-avlink pm-edit-avlink-rm" onClick={() => setAvatar("")}>Remove</button>}
+          </div>
+          <p className="pm-edit-avhelp">Required. Use a clear, front-facing headshot so colleagues recognise you. Square works best: at least 500 × 500 px, JPG or PNG.</p>
+          {avatarErr && <p className="pm-edit-averr" role="alert"><DSPM.IconifyIcon name="lucide:alert-circle" size={15} color="currentColor" />Add a profile picture to save your profile.</p>}
           <input ref={fileRef} type="file" accept="image/*" hidden onChange={pickAvatar} />
         </div>
 
@@ -4449,9 +4480,8 @@ function PMScreen() {
               <div className="pm-ig-name">
                 <span className="nm">{m.name}</span>
                 <span className="pn">{m.role}</span>
-                <DSPM.VerificationSeals seals={["verified", "crown", "gold"]} size={20} />
-                <PMSealBadge src="assets/badge-m.svg" alt="Mastery badge" label="Mastery Badge" width={20} height={20} style={{ marginLeft: -5 }} />
-                <PMSealBadge src="assets/badge-skinfluencer.png" alt="PROfinity Skinfluencer badge" label="Skinfluencer" width={20} height={22} style={{ marginLeft: -5 }} />
+                {/* Tap any badge (or the (i)) to expand what it means — MKT Oct 2026 */}
+                <DSPM.VerificationSeals seals={["verified", "crown", "gold", "mastery", "skinfluencer"]} size={20} info ownerName={m.name} />
               </div>
 
               <div className="pm-ig-bio">

@@ -75,6 +75,10 @@
   window.PFGamification = { get: gamiGet, set: gamiSet, on: function (k) { return gamiGet()[k] !== false; }, KEY: GAMI_KEY };
 
   function enabled() { try { return localStorage.getItem(KEY) !== "off"; } catch (e) { return true; } }
+  /* sound-effects volume 0..1 (Rewards settings page, 2026-10-20) under "pf-sound-volume"; 1 = default */
+  var VOL_KEY = "pf-sound-volume";
+  function getVolume() { try { var v = parseFloat(localStorage.getItem(VOL_KEY)); return isNaN(v) ? 1 : Math.max(0, Math.min(1, v)); } catch (e) { return 1; } }
+  function setVolume(v) { v = Math.max(0, Math.min(1, +v || 0)); try { v >= 0.999 ? localStorage.removeItem(VOL_KEY) : localStorage.setItem(VOL_KEY, String(v)); } catch (e) {} }
   function setEnabled(on) { try { on ? localStorage.removeItem(KEY) : localStorage.setItem(KEY, "off"); } catch (e) {} }
 
   /* ---- Web Audio context (lazy, resumed on demand) ---- */
@@ -97,7 +101,7 @@
     /* "sine" is the fundamental, "triangle" the sparkle overtone — the active
        sound style re-colours both */
     o.type = type === "triangle" ? T.over : T.wave;
-    freq = freq * T.pitch; dur = dur * T.dur; gainPeak = gainPeak * T.gain;
+    freq = freq * T.pitch; dur = dur * T.dur; gainPeak = Math.max(0.0002, gainPeak * T.gain * getVolume());
     o.frequency.setValueAtTime(freq, at);
     if (T.sweep) o.frequency.exponentialRampToValueAtTime(freq * T.sweep, at + dur * 0.6);
     g.gain.setValueAtTime(0.0001, at);
@@ -381,6 +385,8 @@
     unmute: function () { setEnabled(true); },
     toggle: function () { setEnabled(!enabled()); return enabled(); },
     enabled: enabled,
+    getVolume: getVolume,
+    setVolume: setVolume,
     /* sound styles (Notification Settings → Gamification) */
     themes: function () { return THEME_ORDER.map(function (id) { var t = THEMES[id]; return { id: id, label: t.label, desc: t.desc }; }); },
     getTheme: getTheme,

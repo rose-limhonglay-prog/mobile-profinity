@@ -869,6 +869,91 @@ function courseStatusL(c, featured) {
     pill: "Not started"
   };
 }
+/* MKT Oct 2026 — thumbnails: a course cover that fails to load (or has no
+   image) falls back to the local membership still, then to a branded navy
+   tile with the course initials, so the library never shows a broken box. */
+const LM2_THUMB_FALLBACK = "assets/course-membership-banner.jpg";
+function LM2Thumb({
+  src,
+  title
+}) {
+  const [stage, setStage] = useStateL(src ? 0 : 2); // 0 = own image, 1 = fallback still, 2 = branded tile
+  React.useEffect(() => {
+    setStage(src ? 0 : 2);
+  }, [src]);
+  if (stage === 2) {
+    const initials = String(title || "PF").split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+    return /*#__PURE__*/React.createElement("span", {
+      className: "lm2-thumb-tile",
+      "aria-hidden": "true"
+    }, /*#__PURE__*/React.createElement("b", null, initials));
+  }
+  return /*#__PURE__*/React.createElement("img", {
+    src: stage === 0 ? src : LM2_THUMB_FALLBACK,
+    alt: "",
+    loading: "lazy",
+    onError: () => setStage(s => s + 1)
+  });
+}
+
+/* MKT Oct 2026 — layout: after the featured "continue" card, the rest of the
+   library is a scannable list (thumbnail with progress on it, title, status,
+   one action) instead of a sideways rail where cards were cut off. */
+function LM2MyCourseRow({
+  c
+}) {
+  const live = inProgressL(c);
+  const st = courseStatusL(c, false);
+  const cta = courseCtaL(c);
+  const label = c.completed ? "Certificate" : live ? "Resume" : "Start";
+  return /*#__PURE__*/React.createElement("article", {
+    className: "lm2-mcrow lm2-mc-" + st.key,
+    role: "listitem"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-mcrow-thumb",
+    onClick: cta.go,
+    "aria-label": "Open " + c.title
+  }, /*#__PURE__*/React.createElement(LM2Thumb, {
+    src: c.image,
+    title: c.title
+  }), c.completed ? /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mcrow-mark done",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "lucide:award",
+    size: 14,
+    color: "#fff"
+  })) : /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mcrow-mark",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IconifyL, {
+    name: "fluent:play-16-filled",
+    size: 12,
+    color: "#0C1928"
+  })), live && /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mcrow-bar"
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: Math.max(4, c.progress) + "%"
+    }
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "lm2-mcrow-tx"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mc-eyebrow " + st.key
+  }, c.completed ? "Completed" : live ? c.progress + "% complete" : c.level ? c.level : "Not started"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-mcrow-title",
+    onClick: cta.go
+  }, c.title), /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mcrow-sub"
+  }, live ? "Lesson " + (c.lesson || 1) + (c.modulesLeft != null ? " \u00b7 " + c.modulesLeft + " modules to certificate" : "") : c.completed ? "Certificate earned" : c.lessons ? c.lessons + " lessons" : "Ready when you are")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "lm2-mcrow-cta" + (live ? " live" : ""),
+    onClick: cta.go
+  }, label));
+}
+
 /* `saved` (optional, My Courses page only) adds the bookmark toggle on the cover. */
 function LM2MyCourseCard({
   c,
@@ -887,11 +972,17 @@ function LM2MyCourseCard({
     className: "lm2-mc-cover",
     onClick: cta.go,
     "aria-label": "Open " + c.title
-  }, /*#__PURE__*/React.createElement("img", {
+  }, /*#__PURE__*/React.createElement(LM2Thumb, {
     src: c.image,
-    alt: "",
-    loading: "lazy"
-  }), /*#__PURE__*/React.createElement(LevelBadgeL, {
+    title: c.title
+  }), live && /*#__PURE__*/React.createElement("span", {
+    className: "lm2-mc-coverbar",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      width: Math.max(3, c.progress) + "%"
+    }
+  })), /*#__PURE__*/React.createElement(LevelBadgeL, {
     level: c.level,
     className: "lm2-mc-lvl"
   }), c.completed ? /*#__PURE__*/React.createElement("span", {
@@ -1550,30 +1641,27 @@ function LearningHome() {
     size: 14,
     color: "currentColor"
   }))), shownCoursesL.length ? /*#__PURE__*/React.createElement("div", {
-    className: "lm2-mc-rail",
+    className: "lm2-mc-stack",
     role: "list"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lm2-coursegrid-pad",
-    "aria-hidden": "true"
-  }), shownCoursesL.map((c, i) => /*#__PURE__*/React.createElement(LM2MyCourseCard, {
+  }, shownCoursesL.map((c, i) => i === 0 ? /*#__PURE__*/React.createElement(LM2MyCourseCard, {
     key: c.slug || c.title,
     c: c,
-    featured: leadTabL && i === 0 && inProgressL(c)
+    featured: leadTabL && inProgressL(c)
+  }) : /*#__PURE__*/React.createElement(LM2MyCourseRow, {
+    key: c.slug || c.title,
+    c: c
   })), hiddenCountL > 0 && /*#__PURE__*/React.createElement("button", {
     type: "button",
-    className: "lm2-mc-more",
+    className: "lm2-mc-more lm2-mc-more-row",
     role: "listitem",
     onClick: () => goL(LM2_MY_COURSES_URL)
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
   }, /*#__PURE__*/React.createElement(IconifyL, {
     name: "lucide:library",
-    size: 22,
+    size: 20,
     color: "#8A5303"
-  })), /*#__PURE__*/React.createElement("b", null, "View all ", orderedCoursesL.length, " courses"), /*#__PURE__*/React.createElement("span", null, hiddenCountL, " more in your library")), /*#__PURE__*/React.createElement("span", {
-    className: "lm2-coursegrid-pad",
-    "aria-hidden": "true"
-  })) : /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("b", null, "View all ", orderedCoursesL.length, " courses"), /*#__PURE__*/React.createElement("span", null, hiddenCountL, " more in your library"))) : /*#__PURE__*/React.createElement("div", {
     className: "lm2-mc-empty"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"

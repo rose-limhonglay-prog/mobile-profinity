@@ -796,13 +796,7 @@ function RewardsDashboardHome() {
     href: "Leaderboard.html"
   }) : null, /*#__PURE__*/React.createElement(RdbLeagueCard, {
     state: state
-  }), /*#__PURE__*/React.createElement("div", {
-    style: {
-      marginTop: 12
-    }
-  }, /*#__PURE__*/React.createElement(RdbEngagementCards, {
-    state: state
-  })), /*#__PURE__*/React.createElement(RdbFeatureTiles, {
+  }), /*#__PURE__*/React.createElement(RdbFeatureTiles, {
     state: state
   })), /*#__PURE__*/React.createElement(StreakRiskBanner, {
     state: state

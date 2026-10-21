@@ -815,9 +815,7 @@ function RewardsWebApp() {
     className: "rw-main"
   }, window.PFRewardsEmbed ? /*#__PURE__*/React.createElement(window.PFRewardsEmbed.LeagueRail, {
     href: "Leaderboard.html"
-  }) : null, /*#__PURE__*/React.createElement(EngagementCardsRW, {
-    state: state
-  }), /*#__PURE__*/React.createElement(FeatureTilesRW, {
+  }) : null, /*#__PURE__*/React.createElement(FeatureTilesRW, {
     state: state
   }), /*#__PURE__*/React.createElement(StreakRiskBannerRW, {
     state: state,

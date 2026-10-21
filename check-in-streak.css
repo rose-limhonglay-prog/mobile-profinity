@@ -42,6 +42,7 @@ img { max-width: 100%; }
   background: #fff; border: 1.5px dashed rgba(217, 162, 27, .55); color: #292569; transition: border-color .25s ease, background .25s ease; }
 .cis-slot.is-done .cis-slot-art { background: #FFF3DC; border: 2px solid #FCC25D; animation: cisPop .55s cubic-bezier(.2, 1.4, .4, 1) both; animation-delay: var(--d, 0ms); }
 .cis-lottie { display: block; width: 50px; height: 50px; border-radius: 50%; overflow: hidden; }
+.cis-lottie svg { transform: scale(.82); transform-origin: 50% 50%; }  /* the blue flame fills its canvas — breathe inside the ring (2026-10-20) */
 .cis-lottie svg { display: block; }
 .cis-slot-empty { font-size: 14px; font-weight: 800; color: rgba(41, 37, 105, .55); }
 .cis-slot.is-today .cis-slot-art { border-style: solid; border-color: #FCC25D; box-shadow: 0 0 0 3px rgba(252, 194, 93, .3); animation: cisRing 1.8s ease-in-out infinite; }

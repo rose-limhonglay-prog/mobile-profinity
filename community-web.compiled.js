@@ -119,6 +119,90 @@ const CW_CHANNEL_MAP = CW_CHANNELS.reduce((m, c) => {
 const {
   useState: useStateCW
 } = React;
+
+/* MKT Oct 2026: paid channels open on a premium hero (navy/plum gradient,
+   gold detailing, who's in the room) instead of the generic banner header,
+   so Confidence Chat feels like the members' lounge it is. Copy is draft. */
+const CW_HERO = {
+  confidence: {
+    title: "Confidence Chat",
+    tag: "Members' lounge",
+    perks: ["Verified clinicians only", "Weekly Q&A with Dr Tim", "Case reviews"]
+  },
+  mastery: {
+    title: "Mastery",
+    tag: "Inner programme",
+    perks: ["Mastery members only", "Monthly masterclass", "Mentor feedback"]
+  },
+  freedom: {
+    title: "Freedom",
+    tag: "Freedom Path",
+    perks: ["Freedom Path members", "Business clinics", "Growth playbooks"]
+  },
+  inner: {
+    title: "Inner Circle",
+    tag: "By invitation",
+    perks: ["Invitation only", "Quarterly retreat", "Private mastermind"]
+  }
+};
+const CW_HERO_FACES = ["assets/avatar-drtim.png", "assets/avatar-sarah-collins.jpg", "assets/avatar-amir-khan.jpg", "assets/avatar-priya-shah.jpg", "assets/avatar-mark-ellis.jpg"];
+function CWChannelHero({
+  channelKey,
+  meta
+}) {
+  const h = CW_HERO[channelKey] || {
+    title: meta.name,
+    tag: "Members channel",
+    perks: []
+  };
+  const [following, setFollowing] = useStateCW(false);
+  const Ico = DS_CW.IconifyIcon;
+  return /*#__PURE__*/React.createElement("section", {
+    className: "cw-hero",
+    "aria-label": h.title
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cw-hero-glow",
+    "aria-hidden": "true"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cw-hero-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cw-hero-tag"
+  }, /*#__PURE__*/React.createElement(Ico, {
+    name: "fluent:crown-16-filled",
+    size: 13,
+    color: "#2A2569"
+  }), h.tag), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cw-hero-follow" + (following ? " on" : ""),
+    onClick: () => setFollowing(f => !f)
+  }, following ? "Following" : "Follow")), /*#__PURE__*/React.createElement("h1", {
+    className: "cw-hero-ti"
+  }, h.title), /*#__PURE__*/React.createElement("p", {
+    className: "cw-hero-line"
+  }, meta.about), /*#__PURE__*/React.createElement("div", {
+    className: "cw-hero-foot"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cw-hero-faces"
+  }, CW_HERO_FACES.map(f => /*#__PURE__*/React.createElement("img", {
+    key: f,
+    src: f,
+    alt: ""
+  }))), /*#__PURE__*/React.createElement("span", {
+    className: "cw-hero-count"
+  }, /*#__PURE__*/React.createElement("b", null, meta.followers), " members"), /*#__PURE__*/React.createElement("span", {
+    className: "cw-hero-live"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  }), "42 online")), h.perks.length > 0 && /*#__PURE__*/React.createElement("ul", {
+    className: "cw-hero-perks"
+  }, h.perks.map(p => /*#__PURE__*/React.createElement("li", {
+    key: p
+  }, /*#__PURE__*/React.createElement(Ico, {
+    name: "lucide:check",
+    size: 14,
+    color: "#E7C48A"
+  }), p))));
+}
 function ChannelsSidebar({
   active,
   onPick
@@ -208,13 +292,9 @@ function CommunityMain() {
     }
   }, /*#__PURE__*/React.createElement(PanelCW, {
     padding: 24
-  }, /*#__PURE__*/React.createElement(ChannelHeaderCW, {
-    banner: D.channelHeader.banner,
-    name: "#" + meta.name,
-    followers: meta.followers,
-    visibility: "Members channel",
-    about: meta.about,
-    following: false
+  }, /*#__PURE__*/React.createElement(CWChannelHero, {
+    channelKey: channel,
+    meta: meta
   }), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 20

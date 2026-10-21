@@ -33,7 +33,8 @@ const PW_ME = {
   clinicNumber: "+02 309 3928", clinicAddress: "Mr. John Smith, 132 My Street, Kingston, New York 12401.",
   yearsExperience: "12", instagram: "@katywilson"
 };
-const PW_TITLE_OPTIONS = ["Doctor", "Nurse Practitioner", "Registered Nurse", "Aesthetic Practitioner", "Dentist", "Physician Associate"];
+/* MKT Oct 2026: the live app offers only Doctor / Professor / Nurse; widened to clinical roles. */
+const PW_TITLE_OPTIONS = ["Doctor", "Professor", "Nurse", "Dentist", "Pharmacist", "Aesthetic Practitioner", "Other"];
 const PW_PERSONAL_GOAL_QUESTIONS = [
   "Why did you choose to become an aesthetic practitioner, and what's the impact you dream of making for your clients?",
   "What's the one thing in your business that keeps you up at night, and how would solving it change your life?",
@@ -1643,7 +1644,7 @@ function PWHeaderBand({ profile, banners, conn, onEdit, onShare, onAddBanner }) 
       <div className="pw-headerband-info">
         <span className="pw-headerband-namerow">
           <h1>{m.name}</h1>
-          <VerificationSealsPW seals={m.seals} size={19} />
+          <VerificationSealsPW seals={m.seals} size={19} info ownerName={m.name} />
         </span>
         <div className="pw-headerband-stats">{m.followers} followers · {m.following} following</div>
         <ul className="pw-headerband-facts">
@@ -2416,7 +2417,7 @@ function PWOtherHeaderBand({ user, following, onFollow, onMessage }) {
       <div className="pw-headerband-info">
         <span className="pw-headerband-namerow">
           <h1>{user.name}</h1>
-          {user.seals && <VerificationSealsPW seals={user.seals} size={19} />}
+          {user.seals && <VerificationSealsPW seals={user.seals} size={19} info ownerName={user.name} />}
         </span>
         <div className="pw-headerband-stats">{user.followers} followers · {user.following} following · {user.posts} posts</div>
         <ul className="pw-headerband-facts">
@@ -3302,6 +3303,8 @@ function PWEditProfileModal({ profile, onCancel, onSave, openBanners, onOpenGoal
     yearsExperience: profile.yearsExperience || ""
   }));
   const [avatar, setAvatar] = useStatePW(profile.avatar || "");
+  /* Profile picture is mandatory (MKT Oct 2026): Save is blocked until one is set. */
+  const [avatarErr, setAvatarErr] = useStatePW(false);
   const [bannersOpen, setBannersOpen] = useStatePW(!!openBanners);
   const [bannerCount, setBannerCount] = useStatePW(() => pwLoadBanners().length);
   const fileRef = React.useRef(null);
@@ -3310,10 +3313,11 @@ function PWEditProfileModal({ profile, onCancel, onSave, openBanners, onOpenGoal
   function pickAvatar(e) {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
-    try { setAvatar(URL.createObjectURL(f)); } catch (err) {}
+    try { setAvatar(URL.createObjectURL(f)); setAvatarErr(false); } catch (err) {}
     e.target.value = "";
   }
   function handleSave() {
+    if (!avatar) { setAvatarErr(true); return; }
     const patch = {
       name: form.fullName, bio: form.bio, title: form.title, specialty: form.specialty,
       clinic: form.clinic, clinicNumber: form.clinicNumber, clinicAddress: form.clinicAddress,
@@ -3336,11 +3340,16 @@ function PWEditProfileModal({ profile, onCancel, onSave, openBanners, onOpenGoal
             <button type="button" className="pw-edit-done" onClick={handleSave}>Save</button>
           </header>
           <div className="pw-edit-body">
-            <div className="pw-edit-avblock">
+            <div className={"pw-edit-avblock" + (avatarErr ? " is-err" : "")}>
               <button type="button" className="pw-edit-avbtn" aria-label="Edit profile picture" onClick={() => fileRef.current && fileRef.current.click()}>
                 <AvatarPW name={form.fullName || profile.name} src={avatar} size={96} />
               </button>
-              <button type="button" className="pw-edit-avlink" onClick={() => fileRef.current && fileRef.current.click()}>Edit picture</button>
+              <div className="pw-edit-avlinks">
+            <button type="button" className="pw-edit-avlink" onClick={() => fileRef.current && fileRef.current.click()}>{avatar ? "Change profile picture" : "Add profile picture"}</button>
+            {avatar && <button type="button" className="pw-edit-avlink pw-edit-avlink-rm" onClick={() => setAvatar("")}>Remove</button>}
+          </div>
+          <p className="pw-edit-avhelp">Required. Use a clear, front-facing headshot so colleagues recognise you. Square works best: at least 500 × 500 px, JPG or PNG.</p>
+          {avatarErr && <p className="pw-edit-averr" role="alert"><IconifyIconPW name="lucide:alert-circle" size={15} color="currentColor" />Add a profile picture to save your profile.</p>}
               <input ref={fileRef} type="file" accept="image/*" hidden onChange={pickAvatar} />
             </div>
             <section className="pw-edit-group">

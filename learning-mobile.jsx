@@ -421,6 +421,46 @@ function courseStatusL(c, featured) {
   if (inProgressL(c)) return { key: "live", eyebrow: featured ? "Continue where you left off" : "In progress \u00b7 Lesson " + (c.lesson || 1), pill: c.progress + "% complete" };
   return { key: "new", eyebrow: c.level ? c.level + " level" : "Not started", pill: "Not started" };
 }
+/* MKT Oct 2026 — thumbnails: a course cover that fails to load (or has no
+   image) falls back to the local membership still, then to a branded navy
+   tile with the course initials, so the library never shows a broken box. */
+const LM2_THUMB_FALLBACK = "assets/course-membership-banner.jpg";
+function LM2Thumb({ src, title }) {
+  const [stage, setStage] = useStateL(src ? 0 : 2);   // 0 = own image, 1 = fallback still, 2 = branded tile
+  React.useEffect(() => { setStage(src ? 0 : 2); }, [src]);
+  if (stage === 2) {
+    const initials = String(title || "PF").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+    return <span className="lm2-thumb-tile" aria-hidden="true"><b>{initials}</b></span>;
+  }
+  return <img src={stage === 0 ? src : LM2_THUMB_FALLBACK} alt="" loading="lazy" onError={() => setStage((s) => s + 1)} />;
+}
+
+/* MKT Oct 2026 — layout: after the featured "continue" card, the rest of the
+   library is a scannable list (thumbnail with progress on it, title, status,
+   one action) instead of a sideways rail where cards were cut off. */
+function LM2MyCourseRow({ c }) {
+  const live = inProgressL(c);
+  const st = courseStatusL(c, false);
+  const cta = courseCtaL(c);
+  const label = c.completed ? "Certificate" : live ? "Resume" : "Start";
+  return (
+    <article className={"lm2-mcrow lm2-mc-" + st.key} role="listitem">
+      <button type="button" className="lm2-mcrow-thumb" onClick={cta.go} aria-label={"Open " + c.title}>
+        <LM2Thumb src={c.image} title={c.title} />
+        {c.completed ?
+        <span className="lm2-mcrow-mark done" aria-hidden="true"><IconifyL name="lucide:award" size={14} color="#fff" /></span> :
+        <span className="lm2-mcrow-mark" aria-hidden="true"><IconifyL name="fluent:play-16-filled" size={12} color="#0C1928" /></span>}
+        {live && <span className="lm2-mcrow-bar"><span style={{ width: Math.max(4, c.progress) + "%" }} /></span>}
+      </button>
+      <div className="lm2-mcrow-tx">
+        <span className={"lm2-mc-eyebrow " + st.key}>{c.completed ? "Completed" : live ? c.progress + "% complete" : (c.level ? c.level : "Not started")}</span>
+        <button type="button" className="lm2-mcrow-title" onClick={cta.go}>{c.title}</button>
+        <span className="lm2-mcrow-sub">{live ? "Lesson " + (c.lesson || 1) + (c.modulesLeft != null ? " \u00b7 " + c.modulesLeft + " modules to certificate" : "") : c.completed ? "Certificate earned" : (c.lessons ? c.lessons + " lessons" : "Ready when you are")}</span>
+      </div>
+      <button type="button" className={"lm2-mcrow-cta" + (live ? " live" : "")} onClick={cta.go}>{label}</button>
+    </article>);
+}
+
 /* `saved` (optional, My Courses page only) adds the bookmark toggle on the cover. */
 function LM2MyCourseCard({ c, featured, saved }) {
   const live = inProgressL(c);
@@ -430,7 +470,8 @@ function LM2MyCourseCard({ c, featured, saved }) {
   return (
     <article className={"lm2-mc lm2-mc-" + st.key + (featured ? " lm2-mc-featured" : "") + (saved ? " lm2-mc-savable" : "")} role="listitem">
       <button type="button" className="lm2-mc-cover" onClick={cta.go} aria-label={"Open " + c.title}>
-        <img src={c.image} alt="" loading="lazy" />
+        <LM2Thumb src={c.image} title={c.title} />
+        {live && <span className="lm2-mc-coverbar" aria-hidden="true"><span style={{ width: Math.max(3, c.progress) + "%" }} /></span>}
         <LevelBadgeL level={c.level} className="lm2-mc-lvl" />
         {c.completed ?
         <span className="lm2-mc-ribbon" aria-hidden="true"><IconifyL name="lucide:award" size={20} color="#fff" /></span> :
@@ -837,16 +878,16 @@ function LearningHome() {
                 </a>}
               </div>
               {shownCoursesL.length ?
-            <div className="lm2-mc-rail" role="list">
-                  <span className="lm2-coursegrid-pad" aria-hidden="true" />
-                  {shownCoursesL.map((c, i) => <LM2MyCourseCard key={c.slug || c.title} c={c} featured={leadTabL && i === 0 && inProgressL(c)} />)}
+            <div className="lm2-mc-stack" role="list">
+                  {shownCoursesL.map((c, i) => (i === 0 ?
+                    <LM2MyCourseCard key={c.slug || c.title} c={c} featured={leadTabL && inProgressL(c)} /> :
+                    <LM2MyCourseRow key={c.slug || c.title} c={c} />))}
                   {hiddenCountL > 0 &&
-              <button type="button" className="lm2-mc-more" role="listitem" onClick={() => goL(LM2_MY_COURSES_URL)}>
-                      <span className="ic"><IconifyL name="lucide:library" size={22} color="#8A5303" /></span>
+              <button type="button" className="lm2-mc-more lm2-mc-more-row" role="listitem" onClick={() => goL(LM2_MY_COURSES_URL)}>
+                      <span className="ic"><IconifyL name="lucide:library" size={20} color="#8A5303" /></span>
                       <b>View all {orderedCoursesL.length} courses</b>
                       <span>{hiddenCountL} more in your library</span>
                     </button>}
-                  <span className="lm2-coursegrid-pad" aria-hidden="true" />
                 </div> :
             <div className="lm2-mc-empty">
                   <span className="ic"><IconifyL name={tab === "Completed" ? "lucide:award" : "lucide:play-circle"} size={22} color="#8A5303" /></span>

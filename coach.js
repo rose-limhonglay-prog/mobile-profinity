@@ -44,24 +44,24 @@
   function replyFor(prompt) {
     var p = (prompt || "").toLowerCase();
     if (p.indexOf("market") !== -1) {
-      return { text: "Post 3 before/after case studies this week and reply to every comment within the hour — visibility compounds fast when you're consistent.", outcome: "Post 3 case studies and reply to comments within an hour" };
+      return { text: "Post 3 before/after case studies this week and reply to every comment within the hour. Visibility compounds fast when you're consistent.", outcome: "Post 3 case studies and reply to comments within an hour" };
     }
     if (p.indexOf("sale") !== -1 || p.indexOf("pric") !== -1) {
       return { text: "Script your consultation close: restate the outcome the patient wants, offer two package options, then ask for the booking directly.", outcome: "Script and use a two-option consultation close" };
     }
     if (p.indexOf("clinical") !== -1) {
-      return { text: "Book one peer case review this week and log the outcome — it's the fastest way to sharpen clinical skills without another course.", outcome: "Book a peer case review this week" };
+      return { text: "Book one peer case review this week and log the outcome. It's the fastest way to sharpen clinical skills without another course.", outcome: "Book a peer case review this week" };
     }
     if (p.indexOf("system") !== -1 || p.indexOf("business") !== -1) {
-      return { text: "Write a one-page SOP for your top recurring task — it's the quickest Business Systems win you can bank today.", outcome: "Write a one-page SOP for your top recurring task" };
+      return { text: "Write a one-page SOP for your top recurring task. It's the quickest Business Systems win you can bank today.", outcome: "Write a one-page SOP for your top recurring task" };
     }
     if (p.indexOf("target") !== -1) {
       return { text: "Here's a target that'll move the needle today: confirm tomorrow's bookings and send one follow-up to a lapsed patient.", outcome: "Confirm bookings and follow up with one lapsed patient" };
     }
     if (p.indexOf("goal") !== -1 || p.indexOf("spiral") !== -1 || p.indexOf("progress") !== -1) {
-      return { text: "Your Prosperity Spiral shows Marketing as your weakest pillar right now — focus there first and the other three tend to follow.", outcome: "Focus this week's effort on Marketing" };
+      return { text: "Your Prosperity Spiral shows Marketing as your weakest pillar right now. Focus there first and the other three tend to follow.", outcome: "Focus this week's effort on Marketing" };
     }
-    return { text: "Good question — here's a focused next step you can act on today: pick your single biggest bottleneck and give it 30 minutes before anything else.", outcome: "Give your biggest bottleneck 30 focused minutes" };
+    return { text: "Good question. Here's a focused next step you can act on today: pick your single biggest bottleneck and give it 30 minutes before anything else.", outcome: "Give your biggest bottleneck 30 focused minutes" };
   }
 
   function readTargets() {
@@ -71,6 +71,63 @@
     var list = readTargets();
     list.push({ text: outcome, addedAt: Date.now() });
     try { localStorage.setItem(TARGETS_KEY, JSON.stringify(list)); } catch (e) {}
+  }
+
+  /* ---- Learning notepad (MKT Oct 2026) ----
+     Members asked to keep Ava's answers. "Save to notepad" on any answer
+     stores the question + answer; the notepad button in Ava's header lists
+     them (copy / remove). localStorage only in this prototype — the app
+     would persist these per user. */
+  var NOTEPAD_KEY = "pf-learning-notepad";
+  function readNotes() {
+    try { var a = JSON.parse(localStorage.getItem(NOTEPAD_KEY)); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+  }
+  function writeNotes(list) {
+    try { localStorage.setItem(NOTEPAD_KEY, JSON.stringify(list)); } catch (e) {}
+    try { window.dispatchEvent(new CustomEvent("pf:notepad-change")); } catch (e) {}
+    updateNoteCount();
+  }
+  function saveNote(q, a) {
+    var list = readNotes();
+    list.unshift({ id: "n" + Date.now().toString(36), q: q || "", a: a, savedAt: Date.now() });
+    writeNotes(list);
+  }
+  function removeNote(id) { writeNotes(readNotes().filter(function (n) { return n.id !== id; })); }
+  function escHtml(t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function fmtDate(ts) {
+    try { return new Date(ts).toLocaleDateString(undefined, { day: "numeric", month: "short" }); } catch (e) { return ""; }
+  }
+  function updateNoteCount() {
+    if (!el.noteCount) return;
+    var n = readNotes().length;
+    el.noteCount.textContent = n;
+    el.noteCount.style.display = n ? "" : "none";
+  }
+  function renderNotepad() {
+    var list = readNotes();
+    if (!list.length) {
+      el.notesList.innerHTML = '<div class="pf-ava-notes-empty"><span class="ic"><iconify-icon icon="lucide:notebook-pen" width="24" height="24" style="color:var(--ai-purple)"></iconify-icon></span>' +
+        '<b>Your notepad is empty</b><p>Tap “Save to notepad” under any of Ava’s answers to keep it here for later.</p></div>';
+      return;
+    }
+    el.notesList.innerHTML = list.map(function (n) {
+      return '<article class="pf-ava-note" data-id="' + n.id + '">' +
+        (n.q ? '<p class="pf-ava-note-q"><iconify-icon icon="lucide:message-circle-question" width="14" height="14"></iconify-icon>' + escHtml(n.q) + '</p>' : '') +
+        '<p class="pf-ava-note-a">' + escHtml(n.a) + '</p>' +
+        '<div class="pf-ava-note-foot"><span>Saved ' + fmtDate(n.savedAt) + '</span>' +
+          '<button type="button" class="pf-ava-note-btn" data-act="copy"><iconify-icon icon="lucide:copy" width="14" height="14"></iconify-icon>Copy</button>' +
+          '<button type="button" class="pf-ava-note-btn" data-act="del" aria-label="Remove note"><iconify-icon icon="lucide:trash-2" width="14" height="14"></iconify-icon>Remove</button>' +
+        '</div></article>';
+    }).join("");
+  }
+  function openNotepad() {
+    renderNotepad();
+    el.notes.classList.add("open");
+    el.notes.setAttribute("aria-hidden", "false");
+  }
+  function closeNotepad() {
+    el.notes.classList.remove("open");
+    el.notes.setAttribute("aria-hidden", "true");
   }
 
   var el = {};
@@ -109,12 +166,23 @@
                 '<span class="pf-ava-head-title"><b>Ava</b><em class="pf-ava-head-badge">AI coach</em></span>' +
                 '<span class="pf-ava-head-status"><i aria-hidden="true"></i>Online &middot; replies instantly</span>' +
               '</span>' +
+              '<button type="button" class="pf-ava-notebtn" id="pf-ava-notebtn" aria-label="Open my learning notepad" title="My learning notepad">' +
+                '<iconify-icon icon="lucide:notebook-pen" width="19" height="19" style="color:#fff"></iconify-icon>' +
+                '<span class="pf-ava-notecount" id="pf-ava-notecount"></span>' +
+              '</button>' +
               '<button type="button" class="pf-ava-close" id="pf-ava-close" aria-label="Close Ava">' +
                 '<iconify-icon icon="lucide:x" width="20" height="20" style="color:#fff"></iconify-icon>' +
               '</button>' +
             '</div>' +
           '</header>' +
           '<div class="pf-ava-thread" id="pf-ava-thread"></div>' +
+          '<section class="pf-ava-notes" id="pf-ava-notes" aria-hidden="true" aria-label="My learning notepad">' +
+            '<div class="pf-ava-notes-hd">' +
+              '<button type="button" class="pf-ava-notes-back" id="pf-ava-notes-back"><iconify-icon icon="lucide:chevron-left" width="20" height="20"></iconify-icon>Back to chat</button>' +
+              '<span class="pf-ava-notes-ti"><iconify-icon icon="lucide:notebook-pen" width="16" height="16" style="color:var(--ai-purple)"></iconify-icon>My learning notepad</span>' +
+            '</div>' +
+            '<div class="pf-ava-notes-list" id="pf-ava-notes-list"></div>' +
+          '</section>' +
           '<div class="pf-ava-footer">' +
             '<div class="pf-ava-chips-label"><iconify-icon icon="lucide:sparkles" width="12" height="12" style="color:var(--ai-purple)"></iconify-icon><span>Quick actions</span></div>' +
             '<div class="pf-ava-chips" id="pf-ava-chips"></div>' +
@@ -143,6 +211,25 @@
     el.chips = root.querySelector("#pf-ava-chips");
     el.input = root.querySelector("#pf-ava-input");
     el.send = root.querySelector("#pf-ava-send");
+    el.notes = root.querySelector("#pf-ava-notes");
+    el.notesList = root.querySelector("#pf-ava-notes-list");
+    el.noteCount = root.querySelector("#pf-ava-notecount");
+    root.querySelector("#pf-ava-notebtn").addEventListener("click", function () {
+      if (el.notes.classList.contains("open")) closeNotepad(); else openNotepad();
+    });
+    root.querySelector("#pf-ava-notes-back").addEventListener("click", closeNotepad);
+    el.notesList.addEventListener("click", function (e) {
+      var btn = e.target.closest && e.target.closest(".pf-ava-note-btn");
+      if (!btn) return;
+      var card = btn.closest(".pf-ava-note");
+      var id = card && card.getAttribute("data-id");
+      if (btn.getAttribute("data-act") === "del") { removeNote(id); renderNotepad(); return; }
+      var note = readNotes().filter(function (n) { return n.id === id; })[0];
+      if (!note) return;
+      var done = function () { btn.innerHTML = '<iconify-icon icon="lucide:check" width="14" height="14"></iconify-icon>Copied'; };
+      try { navigator.clipboard.writeText(note.a).then(done, done); } catch (err) { done(); }
+    });
+    updateNoteCount();
 
     QUICK_CHIPS.forEach(function (c) {
       var btn = document.createElement("button");
@@ -153,7 +240,7 @@
       el.chips.appendChild(btn);
     });
 
-    addBubble("ava", "Hi Katy — I'm Ava, your AI coach. Ask me anything about your goal, or tap a quick action below.", false);
+    addBubble("ava", "Hi Katy, I'm Ava, your AI coach. Ask me anything about your goal, or tap a quick action below.", false);
 
     el.tab.addEventListener("click", onTabClick);
     el.close.addEventListener("click", closeSheet);
@@ -205,7 +292,7 @@
     return av;
   }
 
-  function addBubble(who, text, withActions) {
+  function addBubble(who, text, withActions, question) {
     var row = document.createElement("div");
     row.className = "pf-ava-bubblerow " + (who === "user" ? "me" : "ava");
     var col = row;
@@ -233,6 +320,17 @@
         addBtn.innerHTML = '<span class="pf-ava-addtarget-ic"><iconify-icon icon="lucide:check" width="14" height="14" style="color:#fff"></iconify-icon></span><span>Added to targets</span>';
       });
       actions.appendChild(addBtn);
+      var noteBtn = document.createElement("button");
+      noteBtn.type = "button";
+      noteBtn.className = "pf-ava-savenote";
+      noteBtn.innerHTML = '<iconify-icon icon="lucide:notebook-pen" width="15" height="15"></iconify-icon><span>Save to notepad</span>';
+      noteBtn.addEventListener("click", function () {
+        saveNote(question, text);
+        noteBtn.disabled = true;
+        noteBtn.classList.add("saved");
+        noteBtn.innerHTML = '<iconify-icon icon="lucide:check" width="15" height="15"></iconify-icon><span>Saved to notepad</span>';
+      });
+      actions.appendChild(noteBtn);
       col.appendChild(actions);
     }
     el.thread.appendChild(row);
@@ -270,7 +368,7 @@
     if (!reduceMotion) showTyping();
     setTimeout(function () {
       hideTyping();
-      addBubble("ava", reply.text, reply.outcome);
+      addBubble("ava", reply.text, reply.outcome, text.trim());
     }, reduceMotion ? 300 : 900);
   }
 
@@ -338,7 +436,8 @@
 
   window.PFAva = {
     open: function (prompt) { if (prompt) { sendMessage(prompt); } else { openSheet(); } },
-    close: closeSheet
+    close: closeSheet,
+    notepad: { open: function () { openSheet(); openNotepad(); }, list: readNotes }
   };
 
   /* ?ava=<prompt> deep link — screens where Ava isn't mounted (Profile's

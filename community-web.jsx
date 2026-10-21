@@ -79,6 +79,43 @@ const CW_CHANNELS = [
 const CW_CHANNEL_MAP = CW_CHANNELS.reduce((m, c) => { m[c.key] = c; return m; }, {});
 const { useState: useStateCW } = React;
 
+/* MKT Oct 2026: paid channels open on a premium hero (navy/plum gradient,
+   gold detailing, who's in the room) instead of the generic banner header,
+   so Confidence Chat feels like the members' lounge it is. Copy is draft. */
+const CW_HERO = {
+  confidence: { title: "Confidence Chat", tag: "Members' lounge", perks: ["Verified clinicians only", "Weekly Q&A with Dr Tim", "Case reviews"] },
+  mastery: { title: "Mastery", tag: "Inner programme", perks: ["Mastery members only", "Monthly masterclass", "Mentor feedback"] },
+  freedom: { title: "Freedom", tag: "Freedom Path", perks: ["Freedom Path members", "Business clinics", "Growth playbooks"] },
+  inner: { title: "Inner Circle", tag: "By invitation", perks: ["Invitation only", "Quarterly retreat", "Private mastermind"] }
+};
+const CW_HERO_FACES = ["assets/avatar-drtim.png", "assets/avatar-sarah-collins.jpg", "assets/avatar-amir-khan.jpg", "assets/avatar-priya-shah.jpg", "assets/avatar-mark-ellis.jpg"];
+function CWChannelHero({ channelKey, meta }) {
+  const h = CW_HERO[channelKey] || { title: meta.name, tag: "Members channel", perks: [] };
+  const [following, setFollowing] = useStateCW(false);
+  const Ico = DS_CW.IconifyIcon;
+  return (
+    <section className="cw-hero" aria-label={h.title}>
+      <div className="cw-hero-glow" aria-hidden="true" />
+      <div className="cw-hero-top">
+        <span className="cw-hero-tag"><Ico name="fluent:crown-16-filled" size={13} color="#2A2569" />{h.tag}</span>
+        <button type="button" className={"cw-hero-follow" + (following ? " on" : "")} onClick={() => setFollowing((f) => !f)}>
+          {following ? "Following" : "Follow"}
+        </button>
+      </div>
+      <h1 className="cw-hero-ti">{h.title}</h1>
+      <p className="cw-hero-line">{meta.about}</p>
+      <div className="cw-hero-foot">
+        <span className="cw-hero-faces">{CW_HERO_FACES.map((f) => <img key={f} src={f} alt="" />)}</span>
+        <span className="cw-hero-count"><b>{meta.followers}</b> members</span>
+        <span className="cw-hero-live"><span className="dot" />42 online</span>
+      </div>
+      {h.perks.length > 0 &&
+      <ul className="cw-hero-perks">
+        {h.perks.map((p) => <li key={p}><Ico name="lucide:check" size={14} color="#E7C48A" />{p}</li>)}
+      </ul>}
+    </section>);
+}
+
 function ChannelsSidebar({ active, onPick }) {
   const Label = ({ children }) => (
     <div style={{ fontFamily: "var(--font-sans)", fontSize: "var(--fs-body)", color: "var(--gray-500)", margin: "16px 6px 6px" }}>
@@ -125,8 +162,7 @@ function CommunityMain() {
       </div>
       <div className="cw-main" style={{ display: "flex", flexDirection: "column", gap: 20, minWidth: 0 }}>
         <PanelCW padding={24}>
-          <ChannelHeaderCW banner={D.channelHeader.banner} name={"#" + meta.name} followers={meta.followers}
-            visibility="Members channel" about={meta.about} following={false} />
+          <CWChannelHero channelKey={channel} meta={meta} />
           <div style={{ marginTop: 20 }}>
             <ComposerCW />
           </div>

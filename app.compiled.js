@@ -6941,6 +6941,38 @@ function WebPollEditor({
     color: "var(--brand-navy)"
   }), "Add option"));
 }
+
+/* Mobile "prompt to post" (MKT Oct 2026): the phone feed only had the
+   floating + button, so nothing in the feed itself invited people to post.
+   A slim composer card at the top of the feed hands off to the full-screen
+   Create Post flow. */
+function MobilePostPrompt() {
+  const firstName = ME.name.split(" ")[0];
+  const go = q => (window.pfGo || function (u) {
+    window.location.href = u;
+  })("CreatePostMobile.html" + (q || ""));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pf-mprompt",
+    "data-screen-label": "Prompt to post"
+  }, /*#__PURE__*/React.createElement(Avatar, {
+    name: ME.name,
+    src: ME.avatar,
+    size: 42
+  }), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-mprompt-pill",
+    onClick: () => go()
+  }, "Share a win, a case or a question, ", firstName, "…"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-mprompt-ic",
+    "aria-label": "Add a photo",
+    onClick: () => go()
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "fluent:image-multiple-24-filled",
+    size: 24,
+    color: "#3DBE5B"
+  })));
+}
 function PostComposer({
   onPost,
   superUser,
@@ -12761,7 +12793,9 @@ function FeedPost({
     ...c,
     reactions: null,
     reactionCount: null,
-    replies: []
+    replies: [],
+    onLikesClick: () => setLikesOpen(true),
+    onCommentsClick: () => setReplyFor(c._id)
   }), /*#__PURE__*/React.createElement("div", {
     className: "cmt-actions",
     style: {
@@ -12829,7 +12863,8 @@ function FeedPost({
     ...comments[0],
     reactions: null,
     reactionCount: null,
-    replies: []
+    replies: [],
+    onCommentsClick: () => setSheetOpen(true)
   })), comments.length > 1 && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "cmt-viewmore",
@@ -13257,7 +13292,8 @@ function ChannelFeedCard({
     ...comments[0],
     reactions: null,
     reactionCount: null,
-    replies: []
+    replies: [],
+    onCommentsClick: () => setSheetOpen(true)
   })), comments.length > 1 && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "cmt-viewmore",
@@ -15196,7 +15232,7 @@ function Feed({
     devRole: composerRole,
     onDevRole: setComposerRole,
     lockedAdmin: viewerCurrent.admin
-  }), !channel && !window.PF_EMBED && PF_SHOW_DEV_PANELS && /*#__PURE__*/React.createElement(ComposerDevToggle, {
+  }), !channel && window.PF_EMBED && window.PF_POST_PROMPT && /*#__PURE__*/React.createElement(MobilePostPrompt, null), !channel && !window.PF_EMBED && PF_SHOW_DEV_PANELS && /*#__PURE__*/React.createElement(ComposerDevToggle, {
     role: composerRole,
     onChange: setComposerRole,
     lockedAdmin: viewerCurrent.admin
