@@ -2,14 +2,27 @@
   "rewrites": [
     {
       "source": "/",
-      "has": [{ "type": "host", "value": "profinity-mobileweb.vercel.app" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "profinity-mobileweb.vercel.app"
+        }
+      ],
       "destination": "/NewsfeedMobile.html"
     },
     {
       "source": "/",
-      "has": [{ "type": "host", "value": "profinity-mobile-2.vercel.app" }],
-      "destination": "/NewsfeedMobile.html"
+      "has": [
+        {
+          "type": "host",
+          "value": "profinity-mobile-2.vercel.app"
+        }
+      ],
+      "destination": "/JaneNewsfeed.html"
     },
-    { "source": "/", "destination": "/NewsfeedWeb.html" }
+    {
+      "source": "/",
+      "destination": "/NewsfeedWeb.html"
+    }
   ]
 }

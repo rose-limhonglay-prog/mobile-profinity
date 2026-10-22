@@ -156,9 +156,9 @@ html[data-mobile-web] [data-ios-device]{background:var(--surface-page,#F2F2F7)}
    in Safari) while bottom-anchored UI — tab bar, FAB, sheets — stays in the
    "small viewport" above it. The screen roots must not clip for this. */
 [data-ios-device][data-safari] :is(.m-screen,.cm-screen,.pm-screen,.lm-screen,.lcm-screen,.ag-screen,.ev-screen,.acc-screen,.ml-screen){overflow:visible !important}
-[data-ios-device][data-safari] :is(.m-scroll,.cm-scroll,.pm-scroll,.lm-scroll,.lcm-scroll,.ag-scroll,.ev-scroll,.acc-scroll,.ml-scroll){
+[data-ios-device][data-safari] :is(.m-scroll,.cm-scroll,.pm-scroll,.lm-scroll,.lcm-scroll,.ag-scroll,.ev-scroll,.acc-scroll,.ml-scroll,.jn-scroll){
   margin-bottom:calc(-1 * var(--pf-sfb,0px))}
-[data-ios-device][data-safari] :is(.m-scroll,.cm-scroll,.pm-scroll,.lm-scroll,.lcm-scroll,.ag-scroll,.ev-scroll,.acc-scroll,.ml-scroll)::after{
+[data-ios-device][data-safari] :is(.m-scroll,.cm-scroll,.pm-scroll,.lm-scroll,.lcm-scroll,.ag-scroll,.ev-scroll,.acc-scroll,.ml-scroll,.jn-scroll)::after{
   content:"";display:block;flex:none;height:var(--pf-sfb,0px)}
 
 /* ---- mobile-web preview: overlays belong to the WEB PAGE, not the phone ----
