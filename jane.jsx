@@ -801,61 +801,184 @@ function HealthScreen() {
   if (setup) return <HealthSetup onDone={(st) => { if (st.method === "wearable" && !connectedWearables().length) goJN("JaneWearables.html"); else setSetup(false); }} />;
   return <HealthDashboard />;
 }
+/* Health "Today" dashboard (user, 2026-10-23, Google Health screenshots):
+   centred title, three swipeable tile pages (weekly ring + Steps/Readiness/
+   Sleep · Vitals/Weight/Food/Hydration/Skin/Next review · Distance/Calories/
+   Exercise days/Hourly/Heart rate/Cycle), Log · Start · edit actions and the
+   "Welcome! Let's get you set up" 0/4 checklist. Fresh users (nothing
+   connected, no phone tracking) see zeros / Calibrating / No data; once a
+   wearable or phone tracking is on, the sample week fills the tiles. */
+const LOGS_KEY = "pf-jane-logs", CYCLE_KEY = "pf-jane-cycle", FRIENDS_KEY = "pf-jane-friends", PHONE_KEY = "pf-jane-phone-tracking", TILES_KEY = "pf-jane-tiles";
 function HealthDashboard() {
-  const [period, setPeriod] = useStateJN("week");
-  const [toast, showToast] = useToastJN();
+  const hs = healthSetup();
   const wear = connectedWearables();
-  const score = 78;
-  const sleepAvg = avg(HEALTH.sleep), stepsAvg = Math.round(avg(HEALTH.steps)), waterAvg = avg(HEALTH.water);
-  const INSIGHTS = [
-    { ic: "trending-up", c: "var(--success)", t: "Sleep is up 12% on last week", s: "Average " + fmtH(sleepAvg) + ". Your best nights were Fri–Sat." },
-    { ic: "droplets", c: "#0ea5e9", t: "Hydration below goal 3 of 7 days", s: "You drink less on days under 6,000 steps. Try a bottle on your desk." },
-    { ic: "sun", c: "var(--brand-gold)", t: "Skin score climbing", s: "From 62 to 78 since you started SPF daily. Katy will love this." },
-    { ic: "heart-pulse", c: "var(--brand-rose)", t: "Resting heart rate 61 bpm", s: "Steady and in a healthy range for you." },
+  const [phone, setPhone] = useStateJN(() => hs.method === "phone" || readJN(PHONE_KEY, false));
+  const [logs, setLogs] = useStateJN(() => readJN(LOGS_KEY, { water: 0, weight: hs.weight || "", food: 0, skin: null }));
+  const [cycle, setCycle] = useStateJN(() => readJN(CYCLE_KEY, null));
+  const [friends, setFriends] = useStateJN(() => readJN(FRIENDS_KEY, []));
+  const [hidden, setHidden] = useStateJN(() => readJN(TILES_KEY, {}));
+  const [page, setPage] = useStateJN(0);
+  const [listOpen, setListOpen] = useStateJN(true);
+  const [sheet, setSheet] = useStateJN(null); // log | start | edit | cycle | friends
+  const [workout, setWorkout] = useStateJN(null); // { kind, start }
+  const [elapsed, setElapsed] = useStateJN(0);
+  const [weightDraft, setWeightDraft] = useStateJN(logs.weight || "");
+  const [cycleDraft, setCycleDraft] = useStateJN({ last: "2026-10-12", len: 28 });
+  const [toast, showToast] = useToastJN();
+  const railRef = useRefJN(null);
+  const tracking = wear.length > 0 || phone;
+  useEffectJN(() => { if (!workout) return; const t = setInterval(() => setElapsed(Math.floor((Date.now() - workout.start) / 1000)), 1000); return () => clearInterval(t); }, [workout]);
+  function saveLogs(l) { setLogs(l); saveJN(LOGS_KEY, l); }
+  function onRail() { const el = railRef.current; if (!el) return; setPage(Math.round(el.scrollLeft / el.clientWidth)); }
+  function goPage(i) { const el = railRef.current; if (el) el.scrollTo({ left: i * el.clientWidth, behavior: "smooth" }); }
+  const mmss = (s) => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+
+  const ring = tracking ? { pct: 64, sub: "96 of 150 min", plus: "+12" } : { pct: 0, sub: "Calibrating – 7 days left", plus: "+0" };
+  const tiles = {
+    steps: { k: "steps", ic: "footprints", t: "Steps", v: tracking ? HEALTH.steps[6].toLocaleString() : "0", tone: "mint" },
+    readiness: { k: "readiness", ic: "activity", t: "Readiness", v: tracking ? "82 · Good" : "Calibrating", tone: tracking ? "mint" : "grey" },
+    sleep: { k: "sleep", ic: "moon", t: "Sleep", v: tracking ? fmtH(HEALTH.sleep[6]) : "No data", tone: "lav" },
+    vitals: { k: "vitals", ic: "activity", t: "Vitals", v: tracking ? "RHR 61 bpm" : "No data", tone: tracking ? "mint" : "grey" },
+    weight: { k: "weight", ic: "scale", t: "Weight", v: logs.weight ? logs.weight + " kg" : "No data", tone: "grey", navy: true, on: () => setSheet("log") },
+    food: { k: "food", ic: "apple", t: "Food", v: logs.food ? logs.food + (logs.food === 1 ? " meal" : " meals") : "No data", tone: logs.food ? "mint" : "grey", on: () => setSheet("log") },
+    water: { k: "water", ic: "glass-water", t: "Hydration", v: logs.water ? (logs.water * 250).toLocaleString() + " ml" : "No data", tone: logs.water ? "mint" : "grey", on: () => setSheet("log") },
+    skin: { k: "skin", ic: "sun", t: "Skin check-in", v: logs.skin ? logs.skin + " / 100" : "Tap to log", tone: logs.skin ? "gold" : "grey", on: () => setSheet("log") },
+    review: { k: "review", ic: "calendar", t: "Next review", v: "Mon 3 Nov", tone: "grey", navy: true, on: () => goJN("JaneMessages.html?to=reception") },
+    distance: { k: "distance", ic: "map-pin", t: "Distance", v: tracking ? "7.4 km" : "0 km", tone: "mint" },
+    cal: { k: "cal", ic: "flame", t: "Cal burned", v: tracking ? "1,840" : "0", tone: "mint" },
+    exdays: { k: "exdays", ic: "dumbbell", t: "Exercise days", v: tracking ? "3 of 5" : "0 of 5", tone: "mint" },
+    hourly: { k: "hourly", ic: "timer", t: "Hourly activity", v: tracking ? "9 of 12 hrs" : "No data", tone: "mint" },
+    hr: { k: "hr", ic: "heart", t: "Heart rate", v: tracking ? "61 bpm" : "--", tone: "grey", navy: true },
+    cycle: { k: "cycle", ic: "flower", t: "Cycle health", v: cycle ? "Day " + cycleDay(cycle) + " · " + cyclePhase(cycle) : "Tap to set up", tone: cycle ? "rose" : "grey", on: () => setSheet("cycle") },
+  };
+  const show = (keys) => keys.map((k) => tiles[k]).filter((t) => !hidden[t.k]);
+  const Tile = ({ t, wide }) => (
+    <button className={"jh-tile " + t.tone + (wide ? " wide" : "") + (t.navy ? " navy" : "")} onClick={t.on || (() => showToast(t.t + " · " + t.v))}>
+      <span className="ic"><IcJN name={t.ic} size={22} /></span>
+      <span className="tx"><b>{t.t}</b><span>{t.v}</span></span>
+    </button>);
+
+  const checklist = [
+    { k: "apps", ic: "layout-grid", art: "lav", t: "Connect apps to see all your data", done: wear.length > 0, on: () => goJN("JaneWearables.html") },
+    { k: "cycle", ic: "flower", art: "blue", t: "Set up your cycle health tracking", done: !!cycle, on: () => setSheet("cycle") },
+    { k: "phone", ic: "footprints", art: "teal", t: "Track steps and more with your phone", done: phone, on: () => { setPhone(true); saveJN(PHONE_KEY, true); showToast("Phone tracking on · steps will sync from your phone"); } },
+    { k: "friends", ic: "users", art: "pink", t: "Add friends to motivate each other", done: friends.length > 0, on: () => setSheet("friends") },
   ];
+  const doneN = checklist.filter((c) => c.done).length;
+  const OTHER_JANES = ["miranda", "amir", "mark"];
+  function toggleFriend(id) { const f = friends.includes(id) ? friends.filter((x) => x !== id) : [...friends, id]; setFriends(f); saveJN(FRIENDS_KEY, f); }
+
   return (
-    <div className="jn-screen">
-      <JNTop title="Health Analytics" sub={wear.length ? "Live from " + wear.map((w) => w.name).join(", ") : "Sample data until a wearable is connected"} />
-      <div className="jn-scroll">
-        {!wear.length && <button className="jn-connect slim" onClick={() => goJN("JaneWearables.html")}><span className="ic"><IcJN name="watch" size={18} color="#fff" /></span><span className="tx"><b>Connect a wearable for live data</b></span><IcJN name="chevron-right" size={18} color="rgba(255,255,255,.8)" /></button>}
-        <div className="jn-seg">{[["week", "This week"], ["month", "This month"]].map(([k, l]) => <button key={k} className={period === k ? "on" : ""} onClick={() => setPeriod(k)}>{l}</button>)}</div>
+    <div className="jn-screen jh">
+      <header className="jh-head">
+        <button className="jh-hbtn" aria-label="Devices" onClick={() => goJN("JaneWearables.html")}><IcJN name="smartphone" size={24} color="var(--text-heading)" /></button>
+        <h1>Health</h1>
+        <button className="jh-hbtn av" aria-label="Profile" onClick={() => goJN("JaneProfile.html")}><JNFace p={JANE} size={40} /></button>
+      </header>
+      <div className="jn-scroll jh-scroll">
+        {workout && <div className="jh-workout"><span className="dot" /><b>{workout.kind} in progress</b><span className="time">{mmss(elapsed)}</span><button onClick={() => { setWorkout(null); showToast(workout.kind + " saved · " + mmss(elapsed)); }}>Stop</button></div>}
+        <div className="jh-rail" ref={railRef} onScroll={onRail}>
+          <section className="jh-page">
+            <button className="jh-ring" onClick={() => showToast(tracking ? "Weekly cardio · " + ring.sub : "Connect a wearable or turn on phone tracking to start")}>
+              <Ring value={ring.pct / 100} size={178} stroke={30} color="var(--brand-navy)">
+                <small className="arc">Weekly cardio</small><b>{ring.pct}<i>%</i></b><small className="sub">{ring.sub}</small>
+              </Ring>
+              <span className="plus">{ring.plus}</span>
+            </button>
+            <div className="jh-stack">{show(["steps", "readiness", "sleep"]).map((t) => <Tile key={t.k} t={t} wide />)}</div>
+          </section>
+          <section className="jh-page grid">{show(["vitals", "weight", "food", "water", "skin", "review"]).map((t) => <Tile key={t.k} t={t} />)}</section>
+          <section className="jh-page grid">{show(["distance", "cal", "exdays", "hourly", "hr", "cycle"]).map((t) => <Tile key={t.k} t={t} />)}</section>
+        </div>
+        <div className="jh-dots">{[0, 1, 2].map((i) => <button key={i} className={page === i ? "on" : ""} aria-label={"Page " + (i + 1)} onClick={() => goPage(i)} />)}</div>
+        <div className="jh-actions">
+          <button className="jh-act" onClick={() => setSheet("log")}><IcJN name="plus" size={22} />Log</button>
+          <button className="jh-act" onClick={() => setSheet("start")}><IcJN name="activity" size={22} />Start</button>
+          <button className="jh-act round" aria-label="Customise" onClick={() => setSheet("edit")}><IcJN name="pencil" size={20} /></button>
+        </div>
 
-        <section className="jn-score">
-          <Ring value={score / 100}><b>{score}</b><small>Wellness</small></Ring>
-          <div className="tx"><h2>Looking good, {JANE.first}</h2><p>Your score blends sleep, movement, hydration and your daily skin check-in. Up 6 points {period === "week" ? "this week" : "this month"}.</p>
-            <button className="jn-btn sm" onClick={() => showToast("Summary sent to " + KATY.name)}><IcJN name="send" size={15} />Share with Katy</button></div>
+        <section className="jh-sheet">
+          <div className="jh-list">
+            <button className="jh-list-head" onClick={() => setListOpen(!listOpen)} aria-expanded={listOpen}>
+              <span className="count">{doneN}/{checklist.length}</span>
+              <span className="tx">{doneN === checklist.length ? "You're all set up 🎉" : "Welcome! Let's get you set up"}</span>
+              <IcJN name={listOpen ? "chevron-up" : "chevron-down"} size={22} color="var(--text-heading)" />
+            </button>
+            {listOpen && checklist.map((c) => (
+              <button key={c.k} className={"jh-item" + (c.done ? " done" : "")} onClick={c.on}>
+                <span className={"art " + c.art}><IcJN name={c.ic} size={30} color="#fff" /></span>
+                <span className="tx">{c.t}</span>
+                <span className="radio">{c.done && <IcJN name="check" size={14} color="#fff" />}</span>
+              </button>))}
+          </div>
+
+          {tracking ? (
+            <React.Fragment>
+              <h3 className="jn-h">This week</h3>
+              <div className="jn-metric">
+                <div className="head"><span className="ic" style={{ background: "#ede9ff" }}><IcJN name="moon" size={18} color="#6c63ff" /></span><div><b>Sleep</b><small>Average {fmtH(avg(HEALTH.sleep))} · goal 7h 30m</small></div><span className="delta up">+12%</span></div>
+                <Bars data={HEALTH.sleep} color="#6c63ff" max={9} fmt={fmtH} />
+              </div>
+              <div className="jn-metric">
+                <div className="head"><span className="ic" style={{ background: "#dcfce7" }}><IcJN name="footprints" size={18} color="#16a34a" /></span><div><b>Movement</b><small>Average {Math.round(avg(HEALTH.steps)).toLocaleString()} steps · goal 8,000</small></div><span className="delta">−3%</span></div>
+                <Bars data={HEALTH.steps} color="#16a34a" max={11000} fmt={(v) => v.toLocaleString()} unit=" steps" />
+              </div>
+              <div className="jn-metric">
+                <div className="head"><span className="ic" style={{ background: "var(--brand-gold-100)" }}><IcJN name="sun" size={18} color="var(--brand-gold)" /></span><div><b>Skin check-in</b><small>Today {logs.skin || HEALTH.skin[6]} · from your daily rating</small></div><span className="delta up">+16</span></div>
+                <Line data={HEALTH.skin} color="#CE9957" />
+                <div className="jn-days">{DAYS.map((d, i) => <span key={i}>{d}</span>)}</div>
+              </div>
+              <button className="jn-coachcta" onClick={() => goJN("JaneCoach.html?q=" + encodeURIComponent("How can I improve my hydration this week?"))}><IcJN name="sparkles" size={18} color="var(--ai-purple)" /><span>Ask the coach how to lift your hydration score</span><IcJN name="chevron-right" size={18} color="var(--ai-purple)" /></button>
+            </React.Fragment>
+          ) : (
+            <div className="jh-empty"><IcJN name="trending-up" size={26} color="var(--gray-400)" /><b>Your trends will appear here</b><small>Connect a wearable or turn on phone tracking and this view fills with your sleep, movement and skin trends.</small></div>)}
+          <div className="jn-end">Not medical advice · talk to your clinician about any concerns</div>
         </section>
-
-        <div className="jn-metric">
-          <div className="head"><span className="ic" style={{ background: "#ede9ff" }}><IcJN name="moon" size={18} color="#6c63ff" /></span><div><b>Sleep</b><small>Average {fmtH(sleepAvg)} · goal 7h 30m</small></div><span className="delta up">+12%</span></div>
-          <Bars data={HEALTH.sleep} color="#6c63ff" max={9} fmt={fmtH} />
-        </div>
-        <div className="jn-metric">
-          <div className="head"><span className="ic" style={{ background: "#dcfce7" }}><IcJN name="footprints" size={18} color="#16a34a" /></span><div><b>Movement</b><small>Average {stepsAvg.toLocaleString()} steps · goal 8,000</small></div><span className="delta">−3%</span></div>
-          <Bars data={HEALTH.steps} color="#16a34a" max={11000} fmt={(v) => v.toLocaleString()} unit=" steps" />
-        </div>
-        <div className="jn-metric">
-          <div className="head"><span className="ic" style={{ background: "#e0f2fe" }}><IcJN name="droplets" size={18} color="#0ea5e9" /></span><div><b>Nutrition</b><small>Water {waterAvg.toFixed(1)} L a day · goal 2 L</small></div><span className="delta">−8%</span></div>
-          <Bars data={HEALTH.water} color="#0ea5e9" max={2.6} fmt={(v) => v.toFixed(1)} unit=" L" />
-          <div className="jn-nutri"><span><b>82g</b><small>Protein</small></span><span><b>3.4</b><small>Veg portions</small></span><span><b>1</b><small>Caffeine after 2pm</small></span></div>
-        </div>
-        <div className="jn-metric">
-          <div className="head"><span className="ic" style={{ background: "var(--brand-gold-100)" }}><IcJN name="sun" size={18} color="var(--brand-gold)" /></span><div><b>Skin check-in</b><small>Today {HEALTH.skin[6]} · from your daily selfie rating</small></div><span className="delta up">+16</span></div>
-          <Line data={HEALTH.skin} color="#CE9957" />
-          <div className="jn-days">{DAYS.map((d, i) => <span key={i}>{d}</span>)}</div>
-        </div>
-
-        <h3 className="jn-h">Insights</h3>
-        <div className="jn-card list">
-          {INSIGHTS.map((x) => <div key={x.t} className="jn-li"><span className="ic"><IcJN name={x.ic} size={17} color={x.c} /></span><span className="tx"><b>{x.t}</b><small>{x.s}</small></span></div>)}
-        </div>
-        <button className="jn-coachcta" onClick={() => goJN("JaneCoach.html?q=" + encodeURIComponent("How can I improve my hydration this week?"))}><IcJN name="sparkles" size={18} color="var(--ai-purple)" /><span>Ask the coach how to lift your hydration score</span><IcJN name="chevron-right" size={18} color="var(--ai-purple)" /></button>
-        <div className="jn-end">Not medical advice · talk to your clinician about any concerns</div>
       </div>
       <JNTabs active="health" />
+
+      <JNSheet open={sheet === "log"} onClose={() => setSheet(null)} title="Log">
+        <div className="jh-logrow"><span className="ic mint"><IcJN name="glass-water" size={20} /></span><span className="tx"><b>Water</b><small>{logs.water} glasses · {(logs.water * 250).toLocaleString()} ml today</small></span><button className="jn-btn sm" onClick={() => { saveLogs({ ...logs, water: logs.water + 1 }); showToast("Glass of water logged"); }}><IcJN name="plus" size={15} />Glass</button></div>
+        <div className="jh-logrow"><span className="ic mint"><IcJN name="apple" size={20} /></span><span className="tx"><b>Food</b><small>{logs.food} meals logged today</small></span><button className="jn-btn sm" onClick={() => { saveLogs({ ...logs, food: logs.food + 1 }); showToast("Meal logged"); }}><IcJN name="plus" size={15} />Meal</button></div>
+        <div className="jh-logrow"><span className="ic grey"><IcJN name="scale" size={20} /></span><span className="tx"><b>Weight</b><small>Today's reading</small></span><span className="jh-wt"><input inputMode="decimal" value={weightDraft} onChange={(e) => setWeightDraft(e.target.value)} placeholder="54" /><em>kg</em></span><button className="jn-btn sm" onClick={() => { saveLogs({ ...logs, weight: weightDraft }); showToast("Weight saved"); }}>Save</button></div>
+        <div className="jh-logrow col"><div className="row"><span className="ic gold"><IcJN name="sun" size={20} /></span><span className="tx"><b>Skin check-in</b><small>How does your skin feel today?</small></span></div>
+          <div className="jh-skin">{[["😣", 40], ["😕", 55], ["🙂", 70], ["😊", 85], ["🤩", 100]].map(([e, v]) => <button key={v} className={logs.skin === v ? "on" : ""} onClick={() => { saveLogs({ ...logs, skin: v }); showToast("Skin check-in saved · " + v); }}>{e}</button>)}</div></div>
+        <button className="jn-btn block ghost" onClick={() => setSheet(null)}>Done</button>
+      </JNSheet>
+
+      <JNSheet open={sheet === "start"} onClose={() => setSheet(null)} title="Start an activity">
+        <div className="jh-kinds">{[["Walk", "footprints"], ["Run", "activity"], ["Yoga", "flower"], ["Strength", "dumbbell"], ["Cycle", "bike"], ["Swim", "waves"]].map(([k, ic]) => (
+          <button key={k} onClick={() => { setWorkout({ kind: k, start: Date.now() }); setElapsed(0); setSheet(null); showToast(k + " started"); }}><span className="ic"><IcJN name={ic} size={22} /></span>{k}</button>))}</div>
+      </JNSheet>
+
+      <JNSheet open={sheet === "edit"} onClose={() => setSheet(null)} title="Customise your tiles">
+        <p className="jn-sheet-p">Choose what shows on your Today view.</p>
+        {Object.values(tiles).map((t) => (
+          <button key={t.k} className="jn-perm" onClick={() => { const h = { ...hidden, [t.k]: !hidden[t.k] }; setHidden(h); saveJN(TILES_KEY, h); }}><IcJN name={t.ic} size={18} color="var(--brand-navy)" /><span>{t.t}</span><span className={"jn-switch" + (!hidden[t.k] ? " on" : "")}><i /></span></button>))}
+        <button className="jn-btn block" onClick={() => setSheet(null)}>Done</button>
+      </JNSheet>
+
+      <JNSheet open={sheet === "cycle"} onClose={() => setSheet(null)} title="Cycle health tracking">
+        <p className="jn-sheet-p">Track your cycle so your clinician can time treatments around it. Only you and your clinic can see this.</p>
+        <label className="jn-field"><span>First day of your last period</span><input className="jn-in" type="date" value={cycleDraft.last} onChange={(e) => setCycleDraft({ ...cycleDraft, last: e.target.value })} /></label>
+        <label className="jn-field"><span>Average cycle length (days)</span><input className="jn-in" inputMode="numeric" value={cycleDraft.len} onChange={(e) => setCycleDraft({ ...cycleDraft, len: e.target.value })} /></label>
+        <button className="jn-btn block" onClick={() => { const c = { last: cycleDraft.last, len: +cycleDraft.len || 28 }; setCycle(c); saveJN(CYCLE_KEY, c); setSheet(null); showToast("Cycle tracking set up"); }}>Save</button>
+        {cycle && <button className="jn-btn block danger" onClick={() => { setCycle(null); saveJN(CYCLE_KEY, null); setSheet(null); }}>Stop tracking</button>}
+      </JNSheet>
+
+      <JNSheet open={sheet === "friends"} onClose={() => setSheet(null)} title="Add friends">
+        <p className="jn-sheet-p">Other patients at {JANE.clinic}. Friends can cheer each other on — your health data stays private.</p>
+        <div className="jn-card list">
+          {OTHER_JANES.map((id) => { const p = PEOPLE[id]; const on = friends.includes(id); return (
+            <div key={id} className="jn-li"><JNFace p={p} size={40} /><span className="tx"><b>{p.name}</b><small>{p.title}</small></span><button className={"jn-btn sm" + (on ? " going" : "")} onClick={() => toggleFriend(id)}>{on ? <React.Fragment><IcJN name="check" size={15} />Added</React.Fragment> : "Add"}</button></div>); })}
+        </div>
+        <button className="jn-btn block ghost" onClick={() => setSheet(null)}>Done</button>
+      </JNSheet>
       <JNToast toast={toast} />
     </div>);
 }
+function cycleDay(c) { const d = Math.floor((Date.now() - new Date(c.last + "T00:00:00").getTime()) / 86400000); return ((d % (c.len || 28)) + (c.len || 28)) % (c.len || 28) + 1; }
+function cyclePhase(c) { const d = cycleDay(c), len = c.len || 28; return d <= 5 ? "Menstrual" : d <= Math.round(len / 2) ? "Follicular" : d <= Math.round(len / 2) + 2 ? "Ovulation" : "Luteal"; }
 
 /* =======================================================================
    COACH — chat or voice

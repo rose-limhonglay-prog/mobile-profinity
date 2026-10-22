@@ -2314,76 +2314,379 @@ function HealthScreen() {
   });
   return /*#__PURE__*/React.createElement(HealthDashboard, null);
 }
+/* Health "Today" dashboard (user, 2026-10-23, Google Health screenshots):
+   centred title, three swipeable tile pages (weekly ring + Steps/Readiness/
+   Sleep · Vitals/Weight/Food/Hydration/Skin/Next review · Distance/Calories/
+   Exercise days/Hourly/Heart rate/Cycle), Log · Start · edit actions and the
+   "Welcome! Let's get you set up" 0/4 checklist. Fresh users (nothing
+   connected, no phone tracking) see zeros / Calibrating / No data; once a
+   wearable or phone tracking is on, the sample week fills the tiles. */
+const LOGS_KEY = "pf-jane-logs",
+  CYCLE_KEY = "pf-jane-cycle",
+  FRIENDS_KEY = "pf-jane-friends",
+  PHONE_KEY = "pf-jane-phone-tracking",
+  TILES_KEY = "pf-jane-tiles";
 function HealthDashboard() {
-  const [period, setPeriod] = useStateJN("week");
-  const [toast, showToast] = useToastJN();
+  const hs = healthSetup();
   const wear = connectedWearables();
-  const score = 78;
-  const sleepAvg = avg(HEALTH.sleep),
-    stepsAvg = Math.round(avg(HEALTH.steps)),
-    waterAvg = avg(HEALTH.water);
-  const INSIGHTS = [{
-    ic: "trending-up",
-    c: "var(--success)",
-    t: "Sleep is up 12% on last week",
-    s: "Average " + fmtH(sleepAvg) + ". Your best nights were Fri–Sat."
-  }, {
-    ic: "droplets",
-    c: "#0ea5e9",
-    t: "Hydration below goal 3 of 7 days",
-    s: "You drink less on days under 6,000 steps. Try a bottle on your desk."
-  }, {
-    ic: "sun",
-    c: "var(--brand-gold)",
-    t: "Skin score climbing",
-    s: "From 62 to 78 since you started SPF daily. Katy will love this."
-  }, {
-    ic: "heart-pulse",
-    c: "var(--brand-rose)",
-    t: "Resting heart rate 61 bpm",
-    s: "Steady and in a healthy range for you."
-  }];
-  return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen"
-  }, /*#__PURE__*/React.createElement(JNTop, {
-    title: "Health Analytics",
-    sub: wear.length ? "Live from " + wear.map(w => w.name).join(", ") : "Sample data until a wearable is connected"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "jn-scroll"
-  }, !wear.length && /*#__PURE__*/React.createElement("button", {
-    className: "jn-connect slim",
-    onClick: () => goJN("JaneWearables.html")
+  const [phone, setPhone] = useStateJN(() => hs.method === "phone" || readJN(PHONE_KEY, false));
+  const [logs, setLogs] = useStateJN(() => readJN(LOGS_KEY, {
+    water: 0,
+    weight: hs.weight || "",
+    food: 0,
+    skin: null
+  }));
+  const [cycle, setCycle] = useStateJN(() => readJN(CYCLE_KEY, null));
+  const [friends, setFriends] = useStateJN(() => readJN(FRIENDS_KEY, []));
+  const [hidden, setHidden] = useStateJN(() => readJN(TILES_KEY, {}));
+  const [page, setPage] = useStateJN(0);
+  const [listOpen, setListOpen] = useStateJN(true);
+  const [sheet, setSheet] = useStateJN(null); // log | start | edit | cycle | friends
+  const [workout, setWorkout] = useStateJN(null); // { kind, start }
+  const [elapsed, setElapsed] = useStateJN(0);
+  const [weightDraft, setWeightDraft] = useStateJN(logs.weight || "");
+  const [cycleDraft, setCycleDraft] = useStateJN({
+    last: "2026-10-12",
+    len: 28
+  });
+  const [toast, showToast] = useToastJN();
+  const railRef = useRefJN(null);
+  const tracking = wear.length > 0 || phone;
+  useEffectJN(() => {
+    if (!workout) return;
+    const t = setInterval(() => setElapsed(Math.floor((Date.now() - workout.start) / 1000)), 1000);
+    return () => clearInterval(t);
+  }, [workout]);
+  function saveLogs(l) {
+    setLogs(l);
+    saveJN(LOGS_KEY, l);
+  }
+  function onRail() {
+    const el = railRef.current;
+    if (!el) return;
+    setPage(Math.round(el.scrollLeft / el.clientWidth));
+  }
+  function goPage(i) {
+    const el = railRef.current;
+    if (el) el.scrollTo({
+      left: i * el.clientWidth,
+      behavior: "smooth"
+    });
+  }
+  const mmss = s => String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+  const ring = tracking ? {
+    pct: 64,
+    sub: "96 of 150 min",
+    plus: "+12"
+  } : {
+    pct: 0,
+    sub: "Calibrating – 7 days left",
+    plus: "+0"
+  };
+  const tiles = {
+    steps: {
+      k: "steps",
+      ic: "footprints",
+      t: "Steps",
+      v: tracking ? HEALTH.steps[6].toLocaleString() : "0",
+      tone: "mint"
+    },
+    readiness: {
+      k: "readiness",
+      ic: "activity",
+      t: "Readiness",
+      v: tracking ? "82 · Good" : "Calibrating",
+      tone: tracking ? "mint" : "grey"
+    },
+    sleep: {
+      k: "sleep",
+      ic: "moon",
+      t: "Sleep",
+      v: tracking ? fmtH(HEALTH.sleep[6]) : "No data",
+      tone: "lav"
+    },
+    vitals: {
+      k: "vitals",
+      ic: "activity",
+      t: "Vitals",
+      v: tracking ? "RHR 61 bpm" : "No data",
+      tone: tracking ? "mint" : "grey"
+    },
+    weight: {
+      k: "weight",
+      ic: "scale",
+      t: "Weight",
+      v: logs.weight ? logs.weight + " kg" : "No data",
+      tone: "grey",
+      navy: true,
+      on: () => setSheet("log")
+    },
+    food: {
+      k: "food",
+      ic: "apple",
+      t: "Food",
+      v: logs.food ? logs.food + (logs.food === 1 ? " meal" : " meals") : "No data",
+      tone: logs.food ? "mint" : "grey",
+      on: () => setSheet("log")
+    },
+    water: {
+      k: "water",
+      ic: "glass-water",
+      t: "Hydration",
+      v: logs.water ? (logs.water * 250).toLocaleString() + " ml" : "No data",
+      tone: logs.water ? "mint" : "grey",
+      on: () => setSheet("log")
+    },
+    skin: {
+      k: "skin",
+      ic: "sun",
+      t: "Skin check-in",
+      v: logs.skin ? logs.skin + " / 100" : "Tap to log",
+      tone: logs.skin ? "gold" : "grey",
+      on: () => setSheet("log")
+    },
+    review: {
+      k: "review",
+      ic: "calendar",
+      t: "Next review",
+      v: "Mon 3 Nov",
+      tone: "grey",
+      navy: true,
+      on: () => goJN("JaneMessages.html?to=reception")
+    },
+    distance: {
+      k: "distance",
+      ic: "map-pin",
+      t: "Distance",
+      v: tracking ? "7.4 km" : "0 km",
+      tone: "mint"
+    },
+    cal: {
+      k: "cal",
+      ic: "flame",
+      t: "Cal burned",
+      v: tracking ? "1,840" : "0",
+      tone: "mint"
+    },
+    exdays: {
+      k: "exdays",
+      ic: "dumbbell",
+      t: "Exercise days",
+      v: tracking ? "3 of 5" : "0 of 5",
+      tone: "mint"
+    },
+    hourly: {
+      k: "hourly",
+      ic: "timer",
+      t: "Hourly activity",
+      v: tracking ? "9 of 12 hrs" : "No data",
+      tone: "mint"
+    },
+    hr: {
+      k: "hr",
+      ic: "heart",
+      t: "Heart rate",
+      v: tracking ? "61 bpm" : "--",
+      tone: "grey",
+      navy: true
+    },
+    cycle: {
+      k: "cycle",
+      ic: "flower",
+      t: "Cycle health",
+      v: cycle ? "Day " + cycleDay(cycle) + " · " + cyclePhase(cycle) : "Tap to set up",
+      tone: cycle ? "rose" : "grey",
+      on: () => setSheet("cycle")
+    }
+  };
+  const show = keys => keys.map(k => tiles[k]).filter(t => !hidden[t.k]);
+  const Tile = ({
+    t,
+    wide
+  }) => /*#__PURE__*/React.createElement("button", {
+    className: "jh-tile " + t.tone + (wide ? " wide" : "") + (t.navy ? " navy" : ""),
+    onClick: t.on || (() => showToast(t.t + " · " + t.v))
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
   }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "watch",
-    size: 18,
+    name: t.ic,
+    size: 22
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, t.t), /*#__PURE__*/React.createElement("span", null, t.v)));
+  const checklist = [{
+    k: "apps",
+    ic: "layout-grid",
+    art: "lav",
+    t: "Connect apps to see all your data",
+    done: wear.length > 0,
+    on: () => goJN("JaneWearables.html")
+  }, {
+    k: "cycle",
+    ic: "flower",
+    art: "blue",
+    t: "Set up your cycle health tracking",
+    done: !!cycle,
+    on: () => setSheet("cycle")
+  }, {
+    k: "phone",
+    ic: "footprints",
+    art: "teal",
+    t: "Track steps and more with your phone",
+    done: phone,
+    on: () => {
+      setPhone(true);
+      saveJN(PHONE_KEY, true);
+      showToast("Phone tracking on · steps will sync from your phone");
+    }
+  }, {
+    k: "friends",
+    ic: "users",
+    art: "pink",
+    t: "Add friends to motivate each other",
+    done: friends.length > 0,
+    on: () => setSheet("friends")
+  }];
+  const doneN = checklist.filter(c => c.done).length;
+  const OTHER_JANES = ["miranda", "amir", "mark"];
+  function toggleFriend(id) {
+    const f = friends.includes(id) ? friends.filter(x => x !== id) : [...friends, id];
+    setFriends(f);
+    saveJN(FRIENDS_KEY, f);
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "jn-screen jh"
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "jh-head"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jh-hbtn",
+    "aria-label": "Devices",
+    onClick: () => goJN("JaneWearables.html")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "smartphone",
+    size: 24,
+    color: "var(--text-heading)"
+  })), /*#__PURE__*/React.createElement("h1", null, "Health"), /*#__PURE__*/React.createElement("button", {
+    className: "jh-hbtn av",
+    "aria-label": "Profile",
+    onClick: () => goJN("JaneProfile.html")
+  }, /*#__PURE__*/React.createElement(JNFace, {
+    p: JANE,
+    size: 40
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "jn-scroll jh-scroll"
+  }, workout && /*#__PURE__*/React.createElement("div", {
+    className: "jh-workout"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  }), /*#__PURE__*/React.createElement("b", null, workout.kind, " in progress"), /*#__PURE__*/React.createElement("span", {
+    className: "time"
+  }, mmss(elapsed)), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setWorkout(null);
+      showToast(workout.kind + " saved · " + mmss(elapsed));
+    }
+  }, "Stop")), /*#__PURE__*/React.createElement("div", {
+    className: "jh-rail",
+    ref: railRef,
+    onScroll: onRail
+  }, /*#__PURE__*/React.createElement("section", {
+    className: "jh-page"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jh-ring",
+    onClick: () => showToast(tracking ? "Weekly cardio · " + ring.sub : "Connect a wearable or turn on phone tracking to start")
+  }, /*#__PURE__*/React.createElement(Ring, {
+    value: ring.pct / 100,
+    size: 178,
+    stroke: 30,
+    color: "var(--brand-navy)"
+  }, /*#__PURE__*/React.createElement("small", {
+    className: "arc"
+  }, "Weekly cardio"), /*#__PURE__*/React.createElement("b", null, ring.pct, /*#__PURE__*/React.createElement("i", null, "%")), /*#__PURE__*/React.createElement("small", {
+    className: "sub"
+  }, ring.sub)), /*#__PURE__*/React.createElement("span", {
+    className: "plus"
+  }, ring.plus)), /*#__PURE__*/React.createElement("div", {
+    className: "jh-stack"
+  }, show(["steps", "readiness", "sleep"]).map(t => /*#__PURE__*/React.createElement(Tile, {
+    key: t.k,
+    t: t,
+    wide: true
+  })))), /*#__PURE__*/React.createElement("section", {
+    className: "jh-page grid"
+  }, show(["vitals", "weight", "food", "water", "skin", "review"]).map(t => /*#__PURE__*/React.createElement(Tile, {
+    key: t.k,
+    t: t
+  }))), /*#__PURE__*/React.createElement("section", {
+    className: "jh-page grid"
+  }, show(["distance", "cal", "exdays", "hourly", "hr", "cycle"]).map(t => /*#__PURE__*/React.createElement(Tile, {
+    key: t.k,
+    t: t
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "jh-dots"
+  }, [0, 1, 2].map(i => /*#__PURE__*/React.createElement("button", {
+    key: i,
+    className: page === i ? "on" : "",
+    "aria-label": "Page " + (i + 1),
+    onClick: () => goPage(i)
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "jh-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jh-act",
+    onClick: () => setSheet("log")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "plus",
+    size: 22
+  }), "Log"), /*#__PURE__*/React.createElement("button", {
+    className: "jh-act",
+    onClick: () => setSheet("start")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "activity",
+    size: 22
+  }), "Start"), /*#__PURE__*/React.createElement("button", {
+    className: "jh-act round",
+    "aria-label": "Customise",
+    onClick: () => setSheet("edit")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "pencil",
+    size: 20
+  }))), /*#__PURE__*/React.createElement("section", {
+    className: "jh-sheet"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jh-list"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jh-list-head",
+    onClick: () => setListOpen(!listOpen),
+    "aria-expanded": listOpen
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "count"
+  }, doneN, "/", checklist.length), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, doneN === checklist.length ? "You're all set up 🎉" : "Welcome! Let's get you set up"), /*#__PURE__*/React.createElement(IcJN, {
+    name: listOpen ? "chevron-up" : "chevron-down",
+    size: 22,
+    color: "var(--text-heading)"
+  })), listOpen && checklist.map(c => /*#__PURE__*/React.createElement("button", {
+    key: c.k,
+    className: "jh-item" + (c.done ? " done" : ""),
+    onClick: c.on
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "art " + c.art
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: c.ic,
+    size: 30,
     color: "#fff"
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, "Connect a wearable for live data")), /*#__PURE__*/React.createElement(IcJN, {
-    name: "chevron-right",
-    size: 18,
-    color: "rgba(255,255,255,.8)"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "jn-seg"
-  }, [["week", "This week"], ["month", "This month"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
-    key: k,
-    className: period === k ? "on" : "",
-    onClick: () => setPeriod(k)
-  }, l))), /*#__PURE__*/React.createElement("section", {
-    className: "jn-score"
-  }, /*#__PURE__*/React.createElement(Ring, {
-    value: score / 100
-  }, /*#__PURE__*/React.createElement("b", null, score), /*#__PURE__*/React.createElement("small", null, "Wellness")), /*#__PURE__*/React.createElement("div", {
-    className: "tx"
-  }, /*#__PURE__*/React.createElement("h2", null, "Looking good, ", JANE.first), /*#__PURE__*/React.createElement("p", null, "Your score blends sleep, movement, hydration and your daily skin check-in. Up 6 points ", period === "week" ? "this week" : "this month", "."), /*#__PURE__*/React.createElement("button", {
-    className: "jn-btn sm",
-    onClick: () => showToast("Summary sent to " + KATY.name)
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "send",
-    size: 15
-  }), "Share with Katy"))), /*#__PURE__*/React.createElement("div", {
+  }, c.t), /*#__PURE__*/React.createElement("span", {
+    className: "radio"
+  }, c.done && /*#__PURE__*/React.createElement(IcJN, {
+    name: "check",
+    size: 14,
+    color: "#fff"
+  }))))), tracking ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h3", {
+    className: "jn-h"
+  }, "This week"), /*#__PURE__*/React.createElement("div", {
     className: "jn-metric"
   }, /*#__PURE__*/React.createElement("div", {
     className: "head"
@@ -2396,7 +2699,7 @@ function HealthDashboard() {
     name: "moon",
     size: 18,
     color: "#6c63ff"
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Sleep"), /*#__PURE__*/React.createElement("small", null, "Average ", fmtH(sleepAvg), " · goal 7h 30m")), /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Sleep"), /*#__PURE__*/React.createElement("small", null, "Average ", fmtH(avg(HEALTH.sleep)), " · goal 7h 30m")), /*#__PURE__*/React.createElement("span", {
     className: "delta up"
   }, "+12%")), /*#__PURE__*/React.createElement(Bars, {
     data: HEALTH.sleep,
@@ -2416,7 +2719,7 @@ function HealthDashboard() {
     name: "footprints",
     size: 18,
     color: "#16a34a"
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Movement"), /*#__PURE__*/React.createElement("small", null, "Average ", stepsAvg.toLocaleString(), " steps · goal 8,000")), /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Movement"), /*#__PURE__*/React.createElement("small", null, "Average ", Math.round(avg(HEALTH.steps)).toLocaleString(), " steps · goal 8,000")), /*#__PURE__*/React.createElement("span", {
     className: "delta"
   }, "−3%")), /*#__PURE__*/React.createElement(Bars, {
     data: HEALTH.steps,
@@ -2431,36 +2734,13 @@ function HealthDashboard() {
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic",
     style: {
-      background: "#e0f2fe"
-    }
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "droplets",
-    size: 18,
-    color: "#0ea5e9"
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Nutrition"), /*#__PURE__*/React.createElement("small", null, "Water ", waterAvg.toFixed(1), " L a day · goal 2 L")), /*#__PURE__*/React.createElement("span", {
-    className: "delta"
-  }, "−8%")), /*#__PURE__*/React.createElement(Bars, {
-    data: HEALTH.water,
-    color: "#0ea5e9",
-    max: 2.6,
-    fmt: v => v.toFixed(1),
-    unit: " L"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "jn-nutri"
-  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "82g"), /*#__PURE__*/React.createElement("small", null, "Protein")), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "3.4"), /*#__PURE__*/React.createElement("small", null, "Veg portions")), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "1"), /*#__PURE__*/React.createElement("small", null, "Caffeine after 2pm")))), /*#__PURE__*/React.createElement("div", {
-    className: "jn-metric"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "head"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ic",
-    style: {
       background: "var(--brand-gold-100)"
     }
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "sun",
     size: 18,
     color: "var(--brand-gold)"
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Skin check-in"), /*#__PURE__*/React.createElement("small", null, "Today ", HEALTH.skin[6], " · from your daily selfie rating")), /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Skin check-in"), /*#__PURE__*/React.createElement("small", null, "Today ", logs.skin || HEALTH.skin[6], " · from your daily rating")), /*#__PURE__*/React.createElement("span", {
     className: "delta up"
   }, "+16")), /*#__PURE__*/React.createElement(Line, {
     data: HEALTH.skin,
@@ -2469,22 +2749,7 @@ function HealthDashboard() {
     className: "jn-days"
   }, DAYS.map((d, i) => /*#__PURE__*/React.createElement("span", {
     key: i
-  }, d)))), /*#__PURE__*/React.createElement("h3", {
-    className: "jn-h"
-  }, "Insights"), /*#__PURE__*/React.createElement("div", {
-    className: "jn-card list"
-  }, INSIGHTS.map(x => /*#__PURE__*/React.createElement("div", {
-    key: x.t,
-    className: "jn-li"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ic"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: x.ic,
-    size: 17,
-    color: x.c
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, x.t), /*#__PURE__*/React.createElement("small", null, x.s))))), /*#__PURE__*/React.createElement("button", {
+  }, d)))), /*#__PURE__*/React.createElement("button", {
     className: "jn-coachcta",
     onClick: () => goJN("JaneCoach.html?q=" + encodeURIComponent("How can I improve my hydration this week?"))
   }, /*#__PURE__*/React.createElement(IcJN, {
@@ -2495,13 +2760,247 @@ function HealthDashboard() {
     name: "chevron-right",
     size: 18,
     color: "var(--ai-purple)"
-  })), /*#__PURE__*/React.createElement("div", {
+  }))) : /*#__PURE__*/React.createElement("div", {
+    className: "jh-empty"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "trending-up",
+    size: 26,
+    color: "var(--gray-400)"
+  }), /*#__PURE__*/React.createElement("b", null, "Your trends will appear here"), /*#__PURE__*/React.createElement("small", null, "Connect a wearable or turn on phone tracking and this view fills with your sleep, movement and skin trends.")), /*#__PURE__*/React.createElement("div", {
     className: "jn-end"
-  }, "Not medical advice · talk to your clinician about any concerns")), /*#__PURE__*/React.createElement(JNTabs, {
+  }, "Not medical advice · talk to your clinician about any concerns"))), /*#__PURE__*/React.createElement(JNTabs, {
     active: "health"
-  }), /*#__PURE__*/React.createElement(JNToast, {
+  }), /*#__PURE__*/React.createElement(JNSheet, {
+    open: sheet === "log",
+    onClose: () => setSheet(null),
+    title: "Log"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jh-logrow"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic mint"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "glass-water",
+    size: 20
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, "Water"), /*#__PURE__*/React.createElement("small", null, logs.water, " glasses · ", (logs.water * 250).toLocaleString(), " ml today")), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn sm",
+    onClick: () => {
+      saveLogs({
+        ...logs,
+        water: logs.water + 1
+      });
+      showToast("Glass of water logged");
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "plus",
+    size: 15
+  }), "Glass")), /*#__PURE__*/React.createElement("div", {
+    className: "jh-logrow"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic mint"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "apple",
+    size: 20
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, "Food"), /*#__PURE__*/React.createElement("small", null, logs.food, " meals logged today")), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn sm",
+    onClick: () => {
+      saveLogs({
+        ...logs,
+        food: logs.food + 1
+      });
+      showToast("Meal logged");
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "plus",
+    size: 15
+  }), "Meal")), /*#__PURE__*/React.createElement("div", {
+    className: "jh-logrow"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic grey"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "scale",
+    size: 20
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, "Weight"), /*#__PURE__*/React.createElement("small", null, "Today's reading")), /*#__PURE__*/React.createElement("span", {
+    className: "jh-wt"
+  }, /*#__PURE__*/React.createElement("input", {
+    inputMode: "decimal",
+    value: weightDraft,
+    onChange: e => setWeightDraft(e.target.value),
+    placeholder: "54"
+  }), /*#__PURE__*/React.createElement("em", null, "kg")), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn sm",
+    onClick: () => {
+      saveLogs({
+        ...logs,
+        weight: weightDraft
+      });
+      showToast("Weight saved");
+    }
+  }, "Save")), /*#__PURE__*/React.createElement("div", {
+    className: "jh-logrow col"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "row"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic gold"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "sun",
+    size: 20
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, "Skin check-in"), /*#__PURE__*/React.createElement("small", null, "How does your skin feel today?"))), /*#__PURE__*/React.createElement("div", {
+    className: "jh-skin"
+  }, [["😣", 40], ["😕", 55], ["🙂", 70], ["😊", 85], ["🤩", 100]].map(([e, v]) => /*#__PURE__*/React.createElement("button", {
+    key: v,
+    className: logs.skin === v ? "on" : "",
+    onClick: () => {
+      saveLogs({
+        ...logs,
+        skin: v
+      });
+      showToast("Skin check-in saved · " + v);
+    }
+  }, e)))), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn block ghost",
+    onClick: () => setSheet(null)
+  }, "Done")), /*#__PURE__*/React.createElement(JNSheet, {
+    open: sheet === "start",
+    onClose: () => setSheet(null),
+    title: "Start an activity"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jh-kinds"
+  }, [["Walk", "footprints"], ["Run", "activity"], ["Yoga", "flower"], ["Strength", "dumbbell"], ["Cycle", "bike"], ["Swim", "waves"]].map(([k, ic]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    onClick: () => {
+      setWorkout({
+        kind: k,
+        start: Date.now()
+      });
+      setElapsed(0);
+      setSheet(null);
+      showToast(k + " started");
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: ic,
+    size: 22
+  })), k)))), /*#__PURE__*/React.createElement(JNSheet, {
+    open: sheet === "edit",
+    onClose: () => setSheet(null),
+    title: "Customise your tiles"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "jn-sheet-p"
+  }, "Choose what shows on your Today view."), Object.values(tiles).map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.k,
+    className: "jn-perm",
+    onClick: () => {
+      const h = {
+        ...hidden,
+        [t.k]: !hidden[t.k]
+      };
+      setHidden(h);
+      saveJN(TILES_KEY, h);
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: t.ic,
+    size: 18,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", null, t.t), /*#__PURE__*/React.createElement("span", {
+    className: "jn-switch" + (!hidden[t.k] ? " on" : "")
+  }, /*#__PURE__*/React.createElement("i", null)))), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn block",
+    onClick: () => setSheet(null)
+  }, "Done")), /*#__PURE__*/React.createElement(JNSheet, {
+    open: sheet === "cycle",
+    onClose: () => setSheet(null),
+    title: "Cycle health tracking"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "jn-sheet-p"
+  }, "Track your cycle so your clinician can time treatments around it. Only you and your clinic can see this."), /*#__PURE__*/React.createElement("label", {
+    className: "jn-field"
+  }, /*#__PURE__*/React.createElement("span", null, "First day of your last period"), /*#__PURE__*/React.createElement("input", {
+    className: "jn-in",
+    type: "date",
+    value: cycleDraft.last,
+    onChange: e => setCycleDraft({
+      ...cycleDraft,
+      last: e.target.value
+    })
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "jn-field"
+  }, /*#__PURE__*/React.createElement("span", null, "Average cycle length (days)"), /*#__PURE__*/React.createElement("input", {
+    className: "jn-in",
+    inputMode: "numeric",
+    value: cycleDraft.len,
+    onChange: e => setCycleDraft({
+      ...cycleDraft,
+      len: e.target.value
+    })
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn block",
+    onClick: () => {
+      const c = {
+        last: cycleDraft.last,
+        len: +cycleDraft.len || 28
+      };
+      setCycle(c);
+      saveJN(CYCLE_KEY, c);
+      setSheet(null);
+      showToast("Cycle tracking set up");
+    }
+  }, "Save"), cycle && /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn block danger",
+    onClick: () => {
+      setCycle(null);
+      saveJN(CYCLE_KEY, null);
+      setSheet(null);
+    }
+  }, "Stop tracking")), /*#__PURE__*/React.createElement(JNSheet, {
+    open: sheet === "friends",
+    onClose: () => setSheet(null),
+    title: "Add friends"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "jn-sheet-p"
+  }, "Other patients at ", JANE.clinic, ". Friends can cheer each other on — your health data stays private."), /*#__PURE__*/React.createElement("div", {
+    className: "jn-card list"
+  }, OTHER_JANES.map(id => {
+    const p = PEOPLE[id];
+    const on = friends.includes(id);
+    return /*#__PURE__*/React.createElement("div", {
+      key: id,
+      className: "jn-li"
+    }, /*#__PURE__*/React.createElement(JNFace, {
+      p: p,
+      size: 40
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, p.name), /*#__PURE__*/React.createElement("small", null, p.title)), /*#__PURE__*/React.createElement("button", {
+      className: "jn-btn sm" + (on ? " going" : ""),
+      onClick: () => toggleFriend(id)
+    }, on ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IcJN, {
+      name: "check",
+      size: 15
+    }), "Added") : "Add"));
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn block ghost",
+    onClick: () => setSheet(null)
+  }, "Done")), /*#__PURE__*/React.createElement(JNToast, {
     toast: toast
   }));
+}
+function cycleDay(c) {
+  const d = Math.floor((Date.now() - new Date(c.last + "T00:00:00").getTime()) / 86400000);
+  return (d % (c.len || 28) + (c.len || 28)) % (c.len || 28) + 1;
+}
+function cyclePhase(c) {
+  const d = cycleDay(c),
+    len = c.len || 28;
+  return d <= 5 ? "Menstrual" : d <= Math.round(len / 2) ? "Follicular" : d <= Math.round(len / 2) + 2 ? "Ovulation" : "Luteal";
 }
 
 /* =======================================================================
