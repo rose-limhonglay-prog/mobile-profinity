@@ -280,7 +280,7 @@ function IOSNavBar({
 // exactly like fixed elements do in real Safari.
 // ─────────────────────────────────────────────────────────────
 // Address pill shows the real host when we're on one of the mobile-web links
-// (profinity-mobileweb.vercel.app, profinity-mobileweb-2.vercel.app, …) so
+// (profinity-mobileweb.vercel.app, any *mobileweb* host, …) so
 // every link reads as itself; local/desktop previews fall back to the main one.
 const IOS_SAFARI_DOMAIN = (() => {
   try {

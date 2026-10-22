@@ -7,7 +7,7 @@
     },
     {
       "source": "/",
-      "has": [{ "type": "host", "value": "profinity-mobileweb-2.vercel.app" }],
+      "has": [{ "type": "host", "value": "profinity-mobile-2.vercel.app" }],
       "destination": "/NewsfeedMobile.html"
     },
     { "source": "/", "destination": "/NewsfeedWeb.html" }
