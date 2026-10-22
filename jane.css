@@ -444,3 +444,13 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .jn-notif .tx { flex: 1; font-size: 13.5px; line-height: 1.4; color: var(--text-primary); }
 .jn-notif .tx b { font-weight: var(--fw-semibold); color: var(--text-heading); }
 .jn-notif .tx small { display: block; font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+
+/* ---- phone browsers (frameless, ≤768px): no fake status-bar clearance, safe-area insets instead ---- */
+@media (max-width: 768px) {
+  .jn-top, .jn-bar { padding-top: calc(env(safe-area-inset-top, 0px) + 10px); }
+  .jn-tabs { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+  .jn-scroll { padding-bottom: calc(108px + env(safe-area-inset-bottom, 0px)); }
+  .jn-voice { padding-bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
+  .jn-onb .jn-scroll, .jn-screen:has(.jn-input-row.dock) .jn-scroll { padding-bottom: 24px; }
+  .jn-toast { bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+}

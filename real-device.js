@@ -36,6 +36,13 @@
   // *.localhost name containing "mobileweb" works too (Chrome resolves them).
   var MOBILE_WEB_PORT = '3002';
   var host = HOST_RE.test(location.hostname) || location.port === MOBILE_WEB_PORT;
+  // "App" hosts (profinity-mobile-2.vercel.app and any profinity-mobile-<n>):
+  // the native-app look. Never the Safari-bar preview, but on a real phone
+  // they still need the frameless, safe-area-inset layout — and they carry
+  // the Jane (patient) app, so Add-to-Home-Screen opens the Jane newsfeed.
+  var APP_HOST_RE = /(^|[.-])mobile-\d+([.-]|$)/i;
+  var appHost = APP_HOST_RE.test(location.hostname);
+  var janeApp = appHost || /^\/Jane[A-Za-z]*\.html$/i.test(location.pathname);
   // "mobile web" preview (desktop): the bezel shows the screens inside Safari
   // (IOSSafariBar in ios-frame.jsx). ?mobileweb=1 / ?mobileweb=0 force it for one load.
   // The host/port decides; ?mobileweb=1/0 overrides for THIS load only (it
@@ -53,7 +60,7 @@
   // the same 768px breakpoint — see useIsMobile* in the mobile jsx files)
   var narrow = true;
   try { narrow = window.matchMedia('(max-width: 768px)').matches; } catch (e) {}
-  var on = (forced !== null ? forced === '1' : mobileWeb) && narrow;
+  var on = (forced !== null ? forced === '1' : (mobileWeb || appHost)) && narrow;
 
   var standalone = false;
   try {
@@ -94,7 +101,7 @@
   }
   // Safari's native Smart App Banner ("PROfinity Academy — Free on the App
   // Store · Download"). Replace the placeholder id with the real listing's.
-  addMeta('apple-itunes-app', 'app-id=' + (window.PF_APP_STORE_ID || '0000000000'));
+  if (!janeApp) addMeta('apple-itunes-app', 'app-id=' + (window.PF_APP_STORE_ID || '0000000000'));
   function addLink(rel, href, extra) {
     if (document.querySelector('link[rel="' + rel + '"]')) return;
     var l = document.createElement('link');
@@ -117,6 +124,6 @@
   addMeta('apple-mobile-web-app-title', 'PROfinity');
   addMeta('theme-color', '#FFFFFF', '(prefers-color-scheme: light)');
   addMeta('theme-color', '#08071a', '(prefers-color-scheme: dark)');
-  addLink('manifest', 'manifest.webmanifest');
+  addLink('manifest', janeApp ? 'manifest-jane.webmanifest' : 'manifest.webmanifest');
   addLink('apple-touch-icon', 'assets/app-icon-512.png');
 }());

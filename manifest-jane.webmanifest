@@ -1,0 +1,14 @@
+{
+  "name": "PROfinity",
+  "short_name": "PROfinity",
+  "description": "PROfinity — your clinic, health and coach in one place",
+  "start_url": "/JaneNewsfeed.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F9FAFB",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    { "src": "assets/app-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
