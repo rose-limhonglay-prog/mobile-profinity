@@ -422,22 +422,40 @@ function fmtH(h) {
 }
 
 /* =======================================================================
-   HOME — newsfeed (posts from Katies and other Janes)
+   HOME — newsfeed, a twin of Katy's NewsfeedMobile (MobileHome in
+   mobile.jsx): .m-push banner, .m-top header, pinned accordion, DS PostCard
+   inside .post-wrap, comment preview, .m-fab and the .m-tabs glass dock.
+   JaneNewsfeed.html therefore also loads styles.css + mobile.css.
    ======================================================================= */
 const POSTS_KEY = "pf-jane-posts";
+const SEALS = {
+  katy: ["gb", "verified"],
+  beth: ["gb", "verified"],
+  priya: ["gb", "verified"],
+  miranda: ["gb"],
+  amir: [],
+  mark: ["gb"],
+  jane: ["gb"],
+  reception: ["verified"]
+};
 const POSTS_SEED = [{
   id: "p1",
   by: "katy",
   t: "2h",
-  text: "Winter skin reminder 🧴 Cold air + central heating = dehydrated skin. Double-cleanse at night, layer a hyaluronic serum under your moisturiser, and yes — SPF still counts in December.",
+  text: "Winter skin reminder 🧴 Cold air + central heating = dehydrated skin. Double-cleanse at night, layer a hyaluronic serum under your moisturiser, and yes — SPF still counts in December. The UVA that ages skin comes straight through cloud, so the habit matters more than the forecast.",
   likes: 48,
+  shares: 6,
   liked: false,
   comments: [{
     by: "miranda",
-    text: "Guilty of skipping SPF when it's grey out 🙈"
+    text: "Guilty of skipping SPF when it's grey out 🙈",
+    likes: 4,
+    t: "1h"
   }, {
     by: "katy",
-    text: "The UVA doesn't care about the clouds Miranda 😄"
+    text: "The UVA doesn't care about the clouds Miranda 😄",
+    likes: 9,
+    t: "50m"
   }]
 }, {
   id: "p2",
@@ -446,13 +464,18 @@ const POSTS_SEED = [{
   text: "6 weeks post lip filler and I've finally stopped overthinking it. Katy was right about the swelling timeline 😅 Any tips for keeping lips hydrated through winter?",
   img: "assets/clinic-lip-design.png",
   likes: 21,
+  shares: 2,
   liked: true,
   comments: [{
     by: "beth",
-    text: "A plain balm (no menthol or 'plumping' ingredients) and a big glass of water before bed. Simple wins."
+    text: "A plain balm (no menthol or 'plumping' ingredients) and a big glass of water before bed. Simple wins.",
+    likes: 7,
+    t: "3h"
   }, {
     by: "amir",
-    text: "They look so natural!"
+    text: "They look so natural!",
+    likes: 2,
+    t: "2h"
   }]
 }, {
   id: "p3",
@@ -460,6 +483,7 @@ const POSTS_SEED = [{
   t: "Yesterday",
   text: "Aftercare 101 after anti-wrinkle treatment: no lying flat for 4 hours, skip the gym today, no facials or massage for 2 weeks, and don't rub the area. Save this post 📌",
   likes: 73,
+  shares: 14,
   liked: false,
   comments: []
 }, {
@@ -468,13 +492,18 @@ const POSTS_SEED = [{
   t: "Yesterday",
   text: "Just booked my first consultation 🙈 nervous but excited. What should I ask? Anything you wish you'd known before your first one?",
   likes: 12,
+  shares: 1,
   liked: false,
   comments: [{
     by: "mark",
-    text: "Ask about the downtime for YOUR job — mine was more than I expected."
+    text: "Ask about the downtime for YOUR job — mine was more than I expected.",
+    likes: 3,
+    t: "20h"
   }, {
     by: "katy",
-    text: "Bring a list of medications and any allergies, and photos of looks you like AND don't like. See you Thursday Amir!"
+    text: "Bring a list of medications and any allergies, and photos of looks you like AND don't like. See you Thursday Amir!",
+    likes: 11,
+    t: "18h"
   }]
 }, {
   id: "p5",
@@ -483,6 +512,7 @@ const POSTS_SEED = [{
   text: "Patient Q&A live this Thursday 7pm — bring your questions about skin boosters, what they do and who they suit. Free for all clinic patients.",
   event: "ev1",
   likes: 35,
+  shares: 9,
   liked: false,
   comments: []
 }, {
@@ -490,42 +520,461 @@ const POSTS_SEED = [{
   by: "mark",
   t: "3d",
   text: "Week 3 of the sleep + hydration plan from the coach. Energy is noticeably better and my skin check-in score has gone from 61 to 72. Small habits, big difference.",
+  img: "assets/course-skin-boosters.jpg",
   likes: 29,
+  shares: 3,
   liked: false,
   comments: [{
     by: "katy",
-    text: "This is exactly it Mark 👏"
+    text: "This is exactly it Mark 👏",
+    likes: 5,
+    t: "2d"
   }]
 }];
+const PINNED_IDS = ["p3", "p5"];
+const PUSH_JN = {
+  app: "Pearce Aesthetics",
+  icon: "assets/profinity-icon-purple-gold.png",
+  title: "Appointment reminder",
+  body: "Your 2-week review with Katy Wilson is Monday 3 Nov at 2:30pm. Tap to confirm or reschedule.",
+  cta: "Confirm"
+};
+const NOTIFS_JN = [{
+  by: "katy",
+  text: "replied to your comment on her winter skin post",
+  t: "50m",
+  icon: "message-square"
+}, {
+  by: "reception",
+  text: "Appointment confirmed · Mon 3 Nov, 2:30pm",
+  t: "2h",
+  icon: "calendar"
+}, {
+  by: "miranda",
+  text: "liked your post",
+  t: "4h",
+  icon: "heart"
+}, {
+  by: "priya",
+  text: "is hosting Skin Boosters Q&A · Live on Thursday",
+  t: "1d",
+  icon: "video"
+}, {
+  by: "beth",
+  text: "sent you an aftercare sheet",
+  t: "4d",
+  icon: "paperclip"
+}];
 function loadPosts() {
-  return readJN(POSTS_KEY, null) || POSTS_SEED;
+  const s = readJN(POSTS_KEY, null);
+  return s && s[0] && "shares" in s[0] ? s : POSTS_SEED;
 }
-function PostCardJN({
+function authorJN(id) {
+  const p = PEOPLE[id];
+  return {
+    name: p.name,
+    avatar: p.avatar,
+    seals: SEALS[id] || []
+  };
+}
+function fmtN(n) {
+  return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "K" : String(n);
+}
+function ClampTextJN({
+  text,
+  lines = 3
+}) {
+  const [expanded, setExpanded] = useStateJN(false);
+  const [overflowing, setOverflowing] = useStateJN(false);
+  const ref = useRefJN(null);
+  React.useLayoutEffect(() => {
+    const el = ref.current;
+    if (el) setOverflowing(el.scrollHeight - el.clientHeight > 2);
+  }, [text]);
+  return /*#__PURE__*/React.createElement("span", {
+    className: "pf-clampwrap"
+  }, /*#__PURE__*/React.createElement("span", {
+    ref: ref,
+    className: "pf-clamp" + (expanded ? " open" : ""),
+    style: expanded ? null : {
+      WebkitLineClamp: lines
+    }
+  }, text), (overflowing || expanded) && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-seemore",
+    onClick: () => setExpanded(v => !v)
+  }, expanded ? "See less" : "See more"));
+}
+function PushBannerJN() {
+  const [open, setOpen] = useStateJN(true);
+  const [expanded, setExpanded] = useStateJN(false);
+  useEffectJN(() => {
+    if (expanded) return;
+    const t = setTimeout(() => setOpen(false), 7000);
+    return () => clearTimeout(t);
+  }, [expanded]);
+  if (!open) return null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "m-push" + (expanded ? " expanded" : ""),
+    role: "alert",
+    "aria-label": PUSH_JN.title,
+    onClick: () => setExpanded(e => !e)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "m-push-row"
+  }, /*#__PURE__*/React.createElement("img", {
+    className: "m-push-icon",
+    src: PUSH_JN.icon,
+    alt: ""
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "m-push-app"
+  }, PUSH_JN.app), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1
+    }
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "m-push-time"
+  }, "now")), /*#__PURE__*/React.createElement("div", {
+    className: "m-push-title"
+  }, PUSH_JN.title), /*#__PURE__*/React.createElement("p", {
+    className: "m-push-body"
+  }, PUSH_JN.body), expanded && /*#__PURE__*/React.createElement("div", {
+    className: "m-push-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "m-push-cta",
+    onClick: e => {
+      e.stopPropagation();
+      setOpen(false);
+      goJN("JaneMessages.html?to=reception");
+    }
+  }, PUSH_JN.cta), /*#__PURE__*/React.createElement("button", {
+    className: "m-push-dismiss",
+    onClick: e => {
+      e.stopPropagation();
+      setOpen(false);
+    }
+  }, "Dismiss")), /*#__PURE__*/React.createElement("span", {
+    className: "m-push-handle",
+    role: "button",
+    "aria-label": "Dismiss notification",
+    onClick: e => {
+      e.stopPropagation();
+      setOpen(false);
+    }
+  }));
+}
+function useHeaderHideJN(scrollRef) {
+  const [state, setState] = useStateJN({
+    hidden: false,
+    floating: false
+  });
+  useEffectJN(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let lastY = el.scrollTop;
+    const onScroll = () => {
+      const y = el.scrollTop,
+        dy = y - lastY;
+      setState(prev => {
+        let hidden = prev.hidden;
+        if (y < 40) hidden = false;else if (dy > 6) hidden = true;else if (dy < -6) hidden = false;
+        return {
+          hidden,
+          floating: y > 40
+        };
+      });
+      lastY = y;
+    };
+    el.addEventListener("scroll", onScroll, {
+      passive: true
+    });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+  return state;
+}
+function usePullToRefreshJN(scrollRef, onRefresh) {
+  const THRESHOLD = 64,
+    MAX = 90;
+  const [pull, setPull] = useStateJN(0);
+  const [dragging, setDragging] = useStateJN(false);
+  const [refreshing, setRefreshing] = useStateJN(false);
+  const drag = useRefJN({
+    active: false,
+    startY: 0
+  });
+  const busy = useRefJN(false);
+  const cb = useRefJN(onRefresh);
+  cb.current = onRefresh;
+  useEffectJN(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const onDown = e => {
+      if (busy.current || el.scrollTop > 0) return;
+      drag.current = {
+        active: true,
+        startY: e.clientY
+      };
+      setDragging(true);
+    };
+    const onMove = e => {
+      if (!drag.current.active) return;
+      const dy = e.clientY - drag.current.startY;
+      if (dy <= 0 || el.scrollTop > 0) {
+        drag.current.active = false;
+        setDragging(false);
+        setPull(0);
+        return;
+      }
+      e.preventDefault();
+      setPull(Math.min(MAX, dy * 0.45));
+    };
+    const onUp = () => {
+      if (!drag.current.active) return;
+      drag.current.active = false;
+      setDragging(false);
+      setPull(p => {
+        if (p < THRESHOLD) return 0;
+        busy.current = true;
+        setRefreshing(true);
+        Promise.resolve(cb.current()).then(() => {
+          busy.current = false;
+          setRefreshing(false);
+          setPull(0);
+        });
+        return THRESHOLD;
+      });
+    };
+    el.addEventListener("pointerdown", onDown, {
+      passive: true
+    });
+    el.addEventListener("pointermove", onMove, {
+      passive: false
+    });
+    el.addEventListener("pointerup", onUp, {
+      passive: true
+    });
+    el.addEventListener("pointercancel", onUp, {
+      passive: true
+    });
+    return () => {
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onUp);
+    };
+  }, []);
+  return {
+    pull,
+    dragging,
+    refreshing
+  };
+}
+const JNTopBar = React.forwardRef(function JNTopBar({
+  onMenu,
+  onBell
+}, ref) {
+  const unread = unreadDMJN();
+  return /*#__PURE__*/React.createElement("header", {
+    ref: ref,
+    className: "m-top"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "m-burger",
+    "aria-label": "Menu",
+    onClick: onMenu
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "menu",
+    size: 24,
+    color: "var(--gray-700)"
+  })), /*#__PURE__*/React.createElement("img", {
+    src: "assets/profinity-icon-purple-gold.png",
+    alt: "PROfinity"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "grow"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "m-iconbtn",
+    "aria-label": "Search",
+    onClick: () => goJN("JaneNewsfeed.html?search=1")
+  }, /*#__PURE__*/React.createElement(DSJN.Icon, {
+    name: "search",
+    size: 20,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "m-iconbtn",
+    "aria-label": "Notifications",
+    onClick: onBell
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "bell",
+    size: 20,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  }, NOTIFS_JN.length)), /*#__PURE__*/React.createElement("button", {
+    className: "m-iconbtn",
+    "aria-label": "Messages",
+    onClick: () => goJN("JaneMessages.html")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "message-circle",
+    size: 20,
+    color: "var(--brand-navy)"
+  }), unread > 0 && /*#__PURE__*/React.createElement("span", {
+    className: "dot"
+  }, unread)));
+});
+const JNDock = React.forwardRef(function JNDock({
+  compact,
+  active
+}, ref) {
+  return /*#__PURE__*/React.createElement("nav", {
+    ref: ref,
+    className: "m-tabs" + (compact ? " m-tabs-compact" : ""),
+    "aria-label": "Primary"
+  }, JN_TABS.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.key,
+    className: "m-tab" + (t.key === active ? " on" : ""),
+    "aria-current": t.key === active ? "page" : undefined,
+    onClick: () => t.key !== active && goJN(t.href)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: t.icon,
+    size: 20,
+    color: t.key === active ? "#fff" : "var(--gray-450)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, t.label))));
+});
+
+/* Drawer (burger) and notifications panel — slide-in layers like the
+   clinician SideMenu / NotificationsPanel, scoped to Jane's pages. */
+function JNDrawer({
+  open,
+  onClose
+}) {
+  const onb = onbState();
+  const rows = [["user", "My profile", "JaneProfile.html"], ["qr-code", "Health Pass", "JaneProfile.html"], ["clipboard-list", onb.done ? "Onboarding · completed" : "Finish onboarding", "JaneOnboarding.html"], ["watch", "Connect your wearables", "JaneWearables.html"], ["heart-pulse", "Health Analytics", "JaneHealth.html"], ["sparkles", "Coach", "JaneCoach.html"], ["calendar", "Events", "JaneEvents.html"], ["message-circle", "Messages", "JaneMessages.html"]];
+  return /*#__PURE__*/React.createElement("div", {
+    className: "jn-layer" + (open ? " open" : ""),
+    "aria-hidden": !open
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "jn-scrim",
+    "aria-label": "Close menu",
+    onClick: onClose
+  }), /*#__PURE__*/React.createElement("aside", {
+    className: "jn-drawer"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-drawer-head"
+  }, /*#__PURE__*/React.createElement(JNFace, {
+    p: JANE,
+    size: 56
+  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, JANE.name), /*#__PURE__*/React.createElement("small", null, "Patient · ", JANE.clinic))), /*#__PURE__*/React.createElement("div", {
+    className: "jn-drawer-pass",
+    onClick: () => goJN("JaneProfile.html")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, "Health Pass"), /*#__PURE__*/React.createElement("b", null, JANE.passId), /*#__PURE__*/React.createElement("span", {
+    className: "st" + (onb.done ? " ok" : "")
+  }, onb.done ? "Active" : "Incomplete")), /*#__PURE__*/React.createElement("nav", {
+    className: "jn-drawer-nav"
+  }, rows.map(([ic, l, href]) => /*#__PURE__*/React.createElement("button", {
+    key: l,
+    onClick: () => goJN(href)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: ic,
+    size: 19,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", null, l), /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-right",
+    size: 16,
+    color: "var(--gray-400)"
+  })))), /*#__PURE__*/React.createElement("button", {
+    className: "jn-drawer-out",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "log-out",
+    size: 18,
+    color: "var(--error)"
+  }), "Log out")));
+}
+function JNNotifPanel({
+  open,
+  onClose
+}) {
+  return /*#__PURE__*/React.createElement("div", {
+    className: "jn-layer right" + (open ? " open" : ""),
+    "aria-hidden": !open
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "jn-scrim",
+    "aria-label": "Close notifications",
+    onClick: onClose
+  }), /*#__PURE__*/React.createElement("aside", {
+    className: "jn-panel"
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "jn-panel-head"
+  }, /*#__PURE__*/React.createElement("h2", null, "Notifications"), /*#__PURE__*/React.createElement("button", {
+    className: "m-iconbtn",
+    "aria-label": "Close",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "x",
+    size: 20,
+    color: "var(--brand-navy)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "jn-panel-list"
+  }, NOTIFS_JN.map((n, i) => {
+    const p = PEOPLE[n.by];
+    return /*#__PURE__*/React.createElement("button", {
+      key: i,
+      className: "jn-notif",
+      onClick: () => goJN(n.icon === "calendar" ? "JaneMessages.html?to=reception" : n.icon === "video" ? "JaneEvents.html?event=ev1" : n.icon === "paperclip" ? "JaneMessages.html?to=beth" : "JaneNewsfeed.html")
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "av"
+    }, /*#__PURE__*/React.createElement(JNFace, {
+      p: p,
+      size: 44
+    }), /*#__PURE__*/React.createElement("i", null, /*#__PURE__*/React.createElement(IcJN, {
+      name: n.icon,
+      size: 11,
+      color: "#fff"
+    }))), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, p.name), " ", n.text, /*#__PURE__*/React.createElement("small", null, n.t)));
+  }))));
+}
+function FeedPostJN({
   p,
+  pinned,
   onLike,
   onComment,
-  onShare
+  onShare,
+  onSave,
+  saved,
+  showToast
 }) {
-  const a = PEOPLE[p.by];
-  return /*#__PURE__*/React.createElement("article", {
-    className: "jn-post"
-  }, /*#__PURE__*/React.createElement("header", {
-    className: "jn-post-h"
-  }, /*#__PURE__*/React.createElement(JNFace, {
-    p: a,
-    size: 42
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "jn-post-who"
-  }, /*#__PURE__*/React.createElement("b", null, a.name), /*#__PURE__*/React.createElement("span", null, a.title, " · ", p.t)), /*#__PURE__*/React.createElement(RoleChip, {
-    p: a
-  })), /*#__PURE__*/React.createElement("p", {
-    className: "jn-post-txt"
-  }, p.text), p.img && /*#__PURE__*/React.createElement("img", {
-    className: "jn-post-img",
+  const a = authorJN(p.by);
+  const first = p.comments[0];
+  const media = p.img ? /*#__PURE__*/React.createElement("div", {
+    className: "pf-media-bleed",
+    style: {
+      margin: "0 -16px"
+    }
+  }, /*#__PURE__*/React.createElement("img", {
     src: p.img,
-    alt: ""
-  }), p.event && /*#__PURE__*/React.createElement("button", {
-    className: "jn-post-ev",
+    alt: "",
+    style: {
+      width: "100%",
+      height: 380,
+      objectFit: "cover",
+      display: "block",
+      background: "var(--gray-100)"
+    }
+  })) : p.event ? /*#__PURE__*/React.createElement("div", {
+    className: "pf-media-bleed",
+    style: {
+      margin: "0 -16px"
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jn-post-ev infeed",
     onClick: () => goJN("JaneEvents.html?event=" + p.event)
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
@@ -535,40 +984,131 @@ function PostCardJN({
     color: "var(--brand-navy)"
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, "Skin Boosters Q&A · Live"), /*#__PURE__*/React.createElement("small", null, "Thu 29 Oct · 7:00pm · Online")), /*#__PURE__*/React.createElement(IcJN, {
+  }, /*#__PURE__*/React.createElement("b", null, "Skin Boosters Q&A · Live"), /*#__PURE__*/React.createElement("small", null, "Thu 29 Oct · 7:00pm · Online · Free for patients")), /*#__PURE__*/React.createElement(IcJN, {
     name: "chevron-right",
     size: 18,
     color: "var(--gray-450)"
-  })), /*#__PURE__*/React.createElement("footer", {
-    className: "jn-post-f"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "jn-act" + (p.liked ? " on" : ""),
-    onClick: () => onLike(p)
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "heart",
-    size: 18
-  }), p.likes), /*#__PURE__*/React.createElement("button", {
-    className: "jn-act",
+  }))) : null;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "post-wrap",
+    id: "post-" + p.id,
+    style: {
+      background: "var(--surface-card)",
+      borderRadius: "var(--r-md)",
+      overflow: "hidden",
+      padding: "0px 16px"
+    }
+  }, /*#__PURE__*/React.createElement(DSJN.PostCard, {
+    author: a,
+    time: pinned ? /*#__PURE__*/React.createElement(React.Fragment, null, p.t, /*#__PURE__*/React.createElement("span", {
+      className: "pf-pin-chip"
+    }, /*#__PURE__*/React.createElement(DSJN.IconifyIcon, {
+      name: "fluent:pin-12-filled",
+      size: 11,
+      color: "var(--brand-navy)"
+    }), "Pinned")) : p.t,
+    body: /*#__PURE__*/React.createElement(ClampTextJN, {
+      text: p.text
+    }),
+    media: media,
+    hashtags: [],
+    liked: p.liked,
+    saved: saved,
+    actioned: false,
+    likes: fmtN(p.likes),
+    shares: fmtN(p.shares),
+    comments: String(p.comments.length),
+    onLike: () => onLike(p),
+    onComment: () => onComment(p),
+    onShare: () => onShare(p),
+    onSave: () => onSave(p),
+    onReport: () => showToast("Thanks, we'll take a look"),
+    onReactionsClick: () => showToast(fmtN(p.likes) + " people reacted"),
+    menuItems: [],
+    style: {
+      boxShadow: "none",
+      border: "none",
+      borderRadius: 0,
+      background: "transparent",
+      padding: "24px 8px"
+    }
+  }), first && /*#__PURE__*/React.createElement("div", {
+    className: "comments-region cm-preview-region",
+    style: {
+      padding: "0px 8px 24px",
+      margin: "8px 0px 0px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cmt-preview",
+    role: "button",
+    tabIndex: 0,
     onClick: () => onComment(p)
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "message-square",
-    size: 18
-  }), p.comments.length), /*#__PURE__*/React.createElement("button", {
-    className: "jn-act",
-    onClick: () => onShare(p)
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "share-2",
-    size: 18
-  }), "Share")));
+  }, /*#__PURE__*/React.createElement(DSJN.CommentItem, {
+    author: authorJN(first.by),
+    text: first.text,
+    likes: fmtN(first.likes || 0),
+    comments: "1",
+    reactions: null,
+    reactionCount: null,
+    replies: [],
+    onCommentsClick: () => onComment(p)
+  })), p.comments.length > 1 && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cmt-viewmore",
+    onClick: () => onComment(p)
+  }, "View all ", p.comments.length, " comments")));
 }
 function HomeScreen() {
   const [posts, setPosts] = useStateJN(loadPosts);
-  const [filter, setFilter] = useStateJN("all");
+  const [saved, setSaved] = useStateJN(() => readJN("pf-jane-saved", {}));
+  const [pinsOpen, setPinsOpen] = useStateJN(false);
+  const [menuOpen, setMenuOpen] = useStateJN(false);
+  const [notifOpen, setNotifOpen] = useStateJN(false);
   const [composeOpen, setComposeOpen] = useStateJN(false);
   const [draft, setDraft] = useStateJN("");
-  const [commentPost, setCommentPost] = useStateJN(null);
+  const [commentId, setCommentId] = useStateJN(null);
   const [cDraft, setCDraft] = useStateJN("");
+  const [feedKey, setFeedKey] = useStateJN(0);
   const [toast, showToast] = useToastJN();
+  const scrollRef = useRefJN(null);
+  const headerRef = useRefJN(null);
+  const tabsRef = useRefJN(null);
+  const [headerH, setHeaderH] = useStateJN(0);
+  const [tabsH, setTabsH] = useStateJN(0);
+  const {
+    hidden: chromeHidden,
+    floating: chromeFloat
+  } = useHeaderHideJN(scrollRef);
+  const {
+    pull,
+    dragging,
+    refreshing
+  } = usePullToRefreshJN(scrollRef, () => new Promise(r => setTimeout(() => {
+    setFeedKey(k => k + 1);
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    r();
+  }, 600)));
+  React.useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const m = () => setHeaderH(el.offsetHeight);
+    m();
+    const ro = new ResizeObserver(m);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  React.useLayoutEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const m = () => setTabsH(el.offsetHeight);
+    m();
+    const ro = new ResizeObserver(m);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  useEffectJN(() => {
+    if (qJN("search") === "1") showToast("Search coming soon");
+  }, []);
   const onb = onbState();
   const wear = connectedWearables();
   const onbPct = onb.done ? 100 : Math.round(Object.keys(onb.answers).length / ONB_STEPS.length * 100);
@@ -583,18 +1123,27 @@ function HomeScreen() {
       likes: x.likes + (x.liked ? -1 : 1)
     } : x));
   }
+  function save(p) {
+    const s = {
+      ...saved,
+      [p.id]: !saved[p.id]
+    };
+    setSaved(s);
+    saveJN("pf-jane-saved", s);
+    showToast(s[p.id] ? "Saved to My Saved" : "Removed from My Saved");
+  }
   function addComment() {
     const t = cDraft.trim();
     if (!t) return;
-    const list = posts.map(x => x.id === commentPost.id ? {
+    persist(posts.map(x => x.id === commentId ? {
       ...x,
       comments: [...x.comments, {
         by: "jane",
-        text: t
+        text: t,
+        likes: 0,
+        t: "Just now"
       }]
-    } : x);
-    persist(list);
-    setCommentPost(list.find(x => x.id === commentPost.id));
+    } : x));
     setCDraft("");
   }
   function publish() {
@@ -606,60 +1155,129 @@ function HomeScreen() {
       t: "Just now",
       text: t,
       likes: 0,
+      shares: 0,
       liked: false,
       comments: []
     }, ...posts]);
     setDraft("");
     setComposeOpen(false);
-    showToast("Shared with your clinic and other Janes");
+    showToast("Shared with your clinic and other patients");
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
   }
-  const shown = posts.filter(p => filter === "all" || (filter === "katies" ? PEOPLE[p.by].role === "Clinician" : PEOPLE[p.by].role === "Patient"));
-  const curPost = commentPost ? posts.find(x => x.id === commentPost.id) : null;
+  const pinnedPosts = PINNED_IDS.map(id => posts.find(x => x.id === id)).filter(Boolean);
+  const feed = posts.filter(x => !PINNED_IDS.includes(x.id));
+  const curPost = posts.find(x => x.id === commentId);
+  const postProps = {
+    onLike: like,
+    onComment: p => setCommentId(p.id),
+    onShare: () => showToast("Link copied"),
+    onSave: save,
+    showToast
+  };
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen"
-  }, /*#__PURE__*/React.createElement(JNTop, null), /*#__PURE__*/React.createElement("div", {
-    className: "jn-scroll"
+    className: "m-screen jn-home" + (chromeHidden ? " chrome-hidden" : "") + (chromeFloat ? " chrome-float" : "")
+  }, /*#__PURE__*/React.createElement(PushBannerJN, null), /*#__PURE__*/React.createElement(JNTopBar, {
+    ref: headerRef,
+    onMenu: () => setMenuOpen(true),
+    onBell: () => setNotifOpen(true)
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "m-scroll",
+    ref: scrollRef,
+    style: {
+      paddingTop: chromeHidden ? 0 : headerH,
+      paddingBottom: tabsH + 34
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "m-pull-refresh",
+    style: {
+      height: pull,
+      transition: dragging ? "none" : "height .25s cubic-bezier(.22,.61,.36,1)"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "m-pull-spinner" + (refreshing ? " is-spinning" : ""),
+    style: !refreshing ? {
+      transform: "rotate(" + pull * 3.2 + "deg)"
+    } : undefined
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "refresh-cw",
+    size: 18,
+    color: "var(--brand-navy)"
+  }))), /*#__PURE__*/React.createElement("main", {
+    className: "feed",
+    key: feedKey
   }, /*#__PURE__*/React.createElement("section", {
-    className: "jn-hello"
-  }, /*#__PURE__*/React.createElement("h2", null, "Good morning, ", JANE.first, " 👋"), /*#__PURE__*/React.createElement("p", null, wear.length ? "Sleep " + fmtH(HEALTH.sleep[6]) + " · " + HEALTH.steps[6].toLocaleString() + " steps so far" : "Your clinic feed, health and coach in one place.")), !onb.done && /*#__PURE__*/React.createElement("button", {
-    className: "jn-nudge",
+    className: "pf-pinned-box pf-pinned-box--m" + (pinsOpen ? " open" : ""),
+    "aria-label": "Pinned posts"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-pinned-box-head",
+    onClick: () => setPinsOpen(!pinsOpen),
+    "aria-expanded": pinsOpen
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-card-tag-tx"
+  }, /*#__PURE__*/React.createElement(DSJN.IconifyIcon, {
+    name: "fluent:pin-16-filled",
+    size: 15,
+    color: "#fff"
+  }), "Pinned"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-box-avs",
+    "aria-hidden": "true"
+  }, pinnedPosts.map((p, i) => /*#__PURE__*/React.createElement("span", {
+    key: p.id,
+    className: "pf-pinned-box-av",
+    style: {
+      marginLeft: i ? -10 : 0
+    }
+  }, /*#__PURE__*/React.createElement(DSJN.Avatar, {
+    name: PEOPLE[p.by].name,
+    src: PEOPLE[p.by].avatar,
+    size: 28
+  })))), /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-box-count"
+  }, pinnedPosts.length, " pinned posts"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-box-hint"
+  }, pinsOpen ? "Hide" : "Show"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-box-chev"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-down",
+    size: 22,
+    color: "var(--brand-navy)"
+  }))), pinsOpen && /*#__PURE__*/React.createElement("div", {
+    className: "pf-pinned-box-list"
+  }, pinnedPosts.map(p => /*#__PURE__*/React.createElement("div", {
+    key: p.id,
+    className: "pf-pinned-box-item"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-pinned-box-item-bar"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-box-item-lbl"
+  }, /*#__PURE__*/React.createElement(DSJN.IconifyIcon, {
+    name: "fluent:pin-12-filled",
+    size: 12,
+    color: "var(--brand-gold)"
+  }), "Pinned post")), /*#__PURE__*/React.createElement(FeedPostJN, {
+    p: p,
+    pinned: true,
+    saved: !!saved[p.id],
+    ...postProps
+  }))))), !onb.done && /*#__PURE__*/React.createElement("button", {
+    className: "jn-feednudge",
     onClick: () => goJN("JaneOnboarding.html")
   }, /*#__PURE__*/React.createElement("span", {
-    className: "ring",
-    style: {
-      "--p": onbPct
-    }
-  }, /*#__PURE__*/React.createElement("b", null, onbPct, "%")), /*#__PURE__*/React.createElement("span", {
+    className: "bar"
+  }), /*#__PURE__*/React.createElement(JNFace, {
+    p: KATY,
+    size: 40
+  }), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, "Finish your Health Pass"), /*#__PURE__*/React.createElement("small", null, onbPct ? "Pick up where you left off" : "6 quick questions so Katy can tailor your care")), /*#__PURE__*/React.createElement(IcJN, {
-    name: "chevron-right",
-    size: 20,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "jn-today"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "jn-tile",
-    onClick: () => goJN("JaneHealth.html")
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "moon",
-    size: 18,
-    color: "#6c63ff"
-  }), /*#__PURE__*/React.createElement("b", null, fmtH(HEALTH.sleep[6])), /*#__PURE__*/React.createElement("small", null, "Sleep")), /*#__PURE__*/React.createElement("button", {
-    className: "jn-tile",
-    onClick: () => goJN("JaneHealth.html")
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "footprints",
-    size: 18,
-    color: "#16a34a"
-  }), /*#__PURE__*/React.createElement("b", null, HEALTH.steps[6].toLocaleString()), /*#__PURE__*/React.createElement("small", null, "Steps")), /*#__PURE__*/React.createElement("button", {
-    className: "jn-tile",
-    onClick: () => goJN("JaneHealth.html")
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "sun",
-    size: 18,
-    color: "var(--brand-gold)"
-  }), /*#__PURE__*/React.createElement("b", null, HEALTH.skin[6]), /*#__PURE__*/React.createElement("small", null, "Skin score"))), !wear.length && /*#__PURE__*/React.createElement("button", {
-    className: "jn-connect",
+  }, /*#__PURE__*/React.createElement("small", null, "From Katy, your clinician · Just now"), /*#__PURE__*/React.createElement("b", null, onbPct ? "You're " + onbPct + "% through your Health Pass" : "Set up your Health Pass before Monday"), /*#__PURE__*/React.createElement("em", null, "Finish onboarding"))), feed.map((p, i) => /*#__PURE__*/React.createElement(React.Fragment, {
+    key: p.id
+  }, /*#__PURE__*/React.createElement(FeedPostJN, {
+    p: p,
+    saved: !!saved[p.id],
+    ...postProps
+  }), i === 1 && !wear.length && /*#__PURE__*/React.createElement("button", {
+    className: "jn-connect infeed",
     onClick: () => goJN("JaneWearables.html")
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
@@ -673,32 +1291,26 @@ function HomeScreen() {
     name: "chevron-right",
     size: 20,
     color: "rgba(255,255,255,.8)"
-  })), /*#__PURE__*/React.createElement("button", {
-    className: "jn-compose",
-    onClick: () => setComposeOpen(true)
-  }, /*#__PURE__*/React.createElement(JNFace, {
-    p: JANE,
-    size: 38
-  }), /*#__PURE__*/React.createElement("span", null, "Share an update with your clinic…"), /*#__PURE__*/React.createElement(IcJN, {
-    name: "image",
-    size: 20,
-    color: "var(--gray-450)"
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "jn-chips"
-  }, [["all", "All"], ["katies", "From clinicians"], ["janes", "From other patients"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
-    key: k,
-    className: "jn-chip" + (filter === k ? " on" : ""),
-    onClick: () => setFilter(k)
-  }, l))), shown.map(p => /*#__PURE__*/React.createElement(PostCardJN, {
-    key: p.id,
-    p: p,
-    onLike: like,
-    onComment: x => setCommentPost(x),
-    onShare: () => showToast("Link copied")
-  })), /*#__PURE__*/React.createElement("div", {
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "jn-end"
-  }, "You're all caught up ✨")), /*#__PURE__*/React.createElement(JNTabs, {
+  }, "You're all caught up ✨"))), /*#__PURE__*/React.createElement(JNDock, {
+    ref: tabsRef,
+    compact: chromeHidden,
     active: "home"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "m-fab" + (chromeHidden ? " m-fab-compact" : ""),
+    "aria-label": "Share a Post",
+    onClick: () => setComposeOpen(true)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "plus",
+    size: 24,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement(JNDrawer, {
+    open: menuOpen,
+    onClose: () => setMenuOpen(false)
+  }), /*#__PURE__*/React.createElement(JNNotifPanel, {
+    open: notifOpen,
+    onClose: () => setNotifOpen(false)
   }), /*#__PURE__*/React.createElement(JNSheet, {
     open: composeOpen,
     onClose: () => setComposeOpen(false),
@@ -728,27 +1340,26 @@ function HomeScreen() {
     onClick: publish
   }, "Post"))), /*#__PURE__*/React.createElement(JNSheet, {
     open: !!curPost,
-    onClose: () => setCommentPost(null),
+    onClose: () => setCommentId(null),
     title: "Comments",
     tall: true
   }, curPost && /*#__PURE__*/React.createElement("div", {
     className: "jn-comments"
   }, curPost.comments.length === 0 && /*#__PURE__*/React.createElement("p", {
     className: "jn-empty"
-  }, "No comments yet. Be the first."), curPost.comments.map((c, i) => {
-    const a = PEOPLE[c.by];
-    return /*#__PURE__*/React.createElement("div", {
-      key: i,
-      className: "jn-comment"
-    }, /*#__PURE__*/React.createElement(JNFace, {
-      p: a,
-      size: 32
-    }), /*#__PURE__*/React.createElement("div", {
-      className: "bub"
-    }, /*#__PURE__*/React.createElement("b", null, a.name, " ", /*#__PURE__*/React.createElement(RoleChip, {
-      p: a
-    })), /*#__PURE__*/React.createElement("p", null, c.text)));
-  })), /*#__PURE__*/React.createElement("div", {
+  }, "No comments yet. Be the first."), curPost.comments.map((c, i) => /*#__PURE__*/React.createElement(DSJN.CommentItem, {
+    key: i,
+    author: authorJN(c.by),
+    text: c.text,
+    likes: fmtN(c.likes || 0),
+    comments: "0",
+    reactions: null,
+    reactionCount: null,
+    replies: [],
+    style: {
+      marginBottom: 16
+    }
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "jn-input-row"
   }, /*#__PURE__*/React.createElement("input", {
     className: "jn-in",
