@@ -146,7 +146,13 @@ function IOSNavBar({ title = 'Title', dark = false, trailingIcon = true }) {
 // --pf-sfb) while bottom-anchored UI (tab bar, FAB, sheets) stays above it,
 // exactly like fixed elements do in real Safari.
 // ─────────────────────────────────────────────────────────────
-const IOS_SAFARI_DOMAIN = 'profinity-mobileweb.vercel.app';
+// Address pill shows the real host when we're on one of the mobile-web links
+// (profinity-mobileweb.vercel.app, profinity-mobileweb-2.vercel.app, …) so
+// every link reads as itself; local/desktop previews fall back to the main one.
+const IOS_SAFARI_DOMAIN = (() => {
+  try { if (/(^|[.-])mobileweb([.-]|$)/i.test(location.hostname)) return location.hostname; } catch (e) {}
+  return 'profinity-mobileweb.vercel.app';
+})();
 const IOS_SAFARI_H = 100; // height of the Safari bottom chrome (--pf-sfb)
 function IOSSafariBar({ dark = false, domain = IOS_SAFARI_DOMAIN }) {
   // colours live in real-device.css (.ios-safari-*) so [data-theme="dark"] applies
