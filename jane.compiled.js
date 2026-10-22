@@ -3183,7 +3183,10 @@ function JaneApp() {
   }, /*#__PURE__*/React.createElement(Screen, null));
   return /*#__PURE__*/React.createElement("div", {
     className: "app device-stage",
-    style: vars
+    style: {
+      ...vars,
+      backgroundColor: "rgb(217, 218, 225)"
+    }
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       transform: "scale(" + scale + ")",

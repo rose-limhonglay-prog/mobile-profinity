@@ -1059,7 +1059,7 @@ function JaneApp() {
   const vars = { "--action-primary": "var(--brand-navy)", "--action-primary-hover": "var(--brand-navy-700)" };
   if (mobile) return <div className="app" style={{ ...vars, background: "var(--surface-page)" }}><Screen /></div>;
   return (
-    <div className="app device-stage" style={vars}>
+    <div className="app device-stage" style={{ ...vars, backgroundColor: "rgb(217, 218, 225)" }}>
       <div style={{ transform: "scale(" + scale + ")", transformOrigin: "center center" }}>
         <IOSDevice width={440} height={956}><Screen /></IOSDevice>
       </div>
