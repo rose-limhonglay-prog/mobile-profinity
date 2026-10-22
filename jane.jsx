@@ -491,6 +491,7 @@ function ProfileScreen() {
         <h3 className="jn-h">Medical history</h3>
         <div className="jn-card">
           <div className="jn-tags">{medical.map((m) => <span key={m} className="jn-tag">{m}</span>)}</div>
+          {healthSetup().height && <div className="jn-kv"><span>Height · Weight</span><b>{healthSetup().height} cm · {healthSetup().weight} kg</b></div>}
           <div className="jn-kv"><span>Previous treatments</span><b>{onb.answers.history || "Not answered"}</b></div>
           <div className="jn-kv"><span>Last treatment</span><b>Lip filler · 1 Oct 2026</b></div>
           <div className="jn-kv"><span>Next review</span><b>Mon 3 Nov · 2:30pm</b></div>
@@ -734,7 +735,73 @@ function Ring({ value, size = 128, stroke = 11, color = "var(--brand-gold)", chi
     </div>);
 }
 
+/* First-time Health setup (user, 2026-10-23, Google Health screenshots):
+   tracking method → profile info → email updates. Shown once (pf-jane-health-
+   setup), ?setup=1 replays it. Choosing a watch/tracker ends on Connect your
+   wearables; choosing the phone ends on Health Analytics. */
+const HSETUP_KEY = "pf-jane-health-setup";
+function healthSetup() { return readJN(HSETUP_KEY, {}); }
+function HealthSetup({ onDone }) {
+  const [step, setStep] = useStateJN(0);
+  const [method, setMethod] = useStateJN(null);
+  const [prof, setProf] = useStateJN({ height: "172", weight: "54", sex: "Female" });
+  const finish = (emails) => { const s = { done: true, method, ...prof, emails, at: Date.now() }; saveJN(HSETUP_KEY, s); onDone(s); };
+  const Opt = ({ k, icon, tint, text }) => (
+    <button className={"jn-setup-opt" + (method === k ? " on" : "")} onClick={() => setMethod(k)}>
+      <span className="art" style={{ background: tint }}><IcJN name={icon} size={30} color="#fff" /></span>
+      <span className="tx">{text}</span>
+      <span className="tick">{method === k && <IcJN name="check" size={14} color="#fff" />}</span>
+    </button>);
+  return (
+    <div className="jn-screen jn-setup">
+      <div className="jn-scroll">
+        {step === 0 && (
+          <React.Fragment>
+            <span className="jn-setup-ic"><IcJN name="watch" size={30} color="var(--brand-navy)" /></span>
+            <h2>How would you like to track your health?</h2>
+            <div className="jn-setup-opts">
+              <Opt k="wearable" icon="watch" tint="linear-gradient(135deg,#292569,#4f47d6)" text="Connect a smartwatch, fitness tracker or smart scale" />
+              <Opt k="phone" icon="footprints" tint="linear-gradient(135deg,#0f766e,#14b8a6)" text="Use your phone to track your steps and more with the app" />
+            </div>
+          </React.Fragment>)}
+        {step === 1 && (
+          <React.Fragment>
+            <span className="jn-setup-ic"><IcJN name="user" size={30} color="var(--brand-navy)" /></span>
+            <h2>Tell us about yourself</h2>
+            <p className="jn-setup-sub">PROfinity uses this information to calculate some metrics.</p>
+            <h3 className="jn-h">Your profile info</h3>
+            <div className="jn-setup-grid">
+              <label className="jn-setup-field"><span>Height</span><div className="in"><input inputMode="decimal" value={prof.height} onChange={(e) => setProf({ ...prof, height: e.target.value })} /><em>cm</em></div></label>
+              <label className="jn-setup-field"><span>Weight</span><div className="in"><input inputMode="decimal" value={prof.weight} onChange={(e) => setProf({ ...prof, weight: e.target.value })} /><em>kg</em></div></label>
+            </div>
+            <label className="jn-setup-field focus"><span>Sex</span><div className="in"><select value={prof.sex} onChange={(e) => setProf({ ...prof, sex: e.target.value })}><option>Female</option><option>Male</option><option>Prefer not to say</option></select><IcJN name="chevron-down" size={18} color="var(--text-secondary)" /></div></label>
+            <p className="jn-setup-note">Sex is used to calculate metrics like calories burned and cardio load.</p>
+          </React.Fragment>)}
+        {step === 2 && (
+          <React.Fragment>
+            <span className="jn-setup-ic"><IcJN name="bell" size={30} color="var(--brand-navy)" /></span>
+            <h2>Stay updated with emails from PROfinity</h2>
+            <p className="jn-setup-sub">Stay up to date on new features, clinic events and offers. Plus, receive surveys and invitations to take part in skin health research.</p>
+          </React.Fragment>)}
+      </div>
+      <div className="jn-setup-foot">
+        {step === 0 && <React.Fragment>
+          <p className="jn-setup-alt"><b>Want to use another method?</b> You can connect medical records on your favourite apps later.</p>
+          {method ? <button className="jn-btn block" onClick={() => setStep(1)}>Continue<IcJN name="arrow-right" size={18} /></button>
+                  : <button className="jn-btn block ghost outline" onClick={() => setStep(1)}>Not now</button>}
+        </React.Fragment>}
+        {step === 1 && <button className="jn-btn block" disabled={!prof.height || !prof.weight} onClick={() => setStep(2)}>Save and continue</button>}
+        {step === 2 && <div className="jn-row-btns"><button className="jn-btn" onClick={() => finish(false)}>Not now</button><button className="jn-btn" onClick={() => finish(true)}>Stay updated</button></div>}
+      </div>
+    </div>);
+}
+
 function HealthScreen() {
+  const [setup, setSetup] = useStateJN(() => qJN("setup") === "1" || !healthSetup().done);
+  if (setup) return <HealthSetup onDone={(st) => { if (st.method === "wearable" && !connectedWearables().length) goJN("JaneWearables.html"); else setSetup(false); }} />;
+  return <HealthDashboard />;
+}
+function HealthDashboard() {
   const [period, setPeriod] = useStateJN("week");
   const [toast, showToast] = useToastJN();
   const wear = connectedWearables();

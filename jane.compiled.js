@@ -1543,7 +1543,9 @@ function ProfileScreen() {
   }, medical.map(m => /*#__PURE__*/React.createElement("span", {
     key: m,
     className: "jn-tag"
-  }, m))), /*#__PURE__*/React.createElement("div", {
+  }, m))), healthSetup().height && /*#__PURE__*/React.createElement("div", {
+    className: "jn-kv"
+  }, /*#__PURE__*/React.createElement("span", null, "Height · Weight"), /*#__PURE__*/React.createElement("b", null, healthSetup().height, " cm · ", healthSetup().weight, " kg")), /*#__PURE__*/React.createElement("div", {
     className: "jn-kv"
   }, /*#__PURE__*/React.createElement("span", null, "Previous treatments"), /*#__PURE__*/React.createElement("b", null, onb.answers.history || "Not answered")), /*#__PURE__*/React.createElement("div", {
     className: "jn-kv"
@@ -2140,7 +2142,179 @@ function Ring({
     className: "in"
   }, children));
 }
+
+/* First-time Health setup (user, 2026-10-23, Google Health screenshots):
+   tracking method → profile info → email updates. Shown once (pf-jane-health-
+   setup), ?setup=1 replays it. Choosing a watch/tracker ends on Connect your
+   wearables; choosing the phone ends on Health Analytics. */
+const HSETUP_KEY = "pf-jane-health-setup";
+function healthSetup() {
+  return readJN(HSETUP_KEY, {});
+}
+function HealthSetup({
+  onDone
+}) {
+  const [step, setStep] = useStateJN(0);
+  const [method, setMethod] = useStateJN(null);
+  const [prof, setProf] = useStateJN({
+    height: "172",
+    weight: "54",
+    sex: "Female"
+  });
+  const finish = emails => {
+    const s = {
+      done: true,
+      method,
+      ...prof,
+      emails,
+      at: Date.now()
+    };
+    saveJN(HSETUP_KEY, s);
+    onDone(s);
+  };
+  const Opt = ({
+    k,
+    icon,
+    tint,
+    text
+  }) => /*#__PURE__*/React.createElement("button", {
+    className: "jn-setup-opt" + (method === k ? " on" : ""),
+    onClick: () => setMethod(k)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "art",
+    style: {
+      background: tint
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: icon,
+    size: 30,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, text), /*#__PURE__*/React.createElement("span", {
+    className: "tick"
+  }, method === k && /*#__PURE__*/React.createElement(IcJN, {
+    name: "check",
+    size: 14,
+    color: "#fff"
+  })));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "jn-screen jn-setup"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-scroll"
+  }, step === 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "jn-setup-ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "watch",
+    size: 30,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("h2", null, "How would you like to track your health?"), /*#__PURE__*/React.createElement("div", {
+    className: "jn-setup-opts"
+  }, /*#__PURE__*/React.createElement(Opt, {
+    k: "wearable",
+    icon: "watch",
+    tint: "linear-gradient(135deg,#292569,#4f47d6)",
+    text: "Connect a smartwatch, fitness tracker or smart scale"
+  }), /*#__PURE__*/React.createElement(Opt, {
+    k: "phone",
+    icon: "footprints",
+    tint: "linear-gradient(135deg,#0f766e,#14b8a6)",
+    text: "Use your phone to track your steps and more with the app"
+  }))), step === 1 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "jn-setup-ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "user",
+    size: 30,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("h2", null, "Tell us about yourself"), /*#__PURE__*/React.createElement("p", {
+    className: "jn-setup-sub"
+  }, "PROfinity uses this information to calculate some metrics."), /*#__PURE__*/React.createElement("h3", {
+    className: "jn-h"
+  }, "Your profile info"), /*#__PURE__*/React.createElement("div", {
+    className: "jn-setup-grid"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "jn-setup-field"
+  }, /*#__PURE__*/React.createElement("span", null, "Height"), /*#__PURE__*/React.createElement("div", {
+    className: "in"
+  }, /*#__PURE__*/React.createElement("input", {
+    inputMode: "decimal",
+    value: prof.height,
+    onChange: e => setProf({
+      ...prof,
+      height: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement("em", null, "cm"))), /*#__PURE__*/React.createElement("label", {
+    className: "jn-setup-field"
+  }, /*#__PURE__*/React.createElement("span", null, "Weight"), /*#__PURE__*/React.createElement("div", {
+    className: "in"
+  }, /*#__PURE__*/React.createElement("input", {
+    inputMode: "decimal",
+    value: prof.weight,
+    onChange: e => setProf({
+      ...prof,
+      weight: e.target.value
+    })
+  }), /*#__PURE__*/React.createElement("em", null, "kg")))), /*#__PURE__*/React.createElement("label", {
+    className: "jn-setup-field focus"
+  }, /*#__PURE__*/React.createElement("span", null, "Sex"), /*#__PURE__*/React.createElement("div", {
+    className: "in"
+  }, /*#__PURE__*/React.createElement("select", {
+    value: prof.sex,
+    onChange: e => setProf({
+      ...prof,
+      sex: e.target.value
+    })
+  }, /*#__PURE__*/React.createElement("option", null, "Female"), /*#__PURE__*/React.createElement("option", null, "Male"), /*#__PURE__*/React.createElement("option", null, "Prefer not to say")), /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-down",
+    size: 18,
+    color: "var(--text-secondary)"
+  }))), /*#__PURE__*/React.createElement("p", {
+    className: "jn-setup-note"
+  }, "Sex is used to calculate metrics like calories burned and cardio load.")), step === 2 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "jn-setup-ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "bell",
+    size: 30,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("h2", null, "Stay updated with emails from PROfinity"), /*#__PURE__*/React.createElement("p", {
+    className: "jn-setup-sub"
+  }, "Stay up to date on new features, clinic events and offers. Plus, receive surveys and invitations to take part in skin health research."))), /*#__PURE__*/React.createElement("div", {
+    className: "jn-setup-foot"
+  }, step === 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
+    className: "jn-setup-alt"
+  }, /*#__PURE__*/React.createElement("b", null, "Want to use another method?"), " You can connect medical records on your favourite apps later."), method ? /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn block",
+    onClick: () => setStep(1)
+  }, "Continue", /*#__PURE__*/React.createElement(IcJN, {
+    name: "arrow-right",
+    size: 18
+  })) : /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn block ghost outline",
+    onClick: () => setStep(1)
+  }, "Not now")), step === 1 && /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn block",
+    disabled: !prof.height || !prof.weight,
+    onClick: () => setStep(2)
+  }, "Save and continue"), step === 2 && /*#__PURE__*/React.createElement("div", {
+    className: "jn-row-btns"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn",
+    onClick: () => finish(false)
+  }, "Not now"), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn",
+    onClick: () => finish(true)
+  }, "Stay updated"))));
+}
 function HealthScreen() {
+  const [setup, setSetup] = useStateJN(() => qJN("setup") === "1" || !healthSetup().done);
+  if (setup) return /*#__PURE__*/React.createElement(HealthSetup, {
+    onDone: st => {
+      if (st.method === "wearable" && !connectedWearables().length) goJN("JaneWearables.html");else setSetup(false);
+    }
+  });
+  return /*#__PURE__*/React.createElement(HealthDashboard, null);
+}
+function HealthDashboard() {
   const [period, setPeriod] = useStateJN("week");
   const [toast, showToast] = useToastJN();
   const wear = connectedWearables();
