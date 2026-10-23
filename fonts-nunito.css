@@ -1,0 +1,22 @@
+/* Nunito — the Jane (patient) app typeface (user, 2026-10-23: "make all the
+   fonts in Nunito"). Loaded after the design-system tokens on the eight Jane
+   shells; overrides --font-sans/--font-display so every token-driven rule,
+   the DS components and the shared newsfeed styles pick it up. */
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 400; font-display: swap; src: url("assets/fonts/Nunito-Regular.ttf") format("truetype"); }
+@font-face { font-family: "Nunito"; font-style: italic; font-weight: 400; font-display: swap; src: url("assets/fonts/Nunito-Italic.ttf") format("truetype"); }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 500; font-display: swap; src: url("assets/fonts/Nunito-Medium.ttf") format("truetype"); }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 600; font-display: swap; src: url("assets/fonts/Nunito-SemiBold.ttf") format("truetype"); }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 700; font-display: swap; src: url("assets/fonts/Nunito-Bold.ttf") format("truetype"); }
+@font-face { font-family: "Nunito"; font-style: italic; font-weight: 700; font-display: swap; src: url("assets/fonts/Nunito-BoldItalic.ttf") format("truetype"); }
+@font-face { font-family: "Nunito"; font-style: normal; font-weight: 800; font-display: swap; src: url("assets/fonts/Nunito-ExtraBold.ttf") format("truetype"); }
+
+:root, [data-theme="dark"] {
+  --font-sans: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Nunito", system-ui, sans-serif;
+  --font-body: "Nunito", system-ui, sans-serif;
+}
+html, body, button, input, select, textarea { font-family: var(--font-sans); }
+/* Nunito sits a touch lighter than Poppins at the same weight */
+.jn-screen b, .jn-screen h1, .jn-screen h2, .jn-screen h3 { font-weight: var(--fw-bold); }
+/* the phone frame sets -apple-system for its status bar; the screens inside stay Nunito */
+.jn-screen, .m-screen, .post-wrap, .jn-sheet, .jn-layer { font-family: var(--font-sans); }
