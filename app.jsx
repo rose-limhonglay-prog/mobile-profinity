@@ -1616,7 +1616,8 @@ const SQUARE_IMG_POST_1 = {
 };
 
 /* Sample long-form text post — body runs well past the old 3-line clamp so
-   the "See more" toggle and the new 5-line default are easy to sanity-check
+   the "See more" toggle and the 3-line default (user, 2026-10-22: newsfeed
+   text shows 3 lines, the rest sits behind See more) are easy to sanity-check
    against a real post in the feed. */
 const SAMPLE_LONG_TEXT_POST = {
   id: "ff_longtext1", author: TIM, time: "45m",
@@ -3045,8 +3046,23 @@ function ReactTrigger() {
 
 }
 
+/* Comment counts (user, 2026-10-22: "300 comments / 27 / View all 2" made no
+   sense). One source of truth: a comment's own "N Comments" is its reply
+   count (hidden when 0), and the post's comment count is the loaded thread
+   (comments + replies) whenever a thread exists, so the stat row, "View all
+   N comments" and the sheet always agree. Posts without a thread keep their
+   seeded number. */
 function withIds(list) {
-  return (list || []).map((c) => ({ ...c, _id: "c" + _cseq++, replies: (c.replies || []).map((r) => ({ ...r })) }));
+  return (list || []).map((c) => {
+    const replies = (c.replies || []).map((r) => ({ ...r }));
+    return { ...c, _id: "c" + _cseq++, replies, comments: replies.length || null };
+  });
+}
+function commentTotal(list) {
+  return (list || []).reduce((n, c) => n + 1 + ((c.replies || []).length), 0);
+}
+function countComments(list, fallback) {
+  return list && list.length ? String(commentTotal(list)) : fallback;
 }
 
 const COMMENT_EMOJI = ["😀", "😂", "😍", "🥰", "😊", "😉", "🤔", "😮", "😢", "😅", "🙌", "👏", "👍", "🙏", "🔥", "💯", "🎉", "❤️"];
@@ -4731,7 +4747,7 @@ function CommentsSheet({ post, comments, onClose, onAddComment, onAddReply }) {
 
 /* Clamp the post body to a few lines with a "See more" / "See less" toggle.
    Passed as the `body` node to the DS PostCard (which renders {body} as-is). */
-function ClampText({ text, lines = 5, more = "See more", color = "var(--text-primary)" }) {
+function ClampText({ text, lines = 3, more = "See more", color = "var(--text-primary)" }) {
   const [expanded, setExpanded] = useState(false);
   const [overflowing, setOverflowing] = useState(false);
   const ref = useRef(null);
@@ -5884,14 +5900,14 @@ function pinMenuItemsFor(pinned, canPin, onPin, pinScope) {
    MS_COLLECTIONS) — kept in sync by hand since each page loads its own
    script and there's no shared module system here. */
 const PF_COLLECTIONS = [
-  { name: "Lip protocols", n: 14, img: "assets/course-lip.png" },
-  { name: "Toxin techniques", n: 22, img: "assets/course-protox.png" },
+  { name: "Lip protocols", n: 14, img: "assets/post5-img10.png" },
+  { name: "Toxin techniques", n: 22, img: "assets/post1-img4.png" },
   { name: "Watch later", n: 8, icon: "lucide:clock" },
-  { name: "Complication cases", n: 11, img: "assets/chin-positions.png" },
+  { name: "Complication cases", n: 11, img: "assets/course-complications.jpg" },
   { name: "Full-face assessment", n: 6, img: "assets/post5-img1.png" },
-  { name: "Business growth", n: 9, img: "assets/post3-img1.png" },
-  { name: "Temple & midface", n: 5, img: "assets/course-temple.png" },
-  { name: "Chairside handouts", n: 17, img: "assets/clinic-toxin-guide.png" },
+  { name: "Business growth", n: 9, img: "assets/course-marketing.webp" },
+  { name: "Temple & midface", n: 5, img: "assets/course-temple-filler.webp" },
+  { name: "Chairside handouts", n: 17, img: "assets/post3-img3.png" },
 ];
 
 /* Reel-style save flow shared by every post card: tapping Save shows a
@@ -6931,9 +6947,9 @@ function FeedPost({ post, st, hideTags, pinned, canPin, onPin, pinScope, onToggl
         onKeyDown={(e) => {if (e.key === "Enter") setSheetOpen(true);}}>
             <CommentItem {...comments[0]} reactions={null} reactionCount={null} replies={[]} onCommentsClick={() => setSheetOpen(true)} />
           </div>
-          {comments.length > 1 &&
+          {commentTotal(comments) > 1 &&
         <button type="button" className="cmt-viewmore" onClick={() => setSheetOpen(true)}>
-              View all {comments.length} comments
+              View all {commentTotal(comments)} comments
             </button>
         }
         </div>
@@ -7000,7 +7016,7 @@ function TeaserPost({ post, onUpgrade }) {
         <div className="pf-teaser-head-main">
           <div className="pf-teaser-head-name">
             <span><ProfileLink author={author} className="pf-prof-nm">{author.name}</ProfileLink></span>
-            {author.seals && <VerificationSeals seals={author.seals} size={16} />}
+            {author.seals && <VerificationSeals seals={author.seals} size={16} info ownerName={author.name} />}
           </div>
           <div className="pf-teaser-head-sub">
             <span>{time}</span>
@@ -7043,7 +7059,7 @@ function FeedEventCard({ post, event }) {
         <div className="pf-teaser-head-main">
           <div className="pf-teaser-head-name">
             <span><ProfileLink author={author} className="pf-prof-nm">{author.name}</ProfileLink></span>
-            {author.seals && <VerificationSeals seals={author.seals} size={16} />}
+            {author.seals && <VerificationSeals seals={author.seals} size={16} info ownerName={author.name} />}
           </div>
           {post.time && <div className="pf-teaser-head-sub"><span>{post.time}</span></div>}
         </div>
@@ -7070,7 +7086,7 @@ function EventRegPostCard({ post }) {
         <div className="pf-teaser-head-main">
           <div className="pf-teaser-head-name">
             <span><ProfileLink author={author} className="pf-prof-nm">{author.name}</ProfileLink></span>
-            {author.seals && <VerificationSeals seals={author.seals} size={16} />}
+            {author.seals && <VerificationSeals seals={author.seals} size={16} info ownerName={author.name} />}
           </div>
           <div className="pf-teaser-head-sub"><span>{post.time}</span></div>
         </div>
@@ -7182,9 +7198,9 @@ function ChannelFeedCard({ post, st, pinned, canPin, onPin, pinScope, onToggleLi
         onKeyDown={(e) => {if (e.key === "Enter") setSheetOpen(true);}}>
             <CommentItem {...comments[0]} reactions={null} reactionCount={null} replies={[]} onCommentsClick={() => setSheetOpen(true)} />
           </div>
-          {comments.length > 1 &&
+          {commentTotal(comments) > 1 &&
         <button type="button" className="cmt-viewmore" onClick={() => setSheetOpen(true)}>
-              View all {comments.length} comments
+              View all {commentTotal(comments)} comments
             </button>
         }
         </div>
@@ -7245,7 +7261,7 @@ function CourseCommentCard({ post, st, pinned, canPin, onPin, pinScope, onToggle
         <div className="pf-ccard-head-main">
           <div className="pf-ccard-head-name">
             <span><ProfileLink author={post.author} className="pf-prof-nm">{post.author.name}</ProfileLink></span>
-            {post.author.seals && <VerificationSeals seals={post.author.seals} size={16} />}
+            {post.author.seals && <VerificationSeals seals={post.author.seals} size={16} info ownerName={post.author.name} />}
           </div>
           <div className="pf-chcard-tags">
             <div className="pf-ccard-head-time">{post.time}</div>
@@ -7788,6 +7804,17 @@ function readPinsOpen() {
 function writePinsOpen(open) {
   try { localStorage.setItem(PF_PINNED_OPEN_KEY, open ? "1" : "0"); } catch (e) {}
 }
+/* MKT Oct 2026: with nothing pinned the slot used to vanish, which members
+   read as a blank section. A quiet one-liner keeps the feature legible. Not
+   sticky and never collapses to the pill: there is nothing to jump to. */
+function PinnedEmpty() {
+  return (
+    <section className="pf-pinned-empty" aria-label="Pinned posts">
+      <span className="pf-pinned-card-tag-tx"><IconifyIcon name="fluent:pin-16-filled" size={15} color="#fff" />Pinned</span>
+      <span className="pf-pinned-empty-tx">Your pinned posts will appear here.</span>
+    </section>);
+}
+
 function PinnedBox({ items, open, onToggle, expandedIds, onToggleItem, renderItem, innerRef }) {
   const n = items.length;
   const authors = [];
@@ -8074,7 +8101,7 @@ function Feed({ channel } = {}) {
     /* Seeded from the union of every tier's sequence (not just the one the
        current viewer sees) so switching tiers via the live persona-preview
        switcher never leaves a post with no interaction state. */
-    [...readUserPosts(), ...ALL_FEED_SEQUENCE_POSTS, ...BUCKET_POSTS, ...TIER_TAG_POSTS, ...feedQuizPlan.posts].forEach((p) => {m[p.id] = { liked: false, saved: false, actioned: p.actioned, likes: p.likes, base: p.likes, reaction: null, shares: p.shares, sharesBase: p.shares, comments: withIds(p.commentList), commentsCount: p.comments };});
+    [...readUserPosts(), ...ALL_FEED_SEQUENCE_POSTS, ...BUCKET_POSTS, ...TIER_TAG_POSTS, ...feedQuizPlan.posts].forEach((p) => {m[p.id] = { liked: false, saved: false, actioned: p.actioned, likes: p.likes, base: p.likes, reaction: null, shares: p.shares, sharesBase: p.shares, comments: withIds(p.commentList), commentsCount: countComments(p.commentList, p.comments) };});
     return m;
   });
   /* Defaults to whatever tier is actually persisted (set for real by the
@@ -8141,7 +8168,7 @@ function Feed({ channel } = {}) {
       likes: "0", comments: "0", shares: "0", commentList: [] };
     try { localStorage.setItem(PF_USER_POSTS_KEY, JSON.stringify([post, ...readUserPosts()])); } catch (e) {}
     setUserPosts((list) => [post, ...list]);
-    setState((s) => ({ ...s, [post.id]: { liked: false, saved: false, actioned: post.actioned, likes: post.likes, base: post.likes, reaction: null, shares: post.shares, sharesBase: post.shares, comments: withIds(post.commentList), commentsCount: post.comments } }));
+    setState((s) => ({ ...s, [post.id]: { liked: false, saved: false, actioned: post.actioned, likes: post.likes, base: post.likes, reaction: null, shares: post.shares, sharesBase: post.shares, comments: withIds(post.commentList), commentsCount: countComments(post.commentList, post.comments) } }));
     return post.id;
   };
 
@@ -8366,9 +8393,10 @@ function Feed({ channel } = {}) {
       toggles={bucketToggles} onToggle={(k, v) => setBucketToggles((t) => ({ ...t, [k]: v }))} />
       }
       {userPosts.filter((p) => p.uploading).map((p) => <FeedUploadCard key={p.id} post={p} onCancel={() => cancelUpload(p.id)} />)}
-      {pinnedItems.length > 0 &&
+      {pinnedItems.length > 0 ?
       <PinnedBox items={pinnedItems} open={pinsOpen} onToggle={togglePinsOpen}
-        expandedIds={expandedPins} onToggleItem={toggleMinimizePin} renderItem={renderFeedItem} innerRef={pinnedRef} />
+        expandedIds={expandedPins} onToggleItem={toggleMinimizePin} renderItem={renderFeedItem} innerRef={pinnedRef} /> :
+      <PinnedEmpty />
       }
       {regularItems.map(renderFeedItem)}
       {landToast &&

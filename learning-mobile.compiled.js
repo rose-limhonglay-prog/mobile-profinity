@@ -1369,15 +1369,7 @@ function LM2TechniqueTuesdayCard({
     className: "lm-unlock-tx"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ti"
-  }, /*#__PURE__*/React.createElement(IconifyL, {
-    name: "lucide:video",
-    size: 15,
-    color: "var(--brand-navy)",
-    style: {
-      marginRight: 6,
-      verticalAlign: -2
-    }
-  }), "Technique Tuesdays", /*#__PURE__*/React.createElement("span", {
+  }, "Technique Tuesdays", /*#__PURE__*/React.createElement("span", {
     className: "lm2-tt-new"
   }, "New · Lesson ", latest.n)), /*#__PURE__*/React.createElement("span", {
     className: "lm2-tt-name"
@@ -1611,9 +1603,7 @@ function LearningHome() {
   }), /*#__PURE__*/React.createElement(LM2GoalBanner, {
     data: LM2_GOAL,
     onHelp: () => setHelpOpen(true)
-  }), !noCoursesYetL && /*#__PURE__*/React.createElement(LM2SearchBar, null), showContinue && /*#__PURE__*/React.createElement(LM2ContinueCard, {
-    data: continueData
-  }), !LM_FREE && /*#__PURE__*/React.createElement(LM2MembershipPathCard, null), noCoursesYetL ? /*#__PURE__*/React.createElement("section", {
+  }), !noCoursesYetL && /*#__PURE__*/React.createElement(LM2SearchBar, null), !LM_FREE && /*#__PURE__*/React.createElement(LM2MembershipPathCard, null), noCoursesYetL ? /*#__PURE__*/React.createElement("section", {
     className: "lm2-courseband lm2-mc-band lm2-start-free",
     "data-screen-label": "Start with free resources"
   }, /*#__PURE__*/React.createElement(LM2StartFreeResources, null)) : /*#__PURE__*/React.createElement("section", {

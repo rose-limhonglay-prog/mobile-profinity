@@ -30,6 +30,17 @@
 /* desktop: the six gems fit, so centre them and drop the edge bleed */
 .rw-main .rme-league { margin: 0; padding: 22px 20px 12px; background: var(--surface-card); border: 1px solid var(--border-default); border-radius: 18px; }
 .rw-main .rme-rail { justify-content: center; gap: 10px; margin: 6px 0 0; padding: 12px 0 4px; overflow: visible; }
+/* bigger gems on the web dashboard (user, 2026-10-22 "make this bigger"):
+   the Gem component sets its size inline (66 / 96 on mobile), so the desktop
+   override needs !important — 88px for the rail, 120px for your league
+   (six items + gaps must stay under the ~780px main-column rail) */
+.rw-main .rme-rail { gap: 14px; padding: 16px 0 6px; }
+.rw-main .rme-rail-item { padding: 6px 6px 8px; gap: 4px; }
+.rw-main .rme-rail-gem > .rme-gem { width: 88px !important; height: 88px !important; }
+.rw-main .rme-rail-item.mine .rme-rail-gem > .rme-gem { width: 120px !important; height: 120px !important; }
+.rw-main .rme-rail-lock { width: 36px; height: 36px; }
+.rw-main .rme-rail-pts { font-size: 15px; }
+.rw-main .rme-rail-item.mine .rme-rail-pts { font-size: 17px; }
 
 /* ---- milestone path ---- */
 .rme-path { margin-top: 6px; }

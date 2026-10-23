@@ -16,6 +16,7 @@ function goMS(url) {
 function msBackTarget() {
   const from = new URLSearchParams(window.location.search).get("from");
   if (from === "learning") return "LearningMobile.html";
+  if (from === "profile") return "ProfileMobile.html";
   return /LearningMobile\.html/i.test(document.referrer) ? "LearningMobile.html" : "AccountSettings.html";
 }
 function useDeviceScaleMS() {
@@ -41,11 +42,11 @@ function useIsMobileMS() {
 const MS_COLLECTIONS = [{
   name: "Lip protocols",
   n: 14,
-  img: "assets/course-lip.png"
+  img: "assets/post5-img10.png"
 }, {
   name: "Toxin techniques",
   n: 22,
-  img: "assets/course-protox.png"
+  img: "assets/post1-img4.png"
 }, {
   name: "Watch later",
   n: 8,
@@ -54,7 +55,7 @@ const MS_COLLECTIONS = [{
 }, {
   name: "Complication cases",
   n: 11,
-  img: "assets/chin-positions.png"
+  img: "assets/course-complications.jpg"
 }, {
   name: "Full-face assessment",
   n: 6,
@@ -62,15 +63,15 @@ const MS_COLLECTIONS = [{
 }, {
   name: "Business growth",
   n: 9,
-  img: "assets/post3-img1.png"
+  img: "assets/course-marketing.webp"
 }, {
   name: "Temple & midface",
   n: 5,
-  img: "assets/course-temple.png"
+  img: "assets/course-temple-filler.webp"
 }, {
   name: "Chairside handouts",
   n: 17,
-  img: "assets/clinic-toxin-guide.png"
+  img: "assets/post3-img3.png"
 }];
 const MS_TABS = [{
   k: "Collections",
@@ -85,11 +86,217 @@ const MS_TABS = [{
   k: "Resources",
   n: 34
 }];
+
+/* ---- Collection detail (user, 2026-10-21 "make the collection same on this",
+   after a TikTok collection screen): back + share, big title, "N posts 🔒",
+   a Manage pill and a tight 3-column grid of post thumbnails with a play
+   glyph and view count. MySaved.html?collection=<name>. Manage = select
+   mode with a Remove bar. The posts are a seeded sample per collection. */
+const MS_POST_POOL = [{
+  img: "assets/post1-img1.png",
+  views: "535.1K"
+}, {
+  img: "assets/post2-img1.png",
+  views: "65.7K"
+}, {
+  img: "assets/post3-img1.png",
+  views: "128K"
+}, {
+  img: "assets/post4-img1.png",
+  views: "42.3K"
+}, {
+  img: "assets/post5-img1.png",
+  views: "88.9K"
+}, {
+  img: "assets/post-case-p1-img1.jpg",
+  views: "211K"
+}, {
+  img: "assets/post1-img2.png",
+  views: "19.4K"
+}, {
+  img: "assets/post2-img2.png",
+  views: "73.5K"
+}, {
+  img: "assets/post3-img2.png",
+  views: "9,812"
+}, {
+  img: "assets/post4-img2.png",
+  views: "154K"
+}, {
+  img: "assets/post1-img3.png",
+  views: "31.7K"
+}, {
+  img: "assets/post2-img3.png",
+  views: "47.2K"
+}, {
+  img: "assets/clinic-lip-design.png",
+  views: "96.1K"
+}, {
+  img: "assets/clinic-treatment-collage.png",
+  views: "22.8K"
+}, {
+  img: "assets/course-cheek-contouring.jpg",
+  views: "61.3K"
+}, {
+  img: "assets/course-tear-trough.jpg",
+  views: "12.6K"
+}, {
+  img: "assets/post3-img3.png",
+  views: "7,204"
+}, {
+  img: "assets/post4-img3.png",
+  views: "58.9K"
+}, {
+  img: "assets/course-jawline-sculpting.jpg",
+  views: "105K"
+}, {
+  img: "assets/course-skin-boosters.jpg",
+  views: "33.4K"
+}, {
+  img: "assets/post1-img4.png",
+  views: "15.2K"
+}, {
+  img: "assets/course-brow-lift.jpg",
+  views: "84.6K"
+}];
+function msCollectionPosts(c) {
+  const start = MS_COLLECTIONS.findIndex(x => x.name === c.name) * 3;
+  return Array.from({
+    length: Math.min(c.n, MS_POST_POOL.length)
+  }, (_, i) => ({
+    id: c.name + "-" + i,
+    ...MS_POST_POOL[(start + i) % MS_POST_POOL.length]
+  }));
+}
+function msParam(name) {
+  try {
+    return new URLSearchParams(window.location.search).get(name);
+  } catch (e) {
+    return null;
+  }
+}
+function MSCollectionDetail({
+  c
+}) {
+  const [posts, setPosts] = useStateMS(() => msCollectionPosts(c));
+  const [manage, setManage] = useStateMS(false);
+  const [sel, setSel] = useStateMS(() => new Set());
+  const toggle = id => setSel(s => {
+    const n = new Set(s);
+    n.has(id) ? n.delete(id) : n.add(id);
+    return n;
+  });
+  const remove = () => {
+    setPosts(p => p.filter(x => !sel.has(x.id)));
+    setSel(new Set());
+    setManage(false);
+  };
+  const share = () => {
+    try {
+      if (navigator.share) navigator.share({
+        title: c.name,
+        url: location.href
+      });
+    } catch (e) {}
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "ms-screen msc-screen",
+    "data-screen-label": "Collection"
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "msc-top"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "ms-back",
+    "aria-label": "Back",
+    onClick: () => goMS("MySaved.html" + (msParam("from") ? "?from=" + encodeURIComponent(msParam("from")) : ""))
+  }, /*#__PURE__*/React.createElement(DSMS.IconifyIcon, {
+    name: "lucide:chevron-left",
+    size: 26,
+    color: "var(--gray-900)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "grow"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "ms-back",
+    "aria-label": "Share collection",
+    onClick: share
+  }, /*#__PURE__*/React.createElement(DSMS.IconifyIcon, {
+    name: "lucide:share",
+    size: 22,
+    color: "var(--gray-900)"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "ms-scroll msc-scroll"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "msc-head"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "msc-head-tx"
+  }, /*#__PURE__*/React.createElement("h1", {
+    className: "msc-title"
+  }, c.name), /*#__PURE__*/React.createElement("p", {
+    className: "msc-sub"
+  }, posts.length, " ", posts.length === 1 ? "post" : "posts", " ", /*#__PURE__*/React.createElement(DSMS.IconifyIcon, {
+    name: "lucide:lock",
+    size: 16,
+    color: "var(--gray-400)"
+  }))), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "msc-manage" + (manage ? " on" : ""),
+    onClick: () => {
+      setManage(m => !m);
+      setSel(new Set());
+    }
+  }, manage ? "Done" : "Manage")), posts.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    className: "lm-saved-empty"
+  }, /*#__PURE__*/React.createElement(DSMS.IconifyIcon, {
+    name: "lucide:bookmark",
+    size: 34,
+    color: "var(--gray-400)"
+  }), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("b", null, "Nothing in this collection"), "Save a post here from the bookmark on any post.")) : /*#__PURE__*/React.createElement("div", {
+    className: "msc-grid" + (manage ? " is-manage" : ""),
+    role: "list"
+  }, posts.map(p => /*#__PURE__*/React.createElement("button", {
+    key: p.id,
+    type: "button",
+    role: "listitem",
+    className: "msc-tile" + (sel.has(p.id) ? " sel" : ""),
+    "aria-label": (manage ? sel.has(p.id) ? "Deselect" : "Select" : "Open") + " post, " + p.views + " views",
+    onClick: () => manage ? toggle(p.id) : goMS("ReelMobile.html")
+  }, /*#__PURE__*/React.createElement("img", {
+    src: p.img,
+    alt: "",
+    loading: "lazy"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "msc-views"
+  }, /*#__PURE__*/React.createElement(DSMS.IconifyIcon, {
+    name: "lucide:play",
+    size: 14,
+    color: "#fff"
+  }), p.views), manage && /*#__PURE__*/React.createElement("span", {
+    className: "msc-check" + (sel.has(p.id) ? " on" : ""),
+    "aria-hidden": "true"
+  }, sel.has(p.id) && /*#__PURE__*/React.createElement(DSMS.IconifyIcon, {
+    name: "lucide:check",
+    size: 14,
+    color: "#fff"
+  }))))), /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: manage ? 96 : 24
+    }
+  })), manage && /*#__PURE__*/React.createElement("div", {
+    className: "msc-bar"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "msc-bar-n"
+  }, sel.size ? sel.size + " selected" : "Select posts"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "msc-bar-remove",
+    disabled: !sel.size,
+    onClick: remove
+  }, "Remove")));
+}
 function MSCollectionTile({
   c
 }) {
   return /*#__PURE__*/React.createElement("button", {
-    className: "lm-col" + (c.img ? "" : " empty")
+    className: "lm-col" + (c.img ? "" : " empty"),
+    onClick: () => goMS("MySaved.html?collection=" + encodeURIComponent(c.name) + (msParam("from") ? "&from=" + encodeURIComponent(msParam("from")) : ""))
   }, c.img ? /*#__PURE__*/React.createElement("img", {
     src: c.img,
     alt: ""
@@ -280,6 +487,11 @@ function MySavedApp() {
     "--action-primary": "var(--brand-navy)",
     "--action-primary-hover": "var(--brand-navy-700)"
   };
+  const colName = msParam("collection");
+  const col = colName ? MS_COLLECTIONS.find(c => c.name === colName) : null;
+  const screen = col ? /*#__PURE__*/React.createElement(MSCollectionDetail, {
+    c: col
+  }) : /*#__PURE__*/React.createElement(MySaved, null);
   if (mobile) {
     return /*#__PURE__*/React.createElement("div", {
       className: "app",
@@ -287,7 +499,7 @@ function MySavedApp() {
         ...vars,
         background: "var(--surface-card)"
       }
-    }, /*#__PURE__*/React.createElement(MySaved, null));
+    }, screen);
   }
   return /*#__PURE__*/React.createElement("div", {
     className: "app device-stage",
@@ -300,6 +512,6 @@ function MySavedApp() {
   }, /*#__PURE__*/React.createElement(IOSDevice, {
     width: 440,
     height: 956
-  }, /*#__PURE__*/React.createElement(MySaved, null))));
+  }, screen)));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(MySavedApp, null));

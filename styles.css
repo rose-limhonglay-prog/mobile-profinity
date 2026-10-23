@@ -1673,6 +1673,10 @@ img{max-width:100%}
 /* admin-pinned posts — one accordion container at the top of the feed
    (PinnedBox in app.jsx): a header row that opens to list every pinned post
    as a compact row; a row expands in place to the full card. */
+/* empty pinned slot (MKT Oct 2026) */
+.pf-pinned-empty{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--brand-gold-100);
+  border:1px dashed color-mix(in srgb,var(--brand-gold) 50%,transparent)}
+.pf-pinned-empty-tx{font-family:var(--font-sans);font-size:13.5px;line-height:1.35;color:var(--text-secondary)}
 .pf-pinned-box{background:var(--brand-gold-100);border:1px solid color-mix(in srgb, var(--brand-gold) 45%, transparent);
   border-radius:calc(var(--r-md) + 4px);padding:12px;font-family:var(--font-sans)}
 /* web: stays pinned flush under the sticky TopNav (84px tall) while the

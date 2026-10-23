@@ -49,7 +49,7 @@
     var icon = ICONS[n.kind] || ICONS.coach;
     el.innerHTML = '<span class="sp-nudge-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + icon + "</svg></span>" +
       '<div class="sp-nudge-tx"><p class="sp-nudge-t">' + esc(n.title) + '</p><p class="sp-nudge-b">' + esc(n.body) + '</p>' +
-      '<div class="sp-nudge-meta"><span class="sp-nudge-time">Just now</span><button type="button" class="sp-nudge-cta">' + esc(n.cta) + "</button></div></div>" +
+      '<div class="sp-nudge-meta"><span class="sp-nudge-time">' + (n.kind === "coach" ? "From Ava, your coach" : "Your Success Path") + '</span><button type="button" class="sp-nudge-cta">' + esc(n.cta) + "</button></div></div>" +
       '<button type="button" class="sp-nudge-x" aria-label="Dismiss notification"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>';
     if (host !== document.body && getComputedStyle(host).position === "static") host.style.position = "relative";
     host.appendChild(el);

@@ -81,7 +81,7 @@
     icon: "lucide:shield-alert",
     href: "DirectMessage.html"
   }, {
-    label: "AI Coach",
+    label: "Ask Ava",
     icon: "lucide:sparkles",
     href: "LearningMobile.html"
   }];

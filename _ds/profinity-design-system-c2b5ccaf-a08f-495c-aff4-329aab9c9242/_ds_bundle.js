@@ -2685,7 +2685,7 @@ function VerificationSeals({
     /* lazy-load the sheet so pages don't each need a <script> tag */
     if (window.__pfBadgeInfoFailed) return false;
     const sc = document.createElement("script");
-    sc.src = "badge-info.js?v=20261020a";
+    sc.src = "badge-info.js?v=20261022n";
     sc.onload = () => { if (window.PFBadgeInfo) go(); };
     sc.onerror = () => { window.__pfBadgeInfoFailed = true; };
     document.head.appendChild(sc);
@@ -2830,7 +2830,9 @@ function CommentItem({
     }
   }, author?.name), author?.seals && /*#__PURE__*/React.createElement(__ds_scope.VerificationSeals, {
     seals: author.seals,
-    size: 16
+    size: 16,
+    info: true,
+    ownerName: author.name
   }), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1
@@ -2852,7 +2854,7 @@ function CommentItem({
     style: {
       marginLeft: 12
     }
-  }, comments, " Comments")), /*#__PURE__*/React.createElement(__ds_scope.Icon, {
+  }, comments, String(comments) === "1" ? " Comment" : " Comments")), /*#__PURE__*/React.createElement(__ds_scope.Icon, {
     name: "settings",
     size: 16,
     color: "var(--gray-400)",
@@ -3024,7 +3026,9 @@ function PostCard({
     }
   }, author?.name), author?.seals && /*#__PURE__*/React.createElement(__ds_scope.VerificationSeals, {
     seals: author.seals,
-    size: 18
+    size: 18,
+    info: true,
+    ownerName: author.name
   }), withOthers && /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: "var(--font-sans)",

@@ -308,7 +308,7 @@
         <span className="cf-hub-banner-ic"><Icon name="lucide:sparkles" size={18} color="#fff" /></span>
         <span className="cf-hub-banner-copy">
           <span className="ti">Start here — Ava finds your focus</span>
-          <span className="su">Answer "Where you are now" (2 mins, free) and Ava shows you the one place to start.</span>
+          <span className="su">Got 2 minutes? Answer "Where you are now" and Ava shows you the one place to start. Free on every plan.</span>
         </span>
         <Icon name="lucide:chevron-right" size={18} color="var(--brand-navy)" />
       </button>);

@@ -748,15 +748,14 @@ function PWTargetsCard({ assessState, onOpenHub }) {
   const allDone = total > 0 && doneCount === total;
 
   return (
+    <>
+    {/* "Today's set · N of 7 done" row REMOVED on web (user, 2026-10-22: moved above the card, then "remove this") */}
     <PWPaneCard id="todays-targets" title="Today's Targets"
       meta={<span className="pw-target-date">{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}</span>}
       sub="Completing these will move your Prosperity Spiral forward."
       infoLabel="About Today's Targets" onInfo={() => setInfo(true)} moreLabel="How targets and points work">
     <div className="cf-door cf-door-targets">
-        <div className="cf-door-hd">
-          <span className="cf-kicker"><IconifyIconPW name="lucide:list-checks" size={14} color="var(--brand-gold)" />Today's set</span>
-          <span className="cf-door-count">{doneCount} of {total} done</span>
-        </div>
+        {/* "Today's set · N of 7 done" header row removed on web (user, 2026-10-22 "remove this") */}
         <ol className="cf-door-list">
           {nextKey && <PWAssessNudgeRow pillarKey={nextKey} remaining={remaining} onOpenHub={onOpenHub} locked={!paid} />}
           <PWDailyPicks />
@@ -799,7 +798,8 @@ function PWTargetsCard({ assessState, onOpenHub }) {
         <p>Pillars you haven't deep-dived yet don't get targets — the <b>Next up</b> row takes you to their questions{paid ? "" : " (Confidence)"}, and their tasks join the list the moment you finish.</p>
         <p>Every day also brings a <b>free PDF download</b> (+50 pts) and a <b>course pick</b> (+150 pts when you enrol). Both refresh daily.</p>
       </PWInfoModal>
-    </PWPaneCard>);
+    </PWPaneCard>
+    </>);
 }
 
 /* Gate card shown in place of Goal Focus / Prosperity Spiral / Today's
@@ -993,10 +993,9 @@ function PWGoalsSection({ assessState, onOpenHub }) {
   return (
     <>
       {/* Today's progress strip removed (user, 2026-10-07) */}
-      <PWGoalFocusCard assessState={assessState} onOpenHub={onOpenHub} />
+      {/* "Your coach focus" moved to the LEFT column (user, 2026-10-22) — see the sidebar in ProfileWebApp */}
       <PWTargetsCard assessState={assessState} onOpenHub={onOpenHub} />
-      <PWLeagueCard />
-      <PWSpiralCard assessState={assessState} onOpenHub={onOpenHub} />
+      {/* league card + Prosperity Spiral moved to the LEFT column (user, 2026-10-22) */}
     </>);
 }
 
@@ -1542,7 +1541,7 @@ function PWGetToKnowSideCard({ assessState, onOpenHub }) {
     <section className="pw-side-card cf-pw-side">
       <div className="cf-pw-side-hd"><h3>Get to know you</h3><IconifyIconPW name="lucide:sparkles" size={16} color="var(--ai-purple)" /></div>
       {focus && UI ? <div style={{ margin: "8px 0" }}><UI.CFFocusChip domain={focus.domain} /></div> :
-      <p className="cf-pw-side-su">Answer <b>Where you are now</b> (2 mins, free) and Ava finds your focus.</p>}
+      <p className="cf-pw-side-su">Got 2 minutes? Answer <b>Where you are now</b> and Ava finds your focus. Free on every plan.</p>}
       <p className="cf-pw-side-su">{done} of {avail.length} done{locked ? " · " + locked + " more with Confidence" : ""}</p>
       <button type="button" className="cf-btn cf-btn-primary cf-btn-block" onClick={() => onOpenHub(focus ? null : "whereNow")}>{focus ? "Open Get to know you" : "Find my focus"}</button>
     </section>);
@@ -1604,7 +1603,7 @@ function SuggestionRow({ s }) {
 function PWCoverHeader({ profile, onAvatar }) {
   const m = profile || PW_ME;
   return (
-    <div className="pw-cover">
+    <div className={"pw-cover" + (m.cover ? " has-img" : "")} style={m.cover ? { backgroundImage: "url(" + m.cover + ")" } : undefined}>
       <div className="pw-cover-inner">
         <button type="button" className="pw-cover-avatarwrap pw-cover-avbtn" aria-label="View profile picture" onClick={onAvatar}>
           {m.avatar ?
@@ -1659,6 +1658,10 @@ function PWHeaderBand({ profile, banners, conn, onEdit, onShare, onAddBanner }) 
         <ButtonPW variant="brand" onClick={onEdit} iconLeading={<IconPW name="edit" size={18} color="var(--white)" />}>Edit Profile</ButtonPW>
         <button type="button" className="pw-btn-outline pw-btn-share" onClick={onShare}>
           <IconifyIconPW name="lucide:share" size={16} color="var(--text-heading)" />Share Profile
+        </button>
+        {/* My Saved (user, 2026-10-22): twin of the bookmark button on ProfileMobile */}
+        <button type="button" className="pw-btn-outline pw-btn-saved" onClick={() => goPW("SavedWeb.html?from=profile")}>
+          <IconifyIconPW name="lucide:bookmark" size={16} color="var(--text-heading)" />My Saved
         </button>
         <button type="button" className="pw-btn-iconsq" aria-label="Settings" title="Settings" onClick={() => goPW("AccountSettingsWeb.html")}>
           <IconifyIconPW name="lucide:settings" size={18} color="var(--gray-600)" />
@@ -2121,7 +2124,13 @@ function ProfileMain({ assessState, onOpenHub, profile, banners, conn, onEdit, o
         <PWTabBar />
         <div className="pw-body">
           <div className="pw-sidebar">
+            {/* "Your coach focus" lives in the left column (user, 2026-10-22 "put this on the
+                left side section"); it renders nothing until Ava has found a focus */}
+            {/* order (user, 2026-10-22): Get to know you first, then coach focus, league, spiral */}
             <PWGetToKnowSideCard assessState={assessState} onOpenHub={onOpenHub} />
+            <PWGoalFocusCard assessState={assessState} onOpenHub={onOpenHub} />
+            {pwHasFocus(assessState) && <PWLeagueCard />}
+            {pwHasFocus(assessState) && <PWSpiralCard assessState={assessState} onOpenHub={onOpenHub} />}
             <PWPersonalDetailsCard />
             <PWLinksCard />
             <PWWorkCard />
@@ -2129,9 +2138,7 @@ function ProfileMain({ assessState, onOpenHub, profile, banners, conn, onEdit, o
             <PWEducationCard />
             <PWLanguagesCard />
             <PWLicensesCard />
-            <PWMembershipSideCard />
-            <PWChannelSideCard channels={p.feedChannels} />
-            <PWSuggestionsSideCard suggestions={p.suggestions} />
+            {/* Membership, Community Channel and "Add to your feed" side cards REMOVED (user, 2026-10-22 "remove this") */}
           </div>
           <div className="pw-main">
             <PWComposerCard profile={profile} />
@@ -3305,6 +3312,9 @@ function PWEditProfileModal({ profile, onCancel, onSave, openBanners, onOpenGoal
   const [avatar, setAvatar] = useStatePW(profile.avatar || "");
   /* Profile picture is mandatory (MKT Oct 2026): Save is blocked until one is set. */
   const [avatarErr, setAvatarErr] = useStatePW(false);
+  /* Cover photo (MKT Oct 2026): optional, replaces the gradient cover band. */
+  const [cover, setCover] = useStatePW(profile.cover || "");
+  const coverRef = React.useRef(null);
   const [bannersOpen, setBannersOpen] = useStatePW(!!openBanners);
   const [bannerCount, setBannerCount] = useStatePW(() => pwLoadBanners().length);
   const fileRef = React.useRef(null);
@@ -3316,6 +3326,12 @@ function PWEditProfileModal({ profile, onCancel, onSave, openBanners, onOpenGoal
     try { setAvatar(URL.createObjectURL(f)); setAvatarErr(false); } catch (err) {}
     e.target.value = "";
   }
+  function pickCover(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try { setCover(URL.createObjectURL(f)); } catch (err) {}
+    e.target.value = "";
+  }
   function handleSave() {
     if (!avatar) { setAvatarErr(true); return; }
     const patch = {
@@ -3324,6 +3340,7 @@ function PWEditProfileModal({ profile, onCancel, onSave, openBanners, onOpenGoal
       yearsExperience: form.yearsExperience
     };
     if (avatar && avatar !== profile.avatar) patch.avatar = avatar;
+    if (cover !== (profile.cover || "")) patch.cover = cover;
     onSave(patch);
   }
   return (
@@ -3340,6 +3357,21 @@ function PWEditProfileModal({ profile, onCancel, onSave, openBanners, onOpenGoal
             <button type="button" className="pw-edit-done" onClick={handleSave}>Save</button>
           </header>
           <div className="pw-edit-body">
+            {/* MKT Oct 2026: both uploads carry grey guidance text. */}
+            <div className="pw-edit-coverblock">
+              <button type="button" className={"pw-edit-cover" + (cover ? " has-img" : "")} aria-label={cover ? "Change cover photo" : "Upload your cover photo"}
+                onClick={() => coverRef.current && coverRef.current.click()}>
+                {cover ? <img src={cover} alt="" /> :
+                <span className="pw-edit-cover-ph">
+                  <IconifyIconPW name="lucide:image-plus" size={24} color="var(--gray-450)" />
+                  <span>Upload your cover photo</span>
+                  <small>Optional. A wide photo of you, your clinic or your work. 1500 × 500 px works best.</small>
+                </span>}
+                {cover && <span className="pw-edit-cover-chg"><IconifyIconPW name="lucide:camera" size={14} color="#fff" />Change</span>}
+              </button>
+              {cover && <button type="button" className="pw-edit-avlink pw-edit-avlink-rm" onClick={() => setCover("")}>Remove cover photo</button>}
+              <input ref={coverRef} type="file" accept="image/*" hidden onChange={pickCover} />
+            </div>
             <div className={"pw-edit-avblock" + (avatarErr ? " is-err" : "")}>
               <button type="button" className="pw-edit-avbtn" aria-label="Edit profile picture" onClick={() => fileRef.current && fileRef.current.click()}>
                 <AvatarPW name={form.fullName || profile.name} src={avatar} size={96} />

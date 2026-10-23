@@ -680,7 +680,7 @@ function LM2TechniqueTuesdayCard({ done }) {
     <section className="lm2-pathsec lm2-tt-sec" data-screen-label="Technique Tuesdays">
       <div className="lm-unlock lm2-tt-card" onClick={open} role="link" tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } }}>
         <div className="lm-unlock-tx">
-          <span className="ti"><IconifyL name="lucide:video" size={15} color="var(--brand-navy)" style={{ marginRight: 6, verticalAlign: -2 }} />Technique Tuesdays<span className="lm2-tt-new">New · Lesson {latest.n}</span></span>
+          <span className="ti">Technique Tuesdays<span className="lm2-tt-new">New · Lesson {latest.n}</span></span>
           <span className="lm2-tt-name">{PFM_L.shortTitle(latest)}</span>
           {/* count / watched / next-live line removed (user, 2026-10-15) */}
         </div>
@@ -853,7 +853,7 @@ function LearningHome() {
 
         {!noCoursesYetL && <LM2SearchBar />}
 
-        {showContinue && <LM2ContinueCard data={continueData} />}
+        {/* Continue Learning hero (LM2ContinueCard) removed from the page (user, 2026-10-22 "remove this"); the current course is reached from My Courses */}
 
         {/* My Membership sits right under Continue Learning (user, 2026-10-15) */}
         {!LM_FREE && <LM2MembershipPathCard />}

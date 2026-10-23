@@ -41,27 +41,85 @@
     { icon: "lucide:tag", label: "Pricing help", prompt: "How should I think about pricing my treatments this month?" }
   ];
 
+  /* ---- Ava's voice (MKT Oct 2026) ----
+     Members asked for Ava to sound like Tim: warm, direct, practical, plain
+     UK English, one clear next step, and a question back so the chat never
+     stalls. Never an em dash, never a hashtag, and she never asks for an
+     email address or any contact details (the live bot did, then went quiet).
+     AVA_VOICE is the brief the real model integration runs with as its system
+     prompt; tidyReply() is the safety net applied to every answer Ava shows,
+     so anything a model slips through still reads the way the brief says. */
+  var AVA_VOICE_RULES = [
+    "You are Ava, the PROfinity coach. You talk the way Dr Tim Pearce talks to the clinicians he mentors: warm, direct, practical, plain UK English, no hype and no lecture.",
+    "Keep every answer short. Two to four sentences, one idea at a time, then one clear next step the member can do today.",
+    "End with a short question back to the member so the conversation keeps moving. Never go quiet and never wait for information before replying.",
+    "Use the member's own numbers, goals and Prosperity Spiral pillars when you have them. Be honest when something is hard.",
+    "Never use em dashes or en dashes. Use a full stop or a comma instead.",
+    "Never use hashtags, bullet points, headings or emojis. Plain sentences only.",
+    "Never ask for the member's email address, phone number or any contact details. You already know who they are.",
+    "If you do not know something, say so and point the member to the right place in PROfinity."
+  ];
+  var AVA_VOICE = AVA_VOICE_RULES.join(" ");
+
+  /* "How Ava talks" card at the top of the thread (MKT Oct 2026): the voice
+     brief is visible in the chat itself, collapsed to one line, tap to read
+     every rule. Keeps the prompt reviewable without opening the code. */
+  function voiceCard() {
+    var row = document.createElement("div");
+    row.className = "pf-ava-voice";
+    row.innerHTML = '<button type="button" class="pf-ava-voice-hd" aria-expanded="false">' +
+        '<span class="pf-ava-voice-ic"><iconify-icon icon="lucide:mic-vocal" width="14" height="14"></iconify-icon></span>' +
+        '<span class="pf-ava-voice-tx"><b>How Ava talks</b><span>Tim\'s tone. Short, direct, no em dashes, no hashtags, never asks for your details.</span></span>' +
+        '<iconify-icon class="pf-ava-voice-chev" icon="lucide:chevron-down" width="16" height="16"></iconify-icon>' +
+      '</button>' +
+      '<div class="pf-ava-voice-body" hidden><p class="pf-ava-voice-lead">The brief every Ava answer follows:</p><ol>' +
+        AVA_VOICE_RULES.map(function (r) { return "<li>" + escHtml(r) + "</li>"; }).join("") +
+      '</ol></div>';
+    var hd = row.querySelector(".pf-ava-voice-hd"), body = row.querySelector(".pf-ava-voice-body");
+    hd.addEventListener("click", function () {
+      var open = body.hidden;
+      body.hidden = !open;
+      row.classList.toggle("open", open);
+      hd.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) el.thread.scrollTop = row.offsetTop - 8;
+    });
+    return row;
+  }
+
+  function tidyReply(text) {
+    return String(text || "")
+      .replace(/\s*[\u2014\u2013]+\s*/g, ", ")      /* em / en dash → comma */
+      .replace(/(^|[\s(])#[\w-]+/g, "$1")           /* hashtags */
+      .replace(/[ \t]{2,}/g, " ")
+      .replace(/\s+([,.!?])/g, "$1")
+      .replace(/,\s*([.!?])/g, "$1")
+      .trim();
+  }
+
   function replyFor(prompt) {
     var p = (prompt || "").toLowerCase();
+    if (/@|e-?mail/.test(p)) {
+      return { text: "No need for your email, I already know who you are. Let's just carry on. What's the one thing you want to get moving this week?", outcome: null };
+    }
     if (p.indexOf("market") !== -1) {
-      return { text: "Post 3 before/after case studies this week and reply to every comment within the hour. Visibility compounds fast when you're consistent.", outcome: "Post 3 case studies and reply to comments within an hour" };
+      return { text: "Visibility is a numbers game, so let's keep it simple. Post three before and after cases this week and reply to every comment within the hour. Consistency beats clever every time. Which treatment do you want to be known for first?", outcome: "Post 3 before and after cases and reply to comments within an hour" };
     }
     if (p.indexOf("sale") !== -1 || p.indexOf("pric") !== -1) {
-      return { text: "Script your consultation close: restate the outcome the patient wants, offer two package options, then ask for the booking directly.", outcome: "Script and use a two-option consultation close" };
+      return { text: "Pricing is a confidence problem more than a maths problem. Restate the result the patient wants, give them two package options, then ask for the booking. Don't apologise for your prices. Which treatment do you feel least sure about charging properly for?", outcome: "Use a two-option consultation close and ask for the booking" };
     }
     if (p.indexOf("clinical") !== -1) {
-      return { text: "Book one peer case review this week and log the outcome. It's the fastest way to sharpen clinical skills without another course.", outcome: "Book a peer case review this week" };
+      return { text: "The fastest way to sharpen up isn't another course. Book one peer case review this week, present a real case, and write down the one thing you'd do differently. Which case has been bugging you lately?", outcome: "Book a peer case review this week" };
     }
     if (p.indexOf("system") !== -1 || p.indexOf("business") !== -1) {
-      return { text: "Write a one-page SOP for your top recurring task. It's the quickest Business Systems win you can bank today.", outcome: "Write a one-page SOP for your top recurring task" };
+      return { text: "Pick the task you repeat most often and write a one page SOP for it today. Thirty minutes now saves you hours every month, and it's the first step to a clinic that doesn't need you in every room. What's the job that always lands back on your desk?", outcome: "Write a one page SOP for your most repeated task" };
     }
     if (p.indexOf("target") !== -1) {
-      return { text: "Here's a target that'll move the needle today: confirm tomorrow's bookings and send one follow-up to a lapsed patient.", outcome: "Confirm bookings and follow up with one lapsed patient" };
+      return { text: "Here's a target that actually moves the needle today. Confirm tomorrow's bookings and send one follow up to a patient who's gone quiet. Small, boring, done. Want me to add that to your targets?", outcome: "Confirm bookings and follow up with one lapsed patient" };
     }
     if (p.indexOf("goal") !== -1 || p.indexOf("spiral") !== -1 || p.indexOf("progress") !== -1) {
-      return { text: "Your Prosperity Spiral shows Marketing as your weakest pillar right now. Focus there first and the other three tend to follow.", outcome: "Focus this week's effort on Marketing" };
+      return { text: "Your Prosperity Spiral says Marketing is the pillar holding you back right now. Fix that first and the other three tend to follow. Shall I set you one marketing target for this week?", outcome: "Focus this week's effort on Marketing" };
     }
-    return { text: "Good question. Here's a focused next step you can act on today: pick your single biggest bottleneck and give it 30 minutes before anything else.", outcome: "Give your biggest bottleneck 30 focused minutes" };
+    return { text: "Good question. Here's what I'd do today: pick your single biggest bottleneck and give it thirty focused minutes before anything else. Tell me what's getting in the way most and I'll help you break it down.", outcome: "Give your biggest bottleneck 30 focused minutes" };
   }
 
   function readTargets() {
@@ -164,8 +222,11 @@
               '</span>' +
               '<span class="pf-ava-head-main">' +
                 '<span class="pf-ava-head-title"><b>Ava</b><em class="pf-ava-head-badge">AI coach</em></span>' +
-                '<span class="pf-ava-head-status"><i aria-hidden="true"></i>Online &middot; replies instantly</span>' +
+                '<span class="pf-ava-head-status"><i aria-hidden="true"></i>Online</span>' +
               '</span>' +
+              '<button type="button" class="pf-ava-notebtn pf-ava-voicebtn" id="pf-ava-voicebtn" aria-label="How Ava talks" title="How Ava talks">' +
+                '<iconify-icon icon="lucide:info" width="20" height="20" style="color:#fff"></iconify-icon>' +
+              '</button>' +
               '<button type="button" class="pf-ava-notebtn" id="pf-ava-notebtn" aria-label="Open my learning notepad" title="My learning notepad">' +
                 '<iconify-icon icon="lucide:notebook-pen" width="19" height="19" style="color:#fff"></iconify-icon>' +
                 '<span class="pf-ava-notecount" id="pf-ava-notecount"></span>' +
@@ -218,6 +279,17 @@
       if (el.notes.classList.contains("open")) closeNotepad(); else openNotepad();
     });
     root.querySelector("#pf-ava-notes-back").addEventListener("click", closeNotepad);
+    /* header (i): jump to the "How Ava talks" card and open it (user, 2026-10-22
+       couldn't find it once the thread had scrolled) */
+    root.querySelector("#pf-ava-voicebtn").addEventListener("click", function () {
+      closeNotepad();
+      var card = el.thread.querySelector(".pf-ava-voice");
+      if (!card) return;
+      if (!card.classList.contains("open")) card.querySelector(".pf-ava-voice-hd").click();
+      el.thread.scrollTop = 0;
+      card.classList.add("flash");
+      setTimeout(function () { card.classList.remove("flash"); }, 1200);
+    });
     el.notesList.addEventListener("click", function (e) {
       var btn = e.target.closest && e.target.closest(".pf-ava-note-btn");
       if (!btn) return;
@@ -240,7 +312,8 @@
       el.chips.appendChild(btn);
     });
 
-    addBubble("ava", "Hi Katy, I'm Ava, your AI coach. Ask me anything about your goal, or tap a quick action below.", false);
+    el.thread.appendChild(voiceCard());
+    addBubble("ava", "Hi Katy, I'm Ava. Ask me anything about your goal, your targets or what to do next, or tap a quick action below.", false);
 
     el.tab.addEventListener("click", onTabClick);
     el.close.addEventListener("click", closeSheet);
@@ -304,6 +377,7 @@
     }
     var bubble = document.createElement("div");
     bubble.className = "pf-ava-bubble";
+    if (who !== "user") text = tidyReply(text);
     bubble.textContent = text;
     col.appendChild(bubble);
     if (withActions) {
@@ -437,6 +511,7 @@
   window.PFAva = {
     open: function (prompt) { if (prompt) { sendMessage(prompt); } else { openSheet(); } },
     close: closeSheet,
+    voice: AVA_VOICE, tidy: tidyReply,
     notepad: { open: function () { openSheet(); openNotepad(); }, list: readNotes }
   };
 

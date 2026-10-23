@@ -125,3 +125,30 @@ img{max-width:100%}
   .sw-col{transition:none}
   .sw-modal-overlay,.sw-modal{animation:none}
 }
+
+/* ---- Collection detail (2026-10-21), twin of .msc-* in my-saved.css ---- */
+.swc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 6px 0 18px; }
+.swc-title { margin: 0 0 6px; font-family: var(--font-sans); font-weight: 800; font-size: 32px; letter-spacing: -.02em; color: var(--gray-900); }
+.swc-sub { margin: 0; display: flex; align-items: center; gap: 6px; font-family: var(--font-sans); font-size: 16px; color: var(--gray-500); }
+.swc-actions { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.swc-manage, .swc-remove { min-height: 42px; padding: 0 20px; border: none; border-radius: 999px; cursor: pointer; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; }
+.swc-manage { background: var(--surface-sunken, #f0f1f5); color: var(--gray-900); }
+.swc-manage:hover { background: var(--gray-100); }
+.swc-manage.on { background: var(--brand-navy); color: #fff; }
+.swc-remove { background: #D33F3F; color: #fff; }
+.swc-remove:disabled { opacity: .4; cursor: default; }
+.swc-share { width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border-default); background: var(--surface-card); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.swc-share:hover { background: var(--gray-50); }
+.swc-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+@media (max-width: 1100px) { .swc-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 760px) { .swc-grid { grid-template-columns: repeat(3, 1fr); } }
+.swc-tile { position: relative; aspect-ratio: 3 / 4; padding: 0; border: none; background: var(--gray-100); cursor: pointer; overflow: hidden; border-radius: 4px; }
+.swc-tile img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .2s ease; }
+.swc-tile:hover img { transform: scale(1.03); }
+.swc-tile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.45), transparent 40%); pointer-events: none; }
+.swc-views { position: absolute; left: 10px; bottom: 10px; z-index: 1; display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 14px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.swc-check { position: absolute; top: 10px; right: 10px; z-index: 1; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; background: rgba(0,0,0,.25); display: flex; align-items: center; justify-content: center; }
+.swc-check.on { background: var(--brand-navy); border-color: var(--brand-navy); }
+.swc-grid.is-manage .swc-tile.sel img { opacity: .7; }
+[data-theme="dark"] .swc-manage { background: rgba(255,255,255,.1); color: #fff; }
+[data-theme="dark"] .swc-manage.on { background: #C2BCFF; color: #131126; }

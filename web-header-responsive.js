@@ -46,7 +46,7 @@
     { label: "Membership Training", icon: "lucide:graduation-cap", href: "CourseWeb.html?course=profinity-membership" }, /* the membership course itself (user, 2026-10-15) */
     { label: "Technique Tuesday",   icon: "lucide:calendar-check", href: "TechniqueTuesdaysWeb.html" },
     { label: "Complications Help",  icon: "lucide:shield-alert",   href: "DirectMessage.html" },
-    { label: "AI Coach",            icon: "lucide:sparkles",       href: "LearningMobile.html" }];
+    { label: "Ask Ava",             icon: "lucide:sparkles",       href: "LearningMobile.html" }];
   var FREEDOM_LECTURE_ROW = { label: "Freedom Path Lectures", icon: "lucide:presentation", href: "LearningMobile.html" };
   var UPGRADE_LABEL = { free: "Confidence", confidence: "Mastery", mastery: "Freedom Path", freedom: "Sovereign" };
   var UPGRADE_METAL = { free: "bronze", confidence: "silver", mastery: "gold", freedom: "gold" };

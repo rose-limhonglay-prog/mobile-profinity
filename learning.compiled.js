@@ -1369,8 +1369,6 @@ function MyLearningApp() {
     color: "var(--gray-500)"
   }))), CONFIDENCE_TIER && !q && (tab === "All Courses" || tab === "In Progress") && /*#__PURE__*/React.createElement(ConfidenceDashboard, {
     saved: saved
-  }), showContinue && /*#__PURE__*/React.createElement(ContinueLearning, {
-    c: continueCourse
   }), noCoursesYet ? /*#__PURE__*/React.createElement("section", {
     className: "panel lrn2-mc-panel lrn2-start-free",
     "data-screen-label": "Start with free resources"

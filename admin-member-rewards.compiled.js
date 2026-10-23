@@ -85,6 +85,10 @@ const ADL_NAV_TOP = [{
   href: "AdminCourses.html",
   chevron: true
 }, {
+  icon: "lucide:route",
+  label: "Success Paths",
+  href: "AdminSuccessPaths.html"
+}, {
   icon: "lucide:users",
   label: "Community",
   href: "AdminCommunity.html",

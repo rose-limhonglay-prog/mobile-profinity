@@ -1799,7 +1799,7 @@ function PMGoalsMenu({
     color: "var(--brand-gold)"
   }), "Find your focus"), /*#__PURE__*/React.createElement("p", {
     className: "pm-goals-preview-empty"
-  }, "Answer ‘Where you are now’ (2 mins, free) and Ava shows you where to start — tap to begin")))), /*#__PURE__*/React.createElement("div", {
+  }, "Got 2 minutes? Answer ‘Where you are now’ and Ava shows you where to start. Free on every plan. Tap to begin.")))), /*#__PURE__*/React.createElement("div", {
     className: "pm-goals-pane pm-goals-expanded" + (expanded ? "" : " is-offstage"),
     "aria-hidden": !expanded
   }, /*#__PURE__*/React.createElement("div", {
@@ -6636,6 +6636,9 @@ function PMEditProfileScreen({
   const [avatar, setAvatar] = useStatePM(profile.avatar || "");
   /* Profile picture is mandatory (MKT Oct 2026): Save is blocked until one is set. */
   const [avatarErr, setAvatarErr] = useStatePM(false);
+  /* Cover photo (MKT Oct 2026): optional, shown as a band above the header. */
+  const [cover, setCover] = useStatePM(profile.cover || "");
+  const coverRef = React.useRef(null);
   const [bannersOpen, setBannersOpen] = useStatePM(() => {
     if (openBanners) return true;
     try {
@@ -6661,6 +6664,14 @@ function PMEditProfileScreen({
     } catch (err) {}
     e.target.value = "";
   }
+  function pickCover(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try {
+      setCover(URL.createObjectURL(f));
+    } catch (err) {}
+    e.target.value = "";
+  }
   function handleSave() {
     if (!avatar) {
       setAvatarErr(true);
@@ -6678,6 +6689,7 @@ function PMEditProfileScreen({
       instagram: form.instagram
     };
     if (avatar && avatar !== profile.avatar) patch.avatar = avatar;
+    if (cover !== (profile.cover || "")) patch.cover = cover;
     onSave(patch);
   }
   if (bannersOpen) {
@@ -6709,6 +6721,38 @@ function PMEditProfileScreen({
   }, "Save")), /*#__PURE__*/React.createElement("div", {
     className: "pm-edit-body"
   }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-edit-coverblock"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-edit-cover" + (cover ? " has-img" : ""),
+    "aria-label": cover ? "Change cover photo" : "Upload your cover photo",
+    onClick: () => coverRef.current && coverRef.current.click()
+  }, cover ? /*#__PURE__*/React.createElement("img", {
+    src: cover,
+    alt: ""
+  }) : /*#__PURE__*/React.createElement("span", {
+    className: "pm-edit-cover-ph"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:image-plus",
+    size: 24,
+    color: "var(--gray-450)"
+  }), /*#__PURE__*/React.createElement("span", null, "Upload your cover photo"), /*#__PURE__*/React.createElement("small", null, "Optional. A wide photo of you, your clinic or your work. 1500 × 500 px works best.")), cover && /*#__PURE__*/React.createElement("span", {
+    className: "pm-edit-cover-chg"
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:camera",
+    size: 14,
+    color: "#fff"
+  }), "Change")), cover && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-edit-avlink pm-edit-avlink-rm pm-edit-cover-rm",
+    onClick: () => setCover("")
+  }, "Remove cover photo"), /*#__PURE__*/React.createElement("input", {
+    ref: coverRef,
+    type: "file",
+    accept: "image/*",
+    hidden: true,
+    onChange: pickCover
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pm-edit-avblock" + (avatarErr ? " is-err" : "")
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -7612,7 +7656,12 @@ function PMScreen() {
     ref: scrollRef
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-ig"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, m.cover && /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-cover"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: m.cover,
+    alt: ""
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pm-ig-top"
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -7715,6 +7764,15 @@ function PMScreen() {
     className: "pm-ig-btn",
     onClick: () => setQrOpen(true)
   }, "Share Profile"), /*#__PURE__*/React.createElement("button", {
+    className: "pm-ig-btn icon",
+    "aria-label": "My Saved",
+    title: "My Saved",
+    onClick: () => goPM("MySaved.html?from=profile")
+  }, /*#__PURE__*/React.createElement(DSPM.IconifyIcon, {
+    name: "lucide:bookmark",
+    size: 20,
+    color: "var(--text-heading)"
+  })), /*#__PURE__*/React.createElement("button", {
     className: "pm-ig-btn icon",
     "aria-label": "Settings",
     onClick: () => goPM("AccountSettings.html")

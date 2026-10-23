@@ -771,7 +771,7 @@ function MyLearningApp() {
 
         {CONFIDENCE_TIER && !q && (tab === "All Courses" || tab === "In Progress") && <ConfidenceDashboard saved={saved} />}
 
-        {showContinue && <ContinueLearning c={continueCourse} />}
+        {/* Continue Learning hero removed (user, 2026-10-22 "remove this" on mobile, mirrored to web) */}
 
         {noCoursesYet ?
         <section className="panel lrn2-mc-panel lrn2-start-free" data-screen-label="Start with free resources">

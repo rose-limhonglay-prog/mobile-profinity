@@ -30,7 +30,6 @@ function readRS() {
   const gg = g ? g.get() : { pointsPopup: true, streakPopup: true, dailyGoalPopup: true };
   return {
     sfxOn: s ? s.enabled() : true, sfxVol: s ? s.getVolume() : 1, theme: s ? s.getTheme() : "coin",
-    musicOn: m ? m.wantsMusic() : true, musicVol: m ? m.getVolume() : 1, tune: m && m.getTune ? m.getTune() : "sunny",
     pointsPopup: gg.pointsPopup !== false, streakPopup: gg.streakPopup !== false, dailyGoalPopup: gg.dailyGoalPopup !== false
   };
 }
@@ -96,12 +95,6 @@ function RewardsSettingsView() {
   const setTheme = (id) => { const s = SND(); if (s) { s.setTheme(id); patch({ theme: id }); if (st.sfxOn && s.preview) s.preview("points", id); } };
   const themes = (SND() && SND().themes) ? SND().themes() : [];
 
-  /* background music */
-  const setMusicOn = (on) => { const m = MUS(); if (m) m.setOn(on); patch({ musicOn: on }); };
-  const setMusicVol = (v) => { const m = MUS(); if (m) { m.setVolume(v); if (st.musicOn) m.start(); } patch({ musicVol: v }); };
-  const setTune = (id) => { const m = MUS(); if (m && m.setTune) m.setTune(id); patch({ tune: id }); };
-  const tunes = (MUS() && MUS().tunes) ? MUS().tunes() : [];
-
   /* pop-ups */
   const setGami = (k, on) => { const g = GAMI(); if (g) g.set({ [k]: on }); patch({ [k]: on }); };
 
@@ -124,22 +117,7 @@ function RewardsSettingsView() {
         </button>
       </section>
 
-      <section className="ml-card rs-card" aria-label="Background music">
-        <RowRS icon="lucide:music" tone="violet" title="Background music" sub="The little tune on the Rewards pages"
-          right={<SwitchRS on={st.musicOn} onChange={setMusicOn} label="Background music" />} />
-        <SliderRS value={st.musicVol} onInput={setMusicVol} label="Background music" disabled={!st.musicOn} />
-        <div className="rs-sub">
-          <span className="rs-sub-h">Tune</span>
-          <div className="rs-chips rs-tunes" role="radiogroup" aria-label="Background tune">
-            {tunes.map((t) => (
-              <button key={t.id} type="button" role="radio" aria-checked={st.tune === t.id} className={"rs-chip rs-tune" + (st.tune === t.id ? " on" : "")} disabled={!st.musicOn} onClick={() => setTune(t.id)}>
-                <b>{t.label}</b><i>{t.desc}</i>
-              </button>
-            ))}
-          </div>
-        </div>
-        <p className="rs-note">Plays only while you're on the Rewards pages. Pick a tune or slide to hear it change.</p>
-      </section>
+      {/* Background music section removed: the Rewards pages are silent (user, 2026-10-22) */}
 
       <section className="ml-card rs-card" aria-label="Pop-ups">
         <RowRS icon="lucide:party-popper" tone="pink" title="Pop-ups" sub="Little celebrations when you earn" />
@@ -211,7 +189,7 @@ function RewardsSettingsWeb() {
       <div className="rs-page" data-screen-label="Rewards settings">
         <button type="button" className="rs-crumb" onClick={() => goRS(retRS())}><DSRS.IconifyIcon name="lucide:chevron-left" size={16} color="currentColor" />Back to Rewards</button>
         <h1 className="rs-page-title">Rewards settings</h1>
-        <p className="rs-page-sub">Sounds, music and pop-ups for your points and rewards.</p>
+        <p className="rs-page-sub">Sounds and pop-ups for your points and rewards.</p>
         <RewardsSettingsView />
       </div>
     </>

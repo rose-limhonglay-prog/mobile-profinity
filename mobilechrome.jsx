@@ -51,7 +51,7 @@
   { label: "Membership Training", icon: "lucide:graduation-cap", href: "CourseDetail.html?course=profinity-membership" }, /* the membership course itself (user, 2026-10-15) */
   { label: "Technique Tuesday",   icon: "lucide:calendar-check", href: "TechniqueTuesdays.html" },
   { label: "Complications Help",  icon: "lucide:shield-alert",   href: "DirectMessage.html" },
-  { label: "AI Coach",            icon: "lucide:sparkles",       href: "LearningMobile.html" }];
+  { label: "Ask Ava",             icon: "lucide:sparkles",       href: "LearningMobile.html" }];
   const SM_FREEDOM_LECTURE_ROW_C = { label: "Freedom Path Lectures", icon: "lucide:presentation", href: "LearningMobile.html" };
 
   /* Upgrade-CTA label keyed by the viewer's CURRENT tier — not derivable from

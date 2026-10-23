@@ -628,6 +628,7 @@ body{background:#d8dae2;display:flex;align-items:flex-start;justify-content:cent
    feed scrolls. The scroll container's padding-top already offsets sticky
    children below the top bar; --m-stick (set by MobileHome) adds a Dynamic
    Island clearance only while the bar is hidden */
+.m-scroll .pf-pinned-empty{margin:0 10px}
 .m-scroll .pf-pinned-box--m{position:sticky;top:var(--m-stick,0px);z-index:20;margin:10px 12px;padding:10px;
   border-radius:18px;box-shadow:0 6px 18px rgba(31,26,77,.10);transition:top .28s cubic-bezier(.22,.61,.36,1)}
 .m-scroll .pf-pinned-box--m .pf-pinned-box-head{gap:10px}

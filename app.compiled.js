@@ -3522,7 +3522,8 @@ const SQUARE_IMG_POST_1 = {
 };
 
 /* Sample long-form text post — body runs well past the old 3-line clamp so
-   the "See more" toggle and the new 5-line default are easy to sanity-check
+   the "See more" toggle and the 3-line default (user, 2026-10-22: newsfeed
+   text shows 3 lines, the rest sits behind See more) are easy to sanity-check
    against a real post in the feed. */
 const SAMPLE_LONG_TEXT_POST = {
   id: "ff_longtext1",
@@ -5962,14 +5963,31 @@ function ReactTrigger() {
     onLeave: scheduleHide
   }));
 }
+
+/* Comment counts (user, 2026-10-22: "300 comments / 27 / View all 2" made no
+   sense). One source of truth: a comment's own "N Comments" is its reply
+   count (hidden when 0), and the post's comment count is the loaded thread
+   (comments + replies) whenever a thread exists, so the stat row, "View all
+   N comments" and the sheet always agree. Posts without a thread keep their
+   seeded number. */
 function withIds(list) {
-  return (list || []).map(c => ({
-    ...c,
-    _id: "c" + _cseq++,
-    replies: (c.replies || []).map(r => ({
+  return (list || []).map(c => {
+    const replies = (c.replies || []).map(r => ({
       ...r
-    }))
-  }));
+    }));
+    return {
+      ...c,
+      _id: "c" + _cseq++,
+      replies,
+      comments: replies.length || null
+    };
+  });
+}
+function commentTotal(list) {
+  return (list || []).reduce((n, c) => n + 1 + (c.replies || []).length, 0);
+}
+function countComments(list, fallback) {
+  return list && list.length ? String(commentTotal(list)) : fallback;
 }
 const COMMENT_EMOJI = ["😀", "😂", "😍", "🥰", "😊", "😉", "🤔", "😮", "😢", "😅", "🙌", "👏", "👍", "🙏", "🔥", "💯", "🎉", "❤️"];
 
@@ -9048,7 +9066,7 @@ function CommentsSheet({
    Passed as the `body` node to the DS PostCard (which renders {body} as-is). */
 function ClampText({
   text,
-  lines = 5,
+  lines = 3,
   more = "See more",
   color = "var(--text-primary)"
 }) {
@@ -10936,11 +10954,11 @@ function pinMenuItemsFor(pinned, canPin, onPin, pinScope) {
 const PF_COLLECTIONS = [{
   name: "Lip protocols",
   n: 14,
-  img: "assets/course-lip.png"
+  img: "assets/post5-img10.png"
 }, {
   name: "Toxin techniques",
   n: 22,
-  img: "assets/course-protox.png"
+  img: "assets/post1-img4.png"
 }, {
   name: "Watch later",
   n: 8,
@@ -10948,7 +10966,7 @@ const PF_COLLECTIONS = [{
 }, {
   name: "Complication cases",
   n: 11,
-  img: "assets/chin-positions.png"
+  img: "assets/course-complications.jpg"
 }, {
   name: "Full-face assessment",
   n: 6,
@@ -10956,15 +10974,15 @@ const PF_COLLECTIONS = [{
 }, {
   name: "Business growth",
   n: 9,
-  img: "assets/post3-img1.png"
+  img: "assets/course-marketing.webp"
 }, {
   name: "Temple & midface",
   n: 5,
-  img: "assets/course-temple.png"
+  img: "assets/course-temple-filler.webp"
 }, {
   name: "Chairside handouts",
   n: 17,
-  img: "assets/clinic-toxin-guide.png"
+  img: "assets/post3-img3.png"
 }];
 
 /* Reel-style save flow shared by every post card: tapping Save shows a
@@ -12865,11 +12883,11 @@ function FeedPost({
     reactionCount: null,
     replies: [],
     onCommentsClick: () => setSheetOpen(true)
-  })), comments.length > 1 && /*#__PURE__*/React.createElement("button", {
+  })), commentTotal(comments) > 1 && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "cmt-viewmore",
     onClick: () => setSheetOpen(true)
-  }, "View all ", comments.length, " comments")), /*#__PURE__*/React.createElement(ReactionPicker, {
+  }, "View all ", commentTotal(comments), " comments")), /*#__PURE__*/React.createElement(ReactionPicker, {
     at: picker,
     onPick: pick,
     onEnter: cancelHide,
@@ -12969,7 +12987,9 @@ function TeaserPost({
     className: "pf-prof-nm"
   }, author.name)), author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
     seals: author.seals,
-    size: 16
+    size: 16,
+    info: true,
+    ownerName: author.name
   })), /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-head-sub"
   }, /*#__PURE__*/React.createElement("span", null, time), /*#__PURE__*/React.createElement("span", {
@@ -13040,7 +13060,9 @@ function FeedEventCard({
     className: "pf-prof-nm"
   }, author.name)), author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
     seals: author.seals,
-    size: 16
+    size: 16,
+    info: true,
+    ownerName: author.name
   })), post.time && /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-head-sub"
   }, /*#__PURE__*/React.createElement("span", null, post.time)))), /*#__PURE__*/React.createElement(EventCard, event));
@@ -13085,7 +13107,9 @@ function EventRegPostCard({
     className: "pf-prof-nm"
   }, author.name)), author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
     seals: author.seals,
-    size: 16
+    size: 16,
+    info: true,
+    ownerName: author.name
   })), /*#__PURE__*/React.createElement("div", {
     className: "pf-teaser-head-sub"
   }, /*#__PURE__*/React.createElement("span", null, post.time)))), /*#__PURE__*/React.createElement("div", {
@@ -13294,11 +13318,11 @@ function ChannelFeedCard({
     reactionCount: null,
     replies: [],
     onCommentsClick: () => setSheetOpen(true)
-  })), comments.length > 1 && /*#__PURE__*/React.createElement("button", {
+  })), commentTotal(comments) > 1 && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "cmt-viewmore",
     onClick: () => setSheetOpen(true)
-  }, "View all ", comments.length, " comments")), replying && /*#__PURE__*/React.createElement(CommentComposer, {
+  }, "View all ", commentTotal(comments), " comments")), replying && /*#__PURE__*/React.createElement(CommentComposer, {
     placeholder: "Write a reply…",
     autoFocus: true,
     small: true,
@@ -13409,7 +13433,9 @@ function CourseCommentCard({
     className: "pf-prof-nm"
   }, post.author.name)), post.author.seals && /*#__PURE__*/React.createElement(VerificationSeals, {
     seals: post.author.seals,
-    size: 16
+    size: 16,
+    info: true,
+    ownerName: post.author.name
   })), /*#__PURE__*/React.createElement("div", {
     className: "pf-chcard-tags"
   }, /*#__PURE__*/React.createElement("div", {
@@ -14284,6 +14310,23 @@ function writePinsOpen(open) {
     localStorage.setItem(PF_PINNED_OPEN_KEY, open ? "1" : "0");
   } catch (e) {}
 }
+/* MKT Oct 2026: with nothing pinned the slot used to vanish, which members
+   read as a blank section. A quiet one-liner keeps the feature legible. Not
+   sticky and never collapses to the pill: there is nothing to jump to. */
+function PinnedEmpty() {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "pf-pinned-empty",
+    "aria-label": "Pinned posts"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-card-tag-tx"
+  }, /*#__PURE__*/React.createElement(IconifyIcon, {
+    name: "fluent:pin-16-filled",
+    size: 15,
+    color: "#fff"
+  }), "Pinned"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-pinned-empty-tx"
+  }, "Your pinned posts will appear here."));
+}
 function PinnedBox({
   items,
   open,
@@ -14695,7 +14738,7 @@ function Feed({
         shares: p.shares,
         sharesBase: p.shares,
         comments: withIds(p.commentList),
-        commentsCount: p.comments
+        commentsCount: countComments(p.commentList, p.comments)
       };
     });
     return m;
@@ -14858,7 +14901,7 @@ function Feed({
         shares: post.shares,
         sharesBase: post.shares,
         comments: withIds(post.commentList),
-        commentsCount: post.comments
+        commentsCount: countComments(post.commentList, post.comments)
       }
     }));
     return post.id;
@@ -15248,7 +15291,7 @@ function Feed({
     key: p.id,
     post: p,
     onCancel: () => cancelUpload(p.id)
-  })), pinnedItems.length > 0 && /*#__PURE__*/React.createElement(PinnedBox, {
+  })), pinnedItems.length > 0 ? /*#__PURE__*/React.createElement(PinnedBox, {
     items: pinnedItems,
     open: pinsOpen,
     onToggle: togglePinsOpen,
@@ -15256,7 +15299,7 @@ function Feed({
     onToggleItem: toggleMinimizePin,
     renderItem: renderFeedItem,
     innerRef: pinnedRef
-  }), regularItems.map(renderFeedItem), landToast && /*#__PURE__*/React.createElement("div", {
+  }) : /*#__PURE__*/React.createElement(PinnedEmpty, null), regularItems.map(renderFeedItem), landToast && /*#__PURE__*/React.createElement("div", {
     className: "pf-save-toast",
     role: "status"
   }, /*#__PURE__*/React.createElement("span", {

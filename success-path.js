@@ -96,14 +96,32 @@
     } catch (e) {}
   })();
 
+  /* Admin-created paths (2026-10-22): stored whole in pf-sp-content-v1 with
+     custom:true; draft:true keeps them invisible to members until the first
+     Publish. list() is what the admin picker and the lesson listener use. */
+  function stored() { return readJSON(CONTENT_KEY, {}) || {}; }
+  function isLive(slug) { var o = stored()[slug]; return !!DEFAULTS[slug] || !!(o && o.custom && !o.draft); }
+  function list() {
+    var o = stored(), out = [];
+    Object.keys(DEFAULTS).forEach(function (k) { out.push({ slug: k, title: (o[k] && o[k].title) || DEFAULTS[k].title, custom: false, draft: false }); });
+    Object.keys(o).forEach(function (k) { if (!DEFAULTS[k] && o[k] && o[k].custom) out.push({ slug: k, title: o[k].title || k, custom: true, draft: !!o[k].draft }); });
+    return out;
+  }
   function getContent(slug) {
     var base = DEFAULTS[slug];
-    if (!base) return null;
-    var o = readJSON(CONTENT_KEY, {}) || {};
+    var o = stored();
+    if (!base) {
+      var cu = o[slug];
+      if (!cu || !cu.custom) return null;
+      return { slug: slug, title: cu.title || slug, shortTitle: cu.shortTitle || cu.title || slug, kicker: cu.kicker || "Success Path", domain: cu.domain || "Clinical Skills", blurb: cu.blurb || "",
+        milestones: clone(cu.milestones || []), activities: clone(cu.activities || []), updatedAt: cu.updatedAt || null, customised: true, custom: true, draft: !!cu.draft };
+    }
     var c = clone(base);
     if (o[slug]) {
       if (Array.isArray(o[slug].milestones) && o[slug].milestones.length) c.milestones = o[slug].milestones;
       if (Array.isArray(o[slug].activities) && o[slug].activities.length) c.activities = o[slug].activities;
+      /* path details are editable in admin too (2026-10-22) */
+      ["title", "shortTitle", "kicker", "blurb", "domain"].forEach(function (k) { if (typeof o[slug][k] === "string" && o[slug][k].trim()) c[k] = o[slug][k]; });
       c.updatedAt = o[slug].updatedAt || null;
       c.customised = true;
     }
@@ -112,6 +130,8 @@
   function setContent(slug, data) {
     var o = readJSON(CONTENT_KEY, {}) || {};
     o[slug] = { milestones: data.milestones, activities: data.activities, updatedAt: nowIso() };
+    ["title", "shortTitle", "kicker", "blurb", "domain"].forEach(function (k) { if (typeof data[k] === "string") o[slug][k] = data[k]; });
+    if (!DEFAULTS[slug]) { o[slug].custom = true; o[slug].draft = !!data.draft; }
     writeJSON(CONTENT_KEY, o); emit({ type: "content", slug: slug });
   }
   function resetContent(slug) { var o = readJSON(CONTENT_KEY, {}) || {}; delete o[slug]; writeJSON(CONTENT_KEY, o); emit({ type: "content", slug: slug }); }
@@ -255,7 +275,7 @@
     var as = readJSON("pf-self-assessment", {}) || {};
     var CF = window.PFCoachFocus;
     if (!as.whereNow || as.whereNow.status !== "completed")
-      return { kind: "coach", title: "Let Ava find your focus", body: "2 minutes, free: tell Ava where you are now and she'll show you exactly where to start.", cta: "Find my focus", url: profileUrl("whereNow") };
+      return { kind: "coach", title: "Let Ava find your focus", body: "Got 2 free minutes? Tell Ava where you are now and she'll show you where to start.", cta: "Find my focus", url: profileUrl("whereNow") };
     var c = getContent(slug);
     var f = CF && CF.computeFocus ? CF.computeFocus(as) : null;
     /* Basic can't track a path (Confidence feature) — keep pointing at the door. */
@@ -473,8 +493,9 @@
   /* opts.inline (course page, 2026-10-07): the page hosts the path itself
      (window.PF_SP_INLINE_PATH) — complete here, splash, then ask the page to
      open its Success Path at the skill (pf-sp-open-path + pf-sp-focus). */
+  function hubSlug() { try { return new URLSearchParams(location.search).get("course") || "8d-lip-design"; } catch (e) { return "8d-lip-design"; } }
   function autoComplete(slug, opts) {
-    slug = slug || "8d-lip-design"; opts = opts || {};
+    slug = slug || hubSlug(); opts = opts || {};
     if (autoBusy || window.PF_SP_NO_AUTO || /Admin/i.test(location.pathname) || (!onHubPage() && !opts.inline)) return [];
     var s = compute(slug); if (!s) return [];
     var un = pathState(slug).unticked;
@@ -546,18 +567,23 @@
       /* on a course / lesson page: the lesson that just finished completed a
          skill's steps → back to the Success Path, which completes the skill
          and shows Dr Tim's splash */
-      var s = compute("8d-lip-design"); if (!s) return;
-      var ready = s.activities.filter(function (a) { return a.status === "ready"; });
-      if (!ready.length) return;
-      if (window.PF_SP_INLINE_PATH) { setTimeout(function () { autoComplete("8d-lip-design", { inline: true }); }, 500); return; }
-      if (!fromPath()) { autoComplete("8d-lip-design", { inline: true }); return; }   /* direct visit: quiet completion, stay on the page */
-      setTimeout(function () { (window.pfGo || function (u) { location.href = u; })(hubUrl("8d-lip-design", ready[0].id)); }, 900);
+      var hit = null;
+      list().forEach(function (p) {
+        if (hit || !isLive(p.slug)) return;
+        var s = compute(p.slug); if (!s) return;
+        var ready = s.activities.filter(function (a) { return a.status === "ready"; });
+        if (ready.length) hit = { slug: p.slug, ready: ready };
+      });
+      if (!hit) return;
+      if (window.PF_SP_INLINE_PATH) { setTimeout(function () { autoComplete(hit.slug, { inline: true }); }, 500); return; }
+      if (!fromPath()) { autoComplete(hit.slug, { inline: true }); return; }   /* direct visit: quiet completion, stay on the page */
+      setTimeout(function () { (window.pfGo || function (u) { location.href = u; })(hubUrl(hit.slug, hit.ready[0].id)); }, 900);
     }, 250);
   });
 
   window.PFSuccessPath = {
     EVT: EVT, STARTER: STARTER, SUGGESTED: SUGGESTED,
-    has: function (slug) { return !!DEFAULTS[slug]; },
+    has: isLive, list: list, isDefault: function (slug) { return !!DEFAULTS[slug]; },
     getContent: getContent, setContent: setContent, resetContent: resetContent, getDefaults: getDefaults,
     compute: compute, activitiesForLesson: activitiesForLesson,
     tick: tick, untick: untick, setGoal: setGoal, clearGoal: clearGoal, markSeen: markSeen,

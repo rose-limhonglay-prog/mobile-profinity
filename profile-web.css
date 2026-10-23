@@ -912,5 +912,25 @@
 .pw-edit-avlinks{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap}
 .pw-edit-avlink-rm{color:var(--gray-500)!important;font-weight:var(--fw-medium)!important}
 .pw-edit-avhelp{margin:-6px 0 0;max-width:320px;text-align:center;font-family:var(--font-sans);font-size:13px;line-height:1.45;color:var(--gray-500)}
+.pw-edit-avhelp b{display:block;font-weight:var(--fw-medium);color:var(--gray-550,var(--gray-500));margin-bottom:2px}
+/* Cover photo upload (MKT Oct 2026) */
+.pw-edit-coverblock{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 24px 0}
+.pw-edit-cover{position:relative;width:100%;height:132px;border:1.5px dashed var(--gray-300);border-radius:16px;background:var(--surface-sunken);
+  cursor:pointer;overflow:hidden;padding:0;display:flex;align-items:center;justify-content:center}
+.pw-edit-cover:hover{border-color:var(--brand-navy)}
+.pw-edit-cover.has-img{border-style:solid;border-color:transparent}
+.pw-edit-cover img{display:block;width:100%;height:100%;object-fit:cover}
+.pw-edit-cover-ph{display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--font-sans);color:var(--gray-500);text-align:center;padding:0 16px}
+.pw-edit-cover-ph span{font-size:14.5px;font-weight:var(--fw-medium);color:var(--gray-550,var(--gray-500))}
+.pw-edit-cover-ph small{font-size:12.5px;color:var(--gray-450)}
+.pw-edit-cover-chg{position:absolute;right:10px;bottom:10px;display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:999px;
+  background:rgba(16,24,40,.66);color:#fff;font-family:var(--font-sans);font-size:12.5px;font-weight:var(--fw-semibold)}
+.pw-cover.has-img{background-size:cover;background-position:center}
 .pw-edit-averr{display:flex;align-items:center;gap:6px;margin:-4px 0 0;font-family:var(--font-sans);font-size:13px;font-weight:var(--fw-semibold);color:#d92d20}
 .pw-edit-avblock.is-err .pw-edit-avbtn{box-shadow:0 0 0 3px #fff,0 0 0 5px #d92d20}
+
+/* "Your coach focus" in the 400px left column (2026-10-22): single column inside the card */
+.pw-sidebar .cf-pw-goal-grid{grid-template-columns:1fr;gap:16px}
+.pw-sidebar .pw-goal-card{width:100%}
+/* "Today's set" strip above the Today's Targets card (2026-10-22) */
+.pw-targets-sethead{margin:0 0 -6px}

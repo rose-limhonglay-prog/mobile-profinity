@@ -181,6 +181,24 @@
 .pf-ava-send:active { transform: scale(.94); }
 .pf-ava-send:focus-visible { outline: 2px solid var(--ai-purple); outline-offset: 2px; }
 
+/* "How Ava talks" voice card (MKT Oct 2026) */
+.pf-ava-voice.flash { box-shadow: 0 0 0 3px rgba(108,99,255,.45); transition: box-shadow .3s ease; }
+.pf-ava-voice { flex: none; align-self: stretch; border-radius: 16px; background: var(--surface-card); border: 1px dashed rgba(108,99,255,.38);
+  box-shadow: 0 2px 10px rgba(74,64,214,.06); font-family: var(--font-sans); overflow: hidden; }
+.pf-ava-voice-hd { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px; border: none; background: none;
+  cursor: pointer; text-align: left; font-family: inherit; color: var(--text-primary); }
+.pf-ava-voice-ic { flex: none; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: var(--ai-purple-100); color: var(--ai-purple); }
+.pf-ava-voice-tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pf-ava-voice-tx b { font-size: 13.5px; font-weight: var(--fw-bold); color: var(--text-heading); }
+.pf-ava-voice-tx span { font-size: 12.5px; line-height: 1.4; color: var(--text-secondary); }
+.pf-ava-voice-chev { flex: none; color: var(--gray-450); transition: transform .2s ease; }
+.pf-ava-voice.open .pf-ava-voice-chev { transform: rotate(180deg); }
+.pf-ava-voice-body { padding: 0 14px 12px; }
+.pf-ava-voice-lead { margin: 0 0 6px; font-size: 12.5px; font-weight: var(--fw-semibold); color: var(--ai-purple); }
+.pf-ava-voice-body ol { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.pf-ava-voice-body li { font-size: 13px; line-height: 1.45; color: var(--text-primary); }
+
 .pf-ava-disclaimer { flex: none; margin: 0; padding: 0 16px calc(12px + env(safe-area-inset-bottom, 0px));
   text-align: center; font-family: var(--font-sans); font-size: 11px; color: var(--gray-450); }
 

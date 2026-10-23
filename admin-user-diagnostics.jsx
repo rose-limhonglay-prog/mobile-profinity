@@ -30,6 +30,7 @@ const ADL_NAV_TOP = [
   { icon: "lucide:clipboard-list", label: "Quizzes & Surveys", href: "AdminQuizEditor.html" },
   { icon: "lucide:receipt-text", label: "Transactions", href: "AdminTransactions.html", chevron: true },
   { icon: "lucide:table-2", label: "Courses", href: "AdminCourses.html", chevron: true },
+  { icon: "lucide:route", label: "Success Paths", href: "AdminSuccessPaths.html" },
   { icon: "lucide:users", label: "Community", href: "AdminCommunity.html", chevron: true }
 ];
 const ADL_LOYALTY_SUBNAV = [

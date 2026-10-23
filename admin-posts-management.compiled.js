@@ -77,6 +77,9 @@ const APM_NAV = [{
   label: "Courses",
   chevron: true
 }, {
+  icon: "lucide:route",
+  label: "Success Paths"
+}, {
   icon: "lucide:users",
   label: "Community",
   chevron: true
@@ -100,6 +103,7 @@ const APM_NAV_LINKS = {
   "Points Ledger": "AdminAuditLedger.html",
   "Transactions": "AdminTransactions.html",
   "Courses": "AdminCourses.html",
+  "Success Paths": "AdminSuccessPaths.html",
   "Community": "AdminCommunity.html"
 };
 function APMSidebar() {

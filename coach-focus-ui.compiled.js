@@ -625,7 +625,7 @@
       className: "ti"
     }, "Start here — Ava finds your focus"), /*#__PURE__*/React.createElement("span", {
       className: "su"
-    }, "Answer \"Where you are now\" (2 mins, free) and Ava shows you the one place to start.")), /*#__PURE__*/React.createElement(Icon, {
+    }, "Got 2 minutes? Answer \"Where you are now\" and Ava shows you the one place to start. Free on every plan.")), /*#__PURE__*/React.createElement(Icon, {
       name: "lucide:chevron-right",
       size: 18,
       color: "var(--brand-navy)"

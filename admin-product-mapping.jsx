@@ -46,6 +46,7 @@ const MAP_NAV = [
   { icon: "lucide:scroll-text", label: "Points Ledger" },
   { icon: "lucide:receipt-text", label: "Transactions", chevron: true },
   { icon: "lucide:table-2", label: "Courses", chevron: true },
+  { icon: "lucide:route", label: "Success Paths" },
   { icon: "lucide:users", label: "Community", chevron: true },
 ];
 
@@ -68,6 +69,7 @@ const MAP_NAV_LINKS = {
   "Points Ledger": "AdminAuditLedger.html",
   "Transactions": "AdminTransactions.html",
   "Courses": "AdminCourses.html",
+  "Success Paths": "AdminSuccessPaths.html",
   "Community": "AdminCommunity.html",
 };
 

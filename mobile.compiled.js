@@ -710,7 +710,7 @@ const SM_MEMBERSHIP_ROWS_M = [{
   icon: "lucide:shield-alert",
   href: "DirectMessage.html"
 }, {
-  label: "AI Coach",
+  label: "Ask Ava",
   icon: "lucide:sparkles",
   href: "LearningMobile.html"
 }];

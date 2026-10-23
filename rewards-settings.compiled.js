@@ -54,9 +54,6 @@ function readRS() {
     sfxOn: s ? s.enabled() : true,
     sfxVol: s ? s.getVolume() : 1,
     theme: s ? s.getTheme() : "coin",
-    musicOn: m ? m.wantsMusic() : true,
-    musicVol: m ? m.getVolume() : 1,
-    tune: m && m.getTune ? m.getTune() : "sunny",
     pointsPopup: gg.pointsPopup !== false,
     streakPopup: gg.streakPopup !== false,
     dailyGoalPopup: gg.dailyGoalPopup !== false
@@ -250,33 +247,6 @@ function RewardsSettingsView() {
   };
   const themes = SND() && SND().themes ? SND().themes() : [];
 
-  /* background music */
-  const setMusicOn = on => {
-    const m = MUS();
-    if (m) m.setOn(on);
-    patch({
-      musicOn: on
-    });
-  };
-  const setMusicVol = v => {
-    const m = MUS();
-    if (m) {
-      m.setVolume(v);
-      if (st.musicOn) m.start();
-    }
-    patch({
-      musicVol: v
-    });
-  };
-  const setTune = id => {
-    const m = MUS();
-    if (m && m.setTune) m.setTune(id);
-    patch({
-      tune: id
-    });
-  };
-  const tunes = MUS() && MUS().tunes ? MUS().tunes() : [];
-
   /* pop-ups */
   const setGami = (k, on) => {
     const g = GAMI();
@@ -338,42 +308,6 @@ function RewardsSettingsView() {
     size: 16,
     color: "currentColor"
   }), "Play a test sound")), /*#__PURE__*/React.createElement("section", {
-    className: "ml-card rs-card",
-    "aria-label": "Background music"
-  }, /*#__PURE__*/React.createElement(RowRS, {
-    icon: "lucide:music",
-    tone: "violet",
-    title: "Background music",
-    sub: "The little tune on the Rewards pages",
-    right: /*#__PURE__*/React.createElement(SwitchRS, {
-      on: st.musicOn,
-      onChange: setMusicOn,
-      label: "Background music"
-    })
-  }), /*#__PURE__*/React.createElement(SliderRS, {
-    value: st.musicVol,
-    onInput: setMusicVol,
-    label: "Background music",
-    disabled: !st.musicOn
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "rs-sub"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "rs-sub-h"
-  }, "Tune"), /*#__PURE__*/React.createElement("div", {
-    className: "rs-chips rs-tunes",
-    role: "radiogroup",
-    "aria-label": "Background tune"
-  }, tunes.map(t => /*#__PURE__*/React.createElement("button", {
-    key: t.id,
-    type: "button",
-    role: "radio",
-    "aria-checked": st.tune === t.id,
-    className: "rs-chip rs-tune" + (st.tune === t.id ? " on" : ""),
-    disabled: !st.musicOn,
-    onClick: () => setTune(t.id)
-  }, /*#__PURE__*/React.createElement("b", null, t.label), /*#__PURE__*/React.createElement("i", null, t.desc))))), /*#__PURE__*/React.createElement("p", {
-    className: "rs-note"
-  }, "Plays only while you're on the Rewards pages. Pick a tune or slide to hear it change.")), /*#__PURE__*/React.createElement("section", {
     className: "ml-card rs-card",
     "aria-label": "Pop-ups"
   }, /*#__PURE__*/React.createElement(RowRS, {
@@ -541,6 +475,6 @@ function RewardsSettingsWeb() {
     className: "rs-page-title"
   }, "Rewards settings"), /*#__PURE__*/React.createElement("p", {
     className: "rs-page-sub"
-  }, "Sounds, music and pop-ups for your points and rewards."), /*#__PURE__*/React.createElement(RewardsSettingsView, null)));
+  }, "Sounds and pop-ups for your points and rewards."), /*#__PURE__*/React.createElement(RewardsSettingsView, null)));
 }
 ReactDOM.createRoot(document.getElementById("pf-root")).render(RS_WEB ? /*#__PURE__*/React.createElement(RewardsSettingsWeb, null) : /*#__PURE__*/React.createElement(RewardsSettingsMobile, null));

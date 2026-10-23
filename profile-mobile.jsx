@@ -1047,7 +1047,7 @@ function PMGoalsMenu({ assessState }) {
                 <span className="pm-goals-preview-h">
                   <DSPM.IconifyIcon name="lucide:sparkles" size={16} color="var(--brand-gold)" />Find your focus
                 </span>
-                <p className="pm-goals-preview-empty">Answer ‘Where you are now’ (2 mins, free) and Ava shows you where to start — tap to begin</p>
+                <p className="pm-goals-preview-empty">Got 2 minutes? Answer ‘Where you are now’ and Ava shows you where to start. Free on every plan. Tap to begin.</p>
               </>}
           </div>
         </button>
@@ -3947,6 +3947,9 @@ function PMEditProfileScreen({ profile, onCancel, onSave, openBanners }) {
   const [avatar, setAvatar] = useStatePM(profile.avatar || "");
   /* Profile picture is mandatory (MKT Oct 2026): Save is blocked until one is set. */
   const [avatarErr, setAvatarErr] = useStatePM(false);
+  /* Cover photo (MKT Oct 2026): optional, shown as a band above the header. */
+  const [cover, setCover] = useStatePM(profile.cover || "");
+  const coverRef = React.useRef(null);
   const [bannersOpen, setBannersOpen] = useStatePM(() => {
     if (openBanners) return true;
     try { return new URLSearchParams(window.location.search).get("banners") === "1"; } catch (e) { return false; }
@@ -3961,6 +3964,12 @@ function PMEditProfileScreen({ profile, onCancel, onSave, openBanners }) {
     try { setAvatar(URL.createObjectURL(f)); setAvatarErr(false); } catch (err) {}
     e.target.value = "";
   }
+  function pickCover(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try { setCover(URL.createObjectURL(f)); } catch (err) {}
+    e.target.value = "";
+  }
 
   function handleSave() {
     if (!avatar) { setAvatarErr(true); return; }
@@ -3970,6 +3979,7 @@ function PMEditProfileScreen({ profile, onCancel, onSave, openBanners }) {
       yearsExperience: form.yearsExperience, instagram: form.instagram,
     };
     if (avatar && avatar !== profile.avatar) patch.avatar = avatar;
+    if (cover !== (profile.cover || "")) patch.cover = cover;
     onSave(patch);
   }
 
@@ -3987,6 +3997,22 @@ function PMEditProfileScreen({ profile, onCancel, onSave, openBanners }) {
         <button type="button" className="pm-edit-done" onClick={handleSave}>Save</button>
       </header>
       <div className="pm-edit-body">
+        {/* MKT Oct 2026: both uploads carry grey guidance text ("Upload your
+            cover photo" / "Upload your profile picture"). */}
+        <div className="pm-edit-coverblock">
+          <button type="button" className={"pm-edit-cover" + (cover ? " has-img" : "")} aria-label={cover ? "Change cover photo" : "Upload your cover photo"}
+            onClick={() => coverRef.current && coverRef.current.click()}>
+            {cover ? <img src={cover} alt="" /> :
+            <span className="pm-edit-cover-ph">
+              <DSPM.IconifyIcon name="lucide:image-plus" size={24} color="var(--gray-450)" />
+              <span>Upload your cover photo</span>
+              <small>Optional. A wide photo of you, your clinic or your work. 1500 × 500 px works best.</small>
+            </span>}
+            {cover && <span className="pm-edit-cover-chg"><DSPM.IconifyIcon name="lucide:camera" size={14} color="#fff" />Change</span>}
+          </button>
+          {cover && <button type="button" className="pm-edit-avlink pm-edit-avlink-rm pm-edit-cover-rm" onClick={() => setCover("")}>Remove cover photo</button>}
+          <input ref={coverRef} type="file" accept="image/*" hidden onChange={pickCover} />
+        </div>
         <div className={"pm-edit-avblock" + (avatarErr ? " is-err" : "")}>
           <button type="button" className="pm-edit-avbtn" aria-label="Edit profile picture" onClick={() => fileRef.current && fileRef.current.click()}>
             <DSPM.Avatar name={form.fullName || profile.name} src={avatar} size={96} />
@@ -4466,6 +4492,7 @@ function PMScreen() {
           )}
           <div className="pm-scroll" ref={scrollRef}>
             <div className="pm-ig">
+              {m.cover && <div className="pm-ig-cover"><img src={m.cover} alt="" /></div>}
               <div className="pm-ig-top">
                 <button type="button" className="pm-ig-avwrap pm-ig-avbtn" aria-label="View profile picture" onClick={() => setAvatarOpen(true)}>
                   <DSPM.Avatar name={m.name} src={m.avatar} size={92} className="pm-ig-av" />
@@ -4516,6 +4543,10 @@ function PMScreen() {
               <div className="pm-ig-actions">
                 <button className="pm-ig-btn" onClick={() => setEditOpen(true)}>Edit Profile</button>
                 <button className="pm-ig-btn" onClick={() => setQrOpen(true)}>Share Profile</button>
+                {/* My Saved (user, 2026-10-22): collections live on MySaved.html; it comes back here */}
+                <button className="pm-ig-btn icon" aria-label="My Saved" title="My Saved" onClick={() => goPM("MySaved.html?from=profile")}>
+                  <DSPM.IconifyIcon name="lucide:bookmark" size={20} color="var(--text-heading)" />
+                </button>
                 <button className="pm-ig-btn icon" aria-label="Settings" onClick={() => goPM("AccountSettings.html")}>
                   <DSPM.IconifyIcon name="lucide:settings" size={20} color="var(--text-heading)" />
                 </button>

@@ -1212,7 +1212,7 @@ function PWTargetsCard({
   const total = rows.length + pickTotal;
   const doneCount = rows.filter(t => t.done).length + pickDone;
   const allDone = total > 0 && doneCount === total;
-  return /*#__PURE__*/React.createElement(PWPaneCard, {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PWPaneCard, {
     id: "todays-targets",
     title: "Today's Targets",
     meta: /*#__PURE__*/React.createElement("span", {
@@ -1228,17 +1228,7 @@ function PWTargetsCard({
     moreLabel: "How targets and points work"
   }, /*#__PURE__*/React.createElement("div", {
     className: "cf-door cf-door-targets"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "cf-door-hd"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "cf-kicker"
-  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
-    name: "lucide:list-checks",
-    size: 14,
-    color: "var(--brand-gold)"
-  }), "Today's set"), /*#__PURE__*/React.createElement("span", {
-    className: "cf-door-count"
-  }, doneCount, " of ", total, " done")), /*#__PURE__*/React.createElement("ol", {
+  }, /*#__PURE__*/React.createElement("ol", {
     className: "cf-door-list"
   }, nextKey && /*#__PURE__*/React.createElement(PWAssessNudgeRow, {
     pillarKey: nextKey,
@@ -1311,7 +1301,7 @@ function PWTargetsCard({
     icon: "lucide:list-checks",
     coach: "What should I tackle first from today's targets, and why?",
     coachLabel: "Ask Ava where to start"
-  }, /*#__PURE__*/React.createElement("p", null, "Ava picks ", /*#__PURE__*/React.createElement("b", null, "five"), " small actions a day, led by your ", /*#__PURE__*/React.createElement("b", null, "coach focus"), ", then any other pillar you've deep-dived — ", /*#__PURE__*/React.createElement("b", null, "red double chevron"), " for your focus, ", /*#__PURE__*/React.createElement("b", null, "gold single"), " for the next, ", /*#__PURE__*/React.createElement("b", null, "grey dash"), " for the rest."), /*#__PURE__*/React.createElement("p", null, "Ticking a target earns its points (", /*#__PURE__*/React.createElement("b", null, "+150 / +100 / +50"), ") and nudges that pillar's score. Click the row itself to open the pillar's goal page; the circle is just the tick."), /*#__PURE__*/React.createElement("p", null, "Five is the day's set. Finish them all and you're done for today — nothing new appears until tomorrow, when a fresh five arrives."), /*#__PURE__*/React.createElement("p", null, "Pillars you haven't deep-dived yet don't get targets — the ", /*#__PURE__*/React.createElement("b", null, "Next up"), " row takes you to their questions", paid ? "" : " (Confidence)", ", and their tasks join the list the moment you finish."), /*#__PURE__*/React.createElement("p", null, "Every day also brings a ", /*#__PURE__*/React.createElement("b", null, "free PDF download"), " (+50 pts) and a ", /*#__PURE__*/React.createElement("b", null, "course pick"), " (+150 pts when you enrol). Both refresh daily.")));
+  }, /*#__PURE__*/React.createElement("p", null, "Ava picks ", /*#__PURE__*/React.createElement("b", null, "five"), " small actions a day, led by your ", /*#__PURE__*/React.createElement("b", null, "coach focus"), ", then any other pillar you've deep-dived — ", /*#__PURE__*/React.createElement("b", null, "red double chevron"), " for your focus, ", /*#__PURE__*/React.createElement("b", null, "gold single"), " for the next, ", /*#__PURE__*/React.createElement("b", null, "grey dash"), " for the rest."), /*#__PURE__*/React.createElement("p", null, "Ticking a target earns its points (", /*#__PURE__*/React.createElement("b", null, "+150 / +100 / +50"), ") and nudges that pillar's score. Click the row itself to open the pillar's goal page; the circle is just the tick."), /*#__PURE__*/React.createElement("p", null, "Five is the day's set. Finish them all and you're done for today — nothing new appears until tomorrow, when a fresh five arrives."), /*#__PURE__*/React.createElement("p", null, "Pillars you haven't deep-dived yet don't get targets — the ", /*#__PURE__*/React.createElement("b", null, "Next up"), " row takes you to their questions", paid ? "" : " (Confidence)", ", and their tasks join the list the moment you finish."), /*#__PURE__*/React.createElement("p", null, "Every day also brings a ", /*#__PURE__*/React.createElement("b", null, "free PDF download"), " (+50 pts) and a ", /*#__PURE__*/React.createElement("b", null, "course pick"), " (+150 pts when you enrol). Both refresh daily."))));
 }
 
 /* Gate card shown in place of Goal Focus / Prosperity Spiral / Today's
@@ -1706,13 +1696,7 @@ function PWGoalsSection({
   if (!pwHasFocus(assessState)) return /*#__PURE__*/React.createElement(PWGoalsGateCard, {
     onOpenHub: onOpenHub
   });
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PWGoalFocusCard, {
-    assessState: assessState,
-    onOpenHub: onOpenHub
-  }), /*#__PURE__*/React.createElement(PWTargetsCard, {
-    assessState: assessState,
-    onOpenHub: onOpenHub
-  }), /*#__PURE__*/React.createElement(PWLeagueCard, null), /*#__PURE__*/React.createElement(PWSpiralCard, {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(PWTargetsCard, {
     assessState: assessState,
     onOpenHub: onOpenHub
   }));
@@ -2406,7 +2390,7 @@ function PWGetToKnowSideCard({
     domain: focus.domain
   })) : /*#__PURE__*/React.createElement("p", {
     className: "cf-pw-side-su"
-  }, "Answer ", /*#__PURE__*/React.createElement("b", null, "Where you are now"), " (2 mins, free) and Ava finds your focus."), /*#__PURE__*/React.createElement("p", {
+  }, "Got 2 minutes? Answer ", /*#__PURE__*/React.createElement("b", null, "Where you are now"), " and Ava finds your focus. Free on every plan."), /*#__PURE__*/React.createElement("p", {
     className: "cf-pw-side-su"
   }, done, " of ", avail.length, " done", locked ? " · " + locked + " more with Confidence" : ""), /*#__PURE__*/React.createElement("button", {
     type: "button",
@@ -2523,7 +2507,10 @@ function PWCoverHeader({
 }) {
   const m = profile || PW_ME;
   return /*#__PURE__*/React.createElement("div", {
-    className: "pw-cover"
+    className: "pw-cover" + (m.cover ? " has-img" : ""),
+    style: m.cover ? {
+      backgroundImage: "url(" + m.cover + ")"
+    } : undefined
   }, /*#__PURE__*/React.createElement("div", {
     className: "pw-cover-inner"
   }, /*#__PURE__*/React.createElement("button", {
@@ -2639,6 +2626,14 @@ function PWHeaderBand({
     size: 16,
     color: "var(--text-heading)"
   }), "Share Profile"), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-btn-outline pw-btn-saved",
+    onClick: () => goPW("SavedWeb.html?from=profile")
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:bookmark",
+    size: 16,
+    color: "var(--text-heading)"
+  }), "My Saved"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "pw-btn-iconsq",
     "aria-label": "Settings",
@@ -3346,11 +3341,13 @@ function ProfileMain({
   }, /*#__PURE__*/React.createElement(PWGetToKnowSideCard, {
     assessState: assessState,
     onOpenHub: onOpenHub
-  }), /*#__PURE__*/React.createElement(PWPersonalDetailsCard, null), /*#__PURE__*/React.createElement(PWLinksCard, null), /*#__PURE__*/React.createElement(PWWorkCard, null), /*#__PURE__*/React.createElement(PWServicesCard, null), /*#__PURE__*/React.createElement(PWEducationCard, null), /*#__PURE__*/React.createElement(PWLanguagesCard, null), /*#__PURE__*/React.createElement(PWLicensesCard, null), /*#__PURE__*/React.createElement(PWMembershipSideCard, null), /*#__PURE__*/React.createElement(PWChannelSideCard, {
-    channels: p.feedChannels
-  }), /*#__PURE__*/React.createElement(PWSuggestionsSideCard, {
-    suggestions: p.suggestions
-  })), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement(PWGoalFocusCard, {
+    assessState: assessState,
+    onOpenHub: onOpenHub
+  }), pwHasFocus(assessState) && /*#__PURE__*/React.createElement(PWLeagueCard, null), pwHasFocus(assessState) && /*#__PURE__*/React.createElement(PWSpiralCard, {
+    assessState: assessState,
+    onOpenHub: onOpenHub
+  }), /*#__PURE__*/React.createElement(PWPersonalDetailsCard, null), /*#__PURE__*/React.createElement(PWLinksCard, null), /*#__PURE__*/React.createElement(PWWorkCard, null), /*#__PURE__*/React.createElement(PWServicesCard, null), /*#__PURE__*/React.createElement(PWEducationCard, null), /*#__PURE__*/React.createElement(PWLanguagesCard, null), /*#__PURE__*/React.createElement(PWLicensesCard, null)), /*#__PURE__*/React.createElement("div", {
     className: "pw-main"
   }, /*#__PURE__*/React.createElement(PWComposerCard, {
     profile: profile
@@ -5897,6 +5894,9 @@ function PWEditProfileModal({
   const [avatar, setAvatar] = useStatePW(profile.avatar || "");
   /* Profile picture is mandatory (MKT Oct 2026): Save is blocked until one is set. */
   const [avatarErr, setAvatarErr] = useStatePW(false);
+  /* Cover photo (MKT Oct 2026): optional, replaces the gradient cover band. */
+  const [cover, setCover] = useStatePW(profile.cover || "");
+  const coverRef = React.useRef(null);
   const [bannersOpen, setBannersOpen] = useStatePW(!!openBanners);
   const [bannerCount, setBannerCount] = useStatePW(() => pwLoadBanners().length);
   const fileRef = React.useRef(null);
@@ -5919,6 +5919,14 @@ function PWEditProfileModal({
     } catch (err) {}
     e.target.value = "";
   }
+  function pickCover(e) {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try {
+      setCover(URL.createObjectURL(f));
+    } catch (err) {}
+    e.target.value = "";
+  }
   function handleSave() {
     if (!avatar) {
       setAvatarErr(true);
@@ -5935,6 +5943,7 @@ function PWEditProfileModal({
       yearsExperience: form.yearsExperience
     };
     if (avatar && avatar !== profile.avatar) patch.avatar = avatar;
+    if (cover !== (profile.cover || "")) patch.cover = cover;
     onSave(patch);
   }
   return /*#__PURE__*/React.createElement("div", {
@@ -5969,6 +5978,38 @@ function PWEditProfileModal({
   }, "Save")), /*#__PURE__*/React.createElement("div", {
     className: "pw-edit-body"
   }, /*#__PURE__*/React.createElement("div", {
+    className: "pw-edit-coverblock"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-edit-cover" + (cover ? " has-img" : ""),
+    "aria-label": cover ? "Change cover photo" : "Upload your cover photo",
+    onClick: () => coverRef.current && coverRef.current.click()
+  }, cover ? /*#__PURE__*/React.createElement("img", {
+    src: cover,
+    alt: ""
+  }) : /*#__PURE__*/React.createElement("span", {
+    className: "pw-edit-cover-ph"
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:image-plus",
+    size: 24,
+    color: "var(--gray-450)"
+  }), /*#__PURE__*/React.createElement("span", null, "Upload your cover photo"), /*#__PURE__*/React.createElement("small", null, "Optional. A wide photo of you, your clinic or your work. 1500 × 500 px works best.")), cover && /*#__PURE__*/React.createElement("span", {
+    className: "pw-edit-cover-chg"
+  }, /*#__PURE__*/React.createElement(IconifyIconPW, {
+    name: "lucide:camera",
+    size: 14,
+    color: "#fff"
+  }), "Change")), cover && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pw-edit-avlink pw-edit-avlink-rm",
+    onClick: () => setCover("")
+  }, "Remove cover photo"), /*#__PURE__*/React.createElement("input", {
+    ref: coverRef,
+    type: "file",
+    accept: "image/*",
+    hidden: true,
+    onChange: pickCover
+  })), /*#__PURE__*/React.createElement("div", {
     className: "pw-edit-avblock" + (avatarErr ? " is-err" : "")
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",

@@ -95,15 +95,15 @@ const RL_COLLECTIONS = [{
 }, {
   name: "Lip protocols",
   n: 14,
-  img: "assets/course-lip.png"
+  img: "assets/post5-img10.png"
 }, {
   name: "Toxin techniques",
   n: 22,
-  img: "assets/course-protox.png"
+  img: "assets/post1-img4.png"
 }, {
   name: "Complication cases",
   n: 11,
-  img: "assets/chin-positions.png"
+  img: "assets/course-complications.jpg"
 }, {
   name: "Full-face assessment",
   n: 6,
@@ -111,7 +111,7 @@ const RL_COLLECTIONS = [{
 }, {
   name: "Temple & midface",
   n: 5,
-  img: "assets/course-temple.png"
+  img: "assets/course-temple-filler.webp"
 }];
 function RLCollectionTile({
   c,

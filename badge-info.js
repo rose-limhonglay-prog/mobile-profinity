@@ -61,7 +61,7 @@
   var CSS = "" +
     ".pfbi-ov{position:fixed;inset:0;z-index:2000;background:rgba(16,14,40,.45);display:flex;align-items:flex-end;justify-content:center;opacity:0;transition:opacity .2s ease;font-family:var(--font-sans,Poppins,sans-serif)}" +
     ".pfbi-ov.in{opacity:1}" +
-    ".pfbi-card{width:100%;max-width:520px;max-height:82%;overflow:auto;background:var(--surface-card,#fff);color:var(--text-primary,#1b1b2f);border-radius:24px 24px 0 0;padding:10px 20px calc(24px + env(safe-area-inset-bottom));transform:translateY(24px);transition:transform .24s cubic-bezier(.2,.9,.3,1);box-shadow:0 -10px 40px rgba(16,14,40,.18)}" +
+    ".pfbi-card{width:calc(100% - 24px);margin:0 12px calc(12px + env(safe-area-inset-bottom));max-width:520px;max-height:82%;overflow:auto;background:var(--surface-card,#fff);color:var(--text-primary,#1b1b2f);border-radius:24px;padding:10px 20px 24px;transform:translateY(24px);transition:transform .24s cubic-bezier(.2,.9,.3,1);box-shadow:0 -10px 40px rgba(16,14,40,.18)}" +
     ".pfbi-ov.in .pfbi-card{transform:none}" +
     ".pfbi-grab{width:40px;height:5px;border-radius:3px;background:var(--gray-300,#d5d5de);margin:0 auto 14px}" +
     ".pfbi-hd{display:flex;align-items:center;gap:10px;margin-bottom:4px}" +
@@ -74,11 +74,14 @@
     ".pfbi-ic{flex:none;width:44px;height:44px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center}" +
     ".pfbi-ic img{width:40px;height:auto;display:block}" +
     ".pfbi-tx{min-width:0}" +
-    ".pfbi-nm{margin:0 0 3px;font-size:15px;font-weight:600;color:var(--text-heading,#2A2569)}" +
+    ".pfbi-nm{margin:0 0 3px;font-size:15px;font-weight:600;color:var(--text-heading,#2A2569);display:flex;align-items:center;gap:6px}" +
+    ".pfbi-i{flex:none;border:none;background:none;padding:4px;margin:-4px 0;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;color:var(--gray-450,#9a9aae);line-height:0}" +
+    ".pfbi-i:hover,.pfbi-i.on{color:var(--ai-purple,#6C63FF);background:var(--ai-purple-100,#EEEDFF)}" +
     ".pfbi-ab{margin:0;font-size:14px;line-height:1.45;color:var(--gray-600,#55556a)}" +
-    ".pfbi-how{margin:8px 0 0;font-size:13px;line-height:1.4;color:var(--gray-500,#6b6b80);display:flex;gap:6px}" +
+    ".pfbi-how{margin:8px 0 0;padding:8px 10px;border-radius:10px;background:var(--ai-purple-100,#EEEDFF);font-size:13px;line-height:1.4;color:var(--gray-600,#55556a)}" +
+    ".pfbi-how[hidden]{display:none}" +
     ".pfbi-how b{font-weight:600;color:var(--gray-700,#444)}" +
-    "@media (min-width:760px){.pfbi-ov{align-items:center}.pfbi-card{border-radius:20px;max-width:480px;padding:20px 24px 24px}.pfbi-grab{display:none}}" +
+    "@media (min-width:760px){.pfbi-ov{align-items:center}.pfbi-card{border-radius:20px;max-width:480px;margin:0;padding:20px 24px 24px}.pfbi-grab{display:none}}" +
     /* the (i) affordance next to a badge row */
     ".pf-seal-info{border:none;background:none;padding:0 2px;margin-left:2px;cursor:pointer;display:inline-flex;align-items:center;color:var(--gray-400,#9a9aae);line-height:0}" +
     ".pf-seal-info:hover{color:var(--brand-navy,#2A2569)}";
@@ -119,7 +122,9 @@
     opts = opts || {};
     injectCss();
     close();
-    var list = (seals || []).filter(function (k) { return BADGES[k]; });
+    /* The country flag is a profile fact (set from the clinic address in Edit
+       profile), not an earned badge, so it stays out of the sheet (user, 2026-10-22). */
+    var list = (seals || []).filter(function (k) { return BADGES[k] && k !== "gb"; });
     if (!list.length) return;
     var h = host();
     var ov = document.createElement("div");
@@ -134,12 +139,25 @@
         '<div class="pfbi-list">' + list.map(function (k) {
           var b = BADGES[k];
           return '<div class="pfbi-row' + (opts.focus === k ? " focus" : "") + '" data-k="' + k + '">' + iconHtml(b) +
-            '<div class="pfbi-tx"><p class="pfbi-nm">' + esc(b.name) + '</p><p class="pfbi-ab">' + esc(b.about) + '</p>' +
-            '<p class="pfbi-how"><iconify-icon icon="lucide:info" width="14" height="14" style="flex:none;margin-top:2px"></iconify-icon><span><b>How it’s earned:</b> ' + esc(b.how) + '</span></p></div></div>';
+            '<div class="pfbi-tx"><p class="pfbi-nm">' + esc(b.name) +
+              '<button type="button" class="pfbi-i" aria-expanded="false" aria-label="How it’s earned"><iconify-icon icon="lucide:info" width="15" height="15"></iconify-icon></button></p>' +
+            '<p class="pfbi-ab">' + esc(b.about) + '</p>' +
+            '<p class="pfbi-how" hidden><b>How it’s earned:</b> ' + esc(b.how) + '</p></div></div>';
         }).join("") + '</div>' +
       '</div>';
     ov.addEventListener("click", function (e) { if (e.target === ov) close(); });
     ov.querySelector(".pfbi-x").addEventListener("click", close);
+    /* (i) beside each badge title toggles its "How it's earned" line (user, 2026-10-22) */
+    ov.addEventListener("click", function (e) {
+      var i = e.target.closest && e.target.closest(".pfbi-i");
+      if (!i) return;
+      e.stopPropagation();
+      var how = i.closest(".pfbi-tx").querySelector(".pfbi-how");
+      var open = how.hidden;
+      how.hidden = !open;
+      i.setAttribute("aria-expanded", open ? "true" : "false");
+      i.classList.toggle("on", open);
+    });
     h.appendChild(ov);
     current = ov;
     document.addEventListener("keydown", onKey);

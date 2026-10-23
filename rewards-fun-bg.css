@@ -9,20 +9,23 @@
    CheckInStreak / RewardLanding(.Web).html. */
 
 :root {
-  --pfb-base: #FFF8EA;
-  --pfb-blob-gold: rgba(252,194,93,.34);
-  --pfb-blob-teal: rgba(79,184,160,.20);
-  --pfb-blob-pink: rgba(242,124,154,.16);
-  --pfb-blob-violet: rgba(142,134,230,.16);
-  --pfb-tile: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22360%22 height=%22360%22 viewBox=%220 0 360 360%22%3E%3Cpolygon points=%2246.0,45.0 49.4,53.3 58.4,54.0 51.6,59.8 53.6,68.5 46.0,63.9 38.4,68.5 40.4,59.8 33.6,54.0 42.6,53.3%22 fill=%22%23E8A63A%22 fill-opacity=%220.341%22/%3E%3Ccircle cx=%22262%22 cy=%2284%22 r=%2210%22 fill=%22%23E8A63A%22 fill-opacity=%220.31%22/%3E%3Ccircle cx=%22262%22 cy=%2284%22 r=%226.2%22 fill=%22none%22 stroke=%22%23E8A63A%22 stroke-opacity=%220.31%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M152 23 Q154.42 31.58 163 34 Q154.42 36.42 152 45 Q149.58 36.42 141 34 Q149.58 31.58 152 23Z%22 fill=%22%233FB39A%22 fill-opacity=%220.341%22/%3E%3Ccircle cx=%2296%22 cy=%22128%22 r=%223.5%22 fill=%22%23F27C9A%22 fill-opacity=%220.372%22/%3E%3Ccircle cx=%22302%22 cy=%22206%22 r=%223%22 fill=%22%238E86E6%22 fill-opacity=%220.372%22/%3E%3Ccircle cx=%22206%22 cy=%22254%22 r=%223.5%22 fill=%22%23E8A63A%22 fill-opacity=%220.372%22/%3E%3Crect x=%2259.5%22 y=%22220.0%22 width=%229%22 height=%224%22 rx=%221.5%22 transform=%22rotate(-28 64 222)%22 fill=%22%23F27C9A%22 fill-opacity=%220.341%22/%3E%3Crect x=%22279.5%22 y=%22300.0%22 width=%229%22 height=%224%22 rx=%221.5%22 transform=%22rotate(22 284 302)%22 fill=%22%233FB39A%22 fill-opacity=%220.341%22/%3E%3Cpolygon points=%22194.8,163.4 195.3,169.6 201.0,172.0 195.3,174.4 194.8,180.6 190.7,175.9 184.7,177.3 187.9,172.0 184.7,166.7 190.7,168.1%22 fill=%22%238E86E6%22 fill-opacity=%220.31%22/%3E%3Cpath d=%22M122 283 Q123.98 290.02 131 292 Q123.98 293.98 122 301 Q120.02 293.98 113 292 Q120.02 290.02 122 283Z%22 fill=%22%23E8A63A%22 fill-opacity=%220.341%22/%3E%3Ccircle cx=%2228%22 cy=%22330%22 r=%227%22 fill=%22%233FB39A%22 fill-opacity=%220.279%22/%3E%3Ccircle cx=%2228%22 cy=%22330%22 r=%224.3%22 fill=%22none%22 stroke=%22%233FB39A%22 stroke-opacity=%220.279%22 stroke-width=%221.6%22/%3E%3Ccircle cx=%22236%22 cy=%2220%22 r=%222.5%22 fill=%22%233FB39A%22 fill-opacity=%220.372%22/%3E%3Crect x=%22326.0%22 y=%22146.25%22 width=%228%22 height=%223.5%22 rx=%221.5%22 transform=%22rotate(-15 330 148)%22 fill=%22%23E8A63A%22 fill-opacity=%220.31%22/%3E%3Ccircle cx=%22170%22 cy=%22110%22 r=%222.5%22 fill=%22%23F27C9A%22 fill-opacity=%220.341%22/%3E%3C/svg%3E");
+  /* near-white base with a quiet lattice (user, 2026-10-22 "a little white
+     but has a pattern, professional"): hairline grid + plus marks in navy,
+     gold pin-dots at the intersections, two very soft gold/navy washes. */
+  --pfb-base: #FCFBF8;
+  --pfb-blob-gold: rgba(232,166,58,.13);
+  --pfb-blob-teal: rgba(42,37,105,.05);
+  --pfb-blob-pink: rgba(232,166,58,.07);
+  --pfb-blob-violet: rgba(42,37,105,.06);
+  --pfb-tile: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2256%22%20height%3D%2256%22%20viewBox%3D%220%200%2056%2056%22%3E%3Cpath%20d%3D%22M0%20.5H56M.5%200V56%22%20stroke%3D%22%232A2569%22%20stroke-opacity%3D%220.055%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M28%2024v8M24%2028h8%22%20stroke%3D%22%232A2569%22%20stroke-opacity%3D%220.100%22%20stroke-width%3D%221.2%22%20stroke-linecap%3D%22round%22%2F%3E%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%221.6%22%20fill%3D%22%23C89A4B%22%20fill-opacity%3D%220.550%22%2F%3E%3Ccircle%20cx%3D%2256%22%20cy%3D%220%22%20r%3D%221.6%22%20fill%3D%22%23C89A4B%22%20fill-opacity%3D%220.550%22%2F%3E%3Ccircle%20cx%3D%220%22%20cy%3D%2256%22%20r%3D%221.6%22%20fill%3D%22%23C89A4B%22%20fill-opacity%3D%220.550%22%2F%3E%3Ccircle%20cx%3D%2256%22%20cy%3D%2256%22%20r%3D%221.6%22%20fill%3D%22%23C89A4B%22%20fill-opacity%3D%220.550%22%2F%3E%3C%2Fsvg%3E");
 }
 :root[data-theme="dark"] {
   --pfb-base: #0d0c1d;
-  --pfb-blob-gold: rgba(252,194,93,.16);
-  --pfb-blob-teal: rgba(79,184,160,.12);
-  --pfb-blob-pink: rgba(242,124,154,.10);
-  --pfb-blob-violet: rgba(142,134,230,.12);
-  --pfb-tile: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22360%22 height=%22360%22 viewBox=%220 0 360 360%22%3E%3Cpolygon points=%2246.0,45.0 49.4,53.3 58.4,54.0 51.6,59.8 53.6,68.5 46.0,63.9 38.4,68.5 40.4,59.8 33.6,54.0 42.6,53.3%22 fill=%22%23E8A63A%22 fill-opacity=%220.209%22/%3E%3Ccircle cx=%22262%22 cy=%2284%22 r=%2210%22 fill=%22%23E8A63A%22 fill-opacity=%220.19%22/%3E%3Ccircle cx=%22262%22 cy=%2284%22 r=%226.2%22 fill=%22none%22 stroke=%22%23E8A63A%22 stroke-opacity=%220.19%22 stroke-width=%221.6%22/%3E%3Cpath d=%22M152 23 Q154.42 31.58 163 34 Q154.42 36.42 152 45 Q149.58 36.42 141 34 Q149.58 31.58 152 23Z%22 fill=%22%233FB39A%22 fill-opacity=%220.209%22/%3E%3Ccircle cx=%2296%22 cy=%22128%22 r=%223.5%22 fill=%22%23F27C9A%22 fill-opacity=%220.228%22/%3E%3Ccircle cx=%22302%22 cy=%22206%22 r=%223%22 fill=%22%238E86E6%22 fill-opacity=%220.228%22/%3E%3Ccircle cx=%22206%22 cy=%22254%22 r=%223.5%22 fill=%22%23E8A63A%22 fill-opacity=%220.228%22/%3E%3Crect x=%2259.5%22 y=%22220.0%22 width=%229%22 height=%224%22 rx=%221.5%22 transform=%22rotate(-28 64 222)%22 fill=%22%23F27C9A%22 fill-opacity=%220.209%22/%3E%3Crect x=%22279.5%22 y=%22300.0%22 width=%229%22 height=%224%22 rx=%221.5%22 transform=%22rotate(22 284 302)%22 fill=%22%233FB39A%22 fill-opacity=%220.209%22/%3E%3Cpolygon points=%22194.8,163.4 195.3,169.6 201.0,172.0 195.3,174.4 194.8,180.6 190.7,175.9 184.7,177.3 187.9,172.0 184.7,166.7 190.7,168.1%22 fill=%22%238E86E6%22 fill-opacity=%220.19%22/%3E%3Cpath d=%22M122 283 Q123.98 290.02 131 292 Q123.98 293.98 122 301 Q120.02 293.98 113 292 Q120.02 290.02 122 283Z%22 fill=%22%23E8A63A%22 fill-opacity=%220.209%22/%3E%3Ccircle cx=%2228%22 cy=%22330%22 r=%227%22 fill=%22%233FB39A%22 fill-opacity=%220.171%22/%3E%3Ccircle cx=%2228%22 cy=%22330%22 r=%224.3%22 fill=%22none%22 stroke=%22%233FB39A%22 stroke-opacity=%220.171%22 stroke-width=%221.6%22/%3E%3Ccircle cx=%22236%22 cy=%2220%22 r=%222.5%22 fill=%22%233FB39A%22 fill-opacity=%220.228%22/%3E%3Crect x=%22326.0%22 y=%22146.25%22 width=%228%22 height=%223.5%22 rx=%221.5%22 transform=%22rotate(-15 330 148)%22 fill=%22%23E8A63A%22 fill-opacity=%220.19%22/%3E%3Ccircle cx=%22170%22 cy=%22110%22 r=%222.5%22 fill=%22%23F27C9A%22 fill-opacity=%220.209%22/%3E%3C/svg%3E");
+  --pfb-blob-gold: rgba(252,194,93,.10);
+  --pfb-blob-teal: rgba(142,134,230,.08);
+  --pfb-blob-pink: rgba(252,194,93,.05);
+  --pfb-blob-violet: rgba(142,134,230,.08);
+  --pfb-tile: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2256%22%20height%3D%2256%22%20viewBox%3D%220%200%2056%2056%22%3E%3Cpath%20d%3D%22M0%20.5H56M.5%200V56%22%20stroke%3D%22%23FFFFFF%22%20stroke-opacity%3D%220.039%22%20stroke-width%3D%221%22%2F%3E%3Cpath%20d%3D%22M28%2024v8M24%2028h8%22%20stroke%3D%22%23FFFFFF%22%20stroke-opacity%3D%220.070%22%20stroke-width%3D%221.2%22%20stroke-linecap%3D%22round%22%2F%3E%3Ccircle%20cx%3D%220%22%20cy%3D%220%22%20r%3D%221.6%22%20fill%3D%22%23FCC25D%22%20fill-opacity%3D%220.350%22%2F%3E%3Ccircle%20cx%3D%2256%22%20cy%3D%220%22%20r%3D%221.6%22%20fill%3D%22%23FCC25D%22%20fill-opacity%3D%220.350%22%2F%3E%3Ccircle%20cx%3D%220%22%20cy%3D%2256%22%20r%3D%221.6%22%20fill%3D%22%23FCC25D%22%20fill-opacity%3D%220.350%22%2F%3E%3Ccircle%20cx%3D%2256%22%20cy%3D%2256%22%20r%3D%221.6%22%20fill%3D%22%23FCC25D%22%20fill-opacity%3D%220.350%22%2F%3E%3C%2Fsvg%3E");
 }
 
 /* the layered background itself — shared by the three roots below. The
@@ -39,11 +42,11 @@
     radial-gradient(52% 36% at 92% 90%, var(--pfb-blob-violet), transparent 70%),
     radial-gradient(50% 30% at 50% 100%, var(--pfb-blob-gold), transparent 70%);
   background-repeat: repeat, no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
-  background-size: 360px 360px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-size: 56px 56px, 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-position: 0 0, 0 0, 0 0, 0 0, 0 0, 0 0;
-  animation: pf-funbg-drift 90s linear infinite;
+  animation: none; /* the lattice stays still: a drifting grid reads as glitchy (2026-10-22) */
 }
-@keyframes pf-funbg-drift { to { background-position: 360px 360px, 0 0, 0 0, 0 0, 0 0, 0 0; } }
+@keyframes pf-funbg-drift { to { background-position: 56px 56px, 0 0, 0 0, 0 0, 0 0, 0 0; } }
 @media (prefers-reduced-motion: reduce) { .pf-funbg, .ml-screen.pf-funbg, [data-theme="dark"] .app.wa-screen.pf-funbg, [data-theme="dark"] body.pf-funbg { animation: none; } }
 
 /* ---- every mobile loyalty page root (.ml-screen): its scroller and header
@@ -72,3 +75,16 @@ body:has(> #pf-root > .app.pf-funbg), body:has(.app.wa-screen.pf-funbg) { backgr
 /* ---- RewardLandingWeb.html — .rl-page is a centred column, so the bundle
    puts .pf-funbg on <body>; pin the wash to the viewport while it scrolls */
 body.pf-funbg { background-attachment: fixed; }
+
+/* Page titles on the rewards pages are Times New Roman (user, 2026-10-22:
+   "set the text title to Times new roman"). Scoped to .pf-funbg so the other
+   loyalty pages that share mobile-loyalty-shared.css keep the sans title. */
+.pf-funbg .ml-top h1,
+.pf-funbg .rl-title,
+.pf-funbg .rs-page-title,
+.pf-funbg .rw-head h1 {
+  font-family: "Times New Roman", Times, serif;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.pf-funbg .ml-top h1 { font-size: 22px; }
