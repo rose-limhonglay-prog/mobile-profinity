@@ -1148,44 +1148,75 @@ function cycleDay(c) { const d = Math.floor((Date.now() - new Date(c.last + "T00
 function cyclePhase(c) { const d = cycleDay(c), len = c.len || 28; return d <= 5 ? "Menstrual" : d <= Math.round(len / 2) ? "Follicular" : d <= Math.round(len / 2) + 2 ? "Ovulation" : "Luteal"; }
 
 /* =======================================================================
-   COACH — chat or voice
+   COACH — chat or voice, styled after the clinician Ava sheet (coach.css:
+   purple gradient head, sparkle avatar, white coach bubbles, quick-action
+   tiles, purple composer) + chat HISTORY (user, 2026-10-26): every
+   conversation is kept in pf-jane-coach {convs:[{id,title,msgs,ts}],cur}.
    ======================================================================= */
 const COACH_KEY = "pf-jane-coach";
-const COACH = { name: "PROfinity Coach", sub: "Reviewed by " + KATY.name, avatar: "assets/profinity-icon-purple-gold.png" };
-const COACH_PROMPTS = ["Prep me for my review on Monday", "Aftercare for lip filler", "Build me a simple skincare routine", "Help me sleep better", "What does my skin score mean?"];
+const COACH = { name: "PROfinity Coach", sub: "Reviewed by " + KATY.name };
+const COACH_PROMPTS = [
+  { t: "Prep me for my review on Monday", ic: "calendar-check" }, { t: "Aftercare for lip filler", ic: "heart-pulse" },
+  { t: "Build me a simple skincare routine", ic: "sparkles" }, { t: "Help me sleep better", ic: "moon" },
+  { t: "What does my skin score mean?", ic: "sun" }, { t: "How can I drink more water?", ic: "droplets" }];
 function coachReply(q) {
   const s = q.toLowerCase();
   if (/appoint|review|monday|consult|prep/.test(s)) return "Your review with Katy is Mon 3 Nov at 2:30pm. Three things to bring:\n\n1. Any photos of the swelling from days 2–5\n2. The question you asked in the feed about lip hydration\n3. Your Health Pass QR (Profile → Show)\n\nWant me to add a reminder the night before?";
   if (/aftercare|filler|swell|bruis|lip/.test(s)) return "Lip filler aftercare, week 1 onwards:\n\n• Ice 10 minutes on, 10 off for the first 48h\n• No straws, hot drinks or intense exercise for 24h\n• A plain balm only — skip menthol or 'plumping' products\n• Sleep slightly propped up\n\nSwelling peaks at day 2–3 and settles by week 2. Anything hot, hard or very painful — message Katy straight away.";
-  if (/routine|skin|cleans|spf|serum/.test(s)) return "A routine you'll actually keep:\n\nAM — gentle cleanser → vitamin C or hyaluronic serum → moisturiser → SPF 50\nPM — cleanse (double if you wore SPF/makeup) → retinol 2–3 nights a week → moisturiser\n\nYou've logged SPF 5 of 7 days this week — that's the one that moves your skin score most.";
+  if (/routine|skin care|skincare|cleans|spf|serum/.test(s)) return "A routine you'll actually keep:\n\nAM — gentle cleanser → vitamin C or hyaluronic serum → moisturiser → SPF 50\nPM — cleanse (double if you wore SPF/makeup) → retinol 2–3 nights a week → moisturiser\n\nYou've logged SPF 5 of 7 days this week — that's the one that moves your skin score most.";
   if (/sleep|tired|energy|bed/.test(s)) return "You averaged 7h 12m this week — your best nights (Fri–Sat) had no screens after 10pm and a caffeine cut-off at 2pm. Let's make those the default:\n\n• Phone on charge outside the bedroom\n• Last coffee 2pm\n• Same wake time, even weekends\n\nI'll check your sleep trend again on Sunday.";
   if (/hydrat|water|drink/.test(s)) return "Your water intake drops on low-step days — 1.4 L on Wednesday vs 2.2 L on Thursday. Easiest fix: a 750 ml bottle finished by lunch and again by 5pm. I can nudge you at 11am and 3pm if you'd like.";
   if (/score|mean|78/.test(s)) return "Your skin score (78 today) comes from your daily selfie rating plus hydration, sleep and SPF habits. Anything over 70 means your routine is working. The biggest swing factors for you have been SPF days and sleep over 7 hours.";
   return "Noted. Based on your Health Pass, the single most useful thing this week is consistency — SPF daily and 7+ hours of sleep. Would you like a short plan, or shall I pass this to Katy before your review?";
 }
-function loadCoach() { return readJN(COACH_KEY, { msgs: [{ by: "coach", text: "Hi " + JANE.first + " 👋 I'm your wellness coach. I can help with aftercare, routines, sleep and getting ready for appointments. Chat here, or switch to voice.", ts: Date.now() - 3600000 }] }); }
+function coachWelcome() { return { by: "coach", text: "Hi " + JANE.first + " 👋 I'm your wellness coach. I can help with aftercare, routines, sleep and getting ready for appointments. Ask me anything, or tap a quick action below.", ts: Date.now() }; }
+function newConvJN() { return { id: "c" + Date.now().toString(36), title: "New chat", msgs: [coachWelcome()], ts: Date.now() }; }
+const COACH_HISTORY_SEED = [
+  { id: "c-seed1", title: "Swelling after lip filler", ts: Date.now() - 3 * 86400000, msgs: [{ by: "coach", text: coachWelcome().text, ts: Date.now() - 3 * 86400000 }, { by: "jane", text: "Is swelling on day 3 normal after lip filler?", ts: Date.now() - 3 * 86400000 + 60000 }, { by: "coach", text: coachReply("swelling lip filler"), ts: Date.now() - 3 * 86400000 + 62000 }] },
+  { id: "c-seed2", title: "Skincare routine for winter", ts: Date.now() - 9 * 86400000, msgs: [{ by: "coach", text: coachWelcome().text, ts: Date.now() - 9 * 86400000 }, { by: "jane", text: "Can you build me a simple skincare routine for winter?", ts: Date.now() - 9 * 86400000 + 50000 }, { by: "coach", text: coachReply("skincare routine"), ts: Date.now() - 9 * 86400000 + 53000 }] },
+];
+function loadCoach() {
+  const s = readJN(COACH_KEY, null);
+  if (s && s.convs) return s;
+  const legacy = s && s.msgs && s.msgs.length > 1 ? [{ id: "c-legacy", title: coachTitle(s.msgs), msgs: s.msgs, ts: s.msgs[s.msgs.length - 1].ts || Date.now() }] : [];
+  const cur = newConvJN();
+  return { convs: [cur, ...legacy, ...COACH_HISTORY_SEED], cur: cur.id };
+}
+function coachTitle(msgs) { const m = msgs.find((x) => x.by === "jane"); return m ? (m.text.length > 42 ? m.text.slice(0, 40).replace(/\s+\S*$/, "") + "…" : m.text) : "New chat"; }
 function fmtClockJN(ts) { const d = new Date(ts); return d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0"); }
+function fmtWhenJN(ts) { const d = new Date(ts), n = new Date(); if (d.toDateString() === n.toDateString()) return "Today · " + fmtClockJN(ts); const diff = Math.round((n - d) / 86400000); if (diff === 1) return "Yesterday"; if (diff < 7) return WD[d.getDay()]; return d.getDate() + " " + MONTHS[d.getMonth()]; }
 
 function CoachScreen() {
   const [store, setStore] = useStateJN(loadCoach);
+  const conv = store.convs.find((c) => c.id === store.cur) || store.convs[0];
   const [mode, setMode] = useStateJN(qJN("mode") === "voice" ? "voice" : "chat");
   const [draft, setDraft] = useStateJN("");
   const [typing, setTyping] = useStateJN(false);
-  const [voice, setVoice] = useStateJN("idle"); // idle | listening | thinking | speaking
+  const [histOpen, setHistOpen] = useStateJN(false);
+  const [ctxOpen, setCtxOpen] = useStateJN(false);
+  const [voice, setVoice] = useStateJN("idle");
   const [heard, setHeard] = useStateJN("");
   const [said, setSaid] = useStateJN("");
   const [muted, setMuted] = useStateJN(false);
+  const [toast, showToast] = useToastJN();
   const scrollRef = useRefJN(null);
   const asked = useRefJN(false);
+  const hs = healthSetup();
 
   function persist(s) { setStore(s); saveJN(COACH_KEY, s); }
+  function updateConv(id, fn) { persist({ ...store, convs: store.convs.map((c) => c.id === id ? fn(c) : c) }); }
+  function append(msg, cid) { const id = cid || conv.id; const s2 = { ...store, convs: store.convs.map((c) => c.id === id ? { ...c, msgs: [...c.msgs, msg], ts: Date.now(), title: c.title === "New chat" && msg.by === "jane" ? coachTitle([msg]) : c.title } : c) }; persist(s2); return s2; }
   function send(text) {
     const t = (text || draft).trim(); if (!t || typing) return;
-    const s = { msgs: [...store.msgs, { by: "jane", text: t, ts: Date.now() }] }; persist(s); setDraft(""); setTyping(true);
-    setTimeout(() => { persist({ msgs: [...s.msgs, { by: "coach", text: coachReply(t), ts: Date.now() }] }); setTyping(false); }, 1100 + Math.random() * 600);
+    const id = conv.id;
+    const s2 = append({ by: "jane", text: t, ts: Date.now() }); setDraft(""); setTyping(true);
+    setTimeout(() => { setStore((cur) => { const s3 = { ...cur, convs: cur.convs.map((c) => c.id === id ? { ...c, msgs: [...c.msgs, { by: "coach", text: coachReply(t), ts: Date.now() }], ts: Date.now() } : c) }; saveJN(COACH_KEY, s3); return s3; }); setTyping(false); }, 1100 + Math.random() * 600);
   }
+  function newChat() { const c = newConvJN(); persist({ convs: [c, ...store.convs.filter((x) => !(x.msgs.length <= 1 && x.id !== c.id))], cur: c.id }); setHistOpen(false); setMode("chat"); }
+  function openConv(id) { persist({ ...store, cur: id }); setHistOpen(false); setMode("chat"); }
+  function deleteConv(id) { const left = store.convs.filter((c) => c.id !== id); const next = left.length ? left : [newConvJN()]; persist({ convs: next, cur: store.cur === id ? next[0].id : store.cur }); showToast("Chat deleted"); }
   useEffectJN(() => { const q = qJN("q"); if (q && !asked.current) { asked.current = true; setTimeout(() => send(q), 300); } }, []);
-  useEffectJN(() => { const el = scrollRef.current; if (el) el.scrollTop = el.scrollHeight; }, [store.msgs.length, typing, mode]);
+  useEffectJN(() => { const el = scrollRef.current; if (el) el.scrollTop = el.scrollHeight; }, [conv && conv.msgs.length, typing, mode, store.cur]);
 
   function talk() {
     if (voice !== "idle") { setVoice("idle"); setHeard(""); setSaid(""); return; }
@@ -1194,38 +1225,62 @@ function CoachScreen() {
     setVoice("listening"); setHeard(""); setSaid("");
     let i = 0; const words = q.split(" ");
     const iv = setInterval(() => { i++; setHeard(words.slice(0, i).join(" ")); if (i >= words.length) { clearInterval(iv); setVoice("thinking");
-      setTimeout(() => { const r = coachReply(q); setSaid(r); setVoice("speaking"); persist({ msgs: [...store.msgs, { by: "jane", text: q, ts: Date.now(), voice: true }, { by: "coach", text: r, ts: Date.now(), voice: true }] });
+      setTimeout(() => { const r = coachReply(q); setSaid(r); setVoice("speaking"); const id = conv.id; setStore((cur) => { const s3 = { ...cur, convs: cur.convs.map((c) => c.id === id ? { ...c, title: c.title === "New chat" ? coachTitle([{ by: "jane", text: q }]) : c.title, ts: Date.now(), msgs: [...c.msgs, { by: "jane", text: q, ts: Date.now(), voice: true }, { by: "coach", text: r, ts: Date.now(), voice: true }] } : c) }; saveJN(COACH_KEY, s3); return s3; });
         setTimeout(() => setVoice("idle"), 6000); }, 1200); } }, 180);
   }
+  const CoachFace = ({ size = 28 }) => <span className="jc-face" style={{ width: size, height: size }}><IcJN name="sparkles" size={Math.round(size * 0.55)} color="#fff" /></span>;
+  const lastCoachIdx = conv ? conv.msgs.map((m) => m.by).lastIndexOf("coach") : -1;
 
   return (
-    <div className="jn-screen jn-coachscr">
-      <header className="jn-top">
-        <img className="jn-face coach" src={COACH.avatar} alt="" />
-        <div className="jn-top-txt"><h1>{COACH.name}</h1><span><i className="jn-online" />{COACH.sub}</span></div>
-        <span className="grow" />
-        <div className="jn-seg mini">{[["chat", "message-circle", "Chat"], ["voice", "mic", "Voice"]].map(([k, ic, l]) => <button key={k} className={mode === k ? "on" : ""} aria-label={l} onClick={() => setMode(k)}><IcJN name={ic} size={16} /><span>{l}</span></button>)}</div>
+    <div className="jn-screen jc">
+      <header className="jc-head">
+        <span className="jc-av"><IcJN name="sparkles" size={26} color="var(--ai-purple)" /><i /></span>
+        <div className="jc-head-tx">
+          <b>{COACH.name} <em>AI COACH</em></b>
+          <span><i className="jn-online" />Online · {COACH.sub}</span>
+        </div>
+        <button className="jc-hbtn" aria-label="Chat history" onClick={() => setHistOpen(true)}><IcJN name="history" size={19} color="#fff" />{store.convs.length > 1 && <small>{store.convs.length}</small>}</button>
+        <button className="jc-hbtn" aria-label="New chat" onClick={newChat}><IcJN name="square-pen" size={19} color="#fff" /></button>
       </header>
+      <div className="jc-modes"><div className="jn-seg mini">{[["chat", "message-circle", "Chat"], ["voice", "mic", "Voice"]].map(([k, ic, l]) => <button key={k} className={mode === k ? "on" : ""} onClick={() => setMode(k)}><IcJN name={ic} size={16} /><span>{l}</span></button>)}</div><span className="jc-convname">{conv && conv.title !== "New chat" ? conv.title : "New chat"}</span></div>
 
       {mode === "chat" ? (
         <React.Fragment>
-          <div className="jn-scroll jn-thread" ref={scrollRef}>
-            {store.msgs.map((m, i) => (
-              <div key={i} className={"jn-msg " + (m.by === "jane" ? "me" : "them")}>
-                {m.by !== "jane" && <img className="jn-face" src={COACH.avatar} alt="" style={{ width: 28, height: 28 }} />}
-                <div className="bub">{m.voice && <small className="vc"><IcJN name="mic" size={11} /> voice</small>}{m.text.split("\n").map((l, j) => <p key={j}>{l || " "}</p>)}<time>{fmtClockJN(m.ts)}</time></div>
-              </div>))}
-            {typing && <div className="jn-msg them"><img className="jn-face" src={COACH.avatar} alt="" style={{ width: 28, height: 28 }} /><div className="bub typing"><i /><i /><i /></div></div>}
-            <div className="jn-prompts">{COACH_PROMPTS.map((p) => <button key={p} className="jn-chip" onClick={() => send(p)}>{p}</button>)}</div>
+          <div className="jn-scroll jn-thread jc-thread" ref={scrollRef}>
+            <button className={"jc-ctx" + (ctxOpen ? " open" : "")} onClick={() => setCtxOpen(!ctxOpen)}>
+              <span className="ic"><IcJN name="qr-code" size={16} color="var(--ai-purple)" /></span>
+              <span className="tx"><b>What your coach knows</b><small>{ctxOpen ? "From your Health Pass — only you and your clinic can see this." : "Lip filler · 1 Oct · Review Mon 3 Nov · Skin score 78"}</small>
+                {ctxOpen && <span className="jc-ctx-list"><span><IcJN name="syringe" size={13} />Lip filler · 1 Oct 2026</span><span><IcJN name="calendar" size={13} />Review Mon 3 Nov · 2:30pm</span><span><IcJN name="sun" size={13} />Skin score 78 · SPF 5 of 7 days</span><span><IcJN name="moon" size={13} />Sleep avg 7h 12m</span>{hs.height && <span><IcJN name="user" size={13} />{hs.height} cm · {hs.weight} kg</span>}</span>}
+              </span>
+              <IcJN name="chevron-down" size={18} color="var(--gray-450)" />
+            </button>
+            {conv && conv.msgs.map((m, i) => (
+              <React.Fragment key={i}>
+                <div className={"jn-msg " + (m.by === "jane" ? "me" : "them")}>
+                  {m.by !== "jane" && <CoachFace />}
+                  <div className="bub">{m.voice && <small className="vc"><IcJN name="mic" size={11} /> voice</small>}{m.text.split("\n").map((l, j) => <p key={j}>{l || " "}</p>)}<time>{fmtClockJN(m.ts)}</time></div>
+                </div>
+                {m.by === "coach" && i === lastCoachIdx && i > 0 && (
+                  <div className="jc-acts"><button onClick={() => showToast("Saved to your notes")}><IcJN name="notebook-pen" size={15} />Save to notes</button><button onClick={() => showToast("Sent to " + KATY.name)}><IcJN name="send" size={15} />Share with Katy</button></div>)}
+              </React.Fragment>))}
+            {typing && <div className="jn-msg them"><CoachFace /><div className="bub typing"><i /><i /><i /></div></div>}
           </div>
-          <div className="jn-input-row dock">
-            <button className="jn-iconbtn sm" aria-label="Voice" onClick={() => setMode("voice")}><IcJN name="mic" size={18} color="var(--brand-navy)" /></button>
-            <input className="jn-in" placeholder="Ask your coach…" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} />
-            <button className="jn-send" aria-label="Send" disabled={!draft.trim()} onClick={() => send()}><IcJN name="send" size={18} color="#fff" /></button>
+          <div className="jc-foot">
+            {conv && conv.msgs.length <= 1 && !typing && (
+              <React.Fragment>
+                <div className="jc-qa-h"><IcJN name="zap" size={13} color="var(--ai-purple)" />Quick actions</div>
+                <div className="jc-qa">{COACH_PROMPTS.map((p) => <button key={p.t} onClick={() => send(p.t)}><IcJN name={p.ic} size={18} color="var(--ai-purple)" /><span>{p.t}</span></button>)}</div>
+              </React.Fragment>)}
+            <div className="jc-composer">
+              <button className="jc-mic" aria-label="Voice" onClick={() => setMode("voice")}><IcJN name="mic" size={18} color="var(--ai-purple)" /></button>
+              <input placeholder="Ask your coach anything…" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} />
+              <button className="jc-send" aria-label="Send" disabled={!draft.trim()} onClick={() => send()}><IcJN name="arrow-up" size={18} color="#fff" /></button>
+            </div>
+            <p className="jc-disc">Not medical advice. Talk to your clinician about any concerns.</p>
           </div>
         </React.Fragment>
       ) : (
-        <div className="jn-voice">
+        <div className="jn-voice jc-voice">
           <div className={"jn-orb " + voice} onClick={talk} role="button" aria-label="Tap to talk">
             <span className="r r1" /><span className="r r2" /><span className="r r3" />
             <span className="core">{voice === "listening" ? <IcJN name="mic" size={38} color="#fff" /> : voice === "speaking" ? <IcJN name="volume-2" size={38} color="#fff" /> : voice === "thinking" ? <IcJN name="sparkles" size={38} color="#fff" /> : <IcJN name="mic" size={38} color="#fff" />}</span>
@@ -1234,7 +1289,7 @@ function CoachScreen() {
           <div className="jn-voice-txt">
             {heard && <p className="you">“{heard}{voice === "listening" ? "…" : "”"}</p>}
             {said && <div className="ans">{said.split("\n").map((l, j) => <p key={j}>{l || " "}</p>)}</div>}
-            {!heard && !said && <p className="hint">Ask about aftercare, your routine, sleep or your next appointment. Your coach has your Health Pass to hand.</p>}
+            {!heard && !said && <p className="hint">Ask about aftercare, your routine, sleep or your next appointment. Your coach has your Health Pass to hand, and the conversation is saved to your history.</p>}
           </div>
           <div className="jn-voice-ctl">
             <button className={"jn-iconbtn lg" + (muted ? " on" : "")} aria-label="Mute" onClick={() => setMuted(!muted)}><IcJN name={muted ? "mic-off" : "mic"} size={22} color={muted ? "#fff" : "var(--brand-navy)"} /></button>
@@ -1243,6 +1298,21 @@ function CoachScreen() {
           </div>
         </div>)}
       <JNTabs active="coach" />
+
+      <JNSheet open={histOpen} onClose={() => setHistOpen(false)} title="Chat history" tall>
+        <button className="jc-newchat" onClick={newChat}><IcJN name="plus" size={18} />Start a new chat</button>
+        <div className="jc-hist">
+          {store.convs.slice().sort((a, b) => b.ts - a.ts).map((c) => { const last = c.msgs[c.msgs.length - 1]; const n = c.msgs.filter((m) => m.by === "jane").length; return (
+            <div key={c.id} className={"jc-hist-row" + (c.id === store.cur ? " cur" : "")}>
+              <button className="main" onClick={() => openConv(c.id)}>
+                <span className="ic"><IcJN name={c.msgs.some((m) => m.voice) ? "mic" : "message-circle"} size={17} color="var(--ai-purple)" /></span>
+                <span className="tx"><b>{c.title}</b><small>{last ? last.text.replace(/\n+/g, " ").slice(0, 70) : ""}</small><em>{fmtWhenJN(c.ts)} · {n} {n === 1 ? "question" : "questions"}{c.id === store.cur ? " · Open" : ""}</em></span>
+              </button>
+              <button className="del" aria-label="Delete chat" onClick={() => deleteConv(c.id)}><IcJN name="trash-2" size={16} color="var(--gray-450)" /></button>
+            </div>); })}
+        </div>
+      </JNSheet>
+      <JNToast toast={toast} />
     </div>);
 }
 

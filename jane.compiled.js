@@ -3553,76 +3553,223 @@ function cyclePhase(c) {
 }
 
 /* =======================================================================
-   COACH — chat or voice
+   COACH — chat or voice, styled after the clinician Ava sheet (coach.css:
+   purple gradient head, sparkle avatar, white coach bubbles, quick-action
+   tiles, purple composer) + chat HISTORY (user, 2026-10-26): every
+   conversation is kept in pf-jane-coach {convs:[{id,title,msgs,ts}],cur}.
    ======================================================================= */
 const COACH_KEY = "pf-jane-coach";
 const COACH = {
   name: "PROfinity Coach",
-  sub: "Reviewed by " + KATY.name,
-  avatar: "assets/profinity-icon-purple-gold.png"
+  sub: "Reviewed by " + KATY.name
 };
-const COACH_PROMPTS = ["Prep me for my review on Monday", "Aftercare for lip filler", "Build me a simple skincare routine", "Help me sleep better", "What does my skin score mean?"];
+const COACH_PROMPTS = [{
+  t: "Prep me for my review on Monday",
+  ic: "calendar-check"
+}, {
+  t: "Aftercare for lip filler",
+  ic: "heart-pulse"
+}, {
+  t: "Build me a simple skincare routine",
+  ic: "sparkles"
+}, {
+  t: "Help me sleep better",
+  ic: "moon"
+}, {
+  t: "What does my skin score mean?",
+  ic: "sun"
+}, {
+  t: "How can I drink more water?",
+  ic: "droplets"
+}];
 function coachReply(q) {
   const s = q.toLowerCase();
   if (/appoint|review|monday|consult|prep/.test(s)) return "Your review with Katy is Mon 3 Nov at 2:30pm. Three things to bring:\n\n1. Any photos of the swelling from days 2–5\n2. The question you asked in the feed about lip hydration\n3. Your Health Pass QR (Profile → Show)\n\nWant me to add a reminder the night before?";
   if (/aftercare|filler|swell|bruis|lip/.test(s)) return "Lip filler aftercare, week 1 onwards:\n\n• Ice 10 minutes on, 10 off for the first 48h\n• No straws, hot drinks or intense exercise for 24h\n• A plain balm only — skip menthol or 'plumping' products\n• Sleep slightly propped up\n\nSwelling peaks at day 2–3 and settles by week 2. Anything hot, hard or very painful — message Katy straight away.";
-  if (/routine|skin|cleans|spf|serum/.test(s)) return "A routine you'll actually keep:\n\nAM — gentle cleanser → vitamin C or hyaluronic serum → moisturiser → SPF 50\nPM — cleanse (double if you wore SPF/makeup) → retinol 2–3 nights a week → moisturiser\n\nYou've logged SPF 5 of 7 days this week — that's the one that moves your skin score most.";
+  if (/routine|skin care|skincare|cleans|spf|serum/.test(s)) return "A routine you'll actually keep:\n\nAM — gentle cleanser → vitamin C or hyaluronic serum → moisturiser → SPF 50\nPM — cleanse (double if you wore SPF/makeup) → retinol 2–3 nights a week → moisturiser\n\nYou've logged SPF 5 of 7 days this week — that's the one that moves your skin score most.";
   if (/sleep|tired|energy|bed/.test(s)) return "You averaged 7h 12m this week — your best nights (Fri–Sat) had no screens after 10pm and a caffeine cut-off at 2pm. Let's make those the default:\n\n• Phone on charge outside the bedroom\n• Last coffee 2pm\n• Same wake time, even weekends\n\nI'll check your sleep trend again on Sunday.";
   if (/hydrat|water|drink/.test(s)) return "Your water intake drops on low-step days — 1.4 L on Wednesday vs 2.2 L on Thursday. Easiest fix: a 750 ml bottle finished by lunch and again by 5pm. I can nudge you at 11am and 3pm if you'd like.";
   if (/score|mean|78/.test(s)) return "Your skin score (78 today) comes from your daily selfie rating plus hydration, sleep and SPF habits. Anything over 70 means your routine is working. The biggest swing factors for you have been SPF days and sleep over 7 hours.";
   return "Noted. Based on your Health Pass, the single most useful thing this week is consistency — SPF daily and 7+ hours of sleep. Would you like a short plan, or shall I pass this to Katy before your review?";
 }
+function coachWelcome() {
+  return {
+    by: "coach",
+    text: "Hi " + JANE.first + " 👋 I'm your wellness coach. I can help with aftercare, routines, sleep and getting ready for appointments. Ask me anything, or tap a quick action below.",
+    ts: Date.now()
+  };
+}
+function newConvJN() {
+  return {
+    id: "c" + Date.now().toString(36),
+    title: "New chat",
+    msgs: [coachWelcome()],
+    ts: Date.now()
+  };
+}
+const COACH_HISTORY_SEED = [{
+  id: "c-seed1",
+  title: "Swelling after lip filler",
+  ts: Date.now() - 3 * 86400000,
+  msgs: [{
+    by: "coach",
+    text: coachWelcome().text,
+    ts: Date.now() - 3 * 86400000
+  }, {
+    by: "jane",
+    text: "Is swelling on day 3 normal after lip filler?",
+    ts: Date.now() - 3 * 86400000 + 60000
+  }, {
+    by: "coach",
+    text: coachReply("swelling lip filler"),
+    ts: Date.now() - 3 * 86400000 + 62000
+  }]
+}, {
+  id: "c-seed2",
+  title: "Skincare routine for winter",
+  ts: Date.now() - 9 * 86400000,
+  msgs: [{
+    by: "coach",
+    text: coachWelcome().text,
+    ts: Date.now() - 9 * 86400000
+  }, {
+    by: "jane",
+    text: "Can you build me a simple skincare routine for winter?",
+    ts: Date.now() - 9 * 86400000 + 50000
+  }, {
+    by: "coach",
+    text: coachReply("skincare routine"),
+    ts: Date.now() - 9 * 86400000 + 53000
+  }]
+}];
 function loadCoach() {
-  return readJN(COACH_KEY, {
-    msgs: [{
-      by: "coach",
-      text: "Hi " + JANE.first + " 👋 I'm your wellness coach. I can help with aftercare, routines, sleep and getting ready for appointments. Chat here, or switch to voice.",
-      ts: Date.now() - 3600000
-    }]
-  });
+  const s = readJN(COACH_KEY, null);
+  if (s && s.convs) return s;
+  const legacy = s && s.msgs && s.msgs.length > 1 ? [{
+    id: "c-legacy",
+    title: coachTitle(s.msgs),
+    msgs: s.msgs,
+    ts: s.msgs[s.msgs.length - 1].ts || Date.now()
+  }] : [];
+  const cur = newConvJN();
+  return {
+    convs: [cur, ...legacy, ...COACH_HISTORY_SEED],
+    cur: cur.id
+  };
+}
+function coachTitle(msgs) {
+  const m = msgs.find(x => x.by === "jane");
+  return m ? m.text.length > 42 ? m.text.slice(0, 40).replace(/\s+\S*$/, "") + "…" : m.text : "New chat";
 }
 function fmtClockJN(ts) {
   const d = new Date(ts);
   return d.getHours() + ":" + String(d.getMinutes()).padStart(2, "0");
 }
+function fmtWhenJN(ts) {
+  const d = new Date(ts),
+    n = new Date();
+  if (d.toDateString() === n.toDateString()) return "Today · " + fmtClockJN(ts);
+  const diff = Math.round((n - d) / 86400000);
+  if (diff === 1) return "Yesterday";
+  if (diff < 7) return WD[d.getDay()];
+  return d.getDate() + " " + MONTHS[d.getMonth()];
+}
 function CoachScreen() {
   const [store, setStore] = useStateJN(loadCoach);
+  const conv = store.convs.find(c => c.id === store.cur) || store.convs[0];
   const [mode, setMode] = useStateJN(qJN("mode") === "voice" ? "voice" : "chat");
   const [draft, setDraft] = useStateJN("");
   const [typing, setTyping] = useStateJN(false);
-  const [voice, setVoice] = useStateJN("idle"); // idle | listening | thinking | speaking
+  const [histOpen, setHistOpen] = useStateJN(false);
+  const [ctxOpen, setCtxOpen] = useStateJN(false);
+  const [voice, setVoice] = useStateJN("idle");
   const [heard, setHeard] = useStateJN("");
   const [said, setSaid] = useStateJN("");
   const [muted, setMuted] = useStateJN(false);
+  const [toast, showToast] = useToastJN();
   const scrollRef = useRefJN(null);
   const asked = useRefJN(false);
+  const hs = healthSetup();
   function persist(s) {
     setStore(s);
     saveJN(COACH_KEY, s);
   }
+  function updateConv(id, fn) {
+    persist({
+      ...store,
+      convs: store.convs.map(c => c.id === id ? fn(c) : c)
+    });
+  }
+  function append(msg, cid) {
+    const id = cid || conv.id;
+    const s2 = {
+      ...store,
+      convs: store.convs.map(c => c.id === id ? {
+        ...c,
+        msgs: [...c.msgs, msg],
+        ts: Date.now(),
+        title: c.title === "New chat" && msg.by === "jane" ? coachTitle([msg]) : c.title
+      } : c)
+    };
+    persist(s2);
+    return s2;
+  }
   function send(text) {
     const t = (text || draft).trim();
     if (!t || typing) return;
-    const s = {
-      msgs: [...store.msgs, {
-        by: "jane",
-        text: t,
-        ts: Date.now()
-      }]
-    };
-    persist(s);
+    const id = conv.id;
+    const s2 = append({
+      by: "jane",
+      text: t,
+      ts: Date.now()
+    });
     setDraft("");
     setTyping(true);
     setTimeout(() => {
-      persist({
-        msgs: [...s.msgs, {
-          by: "coach",
-          text: coachReply(t),
-          ts: Date.now()
-        }]
+      setStore(cur => {
+        const s3 = {
+          ...cur,
+          convs: cur.convs.map(c => c.id === id ? {
+            ...c,
+            msgs: [...c.msgs, {
+              by: "coach",
+              text: coachReply(t),
+              ts: Date.now()
+            }],
+            ts: Date.now()
+          } : c)
+        };
+        saveJN(COACH_KEY, s3);
+        return s3;
       });
       setTyping(false);
     }, 1100 + Math.random() * 600);
+  }
+  function newChat() {
+    const c = newConvJN();
+    persist({
+      convs: [c, ...store.convs.filter(x => !(x.msgs.length <= 1 && x.id !== c.id))],
+      cur: c.id
+    });
+    setHistOpen(false);
+    setMode("chat");
+  }
+  function openConv(id) {
+    persist({
+      ...store,
+      cur: id
+    });
+    setHistOpen(false);
+    setMode("chat");
+  }
+  function deleteConv(id) {
+    const left = store.convs.filter(c => c.id !== id);
+    const next = left.length ? left : [newConvJN()];
+    persist({
+      convs: next,
+      cur: store.cur === id ? next[0].id : store.cur
+    });
+    showToast("Chat deleted");
   }
   useEffectJN(() => {
     const q = qJN("q");
@@ -3634,7 +3781,7 @@ function CoachScreen() {
   useEffectJN(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
-  }, [store.msgs.length, typing, mode]);
+  }, [conv && conv.msgs.length, typing, mode, store.cur]);
   function talk() {
     if (voice !== "idle") {
       setVoice("idle");
@@ -3659,63 +3806,135 @@ function CoachScreen() {
           const r = coachReply(q);
           setSaid(r);
           setVoice("speaking");
-          persist({
-            msgs: [...store.msgs, {
-              by: "jane",
-              text: q,
-              ts: Date.now(),
-              voice: true
-            }, {
-              by: "coach",
-              text: r,
-              ts: Date.now(),
-              voice: true
-            }]
+          const id = conv.id;
+          setStore(cur => {
+            const s3 = {
+              ...cur,
+              convs: cur.convs.map(c => c.id === id ? {
+                ...c,
+                title: c.title === "New chat" ? coachTitle([{
+                  by: "jane",
+                  text: q
+                }]) : c.title,
+                ts: Date.now(),
+                msgs: [...c.msgs, {
+                  by: "jane",
+                  text: q,
+                  ts: Date.now(),
+                  voice: true
+                }, {
+                  by: "coach",
+                  text: r,
+                  ts: Date.now(),
+                  voice: true
+                }]
+              } : c)
+            };
+            saveJN(COACH_KEY, s3);
+            return s3;
           });
           setTimeout(() => setVoice("idle"), 6000);
         }, 1200);
       }
     }, 180);
   }
+  const CoachFace = ({
+    size = 28
+  }) => /*#__PURE__*/React.createElement("span", {
+    className: "jc-face",
+    style: {
+      width: size,
+      height: size
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "sparkles",
+    size: Math.round(size * 0.55),
+    color: "#fff"
+  }));
+  const lastCoachIdx = conv ? conv.msgs.map(m => m.by).lastIndexOf("coach") : -1;
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen jn-coachscr"
+    className: "jn-screen jc"
   }, /*#__PURE__*/React.createElement("header", {
-    className: "jn-top"
-  }, /*#__PURE__*/React.createElement("img", {
-    className: "jn-face coach",
-    src: COACH.avatar,
-    alt: ""
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "jn-top-txt"
-  }, /*#__PURE__*/React.createElement("h1", null, COACH.name), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
+    className: "jc-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "jc-av"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "sparkles",
+    size: 26,
+    color: "var(--ai-purple)"
+  }), /*#__PURE__*/React.createElement("i", null)), /*#__PURE__*/React.createElement("div", {
+    className: "jc-head-tx"
+  }, /*#__PURE__*/React.createElement("b", null, COACH.name, " ", /*#__PURE__*/React.createElement("em", null, "AI COACH")), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
     className: "jn-online"
-  }), COACH.sub)), /*#__PURE__*/React.createElement("span", {
-    className: "grow"
-  }), /*#__PURE__*/React.createElement("div", {
+  }), "Online · ", COACH.sub)), /*#__PURE__*/React.createElement("button", {
+    className: "jc-hbtn",
+    "aria-label": "Chat history",
+    onClick: () => setHistOpen(true)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "history",
+    size: 19,
+    color: "#fff"
+  }), store.convs.length > 1 && /*#__PURE__*/React.createElement("small", null, store.convs.length)), /*#__PURE__*/React.createElement("button", {
+    className: "jc-hbtn",
+    "aria-label": "New chat",
+    onClick: newChat
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "square-pen",
+    size: 19,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "jc-modes"
+  }, /*#__PURE__*/React.createElement("div", {
     className: "jn-seg mini"
   }, [["chat", "message-circle", "Chat"], ["voice", "mic", "Voice"]].map(([k, ic, l]) => /*#__PURE__*/React.createElement("button", {
     key: k,
     className: mode === k ? "on" : "",
-    "aria-label": l,
     onClick: () => setMode(k)
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: ic,
     size: 16
-  }), /*#__PURE__*/React.createElement("span", null, l))))), mode === "chat" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
-    className: "jn-scroll jn-thread",
+  }), /*#__PURE__*/React.createElement("span", null, l)))), /*#__PURE__*/React.createElement("span", {
+    className: "jc-convname"
+  }, conv && conv.title !== "New chat" ? conv.title : "New chat")), mode === "chat" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "jn-scroll jn-thread jc-thread",
     ref: scrollRef
-  }, store.msgs.map((m, i) => /*#__PURE__*/React.createElement("div", {
-    key: i,
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jc-ctx" + (ctxOpen ? " open" : ""),
+    onClick: () => setCtxOpen(!ctxOpen)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "qr-code",
+    size: 16,
+    color: "var(--ai-purple)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, "What your coach knows"), /*#__PURE__*/React.createElement("small", null, ctxOpen ? "From your Health Pass — only you and your clinic can see this." : "Lip filler · 1 Oct · Review Mon 3 Nov · Skin score 78"), ctxOpen && /*#__PURE__*/React.createElement("span", {
+    className: "jc-ctx-list"
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+    name: "syringe",
+    size: 13
+  }), "Lip filler · 1 Oct 2026"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+    name: "calendar",
+    size: 13
+  }), "Review Mon 3 Nov · 2:30pm"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+    name: "sun",
+    size: 13
+  }), "Skin score 78 · SPF 5 of 7 days"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+    name: "moon",
+    size: 13
+  }), "Sleep avg 7h 12m"), hs.height && /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+    name: "user",
+    size: 13
+  }), hs.height, " cm · ", hs.weight, " kg"))), /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-down",
+    size: 18,
+    color: "var(--gray-450)"
+  })), conv && conv.msgs.map((m, i) => /*#__PURE__*/React.createElement(React.Fragment, {
+    key: i
+  }, /*#__PURE__*/React.createElement("div", {
     className: "jn-msg " + (m.by === "jane" ? "me" : "them")
-  }, m.by !== "jane" && /*#__PURE__*/React.createElement("img", {
-    className: "jn-face",
-    src: COACH.avatar,
-    alt: "",
-    style: {
-      width: 28,
-      height: 28
-    }
-  }), /*#__PURE__*/React.createElement("div", {
+  }, m.by !== "jane" && /*#__PURE__*/React.createElement(CoachFace, null), /*#__PURE__*/React.createElement("div", {
     className: "bub"
   }, m.voice && /*#__PURE__*/React.createElement("small", {
     className: "vc"
@@ -3724,51 +3943,67 @@ function CoachScreen() {
     size: 11
   }), " voice"), m.text.split("\n").map((l, j) => /*#__PURE__*/React.createElement("p", {
     key: j
-  }, l || " ")), /*#__PURE__*/React.createElement("time", null, fmtClockJN(m.ts))))), typing && /*#__PURE__*/React.createElement("div", {
-    className: "jn-msg them"
-  }, /*#__PURE__*/React.createElement("img", {
-    className: "jn-face",
-    src: COACH.avatar,
-    alt: "",
-    style: {
-      width: 28,
-      height: 28
-    }
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "bub typing"
-  }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null))), /*#__PURE__*/React.createElement("div", {
-    className: "jn-prompts"
-  }, COACH_PROMPTS.map(p => /*#__PURE__*/React.createElement("button", {
-    key: p,
-    className: "jn-chip",
-    onClick: () => send(p)
-  }, p)))), /*#__PURE__*/React.createElement("div", {
-    className: "jn-input-row dock"
+  }, l || " ")), /*#__PURE__*/React.createElement("time", null, fmtClockJN(m.ts)))), m.by === "coach" && i === lastCoachIdx && i > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "jc-acts"
   }, /*#__PURE__*/React.createElement("button", {
-    className: "jn-iconbtn sm",
+    onClick: () => showToast("Saved to your notes")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "notebook-pen",
+    size: 15
+  }), "Save to notes"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => showToast("Sent to " + KATY.name)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "send",
+    size: 15
+  }), "Share with Katy")))), typing && /*#__PURE__*/React.createElement("div", {
+    className: "jn-msg them"
+  }, /*#__PURE__*/React.createElement(CoachFace, null), /*#__PURE__*/React.createElement("div", {
+    className: "bub typing"
+  }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null)))), /*#__PURE__*/React.createElement("div", {
+    className: "jc-foot"
+  }, conv && conv.msgs.length <= 1 && !typing && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "jc-qa-h"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "zap",
+    size: 13,
+    color: "var(--ai-purple)"
+  }), "Quick actions"), /*#__PURE__*/React.createElement("div", {
+    className: "jc-qa"
+  }, COACH_PROMPTS.map(p => /*#__PURE__*/React.createElement("button", {
+    key: p.t,
+    onClick: () => send(p.t)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: p.ic,
+    size: 18,
+    color: "var(--ai-purple)"
+  }), /*#__PURE__*/React.createElement("span", null, p.t))))), /*#__PURE__*/React.createElement("div", {
+    className: "jc-composer"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jc-mic",
     "aria-label": "Voice",
     onClick: () => setMode("voice")
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "mic",
     size: 18,
-    color: "var(--brand-navy)"
+    color: "var(--ai-purple)"
   })), /*#__PURE__*/React.createElement("input", {
-    className: "jn-in",
-    placeholder: "Ask your coach…",
+    placeholder: "Ask your coach anything…",
     value: draft,
     onChange: e => setDraft(e.target.value),
     onKeyDown: e => e.key === "Enter" && send()
   }), /*#__PURE__*/React.createElement("button", {
-    className: "jn-send",
+    className: "jc-send",
     "aria-label": "Send",
     disabled: !draft.trim(),
     onClick: () => send()
   }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "send",
+    name: "arrow-up",
     size: 18,
     color: "#fff"
-  })))) : /*#__PURE__*/React.createElement("div", {
-    className: "jn-voice"
+  }))), /*#__PURE__*/React.createElement("p", {
+    className: "jc-disc"
+  }, "Not medical advice. Talk to your clinician about any concerns."))) : /*#__PURE__*/React.createElement("div", {
+    className: "jn-voice jc-voice"
   }, /*#__PURE__*/React.createElement("div", {
     className: "jn-orb " + voice,
     onClick: talk,
@@ -3810,7 +4045,7 @@ function CoachScreen() {
     key: j
   }, l || " "))), !heard && !said && /*#__PURE__*/React.createElement("p", {
     className: "hint"
-  }, "Ask about aftercare, your routine, sleep or your next appointment. Your coach has your Health Pass to hand.")), /*#__PURE__*/React.createElement("div", {
+  }, "Ask about aftercare, your routine, sleep or your next appointment. Your coach has your Health Pass to hand, and the conversation is saved to your history.")), /*#__PURE__*/React.createElement("div", {
     className: "jn-voice-ctl"
   }, /*#__PURE__*/React.createElement("button", {
     className: "jn-iconbtn lg" + (muted ? " on" : ""),
@@ -3843,6 +4078,47 @@ function CoachScreen() {
     color: "var(--brand-navy)"
   })))), /*#__PURE__*/React.createElement(JNTabs, {
     active: "coach"
+  }), /*#__PURE__*/React.createElement(JNSheet, {
+    open: histOpen,
+    onClose: () => setHistOpen(false),
+    title: "Chat history",
+    tall: true
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jc-newchat",
+    onClick: newChat
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "plus",
+    size: 18
+  }), "Start a new chat"), /*#__PURE__*/React.createElement("div", {
+    className: "jc-hist"
+  }, store.convs.slice().sort((a, b) => b.ts - a.ts).map(c => {
+    const last = c.msgs[c.msgs.length - 1];
+    const n = c.msgs.filter(m => m.by === "jane").length;
+    return /*#__PURE__*/React.createElement("div", {
+      key: c.id,
+      className: "jc-hist-row" + (c.id === store.cur ? " cur" : "")
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "main",
+      onClick: () => openConv(c.id)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ic"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: c.msgs.some(m => m.voice) ? "mic" : "message-circle",
+      size: 17,
+      color: "var(--ai-purple)"
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, c.title), /*#__PURE__*/React.createElement("small", null, last ? last.text.replace(/\n+/g, " ").slice(0, 70) : ""), /*#__PURE__*/React.createElement("em", null, fmtWhenJN(c.ts), " · ", n, " ", n === 1 ? "question" : "questions", c.id === store.cur ? " · Open" : ""))), /*#__PURE__*/React.createElement("button", {
+      className: "del",
+      "aria-label": "Delete chat",
+      onClick: () => deleteConv(c.id)
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "trash-2",
+      size: 16,
+      color: "var(--gray-450)"
+    })));
+  }))), /*#__PURE__*/React.createElement(JNToast, {
+    toast: toast
   }));
 }
 
