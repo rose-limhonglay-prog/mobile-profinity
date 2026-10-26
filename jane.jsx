@@ -1783,7 +1783,6 @@ function ScheduleCallScreen() {
   const [apptOpen, setApptOpen] = useStateJN(null);
   const [filt, setFilt] = useStateJN("all");
   const [pastOpen, setPastOpen] = useStateJN(false);
-  const chrome = useKatyChromeJN();
   const items = useMemoJN(() => scheduleItems(store.calls), [store]);
   const [step, setStep] = useStateJN(0);
   const [editing, setEditing] = useStateJN(null);
@@ -1871,14 +1870,9 @@ function ScheduleCallScreen() {
     const groups = shown.reduce((g, x) => { const d = new Date(x.date + "T12:00:00"); const k = d.toLocaleString("en-GB", { month: "long" }) + " " + d.getFullYear(); (g[k] = g[k] || []).push(x); return g; }, {});
     const nw = nextUp && callWho(nextUp);
     return (
-    <div className={"jn-screen m-screen sc sc-page" + chrome.cls}>
-      {chrome.top}
-      <div className="jn-scroll sc-scroll" ref={chrome.scrollRef} style={{ paddingTop: 0 }}>
-        <header className="sc-head" style={{ paddingTop: (chrome.hidden ? 0 : chrome.headerH) + 8 }}>
-          <button className="jn-back" aria-label="Back" onClick={() => goJN(ret)}><IcJN name="chevron-left" size={26} color="var(--brand-navy)" /></button>
-          <div className="tx"><h2>Calls & appointments</h2><p>{items.upcoming.length ? items.upcoming.length + " upcoming · " : ""}Clinic visits and calls with your care team</p></div>
-          <button className="jn-iconbtn sm" aria-label="Schedule a call" onClick={() => startBooking(null)}><IcJN name="plus" size={20} color="var(--brand-navy)" /></button>
-        </header>
+    <div className="jn-screen sc sc-page">
+      <JNBar title="Calls & appointments" back={() => goJN(ret)} trailing={<button className="jn-iconbtn sm" aria-label="Schedule a call" onClick={() => startBooking(null)}><IcJN name="plus" size={20} color="var(--brand-navy)" /></button>} />
+      <div className="jn-scroll" ref={scrollRef}>
 
         {nextUp ? (
           <section className="sc-hero">
@@ -1936,8 +1930,7 @@ function ScheduleCallScreen() {
         <div className="sc-info"><IcJN name="info" size={15} color="var(--brand-navy)" /><span>Clinic appointments are booked by reception. To move one, message the clinic or call 0161 000 0000.</span></div>
         <div className="jn-end">Calls are free for {JANE.clinic} patients</div>
       </div>
-      <JNTabs active="schedule" compact={chrome.hidden} />
-      {chrome.layers}
+      <JNTabs active="schedule" />
 
       <JNSheet open={!!apptOpen} onClose={() => setApptOpen(null)}>
         {apptOpen && (() => { const w = callWho(apptOpen); const isPast = apptOpen.status === "done"; return (
