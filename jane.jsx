@@ -167,10 +167,10 @@ const POSTS_SEED = [
 const POSTS_SEED_V = 4;
 
 const PINNED_IDS = ["p3", "p5"];
-const PUSH_JN = { app: "Pearce Aesthetics", icon: "assets/profinity-icon-purple-gold.png", title: "Appointment reminder", body: "Your 2-week review with Katy Wilson is Monday 3 Nov at 2:30pm. Tap to confirm or reschedule.", cta: "Confirm" };
+const PUSH_JN = { app: "Pearce Aesthetics", icon: "assets/profinity-icon-purple-gold.png", title: "Appointment reminder", body: "Your 2-week review with Katy Wilson is Tuesday 3 Nov at 2:30pm. Tap to confirm or reschedule.", cta: "Confirm" };
 const NOTIFS_JN = [
   { by: "katy", text: "replied to your comment on her winter skin post", t: "50m", icon: "message-square" },
-  { by: "reception", text: "Appointment confirmed · Mon 3 Nov, 2:30pm", t: "2h", icon: "calendar" },
+  { by: "reception", text: "Appointment confirmed · Tue 3 Nov, 2:30pm", t: "2h", icon: "calendar" },
   { by: "miranda", text: "liked your post", t: "4h", icon: "heart" },
   { by: "priya", text: "is hosting Skin Boosters Q&A · Live on Thursday", t: "1d", icon: "video" },
   { by: "beth", text: "sent you an aftercare sheet", t: "4d", icon: "paperclip" },
@@ -280,7 +280,7 @@ function JNDrawer({ open, onClose }) {
     ["sparkles", "Coach", "JaneCoach.html"],
     ["calendar", "Events", "JaneEvents.html"],
     ["message-circle", "Messages", "JaneMessages.html"],
-    ["phone", upcomingCall() ? "Your call with " + callWho(upcomingCall()).first : "Schedule a call", "JaneScheduleCall.html?ret=" + encodeURIComponent(hereJN())],
+    ["phone", "Calls & appointments", "JaneScheduleCall.html?ret=" + encodeURIComponent(hereJN())],
     ["shield-check", "Privacy & Security", null],
     ["headphones", "Clinic Support", "JaneMessages.html?to=reception"]];
   return (
@@ -816,7 +816,7 @@ function ProfileScreen() {
           <div className="pm-ig-bio">
             <p><span className="bi">🇬🇧</span> Patient at {JANE.clinic} · with {KATY.name}</p>
             <p><span className="bi">💉</span> Lip filler · Skin boosters · SPF every day</p>
-            <p className="pm-ig-live"><span className="bi"><IcJN name="calendar" size={14} color="var(--text-primary)" /></span>Next review: <b>Mon 3 Nov · 2:30pm</b></p>
+            <p className="pm-ig-live" onClick={() => goJN("JaneScheduleCall.html?ret=JaneProfile.html")} style={{ cursor: "pointer" }}><span className="bi"><IcJN name="calendar" size={14} color="var(--text-primary)" /></span>Next review: <b>Tue 3 Nov · 2:30pm</b></p>
             {prof.bio && <p>{prof.bio}</p>}
           </div>
           <div className="jn-chiprow">
@@ -855,11 +855,11 @@ function ProfileScreen() {
           {hs.height && <div className="jn-kv"><span>Height · Weight</span><b>{hs.height} cm · {hs.weight} kg</b></div>}
           <div className="jn-kv"><span>Previous treatments</span><b>{onb.answers.history || "Not answered"}</b></div>
           <div className="jn-kv"><span>Last treatment</span><b>Lip filler · 1 Oct 2026</b></div>
-          <div className="jn-kv"><span>Next review</span><b>Mon 3 Nov · 2:30pm</b></div>
+          <div className="jn-kv"><span>Next review</span><b>Tue 3 Nov · 2:30pm</b></div>
         </PMCardJN>
 
         {(() => { const up = upcomingCall(); return (
-        <PMCardJN title="Calls with your care team" sub={up ? "Next: " + callWhen(up) + " with " + callWho(up).first : "Free 15-minute video or phone call"} href={"JaneScheduleCall.html?ret=JaneProfile.html"}>
+        <PMCardJN title="Calls & appointments" sub={up ? "Next call: " + callWhen(up) + " with " + callWho(up).first : "Your clinic visits and free 15-minute calls"} href={"JaneScheduleCall.html?ret=JaneProfile.html"}>
           <div className="jn-pmc-list">
             {up ? <div className="jn-li"><span className="ic"><IcJN name={up.type === "phone" ? "phone" : "video"} size={16} color="var(--brand-navy)" /></span><span className="tx"><b>{callTypeLabel(up)} with {callWho(up).first}</b><small>{callWhen(up)} · {up.reason}</small></span><span className="jn-pill">Booked</span></div>
                 : <div className="jn-li"><span className="ic"><IcJN name="phone" size={16} color="var(--brand-navy)" /></span><span className="tx"><b>Schedule a call</b><small>Katy, Nurse Beth or Dr Priya · aftercare, swelling, anything you're unsure about</small></span><IcJN name="chevron-right" size={18} color="var(--gray-400)" /></div>}
@@ -1215,7 +1215,7 @@ function HealthDashboard() {
     food: { k: "food", ic: "apple", t: "Food", v: logs.food ? logs.food + (logs.food === 1 ? " meal" : " meals") : "No data", tone: logs.food ? "mint" : "grey", on: () => setSheet("log") },
     water: { k: "water", ic: "glass-water", t: "Hydration", v: logs.water ? (logs.water * 250).toLocaleString() + " ml" : "No data", tone: logs.water ? "mint" : "grey", on: () => setSheet("log") },
     skin: { k: "skin", ic: "sun", t: "Skin check-in", v: logs.skin ? logs.skin + " / 100" : "Tap to log", tone: logs.skin ? "gold" : "grey", on: () => setSheet("log") },
-    review: { k: "review", ic: "calendar", t: "Next review", v: "Mon 3 Nov", tone: "grey", navy: true, on: () => goJN("JaneMessages.html?to=reception") },
+    review: { k: "review", ic: "calendar", t: "Next review", v: "Tue 3 Nov", tone: "grey", navy: true, on: () => goJN("JaneScheduleCall.html?ret=JaneHealth.html") },
     distance: { k: "distance", ic: "map-pin", t: "Distance", v: tracking ? "7.4 km" : "0 km", tone: "mint" },
     cal: { k: "cal", ic: "flame", t: "Cal burned", v: tracking ? "1,840" : "0", tone: "mint" },
     exdays: { k: "exdays", ic: "dumbbell", t: "Exercise days", v: tracking ? "3 of 5" : "0 of 5", tone: "mint" },
@@ -1367,7 +1367,7 @@ const COACH_PROMPTS = [
   { t: "What does my skin score mean?", ic: "sun" }, { t: "How can I drink more water?", ic: "droplets" }];
 function coachReply(q) {
   const s = q.toLowerCase();
-  if (/appoint|review|monday|consult|prep/.test(s)) return "Your review with Katy is Mon 3 Nov at 2:30pm. Three things to bring:\n\n1. Any photos of the swelling from days 2–5\n2. The question you asked in the feed about lip hydration\n3. Your Health Pass QR (Profile → Show)\n\nWant me to add a reminder the night before?";
+  if (/appoint|review|monday|consult|prep/.test(s)) return "Your review with Katy is Tue 3 Nov at 2:30pm. Three things to bring:\n\n1. Any photos of the swelling from days 2–5\n2. The question you asked in the feed about lip hydration\n3. Your Health Pass QR (Profile → Show)\n\nWant me to add a reminder the night before?";
   if (/aftercare|filler|swell|bruis|lip/.test(s)) return "Lip filler aftercare, week 1 onwards:\n\n• Ice 10 minutes on, 10 off for the first 48h\n• No straws, hot drinks or intense exercise for 24h\n• A plain balm only — skip menthol or 'plumping' products\n• Sleep slightly propped up\n\nSwelling peaks at day 2–3 and settles by week 2. Anything hot, hard or very painful — message Katy straight away.";
   if (/routine|skin care|skincare|cleans|spf|serum/.test(s)) return "A routine you'll actually keep:\n\nAM — gentle cleanser → vitamin C or hyaluronic serum → moisturiser → SPF 50\nPM — cleanse (double if you wore SPF/makeup) → retinol 2–3 nights a week → moisturiser\n\nYou've logged SPF 5 of 7 days this week — that's the one that moves your skin score most.";
   if (/sleep|tired|energy|bed/.test(s)) return "You averaged 7h 12m this week — your best nights (Fri–Sat) had no screens after 10pm and a caffeine cut-off at 2pm. Let's make those the default:\n\n• Phone on charge outside the bedroom\n• Last coffee 2pm\n• Same wake time, even weekends\n\nI'll check your sleep trend again on Sunday.";
@@ -1479,8 +1479,8 @@ function CoachScreen() {
           <div className="jn-scroll jn-thread jc-thread" ref={scrollRef}>
             <button className={"jc-ctx" + (ctxOpen ? " open" : "")} onClick={() => setCtxOpen(!ctxOpen)}>
               <span className="ic"><IcJN name="qr-code" size={16} color="var(--ai-purple)" /></span>
-              <span className="tx"><b>What your coach knows</b><small>{ctxOpen ? "From your Health Pass — only you and your clinic can see this." : "Lip filler · 1 Oct · Review Mon 3 Nov · Skin score 78"}</small>
-                {ctxOpen && <span className="jc-ctx-list"><span><IcJN name="syringe" size={13} />Lip filler · 1 Oct 2026</span><span><IcJN name="calendar" size={13} />Review Mon 3 Nov · 2:30pm</span><span><IcJN name="sun" size={13} />Skin score 78 · SPF 5 of 7 days</span><span><IcJN name="moon" size={13} />Sleep avg 7h 12m</span>{hs.height && <span><IcJN name="user" size={13} />{hs.height} cm · {hs.weight} kg</span>}</span>}
+              <span className="tx"><b>What your coach knows</b><small>{ctxOpen ? "From your Health Pass — only you and your clinic can see this." : "Lip filler · 1 Oct · Review Tue 3 Nov · Skin score 78"}</small>
+                {ctxOpen && <span className="jc-ctx-list"><span><IcJN name="syringe" size={13} />Lip filler · 1 Oct 2026</span><span><IcJN name="calendar" size={13} />Review Tue 3 Nov · 2:30pm</span><span><IcJN name="sun" size={13} />Skin score 78 · SPF 5 of 7 days</span><span><IcJN name="moon" size={13} />Sleep avg 7h 12m</span>{hs.height && <span><IcJN name="user" size={13} />{hs.height} cm · {hs.weight} kg</span>}</span>}
               </span>
               <IcJN name="chevron-down" size={18} color="var(--gray-450)" />
             </button>
@@ -1623,8 +1623,8 @@ const DM_SEED = { convs: [
     { by: "katy", text: "Hi Jane, how are the lips settling? Any tenderness today?", ts: Date.now() - 26 * 3600000 },
     { by: "jane", text: "Much better! A bit of swelling on the left still.", ts: Date.now() - 25 * 3600000 },
     { by: "katy", text: "Totally normal at day 3. Keep icing 10 mins on / 10 off and no straws 🙂", ts: Date.now() - 25 * 3600000 + 120000 },
-    { by: "katy", text: "Also — your 2-week review is booked for Mon 3 Nov, 2:30pm. See you then! 📅", ts: Date.now() - 2 * 3600000 }] },
-  { id: "reception", unread: 1, msgs: [{ by: "reception", text: "Reminder: your appointment with Katy Wilson is Monday 3 Nov at 2:30pm. Reply C to confirm or call us to reschedule.", ts: Date.now() - 5 * 3600000 }] },
+    { by: "katy", text: "Also — your 2-week review is booked for Tue 3 Nov, 2:30pm. See you then! 📅", ts: Date.now() - 2 * 3600000 }] },
+  { id: "reception", unread: 1, msgs: [{ by: "reception", text: "Reminder: your appointment with Katy Wilson is Tuesday 3 Nov at 2:30pm. Reply C to confirm or call us to reschedule.", ts: Date.now() - 5 * 3600000 }] },
   { id: "miranda", unread: 0, msgs: [{ by: "miranda", text: "Saw your post! Want to go to the SPF workshop together? 🧴", ts: Date.now() - 30 * 3600000 }, { by: "jane", text: "Yes! I'll RSVP now", ts: Date.now() - 29 * 3600000 }] },
   { id: "beth", unread: 0, msgs: [{ by: "beth", text: "Your aftercare sheet from today's treatment 📎 Aftercare-Lips.pdf", ts: Date.now() - 4 * 86400000, file: "Aftercare-Lips.pdf" }, { by: "jane", text: "Thank you Beth!", ts: Date.now() - 4 * 86400000 + 900000 }] },
 ] };
@@ -1656,7 +1656,7 @@ function MessagesScreen() {
 
   if (conv) { const p = PEOPLE[conv.id]; let lastDay = ""; return (
     <div className="jn-screen">
-      <JNBar title={p.name} back={() => setOpenId(null)} trailing={<React.Fragment>{p.role === "Clinician" && <button className="jn-iconbtn sm" aria-label="Schedule a call" onClick={() => goJN("JaneScheduleCall.html?with=" + conv.id + "&ret=" + encodeURIComponent("JaneMessages.html?to=" + conv.id))}><IcJN name="phone" size={17} color="var(--brand-navy)" /></button>}<JNFace p={p} size={34} /></React.Fragment>} />
+      <JNBar title={p.name} back={() => setOpenId(null)} trailing={<React.Fragment>{p.role === "Clinician" && <button className="jn-iconbtn sm" aria-label="Schedule a call" onClick={() => goJN("JaneScheduleCall.html?new=1&with=" + conv.id + "&ret=" + encodeURIComponent("JaneMessages.html?to=" + conv.id))}><IcJN name="phone" size={17} color="var(--brand-navy)" /></button>}<JNFace p={p} size={34} /></React.Fragment>} />
       <div className="jn-dm-sub">{p.title}{p.role === "Clinician" && <span><i className="jn-online" />Usually replies within the hour</span>}</div>
       <div className="jn-scroll jn-thread" ref={scrollRef}>
         {conv.msgs.map((m, i) => { const day = new Date(m.ts).toDateString(); const showDay = day !== lastDay; lastDay = day; const me = m.by === "jane"; return (
@@ -1669,7 +1669,7 @@ function MessagesScreen() {
           </React.Fragment>); })}
         {typing && <div className="jn-msg them"><JNFace p={p} size={28} /><div className="bub typing"><i /><i /><i /></div></div>}
         {conv.id === "reception" && <div className="jn-prompts">{["C — confirm", "Can I reschedule?", "What should I bring?"].map((x) => <button key={x} className="jn-chip" onClick={() => send(x === "C — confirm" ? "C" : x)}>{x}</button>)}</div>}
-        {conv.id === "katy" && <div className="jn-prompts"><button className="jn-chip" onClick={() => goJN("JaneScheduleCall.html?with=katy&ret=" + encodeURIComponent("JaneMessages.html?to=katy"))}><IcJN name="phone" size={13} /> Schedule a call</button>{["Thanks Katy!", "Is this swelling normal?", "Can I send a photo?"].map((x) => <button key={x} className="jn-chip" onClick={() => send(x)}>{x}</button>)}</div>}
+        {conv.id === "katy" && <div className="jn-prompts"><button className="jn-chip" onClick={() => goJN("JaneScheduleCall.html?new=1&with=katy&ret=" + encodeURIComponent("JaneMessages.html?to=katy"))}><IcJN name="phone" size={13} /> Schedule a call</button>{["Thanks Katy!", "Is this swelling normal?", "Can I send a photo?"].map((x) => <button key={x} className="jn-chip" onClick={() => send(x)}>{x}</button>)}</div>}
       </div>
       <div className="jn-input-row dock">
         <button className="jn-iconbtn sm" aria-label="Attach" onClick={() => showToast("Photo & file sharing coming soon")}><IcJN name="plus" size={20} color="var(--brand-navy)" /></button>
@@ -1685,7 +1685,7 @@ function MessagesScreen() {
       <div className="jn-scroll" ref={chrome.scrollRef} style={{ paddingTop: chrome.padTop(12) }}>
         <div className="jn-pagehead"><h2>Messages</h2><button className="jn-iconbtn sm" aria-label="New message" onClick={() => showToast("Pick a contact below")}><IcJN name="pencil" size={17} color="var(--brand-navy)" /></button></div>
         <div className="jn-search"><IcJN name="search" size={17} color="var(--gray-450)" /><input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <div className="jn-care"><JNFace p={KATY} size={44} /><div><b>Your care team</b><small>{KATY.name} · Nurse Beth · Reception</small></div><span className="jn-care-btns"><button className="jn-iconbtn sm" aria-label="Schedule a call" onClick={() => goJN("JaneScheduleCall.html?ret=JaneMessages.html")}><IcJN name="phone" size={17} color="var(--brand-navy)" /></button><button className="jn-btn sm" onClick={() => openConv("katy")}>Message</button></span></div>
+        <div className="jn-care"><JNFace p={KATY} size={44} /><div><b>Your care team</b><small>{KATY.name} · Nurse Beth · Reception</small></div><span className="jn-care-btns"><button className="jn-iconbtn sm" aria-label="Schedule a call" onClick={() => goJN("JaneScheduleCall.html?new=1&ret=JaneMessages.html")}><IcJN name="phone" size={17} color="var(--brand-navy)" /></button><button className="jn-btn sm" onClick={() => openConv("katy")}>Message</button></span></div>
         {(() => { const up = upcomingCall(); return up ? (
           <button className="sc-banner" onClick={() => goJN("JaneScheduleCall.html?ret=JaneMessages.html")}>
             <span className="ic"><IcJN name={up.type === "phone" ? "phone" : "video"} size={18} color="#fff" /></span>
@@ -1710,8 +1710,10 @@ function MessagesScreen() {
 
 /* =======================================================================
    SCHEDULE A CALL WITH KATY — JaneScheduleCall.html (PF_JN_PAGE="schedule")
-   Three steps (what it's about → pick a time → confirm), then a booked
-   state with Add to calendar (.ics), Message Katy, Reschedule and Cancel.
+   Opens on the "Calls & appointments" schedule (APPOINTMENTS seed +
+   booked calls, upcoming/past, appointment sheet, call detail with Move /
+   Cancel); + or "Schedule a call" starts the three steps (who and what →
+   pick a time → confirm) and the done screen.
    Store pf-jane-calls = { calls: [{ id, type, reason, note, date, time,
    status: booked|cancelled|done, ts }] }. Booking also drops a confirmation
    from Katy into the Messages thread. Entry points: drawer row, Messages
@@ -1739,6 +1741,19 @@ const CLINICIANS = [
   { id: "priya", tag: "Tue & Thu", short: "Aesthetic Doctor", days: [2, 4], seed: 5 }];
 function clinOf(id) { return CLINICIANS.find((c) => c.id === id) || CLINICIANS[0]; }
 function callWho(c) { return PEOPLE[(c && c.with) || "katy"]; }
+/* In-clinic appointments booked through reception (read-only here; the
+   dates match the "Next review Tue 3 Nov · 2:30pm" copy used across Jane). */
+const APPOINTMENTS = [
+  { id: "ap0", kind: "appt", with: "katy", title: "Lip filler", date: "2026-10-01", time: "3:00pm", dur: 45, where: "Pearce Aesthetics · Manchester", status: "done", note: "Treatment completed. Aftercare sheet sent by Nurse Beth." },
+  { id: "ap1", kind: "appt", with: "katy", title: "2-week review", date: "2026-11-03", time: "2:30pm", dur: 30, where: "Pearce Aesthetics · Manchester", status: "confirmed", note: "Katy checks how the lips have settled. Bring any photos of swelling, and your supplements list." },
+  { id: "ap2", kind: "appt", with: "priya", title: "Skin consultation", date: "2026-11-24", time: "11:00am", dur: 45, where: "Pearce Aesthetics · Manchester", status: "confirmed", note: "Skin scan and a personalised plan with Dr Priya. Arrive make-up free if you can." }];
+function scheduleItems(calls) {
+  const now = Date.now();
+  const all = [...APPOINTMENTS, ...calls.map((c) => ({ ...c, kind: "call" }))];
+  const isPast = (x) => x.status === "cancelled" || x.status === "done" || callStart(x).getTime() < now - (x.dur || CALL_DUR) * 60000;
+  const byTime = (a, b) => callStart(a) - callStart(b);
+  return { upcoming: all.filter((x) => !isPast(x)).sort(byTime), past: all.filter(isPast).sort((a, b) => byTime(b, a)) };
+}
 function callWhen(c) { const d = new Date(c.date + "T12:00:00"); return WD[d.getDay()] + " " + d.getDate() + " " + MONTHS[d.getMonth()] + " · " + c.time; }
 function isoDateJN(d) { return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
 /* Katy's diary for the next two weeks: Sundays closed, Saturday mornings
@@ -1763,7 +1778,10 @@ function ScheduleCallScreen() {
   const prof = readJN(PROFILE_KEY, { phone: "+44 7700 900123" });
   const [store, setStore] = useStateJN(callsState);
   const up = useMemoJN(() => { const now = Date.now(); return store.calls.filter((c) => c.status === "booked" && callStart(c).getTime() > now - CALL_DUR * 60000).sort((a, b) => callStart(a) - callStart(b))[0] || null; }, [store]);
-  const [view, setView] = useStateJN(() => (upcomingCall() && qJN("new") !== "1" ? "upcoming" : "book"));
+  const [view, setView] = useStateJN(() => (qJN("new") === "1" ? "book" : "schedule"));
+  const [sel, setSel] = useStateJN(null);
+  const [apptOpen, setApptOpen] = useStateJN(null);
+  const items = useMemoJN(() => scheduleItems(store.calls), [store]);
   const [step, setStep] = useStateJN(0);
   const [editing, setEditing] = useStateJN(null);
   const [draft, setDraft] = useStateJN({ with: CLINICIANS.some((c) => c.id === qJN("with")) ? qJN("with") : "katy", type: qJN("type") === "phone" ? "phone" : "video", reason: null, note: "", date: null, time: null });
@@ -1782,7 +1800,9 @@ function ScheduleCallScreen() {
   }
   function back() {
     if (view === "book" && step > 0) return setStep(step - 1);
-    if (view === "book" && up && (editing || upcomingCall())) return setView("upcoming");
+    if (view === "book" && qJN("new") !== "1") return setView("schedule");
+    if (view === "book" && editing) return setView("schedule");
+    if (view === "detail") return setView("schedule");
     goJN(ret);
   }
   function confirm() {
@@ -1795,16 +1815,27 @@ function ScheduleCallScreen() {
     setBooked({ ...call, rescheduled: !!editing }); setEditing(null); setView("done");
   }
   function cancelCall() {
-    persist({ calls: store.calls.map((c) => c.id === up.id ? { ...c, status: "cancelled" } : c) });
-    dmCallNote("Got it — I've cancelled your call. Book another whenever you need me 🙂", up.with);
-    setCancelOpen(false); showToast("Call cancelled");
-    setTimeout(() => startBooking(null), 900);
+    const target = sel || up;
+    persist({ calls: store.calls.map((c) => c.id === target.id ? { ...c, status: "cancelled" } : c) });
+    dmCallNote("Got it — I've cancelled your call. Book another whenever you need me 🙂", target.with);
+    setCancelOpen(false); showToast("Call cancelled"); setSel(null); setView("schedule");
   }
   function addToCalendar(c) {
     const start = callStart(c);
-    icsDownloadJN({ id: c.id, title: callTypeLabel(c) + " with " + callWho(c).name, start, end: new Date(start.getTime() + CALL_DUR * 60000), where: c.type === "video" ? "Video call · link in PROfinity Messages" : "Phone call · " + prof.phone, desc: c.reason + (c.note ? ". " + c.note : "") + ". Booked through the PROfinity patient app." });
+    if (c.kind === "appt") icsDownloadJN({ id: c.id, title: c.title + " with " + callWho(c).name, start, end: new Date(start.getTime() + c.dur * 60000), where: c.where, desc: c.note });
+    else icsDownloadJN({ id: c.id, title: callTypeLabel(c) + " with " + callWho(c).name, start, end: new Date(start.getTime() + CALL_DUR * 60000), where: c.type === "video" ? "Video call · link in PROfinity Messages" : "Phone call · " + prof.phone, desc: c.reason + (c.note ? ". " + c.note : "") + ". Booked through the PROfinity patient app." });
     showToast("Added to calendar");
   }
+  const ItemRow = ({ x, past }) => { const w = callWho(x); const d = new Date(x.date + "T12:00:00"); const isCall = x.kind === "call"; return (
+    <button className={"sc-item" + (past ? " past" : "") + (x.status === "cancelled" ? " cancelled" : "")} onClick={() => isCall ? (past ? null : (setSel(x), setView("detail"))) : setApptOpen(x)}>
+      <span className="date"><b>{d.getDate()}</b><i>{MONTHS[d.getMonth()]}</i></span>
+      <span className={"ic" + (isCall ? " call" : " appt")}><IcJN name={isCall ? (x.type === "phone" ? "phone" : "video") : "building-2"} size={17} color="#fff" /></span>
+      <span className="tx">
+        <b>{isCall ? callTypeLabel(x) + " with " + w.first : x.title + " with " + w.first}</b>
+        <small>{WD[d.getDay()]} · {x.time} · {x.dur || CALL_DUR} min · {isCall ? x.reason : "In clinic"}</small>
+      </span>
+      <span className={"st " + (x.status || "booked")}>{x.status === "cancelled" ? "Cancelled" : x.status === "done" || past ? "Done" : isCall ? "Booked" : "Confirmed"}</span>
+    </button>); };
   const canNext = step === 0 ? !!draft.reason : step === 1 ? !!(draft.date && draft.time) : true;
   const Picker = () => (
     <div className="sc-clins">
@@ -1826,9 +1857,55 @@ function ScheduleCallScreen() {
     </div>);
 
   /* ---- booked / upcoming -------------------------------------------- */
-  if (view === "upcoming" && up) { const past = store.calls.filter((c) => c.id !== up.id); const uw = callWho(up); return (
+  if (view === "schedule") { const nextUp = items.upcoming[0]; return (
     <div className="jn-screen sc">
-      <JNBar title={"Your call with " + uw.first} back={() => goJN(ret)} trailing={<JNFace p={uw} size={34} />} />
+      <JNBar title="Calls & appointments" back={() => goJN(ret)} trailing={<button className="jn-iconbtn sm" aria-label="Schedule a call" onClick={() => startBooking(null)}><IcJN name="plus" size={20} color="var(--brand-navy)" /></button>} />
+      <div className="jn-scroll" ref={scrollRef}>
+        {nextUp ? (
+          <div className="sc-next">
+            <span className="lbl">Next up</span>
+            <b>{nextUp.kind === "call" ? callTypeLabel(nextUp) + " with " + callWho(nextUp).first : nextUp.title + " with " + callWho(nextUp).first}</b>
+            <small>{callWhen(nextUp)} · {nextUp.kind === "call" ? (nextUp.type === "phone" ? "they call you" : "link arrives in Messages") : nextUp.where}</small>
+          </div>) : (
+          <div className="jn-emptybox sc-empty"><IcJN name="calendar" size={28} color="var(--gray-400)" /><b>Nothing booked yet</b><small>Schedule a free 15-minute call with your care team.</small></div>)}
+        <button className="jn-btn block sc-newbtn" onClick={() => startBooking(null)}><IcJN name="phone" size={18} />Schedule a call</button>
+
+        <h4 className="sc-h4 sc-sec">Upcoming <em>{items.upcoming.length}</em></h4>
+        <div className="jn-card list sc-list">
+          {items.upcoming.length === 0 && <div className="sc-none">Nothing upcoming</div>}
+          {items.upcoming.map((x) => <ItemRow key={x.id} x={x} />)}
+        </div>
+        {items.past.length > 0 && (
+          <React.Fragment>
+            <h4 className="sc-h4 sc-sec">Past</h4>
+            <div className="jn-card list sc-list">{items.past.map((x) => <ItemRow key={x.id} x={x} past />)}</div>
+          </React.Fragment>)}
+        <div className="sc-info"><IcJN name="info" size={15} color="var(--brand-navy)" /><span>Clinic appointments are booked by reception. To move one, message the clinic or call 0161 000 0000.</span></div>
+        <div className="jn-end">Calls are free for {JANE.clinic} patients</div>
+      </div>
+
+      <JNSheet open={!!apptOpen} onClose={() => setApptOpen(null)}>
+        {apptOpen && (() => { const w = callWho(apptOpen); const isPast = apptOpen.status === "done"; return (
+          <div className="sc-apptd">
+            <div className="sc-apptd-head"><span className="ic"><IcJN name="building-2" size={22} color="#fff" /></span><div><h3>{apptOpen.title}</h3><small>{callWhen(apptOpen)} · {apptOpen.dur} min</small></div></div>
+            <div className="jn-evd-host"><JNFace p={w} size={40} /><div><b>{w.name}</b><small>{w.title}</small></div><RoleChip p={w} /></div>
+            <div className="jn-kv"><span>Where</span><b>{apptOpen.where}</b></div>
+            <div className="jn-kv"><span>Status</span><b>{isPast ? "Completed" : "Confirmed"}</b></div>
+            <p className="jn-sheet-p" style={{ marginTop: 10 }}>{apptOpen.note}</p>
+            {!isPast && <div className="jn-row-btns">
+              <button className="jn-btn ghost" onClick={() => addToCalendar(apptOpen)}><IcJN name="calendar-plus" size={18} />Calendar</button>
+              <button className="jn-btn ghost" onClick={() => showToast("Opening directions…")}><IcJN name="map-pin" size={18} />Directions</button>
+              <button className="jn-btn" onClick={() => goJN("JaneMessages.html?to=reception")}><IcJN name="message-circle" size={18} />Reschedule</button>
+            </div>}
+            {isPast && <button className="jn-btn block ghost" onClick={() => { setApptOpen(null); startBooking(null); }}><IcJN name="phone" size={18} />Book a follow-up call</button>}
+          </div>); })()}
+      </JNSheet>
+      <JNToast toast={toast} />
+    </div>); }
+
+  if (view === "detail" && sel) { const up = sel; const uw = callWho(up); return (
+    <div className="jn-screen sc">
+      <JNBar title={"Your call with " + uw.first} back={() => setView("schedule")} trailing={<JNFace p={uw} size={34} />} />
       <div className="jn-scroll" ref={scrollRef}>
         <section className="sc-upcard">
           <div className="top">
@@ -1858,15 +1935,6 @@ function ScheduleCallScreen() {
           <div className="jn-li"><span className="ic"><IcJN name="shield-check" size={16} color="var(--brand-navy)" /></span><span className="tx"><b>Your Health Pass is shared</b><small>{uw.first} can see your history and aftercare notes during the call.</small></span></div>
         </div>
 
-        {past.length > 0 && (
-          <div className="sc-past">
-            <h4>Previous calls</h4>
-            <div className="jn-card list">
-              {past.map((c) => <div key={c.id} className={"jn-li" + (c.status === "cancelled" ? " off" : "")}><span className="ic"><IcJN name={c.type === "phone" ? "phone" : "video"} size={16} color="var(--brand-navy)" /></span><span className="tx"><b>{callTypeLabel(c)} with {callWho(c).first} · {c.reason}</b><small>{callWhen(c)} · {c.status === "cancelled" ? "Cancelled" : "Completed"}</small></span></div>)}
-            </div>
-          </div>)}
-
-        <button className="jn-btn block ghost" onClick={() => startBooking(null)}><IcJN name="plus" size={18} />Book another call</button>
         <div className="jn-end">Calls are free for {JANE.clinic} patients · for anything urgent call the clinic</div>
       </div>
 
@@ -1891,7 +1959,8 @@ function ScheduleCallScreen() {
             <button className="jn-btn ghost" onClick={() => addToCalendar(booked)}><IcJN name="calendar-plus" size={18} />Add to calendar</button>
             <button className="jn-btn ghost" onClick={() => goJN("JaneMessages.html?to=" + bw.id)}><IcJN name="message-circle" size={18} />Message {bw.first}</button>
           </div>
-          <button className="jn-btn block" onClick={() => goJN(ret)}>Done</button>
+          <button className="jn-btn block" onClick={() => { setBooked(null); setView("schedule"); }}>See all calls & appointments</button>
+          <button className="sc-cancel" style={{ color: "var(--text-secondary)" }} onClick={() => goJN(ret)}>Done</button>
         </div>
       </div>
       <JNToast toast={toast} />

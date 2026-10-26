@@ -633,7 +633,7 @@ const PUSH_JN = {
   app: "Pearce Aesthetics",
   icon: "assets/profinity-icon-purple-gold.png",
   title: "Appointment reminder",
-  body: "Your 2-week review with Katy Wilson is Monday 3 Nov at 2:30pm. Tap to confirm or reschedule.",
+  body: "Your 2-week review with Katy Wilson is Tuesday 3 Nov at 2:30pm. Tap to confirm or reschedule.",
   cta: "Confirm"
 };
 const NOTIFS_JN = [{
@@ -643,7 +643,7 @@ const NOTIFS_JN = [{
   icon: "message-square"
 }, {
   by: "reception",
-  text: "Appointment confirmed · Mon 3 Nov, 2:30pm",
+  text: "Appointment confirmed · Tue 3 Nov, 2:30pm",
   t: "2h",
   icon: "calendar"
 }, {
@@ -984,7 +984,7 @@ function JNDrawer({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
-  const rows = [["user", "Edit Profile", "JaneProfile.html?edit=1"], ["watch", wear.length ? "My Wearables" : "Connect your wearables", "JaneWearables.html"], ["heart-pulse", "Health Analytics", "JaneHealth.html"], ["sparkles", "Coach", "JaneCoach.html"], ["calendar", "Events", "JaneEvents.html"], ["message-circle", "Messages", "JaneMessages.html"], ["phone", upcomingCall() ? "Your call with " + callWho(upcomingCall()).first : "Schedule a call", "JaneScheduleCall.html?ret=" + encodeURIComponent(hereJN())], ["shield-check", "Privacy & Security", null], ["headphones", "Clinic Support", "JaneMessages.html?to=reception"]];
+  const rows = [["user", "Edit Profile", "JaneProfile.html?edit=1"], ["watch", wear.length ? "My Wearables" : "Connect your wearables", "JaneWearables.html"], ["heart-pulse", "Health Analytics", "JaneHealth.html"], ["sparkles", "Coach", "JaneCoach.html"], ["calendar", "Events", "JaneEvents.html"], ["message-circle", "Messages", "JaneMessages.html"], ["phone", "Calls & appointments", "JaneScheduleCall.html?ret=" + encodeURIComponent(hereJN())], ["shield-check", "Privacy & Security", null], ["headphones", "Clinic Support", "JaneMessages.html?to=reception"]];
   return /*#__PURE__*/React.createElement("div", {
     className: "m-drawer-wrap" + (open ? " open" : ""),
     "aria-hidden": !open
@@ -2646,14 +2646,18 @@ function ProfileScreen() {
   }, "🇬🇧"), " Patient at ", JANE.clinic, " · with ", KATY.name), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
     className: "bi"
   }, "💉"), " Lip filler · Skin boosters · SPF every day"), /*#__PURE__*/React.createElement("p", {
-    className: "pm-ig-live"
+    className: "pm-ig-live",
+    onClick: () => goJN("JaneScheduleCall.html?ret=JaneProfile.html"),
+    style: {
+      cursor: "pointer"
+    }
   }, /*#__PURE__*/React.createElement("span", {
     className: "bi"
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "calendar",
     size: 14,
     color: "var(--text-primary)"
-  })), "Next review: ", /*#__PURE__*/React.createElement("b", null, "Mon 3 Nov · 2:30pm")), prof.bio && /*#__PURE__*/React.createElement("p", null, prof.bio)), /*#__PURE__*/React.createElement("div", {
+  })), "Next review: ", /*#__PURE__*/React.createElement("b", null, "Tue 3 Nov · 2:30pm")), prof.bio && /*#__PURE__*/React.createElement("p", null, prof.bio)), /*#__PURE__*/React.createElement("div", {
     className: "jn-chiprow"
   }, /*#__PURE__*/React.createElement("span", {
     className: "pm-chip pin"
@@ -2802,11 +2806,11 @@ function ProfileScreen() {
     className: "jn-kv"
   }, /*#__PURE__*/React.createElement("span", null, "Last treatment"), /*#__PURE__*/React.createElement("b", null, "Lip filler · 1 Oct 2026")), /*#__PURE__*/React.createElement("div", {
     className: "jn-kv"
-  }, /*#__PURE__*/React.createElement("span", null, "Next review"), /*#__PURE__*/React.createElement("b", null, "Mon 3 Nov · 2:30pm"))), (() => {
+  }, /*#__PURE__*/React.createElement("span", null, "Next review"), /*#__PURE__*/React.createElement("b", null, "Tue 3 Nov · 2:30pm"))), (() => {
     const up = upcomingCall();
     return /*#__PURE__*/React.createElement(PMCardJN, {
-      title: "Calls with your care team",
-      sub: up ? "Next: " + callWhen(up) + " with " + callWho(up).first : "Free 15-minute video or phone call",
+      title: "Calls & appointments",
+      sub: up ? "Next call: " + callWhen(up) + " with " + callWho(up).first : "Your clinic visits and free 15-minute calls",
       href: "JaneScheduleCall.html?ret=JaneProfile.html"
     }, /*#__PURE__*/React.createElement("div", {
       className: "jn-pmc-list"
@@ -3739,10 +3743,10 @@ function HealthDashboard() {
       k: "review",
       ic: "calendar",
       t: "Next review",
-      v: "Mon 3 Nov",
+      v: "Tue 3 Nov",
       tone: "grey",
       navy: true,
-      on: () => goJN("JaneMessages.html?to=reception")
+      on: () => goJN("JaneScheduleCall.html?ret=JaneHealth.html")
     },
     distance: {
       k: "distance",
@@ -4327,7 +4331,7 @@ const COACH_PROMPTS = [{
 }];
 function coachReply(q) {
   const s = q.toLowerCase();
-  if (/appoint|review|monday|consult|prep/.test(s)) return "Your review with Katy is Mon 3 Nov at 2:30pm. Three things to bring:\n\n1. Any photos of the swelling from days 2–5\n2. The question you asked in the feed about lip hydration\n3. Your Health Pass QR (Profile → Show)\n\nWant me to add a reminder the night before?";
+  if (/appoint|review|monday|consult|prep/.test(s)) return "Your review with Katy is Tue 3 Nov at 2:30pm. Three things to bring:\n\n1. Any photos of the swelling from days 2–5\n2. The question you asked in the feed about lip hydration\n3. Your Health Pass QR (Profile → Show)\n\nWant me to add a reminder the night before?";
   if (/aftercare|filler|swell|bruis|lip/.test(s)) return "Lip filler aftercare, week 1 onwards:\n\n• Ice 10 minutes on, 10 off for the first 48h\n• No straws, hot drinks or intense exercise for 24h\n• A plain balm only — skip menthol or 'plumping' products\n• Sleep slightly propped up\n\nSwelling peaks at day 2–3 and settles by week 2. Anything hot, hard or very painful — message Katy straight away.";
   if (/routine|skin care|skincare|cleans|spf|serum/.test(s)) return "A routine you'll actually keep:\n\nAM — gentle cleanser → vitamin C or hyaluronic serum → moisturiser → SPF 50\nPM — cleanse (double if you wore SPF/makeup) → retinol 2–3 nights a week → moisturiser\n\nYou've logged SPF 5 of 7 days this week — that's the one that moves your skin score most.";
   if (/sleep|tired|energy|bed/.test(s)) return "You averaged 7h 12m this week — your best nights (Fri–Sat) had no screens after 10pm and a caffeine cut-off at 2pm. Let's make those the default:\n\n• Phone on charge outside the bedroom\n• Last coffee 2pm\n• Same wake time, even weekends\n\nI'll check your sleep trend again on Sunday.";
@@ -4750,7 +4754,7 @@ function CoachScreen() {
     color: "var(--ai-purple)"
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, "What your coach knows"), /*#__PURE__*/React.createElement("small", null, ctxOpen ? "From your Health Pass — only you and your clinic can see this." : "Lip filler · 1 Oct · Review Mon 3 Nov · Skin score 78"), ctxOpen && /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("b", null, "What your coach knows"), /*#__PURE__*/React.createElement("small", null, ctxOpen ? "From your Health Pass — only you and your clinic can see this." : "Lip filler · 1 Oct · Review Tue 3 Nov · Skin score 78"), ctxOpen && /*#__PURE__*/React.createElement("span", {
     className: "jc-ctx-list"
   }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
     name: "syringe",
@@ -4758,7 +4762,7 @@ function CoachScreen() {
   }), "Lip filler · 1 Oct 2026"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
     name: "calendar",
     size: 13
-  }), "Review Mon 3 Nov · 2:30pm"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+  }), "Review Tue 3 Nov · 2:30pm"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
     name: "sun",
     size: 13
   }), "Skin score 78 · SPF 5 of 7 days"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
@@ -5228,7 +5232,7 @@ const DM_SEED = {
       ts: Date.now() - 25 * 3600000 + 120000
     }, {
       by: "katy",
-      text: "Also — your 2-week review is booked for Mon 3 Nov, 2:30pm. See you then! 📅",
+      text: "Also — your 2-week review is booked for Tue 3 Nov, 2:30pm. See you then! 📅",
       ts: Date.now() - 2 * 3600000
     }]
   }, {
@@ -5236,7 +5240,7 @@ const DM_SEED = {
     unread: 1,
     msgs: [{
       by: "reception",
-      text: "Reminder: your appointment with Katy Wilson is Monday 3 Nov at 2:30pm. Reply C to confirm or call us to reschedule.",
+      text: "Reminder: your appointment with Katy Wilson is Tuesday 3 Nov at 2:30pm. Reply C to confirm or call us to reschedule.",
       ts: Date.now() - 5 * 3600000
     }]
   }, {
@@ -5352,7 +5356,7 @@ function MessagesScreen() {
       trailing: /*#__PURE__*/React.createElement(React.Fragment, null, p.role === "Clinician" && /*#__PURE__*/React.createElement("button", {
         className: "jn-iconbtn sm",
         "aria-label": "Schedule a call",
-        onClick: () => goJN("JaneScheduleCall.html?with=" + conv.id + "&ret=" + encodeURIComponent("JaneMessages.html?to=" + conv.id))
+        onClick: () => goJN("JaneScheduleCall.html?new=1&with=" + conv.id + "&ret=" + encodeURIComponent("JaneMessages.html?to=" + conv.id))
       }, /*#__PURE__*/React.createElement(IcJN, {
         name: "phone",
         size: 17,
@@ -5407,7 +5411,7 @@ function MessagesScreen() {
       className: "jn-prompts"
     }, /*#__PURE__*/React.createElement("button", {
       className: "jn-chip",
-      onClick: () => goJN("JaneScheduleCall.html?with=katy&ret=" + encodeURIComponent("JaneMessages.html?to=katy"))
+      onClick: () => goJN("JaneScheduleCall.html?new=1&with=katy&ret=" + encodeURIComponent("JaneMessages.html?to=katy"))
     }, /*#__PURE__*/React.createElement(IcJN, {
       name: "phone",
       size: 13
@@ -5482,7 +5486,7 @@ function MessagesScreen() {
   }, /*#__PURE__*/React.createElement("button", {
     className: "jn-iconbtn sm",
     "aria-label": "Schedule a call",
-    onClick: () => goJN("JaneScheduleCall.html?ret=JaneMessages.html")
+    onClick: () => goJN("JaneScheduleCall.html?new=1&ret=JaneMessages.html")
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "phone",
     size: 17,
@@ -5539,8 +5543,10 @@ function MessagesScreen() {
 
 /* =======================================================================
    SCHEDULE A CALL WITH KATY — JaneScheduleCall.html (PF_JN_PAGE="schedule")
-   Three steps (what it's about → pick a time → confirm), then a booked
-   state with Add to calendar (.ics), Message Katy, Reschedule and Cancel.
+   Opens on the "Calls & appointments" schedule (APPOINTMENTS seed +
+   booked calls, upcoming/past, appointment sheet, call detail with Move /
+   Cancel); + or "Schedule a call" starts the three steps (who and what →
+   pick a time → confirm) and the done screen.
    Store pf-jane-calls = { calls: [{ id, type, reason, note, date, time,
    status: booked|cancelled|done, ts }] }. Booking also drops a confirmation
    from Katy into the Messages thread. Entry points: drawer row, Messages
@@ -5607,6 +5613,55 @@ function clinOf(id) {
 function callWho(c) {
   return PEOPLE[c && c.with || "katy"];
 }
+/* In-clinic appointments booked through reception (read-only here; the
+   dates match the "Next review Tue 3 Nov · 2:30pm" copy used across Jane). */
+const APPOINTMENTS = [{
+  id: "ap0",
+  kind: "appt",
+  with: "katy",
+  title: "Lip filler",
+  date: "2026-10-01",
+  time: "3:00pm",
+  dur: 45,
+  where: "Pearce Aesthetics · Manchester",
+  status: "done",
+  note: "Treatment completed. Aftercare sheet sent by Nurse Beth."
+}, {
+  id: "ap1",
+  kind: "appt",
+  with: "katy",
+  title: "2-week review",
+  date: "2026-11-03",
+  time: "2:30pm",
+  dur: 30,
+  where: "Pearce Aesthetics · Manchester",
+  status: "confirmed",
+  note: "Katy checks how the lips have settled. Bring any photos of swelling, and your supplements list."
+}, {
+  id: "ap2",
+  kind: "appt",
+  with: "priya",
+  title: "Skin consultation",
+  date: "2026-11-24",
+  time: "11:00am",
+  dur: 45,
+  where: "Pearce Aesthetics · Manchester",
+  status: "confirmed",
+  note: "Skin scan and a personalised plan with Dr Priya. Arrive make-up free if you can."
+}];
+function scheduleItems(calls) {
+  const now = Date.now();
+  const all = [...APPOINTMENTS, ...calls.map(c => ({
+    ...c,
+    kind: "call"
+  }))];
+  const isPast = x => x.status === "cancelled" || x.status === "done" || callStart(x).getTime() < now - (x.dur || CALL_DUR) * 60000;
+  const byTime = (a, b) => callStart(a) - callStart(b);
+  return {
+    upcoming: all.filter(x => !isPast(x)).sort(byTime),
+    past: all.filter(isPast).sort((a, b) => byTime(b, a))
+  };
+}
 function callWhen(c) {
   const d = new Date(c.date + "T12:00:00");
   return WD[d.getDay()] + " " + d.getDate() + " " + MONTHS[d.getMonth()] + " · " + c.time;
@@ -5672,7 +5727,10 @@ function ScheduleCallScreen() {
     const now = Date.now();
     return store.calls.filter(c => c.status === "booked" && callStart(c).getTime() > now - CALL_DUR * 60000).sort((a, b) => callStart(a) - callStart(b))[0] || null;
   }, [store]);
-  const [view, setView] = useStateJN(() => upcomingCall() && qJN("new") !== "1" ? "upcoming" : "book");
+  const [view, setView] = useStateJN(() => qJN("new") === "1" ? "book" : "schedule");
+  const [sel, setSel] = useStateJN(null);
+  const [apptOpen, setApptOpen] = useStateJN(null);
+  const items = useMemoJN(() => scheduleItems(store.calls), [store]);
   const [step, setStep] = useStateJN(0);
   const [editing, setEditing] = useStateJN(null);
   const [draft, setDraft] = useStateJN({
@@ -5724,7 +5782,9 @@ function ScheduleCallScreen() {
   }
   function back() {
     if (view === "book" && step > 0) return setStep(step - 1);
-    if (view === "book" && up && (editing || upcomingCall())) return setView("upcoming");
+    if (view === "book" && qJN("new") !== "1") return setView("schedule");
+    if (view === "book" && editing) return setView("schedule");
+    if (view === "detail") return setView("schedule");
     goJN(ret);
   }
   function confirm() {
@@ -5753,20 +5813,29 @@ function ScheduleCallScreen() {
     setView("done");
   }
   function cancelCall() {
+    const target = sel || up;
     persist({
-      calls: store.calls.map(c => c.id === up.id ? {
+      calls: store.calls.map(c => c.id === target.id ? {
         ...c,
         status: "cancelled"
       } : c)
     });
-    dmCallNote("Got it — I've cancelled your call. Book another whenever you need me 🙂", up.with);
+    dmCallNote("Got it — I've cancelled your call. Book another whenever you need me 🙂", target.with);
     setCancelOpen(false);
     showToast("Call cancelled");
-    setTimeout(() => startBooking(null), 900);
+    setSel(null);
+    setView("schedule");
   }
   function addToCalendar(c) {
     const start = callStart(c);
-    icsDownloadJN({
+    if (c.kind === "appt") icsDownloadJN({
+      id: c.id,
+      title: c.title + " with " + callWho(c).name,
+      start,
+      end: new Date(start.getTime() + c.dur * 60000),
+      where: c.where,
+      desc: c.note
+    });else icsDownloadJN({
       id: c.id,
       title: callTypeLabel(c) + " with " + callWho(c).name,
       start,
@@ -5776,6 +5845,30 @@ function ScheduleCallScreen() {
     });
     showToast("Added to calendar");
   }
+  const ItemRow = ({
+    x,
+    past
+  }) => {
+    const w = callWho(x);
+    const d = new Date(x.date + "T12:00:00");
+    const isCall = x.kind === "call";
+    return /*#__PURE__*/React.createElement("button", {
+      className: "sc-item" + (past ? " past" : "") + (x.status === "cancelled" ? " cancelled" : ""),
+      onClick: () => isCall ? past ? null : (setSel(x), setView("detail")) : setApptOpen(x)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "date"
+    }, /*#__PURE__*/React.createElement("b", null, d.getDate()), /*#__PURE__*/React.createElement("i", null, MONTHS[d.getMonth()])), /*#__PURE__*/React.createElement("span", {
+      className: "ic" + (isCall ? " call" : " appt")
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: isCall ? x.type === "phone" ? "phone" : "video" : "building-2",
+      size: 17,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, isCall ? callTypeLabel(x) + " with " + w.first : x.title + " with " + w.first), /*#__PURE__*/React.createElement("small", null, WD[d.getDay()], " · ", x.time, " · ", x.dur || CALL_DUR, " min · ", isCall ? x.reason : "In clinic")), /*#__PURE__*/React.createElement("span", {
+      className: "st " + (x.status || "booked")
+    }, x.status === "cancelled" ? "Cancelled" : x.status === "done" || past ? "Done" : isCall ? "Booked" : "Confirmed"));
+  };
   const canNext = step === 0 ? !!draft.reason : step === 1 ? !!(draft.date && draft.time) : true;
   const Picker = () => /*#__PURE__*/React.createElement("div", {
     className: "sc-clins"
@@ -5832,14 +5925,140 @@ function ScheduleCallScreen() {
   }, /*#__PURE__*/React.createElement("span", null, callWho(c).first, " will call"), /*#__PURE__*/React.createElement("b", null, prof.phone)));
 
   /* ---- booked / upcoming -------------------------------------------- */
-  if (view === "upcoming" && up) {
-    const past = store.calls.filter(c => c.id !== up.id);
+  if (view === "schedule") {
+    const nextUp = items.upcoming[0];
+    return /*#__PURE__*/React.createElement("div", {
+      className: "jn-screen sc"
+    }, /*#__PURE__*/React.createElement(JNBar, {
+      title: "Calls & appointments",
+      back: () => goJN(ret),
+      trailing: /*#__PURE__*/React.createElement("button", {
+        className: "jn-iconbtn sm",
+        "aria-label": "Schedule a call",
+        onClick: () => startBooking(null)
+      }, /*#__PURE__*/React.createElement(IcJN, {
+        name: "plus",
+        size: 20,
+        color: "var(--brand-navy)"
+      }))
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "jn-scroll",
+      ref: scrollRef
+    }, nextUp ? /*#__PURE__*/React.createElement("div", {
+      className: "sc-next"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "lbl"
+    }, "Next up"), /*#__PURE__*/React.createElement("b", null, nextUp.kind === "call" ? callTypeLabel(nextUp) + " with " + callWho(nextUp).first : nextUp.title + " with " + callWho(nextUp).first), /*#__PURE__*/React.createElement("small", null, callWhen(nextUp), " · ", nextUp.kind === "call" ? nextUp.type === "phone" ? "they call you" : "link arrives in Messages" : nextUp.where)) : /*#__PURE__*/React.createElement("div", {
+      className: "jn-emptybox sc-empty"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "calendar",
+      size: 28,
+      color: "var(--gray-400)"
+    }), /*#__PURE__*/React.createElement("b", null, "Nothing booked yet"), /*#__PURE__*/React.createElement("small", null, "Schedule a free 15-minute call with your care team.")), /*#__PURE__*/React.createElement("button", {
+      className: "jn-btn block sc-newbtn",
+      onClick: () => startBooking(null)
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "phone",
+      size: 18
+    }), "Schedule a call"), /*#__PURE__*/React.createElement("h4", {
+      className: "sc-h4 sc-sec"
+    }, "Upcoming ", /*#__PURE__*/React.createElement("em", null, items.upcoming.length)), /*#__PURE__*/React.createElement("div", {
+      className: "jn-card list sc-list"
+    }, items.upcoming.length === 0 && /*#__PURE__*/React.createElement("div", {
+      className: "sc-none"
+    }, "Nothing upcoming"), items.upcoming.map(x => /*#__PURE__*/React.createElement(ItemRow, {
+      key: x.id,
+      x: x
+    }))), items.past.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h4", {
+      className: "sc-h4 sc-sec"
+    }, "Past"), /*#__PURE__*/React.createElement("div", {
+      className: "jn-card list sc-list"
+    }, items.past.map(x => /*#__PURE__*/React.createElement(ItemRow, {
+      key: x.id,
+      x: x,
+      past: true
+    })))), /*#__PURE__*/React.createElement("div", {
+      className: "sc-info"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "info",
+      size: 15,
+      color: "var(--brand-navy)"
+    }), /*#__PURE__*/React.createElement("span", null, "Clinic appointments are booked by reception. To move one, message the clinic or call 0161 000 0000.")), /*#__PURE__*/React.createElement("div", {
+      className: "jn-end"
+    }, "Calls are free for ", JANE.clinic, " patients")), /*#__PURE__*/React.createElement(JNSheet, {
+      open: !!apptOpen,
+      onClose: () => setApptOpen(null)
+    }, apptOpen && (() => {
+      const w = callWho(apptOpen);
+      const isPast = apptOpen.status === "done";
+      return /*#__PURE__*/React.createElement("div", {
+        className: "sc-apptd"
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "sc-apptd-head"
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "ic"
+      }, /*#__PURE__*/React.createElement(IcJN, {
+        name: "building-2",
+        size: 22,
+        color: "#fff"
+      })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h3", null, apptOpen.title), /*#__PURE__*/React.createElement("small", null, callWhen(apptOpen), " · ", apptOpen.dur, " min"))), /*#__PURE__*/React.createElement("div", {
+        className: "jn-evd-host"
+      }, /*#__PURE__*/React.createElement(JNFace, {
+        p: w,
+        size: 40
+      }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, w.name), /*#__PURE__*/React.createElement("small", null, w.title)), /*#__PURE__*/React.createElement(RoleChip, {
+        p: w
+      })), /*#__PURE__*/React.createElement("div", {
+        className: "jn-kv"
+      }, /*#__PURE__*/React.createElement("span", null, "Where"), /*#__PURE__*/React.createElement("b", null, apptOpen.where)), /*#__PURE__*/React.createElement("div", {
+        className: "jn-kv"
+      }, /*#__PURE__*/React.createElement("span", null, "Status"), /*#__PURE__*/React.createElement("b", null, isPast ? "Completed" : "Confirmed")), /*#__PURE__*/React.createElement("p", {
+        className: "jn-sheet-p",
+        style: {
+          marginTop: 10
+        }
+      }, apptOpen.note), !isPast && /*#__PURE__*/React.createElement("div", {
+        className: "jn-row-btns"
+      }, /*#__PURE__*/React.createElement("button", {
+        className: "jn-btn ghost",
+        onClick: () => addToCalendar(apptOpen)
+      }, /*#__PURE__*/React.createElement(IcJN, {
+        name: "calendar-plus",
+        size: 18
+      }), "Calendar"), /*#__PURE__*/React.createElement("button", {
+        className: "jn-btn ghost",
+        onClick: () => showToast("Opening directions…")
+      }, /*#__PURE__*/React.createElement(IcJN, {
+        name: "map-pin",
+        size: 18
+      }), "Directions"), /*#__PURE__*/React.createElement("button", {
+        className: "jn-btn",
+        onClick: () => goJN("JaneMessages.html?to=reception")
+      }, /*#__PURE__*/React.createElement(IcJN, {
+        name: "message-circle",
+        size: 18
+      }), "Reschedule")), isPast && /*#__PURE__*/React.createElement("button", {
+        className: "jn-btn block ghost",
+        onClick: () => {
+          setApptOpen(null);
+          startBooking(null);
+        }
+      }, /*#__PURE__*/React.createElement(IcJN, {
+        name: "phone",
+        size: 18
+      }), "Book a follow-up call"));
+    })()), /*#__PURE__*/React.createElement(JNToast, {
+      toast: toast
+    }));
+  }
+  if (view === "detail" && sel) {
+    const up = sel;
     const uw = callWho(up);
     return /*#__PURE__*/React.createElement("div", {
       className: "jn-screen sc"
     }, /*#__PURE__*/React.createElement(JNBar, {
       title: "Your call with " + uw.first,
-      back: () => goJN(ret),
+      back: () => setView("schedule"),
       trailing: /*#__PURE__*/React.createElement(JNFace, {
         p: uw,
         size: 34
@@ -5935,28 +6154,7 @@ function ScheduleCallScreen() {
       color: "var(--brand-navy)"
     })), /*#__PURE__*/React.createElement("span", {
       className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, "Your Health Pass is shared"), /*#__PURE__*/React.createElement("small", null, uw.first, " can see your history and aftercare notes during the call.")))), past.length > 0 && /*#__PURE__*/React.createElement("div", {
-      className: "sc-past"
-    }, /*#__PURE__*/React.createElement("h4", null, "Previous calls"), /*#__PURE__*/React.createElement("div", {
-      className: "jn-card list"
-    }, past.map(c => /*#__PURE__*/React.createElement("div", {
-      key: c.id,
-      className: "jn-li" + (c.status === "cancelled" ? " off" : "")
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "ic"
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: c.type === "phone" ? "phone" : "video",
-      size: 16,
-      color: "var(--brand-navy)"
-    })), /*#__PURE__*/React.createElement("span", {
-      className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, callTypeLabel(c), " with ", callWho(c).first, " · ", c.reason), /*#__PURE__*/React.createElement("small", null, callWhen(c), " · ", c.status === "cancelled" ? "Cancelled" : "Completed")))))), /*#__PURE__*/React.createElement("button", {
-      className: "jn-btn block ghost",
-      onClick: () => startBooking(null)
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: "plus",
-      size: 18
-    }), "Book another call"), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("b", null, "Your Health Pass is shared"), /*#__PURE__*/React.createElement("small", null, uw.first, " can see your history and aftercare notes during the call.")))), /*#__PURE__*/React.createElement("div", {
       className: "jn-end"
     }, "Calls are free for ", JANE.clinic, " patients · for anything urgent call the clinic")), /*#__PURE__*/React.createElement(JNSheet, {
       open: cancelOpen,
@@ -6019,6 +6217,15 @@ function ScheduleCallScreen() {
       size: 18
     }), "Message ", bw.first)), /*#__PURE__*/React.createElement("button", {
       className: "jn-btn block",
+      onClick: () => {
+        setBooked(null);
+        setView("schedule");
+      }
+    }, "See all calls & appointments"), /*#__PURE__*/React.createElement("button", {
+      className: "sc-cancel",
+      style: {
+        color: "var(--text-secondary)"
+      },
       onClick: () => goJN(ret)
     }, "Done"))), /*#__PURE__*/React.createElement(JNToast, {
       toast: toast
