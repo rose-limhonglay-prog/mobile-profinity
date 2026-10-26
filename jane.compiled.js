@@ -178,10 +178,11 @@ function unreadDMJN() {
   return readJN("pf-jane-dm", null) ? readJN("pf-jane-dm", {}).convs.reduce((n, c) => n + (c.unread || 0), 0) : 2;
 }
 function JNTabs({
-  active
+  active,
+  compact
 }) {
   return /*#__PURE__*/React.createElement("nav", {
-    className: "jn-tabs",
+    className: "jn-tabs" + (compact ? " jn-tabs-compact" : ""),
     "aria-label": "Primary"
   }, JN_TABS.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
@@ -1985,6 +1986,13 @@ function useKatyChromeJN() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+  /* same scroll choreography as Home: past 40px the header floats, scrolling
+     down hides it and compacts the dock, scrolling up brings both back */
+  const scrollRef = useRefJN(null);
+  const {
+    hidden,
+    floating
+  } = useHeaderHideJN(scrollRef);
   const top = /*#__PURE__*/React.createElement(JNTopBar, {
     ref: headerRef,
     onMenu: () => setMenuOpen(true),
@@ -1997,10 +2005,17 @@ function useKatyChromeJN() {
     open: notifOpen,
     onClose: () => setNotifOpen(false)
   }));
+  const cls = (hidden ? " chrome-hidden" : "") + (floating ? " chrome-float" : "");
+  const padTop = extra => hidden ? 0 : headerH + (extra || 0);
   return {
     top,
     layers,
-    headerH
+    headerH,
+    scrollRef,
+    hidden,
+    floating,
+    cls,
+    padTop
   };
 }
 function QRMark() {
@@ -2047,7 +2062,10 @@ function ProfileScreen() {
   const {
     top,
     layers,
-    headerH
+    scrollRef,
+    cls,
+    padTop,
+    hidden
   } = useKatyChromeJN();
   const [prof, setProf] = useStateJN(() => readJN(PROFILE_KEY, {
     name: JANE.name,
@@ -2106,11 +2124,12 @@ function ProfileScreen() {
     showToast("Profile updated");
   }
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen m-screen jn-prof-screen"
+    className: "jn-screen m-screen jn-prof-screen" + cls
   }, top, /*#__PURE__*/React.createElement("div", {
     className: "jn-scroll",
+    ref: scrollRef,
     style: {
-      paddingTop: headerH
+      paddingTop: padTop(0)
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-ig"
@@ -2394,7 +2413,8 @@ function ProfileScreen() {
   }), "Logout"), /*#__PURE__*/React.createElement("div", {
     className: "jn-end"
   }, "PROfinity · patient app")), /*#__PURE__*/React.createElement(JNTabs, {
-    active: "profile"
+    active: "profile",
+    compact: hidden
   }), layers, /*#__PURE__*/React.createElement(JNSheet, {
     open: edit,
     onClose: () => setEdit(false),
@@ -2623,14 +2643,18 @@ function WearablesScreen() {
   const {
     top,
     layers,
-    headerH
+    scrollRef,
+    cls,
+    padTop,
+    hidden
   } = useKatyChromeJN();
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen m-screen"
+    className: "jn-screen m-screen" + cls
   }, top, /*#__PURE__*/React.createElement("div", {
     className: "jn-scroll",
+    ref: scrollRef,
     style: {
-      paddingTop: headerH + 8
+      paddingTop: padTop(8)
     }
   }, /*#__PURE__*/React.createElement("button", {
     className: "jn-backlink",
@@ -2735,7 +2759,8 @@ function WearablesScreen() {
   }), /*#__PURE__*/React.createElement("b", null, "Nutrition"), /*#__PURE__*/React.createElement("small", null, "Water, logged meals"))), /*#__PURE__*/React.createElement("div", {
     className: "jn-end"
   }, "Data stays on your Health Pass · encrypted in transit")), /*#__PURE__*/React.createElement(JNTabs, {
-    active: "health"
+    active: "health",
+    compact: hidden
   }), layers, /*#__PURE__*/React.createElement(JNSheet, {
     open: !!sel,
     onClose: () => !busy && setSel(null),
@@ -3113,19 +3138,7 @@ function HealthDashboard() {
   });
   const [toast, showToast] = useToastJN();
   const railRef = useRefJN(null);
-  const headerRef = useRefJN(null);
-  const [headerH, setHeaderH] = useStateJN(0);
-  const [menuOpen, setMenuOpen] = useStateJN(false);
-  const [notifOpen, setNotifOpen] = useStateJN(false);
-  React.useLayoutEffect(() => {
-    const el = headerRef.current;
-    if (!el) return;
-    const m = () => setHeaderH(el.offsetHeight);
-    m();
-    const ro = new ResizeObserver(m);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+  const chrome = useKatyChromeJN();
   const tracking = wear.length > 0 || phone;
   useEffectJN(() => {
     if (!workout) return;
@@ -3330,15 +3343,12 @@ function HealthDashboard() {
     saveJN(FRIENDS_KEY, f);
   }
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen m-screen jh"
-  }, /*#__PURE__*/React.createElement(JNTopBar, {
-    ref: headerRef,
-    onMenu: () => setMenuOpen(true),
-    onBell: () => setNotifOpen(true)
-  }), /*#__PURE__*/React.createElement("div", {
+    className: "jn-screen m-screen jh" + chrome.cls
+  }, chrome.top, /*#__PURE__*/React.createElement("div", {
     className: "jn-scroll jh-scroll",
+    ref: chrome.scrollRef,
     style: {
-      paddingTop: headerH + 8
+      paddingTop: chrome.padTop(8)
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "jh-title"
@@ -3548,14 +3558,9 @@ function HealthDashboard() {
   }), /*#__PURE__*/React.createElement("b", null, "Your trends will appear here"), /*#__PURE__*/React.createElement("small", null, "Connect a wearable or turn on phone tracking and this view fills with your sleep, movement and skin trends.")), /*#__PURE__*/React.createElement("div", {
     className: "jn-end"
   }, "Not medical advice · talk to your clinician about any concerns"))), /*#__PURE__*/React.createElement(JNTabs, {
-    active: "health"
-  }), /*#__PURE__*/React.createElement(JNDrawer, {
-    open: menuOpen,
-    onClose: () => setMenuOpen(false)
-  }), /*#__PURE__*/React.createElement(JNNotifPanel, {
-    open: notifOpen,
-    onClose: () => setNotifOpen(false)
-  }), /*#__PURE__*/React.createElement(JNSheet, {
+    active: "health",
+    compact: chrome.hidden
+  }), chrome.layers, /*#__PURE__*/React.createElement(JNSheet, {
     open: sheet === "log",
     onClose: () => setSheet(null),
     title: "Log"
@@ -3924,6 +3929,9 @@ function CoachScreen() {
   const [muted, setMuted] = useStateJN(false);
   const [toast, showToast] = useToastJN();
   const scrollRef = useRefJN(null);
+  const {
+    hidden: chromeHidden
+  } = useHeaderHideJN(scrollRef);
   const asked = useRefJN(false);
   const hs = healthSetup();
   function persist(s) {
@@ -4089,7 +4097,7 @@ function CoachScreen() {
   }));
   const lastCoachIdx = conv ? conv.msgs.map(m => m.by).lastIndexOf("coach") : -1;
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen jc"
+    className: "jn-screen jc" + (chromeHidden && mode === "chat" ? " chrome-hidden" : "")
   }, /*#__PURE__*/React.createElement("header", {
     className: "jc-head"
   }, /*#__PURE__*/React.createElement("span", {
@@ -4313,7 +4321,8 @@ function CoachScreen() {
     size: 22,
     color: "var(--brand-navy)"
   })))), /*#__PURE__*/React.createElement(JNTabs, {
-    active: "coach"
+    active: "coach",
+    compact: chromeHidden && mode === "chat"
   }), /*#__PURE__*/React.createElement(JNSheet, {
     open: histOpen,
     onClose: () => setHistOpen(false),
@@ -4519,14 +4528,18 @@ function EventsScreen() {
   const {
     top,
     layers,
-    headerH
+    scrollRef,
+    cls,
+    padTop,
+    hidden
   } = useKatyChromeJN();
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen m-screen"
+    className: "jn-screen m-screen" + cls
   }, top, /*#__PURE__*/React.createElement("div", {
     className: "jn-scroll",
+    ref: scrollRef,
     style: {
-      paddingTop: headerH + 12
+      paddingTop: padTop(12)
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "jn-pagehead"
@@ -4548,7 +4561,8 @@ function EventsScreen() {
   })), /*#__PURE__*/React.createElement("div", {
     className: "jn-end"
   }, "All events are free for Pearce Aesthetics patients")), /*#__PURE__*/React.createElement(JNTabs, {
-    active: "events"
+    active: "events",
+    compact: hidden
   }), layers, /*#__PURE__*/React.createElement(JNSheet, {
     open: !!open,
     onClose: () => setOpen(null),
@@ -4836,11 +4850,12 @@ function MessagesScreen() {
     }));
   }
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen m-screen"
+    className: "jn-screen m-screen" + chrome.cls
   }, chrome.top, /*#__PURE__*/React.createElement("div", {
     className: "jn-scroll",
+    ref: chrome.scrollRef,
     style: {
-      paddingTop: chrome.headerH + 12
+      paddingTop: chrome.padTop(12)
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "jn-pagehead"
@@ -4892,7 +4907,8 @@ function MessagesScreen() {
   })), /*#__PURE__*/React.createElement("div", {
     className: "jn-end"
   }, "Messages with your clinic are private and kept with your Health Pass")), /*#__PURE__*/React.createElement(JNTabs, {
-    active: "messages"
+    active: "messages",
+    compact: chrome.hidden
   }), chrome.layers, /*#__PURE__*/React.createElement(JNToast, {
     toast: toast
   }));

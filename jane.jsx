@@ -58,9 +58,9 @@ function useToastJN() {
 }
 function unreadDMJN() { return readJN("pf-jane-dm", null) ? readJN("pf-jane-dm", {}).convs.reduce((n, c) => n + (c.unread || 0), 0) : 2; }
 
-function JNTabs({ active }) {
+function JNTabs({ active, compact }) {
   return (
-    <nav className="jn-tabs" aria-label="Primary">
+    <nav className={"jn-tabs" + (compact ? " jn-tabs-compact" : "")} aria-label="Primary">
       {JN_TABS.map((t) => (
         <button key={t.key} className={"jn-tab" + (t.key === active ? " on" : "")} onClick={() => t.key !== active && goJN(t.href)}>
           <span className="ic"><IcJN name={t.icon} size={22} color={t.key === active ? "#fff" : "var(--gray-450)"} /></span>
@@ -620,9 +620,15 @@ function useKatyChromeJN() {
   const [menuOpen, setMenuOpen] = useStateJN(false);
   const [notifOpen, setNotifOpen] = useStateJN(false);
   React.useLayoutEffect(() => { const el = headerRef.current; if (!el) return; const m = () => setHeaderH(el.offsetHeight); m(); const ro = new ResizeObserver(m); ro.observe(el); return () => ro.disconnect(); }, []);
+  /* same scroll choreography as Home: past 40px the header floats, scrolling
+     down hides it and compacts the dock, scrolling up brings both back */
+  const scrollRef = useRefJN(null);
+  const { hidden, floating } = useHeaderHideJN(scrollRef);
   const top = <JNTopBar ref={headerRef} onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} />;
   const layers = <React.Fragment><JNDrawer open={menuOpen} onClose={() => setMenuOpen(false)} /><JNNotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} /></React.Fragment>;
-  return { top, layers, headerH };
+  const cls = (hidden ? " chrome-hidden" : "") + (floating ? " chrome-float" : "");
+  const padTop = (extra) => hidden ? 0 : headerH + (extra || 0);
+  return { top, layers, headerH, scrollRef, hidden, floating, cls, padTop };
 }
 
 function QRMark() {
@@ -642,7 +648,7 @@ function PMCardJN({ title, sub, href, onClick, children, className }) {
 }
 
 function ProfileScreen() {
-  const { top, layers, headerH } = useKatyChromeJN();
+  const { top, layers, scrollRef, cls, padTop, hidden } = useKatyChromeJN();
   const [prof, setProf] = useStateJN(() => readJN(PROFILE_KEY, { name: JANE.name, phone: "+44 7700 900123", email: "jane.taylor@example.com", dob: JANE.dob, location: "London, UK", bio: "" }));
   const [edit, setEdit] = useStateJN(qJN("edit") === "1");
   const [passOpen, setPassOpen] = useStateJN(false);
@@ -668,9 +674,9 @@ function ProfileScreen() {
   function save() { setProf(draft); saveJN(PROFILE_KEY, draft); setEdit(false); showToast("Profile updated"); }
 
   return (
-    <div className="jn-screen m-screen jn-prof-screen">
+    <div className={"jn-screen m-screen jn-prof-screen" + cls}>
       {top}
-      <div className="jn-scroll" style={{ paddingTop: headerH }}>
+      <div className="jn-scroll" ref={scrollRef} style={{ paddingTop: padTop(0) }}>
         <div className="pm-ig">
           <div className="pm-ig-top">
             <button type="button" className="pm-ig-avwrap pm-ig-avbtn" aria-label="View profile picture" onClick={() => setPassOpen(true)}>
@@ -754,7 +760,7 @@ function ProfileScreen() {
         <button className="pm-logout" onClick={() => showToast("Logged out (demo)")}><IcJN name="log-out" size={20} color="var(--error)" />Logout</button>
         <div className="jn-end">PROfinity · patient app</div>
       </div>
-      <JNTabs active="profile" />
+      <JNTabs active="profile" compact={hidden} />
       {layers}
 
       <JNSheet open={edit} onClose={() => setEdit(false)} title="Edit profile">
@@ -874,11 +880,11 @@ function WearablesScreen() {
   }
   function disconnect(w) { const s = { ...state }; delete s[w.id]; setState(s); saveJN(WEAR_KEY, s); setSel(null); showToast(w.name + " disconnected"); }
 
-  const { top, layers, headerH } = useKatyChromeJN();
+  const { top, layers, scrollRef, cls, padTop, hidden } = useKatyChromeJN();
   return (
-    <div className="jn-screen m-screen">
+    <div className={"jn-screen m-screen" + cls}>
       {top}
-      <div className="jn-scroll" style={{ paddingTop: headerH + 8 }}>
+      <div className="jn-scroll" ref={scrollRef} style={{ paddingTop: padTop(8) }}>
         <button className="jn-backlink" onClick={() => history.length > 1 ? history.back() : goJN("JaneProfile.html")}><IcJN name="chevron-left" size={18} />Back</button>
         <section className="jn-wear-hero">
           <div className="orbit"><span className="c1"><IcJN name="moon" size={16} color="#fff" /></span><span className="c2"><IcJN name="footprints" size={16} color="#fff" /></span><span className="c3"><IcJN name="droplets" size={16} color="#fff" /></span><span className="core"><IcJN name="heart-pulse" size={26} color="#fff" /></span></div>
@@ -914,7 +920,7 @@ function WearablesScreen() {
         </div>
         <div className="jn-end">Data stays on your Health Pass · encrypted in transit</div>
       </div>
-      <JNTabs active="health" />
+      <JNTabs active="health" compact={hidden} />
       {layers}
 
       <JNSheet open={!!sel} onClose={() => !busy && setSel(null)} title={sel ? (state[sel.id] ? sel.name : "Connect " + sel.name) : ""}>
@@ -1059,11 +1065,7 @@ function HealthDashboard() {
   const [cycleDraft, setCycleDraft] = useStateJN({ last: "2026-10-12", len: 28 });
   const [toast, showToast] = useToastJN();
   const railRef = useRefJN(null);
-  const headerRef = useRefJN(null);
-  const [headerH, setHeaderH] = useStateJN(0);
-  const [menuOpen, setMenuOpen] = useStateJN(false);
-  const [notifOpen, setNotifOpen] = useStateJN(false);
-  React.useLayoutEffect(() => { const el = headerRef.current; if (!el) return; const m = () => setHeaderH(el.offsetHeight); m(); const ro = new ResizeObserver(m); ro.observe(el); return () => ro.disconnect(); }, []);
+  const chrome = useKatyChromeJN();
   const tracking = wear.length > 0 || phone;
   useEffectJN(() => { if (!workout) return; const t = setInterval(() => setElapsed(Math.floor((Date.now() - workout.start) / 1000)), 1000); return () => clearInterval(t); }, [workout]);
   function saveLogs(l) { setLogs(l); saveJN(LOGS_KEY, l); }
@@ -1107,9 +1109,9 @@ function HealthDashboard() {
   function toggleFriend(id) { const f = friends.includes(id) ? friends.filter((x) => x !== id) : [...friends, id]; setFriends(f); saveJN(FRIENDS_KEY, f); }
 
   return (
-    <div className="jn-screen m-screen jh">
-      <JNTopBar ref={headerRef} onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} />
-      <div className="jn-scroll jh-scroll" style={{ paddingTop: headerH + 8 }}>
+    <div className={"jn-screen m-screen jh" + chrome.cls}>
+      {chrome.top}
+      <div className="jn-scroll jh-scroll" ref={chrome.scrollRef} style={{ paddingTop: chrome.padTop(8) }}>
         <div className="jh-title">
           <div><h1>Health</h1><span>{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}{tracking ? " · " + (wear.length ? wear.map((w) => w.name).join(", ") : "Phone tracking") : " · Not tracking yet"}</span></div>
           <button className="jn-iconbtn" aria-label="Devices" onClick={() => goJN("JaneWearables.html")}><IcJN name="watch" size={20} color="var(--brand-navy)" /></button>
@@ -1173,9 +1175,8 @@ function HealthDashboard() {
           <div className="jn-end">Not medical advice · talk to your clinician about any concerns</div>
         </section>
       </div>
-      <JNTabs active="health" />
-      <JNDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
-      <JNNotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
+      <JNTabs active="health" compact={chrome.hidden} />
+      {chrome.layers}
 
       <JNSheet open={sheet === "log"} onClose={() => setSheet(null)} title="Log">
         <div className="jh-logrow"><span className="ic mint"><IcJN name="glass-water" size={20} /></span><span className="tx"><b>Water</b><small>{logs.water} glasses · {(logs.water * 250).toLocaleString()} ml today</small></span><button className="jn-btn sm" onClick={() => { saveLogs({ ...logs, water: logs.water + 1 }); showToast("Glass of water logged"); }}><IcJN name="plus" size={15} />Glass</button></div>
@@ -1273,6 +1274,7 @@ function CoachScreen() {
   const [muted, setMuted] = useStateJN(false);
   const [toast, showToast] = useToastJN();
   const scrollRef = useRefJN(null);
+  const { hidden: chromeHidden } = useHeaderHideJN(scrollRef);
   const asked = useRefJN(false);
   const hs = healthSetup();
 
@@ -1305,7 +1307,7 @@ function CoachScreen() {
   const lastCoachIdx = conv ? conv.msgs.map((m) => m.by).lastIndexOf("coach") : -1;
 
   return (
-    <div className="jn-screen jc">
+    <div className={"jn-screen jc" + (chromeHidden && mode === "chat" ? " chrome-hidden" : "")}>
       <header className="jc-head">
         <span className="jc-av"><IcJN name="sparkles" size={26} color="var(--ai-purple)" /><i /></span>
         <div className="jc-head-tx">
@@ -1370,7 +1372,7 @@ function CoachScreen() {
             <button className="jn-iconbtn lg" aria-label="Keyboard" onClick={() => setMode("chat")}><IcJN name="message-circle" size={22} color="var(--brand-navy)" /></button>
           </div>
         </div>)}
-      <JNTabs active="coach" />
+      <JNTabs active="coach" compact={chromeHidden && mode === "chat"} />
 
       <JNSheet open={histOpen} onClose={() => setHistOpen(false)} title="Chat history" tall>
         <button className="jc-newchat" onClick={newChat}><IcJN name="plus" size={18} />Start a new chat</button>
@@ -1433,18 +1435,18 @@ function EventsScreen() {
       </div>
     </article>); };
 
-  const { top, layers, headerH } = useKatyChromeJN();
+  const { top, layers, scrollRef, cls, padTop, hidden } = useKatyChromeJN();
   return (
-    <div className="jn-screen m-screen">
+    <div className={"jn-screen m-screen" + cls}>
       {top}
-      <div className="jn-scroll" style={{ paddingTop: headerH + 12 }}>
+      <div className="jn-scroll" ref={scrollRef} style={{ paddingTop: padTop(12) }}>
         <div className="jn-pagehead"><h2>Events</h2><p>From your clinic and the PROfinity community</p></div>
         <div className="jn-seg">{[["upcoming", "Upcoming"], ["mine", "My events"]].map(([k, l]) => <button key={k} className={view === k ? "on" : ""} onClick={() => setView(k)}>{l}</button>)}</div>
         {list.length === 0 && <div className="jn-emptybox"><IcJN name="calendar" size={28} color="var(--gray-400)" /><b>No events yet</b><small>RSVP to an event and it will show up here.</small></div>}
         {list.map((e) => <Card key={e.id} e={e} />)}
         <div className="jn-end">All events are free for Pearce Aesthetics patients</div>
       </div>
-      <JNTabs active="events" />
+      <JNTabs active="events" compact={hidden} />
       {layers}
 
       <JNSheet open={!!open} onClose={() => setOpen(null)} tall>
@@ -1533,9 +1535,9 @@ function MessagesScreen() {
     </div>); }
 
   return (
-    <div className="jn-screen m-screen">
+    <div className={"jn-screen m-screen" + chrome.cls}>
       {chrome.top}
-      <div className="jn-scroll" style={{ paddingTop: chrome.headerH + 12 }}>
+      <div className="jn-scroll" ref={chrome.scrollRef} style={{ paddingTop: chrome.padTop(12) }}>
         <div className="jn-pagehead"><h2>Messages</h2><button className="jn-iconbtn sm" aria-label="New message" onClick={() => showToast("Pick a contact below")}><IcJN name="pencil" size={17} color="var(--brand-navy)" /></button></div>
         <div className="jn-search"><IcJN name="search" size={17} color="var(--gray-450)" /><input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="jn-care"><JNFace p={KATY} size={44} /><div><b>Your care team</b><small>{KATY.name} · Nurse Beth · Reception</small></div><button className="jn-btn sm" onClick={() => openConv("katy")}>Message</button></div>
@@ -1549,7 +1551,7 @@ function MessagesScreen() {
         </div>
         <div className="jn-end">Messages with your clinic are private and kept with your Health Pass</div>
       </div>
-      <JNTabs active="messages" />
+      <JNTabs active="messages" compact={chrome.hidden} />
       {chrome.layers}
       <JNToast toast={toast} />
     </div>);
