@@ -1458,14 +1458,15 @@ function FeedPostJN({
     });
     onShare(p);
   };
-  const media = p.img ? /*#__PURE__*/React.createElement("div", {
+  const imgs = p.imgs && p.imgs.length ? p.imgs : p.img ? [p.img] : [];
+  const media = imgs.length ? /*#__PURE__*/React.createElement("div", {
     className: "pf-media-bleed",
     style: {
       margin: "0 -16px"
     },
     onClick: onTap
-  }, /*#__PURE__*/React.createElement("img", {
-    src: p.img,
+  }, imgs.length === 1 ? /*#__PURE__*/React.createElement("img", {
+    src: imgs[0],
     alt: "",
     draggable: false,
     style: {
@@ -1476,7 +1477,15 @@ function FeedPostJN({
       background: "var(--gray-100)",
       userSelect: "none"
     }
-  })) : p.event ? /*#__PURE__*/React.createElement("div", {
+  }) : /*#__PURE__*/React.createElement("div", {
+    className: "jn-gallery n" + Math.min(imgs.length, 4)
+  }, imgs.slice(0, 4).map((src, i) => /*#__PURE__*/React.createElement("span", {
+    key: i
+  }, /*#__PURE__*/React.createElement("img", {
+    src: src,
+    alt: "",
+    draggable: false
+  }), i === 3 && imgs.length > 4 && /*#__PURE__*/React.createElement("b", null, "+", imgs.length - 4))))) : p.event ? /*#__PURE__*/React.createElement("div", {
     className: "pf-media-bleed",
     style: {
       margin: "0 -16px"
@@ -1516,11 +1525,20 @@ function FeedPostJN({
       size: 11,
       color: "var(--brand-navy)"
     }), "Pinned")) : p.t,
-    body: /*#__PURE__*/React.createElement(ClampTextJN, {
+    body: p.bg ? /*#__PURE__*/React.createElement("div", {
+      className: "pf-post-bg",
+      style: {
+        background: p.bg.css,
+        color: p.bg.fg
+      }
+    }, /*#__PURE__*/React.createElement(ClampTextJN, {
+      text: p.text,
+      lines: 6
+    })) : /*#__PURE__*/React.createElement(ClampTextJN, {
       text: p.text
     }),
     media: media,
-    hashtags: [],
+    hashtags: (p.tags || []).map(t => JN_TAG_MAP[t]).filter(Boolean),
     liked: !!reaction,
     saved: saved,
     actioned: false,
@@ -1622,6 +1640,14 @@ function HomeScreen() {
   }, []);
   useEffectJN(() => {
     if (qJN("search") === "1") showToast("Search coming soon");
+    if (qJN("posted") === "1") {
+      showToast("Shared with your clinic");
+      try {
+        const u = new URL(location.href);
+        u.searchParams.delete("posted");
+        history.replaceState(null, "", u.pathname + u.search);
+      } catch (e) {}
+    }
   }, []);
   const onb = onbState();
   const wear = connectedWearables();
@@ -1826,7 +1852,7 @@ function HomeScreen() {
   }), /*#__PURE__*/React.createElement("button", {
     className: "m-fab" + (chromeHidden ? " m-fab-compact" : ""),
     "aria-label": "Share a Post",
-    onClick: () => setComposeOpen(true)
+    onClick: () => goJN("JaneCreatePost.html")
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "plus",
     size: 24,
@@ -4873,9 +4899,622 @@ function MessagesScreen() {
 }
 
 /* =======================================================================
+   CREATE POST — twin of Katy's CreatePostMobile (create-post-mobile.css
+   cp-* classes, same top bar / author row / text area / hashtag rail /
+   "Add to your post" tools / background styles / destination sheet).
+   Posts land in pf-jane-posts and the feed reopens on top.
+   ======================================================================= */
+const JN_TAGS = [{
+  slug: "progress",
+  label: "Progress"
+}, {
+  slug: "question",
+  label: "Question"
+}, {
+  slug: "aftercare",
+  label: "Aftercare"
+}, {
+  slug: "skincare",
+  label: "Skincare"
+}, {
+  slug: "appointment",
+  label: "Appointment"
+}, {
+  slug: "tips",
+  label: "Tips"
+}, {
+  slug: "sleep",
+  label: "Sleep"
+}, {
+  slug: "wins",
+  label: "Wins"
+}];
+const JN_TAG_MAP = JN_TAGS.reduce((m, t) => {
+  m[t.slug] = t;
+  return m;
+}, {});
+const JN_BACKGROUNDS = [{
+  id: "none",
+  label: "No background",
+  css: "",
+  fg: "var(--text-primary)"
+}, {
+  id: "navy",
+  label: "Navy",
+  css: "linear-gradient(150deg,#292569,#3d3688)",
+  fg: "#fff"
+}, {
+  id: "gold",
+  label: "Gold",
+  css: "linear-gradient(150deg,#ce9957,#a26301)",
+  fg: "#fff"
+}, {
+  id: "purple",
+  label: "Purple",
+  css: "linear-gradient(150deg,#6c63ff,#4022a8)",
+  fg: "#fff"
+}, {
+  id: "teal",
+  label: "Teal",
+  css: "linear-gradient(150deg,#25515c,#173840)",
+  fg: "#fff"
+}, {
+  id: "cream",
+  label: "Cream",
+  css: "linear-gradient(150deg,#fcf4e4,#f3e3c8)",
+  fg: "var(--brand-navy)"
+}, {
+  id: "navygold",
+  label: "Navy to gold",
+  css: "linear-gradient(150deg,#292569 40%,#ce9957)",
+  fg: "#fff"
+}, {
+  id: "sunrise",
+  label: "Sunrise",
+  css: "linear-gradient(150deg,#e58f0c,#be1e2d)",
+  fg: "#fff"
+}, {
+  id: "mint",
+  label: "Mint",
+  css: "linear-gradient(150deg,#2a9568,#186b4a)",
+  fg: "#fff"
+}, {
+  id: "slate",
+  label: "Slate",
+  css: "linear-gradient(150deg,#475467,#1f2937)",
+  fg: "#fff"
+}, {
+  id: "blush",
+  label: "Blush",
+  css: "linear-gradient(150deg,#f7d6de,#e9afbe)",
+  fg: "var(--brand-navy)"
+}, {
+  id: "ink",
+  label: "Ink",
+  css: "#101828",
+  fg: "#fff"
+}];
+const JN_DESTS = [{
+  k: "feed",
+  label: "Clinic feed",
+  sub: "Your clinic team and other patients",
+  icon: "rss"
+}, {
+  k: "patients",
+  label: "Patients only",
+  sub: "Other patients at " + JANE.clinic,
+  icon: "users"
+}, {
+  k: "katy",
+  label: "Just my clinician",
+  sub: "A private note to " + KATY.name,
+  icon: "lock"
+}];
+const JN_ATTACH = [{
+  k: "photo",
+  icon: "image",
+  label: "Photo",
+  color: "#2d9d5a"
+}, {
+  k: "video",
+  icon: "video",
+  label: "Video",
+  color: "#e56c1b"
+}, {
+  k: "tag",
+  icon: "at-sign",
+  label: "Tag people",
+  color: "#1d7fc4"
+}, {
+  k: "loc",
+  icon: "map-pin",
+  label: "Location",
+  color: "#d03b3b"
+}, {
+  k: "feel",
+  icon: "smile",
+  label: "Feeling",
+  color: "#d4a017"
+}];
+const JN_FEELINGS = ["😊 happy", "🤩 excited", "😌 relaxed", "😬 nervous", "🥱 tired", "💪 motivated", "🙏 grateful", "😣 sore"];
+const JN_MEDIA_SOURCES = {
+  photo: {
+    title: "Add photos",
+    rows: [{
+      k: "library",
+      icon: "images",
+      label: "Photo library",
+      sub: "Choose up to 5 photos"
+    }, {
+      k: "camera",
+      icon: "camera",
+      label: "Take a photo",
+      sub: "Open the camera now"
+    }]
+  },
+  video: {
+    title: "Add a video",
+    rows: [{
+      k: "library",
+      icon: "film",
+      label: "Video library",
+      sub: "Choose a clip from your gallery"
+    }, {
+      k: "camera",
+      icon: "video",
+      label: "Record a video",
+      sub: "Capture one right now"
+    }]
+  }
+};
+function jnReadImage(file, max = 1280) {
+  return new Promise(resolve => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * s);
+      c.height = Math.round(img.height * s);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+function CPSheetJN({
+  title,
+  onClose,
+  children,
+  done
+}) {
+  useEffectJN(() => {
+    const onKey = e => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet-overlay",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet",
+    role: "dialog",
+    "aria-modal": "true",
+    "aria-label": title,
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-sheet-grip",
+    "aria-hidden": "true"
+  }), done ? /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet-hd"
+  }, /*#__PURE__*/React.createElement("h3", null, title), /*#__PURE__*/React.createElement("button", {
+    className: "cp-sheet-done",
+    "aria-label": "Done",
+    onClick: onClose
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "check",
+    size: 22,
+    color: "var(--brand-navy)"
+  }))) : /*#__PURE__*/React.createElement("h3", null, title), children));
+}
+function CreatePostScreen() {
+  const [text, setText] = useStateJN("");
+  const [dest, setDest] = useStateJN("feed");
+  const [bgId, setBgId] = useStateJN("none");
+  const [tags, setTags] = useStateJN([]);
+  const [images, setImages] = useStateJN([]);
+  const [video, setVideo] = useStateJN(null);
+  const [loc, setLoc] = useStateJN(null);
+  const [feeling, setFeeling] = useStateJN(null);
+  const [sheet, setSheet] = useStateJN(null); // bg | dest | photo | video | loc | feel
+  const [toast, showToast] = useToastJN();
+  const fileRef = useRefJN(null);
+  const fileCfg = useRefJN({});
+  const taRef = useRefJN(null);
+  const bg = JN_BACKGROUNDS.find(b => b.id === bgId) || JN_BACKGROUNDS[0];
+  const canPost = text.trim().length > 0 || images.length > 0 || !!video;
+  const backTo = qJN("ret") || "JaneNewsfeed.html";
+  useEffectJN(() => {
+    if (taRef.current) taRef.current.focus();
+  }, []);
+  function pickSource(kind, src) {
+    setSheet(null);
+    fileCfg.current = {
+      kind,
+      src
+    };
+    const input = fileRef.current;
+    if (!input) return;
+    input.accept = kind === "photo" ? "image/*" : "video/*";
+    input.multiple = kind === "photo";
+    if (src === "camera") input.setAttribute("capture", "environment");else input.removeAttribute("capture");
+    input.value = "";
+    input.click();
+  }
+  async function onFiles(e) {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    if (fileCfg.current.kind === "video") {
+      const f = files[0];
+      setVideo({
+        src: URL.createObjectURL(f),
+        name: f.name
+      });
+      setBgId("none");
+      return;
+    }
+    const room = Math.max(0, 5 - images.length);
+    const out = [];
+    for (const f of files.slice(0, room)) {
+      const d = await jnReadImage(f);
+      if (d) out.push(d);
+    }
+    if (out.length) {
+      setImages(p => [...p, ...out]);
+      setBgId("none");
+    }
+    if (files.length > room) showToast("Photo limit is 5");
+  }
+  function insertMention() {
+    const t = text.replace(/\s*$/, "");
+    setText((t ? t + " " : "") + "@Katy Wilson ");
+    if (taRef.current) taRef.current.focus();
+  }
+  function post() {
+    const posts = loadPosts();
+    const p = {
+      id: "p" + Date.now(),
+      by: "jane",
+      t: "Just now",
+      text: text.trim() + (feeling ? "\n— feeling " + feeling : "") + (loc ? "\n📍 " + loc : ""),
+      likes: 0,
+      shares: 0,
+      liked: false,
+      reaction: null,
+      comments: [],
+      tags,
+      dest
+    };
+    if (images.length) p.imgs = images;
+    if (video) p.video = {
+      name: video.name
+    };
+    if (bg.css) p.bg = {
+      css: bg.css,
+      fg: bg.fg
+    };
+    try {
+      saveJN(POSTS_KEY, [p, ...posts]);
+    } catch (e) {
+      p.imgs = images.slice(0, 1);
+      try {
+        saveJN(POSTS_KEY, [p, ...posts]);
+      } catch (e2) {
+        delete p.imgs;
+        saveJN(POSTS_KEY, [p, ...posts]);
+      }
+    }
+    goJN(dest === "katy" ? "JaneMessages.html?to=katy" : "JaneNewsfeed.html?posted=1");
+  }
+  const d = JN_DESTS.find(x => x.k === dest);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "cp-screen jn-cp",
+    "data-screen-label": "Create Post (Jane)"
+  }, /*#__PURE__*/React.createElement("header", {
+    className: "cp-top"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "cp-cancel",
+    onClick: () => goJN(backTo)
+  }, "Cancel"), /*#__PURE__*/React.createElement("span", {
+    className: "cp-title"
+  }, "Create Post"), /*#__PURE__*/React.createElement("button", {
+    className: "cp-post-btn",
+    disabled: !canPost,
+    onClick: post
+  }, dest === "katy" ? "Send" : "Post")), /*#__PURE__*/React.createElement("div", {
+    className: "cp-scroll"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-author"
+  }, /*#__PURE__*/React.createElement(DSJN.Avatar, {
+    name: JANE.name,
+    src: JANE.avatar,
+    size: 46
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "cp-author-meta"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-author-name-row"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-author-name"
+  }, JANE.name)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "cp-channel-btn",
+    onClick: () => setSheet("dest"),
+    "aria-haspopup": "dialog"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: d.icon,
+    size: 14,
+    color: "var(--gray-500)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: dest === "feed" ? "cp-channel-feed" : "cp-channel-chip"
+  }, dest === "feed" ? "Post to Clinic feed" : d.label), /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-down",
+    size: 14,
+    color: "var(--gray-500)"
+  })))), /*#__PURE__*/React.createElement("div", {
+    className: "cp-compose" + (bg.css ? " cp-compose-bg" : ""),
+    style: bg.css ? {
+      background: bg.css
+    } : undefined
+  }, /*#__PURE__*/React.createElement("textarea", {
+    ref: taRef,
+    className: "cp-textarea" + (bg.css ? " on-bg" : ""),
+    placeholder: dest === "katy" ? "Write a private note to Katy…" : "What's on your mind?",
+    value: text,
+    style: bg.css ? {
+      color: bg.fg
+    } : undefined,
+    onChange: e => setText(e.target.value)
+  }), bg.css && /*#__PURE__*/React.createElement("button", {
+    className: "cp-bg-fab",
+    "aria-label": "Change background style",
+    onClick: () => setSheet("bg")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-bg-aa"
+  }, "Aa"))), (feeling || loc) && /*#__PURE__*/React.createElement("div", {
+    className: "jn-cp-meta"
+  }, feeling && /*#__PURE__*/React.createElement("span", {
+    className: "jn-cp-chip",
+    onClick: () => setFeeling(null)
+  }, "feeling ", feeling, /*#__PURE__*/React.createElement(IcJN, {
+    name: "x",
+    size: 12
+  })), loc && /*#__PURE__*/React.createElement("span", {
+    className: "jn-cp-chip",
+    onClick: () => setLoc(null)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "map-pin",
+    size: 12
+  }), loc, /*#__PURE__*/React.createElement(IcJN, {
+    name: "x",
+    size: 12
+  }))), video && /*#__PURE__*/React.createElement("div", {
+    className: "cp-video-wrap"
+  }, /*#__PURE__*/React.createElement("video", {
+    src: video.src,
+    className: "cp-video-cover",
+    muted: true,
+    playsInline: true,
+    preload: "metadata"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "cp-video-rm",
+    "aria-label": "Remove video",
+    onClick: () => setVideo(null)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "x",
+    size: 14,
+    color: "var(--white)"
+  }))), images.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "cp-images cp-images-" + images.length + (video ? " cp-images-with-video" : "")
+  }, images.map((src, i) => /*#__PURE__*/React.createElement("div", {
+    key: i,
+    className: "cp-img-wrap"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: src,
+    alt: "",
+    className: "cp-img"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "cp-img-rm",
+    "aria-label": "Remove",
+    onClick: () => setImages(p => p.filter((_, j) => j !== i))
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "x",
+    size: 14,
+    color: "var(--white)"
+  }))))), (images.length > 0 || video) && /*#__PURE__*/React.createElement("p", {
+    className: "cp-media-count"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "paperclip",
+    size: 12,
+    color: "var(--gray-500)"
+  }), [video ? "1 video" : null, images.length ? images.length + (images.length === 1 ? " photo" : " photos") : null].filter(Boolean).join(" · "), images.length < 5 ? " · add up to " + (5 - images.length) + " more photo" + (5 - images.length === 1 ? "" : "s") : " · photo limit reached"), /*#__PURE__*/React.createElement("div", {
+    className: "cp-tags"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-attach-label"
+  }, "Add hashtags"), /*#__PURE__*/React.createElement("div", {
+    className: "pf-tagbar"
+  }, JN_TAGS.map(t => /*#__PURE__*/React.createElement("button", {
+    key: t.slug,
+    type: "button",
+    className: "pf-tagchip" + (tags.includes(t.slug) ? " on" : ""),
+    onClick: () => setTags(p => p.includes(t.slug) ? p.filter(x => x !== t.slug) : [...p, t.slug])
+  }, "#", t.label))))), /*#__PURE__*/React.createElement("div", {
+    className: "cp-attach-bar"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-attach-label"
+  }, "Add to your post"), /*#__PURE__*/React.createElement("div", {
+    className: "cp-attach-row"
+  }, JN_ATTACH.map(a => /*#__PURE__*/React.createElement("button", {
+    key: a.k,
+    className: "cp-attach-btn",
+    "aria-label": a.label,
+    disabled: a.k === "photo" && (!!bg.css || images.length >= 5) || a.k === "video" && (!!bg.css || !!video),
+    onClick: a.k === "photo" ? () => setSheet("photo") : a.k === "video" ? () => setSheet("video") : a.k === "tag" ? insertMention : a.k === "loc" ? () => setSheet("loc") : () => setSheet("feel")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: a.icon,
+    size: 24,
+    color: a.color
+  }))), /*#__PURE__*/React.createElement("button", {
+    className: "cp-attach-btn",
+    "aria-label": "Background",
+    disabled: images.length > 0 || !!video,
+    onClick: () => setSheet("bg")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-bg-aa lg"
+  }, "Aa")))), /*#__PURE__*/React.createElement("input", {
+    ref: fileRef,
+    type: "file",
+    hidden: true,
+    onChange: onFiles
+  }), sheet === "bg" && /*#__PURE__*/React.createElement(CPSheetJN, {
+    title: "Background",
+    done: true,
+    onClose: () => setSheet(null)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-swatches",
+    role: "radiogroup",
+    "aria-label": "Background style"
+  }, JN_BACKGROUNDS.map(b => /*#__PURE__*/React.createElement("button", {
+    key: b.id,
+    role: "radio",
+    "aria-checked": b.id === bgId,
+    "aria-label": b.label,
+    className: "cp-swatch" + (b.id === bgId ? " on" : "") + (b.id === "none" ? " none" : ""),
+    style: b.css ? {
+      background: b.css
+    } : undefined,
+    onClick: () => {
+      setBgId(b.id);
+      if (b.css) {
+        setImages([]);
+        setVideo(null);
+      }
+    }
+  }, b.id === "none" && /*#__PURE__*/React.createElement(IcJN, {
+    name: "ban",
+    size: 20,
+    color: "var(--gray-450)"
+  }), b.id === bgId && b.id !== "none" && /*#__PURE__*/React.createElement("span", {
+    className: "cp-swatch-ck"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "check",
+    size: 15,
+    color: "var(--brand-navy)"
+  })))))), sheet === "dest" && /*#__PURE__*/React.createElement(CPSheetJN, {
+    title: "Post to",
+    onClose: () => setSheet(null)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet-list",
+    role: "radiogroup",
+    "aria-label": "Destination"
+  }, JN_DESTS.map(x => /*#__PURE__*/React.createElement("button", {
+    key: x.k,
+    type: "button",
+    role: "radio",
+    "aria-checked": dest === x.k,
+    className: "cp-opt" + (dest === x.k ? " on" : ""),
+    onClick: () => {
+      setDest(x.k);
+      setSheet(null);
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: x.icon,
+    size: 20,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-tx"
+  }, /*#__PURE__*/React.createElement("b", null, x.label), /*#__PURE__*/React.createElement("i", null, x.sub)), /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-rd"
+  }, dest === x.k && /*#__PURE__*/React.createElement(IcJN, {
+    name: "check",
+    size: 14,
+    color: "#fff"
+  })))))), (sheet === "photo" || sheet === "video") && /*#__PURE__*/React.createElement(CPSheetJN, {
+    title: JN_MEDIA_SOURCES[sheet].title,
+    onClose: () => setSheet(null)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet-list"
+  }, JN_MEDIA_SOURCES[sheet].rows.map(r => /*#__PURE__*/React.createElement("button", {
+    key: r.k,
+    type: "button",
+    className: "cp-opt",
+    onClick: () => pickSource(sheet, r.k)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: r.icon,
+    size: 20,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-tx"
+  }, /*#__PURE__*/React.createElement("b", null, r.label), /*#__PURE__*/React.createElement("i", null, r.sub)), /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-right",
+    size: 18,
+    color: "var(--gray-400)"
+  }))))), sheet === "loc" && /*#__PURE__*/React.createElement(CPSheetJN, {
+    title: "Add a location",
+    onClose: () => setSheet(null)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "cp-sheet-list"
+  }, [["Pearce Aesthetics, Manchester", "building-2"], ["Home", "home"], ["Manchester, UK", "map-pin"], ["Use my current location", "navigation"]].map(([l, ic]) => /*#__PURE__*/React.createElement("button", {
+    key: l,
+    type: "button",
+    className: "cp-opt" + (loc === l ? " on" : ""),
+    onClick: () => {
+      setLoc(l === "Use my current location" ? "Manchester, UK" : l);
+      setSheet(null);
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: ic,
+    size: 20,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-tx"
+  }, /*#__PURE__*/React.createElement("b", null, l)), /*#__PURE__*/React.createElement("span", {
+    className: "cp-opt-rd"
+  }, loc === l && /*#__PURE__*/React.createElement(IcJN, {
+    name: "check",
+    size: 14,
+    color: "#fff"
+  })))))), sheet === "feel" && /*#__PURE__*/React.createElement(CPSheetJN, {
+    title: "How are you feeling?",
+    onClose: () => setSheet(null)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-cp-feel"
+  }, JN_FEELINGS.map(f => /*#__PURE__*/React.createElement("button", {
+    key: f,
+    className: feeling === f ? "on" : "",
+    onClick: () => {
+      setFeeling(f);
+      setSheet(null);
+    }
+  }, f)))), /*#__PURE__*/React.createElement(JNToast, {
+    toast: toast
+  }));
+}
+
+/* =======================================================================
    mount
    ======================================================================= */
 const JN_SCREENS = {
+  create: CreatePostScreen,
   home: HomeScreen,
   profile: ProfileScreen,
   onboarding: OnboardingScreen,

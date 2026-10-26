@@ -446,8 +446,12 @@ function FeedPostJN({ p, pinned, onLike, onReact, onComment, onShare, onSave, sa
   const handleLike = () => { const willReact = !reaction; onLike(p); if (willReact) burstFromJN(likeButtonJN(ref.current), "like"); };
   const handleComment = () => { const g = actionIconJN(ref.current, 1); if (g && g.animate) g.animate([{ transform: "rotate(0)" }, { transform: "rotate(-17deg)" }, { transform: "rotate(13deg)" }, { transform: "rotate(-6deg)" }, { transform: "rotate(0)" }], { duration: 520, easing: "ease-in-out" }); onComment(p); };
   const handleShare = () => { const g = actionIconJN(ref.current, 2); if (g && g.animate) g.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: "translate(8px,-10px) scale(1.28)", opacity: 0.35, offset: 0.5 }, { transform: "translate(-3px,2px) scale(1)", opacity: 1, offset: 0.78 }, { transform: "translate(0,0) scale(1)", opacity: 1 }], { duration: 560, easing: "cubic-bezier(.34,1.56,.64,1)" }); onShare(p); };
-  const media = p.img ? (
-    <div className="pf-media-bleed" style={{ margin: "0 -16px" }} onClick={onTap}><img src={p.img} alt="" draggable={false} style={{ width: "100%", height: 380, objectFit: "cover", display: "block", background: "var(--gray-100)", userSelect: "none" }} /></div>
+  const imgs = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : []);
+  const media = imgs.length ? (
+    <div className="pf-media-bleed" style={{ margin: "0 -16px" }} onClick={onTap}>
+      {imgs.length === 1 ? <img src={imgs[0]} alt="" draggable={false} style={{ width: "100%", height: 380, objectFit: "cover", display: "block", background: "var(--gray-100)", userSelect: "none" }} />
+        : <div className={"jn-gallery n" + Math.min(imgs.length, 4)}>{imgs.slice(0, 4).map((src, i) => <span key={i}><img src={src} alt="" draggable={false} />{i === 3 && imgs.length > 4 && <b>+{imgs.length - 4}</b>}</span>)}</div>}
+    </div>
   ) : p.event ? (
     <div className="pf-media-bleed" style={{ margin: "0 -16px" }}>
       <button className="jn-post-ev infeed" onClick={() => goJN("JaneEvents.html?event=" + p.event)}>
@@ -460,9 +464,9 @@ function FeedPostJN({ p, pinned, onLike, onReact, onComment, onShare, onSave, sa
     <div className="post-wrap" id={"post-" + p.id} ref={ref} style={{ background: "var(--surface-card)", borderRadius: "var(--r-md)", overflow: "hidden", padding: "0px 16px" }}>
       <DSJN.PostCard author={a}
         time={pinned ? <React.Fragment>{p.t}<span className="pf-pin-chip"><DSJN.IconifyIcon name="fluent:pin-12-filled" size={11} color="var(--brand-navy)" />Pinned</span></React.Fragment> : p.t}
-        body={<ClampTextJN text={p.text} />}
+        body={p.bg ? <div className="pf-post-bg" style={{ background: p.bg.css, color: p.bg.fg }}><ClampTextJN text={p.text} lines={6} /></div> : <ClampTextJN text={p.text} />}
         media={media}
-        hashtags={[]}
+        hashtags={(p.tags || []).map((t) => JN_TAG_MAP[t]).filter(Boolean)}
         liked={!!reaction} saved={saved} actioned={false} likes={fmtN(p.likes)} shares={fmtN(p.shares)} comments={String(p.comments.length)}
         onLike={handleLike} onComment={handleComment} onShare={handleShare} onSave={() => onSave(p)}
         onReport={() => showToast("Thanks, we'll take a look")}
@@ -499,7 +503,7 @@ function HomeScreen() {
   const { pull, dragging, refreshing } = usePullToRefreshJN(scrollRef, () => new Promise((r) => setTimeout(() => { setFeedKey((k) => k + 1); if (scrollRef.current) scrollRef.current.scrollTop = 0; r(); }, 600)));
   React.useLayoutEffect(() => { const el = headerRef.current; if (!el) return; const m = () => setHeaderH(el.offsetHeight); m(); const ro = new ResizeObserver(m); ro.observe(el); return () => ro.disconnect(); }, []);
   React.useLayoutEffect(() => { const el = tabsRef.current; if (!el) return; const m = () => setTabsH(el.offsetHeight); m(); const ro = new ResizeObserver(m); ro.observe(el); return () => ro.disconnect(); }, []);
-  useEffectJN(() => { if (qJN("search") === "1") showToast("Search coming soon"); }, []);
+  useEffectJN(() => { if (qJN("search") === "1") showToast("Search coming soon"); if (qJN("posted") === "1") { showToast("Shared with your clinic"); try { const u = new URL(location.href); u.searchParams.delete("posted"); history.replaceState(null, "", u.pathname + u.search); } catch (e) {} } }, []);
   const onb = onbState();
   const wear = connectedWearables();
   const onbPct = onb.done ? 100 : Math.round((Object.keys(onb.answers).length / ONB_STEPS.length) * 100);
@@ -568,7 +572,7 @@ function HomeScreen() {
         </main>
       </div>
       <JNDock ref={tabsRef} compact={chromeHidden} active="home" />
-      <button className={"m-fab" + (chromeHidden ? " m-fab-compact" : "")} aria-label="Share a Post" onClick={() => setComposeOpen(true)}><IcJN name="plus" size={24} color="#fff" /></button>
+      <button className={"m-fab" + (chromeHidden ? " m-fab-compact" : "")} aria-label="Share a Post" onClick={() => goJN("JaneCreatePost.html")}><IcJN name="plus" size={24} color="#fff" /></button>
       <JNDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
       <JNNotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
 
@@ -1552,9 +1556,201 @@ function MessagesScreen() {
 }
 
 /* =======================================================================
+   CREATE POST — twin of Katy's CreatePostMobile (create-post-mobile.css
+   cp-* classes, same top bar / author row / text area / hashtag rail /
+   "Add to your post" tools / background styles / destination sheet).
+   Posts land in pf-jane-posts and the feed reopens on top.
+   ======================================================================= */
+const JN_TAGS = [
+  { slug: "progress", label: "Progress" }, { slug: "question", label: "Question" }, { slug: "aftercare", label: "Aftercare" },
+  { slug: "skincare", label: "Skincare" }, { slug: "appointment", label: "Appointment" }, { slug: "tips", label: "Tips" },
+  { slug: "sleep", label: "Sleep" }, { slug: "wins", label: "Wins" }];
+const JN_TAG_MAP = JN_TAGS.reduce((m, t) => { m[t.slug] = t; return m; }, {});
+const JN_BACKGROUNDS = [
+  { id: "none", label: "No background", css: "", fg: "var(--text-primary)" },
+  { id: "navy", label: "Navy", css: "linear-gradient(150deg,#292569,#3d3688)", fg: "#fff" },
+  { id: "gold", label: "Gold", css: "linear-gradient(150deg,#ce9957,#a26301)", fg: "#fff" },
+  { id: "purple", label: "Purple", css: "linear-gradient(150deg,#6c63ff,#4022a8)", fg: "#fff" },
+  { id: "teal", label: "Teal", css: "linear-gradient(150deg,#25515c,#173840)", fg: "#fff" },
+  { id: "cream", label: "Cream", css: "linear-gradient(150deg,#fcf4e4,#f3e3c8)", fg: "var(--brand-navy)" },
+  { id: "navygold", label: "Navy to gold", css: "linear-gradient(150deg,#292569 40%,#ce9957)", fg: "#fff" },
+  { id: "sunrise", label: "Sunrise", css: "linear-gradient(150deg,#e58f0c,#be1e2d)", fg: "#fff" },
+  { id: "mint", label: "Mint", css: "linear-gradient(150deg,#2a9568,#186b4a)", fg: "#fff" },
+  { id: "slate", label: "Slate", css: "linear-gradient(150deg,#475467,#1f2937)", fg: "#fff" },
+  { id: "blush", label: "Blush", css: "linear-gradient(150deg,#f7d6de,#e9afbe)", fg: "var(--brand-navy)" },
+  { id: "ink", label: "Ink", css: "#101828", fg: "#fff" }];
+const JN_DESTS = [
+  { k: "feed", label: "Clinic feed", sub: "Your clinic team and other patients", icon: "rss" },
+  { k: "patients", label: "Patients only", sub: "Other patients at " + JANE.clinic, icon: "users" },
+  { k: "katy", label: "Just my clinician", sub: "A private note to " + KATY.name, icon: "lock" }];
+const JN_ATTACH = [
+  { k: "photo", icon: "image", label: "Photo", color: "#2d9d5a" }, { k: "video", icon: "video", label: "Video", color: "#e56c1b" },
+  { k: "tag", icon: "at-sign", label: "Tag people", color: "#1d7fc4" }, { k: "loc", icon: "map-pin", label: "Location", color: "#d03b3b" },
+  { k: "feel", icon: "smile", label: "Feeling", color: "#d4a017" }];
+const JN_FEELINGS = ["😊 happy", "🤩 excited", "😌 relaxed", "😬 nervous", "🥱 tired", "💪 motivated", "🙏 grateful", "😣 sore"];
+const JN_MEDIA_SOURCES = {
+  photo: { title: "Add photos", rows: [{ k: "library", icon: "images", label: "Photo library", sub: "Choose up to 5 photos" }, { k: "camera", icon: "camera", label: "Take a photo", sub: "Open the camera now" }] },
+  video: { title: "Add a video", rows: [{ k: "library", icon: "film", label: "Video library", sub: "Choose a clip from your gallery" }, { k: "camera", icon: "video", label: "Record a video", sub: "Capture one right now" }] } };
+function jnReadImage(file, max = 1280) {
+  return new Promise((resolve) => { const url = URL.createObjectURL(file); const img = new Image(); img.onload = () => { const s = Math.min(1, max / Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url); resolve(c.toDataURL("image/jpeg", 0.82)); }; img.onerror = () => resolve(null); img.src = url; });
+}
+function CPSheetJN({ title, onClose, children, done }) {
+  useEffectJN(() => { const onKey = (e) => { if (e.key === "Escape") onClose(); }; document.addEventListener("keydown", onKey); return () => document.removeEventListener("keydown", onKey); }, []);
+  return (
+    <div className="cp-sheet-overlay" onClick={onClose}>
+      <div className="cp-sheet" role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}>
+        <span className="cp-sheet-grip" aria-hidden="true"></span>
+        {done ? <div className="cp-sheet-hd"><h3>{title}</h3><button className="cp-sheet-done" aria-label="Done" onClick={onClose}><IcJN name="check" size={22} color="var(--brand-navy)" /></button></div> : <h3>{title}</h3>}
+        {children}
+      </div>
+    </div>);
+}
+function CreatePostScreen() {
+  const [text, setText] = useStateJN("");
+  const [dest, setDest] = useStateJN("feed");
+  const [bgId, setBgId] = useStateJN("none");
+  const [tags, setTags] = useStateJN([]);
+  const [images, setImages] = useStateJN([]);
+  const [video, setVideo] = useStateJN(null);
+  const [loc, setLoc] = useStateJN(null);
+  const [feeling, setFeeling] = useStateJN(null);
+  const [sheet, setSheet] = useStateJN(null); // bg | dest | photo | video | loc | feel
+  const [toast, showToast] = useToastJN();
+  const fileRef = useRefJN(null); const fileCfg = useRefJN({});
+  const taRef = useRefJN(null);
+  const bg = JN_BACKGROUNDS.find((b) => b.id === bgId) || JN_BACKGROUNDS[0];
+  const canPost = text.trim().length > 0 || images.length > 0 || !!video;
+  const backTo = qJN("ret") || "JaneNewsfeed.html";
+  useEffectJN(() => { if (taRef.current) taRef.current.focus(); }, []);
+  function pickSource(kind, src) {
+    setSheet(null); fileCfg.current = { kind, src };
+    const input = fileRef.current; if (!input) return;
+    input.accept = kind === "photo" ? "image/*" : "video/*"; input.multiple = kind === "photo";
+    if (src === "camera") input.setAttribute("capture", "environment"); else input.removeAttribute("capture");
+    input.value = ""; input.click();
+  }
+  async function onFiles(e) {
+    const files = Array.from(e.target.files || []); if (!files.length) return;
+    if (fileCfg.current.kind === "video") { const f = files[0]; setVideo({ src: URL.createObjectURL(f), name: f.name }); setBgId("none"); return; }
+    const room = Math.max(0, 5 - images.length); const out = [];
+    for (const f of files.slice(0, room)) { const d = await jnReadImage(f); if (d) out.push(d); }
+    if (out.length) { setImages((p) => [...p, ...out]); setBgId("none"); }
+    if (files.length > room) showToast("Photo limit is 5");
+  }
+  function insertMention() { const t = text.replace(/\s*$/, ""); setText((t ? t + " " : "") + "@Katy Wilson "); if (taRef.current) taRef.current.focus(); }
+  function post() {
+    const posts = loadPosts();
+    const p = { id: "p" + Date.now(), by: "jane", t: "Just now", text: text.trim() + (feeling ? "\n— feeling " + feeling : "") + (loc ? "\n📍 " + loc : ""), likes: 0, shares: 0, liked: false, reaction: null, comments: [], tags, dest };
+    if (images.length) p.imgs = images; if (video) p.video = { name: video.name }; if (bg.css) p.bg = { css: bg.css, fg: bg.fg };
+    try { saveJN(POSTS_KEY, [p, ...posts]); } catch (e) { p.imgs = images.slice(0, 1); try { saveJN(POSTS_KEY, [p, ...posts]); } catch (e2) { delete p.imgs; saveJN(POSTS_KEY, [p, ...posts]); } }
+    goJN(dest === "katy" ? "JaneMessages.html?to=katy" : "JaneNewsfeed.html?posted=1");
+  }
+  const d = JN_DESTS.find((x) => x.k === dest);
+  return (
+    <div className="cp-screen jn-cp" data-screen-label="Create Post (Jane)">
+      <header className="cp-top">
+        <button className="cp-cancel" onClick={() => goJN(backTo)}>Cancel</button>
+        <span className="cp-title">Create Post</span>
+        <button className="cp-post-btn" disabled={!canPost} onClick={post}>{dest === "katy" ? "Send" : "Post"}</button>
+      </header>
+      <div className="cp-scroll">
+        <div className="cp-author">
+          <DSJN.Avatar name={JANE.name} src={JANE.avatar} size={46} />
+          <div className="cp-author-meta">
+            <div className="cp-author-name-row"><span className="cp-author-name">{JANE.name}</span></div>
+            <button type="button" className="cp-channel-btn" onClick={() => setSheet("dest")} aria-haspopup="dialog">
+              <IcJN name={d.icon} size={14} color="var(--gray-500)" />
+              <span className={dest === "feed" ? "cp-channel-feed" : "cp-channel-chip"}>{dest === "feed" ? "Post to Clinic feed" : d.label}</span>
+              <IcJN name="chevron-down" size={14} color="var(--gray-500)" />
+            </button>
+          </div>
+        </div>
+        <div className={"cp-compose" + (bg.css ? " cp-compose-bg" : "")} style={bg.css ? { background: bg.css } : undefined}>
+          <textarea ref={taRef} className={"cp-textarea" + (bg.css ? " on-bg" : "")} placeholder={dest === "katy" ? "Write a private note to Katy…" : "What's on your mind?"} value={text} style={bg.css ? { color: bg.fg } : undefined} onChange={(e) => setText(e.target.value)} />
+          {bg.css && <button className="cp-bg-fab" aria-label="Change background style" onClick={() => setSheet("bg")}><span className="cp-bg-aa">Aa</span></button>}
+        </div>
+        {(feeling || loc) && <div className="jn-cp-meta">{feeling && <span className="jn-cp-chip" onClick={() => setFeeling(null)}>feeling {feeling}<IcJN name="x" size={12} /></span>}{loc && <span className="jn-cp-chip" onClick={() => setLoc(null)}><IcJN name="map-pin" size={12} />{loc}<IcJN name="x" size={12} /></span>}</div>}
+        {video && (
+          <div className="cp-video-wrap"><video src={video.src} className="cp-video-cover" muted playsInline preload="metadata" /><button className="cp-video-rm" aria-label="Remove video" onClick={() => setVideo(null)}><IcJN name="x" size={14} color="var(--white)" /></button></div>)}
+        {images.length > 0 && (
+          <div className={"cp-images cp-images-" + images.length + (video ? " cp-images-with-video" : "")}>
+            {images.map((src, i) => <div key={i} className="cp-img-wrap"><img src={src} alt="" className="cp-img" /><button className="cp-img-rm" aria-label="Remove" onClick={() => setImages((p) => p.filter((_, j) => j !== i))}><IcJN name="x" size={14} color="var(--white)" /></button></div>)}
+          </div>)}
+        {(images.length > 0 || video) && <p className="cp-media-count"><IcJN name="paperclip" size={12} color="var(--gray-500)" />{[video ? "1 video" : null, images.length ? images.length + (images.length === 1 ? " photo" : " photos") : null].filter(Boolean).join(" · ")}{images.length < 5 ? " · add up to " + (5 - images.length) + " more photo" + (5 - images.length === 1 ? "" : "s") : " · photo limit reached"}</p>}
+        <div className="cp-tags">
+          <span className="cp-attach-label">Add hashtags</span>
+          <div className="pf-tagbar">{JN_TAGS.map((t) => <button key={t.slug} type="button" className={"pf-tagchip" + (tags.includes(t.slug) ? " on" : "")} onClick={() => setTags((p) => p.includes(t.slug) ? p.filter((x) => x !== t.slug) : [...p, t.slug])}>#{t.label}</button>)}</div>
+        </div>
+      </div>
+      <div className="cp-attach-bar">
+        <span className="cp-attach-label">Add to your post</span>
+        <div className="cp-attach-row">
+          {JN_ATTACH.map((a) => (
+            <button key={a.k} className="cp-attach-btn" aria-label={a.label}
+              disabled={(a.k === "photo" && (!!bg.css || images.length >= 5)) || (a.k === "video" && (!!bg.css || !!video))}
+              onClick={a.k === "photo" ? () => setSheet("photo") : a.k === "video" ? () => setSheet("video") : a.k === "tag" ? insertMention : a.k === "loc" ? () => setSheet("loc") : () => setSheet("feel")}>
+              <IcJN name={a.icon} size={24} color={a.color} />
+            </button>))}
+          <button className="cp-attach-btn" aria-label="Background" disabled={images.length > 0 || !!video} onClick={() => setSheet("bg")}><span className="cp-bg-aa lg">Aa</span></button>
+        </div>
+      </div>
+      <input ref={fileRef} type="file" hidden onChange={onFiles} />
+
+      {sheet === "bg" && (
+        <CPSheetJN title="Background" done onClose={() => setSheet(null)}>
+          <div className="cp-swatches" role="radiogroup" aria-label="Background style">
+            {JN_BACKGROUNDS.map((b) => (
+              <button key={b.id} role="radio" aria-checked={b.id === bgId} aria-label={b.label} className={"cp-swatch" + (b.id === bgId ? " on" : "") + (b.id === "none" ? " none" : "")} style={b.css ? { background: b.css } : undefined} onClick={() => { setBgId(b.id); if (b.css) { setImages([]); setVideo(null); } }}>
+                {b.id === "none" && <IcJN name="ban" size={20} color="var(--gray-450)" />}
+                {b.id === bgId && b.id !== "none" && <span className="cp-swatch-ck"><IcJN name="check" size={15} color="var(--brand-navy)" /></span>}
+              </button>))}
+          </div>
+        </CPSheetJN>)}
+      {sheet === "dest" && (
+        <CPSheetJN title="Post to" onClose={() => setSheet(null)}>
+          <div className="cp-sheet-list" role="radiogroup" aria-label="Destination">
+            {JN_DESTS.map((x) => (
+              <button key={x.k} type="button" role="radio" aria-checked={dest === x.k} className={"cp-opt" + (dest === x.k ? " on" : "")} onClick={() => { setDest(x.k); setSheet(null); }}>
+                <span className="cp-opt-ic"><IcJN name={x.icon} size={20} color="var(--brand-navy)" /></span>
+                <span className="cp-opt-tx"><b>{x.label}</b><i>{x.sub}</i></span>
+                <span className="cp-opt-rd">{dest === x.k && <IcJN name="check" size={14} color="#fff" />}</span>
+              </button>))}
+          </div>
+        </CPSheetJN>)}
+      {(sheet === "photo" || sheet === "video") && (
+        <CPSheetJN title={JN_MEDIA_SOURCES[sheet].title} onClose={() => setSheet(null)}>
+          <div className="cp-sheet-list">
+            {JN_MEDIA_SOURCES[sheet].rows.map((r) => (
+              <button key={r.k} type="button" className="cp-opt" onClick={() => pickSource(sheet, r.k)}>
+                <span className="cp-opt-ic"><IcJN name={r.icon} size={20} color="var(--brand-navy)" /></span>
+                <span className="cp-opt-tx"><b>{r.label}</b><i>{r.sub}</i></span>
+                <IcJN name="chevron-right" size={18} color="var(--gray-400)" />
+              </button>))}
+          </div>
+        </CPSheetJN>)}
+      {sheet === "loc" && (
+        <CPSheetJN title="Add a location" onClose={() => setSheet(null)}>
+          <div className="cp-sheet-list">
+            {[["Pearce Aesthetics, Manchester", "building-2"], ["Home", "home"], ["Manchester, UK", "map-pin"], ["Use my current location", "navigation"]].map(([l, ic]) => (
+              <button key={l} type="button" className={"cp-opt" + (loc === l ? " on" : "")} onClick={() => { setLoc(l === "Use my current location" ? "Manchester, UK" : l); setSheet(null); }}>
+                <span className="cp-opt-ic"><IcJN name={ic} size={20} color="var(--brand-navy)" /></span>
+                <span className="cp-opt-tx"><b>{l}</b></span>
+                <span className="cp-opt-rd">{loc === l && <IcJN name="check" size={14} color="#fff" />}</span>
+              </button>))}
+          </div>
+        </CPSheetJN>)}
+      {sheet === "feel" && (
+        <CPSheetJN title="How are you feeling?" onClose={() => setSheet(null)}>
+          <div className="jn-cp-feel">{JN_FEELINGS.map((f) => <button key={f} className={feeling === f ? "on" : ""} onClick={() => { setFeeling(f); setSheet(null); }}>{f}</button>)}</div>
+        </CPSheetJN>)}
+      <JNToast toast={toast} />
+    </div>);
+}
+
+/* =======================================================================
    mount
    ======================================================================= */
-const JN_SCREENS = { home: HomeScreen, profile: ProfileScreen, onboarding: OnboardingScreen, wearables: WearablesScreen, health: HealthScreen, coach: CoachScreen, events: EventsScreen, messages: MessagesScreen };
+const JN_SCREENS = { create: CreatePostScreen, home: HomeScreen, profile: ProfileScreen, onboarding: OnboardingScreen, wearables: WearablesScreen, health: HealthScreen, coach: CoachScreen, events: EventsScreen, messages: MessagesScreen };
 function JaneApp() {
   const Screen = JN_SCREENS[JN_PAGE] || HomeScreen;
   const mobile = useIsMobileJN();
