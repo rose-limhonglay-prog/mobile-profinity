@@ -70,6 +70,7 @@ const JANE = {
 const KATY = {
   id: "katy",
   name: "Katy Wilson",
+  first: "Katy",
   avatar: "assets/avatar-katy.jpg",
   role: "Clinician",
   title: "Registered Nurse · Pearce Aesthetics"
@@ -79,6 +80,7 @@ const PEOPLE = {
   beth: {
     id: "beth",
     name: "Nurse Beth",
+    first: "Beth",
     avatar: "assets/avatar-nurse-beth.jpg",
     role: "Clinician",
     title: "Aesthetic Nurse"
@@ -86,6 +88,7 @@ const PEOPLE = {
   priya: {
     id: "priya",
     name: "Dr Priya Shah",
+    first: "Dr Priya",
     avatar: "assets/avatar-priya-shah.jpg",
     role: "Clinician",
     title: "Aesthetic Doctor"
@@ -981,7 +984,7 @@ function JNDrawer({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
-  const rows = [["user", "Edit Profile", "JaneProfile.html?edit=1"], ["watch", wear.length ? "My Wearables" : "Connect your wearables", "JaneWearables.html"], ["heart-pulse", "Health Analytics", "JaneHealth.html"], ["sparkles", "Coach", "JaneCoach.html"], ["calendar", "Events", "JaneEvents.html"], ["message-circle", "Messages", "JaneMessages.html"], ["phone", upcomingCall() ? "Your call with Katy" : "Schedule a call with Katy", "JaneScheduleCall.html?ret=" + encodeURIComponent(hereJN())], ["shield-check", "Privacy & Security", null], ["headphones", "Clinic Support", "JaneMessages.html?to=reception"]];
+  const rows = [["user", "Edit Profile", "JaneProfile.html?edit=1"], ["watch", wear.length ? "My Wearables" : "Connect your wearables", "JaneWearables.html"], ["heart-pulse", "Health Analytics", "JaneHealth.html"], ["sparkles", "Coach", "JaneCoach.html"], ["calendar", "Events", "JaneEvents.html"], ["message-circle", "Messages", "JaneMessages.html"], ["phone", upcomingCall() ? "Your call with " + callWho(upcomingCall()).first : "Schedule a call", "JaneScheduleCall.html?ret=" + encodeURIComponent(hereJN())], ["shield-check", "Privacy & Security", null], ["headphones", "Clinic Support", "JaneMessages.html?to=reception"]];
   return /*#__PURE__*/React.createElement("div", {
     className: "m-drawer-wrap" + (open ? " open" : ""),
     "aria-hidden": !open
@@ -1128,7 +1131,7 @@ function JNNotifPanel({
 }) {
   const up = upcomingCall();
   const notifs = up ? [{
-    by: "katy",
+    by: up.with || "katy",
     text: "confirmed your " + callTypeLabel(up).toLowerCase() + " · " + callWhen(up),
     t: "Just now",
     icon: "phone"
@@ -2802,8 +2805,8 @@ function ProfileScreen() {
   }, /*#__PURE__*/React.createElement("span", null, "Next review"), /*#__PURE__*/React.createElement("b", null, "Mon 3 Nov · 2:30pm"))), (() => {
     const up = upcomingCall();
     return /*#__PURE__*/React.createElement(PMCardJN, {
-      title: "Calls with Katy",
-      sub: up ? "Next: " + callWhen(up) : "Free 15-minute video or phone call",
+      title: "Calls with your care team",
+      sub: up ? "Next: " + callWhen(up) + " with " + callWho(up).first : "Free 15-minute video or phone call",
       href: "JaneScheduleCall.html?ret=JaneProfile.html"
     }, /*#__PURE__*/React.createElement("div", {
       className: "jn-pmc-list"
@@ -2817,7 +2820,7 @@ function ProfileScreen() {
       color: "var(--brand-navy)"
     })), /*#__PURE__*/React.createElement("span", {
       className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, callTypeLabel(up), " · ", up.reason), /*#__PURE__*/React.createElement("small", null, callWhen(up), " · ", CALL_DUR, " min")), /*#__PURE__*/React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("b", null, callTypeLabel(up), " with ", callWho(up).first), /*#__PURE__*/React.createElement("small", null, callWhen(up), " · ", up.reason)), /*#__PURE__*/React.createElement("span", {
       className: "jn-pill"
     }, "Booked")) : /*#__PURE__*/React.createElement("div", {
       className: "jn-li"
@@ -2829,7 +2832,7 @@ function ProfileScreen() {
       color: "var(--brand-navy)"
     })), /*#__PURE__*/React.createElement("span", {
       className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, "Schedule a call"), /*#__PURE__*/React.createElement("small", null, "Aftercare questions, swelling, anything you're unsure about")), /*#__PURE__*/React.createElement(IcJN, {
+    }, /*#__PURE__*/React.createElement("b", null, "Schedule a call"), /*#__PURE__*/React.createElement("small", null, "Katy, Nurse Beth or Dr Priya · aftercare, swelling, anything you're unsure about")), /*#__PURE__*/React.createElement(IcJN, {
       name: "chevron-right",
       size: 18,
       color: "var(--gray-400)"
@@ -5267,7 +5270,8 @@ const DM_REPLIES = {
   katy: ["Perfect, thanks for letting me know 🙂", "Noted — I'll add that to your file before Monday.", "Good question. Keep doing what you're doing and we'll check it at your review.", "Send me a photo if it changes, otherwise see you Monday!"],
   reception: ["Thanks Jane, your appointment is confirmed ✅", "Noted — we'll see you then."],
   miranda: ["Yay! Let's grab a coffee after 😄", "Perfect, see you there!"],
-  beth: ["You're welcome Jane! Shout if anything's unclear.", "Any time 🙂"]
+  beth: ["You're welcome Jane! Shout if anything's unclear.", "Any time 🙂"],
+  priya: ["Thanks Jane — I'll have a look before our call.", "Good question, let's go through it on the call 🙂", "Noted. If anything changes before then, send a photo."]
 };
 function fmtListTimeJN(ts) {
   const d = new Date(ts),
@@ -5345,10 +5349,10 @@ function MessagesScreen() {
     }, /*#__PURE__*/React.createElement(JNBar, {
       title: p.name,
       back: () => setOpenId(null),
-      trailing: /*#__PURE__*/React.createElement(React.Fragment, null, conv.id === "katy" && /*#__PURE__*/React.createElement("button", {
+      trailing: /*#__PURE__*/React.createElement(React.Fragment, null, p.role === "Clinician" && /*#__PURE__*/React.createElement("button", {
         className: "jn-iconbtn sm",
         "aria-label": "Schedule a call",
-        onClick: () => goJN("JaneScheduleCall.html?ret=" + encodeURIComponent("JaneMessages.html?to=katy"))
+        onClick: () => goJN("JaneScheduleCall.html?with=" + conv.id + "&ret=" + encodeURIComponent("JaneMessages.html?to=" + conv.id))
       }, /*#__PURE__*/React.createElement(IcJN, {
         name: "phone",
         size: 17,
@@ -5403,7 +5407,7 @@ function MessagesScreen() {
       className: "jn-prompts"
     }, /*#__PURE__*/React.createElement("button", {
       className: "jn-chip",
-      onClick: () => goJN("JaneScheduleCall.html?ret=" + encodeURIComponent("JaneMessages.html?to=katy"))
+      onClick: () => goJN("JaneScheduleCall.html?with=katy&ret=" + encodeURIComponent("JaneMessages.html?to=katy"))
     }, /*#__PURE__*/React.createElement(IcJN, {
       name: "phone",
       size: 13
@@ -5423,7 +5427,7 @@ function MessagesScreen() {
       color: "var(--brand-navy)"
     })), /*#__PURE__*/React.createElement("input", {
       className: "jn-in",
-      placeholder: "Message " + p.name.split(" ")[0] + "…",
+      placeholder: "Message " + (p.first || p.name.split(" ")[0]) + "…",
       value: draft,
       onChange: e => setDraft(e.target.value),
       onKeyDown: e => e.key === "Enter" && send()
@@ -5477,7 +5481,7 @@ function MessagesScreen() {
     className: "jn-care-btns"
   }, /*#__PURE__*/React.createElement("button", {
     className: "jn-iconbtn sm",
-    "aria-label": "Schedule a call with Katy",
+    "aria-label": "Schedule a call",
     onClick: () => goJN("JaneScheduleCall.html?ret=JaneMessages.html")
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "phone",
@@ -5499,7 +5503,7 @@ function MessagesScreen() {
       color: "#fff"
     })), /*#__PURE__*/React.createElement("span", {
       className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, callTypeLabel(up), " with Katy"), /*#__PURE__*/React.createElement("small", null, callWhen(up), " · ", up.reason)), /*#__PURE__*/React.createElement(IcJN, {
+    }, /*#__PURE__*/React.createElement("b", null, callTypeLabel(up), " with ", callWho(up).first), /*#__PURE__*/React.createElement("small", null, callWhen(up), " · ", up.reason)), /*#__PURE__*/React.createElement(IcJN, {
       name: "chevron-right",
       size: 18,
       color: "var(--gray-450)"
@@ -5541,8 +5545,9 @@ function MessagesScreen() {
    status: booked|cancelled|done, ts }] }. Booking also drops a confirmation
    from Katy into the Messages thread. Entry points: drawer row, Messages
    (care-team phone button, upcoming banner, Katy thread phone icon + chip),
-   Profile "Calls with Katy" card, notifications. ?ret= returns there,
-   ?new=1 skips the upcoming view, ?type=phone preselects the phone call.
+   Profile "Calls with your care team" card, notifications. ?ret= returns
+   there, ?new=1 skips the upcoming view, ?type=phone preselects the phone
+   call, ?with=katy|beth|priya preselects the clinician (CLINICIANS).
    ======================================================================= */
 const CALLS_KEY = "pf-jane-calls";
 const CALL_DUR = 15;
@@ -5575,6 +5580,33 @@ function upcomingCall() {
 function callTypeLabel(c) {
   return (CALL_TYPES.find(t => t.key === c.type) || CALL_TYPES[0]).label;
 }
+/* who Jane can call: her own clinician first, then the rest of the care team.
+   days = weekdays the clinician takes calls (0 = Sun). */
+const CLINICIANS = [{
+  id: "katy",
+  tag: "Your clinician",
+  short: "Registered Nurse",
+  days: [1, 2, 3, 4, 5, 6],
+  seed: 0
+}, {
+  id: "beth",
+  tag: "Aftercare",
+  short: "Aesthetic Nurse",
+  days: [1, 2, 3, 4, 5],
+  seed: 3
+}, {
+  id: "priya",
+  tag: "Tue & Thu",
+  short: "Aesthetic Doctor",
+  days: [2, 4],
+  seed: 5
+}];
+function clinOf(id) {
+  return CLINICIANS.find(c => c.id === id) || CLINICIANS[0];
+}
+function callWho(c) {
+  return PEOPLE[c && c.with || "katy"];
+}
 function callWhen(c) {
   const d = new Date(c.date + "T12:00:00");
   return WD[d.getDay()] + " " + d.getDate() + " " + MONTHS[d.getMonth()] + " · " + c.time;
@@ -5584,36 +5616,46 @@ function isoDateJN(d) {
 }
 /* Katy's diary for the next two weeks: Sundays closed, Saturday mornings
    only, and a deterministic scatter of taken slots so the grid feels real. */
-function callDays() {
+function callDays(withId) {
+  const cl = clinOf(withId);
   const out = [];
   const d = new Date();
   d.setHours(12, 0, 0, 0);
   d.setDate(d.getDate() + 1);
   for (let i = 0; i < 14; i++) {
     const x = new Date(d.getTime() + i * 86400000);
+    const dow = x.getDay();
     out.push({
       iso: isoDateJN(x),
       d: x.getDate(),
-      wd: WD[x.getDay()],
+      wd: WD[dow],
       m: MONTHS[x.getMonth()],
-      dow: x.getDay()
+      dow,
+      off: dow === 0 ? "closed" : cl.days.indexOf(dow) === -1 ? "away" : null
     });
   }
   return out;
 }
-function slotTaken(iso, time) {
-  const n = +iso.slice(-2) + +iso.slice(5, 7) * 3;
+function slotTaken(iso, time, withId) {
+  const n = +iso.slice(-2) + +iso.slice(5, 7) * 3 + clinOf(withId).seed;
   const i = CALL_SLOTS[0][1].concat(CALL_SLOTS[1][1]).indexOf(time);
   return (n * 7 + i * 11) % 5 === 0 || (n + i) % 9 === 4;
 }
-function dmCallNote(text) {
+function dmCallNote(text, withId) {
+  const id = withId || "katy";
   const s = readJN(DM_KEY, DM_SEED);
+  const has = s.convs.some(c => c.id === id);
+  const convs = has ? s.convs : [...s.convs, {
+    id,
+    unread: 0,
+    msgs: []
+  }];
   saveJN(DM_KEY, {
-    convs: s.convs.map(c => c.id === "katy" ? {
+    convs: convs.map(c => c.id === id ? {
       ...c,
       unread: (c.unread || 0) + 1,
       msgs: [...c.msgs, {
-        by: "katy",
+        by: id,
         text,
         ts: Date.now()
       }]
@@ -5634,16 +5676,18 @@ function ScheduleCallScreen() {
   const [step, setStep] = useStateJN(0);
   const [editing, setEditing] = useStateJN(null);
   const [draft, setDraft] = useStateJN({
+    with: CLINICIANS.some(c => c.id === qJN("with")) ? qJN("with") : "katy",
     type: qJN("type") === "phone" ? "phone" : "video",
     reason: null,
     note: "",
     date: null,
     time: null
   });
+  const who = PEOPLE[draft.with];
   const [booked, setBooked] = useStateJN(null);
   const [cancelOpen, setCancelOpen] = useStateJN(false);
   const [toast, showToast] = useToastJN();
-  const days = useMemoJN(callDays, []);
+  const days = useMemoJN(() => callDays(draft.with), [draft.with]);
   const scrollRef = useRefJN(null);
   useEffectJN(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 0;
@@ -5656,6 +5700,7 @@ function ScheduleCallScreen() {
     if (from) {
       setEditing(from.id);
       setDraft({
+        with: from.with || "katy",
         type: from.type,
         reason: from.reason,
         note: from.note || "",
@@ -5666,6 +5711,7 @@ function ScheduleCallScreen() {
     } else {
       setEditing(null);
       setDraft({
+        with: "katy",
         type: "video",
         reason: null,
         note: "",
@@ -5684,6 +5730,7 @@ function ScheduleCallScreen() {
   function confirm() {
     const call = {
       id: editing || "call" + Date.now().toString(36),
+      with: draft.with,
       type: draft.type,
       reason: draft.reason,
       note: draft.note.trim(),
@@ -5697,7 +5744,7 @@ function ScheduleCallScreen() {
     persist({
       calls: [call, ...others]
     });
-    dmCallNote(editing ? "No problem — I've moved your " + callTypeLabel(call).toLowerCase() + " to " + callWhen(call) + ". See you then 🙂" : "📅 Your " + callTypeLabel(call).toLowerCase() + " is booked for " + callWhen(call) + ". " + (call.type === "video" ? "I'll send the link here 10 minutes before." : "I'll call you on " + prof.phone + ".") + " Anything you'd like me to look at beforehand, just send it over.");
+    dmCallNote(editing ? "No problem — I've moved your " + callTypeLabel(call).toLowerCase() + " to " + callWhen(call) + ". See you then 🙂" : "📅 Your " + callTypeLabel(call).toLowerCase() + " is booked for " + callWhen(call) + ". " + (call.type === "video" ? "I'll send the link here 10 minutes before." : "I'll call you on " + prof.phone + ".") + " Anything you'd like me to look at beforehand, just send it over.", call.with);
     setBooked({
       ...call,
       rescheduled: !!editing
@@ -5712,7 +5759,7 @@ function ScheduleCallScreen() {
         status: "cancelled"
       } : c)
     });
-    dmCallNote("Got it — I've cancelled your call. Book another whenever you need me 🙂");
+    dmCallNote("Got it — I've cancelled your call. Book another whenever you need me 🙂", up.with);
     setCancelOpen(false);
     showToast("Call cancelled");
     setTimeout(() => startBooking(null), 900);
@@ -5721,7 +5768,7 @@ function ScheduleCallScreen() {
     const start = callStart(c);
     icsDownloadJN({
       id: c.id,
-      title: callTypeLabel(c) + " with " + KATY.name,
+      title: callTypeLabel(c) + " with " + callWho(c).name,
       start,
       end: new Date(start.getTime() + CALL_DUR * 60000),
       where: c.type === "video" ? "Video call · link in PROfinity Messages" : "Phone call · " + prof.phone,
@@ -5730,16 +5777,33 @@ function ScheduleCallScreen() {
     showToast("Added to calendar");
   }
   const canNext = step === 0 ? !!draft.reason : step === 1 ? !!(draft.date && draft.time) : true;
-  const KatyCard = () => /*#__PURE__*/React.createElement("div", {
-    className: "sc-katy"
-  }, /*#__PURE__*/React.createElement(JNFace, {
-    p: KATY,
-    size: 52
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, KATY.name), /*#__PURE__*/React.createElement("small", null, KATY.title), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
-    className: "jn-online"
-  }), "Usually replies within the hour")));
+  const Picker = () => /*#__PURE__*/React.createElement("div", {
+    className: "sc-clins"
+  }, CLINICIANS.map(cl => {
+    const p = PEOPLE[cl.id];
+    const on = draft.with === cl.id;
+    return /*#__PURE__*/React.createElement("button", {
+      key: cl.id,
+      className: "sc-clin" + (on ? " on" : ""),
+      onClick: () => setDraft({
+        ...draft,
+        with: cl.id,
+        date: null,
+        time: null
+      })
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "av"
+    }, /*#__PURE__*/React.createElement(JNFace, {
+      p: p,
+      size: 56
+    }), on && /*#__PURE__*/React.createElement("i", null, /*#__PURE__*/React.createElement(IcJN, {
+      name: "check",
+      size: 11,
+      color: "#fff"
+    }))), /*#__PURE__*/React.createElement("b", null, p.name), /*#__PURE__*/React.createElement("small", null, cl.short), /*#__PURE__*/React.createElement("em", {
+      className: cl.id === "katy" ? "mine" : ""
+    }, cl.tag));
+  }));
   const Summary = ({
     c,
     compact
@@ -5750,9 +5814,9 @@ function ScheduleCallScreen() {
   }, /*#__PURE__*/React.createElement("span", null, "With"), /*#__PURE__*/React.createElement("b", {
     className: "who"
   }, /*#__PURE__*/React.createElement(JNFace, {
-    p: KATY,
+    p: callWho(c),
     size: 22
-  }), KATY.name)), /*#__PURE__*/React.createElement("div", {
+  }), callWho(c).name)), /*#__PURE__*/React.createElement("div", {
     className: "jn-kv"
   }, /*#__PURE__*/React.createElement("span", null, "Call"), /*#__PURE__*/React.createElement("b", null, /*#__PURE__*/React.createElement(IcJN, {
     name: c.type === "phone" ? "phone" : "video",
@@ -5765,18 +5829,19 @@ function ScheduleCallScreen() {
     className: "jn-kv col"
   }, /*#__PURE__*/React.createElement("span", null, "Your note"), /*#__PURE__*/React.createElement("b", null, c.note)), c.type === "phone" && /*#__PURE__*/React.createElement("div", {
     className: "jn-kv"
-  }, /*#__PURE__*/React.createElement("span", null, "Katy will call"), /*#__PURE__*/React.createElement("b", null, prof.phone)));
+  }, /*#__PURE__*/React.createElement("span", null, callWho(c).first, " will call"), /*#__PURE__*/React.createElement("b", null, prof.phone)));
 
   /* ---- booked / upcoming -------------------------------------------- */
   if (view === "upcoming" && up) {
     const past = store.calls.filter(c => c.id !== up.id);
+    const uw = callWho(up);
     return /*#__PURE__*/React.createElement("div", {
       className: "jn-screen sc"
     }, /*#__PURE__*/React.createElement(JNBar, {
-      title: "Your call with Katy",
+      title: "Your call with " + uw.first,
       back: () => goJN(ret),
       trailing: /*#__PURE__*/React.createElement(JNFace, {
-        p: KATY,
+        p: uw,
         size: 34
       })
     }), /*#__PURE__*/React.createElement("div", {
@@ -5794,7 +5859,7 @@ function ScheduleCallScreen() {
       color: "#fff"
     })), /*#__PURE__*/React.createElement("div", {
       className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, callTypeLabel(up), " with ", KATY.name.split(" ")[0]), /*#__PURE__*/React.createElement("small", null, callWhen(up))), /*#__PURE__*/React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("b", null, callTypeLabel(up), " with ", uw.first), /*#__PURE__*/React.createElement("small", null, callWhen(up))), /*#__PURE__*/React.createElement("span", {
       className: "st"
     }, /*#__PURE__*/React.createElement(IcJN, {
       name: "check",
@@ -5812,7 +5877,7 @@ function ScheduleCallScreen() {
       name: up.type === "phone" ? "phone-call" : "video",
       size: 18,
       color: "var(--brand-navy)"
-    }), /*#__PURE__*/React.createElement("span", null, up.type === "phone" ? "Katy will call you on " + prof.phone + "." : "Your join link arrives in Messages 10 minutes before the call.")), /*#__PURE__*/React.createElement("div", {
+    }), /*#__PURE__*/React.createElement("span", null, up.type === "phone" ? uw.first + " will call you on " + prof.phone + "." : "Your join link arrives in Messages 10 minutes before the call.")), /*#__PURE__*/React.createElement("div", {
       className: "jn-row-btns"
     }, /*#__PURE__*/React.createElement("button", {
       className: "jn-btn ghost",
@@ -5822,7 +5887,7 @@ function ScheduleCallScreen() {
       size: 18
     }), "Calendar"), /*#__PURE__*/React.createElement("button", {
       className: "jn-btn ghost",
-      onClick: () => goJN("JaneMessages.html?to=katy")
+      onClick: () => goJN("JaneMessages.html?to=" + uw.id)
     }, /*#__PURE__*/React.createElement(IcJN, {
       name: "message-circle",
       size: 18
@@ -5850,7 +5915,7 @@ function ScheduleCallScreen() {
       color: "var(--brand-navy)"
     })), /*#__PURE__*/React.createElement("span", {
       className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, "Good light helps"), /*#__PURE__*/React.createElement("small", null, "Sit facing a window so Katy can see the treated area clearly."))), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("b", null, "Good light helps"), /*#__PURE__*/React.createElement("small", null, "Sit facing a window so ", uw.first, " can see the treated area clearly."))), /*#__PURE__*/React.createElement("div", {
       className: "jn-li"
     }, /*#__PURE__*/React.createElement("span", {
       className: "ic"
@@ -5870,7 +5935,7 @@ function ScheduleCallScreen() {
       color: "var(--brand-navy)"
     })), /*#__PURE__*/React.createElement("span", {
       className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, "Your Health Pass is shared"), /*#__PURE__*/React.createElement("small", null, "Katy can see your history and aftercare notes during the call.")))), past.length > 0 && /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("b", null, "Your Health Pass is shared"), /*#__PURE__*/React.createElement("small", null, uw.first, " can see your history and aftercare notes during the call.")))), past.length > 0 && /*#__PURE__*/React.createElement("div", {
       className: "sc-past"
     }, /*#__PURE__*/React.createElement("h4", null, "Previous calls"), /*#__PURE__*/React.createElement("div", {
       className: "jn-card list"
@@ -5885,7 +5950,7 @@ function ScheduleCallScreen() {
       color: "var(--brand-navy)"
     })), /*#__PURE__*/React.createElement("span", {
       className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, callTypeLabel(c), " · ", c.reason), /*#__PURE__*/React.createElement("small", null, callWhen(c), " · ", c.status === "cancelled" ? "Cancelled" : "Completed")))))), /*#__PURE__*/React.createElement("button", {
+    }, /*#__PURE__*/React.createElement("b", null, callTypeLabel(c), " with ", callWho(c).first, " · ", c.reason), /*#__PURE__*/React.createElement("small", null, callWhen(c), " · ", c.status === "cancelled" ? "Cancelled" : "Completed")))))), /*#__PURE__*/React.createElement("button", {
       className: "jn-btn block ghost",
       onClick: () => startBooking(null)
     }, /*#__PURE__*/React.createElement(IcJN, {
@@ -5899,7 +5964,7 @@ function ScheduleCallScreen() {
       title: "Cancel this call?"
     }, /*#__PURE__*/React.createElement("p", {
       className: "jn-sheet-p"
-    }, "Katy will be let know. You can book another call any time — the slot goes back to other patients."), /*#__PURE__*/React.createElement("div", {
+    }, uw.first, " will be let know. You can book another call any time — the slot goes back to other patients."), /*#__PURE__*/React.createElement("div", {
       className: "jn-row-btns"
     }, /*#__PURE__*/React.createElement("button", {
       className: "jn-btn ghost",
@@ -5913,49 +5978,52 @@ function ScheduleCallScreen() {
   }
 
   /* ---- done ---------------------------------------------------------- */
-  if (view === "done" && booked) return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen sc"
-  }, /*#__PURE__*/React.createElement(JNBar, {
-    title: "Call booked",
-    back: () => goJN(ret),
-    trailing: /*#__PURE__*/React.createElement(JNFace, {
-      p: KATY,
-      size: 34
-    })
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "jn-scroll",
-    ref: scrollRef
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "jn-onb-done sc-done"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ok"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "check",
-    size: 44,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement("h2", null, booked.rescheduled ? "Call moved" : "You're booked in"), /*#__PURE__*/React.createElement("p", null, KATY.name.split(" ")[0], " will ", booked.type === "phone" ? "call you" : "see you", " on ", /*#__PURE__*/React.createElement("b", null, callWhen(booked)), ". We'll remind you 10 minutes before", booked.type === "video" ? " and drop the link in Messages" : "", "."), /*#__PURE__*/React.createElement(Summary, {
-    c: booked,
-    compact: true
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "jn-row-btns"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "jn-btn ghost",
-    onClick: () => addToCalendar(booked)
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "calendar-plus",
-    size: 18
-  }), "Add to calendar"), /*#__PURE__*/React.createElement("button", {
-    className: "jn-btn ghost",
-    onClick: () => goJN("JaneMessages.html?to=katy")
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "message-circle",
-    size: 18
-  }), "Message Katy")), /*#__PURE__*/React.createElement("button", {
-    className: "jn-btn block",
-    onClick: () => goJN(ret)
-  }, "Done"))), /*#__PURE__*/React.createElement(JNToast, {
-    toast: toast
-  }));
+  if (view === "done" && booked) {
+    const bw = callWho(booked);
+    return /*#__PURE__*/React.createElement("div", {
+      className: "jn-screen sc"
+    }, /*#__PURE__*/React.createElement(JNBar, {
+      title: "Call booked",
+      back: () => goJN(ret),
+      trailing: /*#__PURE__*/React.createElement(JNFace, {
+        p: bw,
+        size: 34
+      })
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "jn-scroll",
+      ref: scrollRef
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "jn-onb-done sc-done"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ok"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "check",
+      size: 44,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("h2", null, booked.rescheduled ? "Call moved" : "You're booked in"), /*#__PURE__*/React.createElement("p", null, bw.first, " will ", booked.type === "phone" ? "call you" : "see you", " on ", /*#__PURE__*/React.createElement("b", null, callWhen(booked)), ". We'll remind you 10 minutes before", booked.type === "video" ? " and drop the link in Messages" : "", "."), /*#__PURE__*/React.createElement(Summary, {
+      c: booked,
+      compact: true
+    }), /*#__PURE__*/React.createElement("div", {
+      className: "jn-row-btns"
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "jn-btn ghost",
+      onClick: () => addToCalendar(booked)
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "calendar-plus",
+      size: 18
+    }), "Add to calendar"), /*#__PURE__*/React.createElement("button", {
+      className: "jn-btn ghost",
+      onClick: () => goJN("JaneMessages.html?to=" + bw.id)
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "message-circle",
+      size: 18
+    }), "Message ", bw.first)), /*#__PURE__*/React.createElement("button", {
+      className: "jn-btn block",
+      onClick: () => goJN(ret)
+    }, "Done"))), /*#__PURE__*/React.createElement(JNToast, {
+      toast: toast
+    }));
+  }
 
   /* ---- booking steps ------------------------------------------------- */
   const selDay = days.find(d => d.iso === draft.date);
@@ -5965,7 +6033,7 @@ function ScheduleCallScreen() {
     title: editing ? "Move your call" : "Schedule a call",
     back: back,
     trailing: /*#__PURE__*/React.createElement(JNFace, {
-      p: KATY,
+      p: who,
       size: 34
     })
   }), /*#__PURE__*/React.createElement("div", {
@@ -5979,13 +6047,15 @@ function ScheduleCallScreen() {
   })), /*#__PURE__*/React.createElement("span", null, "Step ", step + 1, " of 3")), /*#__PURE__*/React.createElement("div", {
     className: "jn-scroll",
     ref: scrollRef
-  }, step === 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(KatyCard, null), /*#__PURE__*/React.createElement("span", {
+  }, step === 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
     className: "jn-onb-step"
-  }, "Step 1 · What's it about?"), /*#__PURE__*/React.createElement("h2", {
+  }, "Step 1 · Who and what"), /*#__PURE__*/React.createElement("h2", {
     className: "jn-onb-q"
-  }, "What would you like to talk to Katy about?"), /*#__PURE__*/React.createElement("p", {
+  }, "Who would you like to talk to?"), /*#__PURE__*/React.createElement("p", {
     className: "jn-onb-sub"
-  }, "A free ", CALL_DUR, "-minute call with your clinician. Pick how you'd like to talk and what it's about."), /*#__PURE__*/React.createElement("div", {
+  }, "A free ", CALL_DUR, "-minute call with your care team. Pick a clinician, how you'd like to talk and what it's about."), /*#__PURE__*/React.createElement(Picker, null), /*#__PURE__*/React.createElement("h4", {
+    className: "sc-h4"
+  }, "How"), /*#__PURE__*/React.createElement("div", {
     className: "sc-types"
   }, CALL_TYPES.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.key,
@@ -6000,7 +6070,7 @@ function ScheduleCallScreen() {
     name: t.icon,
     size: 22,
     color: draft.type === t.key ? "#fff" : "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("b", null, t.label), /*#__PURE__*/React.createElement("small", null, t.sub), /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("b", null, t.label), /*#__PURE__*/React.createElement("small", null, t.key === "phone" ? who.first + " calls your number" : t.sub), /*#__PURE__*/React.createElement("span", {
     className: "tick"
   }, draft.type === t.key && /*#__PURE__*/React.createElement(IcJN, {
     name: "check",
@@ -6019,7 +6089,7 @@ function ScheduleCallScreen() {
     })
   }, r))), /*#__PURE__*/React.createElement("h4", {
     className: "sc-h4"
-  }, "Anything Katy should know first? ", /*#__PURE__*/React.createElement("em", null, "optional")), /*#__PURE__*/React.createElement("textarea", {
+  }, "Anything ", who.first, " should know first? ", /*#__PURE__*/React.createElement("em", null, "optional")), /*#__PURE__*/React.createElement("textarea", {
     className: "jn-in sc-note",
     rows: 3,
     placeholder: "e.g. Left side still a little swollen since Tuesday…",
@@ -6040,12 +6110,12 @@ function ScheduleCallScreen() {
     className: "jn-onb-q"
   }, "When suits you?"), /*#__PURE__*/React.createElement("p", {
     className: "jn-onb-sub"
-  }, "Katy's next two weeks. Times are UK time."), /*#__PURE__*/React.createElement("div", {
+  }, who.first, "'s next two weeks", clinOf(draft.with).days.length < 5 ? " · takes calls on " + clinOf(draft.with).tag : "", ". Times are UK time."), /*#__PURE__*/React.createElement("div", {
     className: "sc-month"
   }, selDay ? selDay.m + " " + new Date(selDay.iso + "T12:00:00").getFullYear() : days[0].m + (days[0].m !== days[13].m ? " – " + days[13].m : "")), /*#__PURE__*/React.createElement("div", {
     className: "sc-days"
   }, days.map(d => {
-    const off = d.dow === 0;
+    const off = !!d.off;
     return /*#__PURE__*/React.createElement("button", {
       key: d.iso,
       className: "sc-day" + (draft.date === d.iso ? " on" : "") + (off ? " off" : ""),
@@ -6055,14 +6125,14 @@ function ScheduleCallScreen() {
         date: d.iso,
         time: null
       })
-    }, /*#__PURE__*/React.createElement("small", null, d.wd), /*#__PURE__*/React.createElement("b", null, d.d), off ? /*#__PURE__*/React.createElement("i", null, "closed") : /*#__PURE__*/React.createElement("i", null, d.m));
+    }, /*#__PURE__*/React.createElement("small", null, d.wd), /*#__PURE__*/React.createElement("b", null, d.d), off ? /*#__PURE__*/React.createElement("i", null, d.off) : /*#__PURE__*/React.createElement("i", null, d.m));
   })), !draft.date && /*#__PURE__*/React.createElement("div", {
     className: "jn-emptybox sc-empty"
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "calendar",
     size: 26,
     color: "var(--gray-400)"
-  }), /*#__PURE__*/React.createElement("b", null, "Pick a day"), /*#__PURE__*/React.createElement("small", null, "Then choose one of Katy's free slots.")), draft.date && CALL_SLOTS.filter(([g]) => !(selDay.dow === 6 && g === "Afternoon")).map(([g, slots]) => /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("b", null, "Pick a day"), /*#__PURE__*/React.createElement("small", null, "Then choose one of ", who.first, "'s free slots.")), draft.date && CALL_SLOTS.filter(([g]) => !(selDay.dow === 6 && g === "Afternoon")).map(([g, slots]) => /*#__PURE__*/React.createElement("div", {
     key: g,
     className: "sc-group"
   }, /*#__PURE__*/React.createElement("h4", {
@@ -6070,7 +6140,7 @@ function ScheduleCallScreen() {
   }, g), /*#__PURE__*/React.createElement("div", {
     className: "sc-slots"
   }, slots.map(t => {
-    const taken = slotTaken(draft.date, t);
+    const taken = slotTaken(draft.date, t, draft.with);
     return /*#__PURE__*/React.createElement("button", {
       key: t,
       className: "sc-slot" + (draft.time === t ? " on" : "") + (taken ? " taken" : ""),
@@ -6092,7 +6162,7 @@ function ScheduleCallScreen() {
     className: "jn-onb-q"
   }, "Does this look right?"), /*#__PURE__*/React.createElement("p", {
     className: "jn-onb-sub"
-  }, "Katy will get a note straight away and you'll both get a reminder 10 minutes before."), /*#__PURE__*/React.createElement(Summary, {
+  }, who.first, " will get a note straight away and you'll both get a reminder 10 minutes before."), /*#__PURE__*/React.createElement(Summary, {
     c: draft
   }), draft.type === "phone" && /*#__PURE__*/React.createElement("button", {
     className: "jn-link-row sc-phone",
@@ -6125,7 +6195,7 @@ function ScheduleCallScreen() {
     color: "var(--brand-navy)"
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, draft.type === "phone" ? "Katy calls you" : "Tap the link to join"), /*#__PURE__*/React.createElement("small", null, draft.type === "phone" ? "From the clinic number, so save it in your contacts." : "No app to install — it opens right here."))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("b", null, draft.type === "phone" ? who.first + " calls you" : "Tap the link to join"), /*#__PURE__*/React.createElement("small", null, draft.type === "phone" ? "From the clinic number, so save it in your contacts." : "No app to install — it opens right here."))), /*#__PURE__*/React.createElement("div", {
     className: "jn-li"
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
@@ -6135,7 +6205,7 @@ function ScheduleCallScreen() {
     color: "var(--brand-navy)"
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, "Health Pass shared for the call"), /*#__PURE__*/React.createElement("small", null, "So Katy has your history and aftercare notes to hand.")))))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("b", null, "Health Pass shared for the call"), /*#__PURE__*/React.createElement("small", null, "So ", who.first, " has your history and aftercare notes to hand.")))))), /*#__PURE__*/React.createElement("div", {
     className: "jn-onb-foot"
   }, /*#__PURE__*/React.createElement("button", {
     className: "jn-btn block",
