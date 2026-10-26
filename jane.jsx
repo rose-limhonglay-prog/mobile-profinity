@@ -1266,7 +1266,10 @@ function CoachScreen() {
   const [mode, setMode] = useStateJN(qJN("mode") === "voice" ? "voice" : "chat");
   const [draft, setDraft] = useStateJN("");
   const [typing, setTyping] = useStateJN(false);
-  const [histOpen, setHistOpen] = useStateJN(false);
+  /* History first (user, 2026-10-26): the page opens on the list of past
+     chats; a chat opens from there, back returns to the list. Deep links
+     (?q=, ?mode=voice) go straight into the chat. */
+  const [view, setView] = useStateJN(() => (qJN("q") || qJN("mode") === "voice") ? "chat" : "history");
   const [ctxOpen, setCtxOpen] = useStateJN(false);
   const [voice, setVoice] = useStateJN("idle");
   const [heard, setHeard] = useStateJN("");
@@ -1283,12 +1286,12 @@ function CoachScreen() {
   function append(msg, cid) { const id = cid || conv.id; const s2 = { ...store, convs: store.convs.map((c) => c.id === id ? { ...c, msgs: [...c.msgs, msg], ts: Date.now(), title: c.title === "New chat" && msg.by === "jane" ? coachTitle([msg]) : c.title } : c) }; persist(s2); return s2; }
   function send(text) {
     const t = (text || draft).trim(); if (!t || typing) return;
-    const id = conv.id;
-    const s2 = append({ by: "jane", text: t, ts: Date.now() }); setDraft(""); setTyping(true);
+    const live = readJN(COACH_KEY, store); const id = live.cur || conv.id;
+    const s2 = { ...live, convs: live.convs.map((c) => c.id === id ? { ...c, msgs: [...c.msgs, { by: "jane", text: t, ts: Date.now() }], ts: Date.now(), title: c.title === "New chat" ? coachTitle([{ by: "jane", text: t }]) : c.title } : c) }; persist(s2); setDraft(""); setTyping(true);
     setTimeout(() => { setStore((cur) => { const s3 = { ...cur, convs: cur.convs.map((c) => c.id === id ? { ...c, msgs: [...c.msgs, { by: "coach", text: coachReply(t), ts: Date.now() }], ts: Date.now() } : c) }; saveJN(COACH_KEY, s3); return s3; }); setTyping(false); }, 1100 + Math.random() * 600);
   }
-  function newChat() { const c = newConvJN(); persist({ convs: [c, ...store.convs.filter((x) => !(x.msgs.length <= 1 && x.id !== c.id))], cur: c.id }); setHistOpen(false); setMode("chat"); }
-  function openConv(id) { persist({ ...store, cur: id }); setHistOpen(false); setMode("chat"); }
+  function newChat() { const c = newConvJN(); persist({ convs: [c, ...store.convs.filter((x) => !(x.msgs.length <= 1 && x.id !== c.id))], cur: c.id }); setView("chat"); setMode("chat"); }
+  function openConv(id) { persist({ ...store, cur: id }); setView("chat"); setMode("chat"); }
   function deleteConv(id) { const left = store.convs.filter((c) => c.id !== id); const next = left.length ? left : [newConvJN()]; persist({ convs: next, cur: store.cur === id ? next[0].id : store.cur }); showToast("Chat deleted"); }
   useEffectJN(() => { const q = qJN("q"); if (q && !asked.current) { asked.current = true; setTimeout(() => send(q), 300); } }, []);
   useEffectJN(() => { const el = scrollRef.current; if (el) el.scrollTop = el.scrollHeight; }, [conv && conv.msgs.length, typing, mode, store.cur]);
@@ -1314,12 +1317,32 @@ function CoachScreen() {
           <b>{COACH.name} <em>AI COACH</em></b>
           <span><i className="jn-online" />Online · {COACH.sub}</span>
         </div>
-        <button className="jc-hbtn" aria-label="Chat history" onClick={() => setHistOpen(true)}><IcJN name="history" size={19} color="#fff" />{store.convs.length > 1 && <small>{store.convs.length}</small>}</button>
+        {view === "chat" ? <button className="jc-hbtn" aria-label="Back to chat history" onClick={() => { const kept = store.convs.filter((c) => c.msgs.length > 1); if (kept.length !== store.convs.length) persist({ convs: kept.length ? kept : store.convs.slice(0, 1), cur: (kept[0] || store.convs[0]).id }); setView("history"); setMode("chat"); }}><IcJN name="history" size={19} color="#fff" />{store.convs.length > 1 && <small>{store.convs.length}</small>}</button> : null}
         <button className="jc-hbtn" aria-label="New chat" onClick={newChat}><IcJN name="square-pen" size={19} color="#fff" /></button>
       </header>
-      <div className="jc-modes"><div className="jn-seg mini">{[["chat", "message-circle", "Chat"], ["voice", "mic", "Voice"]].map(([k, ic, l]) => <button key={k} className={mode === k ? "on" : ""} onClick={() => setMode(k)}><IcJN name={ic} size={16} /><span>{l}</span></button>)}</div><span className="jc-convname">{conv && conv.title !== "New chat" ? conv.title : "New chat"}</span></div>
+      {view === "history" ? (
+        <div className="jn-scroll jc-histview">
+          <div className="jc-hist-h"><h2>Your chats</h2><span>{store.convs.length} {store.convs.length === 1 ? "conversation" : "conversations"} · saved to your Health Pass</span></div>
+          <button className="jc-newchat" onClick={newChat}><IcJN name="plus" size={18} />Start a new chat</button>
+          <div className="jc-hist">
+            {store.convs.slice().sort((a, b) => b.ts - a.ts).map((c) => { const last = c.msgs[c.msgs.length - 1]; const n = c.msgs.filter((m) => m.by === "jane").length; return (
+              <div key={c.id} className={"jc-hist-row" + (c.id === store.cur ? " cur" : "")}>
+                <button className="main" onClick={() => openConv(c.id)}>
+                  <span className="ic"><IcJN name={c.msgs.some((m) => m.voice) ? "mic" : "message-circle"} size={17} color="var(--ai-purple)" /></span>
+                  <span className="tx"><b>{c.title}</b><small>{last ? last.text.replace(/\n+/g, " ").slice(0, 70) : ""}</small><em>{fmtWhenJN(c.ts)} · {n} {n === 1 ? "question" : "questions"}</em></span>
+                  <IcJN name="chevron-right" size={18} color="var(--gray-400)" />
+                </button>
+                <button className="del" aria-label="Delete chat" onClick={() => deleteConv(c.id)}><IcJN name="trash-2" size={16} color="var(--gray-450)" /></button>
+              </div>); })}
+          </div>
+          <div className="jc-qa-h" style={{ marginTop: 22 }}><IcJN name="zap" size={13} color="var(--ai-purple)" />Start with a question</div>
+          <div className="jc-qa">{COACH_PROMPTS.slice(0, 4).map((p) => <button key={p.t} onClick={() => { const c = newConvJN(); persist({ convs: [c, ...store.convs.filter((x) => x.msgs.length > 1)], cur: c.id }); setView("chat"); setMode("chat"); setTimeout(() => send(p.t), 250); }}><IcJN name={p.ic} size={18} color="var(--ai-purple)" /><span>{p.t}</span></button>)}</div>
+          <p className="jc-disc">Not medical advice. Talk to your clinician about any concerns.</p>
+        </div>
+      ) : null}
+      {view === "chat" && <div className="jc-modes"><div className="jn-seg mini">{[["chat", "message-circle", "Chat"], ["voice", "mic", "Voice"]].map(([k, ic, l]) => <button key={k} className={mode === k ? "on" : ""} onClick={() => setMode(k)}><IcJN name={ic} size={16} /><span>{l}</span></button>)}</div><span className="jc-convname">{conv && conv.title !== "New chat" ? conv.title : "New chat"}</span></div>}
 
-      {mode === "chat" ? (
+      {view !== "chat" ? null : mode === "chat" ? (
         <React.Fragment>
           <div className="jn-scroll jn-thread jc-thread" ref={scrollRef}>
             <button className={"jc-ctx" + (ctxOpen ? " open" : "")} onClick={() => setCtxOpen(!ctxOpen)}>
@@ -1374,19 +1397,6 @@ function CoachScreen() {
         </div>)}
       <JNTabs active="coach" compact={chromeHidden && mode === "chat"} />
 
-      <JNSheet open={histOpen} onClose={() => setHistOpen(false)} title="Chat history" tall>
-        <button className="jc-newchat" onClick={newChat}><IcJN name="plus" size={18} />Start a new chat</button>
-        <div className="jc-hist">
-          {store.convs.slice().sort((a, b) => b.ts - a.ts).map((c) => { const last = c.msgs[c.msgs.length - 1]; const n = c.msgs.filter((m) => m.by === "jane").length; return (
-            <div key={c.id} className={"jc-hist-row" + (c.id === store.cur ? " cur" : "")}>
-              <button className="main" onClick={() => openConv(c.id)}>
-                <span className="ic"><IcJN name={c.msgs.some((m) => m.voice) ? "mic" : "message-circle"} size={17} color="var(--ai-purple)" /></span>
-                <span className="tx"><b>{c.title}</b><small>{last ? last.text.replace(/\n+/g, " ").slice(0, 70) : ""}</small><em>{fmtWhenJN(c.ts)} · {n} {n === 1 ? "question" : "questions"}{c.id === store.cur ? " · Open" : ""}</em></span>
-              </button>
-              <button className="del" aria-label="Delete chat" onClick={() => deleteConv(c.id)}><IcJN name="trash-2" size={16} color="var(--gray-450)" /></button>
-            </div>); })}
-        </div>
-      </JNSheet>
       <JNToast toast={toast} />
     </div>);
 }

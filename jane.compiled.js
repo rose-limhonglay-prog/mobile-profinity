@@ -3921,7 +3921,10 @@ function CoachScreen() {
   const [mode, setMode] = useStateJN(qJN("mode") === "voice" ? "voice" : "chat");
   const [draft, setDraft] = useStateJN("");
   const [typing, setTyping] = useStateJN(false);
-  const [histOpen, setHistOpen] = useStateJN(false);
+  /* History first (user, 2026-10-26): the page opens on the list of past
+     chats; a chat opens from there, back returns to the list. Deep links
+     (?q=, ?mode=voice) go straight into the chat. */
+  const [view, setView] = useStateJN(() => qJN("q") || qJN("mode") === "voice" ? "chat" : "history");
   const [ctxOpen, setCtxOpen] = useStateJN(false);
   const [voice, setVoice] = useStateJN("idle");
   const [heard, setHeard] = useStateJN("");
@@ -3961,12 +3964,25 @@ function CoachScreen() {
   function send(text) {
     const t = (text || draft).trim();
     if (!t || typing) return;
-    const id = conv.id;
-    const s2 = append({
-      by: "jane",
-      text: t,
-      ts: Date.now()
-    });
+    const live = readJN(COACH_KEY, store);
+    const id = live.cur || conv.id;
+    const s2 = {
+      ...live,
+      convs: live.convs.map(c => c.id === id ? {
+        ...c,
+        msgs: [...c.msgs, {
+          by: "jane",
+          text: t,
+          ts: Date.now()
+        }],
+        ts: Date.now(),
+        title: c.title === "New chat" ? coachTitle([{
+          by: "jane",
+          text: t
+        }]) : c.title
+      } : c)
+    };
+    persist(s2);
     setDraft("");
     setTyping(true);
     setTimeout(() => {
@@ -3995,7 +4011,7 @@ function CoachScreen() {
       convs: [c, ...store.convs.filter(x => !(x.msgs.length <= 1 && x.id !== c.id))],
       cur: c.id
     });
-    setHistOpen(false);
+    setView("chat");
     setMode("chat");
   }
   function openConv(id) {
@@ -4003,7 +4019,7 @@ function CoachScreen() {
       ...store,
       cur: id
     });
-    setHistOpen(false);
+    setView("chat");
     setMode("chat");
   }
   function deleteConv(id) {
@@ -4110,15 +4126,23 @@ function CoachScreen() {
     className: "jc-head-tx"
   }, /*#__PURE__*/React.createElement("b", null, COACH.name, " ", /*#__PURE__*/React.createElement("em", null, "AI COACH")), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
     className: "jn-online"
-  }), "Online · ", COACH.sub)), /*#__PURE__*/React.createElement("button", {
+  }), "Online · ", COACH.sub)), view === "chat" ? /*#__PURE__*/React.createElement("button", {
     className: "jc-hbtn",
-    "aria-label": "Chat history",
-    onClick: () => setHistOpen(true)
+    "aria-label": "Back to chat history",
+    onClick: () => {
+      const kept = store.convs.filter(c => c.msgs.length > 1);
+      if (kept.length !== store.convs.length) persist({
+        convs: kept.length ? kept : store.convs.slice(0, 1),
+        cur: (kept[0] || store.convs[0]).id
+      });
+      setView("history");
+      setMode("chat");
+    }
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "history",
     size: 19,
     color: "#fff"
-  }), store.convs.length > 1 && /*#__PURE__*/React.createElement("small", null, store.convs.length)), /*#__PURE__*/React.createElement("button", {
+  }), store.convs.length > 1 && /*#__PURE__*/React.createElement("small", null, store.convs.length)) : null, /*#__PURE__*/React.createElement("button", {
     className: "jc-hbtn",
     "aria-label": "New chat",
     onClick: newChat
@@ -4126,7 +4150,78 @@ function CoachScreen() {
     name: "square-pen",
     size: 19,
     color: "#fff"
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), view === "history" ? /*#__PURE__*/React.createElement("div", {
+    className: "jn-scroll jc-histview"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jc-hist-h"
+  }, /*#__PURE__*/React.createElement("h2", null, "Your chats"), /*#__PURE__*/React.createElement("span", null, store.convs.length, " ", store.convs.length === 1 ? "conversation" : "conversations", " · saved to your Health Pass")), /*#__PURE__*/React.createElement("button", {
+    className: "jc-newchat",
+    onClick: newChat
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "plus",
+    size: 18
+  }), "Start a new chat"), /*#__PURE__*/React.createElement("div", {
+    className: "jc-hist"
+  }, store.convs.slice().sort((a, b) => b.ts - a.ts).map(c => {
+    const last = c.msgs[c.msgs.length - 1];
+    const n = c.msgs.filter(m => m.by === "jane").length;
+    return /*#__PURE__*/React.createElement("div", {
+      key: c.id,
+      className: "jc-hist-row" + (c.id === store.cur ? " cur" : "")
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "main",
+      onClick: () => openConv(c.id)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ic"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: c.msgs.some(m => m.voice) ? "mic" : "message-circle",
+      size: 17,
+      color: "var(--ai-purple)"
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, c.title), /*#__PURE__*/React.createElement("small", null, last ? last.text.replace(/\n+/g, " ").slice(0, 70) : ""), /*#__PURE__*/React.createElement("em", null, fmtWhenJN(c.ts), " · ", n, " ", n === 1 ? "question" : "questions")), /*#__PURE__*/React.createElement(IcJN, {
+      name: "chevron-right",
+      size: 18,
+      color: "var(--gray-400)"
+    })), /*#__PURE__*/React.createElement("button", {
+      className: "del",
+      "aria-label": "Delete chat",
+      onClick: () => deleteConv(c.id)
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "trash-2",
+      size: 16,
+      color: "var(--gray-450)"
+    })));
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "jc-qa-h",
+    style: {
+      marginTop: 22
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "zap",
+    size: 13,
+    color: "var(--ai-purple)"
+  }), "Start with a question"), /*#__PURE__*/React.createElement("div", {
+    className: "jc-qa"
+  }, COACH_PROMPTS.slice(0, 4).map(p => /*#__PURE__*/React.createElement("button", {
+    key: p.t,
+    onClick: () => {
+      const c = newConvJN();
+      persist({
+        convs: [c, ...store.convs.filter(x => x.msgs.length > 1)],
+        cur: c.id
+      });
+      setView("chat");
+      setMode("chat");
+      setTimeout(() => send(p.t), 250);
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: p.ic,
+    size: 18,
+    color: "var(--ai-purple)"
+  }), /*#__PURE__*/React.createElement("span", null, p.t)))), /*#__PURE__*/React.createElement("p", {
+    className: "jc-disc"
+  }, "Not medical advice. Talk to your clinician about any concerns.")) : null, view === "chat" && /*#__PURE__*/React.createElement("div", {
     className: "jc-modes"
   }, /*#__PURE__*/React.createElement("div", {
     className: "jn-seg mini"
@@ -4139,7 +4234,7 @@ function CoachScreen() {
     size: 16
   }), /*#__PURE__*/React.createElement("span", null, l)))), /*#__PURE__*/React.createElement("span", {
     className: "jc-convname"
-  }, conv && conv.title !== "New chat" ? conv.title : "New chat")), mode === "chat" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, conv && conv.title !== "New chat" ? conv.title : "New chat")), view !== "chat" ? null : mode === "chat" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "jn-scroll jn-thread jc-thread",
     ref: scrollRef
   }, /*#__PURE__*/React.createElement("button", {
@@ -4323,46 +4418,7 @@ function CoachScreen() {
   })))), /*#__PURE__*/React.createElement(JNTabs, {
     active: "coach",
     compact: chromeHidden && mode === "chat"
-  }), /*#__PURE__*/React.createElement(JNSheet, {
-    open: histOpen,
-    onClose: () => setHistOpen(false),
-    title: "Chat history",
-    tall: true
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "jc-newchat",
-    onClick: newChat
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "plus",
-    size: 18
-  }), "Start a new chat"), /*#__PURE__*/React.createElement("div", {
-    className: "jc-hist"
-  }, store.convs.slice().sort((a, b) => b.ts - a.ts).map(c => {
-    const last = c.msgs[c.msgs.length - 1];
-    const n = c.msgs.filter(m => m.by === "jane").length;
-    return /*#__PURE__*/React.createElement("div", {
-      key: c.id,
-      className: "jc-hist-row" + (c.id === store.cur ? " cur" : "")
-    }, /*#__PURE__*/React.createElement("button", {
-      className: "main",
-      onClick: () => openConv(c.id)
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "ic"
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: c.msgs.some(m => m.voice) ? "mic" : "message-circle",
-      size: 17,
-      color: "var(--ai-purple)"
-    })), /*#__PURE__*/React.createElement("span", {
-      className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, c.title), /*#__PURE__*/React.createElement("small", null, last ? last.text.replace(/\n+/g, " ").slice(0, 70) : ""), /*#__PURE__*/React.createElement("em", null, fmtWhenJN(c.ts), " · ", n, " ", n === 1 ? "question" : "questions", c.id === store.cur ? " · Open" : ""))), /*#__PURE__*/React.createElement("button", {
-      className: "del",
-      "aria-label": "Delete chat",
-      onClick: () => deleteConv(c.id)
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: "trash-2",
-      size: 16,
-      color: "var(--gray-450)"
-    })));
-  }))), /*#__PURE__*/React.createElement(JNToast, {
+  }), /*#__PURE__*/React.createElement(JNToast, {
     toast: toast
   }));
 }
