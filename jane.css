@@ -585,3 +585,10 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .jn-home .cm-preview-region .cmt-preview:active { background: var(--surface-sunken); }
 .jn-home .cmt-viewmore { margin-top: 10px; background: none; border: none; cursor: pointer; padding: 2px 0; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13px; color: var(--gray-500); }
 .jn-home .cmt-viewmore:hover { color: var(--action-primary); }
+/* cards edge-to-edge with hairline separators (user, 2026-10-26: "there still margin here") */
+.jn-home .m-scroll .feed { gap: 0 !important; padding: 0 0 24px !important; }
+.jn-home .m-scroll .post-wrap { margin: 0 !important; border-radius: 0 !important; border-left: none !important; border-right: none !important; }
+.jn-home .m-scroll .feed > .post-wrap + .post-wrap { border-top: 1px solid var(--border-default) !important; }
+.jn-home .m-scroll .pf-pinned-box { margin: 10px 12px; }
+.jn-home .jn-feednudge { margin: 0 12px 10px; }
+.jn-home .m-scroll .post-wrap + .jn-connect.infeed, .jn-home .m-scroll .jn-connect.infeed { margin: 10px 12px; }
