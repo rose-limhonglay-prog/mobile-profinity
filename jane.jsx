@@ -152,13 +152,19 @@ function fmtH(h) { const m = Math.round((h % 1) * 60); return Math.floor(h) + "h
 const POSTS_KEY = "pf-jane-posts";
 const SEALS = { katy: ["gb", "verified"], beth: ["gb", "verified"], priya: ["gb", "verified"], miranda: ["gb"], amir: [], mark: ["gb"], jane: ["gb"], reception: ["verified"] };
 const POSTS_SEED = [
-  { id: "p1", by: "katy", t: "2h", text: "Winter skin reminder 🧴 Cold air + central heating = dehydrated skin. Double-cleanse at night, layer a hyaluronic serum under your moisturiser, and yes — SPF still counts in December. The UVA that ages skin comes straight through cloud, so the habit matters more than the forecast.", likes: 48, shares: 6, liked: false, comments: [{ by: "miranda", text: "Guilty of skipping SPF when it's grey out 🙈", likes: 4, t: "1h" }, { by: "katy", text: "The UVA doesn't care about the clouds Miranda 😄", likes: 9, t: "50m" }] },
-  { id: "p2", by: "miranda", t: "4h", text: "6 weeks post lip filler and I've finally stopped overthinking it. Katy was right about the swelling timeline 😅 Any tips for keeping lips hydrated through winter?", img: "assets/clinic-lip-design.png", likes: 21, shares: 2, liked: true, comments: [{ by: "beth", text: "A plain balm (no menthol or 'plumping' ingredients) and a big glass of water before bed. Simple wins.", likes: 7, t: "3h" }, { by: "amir", text: "They look so natural!", likes: 2, t: "2h" }] },
-  { id: "p3", by: "beth", t: "Yesterday", text: "Aftercare 101 after anti-wrinkle treatment: no lying flat for 4 hours, skip the gym today, no facials or massage for 2 weeks, and don't rub the area. Save this post 📌", likes: 73, shares: 14, liked: false, comments: [] },
-  { id: "p4", by: "amir", t: "Yesterday", text: "Just booked my first consultation 🙈 nervous but excited. What should I ask? Anything you wish you'd known before your first one?", likes: 12, shares: 1, liked: false, comments: [{ by: "mark", text: "Ask about the downtime for YOUR job — mine was more than I expected.", likes: 3, t: "20h" }, { by: "katy", text: "Bring a list of medications and any allergies, and photos of looks you like AND don't like. See you Thursday Amir!", likes: 11, t: "18h" }] },
-  { id: "p5", by: "priya", t: "2d", text: "Patient Q&A live this Thursday 7pm — bring your questions about skin boosters, what they do and who they suit. Free for all clinic patients.", event: "ev1", likes: 35, shares: 9, liked: false, comments: [] },
-  { id: "p6", by: "mark", t: "3d", text: "Week 3 of the sleep + hydration plan from the coach. Energy is noticeably better and my skin check-in score has gone from 61 to 72. Small habits, big difference.", img: "assets/course-skin-boosters.jpg", likes: 29, shares: 3, liked: false, comments: [{ by: "katy", text: "This is exactly it Mark 👏", likes: 5, t: "2d" }] },
+  { id: "p0", kind: "live", by: "katy", t: "now", live: { viewers: 86, frame: "assets/avatar-katy.jpg", title: "Aftercare Q&A · ask me anything" }, text: "", likes: 31, shares: 4, liked: false, comments: [] },
+  { id: "p1", by: "katy", t: "2h", tags: ["skincare", "tips"], text: "Winter skin reminder 🧴 Cold air + central heating = dehydrated skin. Double-cleanse at night, layer a hyaluronic serum under your moisturiser, and yes — SPF still counts in December. The UVA that ages skin comes straight through cloud, so the habit matters more than the forecast.", likes: 48, shares: 6, liked: false, comments: [{ by: "miranda", text: "Guilty of skipping SPF when it's grey out 🙈", likes: 4, t: "1h" }, { by: "katy", text: "The UVA doesn't care about the clouds Miranda 😄", likes: 9, t: "50m" }] },
+  { id: "p2", by: "miranda", t: "4h", tags: ["progress", "question"], text: "6 weeks post lip filler and I've finally stopped overthinking it. Katy was right about the swelling timeline 😅 Any tips for keeping lips hydrated through winter?", img: "assets/clinic-lip-design.png", likes: 21, shares: 2, liked: true, comments: [{ by: "beth", text: "A plain balm (no menthol or 'plumping' ingredients) and a big glass of water before bed. Simple wins.", likes: 7, t: "3h" }, { by: "amir", text: "They look so natural!", likes: 2, t: "2h" }] },
+  { id: "p7", kind: "poll", by: "katy", t: "5h", text: "", poll: { question: "What's your biggest winter skin struggle right now?", votes: 212, options: [{ label: "Dryness & tightness", pct: 46 }, { label: "Redness", pct: 22 }, { label: "Breakouts", pct: 18 }, { label: "Dull, tired skin", pct: 14 }] }, likes: 19, shares: 3, liked: false, comments: [{ by: "mark", text: "Dryness, every single year 🙃", likes: 3, t: "4h" }] },
+  { id: "p3", by: "beth", t: "Yesterday", tags: ["aftercare", "tips"], text: "Aftercare 101 after anti-wrinkle treatment: no lying flat for 4 hours, skip the gym today, no facials or massage for 2 weeks, and don't rub the area. Save this post 📌", likes: 73, shares: 14, liked: false, comments: [] },
+  { id: "p8", kind: "eventreg", by: "amir", t: "Yesterday", event: "ev1", going: 12, likes: 0, shares: 0, liked: false, comments: [] },
+  { id: "p4", by: "amir", t: "Yesterday", tags: ["question", "appointment"], text: "Just booked my first consultation 🙈 nervous but excited. What should I ask? Anything you wish you'd known before your first one?", likes: 12, shares: 1, liked: false, comments: [{ by: "mark", text: "Ask about the downtime for YOUR job — mine was more than I expected.", likes: 3, t: "20h" }, { by: "katy", text: "Bring a list of medications and any allergies, and photos of looks you like AND don't like. See you Thursday Amir!", likes: 11, t: "18h" }] },
+  { id: "p9", kind: "quiz", by: "beth", t: "2d", text: "", quiz: { question: "Myth or fact: you don't need SPF on a cloudy day.", options: [{ label: "Myth — UVA comes through cloud", correct: true }, { label: "Fact — clouds block the sun" }], explain: "up to 80% of UV passes through cloud, so SPF is a daily habit, not a weather call." }, likes: 27, shares: 5, liked: false, comments: [{ by: "miranda", text: "Got it right for once 😄", likes: 2, t: "1d" }] },
+  { id: "p5", by: "priya", t: "2d", tags: ["appointment"], text: "Patient Q&A live this Thursday 7pm — bring your questions about skin boosters, what they do and who they suit. Free for all clinic patients.", event: "ev1", likes: 35, shares: 9, liked: false, comments: [] },
+  { id: "p6", by: "mark", t: "3d", tags: ["wins", "sleep"], text: "Week 3 of the sleep + hydration plan from the coach. Energy is noticeably better and my skin check-in score has gone from 61 to 72. Small habits, big difference.", imgs: ["assets/course-skin-boosters.jpg", "assets/course-consultation.jpg", "assets/course-full-face-rejuvenation.jpg"], likes: 29, shares: 3, liked: false, comments: [{ by: "katy", text: "This is exactly it Mark 👏", likes: 5, t: "2d" }] },
 ];
+const POSTS_SEED_V = 4;
+
 const PINNED_IDS = ["p3", "p5"];
 const PUSH_JN = { app: "Pearce Aesthetics", icon: "assets/profinity-icon-purple-gold.png", title: "Appointment reminder", body: "Your 2-week review with Katy Wilson is Monday 3 Nov at 2:30pm. Tap to confirm or reschedule.", cta: "Confirm" };
 const NOTIFS_JN = [
@@ -168,7 +174,11 @@ const NOTIFS_JN = [
   { by: "priya", text: "is hosting Skin Boosters Q&A · Live on Thursday", t: "1d", icon: "video" },
   { by: "beth", text: "sent you an aftercare sheet", t: "4d", icon: "paperclip" },
 ];
-function loadPosts() { const s = readJN(POSTS_KEY, null); return s && s[0] && "shares" in s[0] ? s : POSTS_SEED; }
+function loadPosts() {
+  const s = readJN(POSTS_KEY, null);
+  if (readJN("pf-jane-posts-v", 0) < POSTS_SEED_V) { const mine = (s || []).filter((p) => p.by === "jane"); const merged = [...mine, ...POSTS_SEED]; saveJN(POSTS_KEY, merged); saveJN("pf-jane-posts-v", POSTS_SEED_V); return merged; }
+  return s || POSTS_SEED;
+}
 function authorJN(id) { const p = PEOPLE[id]; return { name: p.name, avatar: p.avatar, seals: SEALS[id] || [] }; }
 function fmtN(n) { return n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, "") + "K" : String(n); }
 
@@ -350,6 +360,78 @@ function JNNotifPanel({ open, onClose }) {
     </div>);
 }
 
+/* ---- Katy-feed content kinds for Jane (same styles.css classes as the
+   clinician feed: .pf-livenow, .pf-poll, .pf-quiz, .pf-event-feed) ---- */
+function PollJN({ poll, onVote }) {
+  const [voted, setVoted] = useStateJN(poll.voted == null ? null : poll.voted);
+  const answered = voted !== null;
+  const total = poll.votes + (answered ? 1 : 0);
+  const pctOf = (o, i) => poll.votes ? o.pct : voted === i ? 100 : 0;
+  const leadIdx = poll.options.reduce((b, o, i) => pctOf(o, i) > pctOf(poll.options[b], b) ? i : b, 0);
+  return (
+    <div className={"pf-poll" + (answered ? " answered" : "")}>
+      <div className="pf-poll-q"><span className="pf-poll-badge"><IcJN name="bar-chart-2" size={15} color="var(--white)" /></span><span>{poll.question}</span></div>
+      <div className="pf-poll-opts">
+        {poll.options.map((o, i) => { const p = pctOf(o, i); const mine = voted === i; return (
+          <button type="button" key={o.label} className={"pf-poll-opt" + (answered ? " answered" : "") + (mine ? " selected" : "") + (answered && i === leadIdx ? " leading" : "")} disabled={answered} aria-pressed={mine} onClick={() => { setVoted(i); onVote && onVote(i); }}>
+            {answered && <span className="pf-poll-fill" style={{ width: p + "%" }} />}
+            <span className="pf-poll-opt-row"><span className="pf-poll-letter">{String.fromCharCode(65 + i)}</span><span className="pf-poll-label">{o.label}</span>{answered && <span className="pf-poll-pct">{p}%</span>}{mine && <span className="pf-poll-check"><IcJN name="check" size={16} color="var(--pf-poll-accent)" /></span>}</span>
+          </button>); })}
+      </div>
+      {answered ? <div className="pf-poll-after"><div className="pf-poll-after-head"><b>Thanks for voting!</b><span className="pf-poll-chip">Voted</span></div><p>{total.toLocaleString()} votes so far · <b>{poll.options[leadIdx].label}</b> is leading with {pctOf(poll.options[leadIdx], leadIdx)}%.</p></div>
+                : <div className="pf-poll-foot">{total.toLocaleString()} votes · Tap an option to vote</div>}
+    </div>);
+}
+function QuizJN({ quiz, onAnswer }) {
+  const [picked, setPicked] = useStateJN(quiz.picked == null ? null : quiz.picked);
+  const answered = picked !== null; const isCorrect = answered && quiz.options[picked].correct;
+  return (
+    <div className="pf-quiz">
+      <div className="pf-quiz-q"><span className="pf-quiz-badge"><IcJN name="brain" size={15} color="var(--white)" /></span><span>{quiz.question}</span></div>
+      <div className="pf-quiz-opts">
+        {quiz.options.map((o, i) => { const state = answered && o.correct ? "correct" : answered && picked === i ? "incorrect" : ""; return (
+          <button type="button" key={o.label} className={"pf-quiz-opt" + (answered ? " answered" : "") + (state ? " " + state : "")} disabled={answered} onClick={() => { setPicked(i); onAnswer && onAnswer(i); }}>
+            <span className="pf-quiz-opt-row"><span className={"pf-quiz-letter" + (state ? " " + state : "")}>{String.fromCharCode(65 + i)}</span><span className="pf-quiz-label">{o.label}</span>{state && <span className={"pf-quiz-mark " + state}><IcJN name={state === "correct" ? "check" : "x"} size={16} color={state === "correct" ? "var(--success)" : "var(--error)"} /></span>}</span>
+          </button>); })}
+      </div>
+      <div className={"pf-quiz-foot" + (answered ? " " + (isCorrect ? "correct" : "incorrect") : "")}>{answered ? (isCorrect ? "Correct! " : "Not quite — ") + quiz.explain : "Tap an option to answer"}</div>
+    </div>);
+}
+function LiveNowJN({ live, author, onTap }) {
+  const initials = author.name.split(" ").map((p) => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+  return (
+    <div className="pf-livenow" onClick={onTap} role="img" aria-label={author.name + " is live now, " + live.viewers + " watching"}>
+      {live.frame ? <img src={live.frame} alt="" /> : <div className="pf-livenow-initials" aria-hidden="true"><span>{initials}</span></div>}
+      <span className="pf-livenow-badge"><span className="pf-livenow-dot" aria-hidden="true" />LIVE</span>
+      <span className="pf-livenow-viewers"><IcJN name="eye" size={13} color="var(--white)" />{live.viewers}</span>
+      <span className="jn-live-title">{live.title}</span>
+    </div>);
+}
+function EventRegJN({ p }) {
+  const a = authorJN(p.by); const ev = EVENTS.find((e) => e.id === p.event) || EVENTS[0]; const d = evDate(ev);
+  const go = () => goJN("JaneEvents.html?event=" + ev.id);
+  return (
+    <div className="post-wrap pf-event-feed" style={{ background: "var(--surface-card)", borderRadius: "var(--r-md)", overflow: "hidden", padding: "0px 16px" }}>
+      <div className="pf-teaser-head">
+        <span className="pf-prof-av"><DSJN.Avatar name={a.name} src={a.avatar} size={44} /></span>
+        <div className="pf-teaser-head-main">
+          <div className="pf-teaser-head-name"><span><span className="pf-prof-nm">{a.name}</span></span>{a.seals.length > 0 && <DSJN.VerificationSeals seals={a.seals} size={16} />}</div>
+          <div className="pf-teaser-head-sub"><span>{p.t}</span></div>
+        </div>
+      </div>
+      <div className="pf-event-feed-label"><IcJN name="calendar-check" size={14} color="var(--premium-gold-deep)" /><span>EVENT</span></div>
+      <p className="pf-event-reg-headline"><b>{a.name}</b> is going to <b>{ev.title}</b>.</p>
+      <div className="pf-event-reg-card">
+        <button type="button" className="pf-event-reg-main" onClick={go}>
+          <span className="pf-event-reg-title">{ev.title}</span>
+          <span className="pf-event-reg-sub">{d.wd} {d.d} {d.m} · {ev.time} · {ev.where}</span>
+          <span className="pf-event-reg-going">{p.going} patients going</span>
+        </button>
+        <button type="button" className="pf-event-reg-cta" onClick={go}>{readJN("pf-jane-events", { ev1: true })[ev.id] ? "You're going · see details" : "RSVP to this event"}</button>
+      </div>
+    </div>);
+}
+
 /* ---- reactions: a copy of the clinician feed's animation set (app.jsx
    burstFrom / ReactionPicker / useReactionPicker / useDoubleTapLove), CSS
    from styles.css (.pf-react-*, .sm-double-heart). Like = tap; hover or
@@ -436,7 +518,7 @@ function useDoubleTapLoveJN(onLove) {
   return { onTap, heartNode };
 }
 
-function FeedPostJN({ p, pinned, onLike, onReact, onComment, onShare, onSave, saved, showToast }) {
+function FeedPostJN({ p, pinned, onLike, onReact, onComment, onShare, onSave, onPatch, saved, showToast }) {
   const a = authorJN(p.by);
   const first = p.comments[0];
   const ref = useRefJN(null);
@@ -447,7 +529,13 @@ function FeedPostJN({ p, pinned, onLike, onReact, onComment, onShare, onSave, sa
   const handleComment = () => { const g = actionIconJN(ref.current, 1); if (g && g.animate) g.animate([{ transform: "rotate(0)" }, { transform: "rotate(-17deg)" }, { transform: "rotate(13deg)" }, { transform: "rotate(-6deg)" }, { transform: "rotate(0)" }], { duration: 520, easing: "ease-in-out" }); onComment(p); };
   const handleShare = () => { const g = actionIconJN(ref.current, 2); if (g && g.animate) g.animate([{ transform: "translate(0,0) scale(1)", opacity: 1 }, { transform: "translate(8px,-10px) scale(1.28)", opacity: 0.35, offset: 0.5 }, { transform: "translate(-3px,2px) scale(1)", opacity: 1, offset: 0.78 }, { transform: "translate(0,0) scale(1)", opacity: 1 }], { duration: 560, easing: "cubic-bezier(.34,1.56,.64,1)" }); onShare(p); };
   const imgs = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : []);
-  const media = imgs.length ? (
+  const media = p.kind === "live" ? (
+    <div className="pf-media-bleed" style={{ margin: "0 -16px" }}><LiveNowJN live={p.live} author={a} onTap={() => showToast("Joining " + a.name.split(" ")[0] + "'s live…")} /></div>
+  ) : p.kind === "poll" ? (
+    <div className="pf-media-bleed" style={{ margin: "0 -16px" }}><PollJN poll={p.poll} onVote={(i) => onPatch && onPatch(p, { poll: { ...p.poll, voted: i } })} /></div>
+  ) : p.kind === "quiz" ? (
+    <div className="pf-media-bleed" style={{ margin: "0 -16px" }}><QuizJN quiz={p.quiz} onAnswer={(i) => onPatch && onPatch(p, { quiz: { ...p.quiz, picked: i } })} /></div>
+  ) : imgs.length ? (
     <div className="pf-media-bleed" style={{ margin: "0 -16px" }} onClick={onTap}>
       {imgs.length === 1 ? <img src={imgs[0]} alt="" draggable={false} style={{ width: "100%", height: 380, objectFit: "cover", display: "block", background: "var(--gray-100)", userSelect: "none" }} />
         : <div className={"jn-gallery n" + Math.min(imgs.length, 4)}>{imgs.slice(0, 4).map((src, i) => <span key={i}><img src={src} alt="" draggable={false} />{i === 3 && imgs.length > 4 && <b>+{imgs.length - 4}</b>}</span>)}</div>}
@@ -463,8 +551,8 @@ function FeedPostJN({ p, pinned, onLike, onReact, onComment, onShare, onSave, sa
   return (
     <div className="post-wrap" id={"post-" + p.id} ref={ref} style={{ background: "var(--surface-card)", borderRadius: "var(--r-md)", overflow: "hidden", padding: "0px 16px" }}>
       <DSJN.PostCard author={a}
-        time={pinned ? <React.Fragment>{p.t}<span className="pf-pin-chip"><DSJN.IconifyIcon name="fluent:pin-12-filled" size={11} color="var(--brand-navy)" />Pinned</span></React.Fragment> : p.t}
-        body={p.bg ? <div className="pf-post-bg" style={{ background: p.bg.css, color: p.bg.fg }}><ClampTextJN text={p.text} lines={6} /></div> : <ClampTextJN text={p.text} />}
+        time={p.kind === "live" ? <span className="pf-livenow-meta">is live now · {p.live.viewers} watching</span> : pinned ? <React.Fragment>{p.t}<span className="pf-pin-chip"><DSJN.IconifyIcon name="fluent:pin-12-filled" size={11} color="var(--brand-navy)" />Pinned</span></React.Fragment> : p.t}
+        body={!p.text ? null : p.bg ? <div className="pf-post-bg" style={{ background: p.bg.css, color: p.bg.fg }}><ClampTextJN text={p.text} lines={6} /></div> : <ClampTextJN text={p.text} />}
         media={media}
         hashtags={(p.tags || []).map((t) => JN_TAG_MAP[t]).filter(Boolean)}
         liked={!!reaction} saved={saved} actioned={false} likes={fmtN(p.likes)} shares={fmtN(p.shares)} comments={String(p.comments.length)}
@@ -525,7 +613,8 @@ function HomeScreen() {
   const pinnedPosts = PINNED_IDS.map((id) => posts.find((x) => x.id === id)).filter(Boolean);
   const feed = posts.filter((x) => !PINNED_IDS.includes(x.id));
   const curPost = posts.find((x) => x.id === commentId);
-  const postProps = { onLike: like, onReact: react, onComment: (p) => setCommentId(p.id), onShare: () => showToast("Link copied"), onSave: save, showToast };
+  function patch(p, fields) { persist(posts.map((x) => x.id === p.id ? { ...x, ...fields } : x)); }
+  const postProps = { onLike: like, onReact: react, onPatch: patch, onComment: (p) => setCommentId(p.id), onShare: () => showToast("Link copied"), onSave: save, showToast };
 
   return (
     <div className={"m-screen jn-home" + (chromeHidden ? " chrome-hidden" : "") + (chromeFloat ? " chrome-float" : "")}>
@@ -560,7 +649,7 @@ function HomeScreen() {
 
           {feed.map((p, i) => (
             <React.Fragment key={p.id}>
-              <FeedPostJN p={p} saved={!!saved[p.id]} {...postProps} />
+              {p.kind === "eventreg" ? <EventRegJN p={p} /> : <FeedPostJN p={p} saved={!!saved[p.id]} {...postProps} />}
               {i === 1 && !wear.length && (
                 <button className="jn-connect infeed" onClick={() => goJN("JaneWearables.html")}>
                   <span className="ic"><IcJN name="watch" size={20} color="#fff" /></span>

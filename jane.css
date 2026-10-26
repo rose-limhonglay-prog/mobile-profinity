@@ -784,3 +784,6 @@ button.jn-pmc-h { cursor: pointer; }
 .jc-hist-h span { font-size: 12.5px; color: var(--text-secondary); }
 .jc-histview .jc-hist { overflow: visible; }
 .jc-histview .jc-qa { margin-bottom: 4px; }
+/* feed kinds */
+.jn-live-title { position: absolute; left: 14px; bottom: 14px; right: 14px; color: #fff; font-size: 15px; font-weight: var(--fw-semibold); text-shadow: 0 1px 6px rgba(0,0,0,.5); }
+.jn-home .pf-livenow { cursor: pointer; }

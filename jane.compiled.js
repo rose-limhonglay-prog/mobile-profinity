@@ -440,9 +440,25 @@ const SEALS = {
   reception: ["verified"]
 };
 const POSTS_SEED = [{
+  id: "p0",
+  kind: "live",
+  by: "katy",
+  t: "now",
+  live: {
+    viewers: 86,
+    frame: "assets/avatar-katy.jpg",
+    title: "Aftercare Q&A · ask me anything"
+  },
+  text: "",
+  likes: 31,
+  shares: 4,
+  liked: false,
+  comments: []
+}, {
   id: "p1",
   by: "katy",
   t: "2h",
+  tags: ["skincare", "tips"],
   text: "Winter skin reminder 🧴 Cold air + central heating = dehydrated skin. Double-cleanse at night, layer a hyaluronic serum under your moisturiser, and yes — SPF still counts in December. The UVA that ages skin comes straight through cloud, so the habit matters more than the forecast.",
   likes: 48,
   shares: 6,
@@ -462,6 +478,7 @@ const POSTS_SEED = [{
   id: "p2",
   by: "miranda",
   t: "4h",
+  tags: ["progress", "question"],
   text: "6 weeks post lip filler and I've finally stopped overthinking it. Katy was right about the swelling timeline 😅 Any tips for keeping lips hydrated through winter?",
   img: "assets/clinic-lip-design.png",
   likes: 21,
@@ -479,18 +496,63 @@ const POSTS_SEED = [{
     t: "2h"
   }]
 }, {
+  id: "p7",
+  kind: "poll",
+  by: "katy",
+  t: "5h",
+  text: "",
+  poll: {
+    question: "What's your biggest winter skin struggle right now?",
+    votes: 212,
+    options: [{
+      label: "Dryness & tightness",
+      pct: 46
+    }, {
+      label: "Redness",
+      pct: 22
+    }, {
+      label: "Breakouts",
+      pct: 18
+    }, {
+      label: "Dull, tired skin",
+      pct: 14
+    }]
+  },
+  likes: 19,
+  shares: 3,
+  liked: false,
+  comments: [{
+    by: "mark",
+    text: "Dryness, every single year 🙃",
+    likes: 3,
+    t: "4h"
+  }]
+}, {
   id: "p3",
   by: "beth",
   t: "Yesterday",
+  tags: ["aftercare", "tips"],
   text: "Aftercare 101 after anti-wrinkle treatment: no lying flat for 4 hours, skip the gym today, no facials or massage for 2 weeks, and don't rub the area. Save this post 📌",
   likes: 73,
   shares: 14,
   liked: false,
   comments: []
 }, {
+  id: "p8",
+  kind: "eventreg",
+  by: "amir",
+  t: "Yesterday",
+  event: "ev1",
+  going: 12,
+  likes: 0,
+  shares: 0,
+  liked: false,
+  comments: []
+}, {
   id: "p4",
   by: "amir",
   t: "Yesterday",
+  tags: ["question", "appointment"],
   text: "Just booked my first consultation 🙈 nervous but excited. What should I ask? Anything you wish you'd known before your first one?",
   likes: 12,
   shares: 1,
@@ -507,9 +569,35 @@ const POSTS_SEED = [{
     t: "18h"
   }]
 }, {
+  id: "p9",
+  kind: "quiz",
+  by: "beth",
+  t: "2d",
+  text: "",
+  quiz: {
+    question: "Myth or fact: you don't need SPF on a cloudy day.",
+    options: [{
+      label: "Myth — UVA comes through cloud",
+      correct: true
+    }, {
+      label: "Fact — clouds block the sun"
+    }],
+    explain: "up to 80% of UV passes through cloud, so SPF is a daily habit, not a weather call."
+  },
+  likes: 27,
+  shares: 5,
+  liked: false,
+  comments: [{
+    by: "miranda",
+    text: "Got it right for once 😄",
+    likes: 2,
+    t: "1d"
+  }]
+}, {
   id: "p5",
   by: "priya",
   t: "2d",
+  tags: ["appointment"],
   text: "Patient Q&A live this Thursday 7pm — bring your questions about skin boosters, what they do and who they suit. Free for all clinic patients.",
   event: "ev1",
   likes: 35,
@@ -520,8 +608,9 @@ const POSTS_SEED = [{
   id: "p6",
   by: "mark",
   t: "3d",
+  tags: ["wins", "sleep"],
   text: "Week 3 of the sleep + hydration plan from the coach. Energy is noticeably better and my skin check-in score has gone from 61 to 72. Small habits, big difference.",
-  img: "assets/course-skin-boosters.jpg",
+  imgs: ["assets/course-skin-boosters.jpg", "assets/course-consultation.jpg", "assets/course-full-face-rejuvenation.jpg"],
   likes: 29,
   shares: 3,
   liked: false,
@@ -532,6 +621,7 @@ const POSTS_SEED = [{
     t: "2d"
   }]
 }];
+const POSTS_SEED_V = 4;
 const PINNED_IDS = ["p3", "p5"];
 const PUSH_JN = {
   app: "Pearce Aesthetics",
@@ -568,7 +658,14 @@ const NOTIFS_JN = [{
 }];
 function loadPosts() {
   const s = readJN(POSTS_KEY, null);
-  return s && s[0] && "shares" in s[0] ? s : POSTS_SEED;
+  if (readJN("pf-jane-posts-v", 0) < POSTS_SEED_V) {
+    const mine = (s || []).filter(p => p.by === "jane");
+    const merged = [...mine, ...POSTS_SEED];
+    saveJN(POSTS_KEY, merged);
+    saveJN("pf-jane-posts-v", POSTS_SEED_V);
+    return merged;
+  }
+  return s || POSTS_SEED;
 }
 function authorJN(id) {
   const p = PEOPLE[id];
@@ -1069,6 +1166,214 @@ function JNNotifPanel({
   }))));
 }
 
+/* ---- Katy-feed content kinds for Jane (same styles.css classes as the
+   clinician feed: .pf-livenow, .pf-poll, .pf-quiz, .pf-event-feed) ---- */
+function PollJN({
+  poll,
+  onVote
+}) {
+  const [voted, setVoted] = useStateJN(poll.voted == null ? null : poll.voted);
+  const answered = voted !== null;
+  const total = poll.votes + (answered ? 1 : 0);
+  const pctOf = (o, i) => poll.votes ? o.pct : voted === i ? 100 : 0;
+  const leadIdx = poll.options.reduce((b, o, i) => pctOf(o, i) > pctOf(poll.options[b], b) ? i : b, 0);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pf-poll" + (answered ? " answered" : "")
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-poll-q"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-poll-badge"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "bar-chart-2",
+    size: 15,
+    color: "var(--white)"
+  })), /*#__PURE__*/React.createElement("span", null, poll.question)), /*#__PURE__*/React.createElement("div", {
+    className: "pf-poll-opts"
+  }, poll.options.map((o, i) => {
+    const p = pctOf(o, i);
+    const mine = voted === i;
+    return /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      key: o.label,
+      className: "pf-poll-opt" + (answered ? " answered" : "") + (mine ? " selected" : "") + (answered && i === leadIdx ? " leading" : ""),
+      disabled: answered,
+      "aria-pressed": mine,
+      onClick: () => {
+        setVoted(i);
+        onVote && onVote(i);
+      }
+    }, answered && /*#__PURE__*/React.createElement("span", {
+      className: "pf-poll-fill",
+      style: {
+        width: p + "%"
+      }
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "pf-poll-opt-row"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "pf-poll-letter"
+    }, String.fromCharCode(65 + i)), /*#__PURE__*/React.createElement("span", {
+      className: "pf-poll-label"
+    }, o.label), answered && /*#__PURE__*/React.createElement("span", {
+      className: "pf-poll-pct"
+    }, p, "%"), mine && /*#__PURE__*/React.createElement("span", {
+      className: "pf-poll-check"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "check",
+      size: 16,
+      color: "var(--pf-poll-accent)"
+    }))));
+  })), answered ? /*#__PURE__*/React.createElement("div", {
+    className: "pf-poll-after"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-poll-after-head"
+  }, /*#__PURE__*/React.createElement("b", null, "Thanks for voting!"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-poll-chip"
+  }, "Voted")), /*#__PURE__*/React.createElement("p", null, total.toLocaleString(), " votes so far · ", /*#__PURE__*/React.createElement("b", null, poll.options[leadIdx].label), " is leading with ", pctOf(poll.options[leadIdx], leadIdx), "%.")) : /*#__PURE__*/React.createElement("div", {
+    className: "pf-poll-foot"
+  }, total.toLocaleString(), " votes · Tap an option to vote"));
+}
+function QuizJN({
+  quiz,
+  onAnswer
+}) {
+  const [picked, setPicked] = useStateJN(quiz.picked == null ? null : quiz.picked);
+  const answered = picked !== null;
+  const isCorrect = answered && quiz.options[picked].correct;
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pf-quiz"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-quiz-q"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-quiz-badge"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "brain",
+    size: 15,
+    color: "var(--white)"
+  })), /*#__PURE__*/React.createElement("span", null, quiz.question)), /*#__PURE__*/React.createElement("div", {
+    className: "pf-quiz-opts"
+  }, quiz.options.map((o, i) => {
+    const state = answered && o.correct ? "correct" : answered && picked === i ? "incorrect" : "";
+    return /*#__PURE__*/React.createElement("button", {
+      type: "button",
+      key: o.label,
+      className: "pf-quiz-opt" + (answered ? " answered" : "") + (state ? " " + state : ""),
+      disabled: answered,
+      onClick: () => {
+        setPicked(i);
+        onAnswer && onAnswer(i);
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "pf-quiz-opt-row"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "pf-quiz-letter" + (state ? " " + state : "")
+    }, String.fromCharCode(65 + i)), /*#__PURE__*/React.createElement("span", {
+      className: "pf-quiz-label"
+    }, o.label), state && /*#__PURE__*/React.createElement("span", {
+      className: "pf-quiz-mark " + state
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: state === "correct" ? "check" : "x",
+      size: 16,
+      color: state === "correct" ? "var(--success)" : "var(--error)"
+    }))));
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pf-quiz-foot" + (answered ? " " + (isCorrect ? "correct" : "incorrect") : "")
+  }, answered ? (isCorrect ? "Correct! " : "Not quite — ") + quiz.explain : "Tap an option to answer"));
+}
+function LiveNowJN({
+  live,
+  author,
+  onTap
+}) {
+  const initials = author.name.split(" ").map(p => p[0]).filter(Boolean).slice(0, 2).join("").toUpperCase();
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pf-livenow",
+    onClick: onTap,
+    role: "img",
+    "aria-label": author.name + " is live now, " + live.viewers + " watching"
+  }, live.frame ? /*#__PURE__*/React.createElement("img", {
+    src: live.frame,
+    alt: ""
+  }) : /*#__PURE__*/React.createElement("div", {
+    className: "pf-livenow-initials",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("span", null, initials)), /*#__PURE__*/React.createElement("span", {
+    className: "pf-livenow-badge"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-livenow-dot",
+    "aria-hidden": "true"
+  }), "LIVE"), /*#__PURE__*/React.createElement("span", {
+    className: "pf-livenow-viewers"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "eye",
+    size: 13,
+    color: "var(--white)"
+  }), live.viewers), /*#__PURE__*/React.createElement("span", {
+    className: "jn-live-title"
+  }, live.title));
+}
+function EventRegJN({
+  p
+}) {
+  const a = authorJN(p.by);
+  const ev = EVENTS.find(e => e.id === p.event) || EVENTS[0];
+  const d = evDate(ev);
+  const go = () => goJN("JaneEvents.html?event=" + ev.id);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "post-wrap pf-event-feed",
+    style: {
+      background: "var(--surface-card)",
+      borderRadius: "var(--r-md)",
+      overflow: "hidden",
+      padding: "0px 16px"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-teaser-head"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-prof-av"
+  }, /*#__PURE__*/React.createElement(DSJN.Avatar, {
+    name: a.name,
+    src: a.avatar,
+    size: 44
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pf-teaser-head-main"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pf-teaser-head-name"
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("span", {
+    className: "pf-prof-nm"
+  }, a.name)), a.seals.length > 0 && /*#__PURE__*/React.createElement(DSJN.VerificationSeals, {
+    seals: a.seals,
+    size: 16
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pf-teaser-head-sub"
+  }, /*#__PURE__*/React.createElement("span", null, p.t)))), /*#__PURE__*/React.createElement("div", {
+    className: "pf-event-feed-label"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "calendar-check",
+    size: 14,
+    color: "var(--premium-gold-deep)"
+  }), /*#__PURE__*/React.createElement("span", null, "EVENT")), /*#__PURE__*/React.createElement("p", {
+    className: "pf-event-reg-headline"
+  }, /*#__PURE__*/React.createElement("b", null, a.name), " is going to ", /*#__PURE__*/React.createElement("b", null, ev.title), "."), /*#__PURE__*/React.createElement("div", {
+    className: "pf-event-reg-card"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-event-reg-main",
+    onClick: go
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-event-reg-title"
+  }, ev.title), /*#__PURE__*/React.createElement("span", {
+    className: "pf-event-reg-sub"
+  }, d.wd, " ", d.d, " ", d.m, " · ", ev.time, " · ", ev.where), /*#__PURE__*/React.createElement("span", {
+    className: "pf-event-reg-going"
+  }, p.going, " patients going")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pf-event-reg-cta",
+    onClick: go
+  }, readJN("pf-jane-events", {
+    ev1: true
+  })[ev.id] ? "You're going · see details" : "RSVP to this event")));
+}
+
 /* ---- reactions: a copy of the clinician feed's animation set (app.jsx
    burstFrom / ReactionPicker / useReactionPicker / useDoubleTapLove), CSS
    from styles.css (.pf-react-*, .sm-double-heart). Like = tap; hover or
@@ -1392,6 +1697,7 @@ function FeedPostJN({
   onComment,
   onShare,
   onSave,
+  onPatch,
   saved,
   showToast
 }) {
@@ -1460,7 +1766,42 @@ function FeedPostJN({
     onShare(p);
   };
   const imgs = p.imgs && p.imgs.length ? p.imgs : p.img ? [p.img] : [];
-  const media = imgs.length ? /*#__PURE__*/React.createElement("div", {
+  const media = p.kind === "live" ? /*#__PURE__*/React.createElement("div", {
+    className: "pf-media-bleed",
+    style: {
+      margin: "0 -16px"
+    }
+  }, /*#__PURE__*/React.createElement(LiveNowJN, {
+    live: p.live,
+    author: a,
+    onTap: () => showToast("Joining " + a.name.split(" ")[0] + "'s live…")
+  })) : p.kind === "poll" ? /*#__PURE__*/React.createElement("div", {
+    className: "pf-media-bleed",
+    style: {
+      margin: "0 -16px"
+    }
+  }, /*#__PURE__*/React.createElement(PollJN, {
+    poll: p.poll,
+    onVote: i => onPatch && onPatch(p, {
+      poll: {
+        ...p.poll,
+        voted: i
+      }
+    })
+  })) : p.kind === "quiz" ? /*#__PURE__*/React.createElement("div", {
+    className: "pf-media-bleed",
+    style: {
+      margin: "0 -16px"
+    }
+  }, /*#__PURE__*/React.createElement(QuizJN, {
+    quiz: p.quiz,
+    onAnswer: i => onPatch && onPatch(p, {
+      quiz: {
+        ...p.quiz,
+        picked: i
+      }
+    })
+  })) : imgs.length ? /*#__PURE__*/React.createElement("div", {
     className: "pf-media-bleed",
     style: {
       margin: "0 -16px"
@@ -1519,14 +1860,16 @@ function FeedPostJN({
     }
   }, /*#__PURE__*/React.createElement(DSJN.PostCard, {
     author: a,
-    time: pinned ? /*#__PURE__*/React.createElement(React.Fragment, null, p.t, /*#__PURE__*/React.createElement("span", {
+    time: p.kind === "live" ? /*#__PURE__*/React.createElement("span", {
+      className: "pf-livenow-meta"
+    }, "is live now · ", p.live.viewers, " watching") : pinned ? /*#__PURE__*/React.createElement(React.Fragment, null, p.t, /*#__PURE__*/React.createElement("span", {
       className: "pf-pin-chip"
     }, /*#__PURE__*/React.createElement(DSJN.IconifyIcon, {
       name: "fluent:pin-12-filled",
       size: 11,
       color: "var(--brand-navy)"
     }), "Pinned")) : p.t,
-    body: p.bg ? /*#__PURE__*/React.createElement("div", {
+    body: !p.text ? null : p.bg ? /*#__PURE__*/React.createElement("div", {
       className: "pf-post-bg",
       style: {
         background: p.bg.css,
@@ -1719,9 +2062,16 @@ function HomeScreen() {
   const pinnedPosts = PINNED_IDS.map(id => posts.find(x => x.id === id)).filter(Boolean);
   const feed = posts.filter(x => !PINNED_IDS.includes(x.id));
   const curPost = posts.find(x => x.id === commentId);
+  function patch(p, fields) {
+    persist(posts.map(x => x.id === p.id ? {
+      ...x,
+      ...fields
+    } : x));
+  }
   const postProps = {
     onLike: like,
     onReact: react,
+    onPatch: patch,
     onComment: p => setCommentId(p.id),
     onShare: () => showToast("Link copied"),
     onSave: save,
@@ -1825,7 +2175,9 @@ function HomeScreen() {
     className: "tx"
   }, /*#__PURE__*/React.createElement("small", null, "From Katy, your clinician · Just now"), /*#__PURE__*/React.createElement("b", null, onbPct ? "You're " + onbPct + "% through your Health Pass" : "Set up your Health Pass before Monday"), /*#__PURE__*/React.createElement("em", null, "Finish onboarding"))), feed.map((p, i) => /*#__PURE__*/React.createElement(React.Fragment, {
     key: p.id
-  }, /*#__PURE__*/React.createElement(FeedPostJN, {
+  }, p.kind === "eventreg" ? /*#__PURE__*/React.createElement(EventRegJN, {
+    p: p
+  }) : /*#__PURE__*/React.createElement(FeedPostJN, {
     p: p,
     saved: !!saved[p.id],
     ...postProps
