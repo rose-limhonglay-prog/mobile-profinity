@@ -1774,7 +1774,7 @@ function dmCallNote(text, withId) {
 }
 
 function ScheduleCallScreen() {
-  const ret = qJN("ret") || "JaneMessages.html";
+  const ret = qJN("ret") || "JaneNewsfeed.html";
   const prof = readJN(PROFILE_KEY, { phone: "+44 7700 900123" });
   const [store, setStore] = useStateJN(callsState);
   const up = useMemoJN(() => { const now = Date.now(); return store.calls.filter((c) => c.status === "booked" && callStart(c).getTime() > now - CALL_DUR * 60000).sort((a, b) => callStart(a) - callStart(b))[0] || null; }, [store]);
@@ -1865,52 +1865,37 @@ function ScheduleCallScreen() {
 
   /* ---- booked / upcoming -------------------------------------------- */
   if (view === "schedule") {
-    const nextUp = items.upcoming[0];
+    const todayIso = isoDateJN(new Date());
+    const todayUp = items.upcoming.find((x) => x.date === todayIso);
     const shown = items.upcoming.filter((x) => filt === "all" || (filt === "call" ? x.kind === "call" : x.kind === "appt"));
     const groups = shown.reduce((g, x) => { const d = new Date(x.date + "T12:00:00"); const k = d.toLocaleString("en-GB", { month: "long" }) + " " + d.getFullYear(); (g[k] = g[k] || []).push(x); return g; }, {});
-    const nw = nextUp && callWho(nextUp);
+    const nw = todayUp && callWho(todayUp);
     return (
     <div className="jn-screen sc sc-page">
-      <JNBar title="Calls & appointments" back={() => goJN(ret)} trailing={<button className="jn-iconbtn sm" aria-label="Schedule a call" onClick={() => startBooking(null)}><IcJN name="plus" size={20} color="var(--brand-navy)" /></button>} />
+      <JNBar title="Calls & appointments" back={() => goJN("JaneNewsfeed.html")} trailing={<button className="jn-iconbtn sm" aria-label="Schedule a call" onClick={() => startBooking(null)}><IcJN name="plus" size={20} color="var(--brand-navy)" /></button>} />
       <div className="jn-scroll" ref={scrollRef}>
 
-        {nextUp ? (
+        {todayUp && (
           <section className="sc-hero">
             <div className="sc-hero-top">
-              <span className="sc-hero-av"><JNFace p={nw} size={62} /><i className={"bd " + kindOf(nextUp)}><IcJN name={kindIcon(nextUp)} size={13} color="#fff" /></i></span>
+              <span className="sc-hero-av"><JNFace p={nw} size={62} /><i className={"bd " + kindOf(todayUp)}><IcJN name={kindIcon(todayUp)} size={13} color="#fff" /></i></span>
               <div className="tx">
-                <span className="lbl"><i /> Next up · {relDay(nextUp)}</span>
-                <b>{titleOf(nextUp)}</b>
+                <span className="lbl"><i /> Today</span>
+                <b>{titleOf(todayUp)}</b>
                 <small>{nw.title}</small>
               </div>
             </div>
             <div className="sc-hero-meta">
-              <span><IcJN name="calendar" size={14} />{callWhen(nextUp).split(" · ")[0]}</span>
-              <span><IcJN name="clock" size={14} />{nextUp.time} · {nextUp.dur || CALL_DUR} min</span>
-              <span><IcJN name={nextUp.kind === "call" ? (nextUp.type === "phone" ? "phone" : "video") : "map-pin"} size={14} />{nextUp.kind === "call" ? callTypeLabel(nextUp) : "Manchester clinic"}</span>
+              <span><IcJN name="calendar" size={14} />{callWhen(todayUp).split(" · ")[0]}</span>
+              <span><IcJN name="clock" size={14} />{todayUp.time} · {todayUp.dur || CALL_DUR} min</span>
+              <span><IcJN name={todayUp.kind === "call" ? (todayUp.type === "phone" ? "phone" : "video") : "map-pin"} size={14} />{todayUp.kind === "call" ? callTypeLabel(todayUp) : "Manchester clinic"}</span>
             </div>
             <div className="sc-hero-acts">
-              <button className="primary" onClick={() => openItem(nextUp)}>{nextUp.kind === "call" ? "View call" : "Details"}</button>
-              <button onClick={() => addToCalendar(nextUp)}><IcJN name="calendar-plus" size={16} />Calendar</button>
-              <button onClick={() => goJN("JaneMessages.html?to=" + (nextUp.kind === "call" ? nw.id : "reception"))}><IcJN name="message-circle" size={16} />Message</button>
+              <button className="primary" onClick={() => openItem(todayUp)}>{todayUp.kind === "call" ? "View call" : "Details"}</button>
+              <button onClick={() => addToCalendar(todayUp)}><IcJN name="calendar-plus" size={16} />Calendar</button>
+              <button onClick={() => goJN("JaneMessages.html?to=" + (todayUp.kind === "call" ? nw.id : "reception"))}><IcJN name="message-circle" size={16} />Message</button>
             </div>
-          </section>) : (
-          <section className="sc-hero empty">
-            <span className="sc-hero-ic"><IcJN name="calendar" size={26} color="#fff" /></span>
-            <b>Nothing booked yet</b>
-            <small>Your clinic visits and calls with the care team will show here.</small>
           </section>)}
-
-        <div className="sc-quick">
-          <button className="sc-qt navy" onClick={() => startBooking(null)}>
-            <span className="ic"><IcJN name="phone" size={20} color="#fff" /></span>
-            <b>Schedule a call</b><small>Free · 15 min · video or phone</small>
-          </button>
-          <button className="sc-qt gold" onClick={() => goJN("JaneMessages.html?to=reception")}>
-            <span className="ic"><IcJN name="building-2" size={20} color="#fff" /></span>
-            <b>Book a clinic visit</b><small>Via reception</small>
-          </button>
-        </div>
 
         <div className="jn-seg sc-seg">{[["all", "All"], ["call", "Calls"], ["appt", "In clinic"]].map(([k, l]) => <button key={k} className={filt === k ? "on" : ""} onClick={() => setFilt(k)}>{l}</button>)}</div>
 

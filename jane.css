@@ -910,19 +910,8 @@ button.jn-pmc-h { cursor: pointer; }
 .sc-hero-acts { display: flex; gap: 8px; margin-top: 14px; }
 .sc-hero-acts button { flex: 1; min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 10px; border-radius: 100px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.14); color: #fff; font-family: inherit; font-size: 13px; font-weight: var(--fw-semibold); cursor: pointer; -webkit-tap-highlight-color: transparent; backdrop-filter: blur(6px); }
 .sc-hero-acts button.primary { background: #fff; color: var(--brand-navy); border-color: #fff; }
-.sc-hero.empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 24px 20px; }
-.sc-hero-ic { width: 54px; height: 54px; border-radius: 18px; background: rgba(255,255,255,.16); display: flex; align-items: center; justify-content: center; margin-bottom: 6px; }
-.sc-hero.empty b { font-size: 17px; font-weight: var(--fw-bold); }
-.sc-hero.empty small { font-size: 13px; opacity: .85; line-height: 1.45; }
-.sc-quick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-.sc-qt { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 14px; border-radius: 18px; border: 1px solid var(--border-default); background: var(--surface-card); font-family: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-.sc-qt:active { transform: scale(.98); }
-.sc-qt .ic { width: 40px; height: 40px; border-radius: 13px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
-.sc-qt.navy .ic { background: var(--brand-navy); }
-.sc-qt.gold .ic { background: var(--brand-gold); }
-.sc-qt b { font-size: 14px; font-weight: var(--fw-semibold); color: var(--text-heading); }
-.sc-qt small { font-size: 11.5px; color: var(--text-secondary); }
 .sc-seg { margin: 16px 0 4px; }
+.sc-page .jn-scroll > .sc-seg:first-child { margin-top: 2px; }
 .sc-month-h { display: flex; align-items: center; gap: 8px; width: 100%; margin: 14px 0 8px; padding: 0; border: none; background: none; font-family: inherit; font-size: 14px; font-weight: var(--fw-semibold); color: var(--text-heading); text-align: left; }
 .sc-month-h em { font-style: normal; padding: 1px 8px; border-radius: 100px; background: var(--surface-sunken); font-size: 11px; font-weight: var(--fw-semibold); color: var(--text-secondary); }
 .sc-past-h { cursor: pointer; -webkit-tap-highlight-color: transparent; }
