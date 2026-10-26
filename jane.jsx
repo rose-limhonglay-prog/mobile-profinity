@@ -1873,12 +1873,12 @@ function ScheduleCallScreen() {
     return (
     <div className={"jn-screen m-screen sc sc-page" + chrome.cls}>
       {chrome.top}
-      <div className="jn-scroll" ref={chrome.scrollRef} style={{ paddingTop: chrome.padTop(8) }}>
-        <button className="jn-backlink" onClick={() => goJN(ret)}><IcJN name="chevron-left" size={18} />Back</button>
-        <div className="jn-pagehead">
-          <div><h2>Calls & appointments</h2><p>Clinic visits and calls with your care team</p></div>
-          <button className="jn-iconbtn" aria-label="Schedule a call" onClick={() => startBooking(null)}><IcJN name="plus" size={22} color="var(--brand-navy)" /></button>
-        </div>
+      <div className="jn-scroll sc-scroll" ref={chrome.scrollRef} style={{ paddingTop: 0 }}>
+        <header className="sc-head" style={{ paddingTop: (chrome.hidden ? 0 : chrome.headerH) + 8 }}>
+          <button className="jn-back" aria-label="Back" onClick={() => goJN(ret)}><IcJN name="chevron-left" size={26} color="var(--brand-navy)" /></button>
+          <div className="tx"><h2>Calls & appointments</h2><p>{items.upcoming.length ? items.upcoming.length + " upcoming · " : ""}Clinic visits and calls with your care team</p></div>
+          <button className="jn-iconbtn sm" aria-label="Schedule a call" onClick={() => startBooking(null)}><IcJN name="plus" size={20} color="var(--brand-navy)" /></button>
+        </header>
 
         {nextUp ? (
           <section className="sc-hero">

@@ -5958,26 +5958,33 @@ function ScheduleCallScreen() {
     return /*#__PURE__*/React.createElement("div", {
       className: "jn-screen m-screen sc sc-page" + chrome.cls
     }, chrome.top, /*#__PURE__*/React.createElement("div", {
-      className: "jn-scroll",
+      className: "jn-scroll sc-scroll",
       ref: chrome.scrollRef,
       style: {
-        paddingTop: chrome.padTop(8)
+        paddingTop: 0
+      }
+    }, /*#__PURE__*/React.createElement("header", {
+      className: "sc-head",
+      style: {
+        paddingTop: (chrome.hidden ? 0 : chrome.headerH) + 8
       }
     }, /*#__PURE__*/React.createElement("button", {
-      className: "jn-backlink",
+      className: "jn-back",
+      "aria-label": "Back",
       onClick: () => goJN(ret)
     }, /*#__PURE__*/React.createElement(IcJN, {
       name: "chevron-left",
-      size: 18
-    }), "Back"), /*#__PURE__*/React.createElement("div", {
-      className: "jn-pagehead"
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", null, "Calls & appointments"), /*#__PURE__*/React.createElement("p", null, "Clinic visits and calls with your care team")), /*#__PURE__*/React.createElement("button", {
-      className: "jn-iconbtn",
+      size: 26,
+      color: "var(--brand-navy)"
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("h2", null, "Calls & appointments"), /*#__PURE__*/React.createElement("p", null, items.upcoming.length ? items.upcoming.length + " upcoming · " : "", "Clinic visits and calls with your care team")), /*#__PURE__*/React.createElement("button", {
+      className: "jn-iconbtn sm",
       "aria-label": "Schedule a call",
       onClick: () => startBooking(null)
     }, /*#__PURE__*/React.createElement(IcJN, {
       name: "plus",
-      size: 22,
+      size: 20,
       color: "var(--brand-navy)"
     }))), nextUp ? /*#__PURE__*/React.createElement("section", {
       className: "sc-hero"
