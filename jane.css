@@ -632,3 +632,5 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .jh-kinds .ic { background: var(--surface-sunken); color: var(--brand-navy); }
 .jh-skin button.on { border-color: var(--brand-gold); background: var(--brand-gold-100); }
 .jh-empty { background: var(--surface-card); border: 1px dashed var(--border-default); border-radius: 18px; margin-top: 12px; padding: 28px 20px; }
+/* Health action buttons: 12px corners, not pills (user, 2026-10-26) */
+.jh-act, .jh-act.round, .jh-act.primary { border-radius: 12px; }
