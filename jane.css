@@ -707,3 +707,40 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .jc-hist-row .tx small { font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .jc-hist-row .tx em { font-style: normal; font-size: 11px; color: var(--text-muted); }
 .jc-hist-row .del { flex: none; width: 40px; height: 40px; border: none; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-right: 4px; }
+
+/* ---- Katy chrome on Profile / Events / Messages / Wearables (2026-10-26) ---- */
+.jn-screen.m-screen .m-top { position: absolute; }
+.jn-pagehead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 0 12px; }
+.jn-pagehead h2 { margin: 0; font-size: 24px; font-weight: var(--fw-bold); color: var(--text-heading); letter-spacing: -.01em; }
+.jn-pagehead p { margin: 4px 0 0; font-size: 12.5px; color: var(--text-secondary); }
+.jn-pagehead > div, .jn-pagehead > h2 { flex: 1; min-width: 0; }
+.jn-backlink { display: inline-flex; align-items: center; gap: 2px; border: none; background: none; padding: 4px 0 8px; font-family: inherit; font-size: 14px; font-weight: var(--fw-semibold); color: var(--brand-navy); cursor: pointer; }
+/* profile: pm-ig hero from profile-mobile.css, Katy-style cards */
+.jn-prof-screen .jn-scroll { padding-left: 0; padding-right: 0; }
+.jn-chiprow { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 14px; }
+.jn-chiprow .pm-chip.add { display: inline-flex; align-items: center; gap: 6px; }
+.jn-steps { width: calc(100% - 32px); text-align: left; border: none; cursor: pointer; font-family: inherit; color: inherit; display: block; }
+.jn-steps .pm-steps-h { font-size: 18px; }
+.jn-steps-next { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 14px; border-radius: 12px; background: var(--surface-card); border: 1px solid var(--border-default); }
+.jn-steps-next .pm-steps-next-lb { font-size: 10px; font-weight: var(--fw-bold); letter-spacing: .08em; text-transform: uppercase; padding: 4px 7px; border-radius: 6px; background: var(--surface-sunken); color: var(--text-secondary); }
+.jn-steps-next .pm-steps-next-ti { flex: 1; font-size: 14px; font-weight: var(--fw-semibold); color: var(--text-heading); }
+.jn-pass-wrap { margin: 16px 20px 0; }
+.jn-pmc { margin: 16px 20px 0; }
+.jn-pmc-h { width: 100%; display: flex; align-items: center; gap: 12px; border: none; background: none; padding: 0; margin: 0 0 12px; text-align: left; font-family: inherit; cursor: default; }
+button.jn-pmc-h { cursor: pointer; }
+.jn-pmc-h .tx { flex: 1; min-width: 0; }
+.jn-pmc-h h3 { margin: 0; font-size: 19px; font-weight: var(--fw-bold); color: var(--text-heading); }
+.jn-pmc-h p { margin: 3px 0 0; font-size: 13.5px; color: var(--text-secondary); line-height: 1.4; }
+.jn-pmc .jn-kv:first-of-type { border-top: 1px solid var(--border-default); padding-top: 9px; }
+.jn-pmc .jn-tags { margin-bottom: 8px; }
+.jn-pmc-list .jn-li { padding: 10px 0; }
+.jn-pmc-list .jn-li + .jn-li { border-top: 1px solid var(--border-default); }
+.jn-pmc-list .jn-goal { padding: 10px 0; }
+.jn-pmc-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.jn-act-row { display: flex; align-items: center; gap: 8px; padding: 9px 0; border-top: 1px solid var(--border-default); font-size: 13px; color: var(--text-primary); }
+.jn-act-row b { font-weight: var(--fw-semibold); color: var(--text-heading); white-space: nowrap; }
+.jn-act-row span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jn-act-row em { font-style: normal; font-size: 12px; color: var(--text-muted); }
+.jn-prof-screen .pm-ig-actions .pm-ig-btn { font-family: var(--font-sans); }
+.jn-prof-screen .jn-end { padding-bottom: 20px; }
+[data-theme="dark"] .jn-pass { background: linear-gradient(135deg, #2a2650 0%, #3d3a8c 100%); }

@@ -1908,7 +1908,11 @@ function HomeScreen() {
 }
 
 /* =======================================================================
-   PROFILE / HEALTH PASS
+   PROFILE / HEALTH PASS — Katy's ProfileMobile layout (pm-ig hero: avatar +
+   counts, name + seals, bio lines, chips, Edit / Share / saved / settings;
+   pm-steps "Complete your Health Pass"; pm-card sections) with the Health
+   Pass card, Medical history, Supplements and Goals kept (user, 2026-10-26).
+   JaneProfile.html loads styles.css + mobile.css + profile-mobile.css.
    ======================================================================= */
 const PROFILE_KEY = "pf-jane-profile";
 const SUPPLEMENTS = [{
@@ -1937,6 +1941,42 @@ const GOALS = [{
   target: "7 of 7 days",
   p: 0.71
 }];
+
+/* Katy's app chrome on a Jane page: .m-top header (burger · logo · search ·
+   bell · messages) + drawer + notifications, with the measured header height
+   so the scroller can start under the absolute header. */
+function useKatyChromeJN() {
+  const headerRef = useRefJN(null);
+  const [headerH, setHeaderH] = useStateJN(0);
+  const [menuOpen, setMenuOpen] = useStateJN(false);
+  const [notifOpen, setNotifOpen] = useStateJN(false);
+  React.useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const m = () => setHeaderH(el.offsetHeight);
+    m();
+    const ro = new ResizeObserver(m);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+  const top = /*#__PURE__*/React.createElement(JNTopBar, {
+    ref: headerRef,
+    onMenu: () => setMenuOpen(true),
+    onBell: () => setNotifOpen(true)
+  });
+  const layers = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(JNDrawer, {
+    open: menuOpen,
+    onClose: () => setMenuOpen(false)
+  }), /*#__PURE__*/React.createElement(JNNotifPanel, {
+    open: notifOpen,
+    onClose: () => setNotifOpen(false)
+  }));
+  return {
+    top,
+    layers,
+    headerH
+  };
+}
 function QRMark() {
   const cells = useMemoJN(() => {
     let s = 7;
@@ -1955,12 +1995,41 @@ function QRMark() {
     className: on ? "on" : ""
   })));
 }
+function PMCardJN({
+  title,
+  sub,
+  href,
+  onClick,
+  children,
+  className
+}) {
+  const Head = href || onClick ? "button" : "div";
+  return /*#__PURE__*/React.createElement("section", {
+    className: "pm-card jn-pmc" + (className ? " " + className : "")
+  }, /*#__PURE__*/React.createElement(Head, {
+    className: "jn-pmc-h",
+    onClick: onClick || (href ? () => goJN(href) : undefined)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("h3", null, title), sub && /*#__PURE__*/React.createElement("p", null, sub)), (href || onClick) && /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-right",
+    size: 20,
+    color: "var(--gray-400)"
+  })), children);
+}
 function ProfileScreen() {
+  const {
+    top,
+    layers,
+    headerH
+  } = useKatyChromeJN();
   const [prof, setProf] = useStateJN(() => readJN(PROFILE_KEY, {
     name: JANE.name,
     phone: "+44 7700 900123",
     email: "jane.taylor@example.com",
-    dob: JANE.dob
+    dob: JANE.dob,
+    location: "London, UK",
+    bio: ""
   }));
   const [edit, setEdit] = useStateJN(qJN("edit") === "1");
   const [passOpen, setPassOpen] = useStateJN(false);
@@ -1968,67 +2037,211 @@ function ProfileScreen() {
   const [toast, showToast] = useToastJN();
   const onb = onbState();
   const wear = connectedWearables();
+  const hs = healthSetup();
   const medical = onb.answers.medical || ["No known allergies"];
   const goalsChosen = onb.answers.goals || [];
+  const friends = readJN("pf-jane-friends", []);
+  const myPosts = (readJN("pf-jane-posts", null) || []).filter(p => p.by === "jane");
+  const going = Object.values(readJN("pf-jane-events", {
+    ev1: true
+  })).filter(Boolean).length;
+  const steps = [{
+    label: "Add a profile photo",
+    done: true
+  }, {
+    label: "Answer the onboarding questions",
+    done: !!onb.done,
+    href: "JaneOnboarding.html"
+  }, {
+    label: "Tell us your height & weight",
+    done: !!hs.height,
+    href: "JaneHealth.html?setup=1"
+  }, {
+    label: "Connect a wearable",
+    done: wear.length > 0,
+    href: "JaneWearables.html"
+  }, {
+    label: "Share your Health Pass with Katy",
+    done: onb.consent !== false && !!onb.done,
+    href: "JaneOnboarding.html"
+  }, {
+    label: "Add a friend",
+    done: friends.length > 0,
+    href: "JaneHealth.html"
+  }];
+  const doneN = steps.filter(s => s.done).length;
+  const pct = Math.round(doneN / steps.length * 100);
+  const next = steps.find(s => !s.done);
+  const seals = ["gb", ...(onb.done ? ["verified"] : [])];
   function save() {
     setProf(draft);
     saveJN(PROFILE_KEY, draft);
     setEdit(false);
     showToast("Profile updated");
   }
-  const Row = ({
-    icon,
-    label,
-    sub,
-    href,
-    onClick,
-    danger
-  }) => /*#__PURE__*/React.createElement("button", {
-    className: "jn-row" + (danger ? " danger" : ""),
-    onClick: onClick || (() => goJN(href))
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ic"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: icon,
-    size: 18,
-    color: danger ? "var(--error)" : "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, label), sub && /*#__PURE__*/React.createElement("small", null, sub)), /*#__PURE__*/React.createElement(IcJN, {
-    name: "chevron-right",
-    size: 18,
-    color: "var(--gray-450)"
-  }));
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen"
-  }, /*#__PURE__*/React.createElement(JNTop, {
-    title: "Profile"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "jn-scroll"
-  }, /*#__PURE__*/React.createElement("section", {
-    className: "jn-prof"
-  }, /*#__PURE__*/React.createElement(JNFace, {
-    p: JANE,
-    size: 88,
-    className: "big"
-  }), /*#__PURE__*/React.createElement("h2", null, prof.name), /*#__PURE__*/React.createElement("p", null, "Patient at ", JANE.clinic, " · with ", KATY.name), /*#__PURE__*/React.createElement("div", {
-    className: "jn-row-btns center"
+    className: "jn-screen m-screen jn-prof-screen"
+  }, top, /*#__PURE__*/React.createElement("div", {
+    className: "jn-scroll",
+    style: {
+      paddingTop: headerH
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-top"
   }, /*#__PURE__*/React.createElement("button", {
-    className: "jn-btn sm",
+    type: "button",
+    className: "pm-ig-avwrap pm-ig-avbtn",
+    "aria-label": "View profile picture",
+    onClick: () => setPassOpen(true)
+  }, /*#__PURE__*/React.createElement(DSJN.Avatar, {
+    name: prof.name,
+    src: JANE.avatar,
+    size: 92,
+    className: "pm-ig-av"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-stats"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-stat"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, myPosts.length), /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "posts")), /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-stat"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, friends.length), /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "friends")), /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-stat"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "n"
+  }, going), /*#__PURE__*/React.createElement("span", {
+    className: "l"
+  }, "events")))), /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-name"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nm"
+  }, prof.name), /*#__PURE__*/React.createElement(DSJN.VerificationSeals, {
+    seals: seals,
+    size: 20
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-bio"
+  }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
+    className: "bi"
+  }, "🇬🇧"), " Patient at ", JANE.clinic, " · with ", KATY.name), /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("span", {
+    className: "bi"
+  }, "💉"), " Lip filler · Skin boosters · SPF every day"), /*#__PURE__*/React.createElement("p", {
+    className: "pm-ig-live"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "bi"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "calendar",
+    size: 14,
+    color: "var(--text-primary)"
+  })), "Next review: ", /*#__PURE__*/React.createElement("b", null, "Mon 3 Nov · 2:30pm")), prof.bio && /*#__PURE__*/React.createElement("p", null, prof.bio)), /*#__PURE__*/React.createElement("div", {
+    className: "jn-chiprow"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-chip pin"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "map-pin",
+    size: 16,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, prof.location || "London, UK")), /*#__PURE__*/React.createElement("span", {
+    className: "pm-chip pin"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "building-2",
+    size: 16,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, JANE.clinic)), /*#__PURE__*/React.createElement("button", {
+    className: "pm-chip add",
     onClick: () => {
       setDraft(prof);
       setEdit(true);
     }
   }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "pencil",
+    name: "plus",
     size: 16
-  }), "Edit profile"), /*#__PURE__*/React.createElement("button", {
-    className: "jn-btn sm ghost",
-    onClick: () => goJN("JaneMessages.html?to=katy")
+  }), "Add")), /*#__PURE__*/React.createElement("div", {
+    className: "pm-ig-actions"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "pm-ig-btn",
+    onClick: () => {
+      setDraft(prof);
+      setEdit(true);
+    }
+  }, "Edit Profile"), /*#__PURE__*/React.createElement("button", {
+    className: "pm-ig-btn",
+    onClick: () => setPassOpen(true)
+  }, "Share Profile"), /*#__PURE__*/React.createElement("button", {
+    className: "pm-ig-btn icon",
+    "aria-label": "My Saved",
+    onClick: () => goJN("JaneNewsfeed.html")
   }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "message-circle",
-    size: 16
-  }), "Message Katy"))), /*#__PURE__*/React.createElement("button", {
+    name: "bookmark",
+    size: 20,
+    color: "var(--text-heading)"
+  })), /*#__PURE__*/React.createElement("button", {
+    className: "pm-ig-btn icon",
+    "aria-label": "Settings",
+    onClick: () => showToast("Settings coming soon")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "settings",
+    size: 20,
+    color: "var(--text-heading)"
+  })))), /*#__PURE__*/React.createElement("button", {
+    className: "pm-steps jn-steps",
+    onClick: () => next && goJN(next.href || "JaneOnboarding.html")
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-steps-collapsed-top"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "pm-steps-h"
+  }, "Complete your Health Pass"), /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-right",
+    size: 20,
+    color: "var(--gray-400)"
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "pm-steps-sub"
+  }, doneN, " of ", steps.length, " complete · so Katy can tailor your care"), /*#__PURE__*/React.createElement("div", {
+    className: "pm-steps-track",
+    role: "progressbar",
+    "aria-valuenow": pct,
+    "aria-valuemin": 0,
+    "aria-valuemax": 100
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-steps-fill",
+    style: {
+      width: pct + "%"
+    }
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "pm-steps-pct"
+  }, pct, "% complete"), next ? /*#__PURE__*/React.createElement("span", {
+    className: "pm-steps-next jn-steps-next"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-steps-next-lb"
+  }, "Next step"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-steps-next-ti"
+  }, next.label), /*#__PURE__*/React.createElement(IcJN, {
+    name: "arrow-right",
+    size: 16,
+    color: "var(--text-heading)"
+  })) : /*#__PURE__*/React.createElement("span", {
+    className: "pm-steps-next jn-steps-next done"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "check",
+    size: 16,
+    color: "var(--success)"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "pm-steps-next-ti"
+  }, "All set — your Health Pass is active"))), /*#__PURE__*/React.createElement("div", {
+    className: "jn-pass-wrap"
+  }, /*#__PURE__*/React.createElement("button", {
     className: "jn-pass",
     onClick: () => setPassOpen(true)
   }, /*#__PURE__*/React.createElement("div", {
@@ -2060,27 +2273,29 @@ function ProfileScreen() {
   }), "Complete the onboarding questionnaire to activate your pass", /*#__PURE__*/React.createElement(IcJN, {
     name: "chevron-right",
     size: 16
-  })), /*#__PURE__*/React.createElement("h3", {
-    className: "jn-h"
-  }, "Medical history"), /*#__PURE__*/React.createElement("div", {
-    className: "jn-card"
+  }))), /*#__PURE__*/React.createElement(PMCardJN, {
+    title: "Medical history",
+    sub: "Allergies, treatments & your next review",
+    onClick: () => goJN("JaneOnboarding.html")
   }, /*#__PURE__*/React.createElement("div", {
     className: "jn-tags"
   }, medical.map(m => /*#__PURE__*/React.createElement("span", {
     key: m,
     className: "jn-tag"
-  }, m))), healthSetup().height && /*#__PURE__*/React.createElement("div", {
+  }, m))), hs.height && /*#__PURE__*/React.createElement("div", {
     className: "jn-kv"
-  }, /*#__PURE__*/React.createElement("span", null, "Height · Weight"), /*#__PURE__*/React.createElement("b", null, healthSetup().height, " cm · ", healthSetup().weight, " kg")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, "Height · Weight"), /*#__PURE__*/React.createElement("b", null, hs.height, " cm · ", hs.weight, " kg")), /*#__PURE__*/React.createElement("div", {
     className: "jn-kv"
   }, /*#__PURE__*/React.createElement("span", null, "Previous treatments"), /*#__PURE__*/React.createElement("b", null, onb.answers.history || "Not answered")), /*#__PURE__*/React.createElement("div", {
     className: "jn-kv"
   }, /*#__PURE__*/React.createElement("span", null, "Last treatment"), /*#__PURE__*/React.createElement("b", null, "Lip filler · 1 Oct 2026")), /*#__PURE__*/React.createElement("div", {
     className: "jn-kv"
-  }, /*#__PURE__*/React.createElement("span", null, "Next review"), /*#__PURE__*/React.createElement("b", null, "Mon 3 Nov · 2:30pm"))), /*#__PURE__*/React.createElement("h3", {
-    className: "jn-h"
-  }, "Supplements"), /*#__PURE__*/React.createElement("div", {
-    className: "jn-card list"
+  }, /*#__PURE__*/React.createElement("span", null, "Next review"), /*#__PURE__*/React.createElement("b", null, "Mon 3 Nov · 2:30pm"))), /*#__PURE__*/React.createElement(PMCardJN, {
+    title: "Supplements",
+    sub: SUPPLEMENTS.length + " in your plan",
+    onClick: () => showToast("Ask Katy to update your supplements")
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pmc-list"
   }, SUPPLEMENTS.map(s => /*#__PURE__*/React.createElement("div", {
     key: s.n,
     className: "jn-li"
@@ -2092,21 +2307,12 @@ function ProfileScreen() {
     color: "var(--brand-navy)"
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, s.n), /*#__PURE__*/React.createElement("small", null, s.d, " · ", s.f)))), /*#__PURE__*/React.createElement("button", {
-    className: "jn-li add",
-    onClick: () => showToast("Ask Katy to add a supplement")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ic"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "plus",
-    size: 16,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, "Add supplement")))), /*#__PURE__*/React.createElement("h3", {
-    className: "jn-h"
-  }, "Goals"), /*#__PURE__*/React.createElement("div", {
-    className: "jn-card list"
+  }, /*#__PURE__*/React.createElement("b", null, s.n), /*#__PURE__*/React.createElement("small", null, s.d, " · ", s.f)))))), /*#__PURE__*/React.createElement(PMCardJN, {
+    title: "Goals",
+    sub: "What you're working on this quarter",
+    href: "JaneHealth.html"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pmc-list"
   }, GOALS.map(g => /*#__PURE__*/React.createElement("div", {
     key: g.t,
     className: "jn-goal"
@@ -2118,70 +2324,61 @@ function ProfileScreen() {
     style: {
       width: g.p * 100 + "%"
     }
-  })))), goalsChosen.length > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "jn-tags pad"
+  }))))), goalsChosen.length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "jn-tags",
+    style: {
+      marginTop: 10
+    }
   }, goalsChosen.map(g => /*#__PURE__*/React.createElement("span", {
     key: g,
     className: "jn-tag gold"
-  }, g)))), /*#__PURE__*/React.createElement("h3", {
-    className: "jn-h"
-  }, "Wearables & analytics"), /*#__PURE__*/React.createElement("div", {
-    className: "jn-card list"
-  }, /*#__PURE__*/React.createElement(Row, {
-    icon: "watch",
-    label: wear.length ? wear.map(w => w.name).join(", ") : "No wearables connected",
+  }, g)))), /*#__PURE__*/React.createElement(PMCardJN, {
+    title: "Track your health",
+    sub: "Sleep · Movement · Nutrition · Skin check-in",
+    href: "JaneHealth.html"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pmc-chips"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "jn-tag"
+  }, wear.length ? wear.map(w => w.name).join(", ") : "No wearable yet"), /*#__PURE__*/React.createElement("span", {
+    className: "jn-tag"
+  }, "Skin score 78"), /*#__PURE__*/React.createElement("span", {
+    className: "jn-tag"
+  }, "Sleep 7h 18m"))), /*#__PURE__*/React.createElement(PMCardJN, {
+    title: "Activity",
+    sub: myPosts.length ? myPosts.length + " recent posts & updates" : "Nothing shared yet",
+    href: "JaneNewsfeed.html"
+  }, myPosts.slice(0, 3).map(p => /*#__PURE__*/React.createElement("div", {
+    key: p.id,
+    className: "jn-act-row"
+  }, /*#__PURE__*/React.createElement(JNFace, {
+    p: JANE,
+    size: 26
+  }), /*#__PURE__*/React.createElement("b", null, JANE.name), /*#__PURE__*/React.createElement("span", null, p.text.slice(0, 48), p.text.length > 48 ? "…" : ""), /*#__PURE__*/React.createElement("em", null, p.t)))), /*#__PURE__*/React.createElement(PMCardJN, {
+    title: "Connected apps & devices",
     sub: wear.length ? "Synced a few minutes ago" : "Connect Apple Health, Oura, Fitbit and more",
     href: "JaneWearables.html"
-  }), /*#__PURE__*/React.createElement(Row, {
-    icon: "heart-pulse",
-    label: "Health Analytics",
-    sub: "Sleep, movement, nutrition and skin trends",
-    href: "JaneHealth.html"
-  }), /*#__PURE__*/React.createElement(Row, {
-    icon: "clipboard-list",
-    label: "Onboarding questionnaire",
-    sub: onb.done ? "Completed · tap to review" : "Not finished",
-    href: "JaneOnboarding.html"
-  })), /*#__PURE__*/React.createElement("h3", {
-    className: "jn-h"
-  }, "More"), /*#__PURE__*/React.createElement("div", {
-    className: "jn-card list"
-  }, /*#__PURE__*/React.createElement(Row, {
-    icon: "message-circle",
-    label: "Messages",
-    href: "JaneMessages.html"
-  }), /*#__PURE__*/React.createElement(Row, {
-    icon: "calendar",
-    label: "Events",
-    href: "JaneEvents.html"
-  }), /*#__PURE__*/React.createElement(Row, {
-    icon: "sparkles",
-    label: "Coach",
-    href: "JaneCoach.html"
-  }), /*#__PURE__*/React.createElement(Row, {
-    icon: "shield-check",
-    label: "Privacy & sharing",
-    sub: "Your Health Pass is shared with Pearce Aesthetics only",
-    onClick: () => showToast("Sharing settings coming soon")
-  }), /*#__PURE__*/React.createElement(Row, {
-    icon: "log-out",
-    label: "Log out",
-    danger: true,
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "pm-logout",
     onClick: () => showToast("Logged out (demo)")
-  })), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "log-out",
+    size: 20,
+    color: "var(--error)"
+  }), "Logout"), /*#__PURE__*/React.createElement("div", {
     className: "jn-end"
   }, "PROfinity · patient app")), /*#__PURE__*/React.createElement(JNTabs, {
     active: "profile"
-  }), /*#__PURE__*/React.createElement(JNSheet, {
+  }), layers, /*#__PURE__*/React.createElement(JNSheet, {
     open: edit,
     onClose: () => setEdit(false),
     title: "Edit profile"
-  }, [["name", "Full name"], ["dob", "Date of birth"], ["phone", "Phone"], ["email", "Email"]].map(([k, l]) => /*#__PURE__*/React.createElement("label", {
+  }, [["name", "Full name"], ["dob", "Date of birth"], ["location", "Location"], ["phone", "Phone"], ["email", "Email"], ["bio", "Bio"]].map(([k, l]) => /*#__PURE__*/React.createElement("label", {
     key: k,
     className: "jn-field"
   }, /*#__PURE__*/React.createElement("span", null, l), /*#__PURE__*/React.createElement("input", {
     className: "jn-in",
-    value: draft[k],
+    value: draft[k] || "",
     onChange: e => setDraft({
       ...draft,
       [k]: e.target.value
@@ -2397,14 +2594,25 @@ function WearablesScreen() {
     setSel(null);
     showToast(w.name + " disconnected");
   }
+  const {
+    top,
+    layers,
+    headerH
+  } = useKatyChromeJN();
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen"
-  }, /*#__PURE__*/React.createElement(JNBar, {
-    title: "Connect your wearables",
-    back: () => history.length > 1 ? history.back() : goJN("JaneProfile.html")
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "jn-scroll"
-  }, /*#__PURE__*/React.createElement("section", {
+    className: "jn-screen m-screen"
+  }, top, /*#__PURE__*/React.createElement("div", {
+    className: "jn-scroll",
+    style: {
+      paddingTop: headerH + 8
+    }
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jn-backlink",
+    onClick: () => history.length > 1 ? history.back() : goJN("JaneProfile.html")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-left",
+    size: 18
+  }), "Back"), /*#__PURE__*/React.createElement("section", {
     className: "jn-wear-hero"
   }, /*#__PURE__*/React.createElement("div", {
     className: "orbit"
@@ -2500,7 +2708,9 @@ function WearablesScreen() {
     color: "#0ea5e9"
   }), /*#__PURE__*/React.createElement("b", null, "Nutrition"), /*#__PURE__*/React.createElement("small", null, "Water, logged meals"))), /*#__PURE__*/React.createElement("div", {
     className: "jn-end"
-  }, "Data stays on your Health Pass · encrypted in transit")), /*#__PURE__*/React.createElement(JNSheet, {
+  }, "Data stays on your Health Pass · encrypted in transit")), /*#__PURE__*/React.createElement(JNTabs, {
+    active: "health"
+  }), layers, /*#__PURE__*/React.createElement(JNSheet, {
     open: !!sel,
     onClose: () => !busy && setSel(null),
     title: sel ? state[sel.id] ? sel.name : "Connect " + sel.name : ""
@@ -4280,14 +4490,21 @@ function EventsScreen() {
       size: 15
     }), "Going") : "RSVP"))));
   };
+  const {
+    top,
+    layers,
+    headerH
+  } = useKatyChromeJN();
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen"
-  }, /*#__PURE__*/React.createElement(JNTop, {
-    title: "Events",
-    sub: "From your clinic and the PROfinity community"
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "jn-scroll"
+    className: "jn-screen m-screen"
+  }, top, /*#__PURE__*/React.createElement("div", {
+    className: "jn-scroll",
+    style: {
+      paddingTop: headerH + 12
+    }
   }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pagehead"
+  }, /*#__PURE__*/React.createElement("h2", null, "Events"), /*#__PURE__*/React.createElement("p", null, "From your clinic and the PROfinity community")), /*#__PURE__*/React.createElement("div", {
     className: "jn-seg"
   }, [["upcoming", "Upcoming"], ["mine", "My events"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
     key: k,
@@ -4306,7 +4523,7 @@ function EventsScreen() {
     className: "jn-end"
   }, "All events are free for Pearce Aesthetics patients")), /*#__PURE__*/React.createElement(JNTabs, {
     active: "events"
-  }), /*#__PURE__*/React.createElement(JNSheet, {
+  }), layers, /*#__PURE__*/React.createElement(JNSheet, {
     open: !!open,
     onClose: () => setOpen(null),
     tall: true
@@ -4448,6 +4665,7 @@ function MessagesScreen() {
   const [typing, setTyping] = useStateJN(false);
   const [toast, showToast] = useToastJN();
   const scrollRef = useRefJN(null);
+  const chrome = useKatyChromeJN();
   const conv = store.convs.find(c => c.id === openId);
   function persist(s) {
     setStore(s);
@@ -4592,22 +4810,23 @@ function MessagesScreen() {
     }));
   }
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen"
-  }, /*#__PURE__*/React.createElement(JNBar, {
-    title: "Messages",
-    back: "JaneNewsfeed.html",
-    trailing: /*#__PURE__*/React.createElement("button", {
-      className: "jn-iconbtn sm",
-      "aria-label": "New message",
-      onClick: () => showToast("Pick a contact below")
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: "pencil",
-      size: 17,
-      color: "var(--brand-navy)"
-    }))
-  }), /*#__PURE__*/React.createElement("div", {
-    className: "jn-scroll"
+    className: "jn-screen m-screen"
+  }, chrome.top, /*#__PURE__*/React.createElement("div", {
+    className: "jn-scroll",
+    style: {
+      paddingTop: chrome.headerH + 12
+    }
   }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pagehead"
+  }, /*#__PURE__*/React.createElement("h2", null, "Messages"), /*#__PURE__*/React.createElement("button", {
+    className: "jn-iconbtn sm",
+    "aria-label": "New message",
+    onClick: () => showToast("Pick a contact below")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "pencil",
+    size: 17,
+    color: "var(--brand-navy)"
+  }))), /*#__PURE__*/React.createElement("div", {
     className: "jn-search"
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "search",
@@ -4646,7 +4865,9 @@ function MessagesScreen() {
     }, /*#__PURE__*/React.createElement("time", null, fmtListTimeJN(last.ts)), c.unread > 0 && /*#__PURE__*/React.createElement("i", null, c.unread)));
   })), /*#__PURE__*/React.createElement("div", {
     className: "jn-end"
-  }, "Messages with your clinic are private and kept with your Health Pass")), /*#__PURE__*/React.createElement(JNToast, {
+  }, "Messages with your clinic are private and kept with your Health Pass")), /*#__PURE__*/React.createElement(JNTabs, {
+    active: "messages"
+  }), chrome.layers, /*#__PURE__*/React.createElement(JNToast, {
     toast: toast
   }));
 }

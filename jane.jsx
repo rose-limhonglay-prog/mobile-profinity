@@ -597,100 +597,165 @@ function HomeScreen() {
 }
 
 /* =======================================================================
-   PROFILE / HEALTH PASS
+   PROFILE / HEALTH PASS — Katy's ProfileMobile layout (pm-ig hero: avatar +
+   counts, name + seals, bio lines, chips, Edit / Share / saved / settings;
+   pm-steps "Complete your Health Pass"; pm-card sections) with the Health
+   Pass card, Medical history, Supplements and Goals kept (user, 2026-10-26).
+   JaneProfile.html loads styles.css + mobile.css + profile-mobile.css.
    ======================================================================= */
 const PROFILE_KEY = "pf-jane-profile";
 const SUPPLEMENTS = [{ n: "Vitamin D3", d: "2000 IU", f: "Daily, morning" }, { n: "Omega-3", d: "1000 mg", f: "Daily with food" }, { n: "Collagen peptides", d: "10 g", f: "Most days" }];
 const GOALS = [{ t: "Sleep", target: "7h 30m a night", p: 0.82 }, { t: "Hydration", target: "2 L a day", p: 0.6 }, { t: "SPF every day", target: "7 of 7 days", p: 0.71 }];
 
+/* Katy's app chrome on a Jane page: .m-top header (burger · logo · search ·
+   bell · messages) + drawer + notifications, with the measured header height
+   so the scroller can start under the absolute header. */
+function useKatyChromeJN() {
+  const headerRef = useRefJN(null);
+  const [headerH, setHeaderH] = useStateJN(0);
+  const [menuOpen, setMenuOpen] = useStateJN(false);
+  const [notifOpen, setNotifOpen] = useStateJN(false);
+  React.useLayoutEffect(() => { const el = headerRef.current; if (!el) return; const m = () => setHeaderH(el.offsetHeight); m(); const ro = new ResizeObserver(m); ro.observe(el); return () => ro.disconnect(); }, []);
+  const top = <JNTopBar ref={headerRef} onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} />;
+  const layers = <React.Fragment><JNDrawer open={menuOpen} onClose={() => setMenuOpen(false)} /><JNNotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} /></React.Fragment>;
+  return { top, layers, headerH };
+}
+
 function QRMark() {
   const cells = useMemoJN(() => { let s = 7; const out = []; for (let i = 0; i < 121; i++) { s = (s * 9301 + 49297) % 233280; out.push(s / 233280 > 0.55); } return out; }, []);
   return <div className="jn-qr" aria-hidden="true">{cells.map((on, i) => <span key={i} className={on ? "on" : ""} />)}</div>;
 }
+function PMCardJN({ title, sub, href, onClick, children, className }) {
+  const Head = href || onClick ? "button" : "div";
+  return (
+    <section className={"pm-card jn-pmc" + (className ? " " + className : "")}>
+      <Head className="jn-pmc-h" onClick={onClick || (href ? () => goJN(href) : undefined)}>
+        <span className="tx"><h3>{title}</h3>{sub && <p>{sub}</p>}</span>
+        {(href || onClick) && <IcJN name="chevron-right" size={20} color="var(--gray-400)" />}
+      </Head>
+      {children}
+    </section>);
+}
 
 function ProfileScreen() {
-  const [prof, setProf] = useStateJN(() => readJN(PROFILE_KEY, { name: JANE.name, phone: "+44 7700 900123", email: "jane.taylor@example.com", dob: JANE.dob }));
+  const { top, layers, headerH } = useKatyChromeJN();
+  const [prof, setProf] = useStateJN(() => readJN(PROFILE_KEY, { name: JANE.name, phone: "+44 7700 900123", email: "jane.taylor@example.com", dob: JANE.dob, location: "London, UK", bio: "" }));
   const [edit, setEdit] = useStateJN(qJN("edit") === "1");
   const [passOpen, setPassOpen] = useStateJN(false);
   const [draft, setDraft] = useStateJN(prof);
   const [toast, showToast] = useToastJN();
   const onb = onbState();
   const wear = connectedWearables();
+  const hs = healthSetup();
   const medical = onb.answers.medical || ["No known allergies"];
   const goalsChosen = onb.answers.goals || [];
-
+  const friends = readJN("pf-jane-friends", []);
+  const myPosts = (readJN("pf-jane-posts", null) || []).filter((p) => p.by === "jane");
+  const going = Object.values(readJN("pf-jane-events", { ev1: true })).filter(Boolean).length;
+  const steps = [
+    { label: "Add a profile photo", done: true },
+    { label: "Answer the onboarding questions", done: !!onb.done, href: "JaneOnboarding.html" },
+    { label: "Tell us your height & weight", done: !!hs.height, href: "JaneHealth.html?setup=1" },
+    { label: "Connect a wearable", done: wear.length > 0, href: "JaneWearables.html" },
+    { label: "Share your Health Pass with Katy", done: onb.consent !== false && !!onb.done, href: "JaneOnboarding.html" },
+    { label: "Add a friend", done: friends.length > 0, href: "JaneHealth.html" }];
+  const doneN = steps.filter((s) => s.done).length; const pct = Math.round((doneN / steps.length) * 100); const next = steps.find((s) => !s.done);
+  const seals = ["gb", ...(onb.done ? ["verified"] : [])];
   function save() { setProf(draft); saveJN(PROFILE_KEY, draft); setEdit(false); showToast("Profile updated"); }
-  const Row = ({ icon, label, sub, href, onClick, danger }) => (
-    <button className={"jn-row" + (danger ? " danger" : "")} onClick={onClick || (() => goJN(href))}>
-      <span className="ic"><IcJN name={icon} size={18} color={danger ? "var(--error)" : "var(--brand-navy)"} /></span>
-      <span className="tx"><b>{label}</b>{sub && <small>{sub}</small>}</span>
-      <IcJN name="chevron-right" size={18} color="var(--gray-450)" />
-    </button>);
 
   return (
-    <div className="jn-screen">
-      <JNTop title="Profile" />
-      <div className="jn-scroll">
-        <section className="jn-prof">
-          <JNFace p={JANE} size={88} className="big" />
-          <h2>{prof.name}</h2>
-          <p>Patient at {JANE.clinic} · with {KATY.name}</p>
-          <div className="jn-row-btns center">
-            <button className="jn-btn sm" onClick={() => { setDraft(prof); setEdit(true); }}><IcJN name="pencil" size={16} />Edit profile</button>
-            <button className="jn-btn sm ghost" onClick={() => goJN("JaneMessages.html?to=katy")}><IcJN name="message-circle" size={16} />Message Katy</button>
+    <div className="jn-screen m-screen jn-prof-screen">
+      {top}
+      <div className="jn-scroll" style={{ paddingTop: headerH }}>
+        <div className="pm-ig">
+          <div className="pm-ig-top">
+            <button type="button" className="pm-ig-avwrap pm-ig-avbtn" aria-label="View profile picture" onClick={() => setPassOpen(true)}>
+              <DSJN.Avatar name={prof.name} src={JANE.avatar} size={92} className="pm-ig-av" />
+            </button>
+            <div className="pm-ig-stats">
+              <div className="pm-ig-stat"><span className="n">{myPosts.length}</span><span className="l">posts</span></div>
+              <div className="pm-ig-stat"><span className="n">{friends.length}</span><span className="l">friends</span></div>
+              <div className="pm-ig-stat"><span className="n">{going}</span><span className="l">events</span></div>
+            </div>
           </div>
-        </section>
+          <div className="pm-ig-name"><span className="nm">{prof.name}</span><DSJN.VerificationSeals seals={seals} size={20} /></div>
+          <div className="pm-ig-bio">
+            <p><span className="bi">🇬🇧</span> Patient at {JANE.clinic} · with {KATY.name}</p>
+            <p><span className="bi">💉</span> Lip filler · Skin boosters · SPF every day</p>
+            <p className="pm-ig-live"><span className="bi"><IcJN name="calendar" size={14} color="var(--text-primary)" /></span>Next review: <b>Mon 3 Nov · 2:30pm</b></p>
+            {prof.bio && <p>{prof.bio}</p>}
+          </div>
+          <div className="jn-chiprow">
+            <span className="pm-chip pin"><IcJN name="map-pin" size={16} color="var(--brand-navy)" /><span className="tx">{prof.location || "London, UK"}</span></span>
+            <span className="pm-chip pin"><IcJN name="building-2" size={16} color="var(--brand-navy)" /><span className="tx">{JANE.clinic}</span></span>
+            <button className="pm-chip add" onClick={() => { setDraft(prof); setEdit(true); }}><IcJN name="plus" size={16} />Add</button>
+          </div>
+          <div className="pm-ig-actions">
+            <button className="pm-ig-btn" onClick={() => { setDraft(prof); setEdit(true); }}>Edit Profile</button>
+            <button className="pm-ig-btn" onClick={() => setPassOpen(true)}>Share Profile</button>
+            <button className="pm-ig-btn icon" aria-label="My Saved" onClick={() => goJN("JaneNewsfeed.html")}><IcJN name="bookmark" size={20} color="var(--text-heading)" /></button>
+            <button className="pm-ig-btn icon" aria-label="Settings" onClick={() => showToast("Settings coming soon")}><IcJN name="settings" size={20} color="var(--text-heading)" /></button>
+          </div>
+        </div>
 
-        <button className="jn-pass" onClick={() => setPassOpen(true)}>
-          <div className="jn-pass-top"><img src="assets/profinity-academy-logo-full.png" alt="PROfinity" /><span className="st">{onb.done ? "Active" : "Incomplete"}</span></div>
-          <div className="jn-pass-mid"><span className="lbl">Health Pass</span><b>{prof.name}</b><small>ID {JANE.passId} · DOB {prof.dob}</small></div>
-          <div className="jn-pass-bot"><span>{JANE.clinic} · member since {JANE.since}</span><span className="qrbtn"><IcJN name="qr-code" size={16} color="#fff" />Show</span></div>
+        <button className="pm-steps jn-steps" onClick={() => next && goJN(next.href || "JaneOnboarding.html")}>
+          <div className="pm-steps-collapsed-top"><h3 className="pm-steps-h">Complete your Health Pass</h3><IcJN name="chevron-right" size={20} color="var(--gray-400)" /></div>
+          <p className="pm-steps-sub">{doneN} of {steps.length} complete · so Katy can tailor your care</p>
+          <div className="pm-steps-track" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><span className="pm-steps-fill" style={{ width: pct + "%" }} /></div>
+          <p className="pm-steps-pct">{pct}% complete</p>
+          {next ? <span className="pm-steps-next jn-steps-next"><span className="pm-steps-next-lb">Next step</span><span className="pm-steps-next-ti">{next.label}</span><IcJN name="arrow-right" size={16} color="var(--text-heading)" /></span>
+                : <span className="pm-steps-next jn-steps-next done"><IcJN name="check" size={16} color="var(--success)" /><span className="pm-steps-next-ti">All set — your Health Pass is active</span></span>}
         </button>
-        {!onb.done && <button className="jn-link-row" onClick={() => goJN("JaneOnboarding.html")}><IcJN name="alert-circle" size={16} color="var(--warning)" />Complete the onboarding questionnaire to activate your pass<IcJN name="chevron-right" size={16} /></button>}
 
-        <h3 className="jn-h">Medical history</h3>
-        <div className="jn-card">
+        <div className="jn-pass-wrap">
+          <button className="jn-pass" onClick={() => setPassOpen(true)}>
+            <div className="jn-pass-top"><img src="assets/profinity-academy-logo-full.png" alt="PROfinity" /><span className="st">{onb.done ? "Active" : "Incomplete"}</span></div>
+            <div className="jn-pass-mid"><span className="lbl">Health Pass</span><b>{prof.name}</b><small>ID {JANE.passId} · DOB {prof.dob}</small></div>
+            <div className="jn-pass-bot"><span>{JANE.clinic} · member since {JANE.since}</span><span className="qrbtn"><IcJN name="qr-code" size={16} color="#fff" />Show</span></div>
+          </button>
+          {!onb.done && <button className="jn-link-row" onClick={() => goJN("JaneOnboarding.html")}><IcJN name="alert-circle" size={16} color="var(--warning)" />Complete the onboarding questionnaire to activate your pass<IcJN name="chevron-right" size={16} /></button>}
+        </div>
+
+        <PMCardJN title="Medical history" sub="Allergies, treatments & your next review" onClick={() => goJN("JaneOnboarding.html")}>
           <div className="jn-tags">{medical.map((m) => <span key={m} className="jn-tag">{m}</span>)}</div>
-          {healthSetup().height && <div className="jn-kv"><span>Height · Weight</span><b>{healthSetup().height} cm · {healthSetup().weight} kg</b></div>}
+          {hs.height && <div className="jn-kv"><span>Height · Weight</span><b>{hs.height} cm · {hs.weight} kg</b></div>}
           <div className="jn-kv"><span>Previous treatments</span><b>{onb.answers.history || "Not answered"}</b></div>
           <div className="jn-kv"><span>Last treatment</span><b>Lip filler · 1 Oct 2026</b></div>
           <div className="jn-kv"><span>Next review</span><b>Mon 3 Nov · 2:30pm</b></div>
-        </div>
+        </PMCardJN>
 
-        <h3 className="jn-h">Supplements</h3>
-        <div className="jn-card list">
-          {SUPPLEMENTS.map((s) => <div key={s.n} className="jn-li"><span className="ic"><IcJN name="pill" size={16} color="var(--brand-navy)" /></span><span className="tx"><b>{s.n}</b><small>{s.d} · {s.f}</small></span></div>)}
-          <button className="jn-li add" onClick={() => showToast("Ask Katy to add a supplement")}><span className="ic"><IcJN name="plus" size={16} color="var(--brand-navy)" /></span><span className="tx"><b>Add supplement</b></span></button>
-        </div>
+        <PMCardJN title="Supplements" sub={SUPPLEMENTS.length + " in your plan"} onClick={() => showToast("Ask Katy to update your supplements")}>
+          <div className="jn-pmc-list">
+            {SUPPLEMENTS.map((s) => <div key={s.n} className="jn-li"><span className="ic"><IcJN name="pill" size={16} color="var(--brand-navy)" /></span><span className="tx"><b>{s.n}</b><small>{s.d} · {s.f}</small></span></div>)}
+          </div>
+        </PMCardJN>
 
-        <h3 className="jn-h">Goals</h3>
-        <div className="jn-card list">
-          {GOALS.map((g) => <div key={g.t} className="jn-goal"><div className="top"><b>{g.t}</b><span>{g.target}</span></div><div className="bar"><i style={{ width: g.p * 100 + "%" }} /></div></div>)}
-          {goalsChosen.length > 0 && <div className="jn-tags pad">{goalsChosen.map((g) => <span key={g} className="jn-tag gold">{g}</span>)}</div>}
-        </div>
+        <PMCardJN title="Goals" sub="What you're working on this quarter" href="JaneHealth.html">
+          <div className="jn-pmc-list">
+            {GOALS.map((g) => <div key={g.t} className="jn-goal"><div className="top"><b>{g.t}</b><span>{g.target}</span></div><div className="bar"><i style={{ width: g.p * 100 + "%" }} /></div></div>)}
+          </div>
+          {goalsChosen.length > 0 && <div className="jn-tags" style={{ marginTop: 10 }}>{goalsChosen.map((g) => <span key={g} className="jn-tag gold">{g}</span>)}</div>}
+        </PMCardJN>
 
-        <h3 className="jn-h">Wearables & analytics</h3>
-        <div className="jn-card list">
-          <Row icon="watch" label={wear.length ? wear.map((w) => w.name).join(", ") : "No wearables connected"} sub={wear.length ? "Synced a few minutes ago" : "Connect Apple Health, Oura, Fitbit and more"} href="JaneWearables.html" />
-          <Row icon="heart-pulse" label="Health Analytics" sub="Sleep, movement, nutrition and skin trends" href="JaneHealth.html" />
-          <Row icon="clipboard-list" label="Onboarding questionnaire" sub={onb.done ? "Completed · tap to review" : "Not finished"} href="JaneOnboarding.html" />
-        </div>
+        <PMCardJN title="Track your health" sub="Sleep · Movement · Nutrition · Skin check-in" href="JaneHealth.html">
+          <div className="jn-pmc-chips"><span className="jn-tag">{wear.length ? wear.map((w) => w.name).join(", ") : "No wearable yet"}</span><span className="jn-tag">Skin score 78</span><span className="jn-tag">Sleep 7h 18m</span></div>
+        </PMCardJN>
 
-        <h3 className="jn-h">More</h3>
-        <div className="jn-card list">
-          <Row icon="message-circle" label="Messages" href="JaneMessages.html" />
-          <Row icon="calendar" label="Events" href="JaneEvents.html" />
-          <Row icon="sparkles" label="Coach" href="JaneCoach.html" />
-          <Row icon="shield-check" label="Privacy & sharing" sub="Your Health Pass is shared with Pearce Aesthetics only" onClick={() => showToast("Sharing settings coming soon")} />
-          <Row icon="log-out" label="Log out" danger onClick={() => showToast("Logged out (demo)")} />
-        </div>
+        <PMCardJN title="Activity" sub={myPosts.length ? myPosts.length + " recent posts & updates" : "Nothing shared yet"} href="JaneNewsfeed.html">
+          {myPosts.slice(0, 3).map((p) => <div key={p.id} className="jn-act-row"><JNFace p={JANE} size={26} /><b>{JANE.name}</b><span>{p.text.slice(0, 48)}{p.text.length > 48 ? "…" : ""}</span><em>{p.t}</em></div>)}
+        </PMCardJN>
+
+        <PMCardJN title="Connected apps & devices" sub={wear.length ? "Synced a few minutes ago" : "Connect Apple Health, Oura, Fitbit and more"} href="JaneWearables.html" />
+
+        <button className="pm-logout" onClick={() => showToast("Logged out (demo)")}><IcJN name="log-out" size={20} color="var(--error)" />Logout</button>
         <div className="jn-end">PROfinity · patient app</div>
       </div>
       <JNTabs active="profile" />
+      {layers}
 
       <JNSheet open={edit} onClose={() => setEdit(false)} title="Edit profile">
-        {[["name", "Full name"], ["dob", "Date of birth"], ["phone", "Phone"], ["email", "Email"]].map(([k, l]) => (
-          <label key={k} className="jn-field"><span>{l}</span><input className="jn-in" value={draft[k]} onChange={(e) => setDraft({ ...draft, [k]: e.target.value })} /></label>))}
+        {[["name", "Full name"], ["dob", "Date of birth"], ["location", "Location"], ["phone", "Phone"], ["email", "Email"], ["bio", "Bio"]].map(([k, l]) => (
+          <label key={k} className="jn-field"><span>{l}</span><input className="jn-in" value={draft[k] || ""} onChange={(e) => setDraft({ ...draft, [k]: e.target.value })} /></label>))}
         <button className="jn-btn block" onClick={save}>Save changes</button>
       </JNSheet>
 
@@ -805,10 +870,12 @@ function WearablesScreen() {
   }
   function disconnect(w) { const s = { ...state }; delete s[w.id]; setState(s); saveJN(WEAR_KEY, s); setSel(null); showToast(w.name + " disconnected"); }
 
+  const { top, layers, headerH } = useKatyChromeJN();
   return (
-    <div className="jn-screen">
-      <JNBar title="Connect your wearables" back={() => history.length > 1 ? history.back() : goJN("JaneProfile.html")} />
-      <div className="jn-scroll">
+    <div className="jn-screen m-screen">
+      {top}
+      <div className="jn-scroll" style={{ paddingTop: headerH + 8 }}>
+        <button className="jn-backlink" onClick={() => history.length > 1 ? history.back() : goJN("JaneProfile.html")}><IcJN name="chevron-left" size={18} />Back</button>
         <section className="jn-wear-hero">
           <div className="orbit"><span className="c1"><IcJN name="moon" size={16} color="#fff" /></span><span className="c2"><IcJN name="footprints" size={16} color="#fff" /></span><span className="c3"><IcJN name="droplets" size={16} color="#fff" /></span><span className="core"><IcJN name="heart-pulse" size={26} color="#fff" /></span></div>
           <h2>Your body, in your Health Pass</h2>
@@ -843,6 +910,8 @@ function WearablesScreen() {
         </div>
         <div className="jn-end">Data stays on your Health Pass · encrypted in transit</div>
       </div>
+      <JNTabs active="health" />
+      {layers}
 
       <JNSheet open={!!sel} onClose={() => !busy && setSel(null)} title={sel ? (state[sel.id] ? sel.name : "Connect " + sel.name) : ""}>
         {sel && !state[sel.id] && (
@@ -1360,16 +1429,19 @@ function EventsScreen() {
       </div>
     </article>); };
 
+  const { top, layers, headerH } = useKatyChromeJN();
   return (
-    <div className="jn-screen">
-      <JNTop title="Events" sub="From your clinic and the PROfinity community" />
-      <div className="jn-scroll">
+    <div className="jn-screen m-screen">
+      {top}
+      <div className="jn-scroll" style={{ paddingTop: headerH + 12 }}>
+        <div className="jn-pagehead"><h2>Events</h2><p>From your clinic and the PROfinity community</p></div>
         <div className="jn-seg">{[["upcoming", "Upcoming"], ["mine", "My events"]].map(([k, l]) => <button key={k} className={view === k ? "on" : ""} onClick={() => setView(k)}>{l}</button>)}</div>
         {list.length === 0 && <div className="jn-emptybox"><IcJN name="calendar" size={28} color="var(--gray-400)" /><b>No events yet</b><small>RSVP to an event and it will show up here.</small></div>}
         {list.map((e) => <Card key={e.id} e={e} />)}
         <div className="jn-end">All events are free for Pearce Aesthetics patients</div>
       </div>
       <JNTabs active="events" />
+      {layers}
 
       <JNSheet open={!!open} onClose={() => setOpen(null)} tall>
         {open && (() => { const d = evDate(open); const h = PEOPLE[open.host]; return (
@@ -1416,6 +1488,7 @@ function MessagesScreen() {
   const [typing, setTyping] = useStateJN(false);
   const [toast, showToast] = useToastJN();
   const scrollRef = useRefJN(null);
+  const chrome = useKatyChromeJN();
   const conv = store.convs.find((c) => c.id === openId);
   function persist(s) { setStore(s); saveJN(DM_KEY, s); }
   function openConv(id) { persist({ convs: store.convs.map((c) => c.id === id ? { ...c, unread: 0 } : c) }); setOpenId(id); }
@@ -1456,9 +1529,10 @@ function MessagesScreen() {
     </div>); }
 
   return (
-    <div className="jn-screen">
-      <JNBar title="Messages" back="JaneNewsfeed.html" trailing={<button className="jn-iconbtn sm" aria-label="New message" onClick={() => showToast("Pick a contact below")}><IcJN name="pencil" size={17} color="var(--brand-navy)" /></button>} />
-      <div className="jn-scroll">
+    <div className="jn-screen m-screen">
+      {chrome.top}
+      <div className="jn-scroll" style={{ paddingTop: chrome.headerH + 12 }}>
+        <div className="jn-pagehead"><h2>Messages</h2><button className="jn-iconbtn sm" aria-label="New message" onClick={() => showToast("Pick a contact below")}><IcJN name="pencil" size={17} color="var(--brand-navy)" /></button></div>
         <div className="jn-search"><IcJN name="search" size={17} color="var(--gray-450)" /><input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} /></div>
         <div className="jn-care"><JNFace p={KATY} size={44} /><div><b>Your care team</b><small>{KATY.name} · Nurse Beth · Reception</small></div><button className="jn-btn sm" onClick={() => openConv("katy")}>Message</button></div>
         <div className="jn-card list">
@@ -1471,6 +1545,8 @@ function MessagesScreen() {
         </div>
         <div className="jn-end">Messages with your clinic are private and kept with your Health Pass</div>
       </div>
+      <JNTabs active="messages" />
+      {chrome.layers}
       <JNToast toast={toast} />
     </div>);
 }
