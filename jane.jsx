@@ -248,24 +248,88 @@ const JNDock = React.forwardRef(function JNDock({ compact, active }, ref) {
     </nav>);
 });
 
-/* Drawer (burger) and notifications panel — slide-in layers like the
-   clinician SideMenu / NotificationsPanel, scoped to Jane's pages. */
+/* Drawer (burger) — a twin of the clinician SideMenu in mobile.jsx (same
+   .m-drawer / .sm-* classes from mobile.css, which Home and Health load):
+   profile head, Health Pass primary card, upcoming events, My Profile rows
+   with the gold status row, Display toggle, Logout. */
+function useDarkModeJN() {
+  const [dark, setDark] = useStateJN(() => { try { return localStorage.getItem("pf-theme") === "dark"; } catch (e) { return false; } });
+  const toggle = () => { const next = !dark; setDark(next); try { localStorage.setItem("pf-theme", next ? "dark" : "light"); document.documentElement.setAttribute("data-theme", next ? "dark" : "light"); } catch (e) {} };
+  return [dark, toggle];
+}
 function JNDrawer({ open, onClose }) {
+  const [dark, toggleDark] = useDarkModeJN();
   const onb = onbState();
+  const wear = connectedWearables();
+  useEffectJN(() => { if (!open) return; const onKey = (e) => { if (e.key === "Escape") onClose(); }; document.addEventListener("keydown", onKey); return () => document.removeEventListener("keydown", onKey); }, [open]);
   const rows = [
-    ["user", "My profile", "JaneProfile.html"], ["qr-code", "Health Pass", "JaneProfile.html"], ["clipboard-list", onb.done ? "Onboarding · completed" : "Finish onboarding", "JaneOnboarding.html"],
-    ["watch", "Connect your wearables", "JaneWearables.html"], ["heart-pulse", "Health Analytics", "JaneHealth.html"], ["sparkles", "Coach", "JaneCoach.html"],
-    ["calendar", "Events", "JaneEvents.html"], ["message-circle", "Messages", "JaneMessages.html"]];
+    ["user", "Edit Profile", "JaneProfile.html?edit=1"],
+    ["watch", wear.length ? "My Wearables" : "Connect your wearables", "JaneWearables.html"],
+    ["heart-pulse", "Health Analytics", "JaneHealth.html"],
+    ["sparkles", "Coach", "JaneCoach.html"],
+    ["calendar", "Events", "JaneEvents.html"],
+    ["message-circle", "Messages", "JaneMessages.html"],
+    ["shield-check", "Privacy & Security", null],
+    ["headphones", "Clinic Support", "JaneMessages.html?to=reception"]];
   return (
-    <div className={"jn-layer" + (open ? " open" : "")} aria-hidden={!open}>
-      <button type="button" className="jn-scrim" aria-label="Close menu" onClick={onClose} />
-      <aside className="jn-drawer">
-        <div className="jn-drawer-head"><JNFace p={JANE} size={56} /><div><b>{JANE.name}</b><small>Patient · {JANE.clinic}</small></div></div>
-        <div className="jn-drawer-pass" onClick={() => goJN("JaneProfile.html")}><span className="lbl">Health Pass</span><b>{JANE.passId}</b><span className={"st" + (onb.done ? " ok" : "")}>{onb.done ? "Active" : "Incomplete"}</span></div>
-        <nav className="jn-drawer-nav">
-          {rows.map(([ic, l, href]) => <button key={l} onClick={() => goJN(href)}><IcJN name={ic} size={19} color="var(--brand-navy)" /><span>{l}</span><IcJN name="chevron-right" size={16} color="var(--gray-400)" /></button>)}
-        </nav>
-        <button className="jn-drawer-out" onClick={onClose}><IcJN name="log-out" size={18} color="var(--error)" />Log out</button>
+    <div className={"m-drawer-wrap" + (open ? " open" : "")} aria-hidden={!open}>
+      <div className="m-drawer-scrim" onClick={onClose} />
+      <aside className="m-drawer" role="dialog" aria-modal="true" aria-label="Menu">
+        <button className="m-drawer-profile" onClick={() => goJN("JaneProfile.html")}>
+          <DSJN.Avatar name={JANE.name} src={JANE.avatar} size={56} />
+          <span className="m-dp-main">
+            <span className="m-dp-name">{JANE.name}{onb.done && <IcJN name="badge-check" size={18} color="var(--reaction-like)" />}</span>
+            <span className="m-dp-role">Patient · {JANE.clinic}</span>
+          </span>
+          <IcJN name="chevron-right" size={22} color="var(--gray-800)" />
+        </button>
+        <div className="sm-body">
+          <button className="sm-primary-card" onClick={() => goJN("JaneProfile.html")}>
+            <span className="sm-primary-icon"><IcJN name="qr-code" size={22} color="var(--brand-navy)" /></span>
+            <span className="sm-primary-main"><span className="sm-primary-title">Health Pass</span><span className="sm-primary-sub">{JANE.passId} · {onb.done ? "Active" : "Incomplete"} · show at reception</span></span>
+            <IcJN name="chevron-right" size={20} color="var(--gray-450)" />
+          </button>
+
+          <div className="sm-sec-h">Upcoming Events</div>
+          <div className="sm-events">
+            {EVENTS.slice(0, 2).map((e) => { const d = evDate(e); const h = PEOPLE[e.host]; return (
+              <button key={e.id} className="sm-event" onClick={() => goJN("JaneEvents.html?event=" + e.id)}>
+                <span className="sm-date"><b>{d.d}</b><i>{d.m.toUpperCase()}</i></span>
+                <span className="sm-event-main">
+                  <span className="sm-event-name">{e.title}</span>
+                  <span className="sm-event-time">{d.wd} · {e.time}</span>
+                  <span className="sm-event-hosts"><JNFace p={h} size={26} /><span className="sm-event-hosts-label">{h.name}</span></span>
+                </span>
+                <span className={"sm-event-access" + (e.online ? " sm-event-access-open" : " sm-event-access-members")}>{e.online ? "Online" : "In clinic"}</span>
+              </button>); })}
+          </div>
+
+          <div className="sm-sec-h">My Profile</div>
+          {!onb.done && (
+            <button className="sm-row sm-verify" onClick={() => goJN("JaneOnboarding.html")}>
+              <IcJN name="clipboard-list" size={23} color="var(--premium-orange)" />
+              <span className="sm-row-label">Complete Health Pass</span>
+              <span className="sm-verify-pill">{Object.keys(onb.answers || {}).length ? "In progress" : "Not started"}</span>
+            </button>)}
+          <nav className="sm-list">
+            {rows.map(([ic, label, href]) => (
+              <button key={label} className="sm-row" onClick={() => href ? goJN(href) : null}>
+                <IcJN name={ic} size={23} color="var(--gray-900)" />
+                <span className="sm-row-label">{label}</span>
+                <IcJN name="chevron-right" size={20} color="var(--gray-450)" />
+              </button>))}
+            <div className="sm-display-card">
+              <div className="sm-display-top">
+                <span className="sm-display-label">Display</span>
+                <button className={"sm-switch" + (dark ? " on" : "")} onClick={toggleDark} role="switch" aria-checked={dark} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}>
+                  <span className="sm-knob"><IcJN name={dark ? "moon" : "sun"} size={13} color={dark ? "#1A1736" : "var(--gray-450)"} /></span>
+                </button>
+              </div>
+              <p className="sm-display-desc">Adjust the appearance of the app to reduce glare and give your eyes a break</p>
+            </div>
+          </nav>
+          <button className="m-drawer-logout" onClick={onClose}><IcJN name="log-out" size={22} color="var(--error)" />Logout</button>
+        </div>
       </aside>
     </div>);
 }
