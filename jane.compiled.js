@@ -2751,6 +2751,19 @@ function HealthDashboard() {
   });
   const [toast, showToast] = useToastJN();
   const railRef = useRefJN(null);
+  const headerRef = useRefJN(null);
+  const [headerH, setHeaderH] = useStateJN(0);
+  const [menuOpen, setMenuOpen] = useStateJN(false);
+  const [notifOpen, setNotifOpen] = useStateJN(false);
+  React.useLayoutEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const m = () => setHeaderH(el.offsetHeight);
+    m();
+    const ro = new ResizeObserver(m);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   const tracking = wear.length > 0 || phone;
   useEffectJN(() => {
     if (!workout) return;
@@ -2955,27 +2968,31 @@ function HealthDashboard() {
     saveJN(FRIENDS_KEY, f);
   }
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen jh"
-  }, /*#__PURE__*/React.createElement("header", {
-    className: "jh-head"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "jh-hbtn",
+    className: "jn-screen m-screen jh"
+  }, /*#__PURE__*/React.createElement(JNTopBar, {
+    ref: headerRef,
+    onMenu: () => setMenuOpen(true),
+    onBell: () => setNotifOpen(true)
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "jn-scroll jh-scroll",
+    style: {
+      paddingTop: headerH + 8
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jh-title"
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", null, "Health"), /*#__PURE__*/React.createElement("span", null, new Date().toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long"
+  }), tracking ? " · " + (wear.length ? wear.map(w => w.name).join(", ") : "Phone tracking") : " · Not tracking yet")), /*#__PURE__*/React.createElement("button", {
+    className: "jn-iconbtn",
     "aria-label": "Devices",
     onClick: () => goJN("JaneWearables.html")
   }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "smartphone",
-    size: 24,
-    color: "var(--text-heading)"
-  })), /*#__PURE__*/React.createElement("h1", null, "Health"), /*#__PURE__*/React.createElement("button", {
-    className: "jh-hbtn av",
-    "aria-label": "Profile",
-    onClick: () => goJN("JaneProfile.html")
-  }, /*#__PURE__*/React.createElement(JNFace, {
-    p: JANE,
-    size: 40
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "jn-scroll jh-scroll"
-  }, workout && /*#__PURE__*/React.createElement("div", {
+    name: "watch",
+    size: 20,
+    color: "var(--brand-navy)"
+  }))), workout && /*#__PURE__*/React.createElement("div", {
     className: "jh-workout"
   }, /*#__PURE__*/React.createElement("span", {
     className: "dot"
@@ -2998,8 +3015,8 @@ function HealthDashboard() {
   }, /*#__PURE__*/React.createElement(Ring, {
     value: ring.pct / 100,
     size: 178,
-    stroke: 30,
-    color: "var(--brand-navy)"
+    stroke: 26,
+    color: "var(--brand-gold)"
   }, /*#__PURE__*/React.createElement("small", {
     className: "arc"
   }, "Weekly cardio"), /*#__PURE__*/React.createElement("b", null, ring.pct, /*#__PURE__*/React.createElement("i", null, "%")), /*#__PURE__*/React.createElement("small", {
@@ -3038,7 +3055,7 @@ function HealthDashboard() {
     name: "plus",
     size: 22
   }), "Log"), /*#__PURE__*/React.createElement("button", {
-    className: "jh-act",
+    className: "jh-act primary",
     onClick: () => setSheet("start")
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "activity",
@@ -3074,8 +3091,8 @@ function HealthDashboard() {
     className: "art " + c.art
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: c.ic,
-    size: 30,
-    color: "#fff"
+    size: 28,
+    color: "var(--brand-navy)"
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
   }, c.t), /*#__PURE__*/React.createElement("span", {
@@ -3170,6 +3187,12 @@ function HealthDashboard() {
     className: "jn-end"
   }, "Not medical advice · talk to your clinician about any concerns"))), /*#__PURE__*/React.createElement(JNTabs, {
     active: "health"
+  }), /*#__PURE__*/React.createElement(JNDrawer, {
+    open: menuOpen,
+    onClose: () => setMenuOpen(false)
+  }), /*#__PURE__*/React.createElement(JNNotifPanel, {
+    open: notifOpen,
+    onClose: () => setNotifOpen(false)
   }), /*#__PURE__*/React.createElement(JNSheet, {
     open: sheet === "log",
     onClose: () => setSheet(null),

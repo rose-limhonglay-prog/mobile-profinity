@@ -922,6 +922,11 @@ function HealthDashboard() {
   const [cycleDraft, setCycleDraft] = useStateJN({ last: "2026-10-12", len: 28 });
   const [toast, showToast] = useToastJN();
   const railRef = useRefJN(null);
+  const headerRef = useRefJN(null);
+  const [headerH, setHeaderH] = useStateJN(0);
+  const [menuOpen, setMenuOpen] = useStateJN(false);
+  const [notifOpen, setNotifOpen] = useStateJN(false);
+  React.useLayoutEffect(() => { const el = headerRef.current; if (!el) return; const m = () => setHeaderH(el.offsetHeight); m(); const ro = new ResizeObserver(m); ro.observe(el); return () => ro.disconnect(); }, []);
   const tracking = wear.length > 0 || phone;
   useEffectJN(() => { if (!workout) return; const t = setInterval(() => setElapsed(Math.floor((Date.now() - workout.start) / 1000)), 1000); return () => clearInterval(t); }, [workout]);
   function saveLogs(l) { setLogs(l); saveJN(LOGS_KEY, l); }
@@ -965,18 +970,18 @@ function HealthDashboard() {
   function toggleFriend(id) { const f = friends.includes(id) ? friends.filter((x) => x !== id) : [...friends, id]; setFriends(f); saveJN(FRIENDS_KEY, f); }
 
   return (
-    <div className="jn-screen jh">
-      <header className="jh-head">
-        <button className="jh-hbtn" aria-label="Devices" onClick={() => goJN("JaneWearables.html")}><IcJN name="smartphone" size={24} color="var(--text-heading)" /></button>
-        <h1>Health</h1>
-        <button className="jh-hbtn av" aria-label="Profile" onClick={() => goJN("JaneProfile.html")}><JNFace p={JANE} size={40} /></button>
-      </header>
-      <div className="jn-scroll jh-scroll">
+    <div className="jn-screen m-screen jh">
+      <JNTopBar ref={headerRef} onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} />
+      <div className="jn-scroll jh-scroll" style={{ paddingTop: headerH + 8 }}>
+        <div className="jh-title">
+          <div><h1>Health</h1><span>{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}{tracking ? " · " + (wear.length ? wear.map((w) => w.name).join(", ") : "Phone tracking") : " · Not tracking yet"}</span></div>
+          <button className="jn-iconbtn" aria-label="Devices" onClick={() => goJN("JaneWearables.html")}><IcJN name="watch" size={20} color="var(--brand-navy)" /></button>
+        </div>
         {workout && <div className="jh-workout"><span className="dot" /><b>{workout.kind} in progress</b><span className="time">{mmss(elapsed)}</span><button onClick={() => { setWorkout(null); showToast(workout.kind + " saved · " + mmss(elapsed)); }}>Stop</button></div>}
         <div className="jh-rail" ref={railRef} onScroll={onRail}>
           <section className="jh-page">
             <button className="jh-ring" onClick={() => showToast(tracking ? "Weekly cardio · " + ring.sub : "Connect a wearable or turn on phone tracking to start")}>
-              <Ring value={ring.pct / 100} size={178} stroke={30} color="var(--brand-navy)">
+              <Ring value={ring.pct / 100} size={178} stroke={26} color="var(--brand-gold)">
                 <small className="arc">Weekly cardio</small><b>{ring.pct}<i>%</i></b><small className="sub">{ring.sub}</small>
               </Ring>
               <span className="plus">{ring.plus}</span>
@@ -989,7 +994,7 @@ function HealthDashboard() {
         <div className="jh-dots">{[0, 1, 2].map((i) => <button key={i} className={page === i ? "on" : ""} aria-label={"Page " + (i + 1)} onClick={() => goPage(i)} />)}</div>
         <div className="jh-actions">
           <button className="jh-act" onClick={() => setSheet("log")}><IcJN name="plus" size={22} />Log</button>
-          <button className="jh-act" onClick={() => setSheet("start")}><IcJN name="activity" size={22} />Start</button>
+          <button className="jh-act primary" onClick={() => setSheet("start")}><IcJN name="activity" size={22} />Start</button>
           <button className="jh-act round" aria-label="Customise" onClick={() => setSheet("edit")}><IcJN name="pencil" size={20} /></button>
         </div>
 
@@ -1002,7 +1007,7 @@ function HealthDashboard() {
             </button>
             {listOpen && checklist.map((c) => (
               <button key={c.k} className={"jh-item" + (c.done ? " done" : "")} onClick={c.on}>
-                <span className={"art " + c.art}><IcJN name={c.ic} size={30} color="#fff" /></span>
+                <span className={"art " + c.art}><IcJN name={c.ic} size={28} color="var(--brand-navy)" /></span>
                 <span className="tx">{c.t}</span>
                 <span className="radio">{c.done && <IcJN name="check" size={14} color="#fff" />}</span>
               </button>))}
@@ -1032,6 +1037,8 @@ function HealthDashboard() {
         </section>
       </div>
       <JNTabs active="health" />
+      <JNDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <JNNotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
 
       <JNSheet open={sheet === "log"} onClose={() => setSheet(null)} title="Log">
         <div className="jh-logrow"><span className="ic mint"><IcJN name="glass-water" size={20} /></span><span className="tx"><b>Water</b><small>{logs.water} glasses · {(logs.water * 250).toLocaleString()} ml today</small></span><button className="jn-btn sm" onClick={() => { saveLogs({ ...logs, water: logs.water + 1 }); showToast("Glass of water logged"); }}><IcJN name="plus" size={15} />Glass</button></div>

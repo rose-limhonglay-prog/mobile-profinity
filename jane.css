@@ -593,3 +593,42 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .jn-home .jn-feednudge { margin: 0 12px; }
 .jn-home .m-scroll .jn-connect.infeed { margin: 0 12px; }
 .jn-home .m-scroll .pf-pinned-box-item .post-wrap { margin: 0 !important; box-shadow: none !important; }
+
+/* ---- Health: PROfinity (Katy) skin — white bordered cards, navy icon tiles, gold accents (user, 2026-10-26) ---- */
+.jh.m-screen { background: var(--surface-page); }
+.jh .m-top { position: absolute; }
+.jh-title { display: flex; align-items: center; gap: 12px; padding: 6px 16px 12px; }
+.jh-title div { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.jh-title h1 { margin: 0; font-size: 24px; font-weight: var(--fw-bold); color: var(--text-heading); letter-spacing: -.01em; }
+.jh-title span { font-size: 12.5px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jh-tile, .jh-tile.mint, .jh-tile.lav, .jh-tile.rose, .jh-tile.gold, .jh-tile.grey { background: var(--surface-card); border: 1px solid var(--border-default); color: var(--text-heading); border-radius: 18px; }
+.jh-tile .ic, .jh-tile.mint .ic, .jh-tile.lav .ic, .jh-tile.rose .ic, .jh-tile.gold .ic, .jh-tile.navy .ic { background: var(--surface-sunken); color: var(--brand-navy); border-radius: 12px; width: 42px; height: 42px; }
+.jh-tile .tx b { font-size: 12px; font-weight: var(--fw-medium); color: var(--text-secondary); }
+.jh-tile .tx span, .jh-tile .tx span:where(:not(:empty)) { font-size: 15.5px; font-weight: var(--fw-bold); color: var(--text-heading); }
+.jh-tile.grey .tx span { color: var(--text-muted); font-weight: var(--fw-medium); }
+.jh-ring .jn-ring svg circle:first-child { stroke: var(--gray-150); }
+.jh-ring .jn-ring .in b { font-weight: var(--fw-bold); color: var(--brand-navy); }
+.jh-ring .jn-ring .in small.sub { color: var(--text-secondary); }
+.jh-ring .plus { background: var(--brand-gold-100); color: #6b4a00; box-shadow: 0 0 0 3px var(--surface-page); }
+[data-theme="dark"] .jh-ring .plus { background: rgba(206,153,87,.2); color: var(--brand-gold); }
+.jh-dots button.on { background: var(--brand-navy); }
+.jh-act { background: var(--surface-sunken); color: var(--brand-navy); font-weight: var(--fw-semibold); min-height: 52px; font-size: 15px; }
+.jh-act.primary { background: var(--brand-navy); color: #fff; }
+[data-theme="dark"] .jh-act.primary { color: #1a1736; }
+.jh-act.round { background: var(--surface-card); border: 1px solid var(--border-default); color: var(--brand-navy); width: 60px; }
+.jh-sheet { background: transparent; border-radius: 0; padding: 0 16px 8px; min-height: 0; }
+.jh-list { background: var(--surface-card); border: 1px solid var(--border-default); border-radius: 18px; }
+.jh-list-head .count { width: 52px; height: 52px; font-size: 15px; }
+.jh-list-head .tx { font-size: 15.5px; font-weight: var(--fw-semibold); }
+.jh-item { padding: 13px 16px 13px 14px; gap: 14px; }
+.jh-item .art, .jh-item .art.lav, .jh-item .art.blue, .jh-item .art.teal, .jh-item .art.pink { width: 54px; height: 54px; border-radius: 14px; background: var(--surface-sunken); }
+.jh-item .tx { font-size: 14.5px; font-weight: var(--fw-medium); }
+.jh-item .radio { width: 26px; height: 26px; border-color: var(--gray-300); }
+.jh-item.done .radio { background: var(--brand-gold); border-color: var(--brand-gold); }
+.jh-item.done .art { background: var(--brand-gold-100); }
+[data-theme="dark"] .jh-item.done .art { background: rgba(206,153,87,.18); }
+.jh-workout { background: var(--brand-navy); }
+.jh-logrow .ic, .jh-logrow .ic.mint, .jh-logrow .ic.gold { background: var(--surface-sunken); color: var(--brand-navy); }
+.jh-kinds .ic { background: var(--surface-sunken); color: var(--brand-navy); }
+.jh-skin button.on { border-color: var(--brand-gold); background: var(--brand-gold-100); }
+.jh-empty { background: var(--surface-card); border: 1px dashed var(--border-default); border-radius: 18px; margin-top: 12px; padding: 28px 20px; }
