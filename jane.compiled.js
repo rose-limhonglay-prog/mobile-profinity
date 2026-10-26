@@ -5886,6 +5886,62 @@ function ScheduleCallScreen() {
       className: "st " + (x.status || "booked")
     }, x.status === "cancelled" ? "Cancelled" : x.status === "done" || past ? "Done" : isCall ? "Booked" : "Confirmed"));
   };
+  const todayIso = isoDateJN(new Date());
+  const HeroCard = ({
+    x
+  }) => {
+    const w = callWho(x);
+    const isCall = x.kind === "call";
+    const hot = x.date === todayIso;
+    return /*#__PURE__*/React.createElement("section", {
+      className: "sc-hero" + (hot ? "" : " lite")
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sc-hero-st " + (x.status || "booked")
+    }, isCall ? "Booked" : "Confirmed"), /*#__PURE__*/React.createElement("div", {
+      className: "sc-hero-top"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sc-hero-av"
+    }, /*#__PURE__*/React.createElement(JNFace, {
+      p: w,
+      size: 62
+    }), /*#__PURE__*/React.createElement("i", {
+      className: "bd " + kindOf(x)
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: kindIcon(x),
+      size: 13,
+      color: "#fff"
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "lbl"
+    }, /*#__PURE__*/React.createElement("i", null), " ", hot ? "Today" : relDay(x)), /*#__PURE__*/React.createElement("b", null, titleOf(x)), /*#__PURE__*/React.createElement("small", null, w.title))), /*#__PURE__*/React.createElement("div", {
+      className: "sc-hero-meta"
+    }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+      name: "calendar",
+      size: 14
+    }), callWhen(x).split(" · ")[0]), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+      name: "clock",
+      size: 14
+    }), x.time, " · ", x.dur || CALL_DUR, " min"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+      name: isCall ? x.type === "phone" ? "phone" : "video" : "map-pin",
+      size: 14
+    }), isCall ? callTypeLabel(x) : "Manchester clinic")), /*#__PURE__*/React.createElement("div", {
+      className: "sc-hero-acts"
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "primary",
+      onClick: () => openItem(x)
+    }, isCall ? "View call" : "Details"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => addToCalendar(x)
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "calendar-plus",
+      size: 16
+    }), "Calendar"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => goJN("JaneMessages.html?to=" + (isCall ? w.id : "reception"))
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "message-circle",
+      size: 16
+    }), "Message")));
+  };
   const canNext = step === 0 ? !!draft.reason : step === 1 ? !!(draft.date && draft.time) : true;
   const Picker = () => /*#__PURE__*/React.createElement("div", {
     className: "sc-clins"
@@ -5943,8 +5999,6 @@ function ScheduleCallScreen() {
 
   /* ---- booked / upcoming -------------------------------------------- */
   if (view === "schedule") {
-    const todayIso = isoDateJN(new Date());
-    const todayUp = items.upcoming.find(x => x.date === todayIso);
     const shown = items.upcoming.filter(x => filt === "all" || (filt === "call" ? x.kind === "call" : x.kind === "appt"));
     const groups = shown.reduce((g, x) => {
       const d = new Date(x.date + "T12:00:00");
@@ -5954,7 +6008,6 @@ function ScheduleCallScreen() {
       (g[k] = g[k] || []).push(x);
       return g;
     }, {});
-    const nw = todayUp && callWho(todayUp);
     return /*#__PURE__*/React.createElement("div", {
       className: "jn-screen sc sc-page"
     }, /*#__PURE__*/React.createElement(JNBar, {
@@ -5972,52 +6025,7 @@ function ScheduleCallScreen() {
     }), /*#__PURE__*/React.createElement("div", {
       className: "jn-scroll",
       ref: scrollRef
-    }, todayUp && /*#__PURE__*/React.createElement("section", {
-      className: "sc-hero"
     }, /*#__PURE__*/React.createElement("div", {
-      className: "sc-hero-top"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "sc-hero-av"
-    }, /*#__PURE__*/React.createElement(JNFace, {
-      p: nw,
-      size: 62
-    }), /*#__PURE__*/React.createElement("i", {
-      className: "bd " + kindOf(todayUp)
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: kindIcon(todayUp),
-      size: 13,
-      color: "#fff"
-    }))), /*#__PURE__*/React.createElement("div", {
-      className: "tx"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "lbl"
-    }, /*#__PURE__*/React.createElement("i", null), " Today"), /*#__PURE__*/React.createElement("b", null, titleOf(todayUp)), /*#__PURE__*/React.createElement("small", null, nw.title))), /*#__PURE__*/React.createElement("div", {
-      className: "sc-hero-meta"
-    }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
-      name: "calendar",
-      size: 14
-    }), callWhen(todayUp).split(" · ")[0]), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
-      name: "clock",
-      size: 14
-    }), todayUp.time, " · ", todayUp.dur || CALL_DUR, " min"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
-      name: todayUp.kind === "call" ? todayUp.type === "phone" ? "phone" : "video" : "map-pin",
-      size: 14
-    }), todayUp.kind === "call" ? callTypeLabel(todayUp) : "Manchester clinic")), /*#__PURE__*/React.createElement("div", {
-      className: "sc-hero-acts"
-    }, /*#__PURE__*/React.createElement("button", {
-      className: "primary",
-      onClick: () => openItem(todayUp)
-    }, todayUp.kind === "call" ? "View call" : "Details"), /*#__PURE__*/React.createElement("button", {
-      onClick: () => addToCalendar(todayUp)
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: "calendar-plus",
-      size: 16
-    }), "Calendar"), /*#__PURE__*/React.createElement("button", {
-      onClick: () => goJN("JaneMessages.html?to=" + (todayUp.kind === "call" ? nw.id : "reception"))
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: "message-circle",
-      size: 16
-    }), "Message"))), /*#__PURE__*/React.createElement("div", {
       className: "jn-seg sc-seg"
     }, [["all", "All"], ["call", "Calls"], ["appt", "In clinic"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
       key: k,
@@ -6035,8 +6043,8 @@ function ScheduleCallScreen() {
     }, /*#__PURE__*/React.createElement("h4", {
       className: "sc-month-h"
     }, month, " ", /*#__PURE__*/React.createElement("em", null, list.length)), /*#__PURE__*/React.createElement("div", {
-      className: "jn-card list sc-list"
-    }, list.map(x => /*#__PURE__*/React.createElement(ItemRow, {
+      className: "sc-cards"
+    }, list.map(x => /*#__PURE__*/React.createElement(HeroCard, {
       key: x.id,
       x: x
     }))))), items.past.length > 0 && /*#__PURE__*/React.createElement("section", {

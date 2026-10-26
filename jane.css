@@ -939,6 +939,23 @@ button.jn-pmc-h { cursor: pointer; }
 [data-theme="dark"] .sc-item .st.confirmed { background: rgba(206,153,87,.18); color: var(--brand-gold); }
 [data-theme="dark"] .sc-item .st { background: rgba(22,163,74,.18); }
 [data-theme="dark"] .sc-hero-acts button.primary { color: var(--brand-navy); }
+.sc-cards { display: grid; gap: 12px; }
+.sc-hero-st { position: absolute; top: 12px; right: 12px; z-index: 1; padding: 3px 8px; border-radius: 100px; font-size: 10px; font-weight: var(--fw-semibold); background: rgba(255,255,255,.18); color: #fff; border: 1px solid rgba(255,255,255,.28); }
+.sc-hero.lite { background: var(--surface-card); color: var(--text-heading); border: 1px solid var(--border-default); box-shadow: 0 6px 18px rgba(41,37,105,.06); }
+.sc-hero.lite::after { display: none; }
+.sc-hero.lite .sc-hero-av .jn-face { box-shadow: 0 0 0 3px var(--surface-sunken); }
+.sc-hero.lite .sc-hero-av .bd { border-color: var(--surface-card); background: var(--brand-navy); }
+.sc-hero.lite .sc-hero-av .bd.clinic { background: var(--brand-gold); }
+.sc-hero.lite .lbl { color: var(--text-secondary); opacity: 1; }
+.sc-hero.lite .lbl i { background: var(--brand-navy); box-shadow: 0 0 0 3px rgba(41,37,105,.12); }
+.sc-hero.lite .sc-hero-top small, .sc-hero.lite .sc-hero-meta span { color: var(--text-secondary); opacity: 1; }
+.sc-hero.lite .sc-hero-acts button { border-color: var(--border-default); background: var(--surface-sunken); color: var(--text-heading); backdrop-filter: none; }
+.sc-hero.lite .sc-hero-acts button.primary { background: var(--brand-navy); color: #fff; border-color: var(--brand-navy); }
+.sc-hero.lite .sc-hero-st { background: #e8f7ee; color: var(--success); border-color: transparent; }
+.sc-hero.lite .sc-hero-st.confirmed { background: var(--brand-gold-100); color: #6b4a00; }
+[data-theme="dark"] .sc-hero.lite .sc-hero-acts button.primary { color: #131126; }
+[data-theme="dark"] .sc-hero.lite .sc-hero-st { background: rgba(22,163,74,.18); }
+[data-theme="dark"] .sc-hero.lite .sc-hero-st.confirmed { background: rgba(206,153,87,.18); color: var(--brand-gold); }
 .sc-apptd-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .sc-apptd-head .ic { flex: none; width: 46px; height: 46px; border-radius: 15px; background: var(--brand-gold); display: flex; align-items: center; justify-content: center; }
 .sc-apptd-head h3 { margin: 0; font-size: 18px; font-weight: var(--fw-bold); color: var(--text-heading); }
