@@ -577,3 +577,11 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .jh-kinds { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 8px; }
 .jh-kinds button { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 6px; border-radius: 18px; border: 1px solid var(--border-default); background: var(--surface-sunken); font-family: inherit; font-size: 14px; font-weight: var(--fw-medium); color: var(--text-heading); cursor: pointer; }
 .jh-kinds .ic { width: 46px; height: 46px; border-radius: 50%; background: var(--jh-mint); color: var(--jh-mint-ink); display: flex; align-items: center; justify-content: center; }
+/* no lavender feed canvas on Jane's home (user, 2026-10-26): cards sit on the page surface, outlined so they still read as cards */
+.jn-home .m-scroll .feed { background: var(--surface-page); }
+.jn-home .m-scroll .post-wrap { border: 1px solid var(--border-default) !important; }
+/* comment preview link (from community-mobile.css, which Jane's home doesn't load) */
+.jn-home .cm-preview-region .cmt-preview { cursor: pointer; border-radius: 12px; transition: background .15s ease; }
+.jn-home .cm-preview-region .cmt-preview:active { background: var(--surface-sunken); }
+.jn-home .cmt-viewmore { margin-top: 10px; background: none; border: none; cursor: pointer; padding: 2px 0; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 13px; color: var(--gray-500); }
+.jn-home .cmt-viewmore:hover { color: var(--action-primary); }

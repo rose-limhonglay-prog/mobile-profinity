@@ -941,10 +941,327 @@ function JNNotifPanel({
     }, /*#__PURE__*/React.createElement("b", null, p.name), " ", n.text, /*#__PURE__*/React.createElement("small", null, n.t)));
   }))));
 }
+
+/* ---- reactions: a copy of the clinician feed's animation set (app.jsx
+   burstFrom / ReactionPicker / useReactionPicker / useDoubleTapLove), CSS
+   from styles.css (.pf-react-*, .sm-double-heart). Like = tap; hover or
+   long-press the like button for the six-emoji bar; double-tap a photo for
+   the big heart. No points on the patient side. ---- */
+const REACTIONS_JN = [{
+  key: "like",
+  label: "Like",
+  icon: "fluent-emoji-flat:thumbs-up",
+  flat: "fluent:thumb-like-16-filled",
+  color: "--reaction-like"
+}, {
+  key: "love",
+  label: "Love",
+  icon: "fluent-emoji-flat:red-heart",
+  flat: "fluent:heart-16-filled",
+  color: "--reaction-love"
+}, {
+  key: "laugh",
+  label: "Laugh",
+  icon: "fluent-emoji-flat:grinning-squinting-face",
+  flat: "fluent:emoji-laugh-16-filled",
+  color: "--premium-orange"
+}, {
+  key: "wow",
+  label: "Wow",
+  icon: "fluent-emoji-flat:face-with-open-mouth",
+  flat: "fluent:emoji-16-filled",
+  color: "--premium-orange"
+}, {
+  key: "cry",
+  label: "Cry",
+  icon: "fluent-emoji-flat:crying-face",
+  flat: "fluent:emoji-sad-16-filled",
+  color: "--premium-orange"
+}, {
+  key: "angry",
+  label: "Angry",
+  icon: "fluent-emoji-flat:pouting-face",
+  flat: "fluent:emoji-angry-16-filled",
+  color: "--error"
+}];
+const REACTION_MAP_JN = REACTIONS_JN.reduce((m, r) => {
+  m[r.key] = r;
+  return m;
+}, {});
+function cssVarJN(name) {
+  const cs = getComputedStyle(document.querySelector(".app") || document.body);
+  return cs.getPropertyValue(name).trim() || "currentColor";
+}
+function frameScaleJN(el) {
+  const f = el && el.closest && el.closest("[data-ios-device]");
+  if (!f || !f.offsetWidth) return 1;
+  const s = f.getBoundingClientRect().width / f.offsetWidth;
+  return s > 0 && isFinite(s) ? s : 1;
+}
+function likeButtonJN(wrap) {
+  if (!wrap) return null;
+  const bar = wrap.querySelector('[style*="space-between"]');
+  return (bar || wrap).querySelector("button");
+}
+function actionIconJN(wrap, idx) {
+  const bar = wrap && wrap.querySelector('[style*="space-between"]');
+  const b = bar ? bar.querySelectorAll("button")[idx] : null;
+  return b ? b.querySelector("iconify-icon, svg") : null;
+}
+function burstFromJN(btn, key) {
+  if (!btn) return;
+  const r = REACTION_MAP_JN[key] || REACTION_MAP_JN.like;
+  const color = cssVarJN(r.color);
+  const icon = btn.querySelector("iconify-icon");
+  if (icon && icon.animate) icon.animate([{
+    transform: "scale(1)"
+  }, {
+    transform: "scale(1.6)"
+  }, {
+    transform: "scale(0.9)"
+  }, {
+    transform: "scale(1)"
+  }], {
+    duration: 460,
+    easing: "cubic-bezier(.34,1.56,.64,1)"
+  });
+  const s = frameScaleJN(btn);
+  const rect = btn.getBoundingClientRect();
+  const cx = rect.left + 16 * s,
+    cy = rect.top + rect.height / 2;
+  for (let i = 0; i < 7; i++) {
+    const size = (13 + Math.random() * 10) * s;
+    const el = document.createElement("iconify-icon");
+    el.setAttribute("icon", r.icon);
+    el.setAttribute("aria-hidden", "true");
+    el.style.cssText = "position:fixed;left:" + cx + "px;top:" + cy + "px;width:" + size + "px;height:" + size + "px;pointer-events:none;z-index:9999;line-height:0;will-change:transform,opacity;color:" + color + ";";
+    document.body.appendChild(el);
+    const dx = (Math.random() - 0.5) * 96 * s,
+      dy = (-56 - Math.random() * 74) * s;
+    const anim = el.animate([{
+      transform: "translate(-50%,-50%) scale(.3)",
+      opacity: 0
+    }, {
+      transform: "translate(calc(-50% + " + dx * 0.35 + "px),calc(-50% + " + dy * 0.35 + "px)) scale(1)",
+      opacity: 1,
+      offset: 0.28
+    }, {
+      transform: "translate(calc(-50% + " + dx + "px),calc(-50% + " + dy + "px)) scale(.55)",
+      opacity: 0
+    }], {
+      duration: 740 + Math.random() * 280,
+      easing: "cubic-bezier(.22,.61,.36,1)"
+    });
+    anim.onfinish = () => el.remove();
+    setTimeout(() => el.remove(), 1500);
+  }
+}
+function ReactionPickerJN({
+  at,
+  onPick,
+  onEnter,
+  onLeave
+}) {
+  if (!at) return null;
+  const scale = at.scale || 1;
+  return ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
+    style: {
+      position: "fixed",
+      left: 0,
+      right: 0,
+      bottom: at.bottom,
+      zIndex: 9999,
+      display: "flex",
+      justifyContent: "center",
+      pointerEvents: "none"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      transform: scale !== 1 ? "scale(" + scale + ")" : undefined,
+      transformOrigin: "center bottom",
+      display: "flex"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    onMouseEnter: onEnter,
+    onMouseLeave: onLeave,
+    className: "pf-react-bar",
+    role: "menu",
+    "aria-label": "Pick a reaction",
+    style: {
+      pointerEvents: "auto"
+    }
+  }, REACTIONS_JN.map((r, i) => /*#__PURE__*/React.createElement("button", {
+    key: r.key,
+    type: "button",
+    role: "menuitem",
+    "aria-label": r.label,
+    onClick: () => onPick(r.key),
+    className: "pf-react-opt",
+    "data-react": r.key,
+    style: {
+      animationDelay: i * 35 + "ms"
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pf-react-label"
+  }, r.label), /*#__PURE__*/React.createElement(DSJN.IconifyIcon, {
+    name: r.icon,
+    size: 40
+  })))))), document.body);
+}
+function useReactionPickerJN(ref, reaction, onReact) {
+  const [picker, setPicker] = useStateJN(null);
+  const hideT = useRefJN(null);
+  const pressT = useRefJN(null);
+  const pressed = useRefJN(false);
+  const show = () => {
+    clearTimeout(hideT.current);
+    const btn = likeButtonJN(ref.current);
+    if (!btn) return;
+    const r = btn.getBoundingClientRect();
+    const scale = frameScaleJN(btn);
+    setPicker({
+      bottom: window.innerHeight - r.top + 8 * scale,
+      scale
+    });
+  };
+  const scheduleHide = () => {
+    clearTimeout(hideT.current);
+    hideT.current = setTimeout(() => setPicker(null), 280);
+  };
+  const cancelHide = () => clearTimeout(hideT.current);
+  useEffectJN(() => {
+    const btn = likeButtonJN(ref.current);
+    if (!btn) return undefined;
+    const down = () => {
+      pressed.current = false;
+      clearTimeout(pressT.current);
+      pressT.current = setTimeout(() => {
+        pressed.current = true;
+        show();
+      }, 420);
+    };
+    const up = () => clearTimeout(pressT.current);
+    const click = e => {
+      if (pressed.current) {
+        e.stopPropagation();
+        e.preventDefault();
+        pressed.current = false;
+      }
+    };
+    btn.addEventListener("mouseenter", show);
+    btn.addEventListener("mouseleave", scheduleHide);
+    btn.addEventListener("pointerdown", down);
+    btn.addEventListener("pointerup", up);
+    btn.addEventListener("pointercancel", up);
+    btn.addEventListener("pointerleave", up);
+    btn.addEventListener("click", click, true);
+    return () => {
+      btn.removeEventListener("mouseenter", show);
+      btn.removeEventListener("mouseleave", scheduleHide);
+      btn.removeEventListener("pointerdown", down);
+      btn.removeEventListener("pointerup", up);
+      btn.removeEventListener("pointercancel", up);
+      btn.removeEventListener("pointerleave", up);
+      btn.removeEventListener("click", click, true);
+      clearTimeout(hideT.current);
+      clearTimeout(pressT.current);
+    };
+  }, []);
+  useEffectJN(() => {
+    if (!picker) return undefined;
+    const close = e => {
+      if (!e.target.closest || !e.target.closest(".pf-react-bar")) setPicker(null);
+    };
+    const t = setTimeout(() => document.addEventListener("pointerdown", close, true), 50);
+    return () => {
+      clearTimeout(t);
+      document.removeEventListener("pointerdown", close, true);
+    };
+  }, [picker]);
+  React.useLayoutEffect(() => {
+    const btn = likeButtonJN(ref.current);
+    if (!btn) return;
+    const icon = btn.querySelector("iconify-icon");
+    const label = btn.querySelector("span");
+    const r = REACTION_MAP_JN[reaction];
+    if (r) {
+      const col = cssVarJN(r.color);
+      if (icon) {
+        icon.setAttribute("icon", r.icon);
+        icon.style.color = col;
+      }
+      if (label) {
+        label.style.color = col;
+        label.style.fontWeight = "var(--fw-semibold)";
+      }
+      btn.dataset.reacted = r.key;
+    } else if (btn.dataset.reacted) {
+      if (icon) {
+        icon.setAttribute("icon", "fluent:thumb-like-16-filled");
+        icon.style.color = "";
+      }
+      if (label) {
+        label.style.color = "";
+        label.style.fontWeight = "";
+      }
+      delete btn.dataset.reacted;
+    }
+  });
+  const pick = key => {
+    const changing = reaction !== key;
+    onReact(key);
+    if (changing) burstFromJN(likeButtonJN(ref.current), key);
+    setPicker(null);
+  };
+  return {
+    picker,
+    pick,
+    cancelHide,
+    scheduleHide
+  };
+}
+function useDoubleTapLoveJN(onLove) {
+  const lastTap = useRefJN(0);
+  const [heart, setHeart] = useStateJN(null);
+  const seq = useRefJN(0);
+  const onTap = e => {
+    const now = Date.now();
+    if (now - lastTap.current < 300) {
+      lastTap.current = 0;
+      const key = ++seq.current;
+      setHeart({
+        x: e.clientX,
+        y: e.clientY,
+        key
+      });
+      setTimeout(() => setHeart(h => h && h.key === key ? null : h), 700);
+      onLove();
+      return;
+    }
+    lastTap.current = now;
+  };
+  const heartNode = heart ? ReactDOM.createPortal(/*#__PURE__*/React.createElement("span", {
+    key: heart.key,
+    className: "sm-double-heart",
+    style: {
+      left: heart.x,
+      top: heart.y
+    }
+  }, /*#__PURE__*/React.createElement(DSJN.IconifyIcon, {
+    name: "fluent:heart-16-filled",
+    size: 96,
+    color: "var(--reaction-love)"
+  })), document.body) : null;
+  return {
+    onTap,
+    heartNode
+  };
+}
 function FeedPostJN({
   p,
   pinned,
   onLike,
+  onReact,
   onComment,
   onShare,
   onSave,
@@ -953,20 +1270,85 @@ function FeedPostJN({
 }) {
   const a = authorJN(p.by);
   const first = p.comments[0];
+  const ref = useRefJN(null);
+  const reaction = p.reaction || (p.liked ? "like" : null);
+  const {
+    picker,
+    pick,
+    cancelHide,
+    scheduleHide
+  } = useReactionPickerJN(ref, reaction, key => onReact(p, key));
+  const {
+    onTap,
+    heartNode
+  } = useDoubleTapLoveJN(() => {
+    if (reaction !== "love") {
+      onReact(p, "love");
+      burstFromJN(likeButtonJN(ref.current), "love");
+    }
+  });
+  const handleLike = () => {
+    const willReact = !reaction;
+    onLike(p);
+    if (willReact) burstFromJN(likeButtonJN(ref.current), "like");
+  };
+  const handleComment = () => {
+    const g = actionIconJN(ref.current, 1);
+    if (g && g.animate) g.animate([{
+      transform: "rotate(0)"
+    }, {
+      transform: "rotate(-17deg)"
+    }, {
+      transform: "rotate(13deg)"
+    }, {
+      transform: "rotate(-6deg)"
+    }, {
+      transform: "rotate(0)"
+    }], {
+      duration: 520,
+      easing: "ease-in-out"
+    });
+    onComment(p);
+  };
+  const handleShare = () => {
+    const g = actionIconJN(ref.current, 2);
+    if (g && g.animate) g.animate([{
+      transform: "translate(0,0) scale(1)",
+      opacity: 1
+    }, {
+      transform: "translate(8px,-10px) scale(1.28)",
+      opacity: 0.35,
+      offset: 0.5
+    }, {
+      transform: "translate(-3px,2px) scale(1)",
+      opacity: 1,
+      offset: 0.78
+    }, {
+      transform: "translate(0,0) scale(1)",
+      opacity: 1
+    }], {
+      duration: 560,
+      easing: "cubic-bezier(.34,1.56,.64,1)"
+    });
+    onShare(p);
+  };
   const media = p.img ? /*#__PURE__*/React.createElement("div", {
     className: "pf-media-bleed",
     style: {
       margin: "0 -16px"
-    }
+    },
+    onClick: onTap
   }, /*#__PURE__*/React.createElement("img", {
     src: p.img,
     alt: "",
+    draggable: false,
     style: {
       width: "100%",
       height: 380,
       objectFit: "cover",
       display: "block",
-      background: "var(--gray-100)"
+      background: "var(--gray-100)",
+      userSelect: "none"
     }
   })) : p.event ? /*#__PURE__*/React.createElement("div", {
     className: "pf-media-bleed",
@@ -992,6 +1374,7 @@ function FeedPostJN({
   return /*#__PURE__*/React.createElement("div", {
     className: "post-wrap",
     id: "post-" + p.id,
+    ref: ref,
     style: {
       background: "var(--surface-card)",
       borderRadius: "var(--r-md)",
@@ -1012,15 +1395,15 @@ function FeedPostJN({
     }),
     media: media,
     hashtags: [],
-    liked: p.liked,
+    liked: !!reaction,
     saved: saved,
     actioned: false,
     likes: fmtN(p.likes),
     shares: fmtN(p.shares),
     comments: String(p.comments.length),
-    onLike: () => onLike(p),
-    onComment: () => onComment(p),
-    onShare: () => onShare(p),
+    onLike: handleLike,
+    onComment: handleComment,
+    onShare: handleShare,
     onSave: () => onSave(p),
     onReport: () => showToast("Thanks, we'll take a look"),
     onReactionsClick: () => showToast(fmtN(p.likes) + " people reacted"),
@@ -1056,7 +1439,12 @@ function FeedPostJN({
     type: "button",
     className: "cmt-viewmore",
     onClick: () => onComment(p)
-  }, "View all ", p.comments.length, " comments")));
+  }, "View all ", p.comments.length, " comments")), /*#__PURE__*/React.createElement(ReactionPickerJN, {
+    at: picker,
+    onPick: pick,
+    onEnter: cancelHide,
+    onLeave: scheduleHide
+  }), heartNode);
 }
 function HomeScreen() {
   const [posts, setPosts] = useStateJN(loadPosts);
@@ -1117,10 +1505,21 @@ function HomeScreen() {
     saveJN(POSTS_KEY, list);
   }
   function like(p) {
+    const had = !!(p.reaction || p.liked);
     persist(posts.map(x => x.id === p.id ? {
       ...x,
-      liked: !x.liked,
-      likes: x.likes + (x.liked ? -1 : 1)
+      liked: false,
+      reaction: had ? null : "like",
+      likes: x.likes + (had ? -1 : 1)
+    } : x));
+  }
+  function react(p, key) {
+    const had = !!(p.reaction || p.liked);
+    persist(posts.map(x => x.id === p.id ? {
+      ...x,
+      liked: false,
+      reaction: key,
+      likes: x.likes + (had ? 0 : 1)
     } : x));
   }
   function save(p) {
@@ -1169,6 +1568,7 @@ function HomeScreen() {
   const curPost = posts.find(x => x.id === commentId);
   const postProps = {
     onLike: like,
+    onReact: react,
     onComment: p => setCommentId(p.id),
     onShare: () => showToast("Link copied"),
     onSave: save,
