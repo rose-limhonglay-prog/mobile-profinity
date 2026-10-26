@@ -1781,6 +1781,9 @@ function ScheduleCallScreen() {
   const [view, setView] = useStateJN(() => (qJN("new") === "1" ? "book" : "schedule"));
   const [sel, setSel] = useStateJN(null);
   const [apptOpen, setApptOpen] = useStateJN(null);
+  const [filt, setFilt] = useStateJN("all");
+  const [pastOpen, setPastOpen] = useStateJN(false);
+  const chrome = useKatyChromeJN();
   const items = useMemoJN(() => scheduleItems(store.calls), [store]);
   const [step, setStep] = useStateJN(0);
   const [editing, setEditing] = useStateJN(null);
@@ -1826,13 +1829,18 @@ function ScheduleCallScreen() {
     else icsDownloadJN({ id: c.id, title: callTypeLabel(c) + " with " + callWho(c).name, start, end: new Date(start.getTime() + CALL_DUR * 60000), where: c.type === "video" ? "Video call · link in PROfinity Messages" : "Phone call · " + prof.phone, desc: c.reason + (c.note ? ". " + c.note : "") + ". Booked through the PROfinity patient app." });
     showToast("Added to calendar");
   }
+  const kindOf = (x) => x.kind === "call" ? x.type : "clinic";
+  const kindIcon = (x) => x.kind === "call" ? (x.type === "phone" ? "phone" : "video") : "building-2";
+  const titleOf = (x) => x.kind === "call" ? callTypeLabel(x) + " with " + callWho(x).first : x.title + " with " + callWho(x).first;
+  const openItem = (x, past) => x.kind === "call" ? (past ? null : (setSel(x), setView("detail"))) : setApptOpen(x);
+  const relDay = (x) => { const t = new Date(); t.setHours(0, 0, 0, 0); const d = Math.round((new Date(x.date + "T00:00:00") - t) / 86400000); return d === 0 ? "Today" : d === 1 ? "Tomorrow" : d < 7 ? "In " + d + " days" : d < 14 ? "Next week" : "In " + Math.round(d / 7) + " weeks"; };
   const ItemRow = ({ x, past }) => { const w = callWho(x); const d = new Date(x.date + "T12:00:00"); const isCall = x.kind === "call"; return (
-    <button className={"sc-item" + (past ? " past" : "") + (x.status === "cancelled" ? " cancelled" : "")} onClick={() => isCall ? (past ? null : (setSel(x), setView("detail"))) : setApptOpen(x)}>
-      <span className="date"><b>{d.getDate()}</b><i>{MONTHS[d.getMonth()]}</i></span>
-      <span className={"ic" + (isCall ? " call" : " appt")}><IcJN name={isCall ? (x.type === "phone" ? "phone" : "video") : "building-2"} size={17} color="#fff" /></span>
+    <button className={"sc-item" + (past ? " past" : "") + (x.status === "cancelled" ? " cancelled" : "")} onClick={() => openItem(x, past)}>
+      <span className="date"><i>{WD[d.getDay()]}</i><b>{d.getDate()}</b></span>
+      <span className="av"><JNFace p={w} size={42} /><i className={"bd " + kindOf(x)}><IcJN name={kindIcon(x)} size={11} color="#fff" /></i></span>
       <span className="tx">
-        <b>{isCall ? callTypeLabel(x) + " with " + w.first : x.title + " with " + w.first}</b>
-        <small>{WD[d.getDay()]} · {x.time} · {x.dur || CALL_DUR} min · {isCall ? x.reason : "In clinic"}</small>
+        <b>{titleOf(x)}</b>
+        <small>{x.time} · {x.dur || CALL_DUR} min · {isCall ? x.reason : "In clinic"}</small>
       </span>
       <span className={"st " + (x.status || "booked")}>{x.status === "cancelled" ? "Cancelled" : x.status === "done" || past ? "Done" : isCall ? "Booked" : "Confirmed"}</span>
     </button>); };
@@ -1857,32 +1865,79 @@ function ScheduleCallScreen() {
     </div>);
 
   /* ---- booked / upcoming -------------------------------------------- */
-  if (view === "schedule") { const nextUp = items.upcoming[0]; return (
-    <div className="jn-screen sc">
-      <JNBar title="Calls & appointments" back={() => goJN(ret)} trailing={<button className="jn-iconbtn sm" aria-label="Schedule a call" onClick={() => startBooking(null)}><IcJN name="plus" size={20} color="var(--brand-navy)" /></button>} />
-      <div className="jn-scroll" ref={scrollRef}>
-        {nextUp ? (
-          <div className="sc-next">
-            <span className="lbl">Next up</span>
-            <b>{nextUp.kind === "call" ? callTypeLabel(nextUp) + " with " + callWho(nextUp).first : nextUp.title + " with " + callWho(nextUp).first}</b>
-            <small>{callWhen(nextUp)} · {nextUp.kind === "call" ? (nextUp.type === "phone" ? "they call you" : "link arrives in Messages") : nextUp.where}</small>
-          </div>) : (
-          <div className="jn-emptybox sc-empty"><IcJN name="calendar" size={28} color="var(--gray-400)" /><b>Nothing booked yet</b><small>Schedule a free 15-minute call with your care team.</small></div>)}
-        <button className="jn-btn block sc-newbtn" onClick={() => startBooking(null)}><IcJN name="phone" size={18} />Schedule a call</button>
-
-        <h4 className="sc-h4 sc-sec">Upcoming <em>{items.upcoming.length}</em></h4>
-        <div className="jn-card list sc-list">
-          {items.upcoming.length === 0 && <div className="sc-none">Nothing upcoming</div>}
-          {items.upcoming.map((x) => <ItemRow key={x.id} x={x} />)}
+  if (view === "schedule") {
+    const nextUp = items.upcoming[0];
+    const shown = items.upcoming.filter((x) => filt === "all" || (filt === "call" ? x.kind === "call" : x.kind === "appt"));
+    const groups = shown.reduce((g, x) => { const d = new Date(x.date + "T12:00:00"); const k = d.toLocaleString("en-GB", { month: "long" }) + " " + d.getFullYear(); (g[k] = g[k] || []).push(x); return g; }, {});
+    const nw = nextUp && callWho(nextUp);
+    return (
+    <div className={"jn-screen m-screen sc sc-page" + chrome.cls}>
+      {chrome.top}
+      <div className="jn-scroll" ref={chrome.scrollRef} style={{ paddingTop: chrome.padTop(8) }}>
+        <button className="jn-backlink" onClick={() => goJN(ret)}><IcJN name="chevron-left" size={18} />Back</button>
+        <div className="jn-pagehead">
+          <div><h2>Calls & appointments</h2><p>Clinic visits and calls with your care team</p></div>
+          <button className="jn-iconbtn" aria-label="Schedule a call" onClick={() => startBooking(null)}><IcJN name="plus" size={22} color="var(--brand-navy)" /></button>
         </div>
+
+        {nextUp ? (
+          <section className="sc-hero">
+            <div className="sc-hero-top">
+              <span className="sc-hero-av"><JNFace p={nw} size={62} /><i className={"bd " + kindOf(nextUp)}><IcJN name={kindIcon(nextUp)} size={13} color="#fff" /></i></span>
+              <div className="tx">
+                <span className="lbl"><i /> Next up · {relDay(nextUp)}</span>
+                <b>{titleOf(nextUp)}</b>
+                <small>{nw.title}</small>
+              </div>
+            </div>
+            <div className="sc-hero-meta">
+              <span><IcJN name="calendar" size={14} />{callWhen(nextUp).split(" · ")[0]}</span>
+              <span><IcJN name="clock" size={14} />{nextUp.time} · {nextUp.dur || CALL_DUR} min</span>
+              <span><IcJN name={nextUp.kind === "call" ? (nextUp.type === "phone" ? "phone" : "video") : "map-pin"} size={14} />{nextUp.kind === "call" ? callTypeLabel(nextUp) : "Manchester clinic"}</span>
+            </div>
+            <div className="sc-hero-acts">
+              <button className="primary" onClick={() => openItem(nextUp)}>{nextUp.kind === "call" ? "View call" : "Details"}</button>
+              <button onClick={() => addToCalendar(nextUp)}><IcJN name="calendar-plus" size={16} />Calendar</button>
+              <button onClick={() => goJN("JaneMessages.html?to=" + (nextUp.kind === "call" ? nw.id : "reception"))}><IcJN name="message-circle" size={16} />Message</button>
+            </div>
+          </section>) : (
+          <section className="sc-hero empty">
+            <span className="sc-hero-ic"><IcJN name="calendar" size={26} color="#fff" /></span>
+            <b>Nothing booked yet</b>
+            <small>Your clinic visits and calls with the care team will show here.</small>
+          </section>)}
+
+        <div className="sc-quick">
+          <button className="sc-qt navy" onClick={() => startBooking(null)}>
+            <span className="ic"><IcJN name="phone" size={20} color="#fff" /></span>
+            <b>Schedule a call</b><small>Free · 15 min · video or phone</small>
+          </button>
+          <button className="sc-qt gold" onClick={() => goJN("JaneMessages.html?to=reception")}>
+            <span className="ic"><IcJN name="building-2" size={20} color="#fff" /></span>
+            <b>Book a clinic visit</b><small>Via reception</small>
+          </button>
+        </div>
+
+        <div className="jn-seg sc-seg">{[["all", "All"], ["call", "Calls"], ["appt", "In clinic"]].map(([k, l]) => <button key={k} className={filt === k ? "on" : ""} onClick={() => setFilt(k)}>{l}</button>)}</div>
+
+        {Object.keys(groups).length === 0 && <div className="jn-emptybox sc-empty"><IcJN name="calendar" size={26} color="var(--gray-400)" /><b>Nothing upcoming</b><small>{filt === "call" ? "Schedule a call with your care team." : filt === "appt" ? "Message reception to book a visit." : "Nothing booked yet."}</small></div>}
+        {Object.entries(groups).map(([month, list]) => (
+          <section key={month} className="sc-group">
+            <h4 className="sc-month-h">{month} <em>{list.length}</em></h4>
+            <div className="jn-card list sc-list">{list.map((x) => <ItemRow key={x.id} x={x} />)}</div>
+          </section>))}
+
         {items.past.length > 0 && (
-          <React.Fragment>
-            <h4 className="sc-h4 sc-sec">Past</h4>
-            <div className="jn-card list sc-list">{items.past.map((x) => <ItemRow key={x.id} x={x} past />)}</div>
-          </React.Fragment>)}
+          <section className="sc-group">
+            <button className={"sc-month-h sc-past-h" + (pastOpen ? " open" : "")} onClick={() => setPastOpen(!pastOpen)}>Past <em>{items.past.length}</em><IcJN name="chevron-down" size={18} color="var(--gray-450)" /></button>
+            {pastOpen && <div className="jn-card list sc-list">{items.past.map((x) => <ItemRow key={x.id} x={x} past />)}</div>}
+          </section>)}
+
         <div className="sc-info"><IcJN name="info" size={15} color="var(--brand-navy)" /><span>Clinic appointments are booked by reception. To move one, message the clinic or call 0161 000 0000.</span></div>
         <div className="jn-end">Calls are free for {JANE.clinic} patients</div>
       </div>
+      <JNTabs active="schedule" compact={chrome.hidden} />
+      {chrome.layers}
 
       <JNSheet open={!!apptOpen} onClose={() => setApptOpen(null)}>
         {apptOpen && (() => { const w = callWho(apptOpen); const isPast = apptOpen.status === "done"; return (

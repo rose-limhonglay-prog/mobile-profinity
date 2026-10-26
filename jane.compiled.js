@@ -5730,6 +5730,9 @@ function ScheduleCallScreen() {
   const [view, setView] = useStateJN(() => qJN("new") === "1" ? "book" : "schedule");
   const [sel, setSel] = useStateJN(null);
   const [apptOpen, setApptOpen] = useStateJN(null);
+  const [filt, setFilt] = useStateJN("all");
+  const [pastOpen, setPastOpen] = useStateJN(false);
+  const chrome = useKatyChromeJN();
   const items = useMemoJN(() => scheduleItems(store.calls), [store]);
   const [step, setStep] = useStateJN(0);
   const [editing, setEditing] = useStateJN(null);
@@ -5845,6 +5848,16 @@ function ScheduleCallScreen() {
     });
     showToast("Added to calendar");
   }
+  const kindOf = x => x.kind === "call" ? x.type : "clinic";
+  const kindIcon = x => x.kind === "call" ? x.type === "phone" ? "phone" : "video" : "building-2";
+  const titleOf = x => x.kind === "call" ? callTypeLabel(x) + " with " + callWho(x).first : x.title + " with " + callWho(x).first;
+  const openItem = (x, past) => x.kind === "call" ? past ? null : (setSel(x), setView("detail")) : setApptOpen(x);
+  const relDay = x => {
+    const t = new Date();
+    t.setHours(0, 0, 0, 0);
+    const d = Math.round((new Date(x.date + "T00:00:00") - t) / 86400000);
+    return d === 0 ? "Today" : d === 1 ? "Tomorrow" : d < 7 ? "In " + d + " days" : d < 14 ? "Next week" : "In " + Math.round(d / 7) + " weeks";
+  };
   const ItemRow = ({
     x,
     past
@@ -5854,18 +5867,23 @@ function ScheduleCallScreen() {
     const isCall = x.kind === "call";
     return /*#__PURE__*/React.createElement("button", {
       className: "sc-item" + (past ? " past" : "") + (x.status === "cancelled" ? " cancelled" : ""),
-      onClick: () => isCall ? past ? null : (setSel(x), setView("detail")) : setApptOpen(x)
+      onClick: () => openItem(x, past)
     }, /*#__PURE__*/React.createElement("span", {
       className: "date"
-    }, /*#__PURE__*/React.createElement("b", null, d.getDate()), /*#__PURE__*/React.createElement("i", null, MONTHS[d.getMonth()])), /*#__PURE__*/React.createElement("span", {
-      className: "ic" + (isCall ? " call" : " appt")
+    }, /*#__PURE__*/React.createElement("i", null, WD[d.getDay()]), /*#__PURE__*/React.createElement("b", null, d.getDate())), /*#__PURE__*/React.createElement("span", {
+      className: "av"
+    }, /*#__PURE__*/React.createElement(JNFace, {
+      p: w,
+      size: 42
+    }), /*#__PURE__*/React.createElement("i", {
+      className: "bd " + kindOf(x)
     }, /*#__PURE__*/React.createElement(IcJN, {
-      name: isCall ? x.type === "phone" ? "phone" : "video" : "building-2",
-      size: 17,
+      name: kindIcon(x),
+      size: 11,
       color: "#fff"
-    })), /*#__PURE__*/React.createElement("span", {
+    }))), /*#__PURE__*/React.createElement("span", {
       className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, isCall ? callTypeLabel(x) + " with " + w.first : x.title + " with " + w.first), /*#__PURE__*/React.createElement("small", null, WD[d.getDay()], " · ", x.time, " · ", x.dur || CALL_DUR, " min · ", isCall ? x.reason : "In clinic")), /*#__PURE__*/React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("b", null, titleOf(x)), /*#__PURE__*/React.createElement("small", null, x.time, " · ", x.dur || CALL_DUR, " min · ", isCall ? x.reason : "In clinic")), /*#__PURE__*/React.createElement("span", {
       className: "st " + (x.status || "booked")
     }, x.status === "cancelled" ? "Cancelled" : x.status === "done" || past ? "Done" : isCall ? "Booked" : "Confirmed"));
   };
@@ -5927,51 +5945,145 @@ function ScheduleCallScreen() {
   /* ---- booked / upcoming -------------------------------------------- */
   if (view === "schedule") {
     const nextUp = items.upcoming[0];
+    const shown = items.upcoming.filter(x => filt === "all" || (filt === "call" ? x.kind === "call" : x.kind === "appt"));
+    const groups = shown.reduce((g, x) => {
+      const d = new Date(x.date + "T12:00:00");
+      const k = d.toLocaleString("en-GB", {
+        month: "long"
+      }) + " " + d.getFullYear();
+      (g[k] = g[k] || []).push(x);
+      return g;
+    }, {});
+    const nw = nextUp && callWho(nextUp);
     return /*#__PURE__*/React.createElement("div", {
-      className: "jn-screen sc"
-    }, /*#__PURE__*/React.createElement(JNBar, {
-      title: "Calls & appointments",
-      back: () => goJN(ret),
-      trailing: /*#__PURE__*/React.createElement("button", {
-        className: "jn-iconbtn sm",
-        "aria-label": "Schedule a call",
-        onClick: () => startBooking(null)
-      }, /*#__PURE__*/React.createElement(IcJN, {
-        name: "plus",
-        size: 20,
-        color: "var(--brand-navy)"
-      }))
-    }), /*#__PURE__*/React.createElement("div", {
+      className: "jn-screen m-screen sc sc-page" + chrome.cls
+    }, chrome.top, /*#__PURE__*/React.createElement("div", {
       className: "jn-scroll",
-      ref: scrollRef
-    }, nextUp ? /*#__PURE__*/React.createElement("div", {
-      className: "sc-next"
+      ref: chrome.scrollRef,
+      style: {
+        paddingTop: chrome.padTop(8)
+      }
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "jn-backlink",
+      onClick: () => goJN(ret)
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "chevron-left",
+      size: 18
+    }), "Back"), /*#__PURE__*/React.createElement("div", {
+      className: "jn-pagehead"
+    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", null, "Calls & appointments"), /*#__PURE__*/React.createElement("p", null, "Clinic visits and calls with your care team")), /*#__PURE__*/React.createElement("button", {
+      className: "jn-iconbtn",
+      "aria-label": "Schedule a call",
+      onClick: () => startBooking(null)
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "plus",
+      size: 22,
+      color: "var(--brand-navy)"
+    }))), nextUp ? /*#__PURE__*/React.createElement("section", {
+      className: "sc-hero"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "sc-hero-top"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sc-hero-av"
+    }, /*#__PURE__*/React.createElement(JNFace, {
+      p: nw,
+      size: 62
+    }), /*#__PURE__*/React.createElement("i", {
+      className: "bd " + kindOf(nextUp)
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: kindIcon(nextUp),
+      size: 13,
+      color: "#fff"
+    }))), /*#__PURE__*/React.createElement("div", {
+      className: "tx"
     }, /*#__PURE__*/React.createElement("span", {
       className: "lbl"
-    }, "Next up"), /*#__PURE__*/React.createElement("b", null, nextUp.kind === "call" ? callTypeLabel(nextUp) + " with " + callWho(nextUp).first : nextUp.title + " with " + callWho(nextUp).first), /*#__PURE__*/React.createElement("small", null, callWhen(nextUp), " · ", nextUp.kind === "call" ? nextUp.type === "phone" ? "they call you" : "link arrives in Messages" : nextUp.where)) : /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("i", null), " Next up · ", relDay(nextUp)), /*#__PURE__*/React.createElement("b", null, titleOf(nextUp)), /*#__PURE__*/React.createElement("small", null, nw.title))), /*#__PURE__*/React.createElement("div", {
+      className: "sc-hero-meta"
+    }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+      name: "calendar",
+      size: 14
+    }), callWhen(nextUp).split(" · ")[0]), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+      name: "clock",
+      size: 14
+    }), nextUp.time, " · ", nextUp.dur || CALL_DUR, " min"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+      name: nextUp.kind === "call" ? nextUp.type === "phone" ? "phone" : "video" : "map-pin",
+      size: 14
+    }), nextUp.kind === "call" ? callTypeLabel(nextUp) : "Manchester clinic")), /*#__PURE__*/React.createElement("div", {
+      className: "sc-hero-acts"
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "primary",
+      onClick: () => openItem(nextUp)
+    }, nextUp.kind === "call" ? "View call" : "Details"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => addToCalendar(nextUp)
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "calendar-plus",
+      size: 16
+    }), "Calendar"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => goJN("JaneMessages.html?to=" + (nextUp.kind === "call" ? nw.id : "reception"))
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "message-circle",
+      size: 16
+    }), "Message"))) : /*#__PURE__*/React.createElement("section", {
+      className: "sc-hero empty"
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "sc-hero-ic"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "calendar",
+      size: 26,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("b", null, "Nothing booked yet"), /*#__PURE__*/React.createElement("small", null, "Your clinic visits and calls with the care team will show here.")), /*#__PURE__*/React.createElement("div", {
+      className: "sc-quick"
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "sc-qt navy",
+      onClick: () => startBooking(null)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ic"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "phone",
+      size: 20,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("b", null, "Schedule a call"), /*#__PURE__*/React.createElement("small", null, "Free · 15 min · video or phone")), /*#__PURE__*/React.createElement("button", {
+      className: "sc-qt gold",
+      onClick: () => goJN("JaneMessages.html?to=reception")
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ic"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "building-2",
+      size: 20,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("b", null, "Book a clinic visit"), /*#__PURE__*/React.createElement("small", null, "Via reception"))), /*#__PURE__*/React.createElement("div", {
+      className: "jn-seg sc-seg"
+    }, [["all", "All"], ["call", "Calls"], ["appt", "In clinic"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+      key: k,
+      className: filt === k ? "on" : "",
+      onClick: () => setFilt(k)
+    }, l))), Object.keys(groups).length === 0 && /*#__PURE__*/React.createElement("div", {
       className: "jn-emptybox sc-empty"
     }, /*#__PURE__*/React.createElement(IcJN, {
       name: "calendar",
-      size: 28,
+      size: 26,
       color: "var(--gray-400)"
-    }), /*#__PURE__*/React.createElement("b", null, "Nothing booked yet"), /*#__PURE__*/React.createElement("small", null, "Schedule a free 15-minute call with your care team.")), /*#__PURE__*/React.createElement("button", {
-      className: "jn-btn block sc-newbtn",
-      onClick: () => startBooking(null)
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: "phone",
-      size: 18
-    }), "Schedule a call"), /*#__PURE__*/React.createElement("h4", {
-      className: "sc-h4 sc-sec"
-    }, "Upcoming ", /*#__PURE__*/React.createElement("em", null, items.upcoming.length)), /*#__PURE__*/React.createElement("div", {
+    }), /*#__PURE__*/React.createElement("b", null, "Nothing upcoming"), /*#__PURE__*/React.createElement("small", null, filt === "call" ? "Schedule a call with your care team." : filt === "appt" ? "Message reception to book a visit." : "Nothing booked yet.")), Object.entries(groups).map(([month, list]) => /*#__PURE__*/React.createElement("section", {
+      key: month,
+      className: "sc-group"
+    }, /*#__PURE__*/React.createElement("h4", {
+      className: "sc-month-h"
+    }, month, " ", /*#__PURE__*/React.createElement("em", null, list.length)), /*#__PURE__*/React.createElement("div", {
       className: "jn-card list sc-list"
-    }, items.upcoming.length === 0 && /*#__PURE__*/React.createElement("div", {
-      className: "sc-none"
-    }, "Nothing upcoming"), items.upcoming.map(x => /*#__PURE__*/React.createElement(ItemRow, {
+    }, list.map(x => /*#__PURE__*/React.createElement(ItemRow, {
       key: x.id,
       x: x
-    }))), items.past.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h4", {
-      className: "sc-h4 sc-sec"
-    }, "Past"), /*#__PURE__*/React.createElement("div", {
+    }))))), items.past.length > 0 && /*#__PURE__*/React.createElement("section", {
+      className: "sc-group"
+    }, /*#__PURE__*/React.createElement("button", {
+      className: "sc-month-h sc-past-h" + (pastOpen ? " open" : ""),
+      onClick: () => setPastOpen(!pastOpen)
+    }, "Past ", /*#__PURE__*/React.createElement("em", null, items.past.length), /*#__PURE__*/React.createElement(IcJN, {
+      name: "chevron-down",
+      size: 18,
+      color: "var(--gray-450)"
+    })), pastOpen && /*#__PURE__*/React.createElement("div", {
       className: "jn-card list sc-list"
     }, items.past.map(x => /*#__PURE__*/React.createElement(ItemRow, {
       key: x.id,
@@ -5985,7 +6097,10 @@ function ScheduleCallScreen() {
       color: "var(--brand-navy)"
     }), /*#__PURE__*/React.createElement("span", null, "Clinic appointments are booked by reception. To move one, message the clinic or call 0161 000 0000.")), /*#__PURE__*/React.createElement("div", {
       className: "jn-end"
-    }, "Calls are free for ", JANE.clinic, " patients")), /*#__PURE__*/React.createElement(JNSheet, {
+    }, "Calls are free for ", JANE.clinic, " patients")), /*#__PURE__*/React.createElement(JNTabs, {
+      active: "schedule",
+      compact: chrome.hidden
+    }), chrome.layers, /*#__PURE__*/React.createElement(JNSheet, {
       open: !!apptOpen,
       onClose: () => setApptOpen(null)
     }, apptOpen && (() => {
