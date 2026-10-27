@@ -6272,7 +6272,13 @@ function ScheduleCallScreen() {
     const isCall = x.kind === "call";
     const hot = x.date === todayIso;
     return /*#__PURE__*/React.createElement("section", {
-      className: "sc-hero" + (hot ? "" : " lite")
+      className: "sc-hero" + (hot ? "" : " lite"),
+      role: "button",
+      tabIndex: 0,
+      onClick: () => openItem(x),
+      onKeyDown: e => {
+        if (e.key === "Enter") openItem(x);
+      }
     }, /*#__PURE__*/React.createElement("span", {
       className: "sc-hero-st " + (x.status || "booked")
     }, isCall ? "Booked" : "Confirmed"), /*#__PURE__*/React.createElement("div", {
@@ -6303,12 +6309,9 @@ function ScheduleCallScreen() {
     }), x.time, " · ", x.dur || CALL_DUR, " min"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
       name: isCall ? x.type === "phone" ? "phone" : "video" : "map-pin",
       size: 14
-    }), isCall ? callTypeLabel(x) : "Manchester clinic")), /*#__PURE__*/React.createElement(SlideJN, {
-      label: isCall ? "View call" : "View details",
-      hot: hot,
-      onDone: () => openItem(x)
-    }), /*#__PURE__*/React.createElement("div", {
-      className: "sc-hero-acts"
+    }), isCall ? callTypeLabel(x) : "Manchester clinic")), /*#__PURE__*/React.createElement("div", {
+      className: "sc-hero-acts",
+      onClick: e => e.stopPropagation()
     }, /*#__PURE__*/React.createElement("button", {
       onClick: () => addToCalendar(x)
     }, /*#__PURE__*/React.createElement(IcJN, {

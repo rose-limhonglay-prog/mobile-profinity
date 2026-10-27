@@ -1929,7 +1929,7 @@ function ScheduleCallScreen() {
     </button>); };
   const todayIso = isoDateJN(new Date());
   const HeroCard = ({ x }) => { const w = callWho(x); const isCall = x.kind === "call"; const hot = x.date === todayIso; return (
-    <section className={"sc-hero" + (hot ? "" : " lite")}>
+    <section className={"sc-hero" + (hot ? "" : " lite")} role="button" tabIndex={0} onClick={() => openItem(x)} onKeyDown={(e) => { if (e.key === "Enter") openItem(x); }}>
       <span className={"sc-hero-st " + (x.status || "booked")}>{isCall ? "Booked" : "Confirmed"}</span>
       <div className="sc-hero-top">
         <span className="sc-hero-av"><JNFace p={w} size={62} /><i className={"bd " + kindOf(x)}><IcJN name={kindIcon(x)} size={13} color="#fff" /></i></span>
@@ -1943,8 +1943,7 @@ function ScheduleCallScreen() {
         <span><IcJN name="clock" size={14} />{x.time} · {x.dur || CALL_DUR} min</span>
         <span><IcJN name={isCall ? (x.type === "phone" ? "phone" : "video") : "map-pin"} size={14} />{isCall ? callTypeLabel(x) : "Manchester clinic"}</span>
       </div>
-      <SlideJN label={isCall ? "View call" : "View details"} hot={hot} onDone={() => openItem(x)} />
-      <div className="sc-hero-acts">
+      <div className="sc-hero-acts" onClick={(e) => e.stopPropagation()}>
         <button onClick={() => addToCalendar(x)}><IcJN name="calendar-plus" size={16} />Calendar</button>
         <button onClick={() => goJN("JaneMessages.html?to=" + (isCall ? w.id : "reception"))}><IcJN name="message-circle" size={16} />Message</button>
       </div>

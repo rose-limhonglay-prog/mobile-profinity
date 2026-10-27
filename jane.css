@@ -970,7 +970,9 @@ button.jn-pmc-h { cursor: pointer; }
 .sc-slide.hot { background: #fff; }
 .sc-slide.hot .sc-slide-l { color: var(--brand-navy); }
 .sc-slide.hot .sc-slide-k { background: #eef0ff; border-color: #dcdffb; }
-.sc-hero-acts { margin-top: 10px; }
+.sc-hero-acts { margin-top: 14px; }
+.sc-cards .sc-hero { cursor: pointer; }
+.sc-cards .sc-hero:active { transform: scale(.99); }
 .sc .jn-btn, .sc .sc-hero-acts button, .sc .sc-slot, .sc .sc-day, .sc .sc-type, .sc .sc-reasons .jn-chip, .sc .sc-clin, .sc .jn-iconbtn, .sc .sc-join, .sc .sc-cancel { border-radius: 12px; }
 [data-theme="dark"] .sc-slide { background: var(--brand-navy); }
 [data-theme="dark"] .sc-slide-l { color: #131126; }
