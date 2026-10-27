@@ -5717,6 +5717,78 @@ function dmCallNote(text, withId) {
     } : c)
   });
 }
+
+/* Slide-to-open control: drag the knob to the end (or just tap the track) to fire onDone. */
+function SlideJN({
+  label,
+  onDone,
+  hot
+}) {
+  const ref = useRefJN(null);
+  const [x, setX] = useStateJN(0);
+  const drag = useRefJN(null);
+  const maxX = () => {
+    const el = ref.current;
+    return el ? el.clientWidth - 52 : 0;
+  };
+  const down = e => {
+    drag.current = {
+      sx: e.clientX,
+      moved: false
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const move = e => {
+    if (!drag.current) return;
+    const dx = Math.max(0, Math.min(maxX(), e.clientX - drag.current.sx));
+    if (dx > 4) drag.current.moved = true;
+    setX(dx);
+  };
+  const up = e => {
+    if (!drag.current) return;
+    const done = x >= maxX() * 0.8 || !drag.current.moved;
+    drag.current = null;
+    if (done) {
+      setX(maxX());
+      setTimeout(() => {
+        setX(0);
+        onDone();
+      }, done && x > 0 ? 120 : 0);
+    } else setX(0);
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "sc-slide" + (hot ? " hot" : ""),
+    ref: ref,
+    onClick: () => {
+      if (!drag.current) onDone();
+    },
+    role: "button",
+    "aria-label": label
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sc-slide-l",
+    style: {
+      opacity: 1 - x / Math.max(1, maxX())
+    }
+  }, label, /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-right",
+    size: 16
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sc-slide-k",
+    style: {
+      transform: "translateX(" + x + "px)",
+      transition: drag.current ? "none" : "transform .18s ease"
+    },
+    onPointerDown: down,
+    onPointerMove: move,
+    onPointerUp: up,
+    onPointerCancel: up,
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "arrow-right",
+    size: 20,
+    color: hot ? "var(--brand-navy)" : "#fff"
+  })));
+}
 function ScheduleCallScreen() {
   const ret = qJN("ret") || "JaneNewsfeed.html";
   const prof = readJN(PROFILE_KEY, {
@@ -5914,7 +5986,7 @@ function ScheduleCallScreen() {
       className: "tx"
     }, /*#__PURE__*/React.createElement("span", {
       className: "lbl"
-    }, /*#__PURE__*/React.createElement("i", null), " ", hot ? "Today" : relDay(x)), /*#__PURE__*/React.createElement("b", null, titleOf(x)), /*#__PURE__*/React.createElement("small", null, w.title))), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("i", null), " ", hot ? "Today" : relDay(x)), /*#__PURE__*/React.createElement("b", null, titleOf(x)))), /*#__PURE__*/React.createElement("div", {
       className: "sc-hero-meta"
     }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
       name: "calendar",
@@ -5925,12 +5997,13 @@ function ScheduleCallScreen() {
     }), x.time, " · ", x.dur || CALL_DUR, " min"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
       name: isCall ? x.type === "phone" ? "phone" : "video" : "map-pin",
       size: 14
-    }), isCall ? callTypeLabel(x) : "Manchester clinic")), /*#__PURE__*/React.createElement("div", {
+    }), isCall ? callTypeLabel(x) : "Manchester clinic")), /*#__PURE__*/React.createElement(SlideJN, {
+      label: isCall ? "View call" : "View details",
+      hot: hot,
+      onDone: () => openItem(x)
+    }), /*#__PURE__*/React.createElement("div", {
       className: "sc-hero-acts"
     }, /*#__PURE__*/React.createElement("button", {
-      className: "primary",
-      onClick: () => openItem(x)
-    }, isCall ? "View call" : "Details"), /*#__PURE__*/React.createElement("button", {
       onClick: () => addToCalendar(x)
     }, /*#__PURE__*/React.createElement(IcJN, {
       name: "calendar-plus",

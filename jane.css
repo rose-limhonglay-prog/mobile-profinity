@@ -962,3 +962,18 @@ button.jn-pmc-h { cursor: pointer; }
 .sc-apptd-head small { font-size: 13px; color: var(--text-secondary); }
 .sc-apptd .jn-evd-host { margin-bottom: 8px; }
 .sc-apptd .jn-row-btns .jn-btn { padding: 0 8px; font-size: 13px; min-width: 0; }
+
+/* ---- Calls & appointments: slide-to-open + 12px corners (user 2026-10-27: no round buttons) ---- */
+.sc-slide { position: relative; height: 52px; margin-top: 14px; border-radius: 12px; background: var(--brand-navy); overflow: hidden; cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+.sc-slide-l { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 4px; padding-left: 44px; color: #fff; font-size: 14px; font-weight: var(--fw-semibold); pointer-events: none; }
+.sc-slide-k { position: absolute; left: 4px; top: 4px; width: 44px; height: 44px; border-radius: 10px; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.28); display: flex; align-items: center; justify-content: center; touch-action: none; cursor: grab; }
+.sc-slide.hot { background: #fff; }
+.sc-slide.hot .sc-slide-l { color: var(--brand-navy); }
+.sc-slide.hot .sc-slide-k { background: #eef0ff; border-color: #dcdffb; }
+.sc-hero-acts { margin-top: 10px; }
+.sc .jn-btn, .sc .sc-hero-acts button, .sc .sc-slot, .sc .sc-day, .sc .sc-type, .sc .sc-reasons .jn-chip, .sc .sc-clin, .sc .jn-iconbtn, .sc .sc-join, .sc .sc-cancel { border-radius: 12px; }
+[data-theme="dark"] .sc-slide { background: var(--brand-navy); }
+[data-theme="dark"] .sc-slide-l { color: #131126; }
+[data-theme="dark"] .sc-slide-k svg, [data-theme="dark"] .sc-slide-k iconify-icon { color: #131126; }
+[data-theme="dark"] .sc-slide.hot { background: #fff; }
+[data-theme="dark"] .sc-slide.hot .sc-slide-l { color: #292569; }

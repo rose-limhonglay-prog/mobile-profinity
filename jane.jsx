@@ -1773,6 +1773,20 @@ function dmCallNote(text, withId) {
   saveJN(DM_KEY, { convs: convs.map((c) => c.id === id ? { ...c, unread: (c.unread || 0) + 1, msgs: [...c.msgs, { by: id, text, ts: Date.now() }] } : c) });
 }
 
+/* Slide-to-open control: drag the knob to the end (or just tap the track) to fire onDone. */
+function SlideJN({ label, onDone, hot }) {
+  const ref = useRefJN(null); const [x, setX] = useStateJN(0); const drag = useRefJN(null);
+  const maxX = () => { const el = ref.current; return el ? el.clientWidth - 52 : 0; };
+  const down = (e) => { drag.current = { sx: e.clientX, moved: false }; e.currentTarget.setPointerCapture(e.pointerId); };
+  const move = (e) => { if (!drag.current) return; const dx = Math.max(0, Math.min(maxX(), e.clientX - drag.current.sx)); if (dx > 4) drag.current.moved = true; setX(dx); };
+  const up = (e) => { if (!drag.current) return; const done = x >= maxX() * 0.8 || !drag.current.moved; drag.current = null; if (done) { setX(maxX()); setTimeout(() => { setX(0); onDone(); }, done && x > 0 ? 120 : 0); } else setX(0); };
+  return (
+    <div className={"sc-slide" + (hot ? " hot" : "")} ref={ref} onClick={() => { if (!drag.current) onDone(); }} role="button" aria-label={label}>
+      <span className="sc-slide-l" style={{ opacity: 1 - x / Math.max(1, maxX()) }}>{label}<IcJN name="chevron-right" size={16} /></span>
+      <span className="sc-slide-k" style={{ transform: "translateX(" + x + "px)", transition: drag.current ? "none" : "transform .18s ease" }} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onClick={(e) => e.stopPropagation()}><IcJN name="arrow-right" size={20} color={hot ? "var(--brand-navy)" : "#fff"} /></span>
+    </div>);
+}
+
 function ScheduleCallScreen() {
   const ret = qJN("ret") || "JaneNewsfeed.html";
   const prof = readJN(PROFILE_KEY, { phone: "+44 7700 900123" });
@@ -1852,7 +1866,6 @@ function ScheduleCallScreen() {
         <div className="tx">
           <span className="lbl"><i /> {hot ? "Today" : relDay(x)}</span>
           <b>{titleOf(x)}</b>
-          <small>{w.title}</small>
         </div>
       </div>
       <div className="sc-hero-meta">
@@ -1860,8 +1873,8 @@ function ScheduleCallScreen() {
         <span><IcJN name="clock" size={14} />{x.time} · {x.dur || CALL_DUR} min</span>
         <span><IcJN name={isCall ? (x.type === "phone" ? "phone" : "video") : "map-pin"} size={14} />{isCall ? callTypeLabel(x) : "Manchester clinic"}</span>
       </div>
+      <SlideJN label={isCall ? "View call" : "View details"} hot={hot} onDone={() => openItem(x)} />
       <div className="sc-hero-acts">
-        <button className="primary" onClick={() => openItem(x)}>{isCall ? "View call" : "Details"}</button>
         <button onClick={() => addToCalendar(x)}><IcJN name="calendar-plus" size={16} />Calendar</button>
         <button onClick={() => goJN("JaneMessages.html?to=" + (isCall ? w.id : "reception"))}><IcJN name="message-circle" size={16} />Message</button>
       </div>
