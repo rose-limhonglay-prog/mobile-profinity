@@ -155,6 +155,7 @@ const SEALS = { katy: ["gb", "verified"], beth: ["gb", "verified"], priya: ["gb"
 const POSTS_SEED = [
   { id: "p0", kind: "live", by: "katy", t: "now", live: { viewers: 86, frame: "assets/avatar-katy.jpg", title: "Aftercare Q&A · ask me anything" }, text: "", likes: 31, shares: 4, liked: false, comments: [] },
   { id: "p1", by: "katy", t: "2h", tags: ["skincare", "tips"], text: "Winter skin reminder 🧴 Cold air + central heating = dehydrated skin. Double-cleanse at night, layer a hyaluronic serum under your moisturiser, and yes — SPF still counts in December. The UVA that ages skin comes straight through cloud, so the habit matters more than the forecast.", likes: 48, shares: 6, liked: false, comments: [{ by: "miranda", text: "Guilty of skipping SPF when it's grey out 🙈", likes: 4, t: "1h" }, { by: "katy", text: "The UVA doesn't care about the clouds Miranda 😄", likes: 9, t: "50m" }] },
+  { id: "p10", kind: "reel", by: "katy", t: "3h", tags: ["aftercare", "tips"], reel: { src: "assets/sample-reel.mp4", dur: 30 }, text: "30 seconds on the first 24 hours after lip filler 💋 ice on, lipstick off, and please leave the swelling alone — it settles.", likes: 86, shares: 12, liked: false, comments: [{ by: "miranda", text: "Wish I'd seen this before my first appointment 😅", likes: 3, t: "2h" }, { by: "katy", text: "Saving you all the overthinking Miranda 😄", likes: 6, t: "1h" }] },
   { id: "p2", by: "miranda", t: "4h", tags: ["progress", "question"], text: "6 weeks post lip filler and I've finally stopped overthinking it. Katy was right about the swelling timeline 😅 Any tips for keeping lips hydrated through winter?", img: "assets/clinic-lip-design.png", likes: 21, shares: 2, liked: true, comments: [{ by: "beth", text: "A plain balm (no menthol or 'plumping' ingredients) and a big glass of water before bed. Simple wins.", likes: 7, t: "3h" }, { by: "amir", text: "They look so natural!", likes: 2, t: "2h" }] },
   { id: "p7", kind: "poll", by: "katy", t: "5h", text: "", poll: { question: "What's your biggest winter skin struggle right now?", votes: 212, options: [{ label: "Dryness & tightness", pct: 46 }, { label: "Redness", pct: 22 }, { label: "Breakouts", pct: 18 }, { label: "Dull, tired skin", pct: 14 }] }, likes: 19, shares: 3, liked: false, comments: [{ by: "mark", text: "Dryness, every single year 🙃", likes: 3, t: "4h" }] },
   { id: "p3", by: "beth", t: "Yesterday", tags: ["aftercare", "tips"], text: "Aftercare 101 after anti-wrinkle treatment: no lying flat for 4 hours, skip the gym today, no facials or massage for 2 weeks, and don't rub the area. Save this post 📌", likes: 73, shares: 14, liked: false, comments: [] },
@@ -164,7 +165,7 @@ const POSTS_SEED = [
   { id: "p5", by: "priya", t: "2d", tags: ["appointment"], text: "Patient Q&A live this Thursday 7pm — bring your questions about skin boosters, what they do and who they suit. Free for all clinic patients.", event: "ev1", likes: 35, shares: 9, liked: false, comments: [] },
   { id: "p6", by: "mark", t: "3d", tags: ["wins", "sleep"], text: "Week 3 of the sleep + hydration plan from the coach. Energy is noticeably better and my skin check-in score has gone from 61 to 72. Small habits, big difference.", imgs: ["assets/course-skin-boosters.jpg", "assets/course-consultation.jpg", "assets/course-full-face-rejuvenation.jpg"], likes: 29, shares: 3, liked: false, comments: [{ by: "katy", text: "This is exactly it Mark 👏", likes: 5, t: "2d" }] },
 ];
-const POSTS_SEED_V = 4;
+const POSTS_SEED_V = 5;
 
 const PINNED_IDS = ["p3", "p5"];
 const PUSH_JN = { app: "Pearce Aesthetics", icon: "assets/profinity-icon-purple-gold.png", title: "Appointment reminder", body: "Your 2-week review with Katy Wilson is Tuesday 3 Nov at 2:30pm. Tap to confirm or reschedule.", cta: "Confirm" };
@@ -556,6 +557,73 @@ function CarouselJN({ imgs, wrap }) {
     </div>);
 }
 
+/* Reel post (user 2026-10-27 "add post in jane that also shows the reels similar in Katy"):
+   9:16 clip plays muted inline like the Katy feed's vertical reel card (play/pause · time ·
+   track · mute controls); tapping it opens a full-screen reel viewer (black stage, right-hand
+   action rail, author + caption foot, progress bar) in the style of Katy's ReelMobile page. */
+function ReelJN({ p, author, liked, saved, onLike, onComment, onShare, onSave, showToast }) {
+  const vRef = useRefJN(null); const fsRef = useRefJN(null);
+  const [playing, setPlaying] = useStateJN(true); const [muted, setMuted] = useStateJN(true);
+  const [t, setT] = useStateJN(0); const [dur, setDur] = useStateJN(p.reel.dur || 30);
+  const [open, setOpen] = useStateJN(false); const [fsPlaying, setFsPlaying] = useStateJN(true); const [fsT, setFsT] = useStateJN(0);
+  const [heart, setHeart] = useStateJN(null); const lastTap = useRefJN(0);
+  const fmt = (x) => Math.floor(x / 60) + ":" + String(Math.floor(x % 60)).padStart(2, "0");
+  useEffectJN(() => { const v = vRef.current; if (!v) return; if (playing && !open) v.play().catch(() => {}); else v.pause(); }, [playing, open]);
+  useEffectJN(() => { const v = fsRef.current; if (!v || !open) return; v.currentTime = t; if (fsPlaying) v.play().catch(() => {}); else v.pause(); }, [open, fsPlaying]);
+  useEffectJN(() => { if (!open) return; const prev = document.body.style.overflow; document.body.style.overflow = "hidden"; return () => { document.body.style.overflow = prev; }; }, [open]);
+  const openFs = () => { setFsPlaying(true); setOpen(true); };
+  const closeFs = () => { setOpen(false); setPlaying(true); };
+  const fsTap = (e) => {
+    const now = Date.now(); const r = e.currentTarget.getBoundingClientRect();
+    if (now - lastTap.current < 300) { lastTap.current = 0; if (!liked) onLike(); setHeart({ x: e.clientX - r.left, y: e.clientY - r.top, k: now }); setTimeout(() => setHeart((h) => h && h.k === now ? null : h), 900); }
+    else { lastTap.current = now; setTimeout(() => { if (lastTap.current === now) { lastTap.current = 0; setFsPlaying((v) => !v); } }, 300); }
+  };
+  const Act = ({ icon, label, on, active, color }) => (
+    <button className={"jn-reel-act" + (active ? " on" : "")} onClick={(e) => { e.stopPropagation(); on(); }}>
+      <span className="ic" style={active && color ? { background: color, borderColor: color } : undefined}><IcJN name={icon} size={22} color="#fff" /></span><small>{label}</small>
+    </button>);
+  return (
+    <div className="jn-reel-wrap">
+      <div className={"sm-vertical sm-reel jn-reel" + (playing ? " playing" : "")} onClick={openFs} role="button" tabIndex={0} aria-label="Open reel">
+        <video ref={vRef} src={p.reel.src} muted={muted} loop playsInline autoPlay preload="metadata" onTimeUpdate={(e) => setT(e.target.currentTime)} onLoadedMetadata={(e) => isFinite(e.target.duration) && setDur(e.target.duration)} />
+        <span className="jn-reel-chip"><IcJN name="film" size={12} color="#fff" />Reel</span>
+        <span className={"sm-bigplay" + (playing ? " hide" : "")}><IcJN name="play" size={30} color="#fff" /></span>
+        <div className="sm-controls" onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="sm-ctl" aria-label={playing ? "Pause" : "Play"} onClick={() => setPlaying((v) => !v)}><IcJN name={playing ? "pause" : "play"} size={18} color="#fff" /></button>
+          <span className="sm-time">{fmt(t)}</span>
+          <span className="sm-track"><span className="sm-fill jn-reel-fill" style={{ width: (dur ? (t / dur) * 100 : 0) + "%", animation: "none" }} /></span>
+          <span className="sm-time">{fmt(dur)}</span>
+          <button type="button" className="sm-ctl" aria-label={muted ? "Unmute" : "Mute"} onClick={() => setMuted((m) => !m)}><IcJN name={muted ? "volume-x" : "volume-2"} size={16} color="#fff" /></button>
+        </div>
+      </div>
+      {open && (
+        <div className="jn-reel-fs" onClick={(e) => e.stopPropagation()}>
+          <video ref={fsRef} src={p.reel.src} muted={muted} loop playsInline autoPlay onTimeUpdate={(e) => setFsT(e.target.currentTime)} />
+          <span className="scrim t" /><span className="scrim b" />
+          <button className="jn-reel-tap" aria-label={fsPlaying ? "Pause" : "Play"} onClick={fsTap} />
+          {!fsPlaying && <span className="jn-reel-play"><IcJN name="play" size={32} color="#fff" /></span>}
+          {heart && <span className="jn-reel-heart" key={heart.k} style={{ left: heart.x, top: heart.y }}><IcJN name="heart" size={88} color="#F0425F" /></span>}
+          <div className="jn-reel-top">
+            <button className="gb" aria-label="Close" onClick={closeFs}><IcJN name="x" size={22} color="#fff" /></button>
+            <b>Reels</b>
+            <button className="gb" aria-label={muted ? "Unmute" : "Mute"} onClick={() => setMuted((m) => !m)}><IcJN name={muted ? "volume-x" : "volume-2"} size={20} color="#fff" /></button>
+          </div>
+          <div className="jn-reel-rail">
+            <Act icon="heart" label={fmtN(p.likes + (liked && !p.liked ? 0 : 0))} on={onLike} active={liked} color="#F0425F" />
+            <Act icon="message-circle" label={String(p.comments.length)} on={() => { closeFs(); onComment(); }} />
+            <Act icon="share-2" label={fmtN(p.shares)} on={() => { closeFs(); onShare(); }} />
+            <Act icon="bookmark" label={saved ? "Saved" : "Save"} on={onSave} active={saved} color="var(--brand-gold)" />
+          </div>
+          <div className="jn-reel-foot">
+            <div className="au"><JNFace p={PEOPLE[p.by]} size={38} /><div><b>{PEOPLE[p.by].name}</b><small>{PEOPLE[p.by].title}</small></div><RoleChip p={PEOPLE[p.by]} /></div>
+            <p>{p.text}</p>
+            <div className="tags">{(p.tags || []).map((x) => <span key={x}>#{x}</span>)}</div>
+          </div>
+          <span className="jn-reel-track"><i style={{ width: (dur ? (fsT / dur) * 100 : 0) + "%" }} /></span>
+        </div>)}
+    </div>);
+}
+
 function FeedPostJN({ p, pinned, onLike, onReact, onComment, onShare, onSave, onPatch, saved, showToast }) {
   const a = authorJN(p.by);
   const first = p.comments[0];
@@ -569,6 +637,8 @@ function FeedPostJN({ p, pinned, onLike, onReact, onComment, onShare, onSave, on
   const imgs = p.imgs && p.imgs.length ? p.imgs : (p.img ? [p.img] : []);
   const media = p.kind === "live" ? (
     <div className="pf-media-bleed" style={{ margin: "0 -16px" }}><LiveNowJN live={p.live} author={a} onTap={() => showToast("Joining " + a.name.split(" ")[0] + "'s live…")} /></div>
+  ) : p.kind === "reel" ? (
+    <div className="pf-media-bleed" style={{ margin: "0 -16px" }}><ReelJN p={p} author={a} liked={!!reaction} saved={saved} onLike={handleLike} onComment={handleComment} onShare={handleShare} onSave={() => onSave(p)} showToast={showToast} /></div>
   ) : p.kind === "poll" ? (
     <div className="pf-media-bleed" style={{ margin: "0 -16px" }}><PollJN poll={p.poll} onVote={(i) => onPatch && onPatch(p, { poll: { ...p.poll, voted: i } })} /></div>
   ) : p.kind === "quiz" ? (

@@ -481,6 +481,31 @@ const POSTS_SEED = [{
     t: "50m"
   }]
 }, {
+  id: "p10",
+  kind: "reel",
+  by: "katy",
+  t: "3h",
+  tags: ["aftercare", "tips"],
+  reel: {
+    src: "assets/sample-reel.mp4",
+    dur: 30
+  },
+  text: "30 seconds on the first 24 hours after lip filler 💋 ice on, lipstick off, and please leave the swelling alone — it settles.",
+  likes: 86,
+  shares: 12,
+  liked: false,
+  comments: [{
+    by: "miranda",
+    text: "Wish I'd seen this before my first appointment 😅",
+    likes: 3,
+    t: "2h"
+  }, {
+    by: "katy",
+    text: "Saving you all the overthinking Miranda 😄",
+    likes: 6,
+    t: "1h"
+  }]
+}, {
   id: "p2",
   by: "miranda",
   t: "4h",
@@ -627,7 +652,7 @@ const POSTS_SEED = [{
     t: "2d"
   }]
 }];
-const POSTS_SEED_V = 4;
+const POSTS_SEED_V = 5;
 const PINNED_IDS = ["p3", "p5"];
 const PUSH_JN = {
   app: "Pearce Aesthetics",
@@ -1821,6 +1846,272 @@ function CarouselJN({
     className: "mc-fs-count"
   }, fsIdx + 1, "/", imgs.length)));
 }
+
+/* Reel post (user 2026-10-27 "add post in jane that also shows the reels similar in Katy"):
+   9:16 clip plays muted inline like the Katy feed's vertical reel card (play/pause · time ·
+   track · mute controls); tapping it opens a full-screen reel viewer (black stage, right-hand
+   action rail, author + caption foot, progress bar) in the style of Katy's ReelMobile page. */
+function ReelJN({
+  p,
+  author,
+  liked,
+  saved,
+  onLike,
+  onComment,
+  onShare,
+  onSave,
+  showToast
+}) {
+  const vRef = useRefJN(null);
+  const fsRef = useRefJN(null);
+  const [playing, setPlaying] = useStateJN(true);
+  const [muted, setMuted] = useStateJN(true);
+  const [t, setT] = useStateJN(0);
+  const [dur, setDur] = useStateJN(p.reel.dur || 30);
+  const [open, setOpen] = useStateJN(false);
+  const [fsPlaying, setFsPlaying] = useStateJN(true);
+  const [fsT, setFsT] = useStateJN(0);
+  const [heart, setHeart] = useStateJN(null);
+  const lastTap = useRefJN(0);
+  const fmt = x => Math.floor(x / 60) + ":" + String(Math.floor(x % 60)).padStart(2, "0");
+  useEffectJN(() => {
+    const v = vRef.current;
+    if (!v) return;
+    if (playing && !open) v.play().catch(() => {});else v.pause();
+  }, [playing, open]);
+  useEffectJN(() => {
+    const v = fsRef.current;
+    if (!v || !open) return;
+    v.currentTime = t;
+    if (fsPlaying) v.play().catch(() => {});else v.pause();
+  }, [open, fsPlaying]);
+  useEffectJN(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+  const openFs = () => {
+    setFsPlaying(true);
+    setOpen(true);
+  };
+  const closeFs = () => {
+    setOpen(false);
+    setPlaying(true);
+  };
+  const fsTap = e => {
+    const now = Date.now();
+    const r = e.currentTarget.getBoundingClientRect();
+    if (now - lastTap.current < 300) {
+      lastTap.current = 0;
+      if (!liked) onLike();
+      setHeart({
+        x: e.clientX - r.left,
+        y: e.clientY - r.top,
+        k: now
+      });
+      setTimeout(() => setHeart(h => h && h.k === now ? null : h), 900);
+    } else {
+      lastTap.current = now;
+      setTimeout(() => {
+        if (lastTap.current === now) {
+          lastTap.current = 0;
+          setFsPlaying(v => !v);
+        }
+      }, 300);
+    }
+  };
+  const Act = ({
+    icon,
+    label,
+    on,
+    active,
+    color
+  }) => /*#__PURE__*/React.createElement("button", {
+    className: "jn-reel-act" + (active ? " on" : ""),
+    onClick: e => {
+      e.stopPropagation();
+      on();
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic",
+    style: active && color ? {
+      background: color,
+      borderColor: color
+    } : undefined
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: icon,
+    size: 22,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("small", null, label));
+  return /*#__PURE__*/React.createElement("div", {
+    className: "jn-reel-wrap"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "sm-vertical sm-reel jn-reel" + (playing ? " playing" : ""),
+    onClick: openFs,
+    role: "button",
+    tabIndex: 0,
+    "aria-label": "Open reel"
+  }, /*#__PURE__*/React.createElement("video", {
+    ref: vRef,
+    src: p.reel.src,
+    muted: muted,
+    loop: true,
+    playsInline: true,
+    autoPlay: true,
+    preload: "metadata",
+    onTimeUpdate: e => setT(e.target.currentTime),
+    onLoadedMetadata: e => isFinite(e.target.duration) && setDur(e.target.duration)
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "jn-reel-chip"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "film",
+    size: 12,
+    color: "#fff"
+  }), "Reel"), /*#__PURE__*/React.createElement("span", {
+    className: "sm-bigplay" + (playing ? " hide" : "")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "play",
+    size: 30,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "sm-controls",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sm-ctl",
+    "aria-label": playing ? "Pause" : "Play",
+    onClick: () => setPlaying(v => !v)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: playing ? "pause" : "play",
+    size: 18,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sm-time"
+  }, fmt(t)), /*#__PURE__*/React.createElement("span", {
+    className: "sm-track"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "sm-fill jn-reel-fill",
+    style: {
+      width: (dur ? t / dur * 100 : 0) + "%",
+      animation: "none"
+    }
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "sm-time"
+  }, fmt(dur)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "sm-ctl",
+    "aria-label": muted ? "Unmute" : "Mute",
+    onClick: () => setMuted(m => !m)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: muted ? "volume-x" : "volume-2",
+    size: 16,
+    color: "#fff"
+  })))), open && /*#__PURE__*/React.createElement("div", {
+    className: "jn-reel-fs",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("video", {
+    ref: fsRef,
+    src: p.reel.src,
+    muted: muted,
+    loop: true,
+    playsInline: true,
+    autoPlay: true,
+    onTimeUpdate: e => setFsT(e.target.currentTime)
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "scrim t"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "scrim b"
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "jn-reel-tap",
+    "aria-label": fsPlaying ? "Pause" : "Play",
+    onClick: fsTap
+  }), !fsPlaying && /*#__PURE__*/React.createElement("span", {
+    className: "jn-reel-play"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "play",
+    size: 32,
+    color: "#fff"
+  })), heart && /*#__PURE__*/React.createElement("span", {
+    className: "jn-reel-heart",
+    key: heart.k,
+    style: {
+      left: heart.x,
+      top: heart.y
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "heart",
+    size: 88,
+    color: "#F0425F"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "jn-reel-top"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "gb",
+    "aria-label": "Close",
+    onClick: closeFs
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "x",
+    size: 22,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("b", null, "Reels"), /*#__PURE__*/React.createElement("button", {
+    className: "gb",
+    "aria-label": muted ? "Unmute" : "Mute",
+    onClick: () => setMuted(m => !m)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: muted ? "volume-x" : "volume-2",
+    size: 20,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "jn-reel-rail"
+  }, /*#__PURE__*/React.createElement(Act, {
+    icon: "heart",
+    label: fmtN(p.likes + (liked && !p.liked ? 0 : 0)),
+    on: onLike,
+    active: liked,
+    color: "#F0425F"
+  }), /*#__PURE__*/React.createElement(Act, {
+    icon: "message-circle",
+    label: String(p.comments.length),
+    on: () => {
+      closeFs();
+      onComment();
+    }
+  }), /*#__PURE__*/React.createElement(Act, {
+    icon: "share-2",
+    label: fmtN(p.shares),
+    on: () => {
+      closeFs();
+      onShare();
+    }
+  }), /*#__PURE__*/React.createElement(Act, {
+    icon: "bookmark",
+    label: saved ? "Saved" : "Save",
+    on: onSave,
+    active: saved,
+    color: "var(--brand-gold)"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "jn-reel-foot"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "au"
+  }, /*#__PURE__*/React.createElement(JNFace, {
+    p: PEOPLE[p.by],
+    size: 38
+  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, PEOPLE[p.by].name), /*#__PURE__*/React.createElement("small", null, PEOPLE[p.by].title)), /*#__PURE__*/React.createElement(RoleChip, {
+    p: PEOPLE[p.by]
+  })), /*#__PURE__*/React.createElement("p", null, p.text), /*#__PURE__*/React.createElement("div", {
+    className: "tags"
+  }, (p.tags || []).map(x => /*#__PURE__*/React.createElement("span", {
+    key: x
+  }, "#", x)))), /*#__PURE__*/React.createElement("span", {
+    className: "jn-reel-track"
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      width: (dur ? fsT / dur * 100 : 0) + "%"
+    }
+  }))));
+}
 function FeedPostJN({
   p,
   pinned,
@@ -1908,6 +2199,21 @@ function FeedPostJN({
     live: p.live,
     author: a,
     onTap: () => showToast("Joining " + a.name.split(" ")[0] + "'s live…")
+  })) : p.kind === "reel" ? /*#__PURE__*/React.createElement("div", {
+    className: "pf-media-bleed",
+    style: {
+      margin: "0 -16px"
+    }
+  }, /*#__PURE__*/React.createElement(ReelJN, {
+    p: p,
+    author: a,
+    liked: !!reaction,
+    saved: saved,
+    onLike: handleLike,
+    onComment: handleComment,
+    onShare: handleShare,
+    onSave: () => onSave(p),
+    showToast: showToast
   })) : p.kind === "poll" ? /*#__PURE__*/React.createElement("div", {
     className: "pf-media-bleed",
     style: {
