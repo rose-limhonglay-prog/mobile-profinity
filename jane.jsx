@@ -153,7 +153,7 @@ function fmtH(h) { const m = Math.round((h % 1) * 60); return Math.floor(h) + "h
 const POSTS_KEY = "pf-jane-posts";
 const SEALS = { katy: ["gb", "verified"], beth: ["gb", "verified"], priya: ["gb", "verified"], miranda: ["gb"], amir: [], mark: ["gb"], jane: ["gb"], reception: ["verified"] };
 const POSTS_SEED = [
-  { id: "p0", kind: "live", by: "katy", t: "now", live: { viewers: 86, frame: "assets/avatar-katy.jpg", title: "Aftercare Q&A · ask me anything" }, text: "", likes: 31, shares: 4, liked: false, comments: [] },
+  { id: "p0", kind: "live", by: "katy", t: "now", live: { viewers: 86, frame: "assets/live-preview-camera.jpg", title: "Aftercare Q&A · ask me anything" }, text: "", likes: 31, shares: 4, liked: false, comments: [] },
   { id: "p1", by: "katy", t: "2h", tags: ["skincare", "tips"], text: "Winter skin reminder 🧴 Cold air + central heating = dehydrated skin. Double-cleanse at night, layer a hyaluronic serum under your moisturiser, and yes — SPF still counts in December. The UVA that ages skin comes straight through cloud, so the habit matters more than the forecast.", likes: 48, shares: 6, liked: false, comments: [{ by: "miranda", text: "Guilty of skipping SPF when it's grey out 🙈", likes: 4, t: "1h" }, { by: "katy", text: "The UVA doesn't care about the clouds Miranda 😄", likes: 9, t: "50m" }] },
   { id: "p10", kind: "reel", by: "katy", t: "3h", tags: ["aftercare", "tips"], reel: { src: "assets/sample-reel.mp4", dur: 30 }, text: "30 seconds on the first 24 hours after lip filler 💋 ice on, lipstick off, and please leave the swelling alone — it settles.", likes: 86, shares: 12, liked: false, comments: [{ by: "miranda", text: "Wish I'd seen this before my first appointment 😅", likes: 3, t: "2h" }, { by: "katy", text: "Saving you all the overthinking Miranda 😄", likes: 6, t: "1h" }] },
   { id: "p2", by: "miranda", t: "4h", tags: ["progress", "question"], text: "6 weeks post lip filler and I've finally stopped overthinking it. Katy was right about the swelling timeline 😅 Any tips for keeping lips hydrated through winter?", img: "assets/clinic-lip-design.png", likes: 21, shares: 2, liked: true, comments: [{ by: "beth", text: "A plain balm (no menthol or 'plumping' ingredients) and a big glass of water before bed. Simple wins.", likes: 7, t: "3h" }, { by: "amir", text: "They look so natural!", likes: 2, t: "2h" }] },
@@ -165,7 +165,7 @@ const POSTS_SEED = [
   { id: "p5", by: "priya", t: "2d", tags: ["appointment"], text: "Patient Q&A live this Thursday 7pm — bring your questions about skin boosters, what they do and who they suit. Free for all clinic patients.", event: "ev1", likes: 35, shares: 9, liked: false, comments: [] },
   { id: "p6", by: "mark", t: "3d", tags: ["wins", "sleep"], text: "Week 3 of the sleep + hydration plan from the coach. Energy is noticeably better and my skin check-in score has gone from 61 to 72. Small habits, big difference.", imgs: ["assets/course-skin-boosters.jpg", "assets/course-consultation.jpg", "assets/course-full-face-rejuvenation.jpg"], likes: 29, shares: 3, liked: false, comments: [{ by: "katy", text: "This is exactly it Mark 👏", likes: 5, t: "2d" }] },
 ];
-const POSTS_SEED_V = 5;
+const POSTS_SEED_V = 6;
 
 const PINNED_IDS = ["p3", "p5"];
 const PUSH_JN = { app: "Pearce Aesthetics", icon: "assets/profinity-icon-purple-gold.png", title: "Appointment reminder", body: "Your 2-week review with Katy Wilson is Tuesday 3 Nov at 2:30pm. Tap to confirm or reschedule.", cta: "Confirm" };

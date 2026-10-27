@@ -452,7 +452,7 @@ const POSTS_SEED = [{
   t: "now",
   live: {
     viewers: 86,
-    frame: "assets/avatar-katy.jpg",
+    frame: "assets/live-preview-camera.jpg",
     title: "Aftercare Q&A · ask me anything"
   },
   text: "",
@@ -652,7 +652,7 @@ const POSTS_SEED = [{
     t: "2d"
   }]
 }];
-const POSTS_SEED_V = 5;
+const POSTS_SEED_V = 6;
 const PINNED_IDS = ["p3", "p5"];
 const PUSH_JN = {
   app: "Pearce Aesthetics",
