@@ -1499,7 +1499,9 @@ function CoachScreen() {
   const toHistory = () => { const kept = store.convs.filter((c) => c.msgs.length > 1); if (kept.length !== store.convs.length) persist({ convs: kept.length ? kept : store.convs.slice(0, 1), cur: (kept[0] || store.convs[0]).id }); setView("history"); setMode("chat"); };
   function newChat() { const c = newConvJN(); persist({ convs: [c, ...store.convs.filter((x) => !(x.msgs.length <= 1 && x.id !== c.id))], cur: c.id }); setView("chat"); setMode("chat"); }
   function openConv(id) { persist({ ...store, cur: id }); setView("chat"); setMode("chat"); }
-  function deleteConv(id) { const left = store.convs.filter((c) => c.id !== id); const next = left.length ? left : [newConvJN()]; persist({ convs: next, cur: store.cur === id ? next[0].id : store.cur }); showToast("Chat deleted"); }
+  const [menuFor, setMenuFor] = useStateJN(null); const [archOpen, setArchOpen] = useStateJN(false);
+  function setArchived(id, on) { const left = store.convs.map((c) => c.id === id ? { ...c, archived: on } : c); const active = left.filter((c) => !c.archived); const next = active.length ? left : [...left, newConvJN()]; persist({ convs: next, cur: store.cur === id && on ? (next.find((c) => !c.archived) || next[0]).id : store.cur }); setMenuFor(null); showToast(on ? "Chat archived" : "Chat restored"); }
+  function deleteConv(id) { const left = store.convs.filter((c) => c.id !== id); const next = left.length ? left : [newConvJN()]; persist({ convs: next, cur: store.cur === id ? next[0].id : store.cur }); setMenuFor(null); showToast("Chat deleted"); }
   useEffectJN(() => { const q = qJN("q"); if (q && !asked.current) { asked.current = true; setTimeout(() => send(q), 300); } }, []);
   useEffectJN(() => { const el = scrollRef.current; if (el) el.scrollTop = el.scrollHeight; }, [conv && conv.msgs.length, typing, mode, store.cur]);
 
@@ -1534,17 +1536,23 @@ function CoachScreen() {
       </header>)}
       {view === "history" ? (
         <div className="jn-scroll jc-histview">
-          <div className="jc-hist-h"><h2>Your chats</h2><span>{store.convs.length} {store.convs.length === 1 ? "conversation" : "conversations"} · saved to your Health Pass</span></div>
-          <div className="jc-hist">
-            {store.convs.slice().sort((a, b) => b.ts - a.ts).map((c) => { const last = c.msgs[c.msgs.length - 1]; const n = c.msgs.filter((m) => m.by === "jane").length; return (
-              <div key={c.id} className={"jc-hist-row" + (c.id === store.cur ? " cur" : "")}>
+          {(() => { const active = store.convs.filter((c) => !c.archived).slice().sort((a, b) => b.ts - a.ts); const archived = store.convs.filter((c) => c.archived).slice().sort((a, b) => b.ts - a.ts);
+            const Row = ({ c }) => { const last = c.msgs[c.msgs.length - 1]; const n = c.msgs.filter((m) => m.by === "jane").length; return (
+              <div key={c.id} className={"jc-hist-row" + (c.id === store.cur && !c.archived ? " cur" : "") + (c.archived ? " archived" : "")}>
                 <button className="main" onClick={() => openConv(c.id)}>
                   <span className="tx"><b>{c.title}</b><small>{last ? last.text.replace(/\n+/g, " ").slice(0, 70) : ""}</small><em>{fmtWhenJN(c.ts)} · {n} {n === 1 ? "question" : "questions"}</em></span>
-                  <IcJN name="chevron-right" size={18} color="var(--gray-400)" />
                 </button>
-                <button className="del" aria-label="Delete chat" onClick={() => deleteConv(c.id)}><IcJN name="trash-2" size={16} color="var(--gray-450)" /></button>
-              </div>); })}
-          </div>
+                <button className="del" aria-label="Chat options" onClick={() => setMenuFor(c.id)}><IcJN name="more-vertical" size={18} color="var(--gray-450)" /></button>
+              </div>); };
+            return (<React.Fragment>
+          <div className="jc-hist-h"><h2>Your chats</h2><span>{active.length} {active.length === 1 ? "conversation" : "conversations"} · saved to your Health Pass</span></div>
+          <div className="jc-hist">{active.map((c) => <Row key={c.id} c={c} />)}</div>
+          {archived.length > 0 && (
+            <div className="jc-arch">
+              <button className={"jc-arch-h" + (archOpen ? " open" : "")} onClick={() => setArchOpen(!archOpen)}><IcJN name="archive" size={15} color="var(--text-secondary)" />Archived <em>{archived.length}</em><IcJN name="chevron-down" size={18} color="var(--gray-450)" /></button>
+              {archOpen && <div className="jc-hist">{archived.map((c) => <Row key={c.id} c={c} />)}</div>}
+            </div>)}
+            </React.Fragment>); })()}
           <p className="jc-disc">Not medical advice. Talk to your clinician about any concerns.</p>
         </div>
       ) : null}
@@ -1603,6 +1611,16 @@ function CoachScreen() {
             <button className="jn-iconbtn lg" aria-label="Keyboard" onClick={() => setMode("chat")}><IcJN name="message-circle" size={22} color="var(--brand-navy)" /></button>
           </div>
         </div>)}
+      <JNSheet open={!!menuFor} onClose={() => setMenuFor(null)}>
+        {menuFor && (() => { const c = store.convs.find((x) => x.id === menuFor); if (!c) return null; return (
+          <div className="jc-menu">
+            <div className="jc-menu-h"><b>{c.title}</b><small>{fmtWhenJN(c.ts)} · {(() => { const n = c.msgs.filter((m) => m.by === "jane").length; return n + (n === 1 ? " question" : " questions"); })()}</small></div>
+            <button className="jc-menu-row" onClick={() => { setMenuFor(null); openConv(c.id); }}><span className="ic"><IcJN name="message-circle" size={18} color="var(--brand-navy)" /></span><span className="tx"><b>Open chat</b><small>Continue where you left off</small></span></button>
+            <button className="jc-menu-row" onClick={() => setArchived(c.id, !c.archived)}><span className="ic"><IcJN name={c.archived ? "archive-restore" : "archive"} size={18} color="var(--brand-navy)" /></span><span className="tx"><b>{c.archived ? "Unarchive" : "Archive"}</b><small>{c.archived ? "Move it back to your chats" : "Hide it from your chats without deleting"}</small></span></button>
+            <button className="jc-menu-row danger" onClick={() => deleteConv(c.id)}><span className="ic"><IcJN name="trash-2" size={18} color="var(--error)" /></span><span className="tx"><b>Delete</b><small>Removes it from your Health Pass for good</small></span></button>
+            <button className="jn-btn ghost block" style={{ marginTop: 6 }} onClick={() => setMenuFor(null)}>Cancel</button>
+          </div>); })()}
+      </JNSheet>
       {view !== "chat" && <JNTabs active="coach" />}
 
       <JNToast toast={toast} />

@@ -4891,6 +4891,22 @@ function CoachScreen() {
     setView("chat");
     setMode("chat");
   }
+  const [menuFor, setMenuFor] = useStateJN(null);
+  const [archOpen, setArchOpen] = useStateJN(false);
+  function setArchived(id, on) {
+    const left = store.convs.map(c => c.id === id ? {
+      ...c,
+      archived: on
+    } : c);
+    const active = left.filter(c => !c.archived);
+    const next = active.length ? left : [...left, newConvJN()];
+    persist({
+      convs: next,
+      cur: store.cur === id && on ? (next.find(c => !c.archived) || next[0]).id : store.cur
+    });
+    setMenuFor(null);
+    showToast(on ? "Chat archived" : "Chat restored");
+  }
   function deleteConv(id) {
     const left = store.convs.filter(c => c.id !== id);
     const next = left.length ? left : [newConvJN()];
@@ -4898,6 +4914,7 @@ function CoachScreen() {
       convs: next,
       cur: store.cur === id ? next[0].id : store.cur
     });
+    setMenuFor(null);
     showToast("Chat deleted");
   }
   useEffectJN(() => {
@@ -5025,35 +5042,59 @@ function CoachScreen() {
     color: "#fff"
   }))), view === "history" ? /*#__PURE__*/React.createElement("div", {
     className: "jn-scroll jc-histview"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "jc-hist-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Your chats"), /*#__PURE__*/React.createElement("span", null, store.convs.length, " ", store.convs.length === 1 ? "conversation" : "conversations", " · saved to your Health Pass")), /*#__PURE__*/React.createElement("div", {
-    className: "jc-hist"
-  }, store.convs.slice().sort((a, b) => b.ts - a.ts).map(c => {
-    const last = c.msgs[c.msgs.length - 1];
-    const n = c.msgs.filter(m => m.by === "jane").length;
-    return /*#__PURE__*/React.createElement("div", {
+  }, (() => {
+    const active = store.convs.filter(c => !c.archived).slice().sort((a, b) => b.ts - a.ts);
+    const archived = store.convs.filter(c => c.archived).slice().sort((a, b) => b.ts - a.ts);
+    const Row = ({
+      c
+    }) => {
+      const last = c.msgs[c.msgs.length - 1];
+      const n = c.msgs.filter(m => m.by === "jane").length;
+      return /*#__PURE__*/React.createElement("div", {
+        key: c.id,
+        className: "jc-hist-row" + (c.id === store.cur && !c.archived ? " cur" : "") + (c.archived ? " archived" : "")
+      }, /*#__PURE__*/React.createElement("button", {
+        className: "main",
+        onClick: () => openConv(c.id)
+      }, /*#__PURE__*/React.createElement("span", {
+        className: "tx"
+      }, /*#__PURE__*/React.createElement("b", null, c.title), /*#__PURE__*/React.createElement("small", null, last ? last.text.replace(/\n+/g, " ").slice(0, 70) : ""), /*#__PURE__*/React.createElement("em", null, fmtWhenJN(c.ts), " · ", n, " ", n === 1 ? "question" : "questions"))), /*#__PURE__*/React.createElement("button", {
+        className: "del",
+        "aria-label": "Chat options",
+        onClick: () => setMenuFor(c.id)
+      }, /*#__PURE__*/React.createElement(IcJN, {
+        name: "more-vertical",
+        size: 18,
+        color: "var(--gray-450)"
+      })));
+    };
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+      className: "jc-hist-h"
+    }, /*#__PURE__*/React.createElement("h2", null, "Your chats"), /*#__PURE__*/React.createElement("span", null, active.length, " ", active.length === 1 ? "conversation" : "conversations", " · saved to your Health Pass")), /*#__PURE__*/React.createElement("div", {
+      className: "jc-hist"
+    }, active.map(c => /*#__PURE__*/React.createElement(Row, {
       key: c.id,
-      className: "jc-hist-row" + (c.id === store.cur ? " cur" : "")
+      c: c
+    }))), archived.length > 0 && /*#__PURE__*/React.createElement("div", {
+      className: "jc-arch"
     }, /*#__PURE__*/React.createElement("button", {
-      className: "main",
-      onClick: () => openConv(c.id)
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, c.title), /*#__PURE__*/React.createElement("small", null, last ? last.text.replace(/\n+/g, " ").slice(0, 70) : ""), /*#__PURE__*/React.createElement("em", null, fmtWhenJN(c.ts), " · ", n, " ", n === 1 ? "question" : "questions")), /*#__PURE__*/React.createElement(IcJN, {
-      name: "chevron-right",
-      size: 18,
-      color: "var(--gray-400)"
-    })), /*#__PURE__*/React.createElement("button", {
-      className: "del",
-      "aria-label": "Delete chat",
-      onClick: () => deleteConv(c.id)
+      className: "jc-arch-h" + (archOpen ? " open" : ""),
+      onClick: () => setArchOpen(!archOpen)
     }, /*#__PURE__*/React.createElement(IcJN, {
-      name: "trash-2",
-      size: 16,
+      name: "archive",
+      size: 15,
+      color: "var(--text-secondary)"
+    }), "Archived ", /*#__PURE__*/React.createElement("em", null, archived.length), /*#__PURE__*/React.createElement(IcJN, {
+      name: "chevron-down",
+      size: 18,
       color: "var(--gray-450)"
-    })));
-  })), /*#__PURE__*/React.createElement("p", {
+    })), archOpen && /*#__PURE__*/React.createElement("div", {
+      className: "jc-hist"
+    }, archived.map(c => /*#__PURE__*/React.createElement(Row, {
+      key: c.id,
+      c: c
+    })))));
+  })(), /*#__PURE__*/React.createElement("p", {
     className: "jc-disc"
   }, "Not medical advice. Talk to your clinician about any concerns.")) : null, view === "chat" && /*#__PURE__*/React.createElement("div", {
     className: "jc-modes"
@@ -5240,7 +5281,63 @@ function CoachScreen() {
     name: "message-circle",
     size: 22,
     color: "var(--brand-navy)"
-  })))), view !== "chat" && /*#__PURE__*/React.createElement(JNTabs, {
+  })))), /*#__PURE__*/React.createElement(JNSheet, {
+    open: !!menuFor,
+    onClose: () => setMenuFor(null)
+  }, menuFor && (() => {
+    const c = store.convs.find(x => x.id === menuFor);
+    if (!c) return null;
+    return /*#__PURE__*/React.createElement("div", {
+      className: "jc-menu"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "jc-menu-h"
+    }, /*#__PURE__*/React.createElement("b", null, c.title), /*#__PURE__*/React.createElement("small", null, fmtWhenJN(c.ts), " · ", (() => {
+      const n = c.msgs.filter(m => m.by === "jane").length;
+      return n + (n === 1 ? " question" : " questions");
+    })())), /*#__PURE__*/React.createElement("button", {
+      className: "jc-menu-row",
+      onClick: () => {
+        setMenuFor(null);
+        openConv(c.id);
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ic"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "message-circle",
+      size: 18,
+      color: "var(--brand-navy)"
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, "Open chat"), /*#__PURE__*/React.createElement("small", null, "Continue where you left off"))), /*#__PURE__*/React.createElement("button", {
+      className: "jc-menu-row",
+      onClick: () => setArchived(c.id, !c.archived)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ic"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: c.archived ? "archive-restore" : "archive",
+      size: 18,
+      color: "var(--brand-navy)"
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, c.archived ? "Unarchive" : "Archive"), /*#__PURE__*/React.createElement("small", null, c.archived ? "Move it back to your chats" : "Hide it from your chats without deleting"))), /*#__PURE__*/React.createElement("button", {
+      className: "jc-menu-row danger",
+      onClick: () => deleteConv(c.id)
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ic"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "trash-2",
+      size: 18,
+      color: "var(--error)"
+    })), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, "Delete"), /*#__PURE__*/React.createElement("small", null, "Removes it from your Health Pass for good"))), /*#__PURE__*/React.createElement("button", {
+      className: "jn-btn ghost block",
+      style: {
+        marginTop: 6
+      },
+      onClick: () => setMenuFor(null)
+    }, "Cancel"));
+  })()), view !== "chat" && /*#__PURE__*/React.createElement(JNTabs, {
     active: "coach"
   }), /*#__PURE__*/React.createElement(JNToast, {
     toast: toast
