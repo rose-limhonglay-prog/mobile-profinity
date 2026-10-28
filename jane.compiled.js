@@ -5026,12 +5026,6 @@ function CoachScreen() {
       className: "main",
       onClick: () => openConv(c.id)
     }, /*#__PURE__*/React.createElement("span", {
-      className: "ic"
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: c.msgs.some(m => m.voice) ? "mic" : "message-circle",
-      size: 17,
-      color: "var(--ai-purple)"
-    })), /*#__PURE__*/React.createElement("span", {
       className: "tx"
     }, /*#__PURE__*/React.createElement("b", null, c.title), /*#__PURE__*/React.createElement("small", null, last ? last.text.replace(/\n+/g, " ").slice(0, 70) : ""), /*#__PURE__*/React.createElement("em", null, fmtWhenJN(c.ts), " · ", n, " ", n === 1 ? "question" : "questions")), /*#__PURE__*/React.createElement(IcJN, {
       name: "chevron-right",
@@ -5047,16 +5041,9 @@ function CoachScreen() {
       color: "var(--gray-450)"
     })));
   })), /*#__PURE__*/React.createElement("div", {
-    className: "jc-qa-h",
-    style: {
-      marginTop: 22
-    }
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "zap",
-    size: 13,
-    color: "var(--ai-purple)"
-  }), "Start with a question"), /*#__PURE__*/React.createElement("div", {
-    className: "jc-qa"
+    className: "jc-starts-h"
+  }, /*#__PURE__*/React.createElement("b", null, "Start with a question"), /*#__PURE__*/React.createElement("small", null, "Pick one and Ava takes it from there")), /*#__PURE__*/React.createElement("div", {
+    className: "jc-starts"
   }, COACH_PROMPTS.slice(0, 4).map(p => /*#__PURE__*/React.createElement("button", {
     key: p.t,
     onClick: () => {
@@ -5069,11 +5056,11 @@ function CoachScreen() {
       setMode("chat");
       setTimeout(() => send(p.t), 250);
     }
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: p.ic,
-    size: 18,
-    color: "var(--ai-purple)"
-  }), /*#__PURE__*/React.createElement("span", null, p.t)))), /*#__PURE__*/React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("span", null, p.t), /*#__PURE__*/React.createElement(IcJN, {
+    name: "arrow-right",
+    size: 16,
+    color: "var(--brand-gold)"
+  })))), /*#__PURE__*/React.createElement("p", {
     className: "jc-disc"
   }, "Not medical advice. Talk to your clinician about any concerns.")) : null, view === "chat" && /*#__PURE__*/React.createElement("div", {
     className: "jc-modes"

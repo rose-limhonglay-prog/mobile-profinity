@@ -1533,15 +1533,14 @@ function CoachScreen() {
             {store.convs.slice().sort((a, b) => b.ts - a.ts).map((c) => { const last = c.msgs[c.msgs.length - 1]; const n = c.msgs.filter((m) => m.by === "jane").length; return (
               <div key={c.id} className={"jc-hist-row" + (c.id === store.cur ? " cur" : "")}>
                 <button className="main" onClick={() => openConv(c.id)}>
-                  <span className="ic"><IcJN name={c.msgs.some((m) => m.voice) ? "mic" : "message-circle"} size={17} color="var(--ai-purple)" /></span>
                   <span className="tx"><b>{c.title}</b><small>{last ? last.text.replace(/\n+/g, " ").slice(0, 70) : ""}</small><em>{fmtWhenJN(c.ts)} · {n} {n === 1 ? "question" : "questions"}</em></span>
                   <IcJN name="chevron-right" size={18} color="var(--gray-400)" />
                 </button>
                 <button className="del" aria-label="Delete chat" onClick={() => deleteConv(c.id)}><IcJN name="trash-2" size={16} color="var(--gray-450)" /></button>
               </div>); })}
           </div>
-          <div className="jc-qa-h" style={{ marginTop: 22 }}><IcJN name="zap" size={13} color="var(--ai-purple)" />Start with a question</div>
-          <div className="jc-qa">{COACH_PROMPTS.slice(0, 4).map((p) => <button key={p.t} onClick={() => { const c = newConvJN(); persist({ convs: [c, ...store.convs.filter((x) => x.msgs.length > 1)], cur: c.id }); setView("chat"); setMode("chat"); setTimeout(() => send(p.t), 250); }}><IcJN name={p.ic} size={18} color="var(--ai-purple)" /><span>{p.t}</span></button>)}</div>
+          <div className="jc-starts-h"><b>Start with a question</b><small>Pick one and Ava takes it from there</small></div>
+          <div className="jc-starts">{COACH_PROMPTS.slice(0, 4).map((p) => <button key={p.t} onClick={() => { const c = newConvJN(); persist({ convs: [c, ...store.convs.filter((x) => x.msgs.length > 1)], cur: c.id }); setView("chat"); setMode("chat"); setTimeout(() => send(p.t), 250); }}><span>{p.t}</span><IcJN name="arrow-right" size={16} color="var(--brand-gold)" /></button>)}</div>
           <p className="jc-disc">Not medical advice. Talk to your clinician about any concerns.</p>
         </div>
       ) : null}
