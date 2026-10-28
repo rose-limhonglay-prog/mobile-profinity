@@ -36,7 +36,7 @@ const PEOPLE = {
 const JN_TABS = [
   { key: "home", label: "Home", icon: "home", href: "JaneNewsfeed.html" },
   { key: "health", label: "Health", icon: "heart-pulse", href: "JaneHealth.html" },
-  { key: "coach", label: "Coach", icon: "sparkles", href: "JaneCoach.html" },
+  { key: "coach", label: "Ava", icon: "sparkles", href: "JaneCoach.html" },
   { key: "events", label: "Events", icon: "calendar", href: "JaneEvents.html" },
   { key: "profile", label: "Profile", icon: "user", href: "JaneProfile.html" },
 ];
@@ -153,7 +153,7 @@ function fmtH(h) { const m = Math.round((h % 1) * 60); return Math.floor(h) + "h
 const POSTS_KEY = "pf-jane-posts";
 const SEALS = { katy: ["gb", "verified"], beth: ["gb", "verified"], priya: ["gb", "verified"], miranda: ["gb"], amir: [], mark: ["gb"], jane: ["gb"], reception: ["verified"] };
 const POSTS_SEED = [
-  { id: "p0", kind: "live", by: "katy", t: "now", live: { viewers: 86, frame: "assets/live-preview-camera.jpg", title: "Aftercare Q&A · ask me anything" }, text: "", likes: 31, shares: 4, liked: false, comments: [] },
+  { id: "p0", kind: "live", by: "katy", t: "now", live: { viewers: 86, title: "Aftercare Q&A · ask me anything" }, text: "", likes: 31, shares: 4, liked: false, comments: [] },
   { id: "p1", by: "katy", t: "2h", tags: ["skincare", "tips"], text: "Winter skin reminder 🧴 Cold air + central heating = dehydrated skin. Double-cleanse at night, layer a hyaluronic serum under your moisturiser, and yes — SPF still counts in December. The UVA that ages skin comes straight through cloud, so the habit matters more than the forecast.", likes: 48, shares: 6, liked: false, comments: [{ by: "miranda", text: "Guilty of skipping SPF when it's grey out 🙈", likes: 4, t: "1h" }, { by: "katy", text: "The UVA doesn't care about the clouds Miranda 😄", likes: 9, t: "50m" }] },
   { id: "p10", kind: "reel", by: "katy", t: "3h", tags: ["aftercare", "tips"], reel: { src: "assets/sample-reel.mp4", dur: 30 }, text: "30 seconds on the first 24 hours after lip filler 💋 ice on, lipstick off, and please leave the swelling alone — it settles.", likes: 86, shares: 12, liked: false, comments: [{ by: "miranda", text: "Wish I'd seen this before my first appointment 😅", likes: 3, t: "2h" }, { by: "katy", text: "Saving you all the overthinking Miranda 😄", likes: 6, t: "1h" }] },
   { id: "p2", by: "miranda", t: "4h", tags: ["progress", "question"], text: "6 weeks post lip filler and I've finally stopped overthinking it. Katy was right about the swelling timeline 😅 Any tips for keeping lips hydrated through winter?", img: "assets/clinic-lip-design.png", likes: 21, shares: 2, liked: true, comments: [{ by: "beth", text: "A plain balm (no menthol or 'plumping' ingredients) and a big glass of water before bed. Simple wins.", likes: 7, t: "3h" }, { by: "amir", text: "They look so natural!", likes: 2, t: "2h" }] },
@@ -163,9 +163,9 @@ const POSTS_SEED = [
   { id: "p4", by: "amir", t: "Yesterday", tags: ["question", "appointment"], text: "Just booked my first consultation 🙈 nervous but excited. What should I ask? Anything you wish you'd known before your first one?", likes: 12, shares: 1, liked: false, comments: [{ by: "mark", text: "Ask about the downtime for YOUR job — mine was more than I expected.", likes: 3, t: "20h" }, { by: "katy", text: "Bring a list of medications and any allergies, and photos of looks you like AND don't like. See you Thursday Amir!", likes: 11, t: "18h" }] },
   { id: "p9", kind: "quiz", by: "beth", t: "2d", text: "", quiz: { question: "Myth or fact: you don't need SPF on a cloudy day.", options: [{ label: "Myth — UVA comes through cloud", correct: true }, { label: "Fact — clouds block the sun" }], explain: "up to 80% of UV passes through cloud, so SPF is a daily habit, not a weather call." }, likes: 27, shares: 5, liked: false, comments: [{ by: "miranda", text: "Got it right for once 😄", likes: 2, t: "1d" }] },
   { id: "p5", by: "priya", t: "2d", tags: ["appointment"], text: "Patient Q&A live this Thursday 7pm — bring your questions about skin boosters, what they do and who they suit. Free for all clinic patients.", event: "ev1", likes: 35, shares: 9, liked: false, comments: [] },
-  { id: "p6", by: "mark", t: "3d", tags: ["wins", "sleep"], text: "Week 3 of the sleep + hydration plan from the coach. Energy is noticeably better and my skin check-in score has gone from 61 to 72. Small habits, big difference.", imgs: ["assets/course-skin-boosters.jpg", "assets/course-consultation.jpg", "assets/course-full-face-rejuvenation.jpg"], likes: 29, shares: 3, liked: false, comments: [{ by: "katy", text: "This is exactly it Mark 👏", likes: 5, t: "2d" }] },
+  { id: "p6", by: "mark", t: "3d", tags: ["wins", "sleep"], text: "Week 3 of the sleep + hydration plan from Ava. Energy is noticeably better and my skin check-in score has gone from 61 to 72. Small habits, big difference.", imgs: ["assets/course-skin-boosters.jpg", "assets/course-consultation.jpg", "assets/course-full-face-rejuvenation.jpg"], likes: 29, shares: 3, liked: false, comments: [{ by: "katy", text: "This is exactly it Mark 👏", likes: 5, t: "2d" }] },
 ];
-const POSTS_SEED_V = 6;
+const POSTS_SEED_V = 7;
 
 const PINNED_IDS = ["p3", "p5"];
 const PUSH_JN = { app: "Pearce Aesthetics", icon: "assets/profinity-icon-purple-gold.png", title: "Appointment reminder", body: "Your 2-week review with Katy Wilson is Tuesday 3 Nov at 2:30pm. Tap to confirm or reschedule.", cta: "Confirm" };
@@ -278,7 +278,7 @@ function JNDrawer({ open, onClose }) {
     ["user", "Edit Profile", "JaneProfile.html?edit=1"],
     ["watch", wear.length ? "My Wearables" : "Connect your wearables", "JaneWearables.html"],
     ["heart-pulse", "Health Analytics", "JaneHealth.html"],
-    ["sparkles", "Coach", "JaneCoach.html"],
+    ["sparkles", "Ava", "JaneCoach.html"],
     ["calendar", "Events", "JaneEvents.html"],
     ["message-circle", "Messages", "JaneMessages.html"],
     ["phone", "Calls & appointments", "JaneScheduleCall.html?ret=" + encodeURIComponent(hereJN())],
@@ -1370,7 +1370,7 @@ function HealthDashboard() {
                 <Line data={HEALTH.skin} color="#CE9957" />
                 <div className="jn-days">{DAYS.map((d, i) => <span key={i}>{d}</span>)}</div>
               </div>
-              <button className="jn-coachcta" onClick={() => goJN("JaneCoach.html?q=" + encodeURIComponent("How can I improve my hydration this week?"))}><IcJN name="sparkles" size={18} color="var(--ai-purple)" /><span>Ask the coach how to lift your hydration score</span><IcJN name="chevron-right" size={18} color="var(--ai-purple)" /></button>
+              <button className="jn-coachcta" onClick={() => goJN("JaneCoach.html?q=" + encodeURIComponent("How can I improve my hydration this week?"))}><IcJN name="sparkles" size={18} color="var(--ai-purple)" /><span>Ask Ava how to lift your hydration score</span><IcJN name="chevron-right" size={18} color="var(--ai-purple)" /></button>
             </React.Fragment>
           ) : (
             <div className="jh-empty"><IcJN name="trending-up" size={26} color="var(--gray-400)" /><b>Your trends will appear here</b><small>Connect a wearable or turn on phone tracking and this view fills with your sleep, movement and skin trends.</small></div>)}
@@ -1430,7 +1430,7 @@ function cyclePhase(c) { const d = cycleDay(c), len = c.len || 28; return d <= 5
    conversation is kept in pf-jane-coach {convs:[{id,title,msgs,ts}],cur}.
    ======================================================================= */
 const COACH_KEY = "pf-jane-coach";
-const COACH = { name: "PROfinity Coach", sub: "Reviewed by " + KATY.name };
+const COACH = { name: "Ava", sub: "Reviewed by " + KATY.name };
 const COACH_PROMPTS = [
   { t: "Prep me for my review on Monday", ic: "calendar-check" }, { t: "Aftercare for lip filler", ic: "heart-pulse" },
   { t: "Build me a simple skincare routine", ic: "sparkles" }, { t: "Help me sleep better", ic: "moon" },
@@ -1445,7 +1445,7 @@ function coachReply(q) {
   if (/score|mean|78/.test(s)) return "Your skin score (78 today) comes from your daily selfie rating plus hydration, sleep and SPF habits. Anything over 70 means your routine is working. The biggest swing factors for you have been SPF days and sleep over 7 hours.";
   return "Noted. Based on your Health Pass, the single most useful thing this week is consistency — SPF daily and 7+ hours of sleep. Would you like a short plan, or shall I pass this to Katy before your review?";
 }
-function coachWelcome() { return { by: "coach", text: "Hi " + JANE.first + " 👋 I'm your wellness coach. I can help with aftercare, routines, sleep and getting ready for appointments. Ask me anything, or tap a quick action below.", ts: Date.now() }; }
+function coachWelcome() { return { by: "coach", text: "Hi " + JANE.first + " 👋 I'm Ava, your wellness coach. I can help with aftercare, routines, sleep and getting ready for appointments. Ask me anything, or tap a quick action below.", ts: Date.now() }; }
 function newConvJN() { return { id: "c" + Date.now().toString(36), title: "New chat", msgs: [coachWelcome()], ts: Date.now() }; }
 const COACH_HISTORY_SEED = [
   { id: "c-seed1", title: "Swelling after lip filler", ts: Date.now() - 3 * 86400000, msgs: [{ by: "coach", text: coachWelcome().text, ts: Date.now() - 3 * 86400000 }, { by: "jane", text: "Is swelling on day 3 normal after lip filler?", ts: Date.now() - 3 * 86400000 + 60000 }, { by: "coach", text: coachReply("swelling lip filler"), ts: Date.now() - 3 * 86400000 + 62000 }] },
@@ -1453,7 +1453,7 @@ const COACH_HISTORY_SEED = [
 ];
 function loadCoach() {
   const s = readJN(COACH_KEY, null);
-  if (s && s.convs) return s;
+  if (s && s.convs) return { ...s, convs: s.convs.map((c) => ({ ...c, msgs: c.msgs.map((m) => m.by === "coach" && m.text && m.text.indexOf("I'm your wellness coach") >= 0 ? { ...m, text: m.text.replace("I'm your wellness coach", "I'm Ava, your wellness coach") } : m) })) };
   const legacy = s && s.msgs && s.msgs.length > 1 ? [{ id: "c-legacy", title: coachTitle(s.msgs), msgs: s.msgs, ts: s.msgs[s.msgs.length - 1].ts || Date.now() }] : [];
   const cur = newConvJN();
   return { convs: [cur, ...legacy, ...COACH_HISTORY_SEED], cur: cur.id };
@@ -1549,7 +1549,7 @@ function CoachScreen() {
           <div className="jn-scroll jn-thread jc-thread" ref={scrollRef}>
             <button className={"jc-ctx" + (ctxOpen ? " open" : "")} onClick={() => setCtxOpen(!ctxOpen)}>
               <span className="ic"><IcJN name="qr-code" size={16} color="var(--ai-purple)" /></span>
-              <span className="tx"><b>What your coach knows</b><small>{ctxOpen ? "From your Health Pass — only you and your clinic can see this." : "Lip filler · 1 Oct · Review Tue 3 Nov · Skin score 78"}</small>
+              <span className="tx"><b>What Ava knows</b><small>{ctxOpen ? "From your Health Pass — only you and your clinic can see this." : "Lip filler · 1 Oct · Review Tue 3 Nov · Skin score 78"}</small>
                 {ctxOpen && <span className="jc-ctx-list"><span><IcJN name="syringe" size={13} />Lip filler · 1 Oct 2026</span><span><IcJN name="calendar" size={13} />Review Tue 3 Nov · 2:30pm</span><span><IcJN name="sun" size={13} />Skin score 78 · SPF 5 of 7 days</span><span><IcJN name="moon" size={13} />Sleep avg 7h 12m</span>{hs.height && <span><IcJN name="user" size={13} />{hs.height} cm · {hs.weight} kg</span>}</span>}
               </span>
               <IcJN name="chevron-down" size={18} color="var(--gray-450)" />
@@ -1573,7 +1573,7 @@ function CoachScreen() {
               </React.Fragment>)}
             <div className="jc-composer">
               <button className="jc-mic" aria-label="Voice" onClick={() => setMode("voice")}><IcJN name="mic" size={18} color="var(--ai-purple)" /></button>
-              <input placeholder="Ask your coach anything…" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} />
+              <input placeholder="Ask Ava anything…" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} />
               <button className="jc-send" aria-label="Send" disabled={!draft.trim()} onClick={() => send()}><IcJN name="arrow-up" size={18} color="#fff" /></button>
             </div>
             <p className="jc-disc">Not medical advice. Talk to your clinician about any concerns.</p>
@@ -1589,7 +1589,7 @@ function CoachScreen() {
           <div className="jn-voice-txt">
             {heard && <p className="you">“{heard}{voice === "listening" ? "…" : "”"}</p>}
             {said && <div className="ans">{said.split("\n").map((l, j) => <p key={j}>{l || " "}</p>)}</div>}
-            {!heard && !said && <p className="hint">Ask about aftercare, your routine, sleep or your next appointment. Your coach has your Health Pass to hand, and the conversation is saved to your history.</p>}
+            {!heard && !said && <p className="hint">Ask about aftercare, your routine, sleep or your next appointment. Ava has your Health Pass to hand, and the conversation is saved to your history.</p>}
           </div>
           <div className="jn-voice-ctl">
             <button className={"jn-iconbtn lg" + (muted ? " on" : "")} aria-label="Mute" onClick={() => setMuted(!muted)}><IcJN name={muted ? "mic-off" : "mic"} size={22} color={muted ? "#fff" : "var(--brand-navy)"} /></button>

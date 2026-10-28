@@ -137,7 +137,7 @@ const JN_TABS = [{
   href: "JaneHealth.html"
 }, {
   key: "coach",
-  label: "Coach",
+  label: "Ava",
   icon: "sparkles",
   href: "JaneCoach.html"
 }, {
@@ -452,7 +452,6 @@ const POSTS_SEED = [{
   t: "now",
   live: {
     viewers: 86,
-    frame: "assets/live-preview-camera.jpg",
     title: "Aftercare Q&A · ask me anything"
   },
   text: "",
@@ -640,7 +639,7 @@ const POSTS_SEED = [{
   by: "mark",
   t: "3d",
   tags: ["wins", "sleep"],
-  text: "Week 3 of the sleep + hydration plan from the coach. Energy is noticeably better and my skin check-in score has gone from 61 to 72. Small habits, big difference.",
+  text: "Week 3 of the sleep + hydration plan from Ava. Energy is noticeably better and my skin check-in score has gone from 61 to 72. Small habits, big difference.",
   imgs: ["assets/course-skin-boosters.jpg", "assets/course-consultation.jpg", "assets/course-full-face-rejuvenation.jpg"],
   likes: 29,
   shares: 3,
@@ -652,7 +651,7 @@ const POSTS_SEED = [{
     t: "2d"
   }]
 }];
-const POSTS_SEED_V = 6;
+const POSTS_SEED_V = 7;
 const PINNED_IDS = ["p3", "p5"];
 const PUSH_JN = {
   app: "Pearce Aesthetics",
@@ -1009,7 +1008,7 @@ function JNDrawer({
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
-  const rows = [["user", "Edit Profile", "JaneProfile.html?edit=1"], ["watch", wear.length ? "My Wearables" : "Connect your wearables", "JaneWearables.html"], ["heart-pulse", "Health Analytics", "JaneHealth.html"], ["sparkles", "Coach", "JaneCoach.html"], ["calendar", "Events", "JaneEvents.html"], ["message-circle", "Messages", "JaneMessages.html"], ["phone", "Calls & appointments", "JaneScheduleCall.html?ret=" + encodeURIComponent(hereJN())], ["shield-check", "Privacy & Security", null], ["headphones", "Clinic Support", "JaneMessages.html?to=reception"]];
+  const rows = [["user", "Edit Profile", "JaneProfile.html?edit=1"], ["watch", wear.length ? "My Wearables" : "Connect your wearables", "JaneWearables.html"], ["heart-pulse", "Health Analytics", "JaneHealth.html"], ["sparkles", "Ava", "JaneCoach.html"], ["calendar", "Events", "JaneEvents.html"], ["message-circle", "Messages", "JaneMessages.html"], ["phone", "Calls & appointments", "JaneScheduleCall.html?ret=" + encodeURIComponent(hereJN())], ["shield-check", "Privacy & Security", null], ["headphones", "Clinic Support", "JaneMessages.html?to=reception"]];
   return /*#__PURE__*/React.createElement("div", {
     className: "m-drawer-wrap" + (open ? " open" : ""),
     "aria-hidden": !open
@@ -4357,7 +4356,7 @@ function HealthDashboard() {
     name: "sparkles",
     size: 18,
     color: "var(--ai-purple)"
-  }), /*#__PURE__*/React.createElement("span", null, "Ask the coach how to lift your hydration score"), /*#__PURE__*/React.createElement(IcJN, {
+  }), /*#__PURE__*/React.createElement("span", null, "Ask Ava how to lift your hydration score"), /*#__PURE__*/React.createElement(IcJN, {
     name: "chevron-right",
     size: 18,
     color: "var(--ai-purple)"
@@ -4613,7 +4612,7 @@ function cyclePhase(c) {
    ======================================================================= */
 const COACH_KEY = "pf-jane-coach";
 const COACH = {
-  name: "PROfinity Coach",
+  name: "Ava",
   sub: "Reviewed by " + KATY.name
 };
 const COACH_PROMPTS = [{
@@ -4648,7 +4647,7 @@ function coachReply(q) {
 function coachWelcome() {
   return {
     by: "coach",
-    text: "Hi " + JANE.first + " 👋 I'm your wellness coach. I can help with aftercare, routines, sleep and getting ready for appointments. Ask me anything, or tap a quick action below.",
+    text: "Hi " + JANE.first + " 👋 I'm Ava, your wellness coach. I can help with aftercare, routines, sleep and getting ready for appointments. Ask me anything, or tap a quick action below.",
     ts: Date.now()
   };
 }
@@ -4697,7 +4696,16 @@ const COACH_HISTORY_SEED = [{
 }];
 function loadCoach() {
   const s = readJN(COACH_KEY, null);
-  if (s && s.convs) return s;
+  if (s && s.convs) return {
+    ...s,
+    convs: s.convs.map(c => ({
+      ...c,
+      msgs: c.msgs.map(m => m.by === "coach" && m.text && m.text.indexOf("I'm your wellness coach") >= 0 ? {
+        ...m,
+        text: m.text.replace("I'm your wellness coach", "I'm Ava, your wellness coach")
+      } : m)
+    }))
+  };
   const legacy = s && s.msgs && s.msgs.length > 1 ? [{
     id: "c-legacy",
     title: coachTitle(s.msgs),
@@ -5060,7 +5068,7 @@ function CoachScreen() {
     color: "var(--ai-purple)"
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, "What your coach knows"), /*#__PURE__*/React.createElement("small", null, ctxOpen ? "From your Health Pass — only you and your clinic can see this." : "Lip filler · 1 Oct · Review Tue 3 Nov · Skin score 78"), ctxOpen && /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("b", null, "What Ava knows"), /*#__PURE__*/React.createElement("small", null, ctxOpen ? "From your Health Pass — only you and your clinic can see this." : "Lip filler · 1 Oct · Review Tue 3 Nov · Skin score 78"), ctxOpen && /*#__PURE__*/React.createElement("span", {
     className: "jc-ctx-list"
   }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
     name: "syringe",
@@ -5138,7 +5146,7 @@ function CoachScreen() {
     size: 18,
     color: "var(--ai-purple)"
   })), /*#__PURE__*/React.createElement("input", {
-    placeholder: "Ask your coach anything…",
+    placeholder: "Ask Ava anything…",
     value: draft,
     onChange: e => setDraft(e.target.value),
     onKeyDown: e => e.key === "Enter" && send()
@@ -5196,7 +5204,7 @@ function CoachScreen() {
     key: j
   }, l || " "))), !heard && !said && /*#__PURE__*/React.createElement("p", {
     className: "hint"
-  }, "Ask about aftercare, your routine, sleep or your next appointment. Your coach has your Health Pass to hand, and the conversation is saved to your history.")), /*#__PURE__*/React.createElement("div", {
+  }, "Ask about aftercare, your routine, sleep or your next appointment. Ava has your Health Pass to hand, and the conversation is saved to your history.")), /*#__PURE__*/React.createElement("div", {
     className: "jn-voice-ctl"
   }, /*#__PURE__*/React.createElement("button", {
     className: "jn-iconbtn lg" + (muted ? " on" : ""),
