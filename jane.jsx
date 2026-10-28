@@ -1535,14 +1535,19 @@ function CoachScreen() {
         <button className="jc-hbtn" aria-label="New chat" onClick={newChat}><IcJN name="square-pen" size={19} color="#fff" /></button>
       </header>)}
       {view === "history" ? (
-        <div className="jn-scroll jc-histview">
+        <div className="jn-scroll jc-histview" onClick={() => menuFor && setMenuFor(null)}>
           {(() => { const active = store.convs.filter((c) => !c.archived).slice().sort((a, b) => b.ts - a.ts); const archived = store.convs.filter((c) => c.archived).slice().sort((a, b) => b.ts - a.ts);
             const Row = ({ c }) => { const last = c.msgs[c.msgs.length - 1]; const n = c.msgs.filter((m) => m.by === "jane").length; return (
               <div key={c.id} className={"jc-hist-row" + (c.id === store.cur && !c.archived ? " cur" : "") + (c.archived ? " archived" : "")}>
                 <button className="main" onClick={() => openConv(c.id)}>
                   <span className="tx"><b>{c.title}</b><small>{last ? last.text.replace(/\n+/g, " ").slice(0, 70) : ""}</small><em>{fmtWhenJN(c.ts)} · {n} {n === 1 ? "question" : "questions"}</em></span>
                 </button>
-                <button className="del" aria-label="Chat options" onClick={() => setMenuFor(c.id)}><IcJN name="more-vertical" size={18} color="var(--gray-450)" /></button>
+                <button className={"del" + (menuFor === c.id ? " on" : "")} aria-label="Chat options" aria-expanded={menuFor === c.id} onClick={(e) => { e.stopPropagation(); setMenuFor(menuFor === c.id ? null : c.id); }}><IcJN name="more-vertical" size={18} color="var(--gray-450)" /></button>
+                {menuFor === c.id && (
+                  <div className="jc-dd" onClick={(e) => e.stopPropagation()}>
+                    <button onClick={() => setArchived(c.id, !c.archived)}><IcJN name={c.archived ? "archive-restore" : "archive"} size={16} />{c.archived ? "Unarchive" : "Archive"}</button>
+                    <button className="danger" onClick={() => deleteConv(c.id)}><IcJN name="trash-2" size={16} />Delete</button>
+                  </div>)}
               </div>); };
             return (<React.Fragment>
           <div className="jc-hist-h"><h2>Your chats</h2><span>{active.length} {active.length === 1 ? "conversation" : "conversations"} · saved to your Health Pass</span></div>
@@ -1611,16 +1616,6 @@ function CoachScreen() {
             <button className="jn-iconbtn lg" aria-label="Keyboard" onClick={() => setMode("chat")}><IcJN name="message-circle" size={22} color="var(--brand-navy)" /></button>
           </div>
         </div>)}
-      <JNSheet open={!!menuFor} onClose={() => setMenuFor(null)}>
-        {menuFor && (() => { const c = store.convs.find((x) => x.id === menuFor); if (!c) return null; return (
-          <div className="jc-menu">
-            <div className="jc-menu-h"><b>{c.title}</b><small>{fmtWhenJN(c.ts)} · {(() => { const n = c.msgs.filter((m) => m.by === "jane").length; return n + (n === 1 ? " question" : " questions"); })()}</small></div>
-            <button className="jc-menu-row" onClick={() => { setMenuFor(null); openConv(c.id); }}><span className="ic"><IcJN name="message-circle" size={18} color="var(--brand-navy)" /></span><span className="tx"><b>Open chat</b><small>Continue where you left off</small></span></button>
-            <button className="jc-menu-row" onClick={() => setArchived(c.id, !c.archived)}><span className="ic"><IcJN name={c.archived ? "archive-restore" : "archive"} size={18} color="var(--brand-navy)" /></span><span className="tx"><b>{c.archived ? "Unarchive" : "Archive"}</b><small>{c.archived ? "Move it back to your chats" : "Hide it from your chats without deleting"}</small></span></button>
-            <button className="jc-menu-row danger" onClick={() => deleteConv(c.id)}><span className="ic"><IcJN name="trash-2" size={18} color="var(--error)" /></span><span className="tx"><b>Delete</b><small>Removes it from your Health Pass for good</small></span></button>
-            <button className="jn-btn ghost block" style={{ marginTop: 6 }} onClick={() => setMenuFor(null)}>Cancel</button>
-          </div>); })()}
-      </JNSheet>
       {view !== "chat" && <JNTabs active="coach" />}
 
       <JNToast toast={toast} />
