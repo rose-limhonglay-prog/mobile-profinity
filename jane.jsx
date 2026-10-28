@@ -1541,7 +1541,7 @@ function CoachScreen() {
           <b>{COACH.name} <em>AI COACH</em></b>
           <span><i className="jn-online" />Online · {COACH.sub}</span>
         </div>
-        <button className="jc-hbtn" aria-label="New chat" onClick={newChat}><IcJN name="square-pen" size={19} color="#fff" /></button>
+        <button className="jc-hbtn" aria-label="New chat" onClick={newChat}><IcJN name="square-pen" size={19} color="var(--brand-navy)" /></button>
       </header>)}
       {view === "history" ? (
         <div className="jn-scroll jc-histview" onClick={() => menuFor && setMenuFor(null)}>

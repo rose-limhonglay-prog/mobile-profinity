@@ -5074,7 +5074,7 @@ function CoachScreen() {
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "square-pen",
     size: 19,
-    color: "#fff"
+    color: "var(--brand-navy)"
   }))), view === "history" ? /*#__PURE__*/React.createElement("div", {
     className: "jn-scroll jc-histview",
     onClick: () => menuFor && setMenuFor(null)
