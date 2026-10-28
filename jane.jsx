@@ -1496,6 +1496,7 @@ function CoachScreen() {
     const s2 = { ...live, convs: live.convs.map((c) => c.id === id ? { ...c, msgs: [...c.msgs, { by: "jane", text: t, ts: Date.now() }], ts: Date.now(), title: c.title === "New chat" ? coachTitle([{ by: "jane", text: t }]) : c.title } : c) }; persist(s2); setDraft(""); setTyping(true);
     setTimeout(() => { setStore((cur) => { const s3 = { ...cur, convs: cur.convs.map((c) => c.id === id ? { ...c, msgs: [...c.msgs, { by: "coach", text: coachReply(t), ts: Date.now() }], ts: Date.now() } : c) }; saveJN(COACH_KEY, s3); return s3; }); setTyping(false); }, 1100 + Math.random() * 600);
   }
+  const toHistory = () => { const kept = store.convs.filter((c) => c.msgs.length > 1); if (kept.length !== store.convs.length) persist({ convs: kept.length ? kept : store.convs.slice(0, 1), cur: (kept[0] || store.convs[0]).id }); setView("history"); setMode("chat"); };
   function newChat() { const c = newConvJN(); persist({ convs: [c, ...store.convs.filter((x) => !(x.msgs.length <= 1 && x.id !== c.id))], cur: c.id }); setView("chat"); setMode("chat"); }
   function openConv(id) { persist({ ...store, cur: id }); setView("chat"); setMode("chat"); }
   function deleteConv(id) { const left = store.convs.filter((c) => c.id !== id); const next = left.length ? left : [newConvJN()]; persist({ convs: next, cur: store.cur === id ? next[0].id : store.cur }); showToast("Chat deleted"); }
@@ -1516,16 +1517,21 @@ function CoachScreen() {
   const lastCoachIdx = conv ? conv.msgs.map((m) => m.by).lastIndexOf("coach") : -1;
 
   return (
-    <div className={"jn-screen jc" + (chromeHidden && mode === "chat" ? " chrome-hidden" : "")}>
+    <div className={"jn-screen jc" + (chromeHidden && mode === "chat" ? " chrome-hidden" : "") + (view === "chat" ? " jc-inchat" : "")}>
+      {view === "chat" ? (
+      <header className="jc-head chat">
+        <button className="jc-hbtn" aria-label="Back to your chats" onClick={toHistory}><IcJN name="chevron-left" size={22} color="var(--brand-navy)" /></button>
+        <div className="jc-head-title"><b>{conv ? conv.title : "New chat"}</b><small>{COACH.name} · AI coach · Online</small></div>
+        <button className="jc-hbtn" aria-label="New chat" onClick={newChat}><IcJN name="square-pen" size={19} color="var(--brand-navy)" /></button>
+      </header>) : (
       <header className="jc-head">
         <span className="jc-av"><IcJN name="sparkles" size={26} color="var(--ai-purple)" /><i /></span>
         <div className="jc-head-tx">
           <b>{COACH.name} <em>AI COACH</em></b>
           <span><i className="jn-online" />Online · {COACH.sub}</span>
         </div>
-        {view === "chat" ? <button className="jc-hbtn" aria-label="Back to chat history" onClick={() => { const kept = store.convs.filter((c) => c.msgs.length > 1); if (kept.length !== store.convs.length) persist({ convs: kept.length ? kept : store.convs.slice(0, 1), cur: (kept[0] || store.convs[0]).id }); setView("history"); setMode("chat"); }}><IcJN name="history" size={19} color="#fff" />{store.convs.length > 1 && <small>{store.convs.length}</small>}</button> : null}
         <button className="jc-hbtn" aria-label="New chat" onClick={newChat}><IcJN name="square-pen" size={19} color="#fff" /></button>
-      </header>
+      </header>)}
       {view === "history" ? (
         <div className="jn-scroll jc-histview">
           <div className="jc-hist-h"><h2>Your chats</h2><span>{store.convs.length} {store.convs.length === 1 ? "conversation" : "conversations"} · saved to your Health Pass</span></div>
@@ -1544,7 +1550,7 @@ function CoachScreen() {
           <p className="jc-disc">Not medical advice. Talk to your clinician about any concerns.</p>
         </div>
       ) : null}
-      {view === "chat" && <div className="jc-modes"><div className="jn-seg mini">{[["chat", "message-circle", "Chat"], ["voice", "mic", "Voice"]].map(([k, ic, l]) => <button key={k} className={mode === k ? "on" : ""} onClick={() => setMode(k)}><IcJN name={ic} size={16} /><span>{l}</span></button>)}</div><span className="jc-convname">{conv && conv.title !== "New chat" ? conv.title : "New chat"}</span></div>}
+      {view === "chat" && <div className="jc-modes"><div className="jn-seg mini">{[["chat", "message-circle", "Chat"], ["voice", "mic", "Voice"]].map(([k, ic, l]) => <button key={k} className={mode === k ? "on" : ""} onClick={() => setMode(k)}><IcJN name={ic} size={16} /><span>{l}</span></button>)}</div></div>}
 
       {view !== "chat" ? null : mode === "chat" ? (
         <React.Fragment>
@@ -1570,8 +1576,8 @@ function CoachScreen() {
           <div className="jc-foot">
             {conv && conv.msgs.length <= 1 && !typing && (
               <React.Fragment>
-                <div className="jc-qa-h"><IcJN name="zap" size={13} color="var(--ai-purple)" />Quick actions</div>
-                <div className="jc-qa">{COACH_PROMPTS.map((p) => <button key={p.t} onClick={() => send(p.t)}><IcJN name={p.ic} size={18} color="var(--ai-purple)" /><span>{p.t}</span></button>)}</div>
+                <div className="jc-starts-h"><b>Start with a question</b><small>Pick one and Ava takes it from there</small></div>
+                <div className="jc-starts jn-chips wrap">{COACH_PROMPTS.map((p) => <button key={p.t} className="jn-chip" onClick={() => send(p.t)}>{p.t}</button>)}</div>
               </React.Fragment>)}
             <div className="jc-composer">
               <button className="jc-mic" aria-label="Voice" onClick={() => setMode("voice")}><IcJN name="mic" size={18} color="var(--ai-purple)" /></button>
@@ -1599,7 +1605,7 @@ function CoachScreen() {
             <button className="jn-iconbtn lg" aria-label="Keyboard" onClick={() => setMode("chat")}><IcJN name="message-circle" size={22} color="var(--brand-navy)" /></button>
           </div>
         </div>)}
-      <JNTabs active="coach" compact={chromeHidden && mode === "chat"} />
+      {view !== "chat" && <JNTabs active="coach" />}
 
       <JNToast toast={toast} />
     </div>);
