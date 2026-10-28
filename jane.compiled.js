@@ -137,7 +137,7 @@ const JN_TABS = [{
   href: "JaneHealth.html"
 }, {
   key: "coach",
-  label: "Ava",
+  label: "Coach",
   icon: "sparkles",
   href: "JaneCoach.html"
 }, {
@@ -3983,33 +3983,38 @@ function HealthDashboard() {
     plus: "+0"
   };
   const tiles = {
+    /* c = icon tint (mint · lav · sky · rose · gold · navy), polish 2026-10-28 */
     steps: {
       k: "steps",
       ic: "footprints",
       t: "Steps",
       v: tracking ? HEALTH.steps[6].toLocaleString() : "0",
-      tone: "mint"
+      tone: "mint",
+      c: "mint"
     },
     readiness: {
       k: "readiness",
       ic: "activity",
       t: "Readiness",
       v: tracking ? "82 · Good" : "Calibrating",
-      tone: tracking ? "mint" : "grey"
+      tone: tracking ? "mint" : "grey",
+      c: "sky"
     },
     sleep: {
       k: "sleep",
       ic: "moon",
       t: "Sleep",
       v: tracking ? fmtH(HEALTH.sleep[6]) : "No data",
-      tone: "lav"
+      tone: "lav",
+      c: "lav"
     },
     vitals: {
       k: "vitals",
       ic: "activity",
       t: "Vitals",
       v: tracking ? "RHR 61 bpm" : "No data",
-      tone: tracking ? "mint" : "grey"
+      tone: tracking ? "mint" : "grey",
+      c: "rose"
     },
     weight: {
       k: "weight",
@@ -4018,6 +4023,7 @@ function HealthDashboard() {
       v: logs.weight ? logs.weight + " kg" : "No data",
       tone: "grey",
       navy: true,
+      c: "navy",
       on: () => setSheet("log")
     },
     food: {
@@ -4026,6 +4032,7 @@ function HealthDashboard() {
       t: "Food",
       v: logs.food ? logs.food + (logs.food === 1 ? " meal" : " meals") : "No data",
       tone: logs.food ? "mint" : "grey",
+      c: "gold",
       on: () => setSheet("log")
     },
     water: {
@@ -4034,6 +4041,7 @@ function HealthDashboard() {
       t: "Hydration",
       v: logs.water ? (logs.water * 250).toLocaleString() + " ml" : "No data",
       tone: logs.water ? "mint" : "grey",
+      c: "sky",
       on: () => setSheet("log")
     },
     skin: {
@@ -4042,6 +4050,7 @@ function HealthDashboard() {
       t: "Skin check-in",
       v: logs.skin ? logs.skin + " / 100" : "Tap to log",
       tone: logs.skin ? "gold" : "grey",
+      c: "gold",
       on: () => setSheet("log")
     },
     review: {
@@ -4051,6 +4060,7 @@ function HealthDashboard() {
       v: "Tue 3 Nov",
       tone: "grey",
       navy: true,
+      c: "navy",
       on: () => goJN("JaneScheduleCall.html?ret=JaneHealth.html")
     },
     distance: {
@@ -4058,28 +4068,32 @@ function HealthDashboard() {
       ic: "map-pin",
       t: "Distance",
       v: tracking ? "7.4 km" : "0 km",
-      tone: "mint"
+      tone: "mint",
+      c: "mint"
     },
     cal: {
       k: "cal",
       ic: "flame",
       t: "Cal burned",
       v: tracking ? "1,840" : "0",
-      tone: "mint"
+      tone: "mint",
+      c: "rose"
     },
     exdays: {
       k: "exdays",
       ic: "dumbbell",
       t: "Exercise days",
       v: tracking ? "3 of 5" : "0 of 5",
-      tone: "mint"
+      tone: "mint",
+      c: "lav"
     },
     hourly: {
       k: "hourly",
       ic: "timer",
       t: "Hourly activity",
       v: tracking ? "9 of 12 hrs" : "No data",
-      tone: "mint"
+      tone: "mint",
+      c: "sky"
     },
     hr: {
       k: "hr",
@@ -4087,7 +4101,8 @@ function HealthDashboard() {
       t: "Heart rate",
       v: tracking ? "61 bpm" : "--",
       tone: "grey",
-      navy: true
+      navy: true,
+      c: "rose"
     },
     cycle: {
       k: "cycle",
@@ -4095,6 +4110,7 @@ function HealthDashboard() {
       t: "Cycle health",
       v: cycle ? "Day " + cycleDay(cycle) + " · " + cyclePhase(cycle) : "Tap to set up",
       tone: cycle ? "rose" : "grey",
+      c: "rose",
       on: () => setSheet("cycle")
     }
   };
@@ -4106,10 +4122,10 @@ function HealthDashboard() {
     className: "jh-tile " + t.tone + (wide ? " wide" : "") + (t.navy ? " navy" : ""),
     onClick: t.on || (() => showToast(t.t + " · " + t.v))
   }, /*#__PURE__*/React.createElement("span", {
-    className: "ic"
+    className: "ic c-" + (t.c || "navy")
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: t.ic,
-    size: 22
+    size: 20
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
   }, /*#__PURE__*/React.createElement("b", null, t.t), /*#__PURE__*/React.createElement("span", null, t.v)));
@@ -4118,20 +4134,23 @@ function HealthDashboard() {
     ic: "layout-grid",
     art: "lav",
     t: "Connect apps to see all your data",
+    sub: "Apple Health, Oura, Fitbit and more",
     done: wear.length > 0,
     on: () => goJN("JaneWearables.html")
   }, {
     k: "cycle",
     ic: "flower",
-    art: "blue",
-    t: "Set up your cycle health tracking",
+    art: "rose",
+    t: "Set up cycle health tracking",
+    sub: "Time treatments around your cycle",
     done: !!cycle,
     on: () => setSheet("cycle")
   }, {
     k: "phone",
     ic: "footprints",
-    art: "teal",
-    t: "Track steps and more with your phone",
+    art: "mint",
+    t: "Track steps with your phone",
+    sub: "No wearable needed",
     done: phone,
     on: () => {
       setPhone(true);
@@ -4141,8 +4160,9 @@ function HealthDashboard() {
   }, {
     k: "friends",
     ic: "users",
-    art: "pink",
+    art: "sky",
     t: "Add friends to motivate each other",
+    sub: "Cheer each other on, data stays private",
     done: friends.length > 0,
     on: () => setSheet("friends")
   }];
@@ -4163,11 +4183,17 @@ function HealthDashboard() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "jh-title"
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", null, "Health"), /*#__PURE__*/React.createElement("span", null, new Date().toLocaleDateString("en-GB", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h1", null, "Health"), /*#__PURE__*/React.createElement("span", {
+    className: "jh-meta"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "jh-date"
+  }, new Date().toLocaleDateString("en-GB", {
     weekday: "long",
     day: "numeric",
     month: "long"
-  }), tracking ? " · " + (wear.length ? wear.map(w => w.name).join(", ") : "Phone tracking") : " · Not tracking yet")), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "jh-src" + (tracking ? " on" : "")
+  }, /*#__PURE__*/React.createElement("i", null), tracking ? wear.length ? wear.map(w => w.name).join(", ") : "Phone tracking" : "Not tracking yet"))), /*#__PURE__*/React.createElement("button", {
     className: "jn-iconbtn",
     "aria-label": "Devices",
     onClick: () => goJN("JaneWearables.html")
@@ -4204,9 +4230,12 @@ function HealthDashboard() {
     className: "arc"
   }, "Weekly cardio"), /*#__PURE__*/React.createElement("b", null, ring.pct, /*#__PURE__*/React.createElement("i", null, "%")), /*#__PURE__*/React.createElement("small", {
     className: "sub"
-  }, ring.sub)), /*#__PURE__*/React.createElement("span", {
+  }, ring.sub)), tracking && /*#__PURE__*/React.createElement("span", {
     className: "plus"
-  }, ring.plus)), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "trending-up",
+    size: 12
+  }), ring.plus, " min today")), /*#__PURE__*/React.createElement("div", {
     className: "jh-stack"
   }, show(["steps", "readiness", "sleep"]).map(t => /*#__PURE__*/React.createElement(Tile, {
     key: t.k,
@@ -4259,34 +4288,45 @@ function HealthDashboard() {
     onClick: () => setListOpen(!listOpen),
     "aria-expanded": listOpen
   }, /*#__PURE__*/React.createElement("span", {
-    className: "count"
-  }, doneN, "/", checklist.length), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, doneN === checklist.length ? "You're all set up 🎉" : "Welcome! Let's get you set up"), /*#__PURE__*/React.createElement(IcJN, {
+  }, /*#__PURE__*/React.createElement("b", null, doneN === checklist.length ? "You're all set up 🎉" : "Let's get you set up"), /*#__PURE__*/React.createElement("small", null, doneN === checklist.length ? "Every step done · your Health view is complete" : doneN + " of " + checklist.length + " done · " + (checklist.length - doneN) + (checklist.length - doneN === 1 ? " quick step" : " quick steps") + " left"), /*#__PURE__*/React.createElement("span", {
+    className: "bar"
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      width: Math.round(doneN / checklist.length * 100) + "%"
+    }
+  }))), /*#__PURE__*/React.createElement("span", {
+    className: "chev"
+  }, /*#__PURE__*/React.createElement(IcJN, {
     name: listOpen ? "chevron-up" : "chevron-down",
-    size: 22,
-    color: "var(--text-heading)"
-  })), listOpen && checklist.map(c => /*#__PURE__*/React.createElement("button", {
+    size: 18,
+    color: "var(--brand-navy)"
+  }))), listOpen && checklist.map(c => /*#__PURE__*/React.createElement("button", {
     key: c.k,
     className: "jh-item" + (c.done ? " done" : ""),
     onClick: c.on
   }, /*#__PURE__*/React.createElement("span", {
-    className: "art " + c.art
+    className: "art c-" + c.art
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: c.ic,
-    size: 28,
-    color: "var(--brand-navy)"
+    size: 20
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, c.t), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("b", null, c.t), /*#__PURE__*/React.createElement("small", null, c.done ? "Done" : c.sub)), /*#__PURE__*/React.createElement("span", {
     className: "radio"
-  }, c.done && /*#__PURE__*/React.createElement(IcJN, {
+  }, c.done ? /*#__PURE__*/React.createElement(IcJN, {
     name: "check",
-    size: 14,
+    size: 13,
     color: "#fff"
-  }))))), tracking ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h3", {
+  }) : /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-right",
+    size: 14,
+    color: "var(--gray-400)"
+  }))))), tracking ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+    className: "jh-sec"
+  }, /*#__PURE__*/React.createElement("h3", {
     className: "jn-h"
-  }, "This week"), /*#__PURE__*/React.createElement("div", {
+  }, "This week"), /*#__PURE__*/React.createElement("span", null, "Last 7 days")), /*#__PURE__*/React.createElement("div", {
     className: "jn-metric"
   }, /*#__PURE__*/React.createElement("div", {
     className: "head"
@@ -4974,13 +5014,7 @@ function CoachScreen() {
     className: "jn-scroll jc-histview"
   }, /*#__PURE__*/React.createElement("div", {
     className: "jc-hist-h"
-  }, /*#__PURE__*/React.createElement("h2", null, "Your chats"), /*#__PURE__*/React.createElement("span", null, store.convs.length, " ", store.convs.length === 1 ? "conversation" : "conversations", " · saved to your Health Pass")), /*#__PURE__*/React.createElement("button", {
-    className: "jc-newchat",
-    onClick: newChat
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "plus",
-    size: 18
-  }), "Start a new chat"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("h2", null, "Your chats"), /*#__PURE__*/React.createElement("span", null, store.convs.length, " ", store.convs.length === 1 ? "conversation" : "conversations", " · saved to your Health Pass")), /*#__PURE__*/React.createElement("div", {
     className: "jc-hist"
   }, store.convs.slice().sort((a, b) => b.ts - a.ts).map(c => {
     const last = c.msgs[c.msgs.length - 1];

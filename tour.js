@@ -28,7 +28,7 @@
       body: "Discover channels dedicated to specific specialties, procedures, and practice management. Find answers in Q&A or join circles to network with your peers.",
       action: { label: "Explore Channels", icon: "lucide:arrow-right" } },
     { n: 5, page: "NewsfeedMobile.html", tab: "Agents", title: "Meet Your AI Agents",
-      body: "Profinity's AI Agents are here to assist you. Use LeadGen to draft outreach messages or the AI Coach to simulate client consultations.",
+      body: "Profinity's AI Agents are here to assist you. Use LeadGen to draft outreach messages or Ava, your AI coach, to simulate client consultations.",
       prompt: "Draft a polite follow-up email for a client who enquired about Botox last week but hasn't booked." },
   ];
 
@@ -45,7 +45,7 @@
       body: "Discover channels dedicated to specific specialties, procedures, and practice management. Find answers in Q&A or join circles to network with your peers.",
       action: { label: "Explore Channels", icon: "lucide:arrow-right" } },
     { n: 5, page: "Agent.html", tab: "Agent", title: "Meet Your AI Agents",
-      body: "Profinity's AI Agents are here to assist you. Use LeadGen to draft outreach messages or the AI Coach to simulate client consultations.",
+      body: "Profinity's AI Agents are here to assist you. Use LeadGen to draft outreach messages or Ava, your AI coach, to simulate client consultations.",
       prompt: "Draft a polite follow-up email for a client who enquired about Botox last week but hasn't booked." },
   ];
 

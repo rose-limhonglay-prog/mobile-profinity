@@ -637,6 +637,76 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 /* Log = white outlined button (user, 2026-10-26) */
 .jh-act:not(.primary) { background: var(--surface-card); border: 1px solid var(--border-default); color: var(--brand-navy); }
 
+/* ---- Health polish (user, 2026-10-28: "make the health page nicer", the 1/4 circle head was ugly) ----
+   tinted per-metric icon squares on white cards, tracking status chip under the title, "+N min today"
+   pill under the ring, checklist head = title + "1 of 4 done" + thin gold bar, 40px item art + sub lines */
+.jh { --jh-sky: #DCEBFA; --jh-sky-ink: #1d4f8a; --jh-navy-soft: #E9E8F5; --jh-shadow: 0 2px 10px rgba(42,37,105,.05); }
+[data-theme="dark"] .jh { --jh-sky: #1c3350; --jh-sky-ink: #9cc8ff; --jh-navy-soft: #2a2850; --jh-shadow: none; }
+.jh-title { padding: 8px 16px 14px; }
+.jh-title h1 { font-size: 26px; letter-spacing: -.02em; }
+.jh-title .jh-meta { display: flex; align-items: center; gap: 8px; margin-top: 4px; white-space: nowrap; overflow: hidden; }
+.jh-title .jh-date { font-size: 13px; color: var(--text-secondary); flex: none; }
+.jh-title .jh-src { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px 3px 7px; border-radius: 100px; background: var(--surface-sunken); font-size: 11.5px; font-weight: var(--fw-semibold); color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; }
+.jh-title .jh-src i { width: 6px; height: 6px; border-radius: 50%; background: var(--gray-400); flex: none; }
+.jh-title .jh-src.on { background: var(--success-bg); color: var(--success); }
+.jh-title .jh-src.on i { background: var(--success); box-shadow: 0 0 0 2px rgba(22,163,74,.18); }
+.jh-title .jn-iconbtn { width: 42px; height: 42px; border-radius: 13px; border: 1px solid var(--border-default); background: var(--surface-card); box-shadow: var(--jh-shadow); }
+.jh-page { padding: 4px 16px 6px; }
+.jh-ring { padding-bottom: 10px; }
+.jh-ring .jn-ring .in b { font-size: 36px; letter-spacing: -.02em; }
+.jh-ring .jn-ring .in small.arc { font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-secondary); font-weight: var(--fw-semibold); max-width: 130px; white-space: nowrap; }
+.jh-ring .jn-ring .in small.sub { font-size: 11px; color: var(--text-heading); font-weight: var(--fw-medium); }
+.jh-ring .plus { bottom: 0; min-width: 0; height: 26px; padding: 0 10px; border-radius: 100px; gap: 4px; font-size: 11.5px; font-weight: var(--fw-bold); white-space: nowrap; background: var(--brand-gold-100); color: #6b4a00; border: 1px solid rgba(206,153,87,.35); box-shadow: 0 0 0 3px var(--surface-page); }
+.jh-tile, .jh-tile.mint, .jh-tile.lav, .jh-tile.rose, .jh-tile.gold, .jh-tile.grey { border-radius: 18px; box-shadow: var(--jh-shadow); transition: transform .12s ease; }
+.jh-tile:active { transform: scale(.985); }
+.jh-tile .ic, .jh-tile.mint .ic, .jh-tile.lav .ic, .jh-tile.rose .ic, .jh-tile.gold .ic, .jh-tile.navy .ic { width: 42px; height: 42px; border-radius: 13px; }
+.jh-tile .ic.c-mint, .jh-item .art.c-mint, .jh-logrow .ic.mint { background: var(--jh-mint); color: var(--jh-mint-ink); }
+.jh-tile .ic.c-lav,  .jh-item .art.c-lav  { background: var(--jh-lav);  color: var(--jh-lav-ink); }
+.jh-tile .ic.c-sky,  .jh-item .art.c-sky  { background: var(--jh-sky);  color: var(--jh-sky-ink); }
+.jh-tile .ic.c-rose, .jh-item .art.c-rose { background: var(--jh-rose); color: var(--jh-rose-ink); }
+.jh-tile .ic.c-gold, .jh-item .art.c-gold, .jh-logrow .ic.gold { background: var(--jh-gold); color: var(--jh-gold-ink); }
+.jh-tile .ic.c-navy, .jh-item .art.c-navy { background: var(--jh-navy-soft); color: var(--brand-navy); }
+.jh-tile .tx b { font-size: 12px; letter-spacing: .01em; }
+.jh-tile .tx span, .jh-tile .tx span:where(:not(:empty)) { font-size: 16px; letter-spacing: -.01em; }
+.jh-dots { padding: 12px 0 16px; }
+.jh-dots button { width: 7px; height: 7px; background: var(--gray-250, var(--gray-300)); }
+.jh-dots button.on { width: 22px; }
+.jh-actions { padding: 0 16px 20px; gap: 10px; }
+.jh-act, .jh-act.round { min-height: 50px; box-shadow: var(--jh-shadow); }
+.jh-act.round { width: 54px; }
+.jh-sheet { padding: 0 16px 8px; }
+/* checklist card */
+.jh-list { border-radius: 20px; box-shadow: var(--jh-shadow); }
+.jh-list-head { gap: 12px; padding: 16px 16px 14px; align-items: flex-start; }
+.jh-list-head .count { display: none; }
+.jh-list-head .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; font-size: inherit; font-weight: inherit; }
+.jh-list-head .tx b { font-size: 16px; font-weight: var(--fw-bold); color: var(--text-heading); letter-spacing: -.01em; }
+.jh-list-head .tx small { font-size: 12.5px; color: var(--text-secondary); }
+.jh-list-head .tx .bar { display: block; height: 6px; margin-top: 9px; border-radius: 100px; background: var(--surface-sunken); overflow: hidden; }
+.jh-list-head .tx .bar i { display: block; height: 100%; min-width: 6px; border-radius: 100px; background: linear-gradient(90deg, var(--brand-gold), #e2b877); transition: width .4s ease; }
+.jh-list-head .chev { flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--surface-sunken); display: flex; align-items: center; justify-content: center; margin-top: 2px; }
+.jh-item { gap: 12px; padding: 12px 16px; }
+.jh-item .art, .jh-item .art.lav, .jh-item .art.blue, .jh-item .art.teal, .jh-item .art.pink { width: 42px; height: 42px; border-radius: 13px; }
+.jh-item .tx { display: flex; flex-direction: column; gap: 1px; min-width: 0; font-size: inherit; font-weight: inherit; }
+.jh-item .tx b { font-size: 14.5px; font-weight: var(--fw-semibold); color: var(--text-heading); line-height: 1.3; }
+.jh-item .tx small { font-size: 12px; color: var(--text-secondary); line-height: 1.3; }
+.jh-item .radio { width: 24px; height: 24px; border: 1.5px solid var(--border-default); background: var(--surface-card); }
+.jh-item.done .tx { text-decoration: none; color: inherit; }
+.jh-item.done .tx b { color: var(--text-secondary); font-weight: var(--fw-medium); }
+.jh-item.done .tx small { color: var(--brand-gold); font-weight: var(--fw-semibold); }
+.jh-item.done .art, .jh-item.done .art.c-mint, .jh-item.done .art.c-lav, .jh-item.done .art.c-sky, .jh-item.done .art.c-rose { background: var(--brand-gold-100); color: #6b4a00; }
+[data-theme="dark"] .jh-item.done .art, [data-theme="dark"] .jh-item.done .art.c-mint, [data-theme="dark"] .jh-item.done .art.c-lav, [data-theme="dark"] .jh-item.done .art.c-sky, [data-theme="dark"] .jh-item.done .art.c-rose { background: rgba(206,153,87,.18); color: var(--brand-gold); }
+.jh-item.done .radio { background: var(--brand-gold); border-color: var(--brand-gold); }
+/* trends */
+.jh-sec { display: flex; align-items: baseline; justify-content: space-between; margin: 24px 2px 10px; }
+.jh-sec .jn-h { margin: 0; font-size: 17px; letter-spacing: -.01em; }
+.jh-sec span { font-size: 12px; color: var(--text-muted); }
+.jh .jn-metric { border-radius: 20px; box-shadow: var(--jh-shadow); padding: 16px 16px 14px; margin-bottom: 10px; }
+.jh .jn-metric .head { margin-bottom: 14px; }
+.jh .jn-metric .head .ic { border-radius: 13px; }
+.jh .jn-coachcta { border-radius: 18px; }
+.jh-empty { border-radius: 20px; }
+
 /* ---- COACH (Ava-style, 2026-10-26) ---- */
 .jc { background: linear-gradient(180deg, var(--ai-purple-100) 0%, var(--surface-page) 220px); }
 [data-theme="dark"] .jc { background: linear-gradient(180deg, #221c4a 0%, var(--surface-page) 220px); }
@@ -693,8 +763,6 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 [data-theme="dark"] .jc-send iconify-icon, [data-theme="dark"] .jc-send svg { color: #1a1736; }
 .jc-disc { margin: 8px 0 0; text-align: center; font-size: 11px; color: var(--text-muted); }
 .jc-voice .jn-orb .core { background: linear-gradient(135deg, #8B84FF, #4A40D6); box-shadow: 0 18px 44px rgba(74,64,214,.35); }
-.jc-newchat { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; border-radius: 12px; border: 1.5px dashed var(--ai-purple); background: var(--ai-purple-100); color: var(--ai-purple); font-family: inherit; font-size: 14px; font-weight: var(--fw-semibold); cursor: pointer; margin-bottom: 12px; }
-[data-theme="dark"] .jc-newchat { background: rgba(108,99,255,.14); color: #c9c4ff; }
 .jc-hist { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 .jc-hist-row { display: flex; align-items: center; gap: 4px; border-radius: 14px; border: 1px solid var(--border-default); background: var(--surface-card); }
 .jc-hist-row.cur { border-color: var(--ai-purple); box-shadow: 0 0 0 3px var(--ai-purple-100); }
@@ -1012,3 +1080,19 @@ button.jn-pmc-h { cursor: pointer; }
 .jn-reel-foot .tags span { color: var(--brand-gold); font-size: 13px; font-weight: var(--fw-medium); text-shadow: 0 1px 3px rgba(0,0,0,.5); }
 .jn-reel-track { position: absolute; left: 16px; right: 16px; bottom: max(36px, calc(env(safe-area-inset-bottom) + 20px)); z-index: 4; height: 3px; border-radius: 99px; background: rgba(255,255,255,.3); overflow: hidden; }
 .jn-reel-track i { display: block; height: 100%; background: #fff; border-radius: 99px; transition: width .25s linear; }
+
+/* ---- Coach page = brand colours (user 2026-10-28 "keep the color to our branding"): the DS AI-purple
+   tokens are remapped to navy/gold inside the coach screen and the Health-page coach CTA. ---- */
+.jc, .jn-coachcta { --ai-purple: var(--brand-navy); --ai-purple-600: var(--brand-navy-700); --ai-purple-700: var(--brand-navy-900); --ai-purple-200: #dedcee; --ai-purple-100: #f1f0f8; }
+.jc-head { background: linear-gradient(135deg, #3b357f 0%, #292569 55%, #1c1947 100%); }
+/* page surface = Katy My Learning warm off-white (#F6F3EF), user 2026-10-28 */
+.jc { background: #F6F3EF; }
+[data-theme="dark"] .jc { background: var(--surface-page); }
+.jc-head-tx b em { background: var(--brand-gold); color: #1a1736; }
+.jc-av { background: #fff; }
+[data-theme="dark"] .jc, [data-theme="dark"] .jn-coachcta { --ai-purple-200: rgba(206,153,87,.28); --ai-purple-100: rgba(206,153,87,.12); }
+[data-theme="dark"] .jc-head { background: linear-gradient(135deg, #2a2660 0%, #1c1947 60%, #131126 100%); }
+.jc-face, .jc-voice .jn-orb .core { background: linear-gradient(135deg, #3b357f, #292569); }
+.jc-voice .jn-orb .core { box-shadow: 0 18px 44px rgba(41,37,105,.35); }
+[data-theme="dark"] .jc-face, [data-theme="dark"] .jc-voice .jn-orb .core { background: linear-gradient(135deg, #e0b071, #ce9957); }
+
