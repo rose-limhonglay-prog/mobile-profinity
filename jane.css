@@ -1098,11 +1098,7 @@ button.jn-pmc-h { cursor: pointer; }
 .jc-starts-h { margin: 26px 2px 10px; display: flex; flex-direction: column; gap: 2px; }
 .jc-starts-h b { font-size: 17px; font-weight: var(--fw-bold); color: var(--text-heading); letter-spacing: -.01em; }
 .jc-starts-h small { font-size: 12.5px; color: var(--text-secondary); }
-.jc-starts { display: flex; flex-direction: column; border-radius: 16px; overflow: hidden; background: var(--surface-card); border: 1px solid var(--border-default); box-shadow: 0 6px 18px rgba(41,37,105,.05); margin-bottom: 12px; }
-.jc-starts button { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 54px; padding: 14px 14px 14px 18px; border: none; background: none; font-family: inherit; font-size: 15px; font-weight: var(--fw-medium); color: var(--text-heading); text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; position: relative; }
-.jc-starts button::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px; border-radius: 0 3px 3px 0; background: var(--brand-gold); opacity: 0; transition: opacity .15s ease; }
-.jc-starts button:active { background: var(--brand-gold-100); }
-.jc-starts button:active::before { opacity: 1; }
-.jc-starts button + button { border-top: 1px solid var(--border-default); }
-.jc-starts button span { flex: 1; line-height: 1.3; }
-[data-theme="dark"] .jc-starts button:active { background: rgba(206,153,87,.12); }
+.jc-starts.jn-chips { flex-wrap: wrap; overflow: visible; margin: 0 0 12px; padding: 0; gap: 8px; }
+.jc-starts .jn-chip { font-size: 13.5px; min-height: 38px; color: var(--text-heading); }
+.jc-starts .jn-chip:active { background: var(--brand-gold-100); border-color: var(--brand-gold); }
+[data-theme="dark"] .jc-starts .jn-chip:active { background: rgba(206,153,87,.14); }

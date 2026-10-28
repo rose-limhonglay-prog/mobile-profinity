@@ -5043,9 +5043,10 @@ function CoachScreen() {
   })), /*#__PURE__*/React.createElement("div", {
     className: "jc-starts-h"
   }, /*#__PURE__*/React.createElement("b", null, "Start with a question"), /*#__PURE__*/React.createElement("small", null, "Pick one and Ava takes it from there")), /*#__PURE__*/React.createElement("div", {
-    className: "jc-starts"
+    className: "jc-starts jn-chips wrap"
   }, COACH_PROMPTS.slice(0, 4).map(p => /*#__PURE__*/React.createElement("button", {
     key: p.t,
+    className: "jn-chip",
     onClick: () => {
       const c = newConvJN();
       persist({
@@ -5056,11 +5057,7 @@ function CoachScreen() {
       setMode("chat");
       setTimeout(() => send(p.t), 250);
     }
-  }, /*#__PURE__*/React.createElement("span", null, p.t), /*#__PURE__*/React.createElement(IcJN, {
-    name: "arrow-right",
-    size: 16,
-    color: "var(--brand-gold)"
-  })))), /*#__PURE__*/React.createElement("p", {
+  }, p.t))), /*#__PURE__*/React.createElement("p", {
     className: "jc-disc"
   }, "Not medical advice. Talk to your clinician about any concerns.")) : null, view === "chat" && /*#__PURE__*/React.createElement("div", {
     className: "jc-modes"
