@@ -1545,8 +1545,6 @@ function CoachScreen() {
                 <button className="del" aria-label="Delete chat" onClick={() => deleteConv(c.id)}><IcJN name="trash-2" size={16} color="var(--gray-450)" /></button>
               </div>); })}
           </div>
-          <div className="jc-starts-h"><b>Start with a question</b><small>Pick one and Ava takes it from there</small></div>
-          <div className="jc-starts jn-chips wrap">{COACH_PROMPTS.slice(0, 4).map((p) => <button key={p.t} className="jn-chip" onClick={() => { const c = newConvJN(); persist({ convs: [c, ...store.convs.filter((x) => x.msgs.length > 1)], cur: c.id }); setView("chat"); setMode("chat"); setTimeout(() => send(p.t), 250); }}>{p.t}</button>)}</div>
           <p className="jc-disc">Not medical advice. Talk to your clinician about any concerns.</p>
         </div>
       ) : null}
