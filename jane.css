@@ -720,10 +720,11 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .jc-head-tx .jn-online { box-shadow: 0 0 0 2px rgba(255,255,255,.35); }
 .jc-hbtn { position: relative; flex: none; width: 38px; height: 38px; border-radius: 50%; border: none; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .jc-hbtn small { position: absolute; top: -3px; right: -3px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--brand-gold); color: #1a1736; font-size: 10px; font-weight: var(--fw-bold); display: flex; align-items: center; justify-content: center; }
-.jc-modes { flex: none; display: flex; align-items: center; gap: 10px; padding: 10px 16px 0; }
-.jc-modes .jn-seg.mini { background: var(--surface-card); border: 1px solid var(--border-default); }
+.jc-modes { flex: none; position: relative; z-index: 5; height: 0; overflow: visible; display: flex; align-items: flex-start; justify-content: center; padding: 0 16px; pointer-events: none; }
+.jc-modes .jn-seg.mini { margin-top: 10px; pointer-events: auto; background: var(--surface-card); border: 1px solid var(--border-default); box-shadow: 0 6px 18px rgba(16,24,40,.12); }
+[data-theme="dark"] .jc-modes .jn-seg.mini { box-shadow: 0 6px 18px rgba(0,0,0,.45); }
+.jc-thread, .jc-voice { padding-top: 62px; }
 .jc-convname { flex: 1; min-width: 0; text-align: right; font-size: 12px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.jc-thread { padding-top: 12px; }
 .jc-ctx { display: flex; align-items: flex-start; gap: 10px; width: 100%; padding: 11px 12px; border-radius: 14px; border: 1px dashed var(--ai-purple-200); background: var(--surface-card); font-family: inherit; text-align: left; cursor: pointer; margin-bottom: 6px; }
 [data-theme="dark"] .jc-ctx { border-color: rgba(108,99,255,.4); }
 .jc-ctx .ic { flex: none; width: 30px; height: 30px; border-radius: 9px; background: var(--ai-purple-100); display: flex; align-items: center; justify-content: center; }
@@ -1110,7 +1111,11 @@ button.jn-pmc-h { cursor: pointer; }
 /* chat view header = white bar: back · chat title · new chat (user 2026-10-28) */
 .jc-head.chat { background: var(--surface-card); color: var(--text-heading); border-bottom: 1px solid var(--border-default); padding: 54px 10px 10px 8px; gap: 6px; }
 .jc-head.chat .jc-hbtn { background: transparent; }
-.jc-head.chat .jc-hbtn:active { background: var(--surface-sunken); }
+.jc-head.chat .jc-hbtn:active, .jc-head.chat .jc-hbtn.on { background: var(--surface-sunken); }
+.jc-hmenu { position: relative; flex: none; display: flex; }
+.jc-head.chat { position: relative; z-index: 9; }
+.jc-head.chat:has(.jc-dd) { overflow: visible; }
+.jc-hmenu .jc-dd { top: calc(100% + 4px); right: 0; }
 .jc-head-title { flex: 1; min-width: 0; text-align: center; display: flex; flex-direction: column; gap: 1px; }
 .jc-head-title b { font-size: 16px; font-weight: var(--fw-bold); color: var(--text-heading); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .jc-head-title small { font-size: 11.5px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

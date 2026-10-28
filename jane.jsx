@@ -1519,12 +1519,21 @@ function CoachScreen() {
   const lastCoachIdx = conv ? conv.msgs.map((m) => m.by).lastIndexOf("coach") : -1;
 
   return (
-    <div className={"jn-screen jc" + (chromeHidden && mode === "chat" ? " chrome-hidden" : "") + (view === "chat" ? " jc-inchat" : "")}>
+    <div className={"jn-screen jc" + (chromeHidden && mode === "chat" ? " chrome-hidden" : "") + (view === "chat" ? " jc-inchat" : "")} onClick={() => menuFor && setMenuFor(null)}>
       {view === "chat" ? (
       <header className="jc-head chat">
         <button className="jc-hbtn" aria-label="Back to your chats" onClick={toHistory}><IcJN name="chevron-left" size={22} color="var(--brand-navy)" /></button>
         <div className="jc-head-title"><b>{conv ? conv.title : "New chat"}</b><small>{COACH.name} · AI coach · Online</small></div>
-        <button className="jc-hbtn" aria-label="New chat" onClick={newChat}><IcJN name="square-pen" size={19} color="var(--brand-navy)" /></button>
+        <span className="jc-hmenu">
+          <button className={"jc-hbtn" + (menuFor === "head" ? " on" : "")} aria-label="Chat options" aria-expanded={menuFor === "head"} onClick={(e) => { e.stopPropagation(); setMenuFor(menuFor === "head" ? null : "head"); }}><IcJN name="more-vertical" size={20} color="var(--brand-navy)" /></button>
+          {menuFor === "head" && conv && (
+            <div className="jc-dd" onClick={(e) => e.stopPropagation()}>
+              <button onClick={() => { setMenuFor(null); newChat(); }}><IcJN name="square-pen" size={16} />New chat</button>
+              <button onClick={() => { setArchived(conv.id, !conv.archived); setView("history"); }}><IcJN name={conv.archived ? "archive-restore" : "archive"} size={16} />{conv.archived ? "Unarchive" : "Archive"}</button>
+              <button className="danger" onClick={() => { deleteConv(conv.id); setView("history"); }}><IcJN name="trash-2" size={16} />Delete</button>
+            </div>
+          )}
+        </span>
       </header>) : (
       <header className="jc-head">
         <span className="jc-av"><IcJN name="sparkles" size={26} color="var(--ai-purple)" /><i /></span>

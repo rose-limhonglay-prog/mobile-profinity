@@ -4999,7 +4999,8 @@ function CoachScreen() {
   }));
   const lastCoachIdx = conv ? conv.msgs.map(m => m.by).lastIndexOf("coach") : -1;
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen jc" + (chromeHidden && mode === "chat" ? " chrome-hidden" : "") + (view === "chat" ? " jc-inchat" : "")
+    className: "jn-screen jc" + (chromeHidden && mode === "chat" ? " chrome-hidden" : "") + (view === "chat" ? " jc-inchat" : ""),
+    onClick: () => menuFor && setMenuFor(null)
   }, view === "chat" ? /*#__PURE__*/React.createElement("header", {
     className: "jc-head chat"
   }, /*#__PURE__*/React.createElement("button", {
@@ -5012,15 +5013,49 @@ function CoachScreen() {
     color: "var(--brand-navy)"
   })), /*#__PURE__*/React.createElement("div", {
     className: "jc-head-title"
-  }, /*#__PURE__*/React.createElement("b", null, conv ? conv.title : "New chat"), /*#__PURE__*/React.createElement("small", null, COACH.name, " · AI coach · Online")), /*#__PURE__*/React.createElement("button", {
-    className: "jc-hbtn",
-    "aria-label": "New chat",
-    onClick: newChat
+  }, /*#__PURE__*/React.createElement("b", null, conv ? conv.title : "New chat"), /*#__PURE__*/React.createElement("small", null, COACH.name, " · AI coach · Online")), /*#__PURE__*/React.createElement("span", {
+    className: "jc-hmenu"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jc-hbtn" + (menuFor === "head" ? " on" : ""),
+    "aria-label": "Chat options",
+    "aria-expanded": menuFor === "head",
+    onClick: e => {
+      e.stopPropagation();
+      setMenuFor(menuFor === "head" ? null : "head");
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "more-vertical",
+    size: 20,
+    color: "var(--brand-navy)"
+  })), menuFor === "head" && conv && /*#__PURE__*/React.createElement("div", {
+    className: "jc-dd",
+    onClick: e => e.stopPropagation()
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setMenuFor(null);
+      newChat();
+    }
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "square-pen",
-    size: 19,
-    color: "var(--brand-navy)"
-  }))) : /*#__PURE__*/React.createElement("header", {
+    size: 16
+  }), "New chat"), /*#__PURE__*/React.createElement("button", {
+    onClick: () => {
+      setArchived(conv.id, !conv.archived);
+      setView("history");
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: conv.archived ? "archive-restore" : "archive",
+    size: 16
+  }), conv.archived ? "Unarchive" : "Archive"), /*#__PURE__*/React.createElement("button", {
+    className: "danger",
+    onClick: () => {
+      deleteConv(conv.id);
+      setView("history");
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "trash-2",
+    size: 16
+  }), "Delete")))) : /*#__PURE__*/React.createElement("header", {
     className: "jc-head"
   }, /*#__PURE__*/React.createElement("span", {
     className: "jc-av"
