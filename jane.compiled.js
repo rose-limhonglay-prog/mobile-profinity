@@ -5528,13 +5528,16 @@ function EventsScreen() {
     showToast(r[e.id] ? "You're going to " + e.title : "RSVP removed");
   }
   const list = view === "mine" ? EVENTS.filter(e => rsvp[e.id]) : EVENTS;
+  /* Editorial card (user 2026-10-29 "make the events nice"): soft-shadow white card on the Coach page's warm
+     off-white, gradient scrim under the date badge, meta as chips, host name + title, gold "spots left" pill. */
   const Card = ({
     e
   }) => {
     const d = evDate(e);
     const h = PEOPLE[e.host];
+    const going = !!rsvp[e.id];
     return /*#__PURE__*/React.createElement("article", {
-      className: "jn-ev"
+      className: "jn-ev" + (going ? " is-going" : "")
     }, /*#__PURE__*/React.createElement("button", {
       className: "jn-ev-img",
       onClick: () => setOpen(e)
@@ -5543,13 +5546,24 @@ function EventsScreen() {
       alt: ""
     }), /*#__PURE__*/React.createElement("span", {
       className: "date"
-    }, /*#__PURE__*/React.createElement("b", null, d.d), /*#__PURE__*/React.createElement("small", null, d.m)), e.online && /*#__PURE__*/React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("b", null, d.d), /*#__PURE__*/React.createElement("small", null, d.m)), e.online ? /*#__PURE__*/React.createElement("span", {
       className: "live"
     }, /*#__PURE__*/React.createElement(IcJN, {
       name: "video",
       size: 12,
       color: "#fff"
-    }), "Online")), /*#__PURE__*/React.createElement("div", {
+    }), "Online") : /*#__PURE__*/React.createElement("span", {
+      className: "live venue"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "map-pin",
+      size: 12,
+      color: "#fff"
+    }), "In clinic"), going && /*#__PURE__*/React.createElement("span", {
+      className: "going-tag"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "check",
+      size: 12
+    }), "You're going")), /*#__PURE__*/React.createElement("div", {
       className: "jn-ev-body"
     }, /*#__PURE__*/React.createElement("button", {
       className: "jn-ev-ttl",
@@ -5558,27 +5572,36 @@ function EventsScreen() {
       className: "jn-ev-meta"
     }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
       name: "clock",
-      size: 14
+      size: 13,
+      color: "var(--brand-navy)"
     }), d.wd, " ", d.d, " ", d.m, " · ", e.time), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
       name: "map-pin",
-      size: 14
+      size: 13,
+      color: "var(--brand-navy)"
     }), e.where)), /*#__PURE__*/React.createElement("div", {
       className: "jn-ev-foot"
     }, /*#__PURE__*/React.createElement("span", {
       className: "host"
     }, /*#__PURE__*/React.createElement(JNFace, {
       p: h,
-      size: 24
-    }), h.name), e.spots != null && /*#__PURE__*/React.createElement("span", {
+      size: 30
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, h.name), /*#__PURE__*/React.createElement("small", null, h.title))), e.spots != null && /*#__PURE__*/React.createElement("span", {
       className: "spots"
-    }, e.spots - (rsvp[e.id] ? 1 : 0), " spots left"), /*#__PURE__*/React.createElement("button", {
-      className: "jn-btn sm" + (rsvp[e.id] ? " going" : ""),
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "users",
+      size: 12
+    }), e.spots - (going ? 1 : 0), " left"), /*#__PURE__*/React.createElement("button", {
+      className: "jn-btn sm" + (going ? " going" : ""),
       onClick: () => toggle(e)
-    }, rsvp[e.id] ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IcJN, {
+    }, going ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IcJN, {
       name: "check",
       size: 15
     }), "Going") : "RSVP"))));
   };
+  const MONTH_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  let lastMonth = "";
   const {
     top,
     layers,
@@ -5588,7 +5611,7 @@ function EventsScreen() {
     hidden
   } = useKatyChromeJN();
   return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen m-screen" + cls
+    className: "jn-screen m-screen jn-evpage" + cls
   }, top, /*#__PURE__*/React.createElement("div", {
     className: "jn-scroll",
     ref: scrollRef,
@@ -5597,22 +5620,42 @@ function EventsScreen() {
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "jn-pagehead"
-  }, /*#__PURE__*/React.createElement("h2", null, "Events"), /*#__PURE__*/React.createElement("p", null, "From your clinic and the PROfinity community")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("h2", null, "Events"), /*#__PURE__*/React.createElement("p", null, "From your clinic and the PROfinity community")), /*#__PURE__*/React.createElement("span", {
+    className: "jn-ev-count"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "calendar",
+    size: 13
+  }), EVENTS.filter(e => rsvp[e.id]).length, " going")), /*#__PURE__*/React.createElement("div", {
     className: "jn-seg"
   }, [["upcoming", "Upcoming"], ["mine", "My events"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
     key: k,
     className: view === k ? "on" : "",
     onClick: () => setView(k)
-  }, l))), list.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, l, k === "mine" && EVENTS.filter(e => rsvp[e.id]).length > 0 && /*#__PURE__*/React.createElement("i", {
+    className: "n"
+  }, EVENTS.filter(e => rsvp[e.id]).length)))), list.length === 0 && /*#__PURE__*/React.createElement("div", {
     className: "jn-emptybox"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "calendar",
-    size: 28,
-    color: "var(--gray-400)"
-  }), /*#__PURE__*/React.createElement("b", null, "No events yet"), /*#__PURE__*/React.createElement("small", null, "RSVP to an event and it will show up here.")), list.map(e => /*#__PURE__*/React.createElement(Card, {
-    key: e.id,
-    e: e
-  })), /*#__PURE__*/React.createElement("div", {
+    size: 26,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("b", null, "No events yet"), /*#__PURE__*/React.createElement("small", null, "RSVP to an event and it will show up here."), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn sm",
+    onClick: () => setView("upcoming")
+  }, "Browse upcoming")), list.map(e => {
+    const mo = MONTH_FULL[new Date(e.date + "T12:00:00").getMonth()];
+    const first = mo !== lastMonth;
+    lastMonth = mo;
+    return /*#__PURE__*/React.createElement(React.Fragment, {
+      key: e.id
+    }, first && /*#__PURE__*/React.createElement("div", {
+      className: "jn-ev-month"
+    }, mo), /*#__PURE__*/React.createElement(Card, {
+      e: e
+    }));
+  }), /*#__PURE__*/React.createElement("div", {
     className: "jn-end"
   }, "All events are free for Pearce Aesthetics patients")), /*#__PURE__*/React.createElement(JNTabs, {
     active: "events",
