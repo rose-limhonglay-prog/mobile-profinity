@@ -52,7 +52,7 @@
   function toggleHand() { var c = read(); if (c) set({ hand: !c.hand }); }
   function elapsed() { var c = read(); return c ? Math.max(0, Date.now() - c.startedAt) : 0; }
   function isWeb() { return !!(window.PF_DM_WEB || window.PFMessagesChrome || document.querySelector(".dm-web-app")); }
-  function url(c) { var x = c || read(); return (isWeb() ? "MessagesWeb.html" : "Messages.html") + "?tab=conference" + (x ? "&conf=" + encodeURIComponent(x.id) : ""); }
+  function url(c) { var x = c || read(); return (isWeb() ? "MessagesWeb.html" : window.PF_DM_JANE ? "JaneMessages.html" : "Messages.html") + "?tab=conference" + (x ? "&conf=" + encodeURIComponent(x.id) : ""); }
   function go(u) { (window.pfGo || function (v) { window.location.href = v; })(u); }
   function fmt(ms) {
     var s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;

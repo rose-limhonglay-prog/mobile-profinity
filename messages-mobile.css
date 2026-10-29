@@ -141,6 +141,13 @@
 .dm-linkrow-quiet .dm-linkrow-ic { background: var(--gray-100); }
 .dm-linkrow-label { flex: 1; min-width: 0; font-family: var(--font-sans); font-weight: var(--fw-semibold); font-size: 15px; color: var(--text-heading); }
 .dm-linkrow-count { font-family: var(--font-sans); font-size: 14px; color: var(--gray-500); }
+/* Jane (patient app): next booked call with the clinic, above the inbox */
+.dm-linkrow-call { background: var(--surface-card); border: 1px solid var(--gray-150); }
+.dm-linkrow-call .dm-linkrow-ic { background: var(--brand-navy); }
+.dm-linkrow-call .dm-linkrow-label { display: flex; flex-direction: column; gap: 1px; }
+.dm-linkrow-call .dm-linkrow-label small { font-weight: var(--fw-regular, 400); font-size: 13px; color: var(--gray-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* mobile thread header tools (Jane's schedule-a-call sits beside the kebab) */
+.dm-thread-head .dm-thread-tools { flex: none; display: flex; align-items: center; gap: 2px; }
 .dm-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 44px 24px; text-align: center; }
 .dm-empty b { font-family: var(--font-sans); font-weight: var(--fw-bold); font-size: 16px; color: var(--text-heading); margin-top: 6px; }
 .dm-empty p { margin: 0; font-family: var(--font-sans); font-size: 14px; line-height: 1.45; color: var(--gray-500); }

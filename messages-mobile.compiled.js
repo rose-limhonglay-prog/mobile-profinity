@@ -8,6 +8,10 @@
    Suffixed -DM: Babel text/babel scripts share one global scope.
    MessagesWeb.html runs the same file compiled, with window.PF_DM_WEB = true
    (see DM_WEB below) — desktop three-column layout, messages-web.css.
+   JaneMessages.html (patient app) runs it compiled with window.PF_DM_JANE =
+   true: the identical UI on Jane's roster / conversations / conferences, her
+   own store keys, the Jane chrome (drawer + notifications from jane.jsx) and
+   Jane page hrefs. Everything Jane-specific is gated on DM_JANE below.
    =========================================================================== */
 const {
   useState: useStateDM,
@@ -17,7 +21,12 @@ const {
   useCallback: useCallbackDM
 } = React;
 const DSDM = window.ProfinityDesignSystem_c2b5cc;
-const MobileChromeDM = window.MobileChromeC;
+/* window.PF_DM_JANE = true (JaneMessages.html) — same app, patient persona.
+   jane.jsx (loaded first with PF_JN_NO_MOUNT) exposes its drawer +
+   notifications as window.JaneChromeC and the call-booking hooks as
+   window.PFJaneDM. */
+const DM_JANE = !!window.PF_DM_JANE;
+const MobileChromeDM = DM_JANE ? window.JaneChromeC : window.MobileChromeC;
 function goDM(url) {
   (window.pfGo || function (u) {
     window.location.href = u;
@@ -42,11 +51,28 @@ const DM_WEB_HREFS = {
   "NotificationSettings.html": "NotificationSettingsWeb.html",
   "Messages.html": "MessagesWeb.html"
 };
+const DM_JANE_HREFS = {
+  "NewsfeedMobile.html": "JaneNewsfeed.html",
+  "ProfileMobile.html": "JaneProfile.html",
+  "NotificationSettings.html": "JaneProfile.html",
+  "Messages.html": "JaneMessages.html"
+};
 function hrefDM(url) {
-  if (!DM_WEB) return url;
+  const map = DM_WEB ? DM_WEB_HREFS : DM_JANE ? DM_JANE_HREFS : null;
+  if (!map) return url;
   const parts = String(url).split("?"),
-    web = DM_WEB_HREFS[parts[0]];
+    web = map[parts[0]];
   return web ? web + (parts[1] ? "?" + parts[1] : "") : url;
+}
+/* this page's own file — the ?ret= / ?from= return target */
+const SELF_DM = DM_WEB ? "MessagesWeb.html" : DM_JANE ? "JaneMessages.html" : "Messages.html";
+/* Jane: the clinic team (nurses, doctor, reception) can be booked for a call
+   straight from a thread / profile — JaneScheduleCall.html's ?new=1&with= contract. */
+function janeClinicDM(p) {
+  return DM_JANE && !!p && /nurse|doctor|physician|reception|clinic/i.test(p.role || "");
+}
+function janeScheduleUrlDM(personId, convId) {
+  return "JaneScheduleCall.html?new=1" + (personId && personId !== "reception" ? "&with=" + encodeURIComponent(personId) : "") + "&ret=" + encodeURIComponent("JaneMessages.html?t=" + (convId || personId));
 }
 function navigateWebDM(label) {
   const u = {
@@ -130,7 +156,7 @@ function presenceDM(p) {
    People — one photo per person. Only a handful of portraits exist in the
    design system; everyone else falls back to initials via DMFace.
    --------------------------------------------------------------------------- */
-const ME_DM = {
+const ME_KATY_DM = {
   id: "me",
   name: "Katy Wilson",
   avatar: "assets/avatar-katy.jpg",
@@ -138,7 +164,7 @@ const ME_DM = {
   online: true,
   seals: ["gb", "verified"]
 };
-const PEOPLE_SEED_DM = [{
+const PEOPLE_SEED_KATY_DM = [{
   id: "tim",
   name: "Dr Tim Pearce",
   avatar: "assets/avatar-drtim.png",
@@ -300,7 +326,7 @@ const PEOPLE_SEED_DM = [{
 }];
 
 /* Conversations — `ago` is minutes before load; resolved to `ts` by buildSeedDM. */
-const CONVERSATIONS_SEED_DM = [{
+const CONVERSATIONS_SEED_KATY_DM = [{
   id: "tim",
   kind: "dm",
   personId: "tim",
@@ -572,7 +598,7 @@ const CONVERSATIONS_SEED_DM = [{
     ago: 39990
   }]
 }];
-const REQUESTS_SEED_DM = [{
+const REQUESTS_SEED_KATY_DM = [{
   id: "omar",
   personId: "omar",
   text: "Hi Katy — I'm a new nurse prescriber and loved your lip case write-up. Would you be open to a quick chat?",
@@ -583,7 +609,7 @@ const REQUESTS_SEED_DM = [{
   text: "Hello! Miranda suggested I reach out about clinic systems.",
   ago: 400
 }];
-const CONFERENCES_DM = [{
+const CONFERENCES_KATY_DM = [{
   id: "c1",
   name: "Case Study Discussion",
   hostId: "tim",
@@ -678,15 +704,370 @@ const EMOJI_GROUPS_DM = [{
   icon: "lucide:syringe",
   emojis: ["💉", "🩹", "🩺", "💊", "🧴", "🧪", "🧬", "🔬", "🩻", "🧑‍⚕️", "👩‍⚕️", "👨‍⚕️", "🏥", "🧤", "😷", "🫧"]
 }];
-const SAMPLE_REPLIES_DM = ["Got it, thanks for the update!", "Sounds good — let's touch base soon.", "Appreciate you sharing this with me.", "Perfect, I'll take a look and get back to you.", "Thanks! That's really helpful."];
+const SAMPLE_REPLIES_KATY_DM = ["Got it, thanks for the update!", "Sounds good — let's touch base soon.", "Appreciate you sharing this with me.", "Perfect, I'll take a look and get back to you.", "Thanks! That's really helpful."];
+
+/* ---------------------------------------------------------------------------
+   Jane (patient app, PF_DM_JANE) — the same inbox on Jane's world: her clinic
+   team at Pearce Aesthetics, a couple of fellow patients, the aftercare group,
+   clinic conferences. Roster ids match jane.jsx PEOPLE so ?to=katy etc. from
+   the rest of the patient app land on the right thread.
+   --------------------------------------------------------------------------- */
+const ME_JANE_DM = {
+  id: "me",
+  name: "Jane Taylor",
+  avatar: "assets/avatar-sarah-collins.jpg",
+  role: "Patient · Pearce Aesthetics",
+  online: true,
+  seals: ["gb"]
+};
+const PEOPLE_SEED_JANE_DM = [{
+  id: "katy",
+  name: "Katy Wilson",
+  avatar: "assets/avatar-katy.jpg",
+  role: "Registered Nurse · Pearce Aesthetics",
+  online: true,
+  seals: ["gb", "verified"],
+  email: "katy@pearceaesthetics.co.uk",
+  clinic: "Pearce Aesthetics · Manchester",
+  website: "pearceaesthetics.co.uk",
+  instagram: "@katywilson.rn",
+  media: ["assets/clinic-lip-design.png", "assets/clinic-toxin-guide.png", "assets/clinic-treatment-collage.png"]
+}, {
+  id: "beth",
+  name: "Nurse Beth",
+  avatar: "assets/avatar-nurse-beth.jpg",
+  role: "Aesthetic Nurse · Pearce Aesthetics",
+  online: false,
+  lastActive: 35,
+  seals: ["gb", "verified"],
+  email: "beth@pearceaesthetics.co.uk",
+  clinic: "Pearce Aesthetics · Manchester",
+  website: "pearceaesthetics.co.uk",
+  instagram: "@nursebeth.aesthetics"
+}, {
+  id: "priya",
+  name: "Dr Priya Shah",
+  avatar: "assets/avatar-priya-shah.jpg",
+  role: "Aesthetic Doctor · Pearce Aesthetics",
+  online: true,
+  seals: ["gb", "gold", "verified"],
+  email: "priya@pearceaesthetics.co.uk",
+  clinic: "Pearce Aesthetics · Manchester",
+  website: "pearceaesthetics.co.uk",
+  instagram: "@drpriyashah"
+}, {
+  id: "reception",
+  name: "Pearce Aesthetics",
+  avatar: "assets/profinity-icon-purple-gold.png",
+  role: "Reception · Pearce Aesthetics",
+  online: true,
+  seals: ["verified"],
+  email: "hello@pearceaesthetics.co.uk",
+  clinic: "Pearce Aesthetics · Manchester",
+  website: "pearceaesthetics.co.uk",
+  instagram: "@pearceaesthetics"
+}, {
+  id: "miranda",
+  name: "Miranda P.",
+  avatar: "assets/avatar-miranda.jpg",
+  role: "Patient · 6 weeks post treatment",
+  online: true,
+  seals: ["gb"],
+  instagram: "@miranda.glow"
+}, {
+  id: "amir",
+  name: "Amir K.",
+  avatar: "assets/avatar-amir-khan.jpg",
+  role: "Patient · new",
+  online: false,
+  lastActive: 120,
+  seals: []
+}, {
+  id: "mark",
+  name: "Mark E.",
+  avatar: "assets/avatar-mark-ellis.jpg",
+  role: "Patient",
+  online: false,
+  lastActive: 1440,
+  seals: ["gb"]
+}, /* request senders — not in Jane's circle yet */
+{
+  id: "sophie",
+  name: "Sophie L.",
+  avatar: null,
+  role: "Patient",
+  online: true,
+  seals: [],
+  request: true
+}, {
+  id: "lucy",
+  name: "Lucy B.",
+  avatar: null,
+  role: "Patient · Open Evening",
+  online: false,
+  lastActive: 400,
+  seals: [],
+  request: true
+}];
+const CONVERSATIONS_SEED_JANE_DM = [{
+  id: "katy",
+  kind: "dm",
+  personId: "katy",
+  unread: 1,
+  messages: [{
+    from: "katy",
+    text: "Hi Jane, how are the lips settling? Any tenderness today?",
+    ago: 1560
+  }, {
+    from: "me",
+    text: "Much better! A bit of swelling on the left still.",
+    ago: 1500
+  }, {
+    from: "katy",
+    text: "Totally normal at day 3. Keep icing 10 mins on / 10 off and no straws 🙂",
+    ago: 1498,
+    reactions: {
+      "🙏": ["me"]
+    }
+  }, {
+    from: "me",
+    text: "Thank you! Sending a photo so you can see.",
+    image: "assets/clinic-lip-design.png",
+    ago: 1490
+  }, {
+    from: "katy",
+    text: "Perfect — that's healing exactly as I'd expect 👏",
+    ago: 1480
+  }, {
+    from: "katy",
+    text: "Also — your 2-week review is booked for Tue 3 Nov, 2:30pm. See you then! 📅",
+    ago: 120
+  }]
+}, {
+  id: "g-aftercare",
+  kind: "group",
+  name: "Lip Filler Aftercare Club",
+  memberIds: ["katy", "miranda", "amir"],
+  roles: {
+    katy: "Admin"
+  },
+  pinned: true,
+  unread: 2,
+  messages: [{
+    from: "katy",
+    text: "Welcome to the club 👋 Ask anything about the first two weeks here — I check in every morning.",
+    ago: 2900
+  }, {
+    from: "miranda",
+    text: "Day 10 for me and the lumps have completely gone. Hang in there everyone!",
+    ago: 2880,
+    reactions: {
+      "❤️": ["me", "amir"]
+    }
+  }, {
+    from: "me",
+    text: "That's so reassuring, thank you Miranda 🙏",
+    ago: 2870
+  }, {
+    from: "amir",
+    text: "Is it normal to still feel a bit numb on day 2?",
+    ago: 45
+  }, {
+    from: "katy",
+    text: "Yes, totally — it fades over the week. Shout if it's still there by day 7.",
+    ago: 30
+  }]
+}, {
+  id: "reception",
+  kind: "dm",
+  personId: "reception",
+  unread: 1,
+  messages: [{
+    from: "reception",
+    text: "Reminder: your appointment with Katy Wilson is Tuesday 3 Nov at 2:30pm. Reply C to confirm or call us to reschedule.",
+    ago: 300
+  }]
+}, {
+  id: "miranda",
+  kind: "dm",
+  personId: "miranda",
+  unread: 0,
+  messages: [{
+    from: "miranda",
+    text: "Saw your post! Want to go to the SPF workshop together? 🧴",
+    ago: 1800
+  }, {
+    from: "me",
+    text: "Yes! I'll RSVP now",
+    ago: 1740
+  }]
+}, {
+  id: "beth",
+  kind: "dm",
+  personId: "beth",
+  unread: 0,
+  messages: [{
+    from: "beth",
+    text: "Here's your aftercare sheet from today's treatment 📎 Aftercare-Lips.pdf",
+    ago: 5760
+  }, {
+    from: "me",
+    text: "Thank you Beth!",
+    ago: 5745,
+    reactions: {
+      "❤️": ["beth"]
+    }
+  }]
+}, /* Dr Priya is the empty-conversation sample: a contact with no messages yet. */
+{
+  id: "priya",
+  kind: "dm",
+  personId: "priya",
+  unread: 0,
+  messages: []
+}, {
+  id: "amir",
+  kind: "dm",
+  personId: "amir",
+  unread: 0,
+  messages: [{
+    from: "amir",
+    text: "Hi! Saw you're in the aftercare club — did your swelling go down by day 5?",
+    ago: 4300
+  }, {
+    from: "me",
+    text: "Mostly by day 4 for me. Ice helped loads!",
+    ago: 4290
+  }]
+}, {
+  id: "mark",
+  kind: "dm",
+  personId: "mark",
+  unread: 0,
+  muted: true,
+  messages: [{
+    from: "mark",
+    text: "Which SPF does Katy recommend? Mine stings 😩",
+    ago: 7300
+  }, {
+    from: "me",
+    text: "She told me La Roche-Posay Anthelios — no sting for me.",
+    ago: 7290
+  }, {
+    from: "mark",
+    text: "Thanks, ordering it now!",
+    ago: 7280
+  }]
+}, {
+  id: "g-openevening",
+  kind: "group",
+  name: "Skin Health Open Evening",
+  memberIds: ["beth", "mark", "miranda"],
+  roles: {
+    beth: "Admin"
+  },
+  unread: 0,
+  archived: true,
+  messages: [{
+    from: "beth",
+    text: "Thanks everyone for coming tonight 🥂 Your 10% booking code is in your email.",
+    ago: 20000
+  }, {
+    from: "me",
+    text: "Had such a lovely evening, thank you!",
+    ago: 19990
+  }]
+}];
+const REQUESTS_SEED_JANE_DM = [{
+  id: "sophie",
+  personId: "sophie",
+  text: "Hi Jane! I saw your winter skin comment — I'm having my lips done next week, could I ask you a couple of questions?",
+  ago: 95
+}, {
+  id: "lucy",
+  personId: "lucy",
+  text: "Hello! We met at the open evening — Beth said you'd be happy to chat about aftercare.",
+  ago: 400
+}];
+const CONFERENCES_JANE_DM = [{
+  id: "c1",
+  name: "Skin Boosters Q&A · Live",
+  hostId: "priya",
+  speakerIds: ["katy", "beth"],
+  attendeeIds: ["me", "miranda", "amir", "mark", "sophie", "lucy"],
+  count: 48,
+  live: true,
+  startedAgo: 900,
+  scope: "public",
+  desc: "Dr Priya answers your questions on skin boosters: what they do, who they suit and what results to expect. Free for all clinic patients.",
+  link: "profinity.app/voice/skinq1"
+}, {
+  id: "c2",
+  name: "Aftercare drop-in · Ask Katy anything",
+  hostId: "katy",
+  speakerIds: ["beth"],
+  attendeeIds: ["me", "miranda", "amir"],
+  count: 23,
+  live: false,
+  scope: "invited",
+  when: "Tomorrow · 7:00 PM",
+  desc: "A relaxed drop-in for anyone treated in the last month. Swelling, bruising, what's normal and what isn't.",
+  link: "profinity.app/voice/after22"
+}, {
+  id: "c3",
+  name: "SPF & Winter Skin · Audio workshop",
+  hostId: "beth",
+  speakerIds: ["priya"],
+  attendeeIds: ["me", "mark"],
+  count: 31,
+  live: false,
+  scope: "public",
+  when: "Thu · 6:00 PM",
+  desc: "How much SPF is enough, layering with makeup, and a winter routine for dry or sensitive skin.",
+  link: "profinity.app/voice/spf310"
+}, {
+  id: "c4",
+  name: "New patient welcome session",
+  hostId: "reception",
+  ended: true,
+  scope: "invited",
+  when: "Sep 12, 2026 · 6:30 PM",
+  count: 40,
+  duration: 38 * 60 * 1000
+}, {
+  id: "c5",
+  name: "Lip filler myths · Live Q&A",
+  hostId: "katy",
+  ended: true,
+  scope: "public",
+  when: "Aug 20, 2026 · 7:00 PM",
+  count: 112,
+  duration: 55 * 60 * 1000
+}, {
+  id: "c6",
+  name: "Summer skin clinic",
+  hostId: "priya",
+  ended: true,
+  scope: "public",
+  when: "Jun 18, 2026 · 7:00 PM",
+  count: 67,
+  duration: 49 * 60 * 1000
+}];
+const SAMPLE_REPLIES_JANE_DM = ["Thanks for letting me know, Jane 🙂", "Noted — I'll add that to your file before your review.", "Good question. Keep doing what you're doing and we'll check it at your review.", "Send me a photo if it changes, otherwise see you soon!", "Perfect, see you there!"];
+const ME_DM = DM_JANE ? ME_JANE_DM : ME_KATY_DM;
+const PEOPLE_SEED_DM = DM_JANE ? PEOPLE_SEED_JANE_DM : PEOPLE_SEED_KATY_DM;
+const CONVERSATIONS_SEED_DM = DM_JANE ? CONVERSATIONS_SEED_JANE_DM : CONVERSATIONS_SEED_KATY_DM;
+const REQUESTS_SEED_DM = DM_JANE ? REQUESTS_SEED_JANE_DM : REQUESTS_SEED_KATY_DM;
+const CONFERENCES_DM = DM_JANE ? CONFERENCES_JANE_DM : CONFERENCES_KATY_DM;
+const SAMPLE_REPLIES_DM = DM_JANE ? SAMPLE_REPLIES_JANE_DM : SAMPLE_REPLIES_KATY_DM;
 
 /* ---------------------------------------------------------------------------
    Store — seed + localStorage persistence + groups created from the newsfeed
    Messages drawer ("pf-dm-groups").
    --------------------------------------------------------------------------- */
-const STORE_KEY_DM = "pf-messages-v1";
+const STORE_KEY_DM = DM_JANE ? "pf-jane-messages-v1" : "pf-messages-v1";
 const SEED_VERSION_DM = 4;
-const PF_GROUPS_KEY_DM = "pf-dm-groups";
+const PF_GROUPS_KEY_DM = DM_JANE ? "pf-jane-dm-groups" : "pf-dm-groups";
 let MSG_SEQ_DM = 1;
 function midDM() {
   return "m" + NOW_DM.toString(36) + "-" + MSG_SEQ_DM++;
@@ -780,7 +1161,49 @@ function loadStoreDM() {
     if (saved && saved.v === SEED_VERSION_DM && Array.isArray(saved.conversations)) store = saved;
   } catch (e) {}
   if (!store) store = buildSeedDM();
-  return mergeExternalGroupsDM(store);
+  return mergeJanePendingDM(mergeExternalGroupsDM(store));
+}
+/* Jane: JaneScheduleCall.html drops the clinician's booking confirmation into
+   the thread (jane.jsx dmCallNote) — queued under pf-jane-dm-pending until
+   this page loads, then appended unread and the queue cleared. */
+function mergeJanePendingDM(store) {
+  if (!DM_JANE) return store;
+  let notes = [];
+  try {
+    notes = JSON.parse(localStorage.getItem("pf-jane-dm-pending")) || [];
+  } catch (e) {}
+  if (!notes.length) return store;
+  let conversations = store.conversations;
+  notes.forEach(n => {
+    const id = n.id || "katy";
+    const msg = {
+      id: midDM(),
+      from: id,
+      text: n.text,
+      image: null,
+      ts: n.ts || NOW_DM,
+      reactions: {}
+    };
+    if (conversations.some(c => c.kind === "dm" && c.personId === id)) conversations = conversations.map(c => c.kind === "dm" && c.personId === id ? {
+      ...c,
+      archived: false,
+      unread: (c.unread || 0) + 1,
+      messages: c.messages.concat([msg])
+    } : c);else conversations = [{
+      id,
+      kind: "dm",
+      personId: id,
+      unread: 1,
+      messages: [msg]
+    }].concat(conversations);
+  });
+  try {
+    localStorage.removeItem("pf-jane-dm-pending");
+  } catch (e) {}
+  return {
+    ...store,
+    conversations
+  };
 }
 function saveStoreDM(store) {
   try {
@@ -811,7 +1234,7 @@ function saveStoreDM(store) {
    roster and has a thread so the route initialiser can open it. ?t=<conversation>
    keeps working unchanged. */
 function applyDeepLinkDM(store) {
-  const id = paramDM("id");
+  const id = paramDM("id") || (DM_JANE ? paramDM("to") : null);
   if (!id || paramDM("t")) return store;
   let out = store;
   const known = PEOPLE_SEED_DM.some(p => p.id === id) || store.people.some(p => p.id === id);
@@ -1654,6 +2077,31 @@ const INBOX_TABS_DM = [{
   key: "groups",
   label: "Groups"
 }];
+
+/* Jane: her next booked call with the clinic (JaneScheduleCall.html's store,
+   read through window.PFJaneDM from jane.jsx) as a link row above the inbox. */
+function JaneUpcomingCallDM() {
+  const api = window.PFJaneDM;
+  const up = api && api.upcoming ? api.upcoming() : null;
+  if (!up) return null;
+  return /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "dm-linkrow dm-linkrow-call",
+    onClick: () => goDM(up.href)
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "dm-linkrow-ic"
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: up.icon,
+    size: 19,
+    color: "#fff"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "dm-linkrow-label"
+  }, /*#__PURE__*/React.createElement("b", null, up.label), /*#__PURE__*/React.createElement("small", null, up.sub)), /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:chevron-right",
+    size: 18,
+    color: "var(--gray-400)"
+  }));
+}
 function ChatsViewDM({
   convs,
   archivedCount,
@@ -1722,7 +2170,7 @@ function ChatsViewDM({
     placeholder: "Search messages"
   }), /*#__PURE__*/React.createElement(ActiveNowDM, {
     onOpen: onOpenPerson
-  }), requestsCount > 0 && /*#__PURE__*/React.createElement("button", {
+  }), DM_JANE && /*#__PURE__*/React.createElement(JaneUpcomingCallDM, null), requestsCount > 0 && /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "dm-linkrow",
     onClick: onRequests
@@ -3155,8 +3603,8 @@ function ThreadViewDM({
     onClick: onBack
   }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
     name: "lucide:arrow-left",
-    size: 24,
-    color: "var(--gray-900)"
+    size: DM_JANE ? 22 : 24,
+    color: DM_JANE ? "var(--brand-navy)" : "var(--gray-900)"
   })), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "dm-thread-id",
@@ -3222,7 +3670,18 @@ function ThreadViewDM({
     name: "lucide:info",
     size: 21,
     color: infoOpen ? "#fff" : "var(--dm-me, var(--brand-navy))"
-  }))) : /*#__PURE__*/React.createElement("button", {
+  }))) : /*#__PURE__*/React.createElement("span", {
+    className: "dm-thread-tools"
+  }, janeClinicDM(person) && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "dm-iconbtn",
+    "aria-label": "Schedule a call with " + name,
+    onClick: () => goDM(janeScheduleUrlDM(person.id, c.id))
+  }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
+    name: "lucide:phone",
+    size: 20,
+    color: "var(--dm-me, var(--brand-navy))"
+  })), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "dm-iconbtn",
     "aria-label": "Conversation settings",
@@ -3232,7 +3691,7 @@ function ThreadViewDM({
     name: "lucide:more-vertical",
     size: 22,
     color: "var(--brand-navy)"
-  }))), /*#__PURE__*/React.createElement("div", {
+  })))), /*#__PURE__*/React.createElement("div", {
     className: "dm-scroll dm-thread-body",
     ref: bodyRef,
     onClick: () => {
@@ -3776,7 +4235,7 @@ function ProfileViewDM({
   }, /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "dm-pact",
-    onClick: () => goDM(DM_WEB ? profileHrefDM(p, "MessagesWeb.html?t=" + c.id) : "ClinicianDirectory.html?from=" + encodeURIComponent("Messages.html?t=" + c.id))
+    onClick: () => DM_JANE ? toast("Profiles are coming to the patient app") : goDM(DM_WEB ? profileHrefDM(p, "MessagesWeb.html?t=" + c.id) : "ClinicianDirectory.html?from=" + encodeURIComponent("Messages.html?t=" + c.id))
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
   }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
@@ -3797,14 +4256,14 @@ function ProfileViewDM({
   })), c.muted ? "Unmute" : "Mute"), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "dm-pact",
-    onClick: () => toast("Calling " + stripHonorificDM(p.name).split(" ")[0] + "…")
+    onClick: () => janeClinicDM(p) ? goDM(janeScheduleUrlDM(p.id, c.id)) : toast("Calling " + stripHonorificDM(p.name).split(" ")[0] + "…")
   }, /*#__PURE__*/React.createElement("span", {
     className: "ic"
   }, /*#__PURE__*/React.createElement(DSDM.IconifyIcon, {
     name: "lucide:phone",
     size: 20,
     color: "var(--brand-navy)"
-  })), "Call"))), /*#__PURE__*/React.createElement("section", {
+  })), janeClinicDM(p) ? "Book a call" : "Call"))), /*#__PURE__*/React.createElement("section", {
     className: "dm-psec"
   }, /*#__PURE__*/React.createElement("div", {
     className: "dm-psec-h"
@@ -4423,7 +4882,7 @@ function PeopleViewDM({
     className: "dm-title"
   }, "People"), /*#__PURE__*/React.createElement("span", {
     className: "dm-head-sub"
-  }, people.filter(p => !p.request).length, " you follow")), /*#__PURE__*/React.createElement("div", {
+  }, people.filter(p => !p.request).length, DM_JANE ? " in your circle" : " you follow")), /*#__PURE__*/React.createElement("div", {
     className: "dm-scroll",
     onScroll: onScroll
   }, /*#__PURE__*/React.createElement(SearchDM, {
@@ -4501,7 +4960,7 @@ const CONF_PEOPLE_DM = [{
   avatar: null,
   online: true
 }];
-const CONF_ROOMS_KEY_DM = "pf-voice-rooms";
+const CONF_ROOMS_KEY_DM = DM_JANE ? "pf-jane-voice-rooms" : "pf-voice-rooms";
 const CONF_SETTINGS_KEY_DM = "pf-voice-settings";
 const CONF_DESC_DM = "Easily engage in discussions! Anyone with the link can join without limits on the number of participants.";
 const CONF_SCOPES_DM = [{
@@ -4515,7 +4974,27 @@ const CONF_SCOPES_DM = [{
   label: "Ended"
 }];
 const CONF_EMOJIS_DM = ["👍", "❤️", "👏", "😂", "🙌", "🔥", "💯", "🤔"];
-const CONF_CHAT_SEED_DM = [{
+const CONF_CHAT_SEED_DM = DM_JANE ? [{
+  id: "cc1",
+  from: "miranda",
+  text: "Can skin boosters be done on the same day as filler?",
+  ago: 4
+}, {
+  id: "cc2",
+  from: "katy",
+  text: "We usually space them two weeks apart — Priya will explain why.",
+  ago: 3
+}, {
+  id: "cc3",
+  from: "priya",
+  text: "Different products, different depth. Two weeks is the sweet spot 🙂",
+  ago: 2
+}, {
+  id: "cc4",
+  from: "amir",
+  text: "🙌",
+  ago: 1
+}] : [{
   id: "cc1",
   from: "rachel",
   text: "Sharing the before / after slides in a sec.",
@@ -4769,7 +5248,7 @@ function callApiDM() {
       });
     },
     setOwner() {},
-    url: c => (DM_WEB ? "MessagesWeb.html" : "Messages.html") + "?tab=conference" + (c ? "&conf=" + c.id : "")
+    url: c => SELF_DM + "?tab=conference" + (c ? "&conf=" + c.id : "")
   };
 }
 function useVoiceCallDM() {
@@ -5568,6 +6047,29 @@ function ConfShareSheetDM({
   };
   const postToFeed = () => {
     if (posted) return;
+    if (DM_JANE) {
+      /* patient feed (jane.jsx POSTS_KEY / post shape) — the conference goes in as a text post with its link */
+      const jp = {
+        id: "p" + Date.now(),
+        by: "jane",
+        t: "Just now",
+        text: (caption.trim() ? caption.trim() + "\n" : "") + "🎙 " + c.name + (c.live ? " · Live now" : c.when ? " · " + c.when : "") + "\n" + url,
+        likes: 0,
+        shares: 0,
+        liked: false,
+        reaction: null,
+        comments: [],
+        tags: ["events"]
+      };
+      try {
+        const ex = JSON.parse(localStorage.getItem("pf-jane-posts")) || [];
+        localStorage.setItem("pf-jane-posts", JSON.stringify([jp, ...ex]));
+      } catch (e) {}
+      setPosted(true);
+      toast("Shared to your feed");
+      window.setTimeout(() => goDM("JaneNewsfeed.html?posted=1"), 700);
+      return;
+    }
     const post = {
       id: "u" + Date.now(),
       author: {
@@ -5787,7 +6289,7 @@ function HostRoomSheetDM({
 
 /* ---- settings (gear) — opens the Conference Settings page ---- */
 function confSettingsUrlDM() {
-  const ret = (DM_WEB ? "MessagesWeb.html" : "Messages.html") + "?tab=conference";
+  const ret = SELF_DM + "?tab=conference";
   return (DM_WEB ? "ConferenceSettingsWeb.html" : "ConferenceSettings.html") + "?ret=" + encodeURIComponent(ret);
 }
 
@@ -5999,7 +6501,19 @@ function MenuViewDM({
    Sample push banner (Messages page only, for testing) — an incoming message
    slides in under the Dynamic Island; tap opens the thread, auto-dismisses.
    --------------------------------------------------------------------------- */
-const PUSH_SAMPLES_DM = [{
+const PUSH_SAMPLES_DM = DM_JANE ? [{
+  convId: "katy",
+  from: "katy",
+  text: "Jane, how's the swelling today? Send me a photo if you can 📸"
+}, {
+  convId: "g-aftercare",
+  from: "katy",
+  text: "Reminder — the aftercare drop-in starts in 15 minutes. Bring your questions!"
+}, {
+  convId: "reception",
+  from: "reception",
+  text: "Your 2-week review is confirmed for Tue 3 Nov, 2:30pm. See you then!"
+}] : [{
   convId: "sarahc",
   from: "sarahc",
   text: "Katy, are the follow-up photos from your lip case ready for Thursday? 📸"
@@ -6203,7 +6717,7 @@ function MessagesAppDM() {
   const [store, setStore] = useStateDM(() => applyDeepLinkDM(loadStoreDM()));
   const [tab, setTab] = useStateDM(() => ["chats", "conference", "people", "menu"].includes(paramDM("tab")) ? paramDM("tab") : paramDM("conf") ? "conference" : "chats");
   const [route, setRoute] = useStateDM(() => {
-    const t = paramDM("t") || paramDM("id");
+    const t = paramDM("t") || paramDM("id") || (DM_JANE ? paramDM("to") : null);
     if (t) {
       const s = applyDeepLinkDM(loadStoreDM());
       const c = s.conversations.find(x => x.id === t || x.kind === "dm" && x.personId === t);
@@ -6265,6 +6779,7 @@ function MessagesAppDM() {
     try {
       const url = new URL(window.location.href);
       if (route.name === "thread" || route.name === "profile") url.searchParams.set("t", route.id);else url.searchParams.delete("t");
+      if (DM_JANE) url.searchParams.delete("to");
       if (tab !== "chats") url.searchParams.set("tab", tab);else url.searchParams.delete("tab");
       if (route.name === "conf") url.searchParams.set("conf", route.id);else url.searchParams.delete("conf");
       window.history.replaceState(null, "", url.pathname + (url.search || ""));

@@ -5,7 +5,7 @@
    (same split as the Flutter app's user_type 'jane' | 'katy'). One bundle
    serves ten shells, picked by window.PF_JN_PAGE:
      home · profile · onboarding · wearables · health · coach · events
-     (+ schedule · create). Messages is NOT a screen here any more: since
+     (+ schedule · create · pass = JaneHealthPass.html). Messages is NOT a screen here any more: since
      2026-10-29 JaneMessages.html runs messages-mobile.jsx (the clinician DM
      app) with PF_DM_JANE, and loads this bundle first with PF_JN_NO_MOUNT
      only for window.JaneChromeC (drawer + notifications) and window.PFJaneDM.
@@ -982,7 +982,7 @@ const JNDock = React.forwardRef(function JNDock({
 
 /* Drawer (burger) — a twin of the clinician SideMenu in mobile.jsx (same
    .m-drawer / .sm-* classes from mobile.css, which Home and Health load):
-   profile head, Health Pass primary card, upcoming events, My Profile rows
+   profile head, Health Passport primary card, upcoming events, My Profile rows
    with the gold status row, Display toggle, Logout. */
 function useDarkModeJN() {
   const [dark, setDark] = useStateJN(() => {
@@ -1055,7 +1055,7 @@ function JNDrawer({
   }, /*#__PURE__*/React.createElement("div", {
     className: "jn-pass-wrap sm"
   }, /*#__PURE__*/React.createElement(HealthPassCard, {
-    onClick: () => goJN("JaneProfile.html?pass=1")
+    onClick: () => goJN("JaneHealthPass.html?ret=" + encodeURIComponent(hereJN()))
   })), /*#__PURE__*/React.createElement("div", {
     className: "sm-sec-h"
   }, "Upcoming Events"), /*#__PURE__*/React.createElement("div", {
@@ -1096,7 +1096,7 @@ function JNDrawer({
     color: "var(--premium-orange)"
   }), /*#__PURE__*/React.createElement("span", {
     className: "sm-row-label"
-  }, "Complete Health Pass"), /*#__PURE__*/React.createElement("span", {
+  }, "Complete Health Passport"), /*#__PURE__*/React.createElement("span", {
     className: "sm-verify-pill"
   }, Object.keys(onb.answers || {}).length ? "In progress" : "Not started")), /*#__PURE__*/React.createElement("nav", {
     className: "sm-list"
@@ -2587,7 +2587,7 @@ function HomeScreen() {
     size: 40
   }), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("small", null, "From Katy, your clinician · Just now"), /*#__PURE__*/React.createElement("b", null, onbPct ? "You're " + onbPct + "% through your Health Pass" : "Set up your Health Pass before Monday"), /*#__PURE__*/React.createElement("em", null, "Finish onboarding"))), feed.map((p, i) => /*#__PURE__*/React.createElement(React.Fragment, {
+  }, /*#__PURE__*/React.createElement("small", null, "From Katy, your clinician · Just now"), /*#__PURE__*/React.createElement("b", null, onbPct ? "You're " + onbPct + "% through your Health Passport" : "Set up your Health Passport before Monday"), /*#__PURE__*/React.createElement("em", null, "Finish onboarding"))), feed.map((p, i) => /*#__PURE__*/React.createElement(React.Fragment, {
     key: p.id
   }, p.kind === "eventreg" ? /*#__PURE__*/React.createElement(EventRegJN, {
     p: p
@@ -2703,8 +2703,9 @@ function HomeScreen() {
 /* =======================================================================
    PROFILE / HEALTH PASS — Katy's ProfileMobile layout (pm-ig hero: avatar +
    counts, name + seals, bio lines, chips, Edit / Share / saved / settings;
-   pm-steps "Complete your Health Pass"; pm-card sections) with the Health
-   Pass card, Medical history, Supplements and Goals kept (user, 2026-10-26).
+   pm-steps "Complete your Health Passport"; pm-card sections) with the Health
+   Pass card kept (user, 2026-10-26); Medical history, Health documents, Calls,
+   Supplements, Goals and Track your health moved to JaneHealthPass.html (2026-10-29).
    JaneProfile.html loads styles.css + mobile.css + profile-mobile.css.
    ======================================================================= */
 const PROFILE_KEY = "pf-jane-profile";
@@ -2802,12 +2803,135 @@ function QRMark() {
     className: on ? "on" : ""
   })));
 }
-/* The navy Health Pass card — same design on the Profile page and in the
+/* Pass photo (user, 2026-10-29): Jane can upload her own ID-style photo for the
+   Health Passport card. pf-jane-pass-photo = square 400px JPEG data URL; null
+   falls back to her profile picture. Changed only via the Update passport
+   photo button on the Health Passport page (user, 2026-10-29: not on the card). */
+const PASS_PHOTO_KEY = "pf-jane-pass-photo";
+function passPhoto() {
+  return readJN(PASS_PHOTO_KEY, null);
+}
+function readPassPhoto(file) {
+  return new Promise(res => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2,
+          sy = (img.height - side) / 2;
+        const c = document.createElement("canvas");
+        c.width = c.height = 400;
+        c.getContext("2d").drawImage(img, sx, sy, side, side, 0, 0, 400, 400);
+        res(c.toDataURL("image/jpeg", 0.84));
+      } catch (e) {
+        res(null);
+      }
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      res(null);
+    };
+    img.src = url;
+  });
+}
+function PassPhotoSheet({
+  open,
+  onClose,
+  current,
+  onSave,
+  onRemove
+}) {
+  const [draft, setDraft] = useStateJN(null);
+  const [busy, setBusy] = useStateJN(false);
+  const fileRef = useRefJN(null);
+  const camRef = useRefJN(null);
+  useEffectJN(() => {
+    if (open) setDraft(null);
+  }, [open]);
+  function pick(e) {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    setBusy(true);
+    readPassPhoto(f).then(d => {
+      setBusy(false);
+      if (d) setDraft(d);
+    });
+  }
+  return /*#__PURE__*/React.createElement(JNSheet, {
+    open: open,
+    onClose: onClose,
+    title: "Your passport photo"
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "jn-sheet-p"
+  }, "Shown on your Health Passport so reception can check it's you. A clear, front-facing photo in good light works best."), /*#__PURE__*/React.createElement("input", {
+    ref: fileRef,
+    type: "file",
+    accept: "image/*",
+    hidden: true,
+    onChange: pick
+  }), /*#__PURE__*/React.createElement("input", {
+    ref: camRef,
+    type: "file",
+    accept: "image/*",
+    capture: "user",
+    hidden: true,
+    onChange: pick
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "jn-pp-preview"
+  }, /*#__PURE__*/React.createElement("img", {
+    src: draft || current || JANE.avatar,
+    alt: ""
+  }), !draft && !current && /*#__PURE__*/React.createElement("small", null, "Using your profile picture"), draft && /*#__PURE__*/React.createElement("small", null, "New photo · not saved yet")), /*#__PURE__*/React.createElement("div", {
+    className: "jn-doc-drop"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "jn-doc-dropbtn",
+    onClick: () => fileRef.current && fileRef.current.click(),
+    disabled: busy
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "image",
+    size: 22,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("b", null, busy ? "Reading…" : "Choose a photo"), /*#__PURE__*/React.createElement("small", null, "From your library")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "jn-doc-dropbtn",
+    onClick: () => camRef.current && camRef.current.click(),
+    disabled: busy
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "camera",
+    size: 22,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("b", null, "Take a photo"), /*#__PURE__*/React.createElement("small", null, "Front camera"))), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn block",
+    disabled: !draft || busy,
+    onClick: () => onSave(draft)
+  }, "Use this photo"), current && !draft && /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn ghost block",
+    onClick: onRemove
+  }, "Use my profile picture instead"));
+}
+
+/* The navy Health Passport card — same design on the Profile page and in the
    side-menu drawer (user, 2026-10-29). Reads the saved profile name so both
-   places agree; `onClick` opens the QR sheet (Profile) or deep-links to it. */
+   places agree; tapping it opens JaneHealthPass.html (medical history +
+   documents) from the drawer; Profile and the page use HealthPassFlip (tap →
+   back of the card first; Profile shows an Open Health Passport button under the card). Logo = the
+   gold PROfinity Academy wordmark (user, 2026-10-29, replaced the white lockup) on the navy card. */
 function HealthPassCard({
   onClick,
-  prof
+  prof,
+  onQr,
+  hint,
+  className,
+  photo,
+  onPhoto
 }) {
   const p = prof || readJN(PROFILE_KEY, {
     name: JANE.name,
@@ -2815,39 +2939,201 @@ function HealthPassCard({
   });
   const onb = onbState();
   return /*#__PURE__*/React.createElement("button", {
-    className: "jn-pass",
+    className: "jn-pass" + (className ? " " + className : ""),
     onClick: onClick
   }, /*#__PURE__*/React.createElement("div", {
     className: "jn-pass-top"
   }, /*#__PURE__*/React.createElement("span", {
     className: "jn-pass-logo"
   }, /*#__PURE__*/React.createElement("img", {
-    className: "p",
-    src: "assets/splash/p-gold.png",
-    alt: ""
-  }), /*#__PURE__*/React.createElement("img", {
-    className: "wm",
-    src: "assets/splash/wordmark.svg",
-    alt: "PROfinity"
+    className: "full gold",
+    src: "assets/profinity-academy-gold.png?v=20261029b",
+    alt: "PROfinity Academy"
   })), /*#__PURE__*/React.createElement("span", {
-    className: "st"
-  }, onb.done ? "Active" : "Incomplete")), /*#__PURE__*/React.createElement("div", {
+    className: "jn-pass-kind"
+  }, "Health Passport")), /*#__PURE__*/React.createElement("div", {
     className: "jn-pass-mid"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "lbl"
-  }, "Health Pass"), /*#__PURE__*/React.createElement("b", null, p.name), /*#__PURE__*/React.createElement("small", null, "ID ", JANE.passId, " · DOB ", p.dob)), /*#__PURE__*/React.createElement("div", {
-    className: "jn-pass-bot"
-  }, /*#__PURE__*/React.createElement("span", null, JANE.clinic, " · member since ", JANE.since), /*#__PURE__*/React.createElement("span", {
-    className: "qrbtn"
+    className: "jn-pass-photo" + (onPhoto ? " edit" : ""),
+    role: onPhoto ? "button" : undefined,
+    "aria-label": onPhoto ? "Change passport photo" : undefined,
+    onClick: onPhoto ? e => {
+      e.stopPropagation();
+      onPhoto();
+    } : undefined
+  }, /*#__PURE__*/React.createElement("img", {
+    src: photo === undefined ? passPhoto() || JANE.avatar : photo || JANE.avatar,
+    alt: ""
+  }), onPhoto && /*#__PURE__*/React.createElement("i", {
+    className: "cam"
   }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "qr-code",
+    name: "camera",
+    size: 11,
+    color: "#fff"
+  }))), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, p.name), /*#__PURE__*/React.createElement("small", null, "ID ", JANE.passId, " · DOB ", p.dob), /*#__PURE__*/React.createElement("small", {
+    className: "clinic"
+  }, JANE.clinic), /*#__PURE__*/React.createElement("small", {
+    className: "since"
+  }, "Member since ", JANE.since))));
+}
+
+/* Flip version for the Health Passport page (user, 2026-10-29): tap the card and it
+   turns over like an ID card; the back = QR tile + DOB / Pass ID / Sex /
+   Contact (same on Profile and the Health Passport page; Profile adds an
+   Open Health Passport button under the card). `qr` prop kept for callers, no longer branches. */
+function HealthPassFlip({
+  prof,
+  hs = {},
+  bmi,
+  onQr,
+  onOpen,
+  qr,
+  flipRef,
+  photo,
+  onPhoto
+}) {
+  const [flipped, setFlipped] = useStateJN(false);
+  const wrapRef = useRefJN(null);
+  useEffectJN(() => {
+    if (flipRef) flipRef.current = v => setFlipped(v == null ? f => !f : v);
+  }, [flipRef]);
+  /* The floating tab bar covers the bottom ~110px of the scroll view, so when
+     the card turns over make sure its bottom row (Open Health Passport / Flip
+     back) is scrolled clear of it (user, 2026-10-29 "can't click"). */
+  useEffectJN(() => {
+    if (!flipped || !wrapRef.current) return;
+    const el = wrapRef.current;
+    const sc = el.closest(".jn-scroll");
+    if (!sc) return;
+    const r = el.getBoundingClientRect(),
+      p = sc.getBoundingClientRect();
+    const over = r.bottom - (p.bottom - 118);
+    if (over > 0) sc.scrollBy({
+      top: over,
+      behavior: "smooth"
+    });
+  }, [flipped]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "jn-pass-flip" + (flipped ? " flipped" : ""),
+    ref: wrapRef
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pass-3d"
+  }, /*#__PURE__*/React.createElement(HealthPassCard, {
+    className: "face front",
+    prof: prof,
+    onClick: () => setFlipped(true),
+    onQr: onQr,
+    photo: photo,
+    onPhoto: onPhoto
+  }), /*#__PURE__*/React.createElement("button", {
+    className: "jn-pass face back qr",
+    onClick: () => setFlipped(false),
+    "aria-label": "Flip back"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pass-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "jn-pass-logo"
+  }, /*#__PURE__*/React.createElement("img", {
+    className: "full gold",
+    src: "assets/profinity-academy-gold.png?v=20261029b",
+    alt: "PROfinity Academy"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "jn-pass-kind"
+  }, "Health Passport")), /*#__PURE__*/React.createElement("div", {
+    className: "jn-pass-qrwrap"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "tile"
+  }, /*#__PURE__*/React.createElement(QRMark, null)), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, prof.name), [["DOB", prof.dob], ["Pass ID", JANE.passId], ["Sex", hs.sex || "Not set"], ["Contact", prof.phone]].map(([k, v]) => /*#__PURE__*/React.createElement("span", {
+    key: k,
+    className: "kv"
+  }, /*#__PURE__*/React.createElement("small", null, k), /*#__PURE__*/React.createElement("i", null, v))))))), onOpen && /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "jn-btn block jn-pass-openbtn",
+    onClick: onOpen
+  }, "Open Health Passport", /*#__PURE__*/React.createElement(IcJN, {
+    name: "arrow-right",
     size: 16,
     color: "#fff"
-  }), "Show")));
+  })));
+}
+
+/* Dev switch (user, 2026-10-29): "what if the user is still new" — New patient
+   clears every Health Passport store; Returning patient seeds a finished
+   questionnaire, height & weight, two documents and Apple Health. Reloads. */
+function JNDevPassRow() {
+  const mode = onbState().done ? "returning" : "new";
+  function set(m) {
+    if (m === mode) return;
+    [ONB_KEY, HSETUP_KEY, DOCS_KEY, WEAR_KEY, PASS_PHOTO_KEY].forEach(k => {
+      try {
+        localStorage.removeItem(k);
+      } catch (e) {}
+    });
+    if (m === "returning") {
+      saveJN(ONB_KEY, {
+        done: true,
+        step: ONB_STEPS.length,
+        consent: true,
+        answers: {
+          reason: ["Lips", "Skin quality & glow"],
+          history: "Once or twice",
+          medical: ["Cold sores (HSV)", "Allergy to lidocaine"],
+          sleep: "6–7 hours",
+          habits: ["SPF every day", "2L+ water a day", "Retinol at night"],
+          goals: ["Clearer, brighter skin", "A natural refresh"]
+        }
+      });
+      saveJN(HSETUP_KEY, {
+        done: true,
+        method: "phone",
+        height: "172",
+        weight: "54",
+        sex: "Female",
+        emails: true,
+        at: Date.now()
+      });
+      saveJN(DOCS_KEY, [{
+        id: "d-dev-1",
+        type: "blood",
+        title: "Full blood count",
+        date: "2026-09-30",
+        by: "you",
+        note: "Iron slightly low — GP suggested a supplement",
+        share: true,
+        file: {
+          name: "fbc-sept.pdf",
+          size: "PDF · 2 pages",
+          kind: "pdf"
+        }
+      }, ...DOCS_SEED]);
+      saveJN(WEAR_KEY, {
+        apple: true
+      });
+    }
+    window.location.reload();
+  }
+  return /*#__PURE__*/React.createElement("div", {
+    className: "jn-dev"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-dev-h"
+  }, /*#__PURE__*/React.createElement("i", null), "Dev · Health Passport state"), /*#__PURE__*/React.createElement("div", {
+    className: "jn-dev-chips"
+  }, [["new", "New patient"], ["returning", "Returning patient"]].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    type: "button",
+    className: "jn-dev-chip" + (mode === k ? " on" : ""),
+    onClick: () => set(k)
+  }, l))), /*#__PURE__*/React.createElement("p", {
+    className: "jn-dev-p"
+  }, mode === "new" ? "Nothing answered yet, no documents, no wearable, profile picture on the pass." : "Questionnaire done, height & weight, two documents, Apple Health connected."));
 }
 
 /* Health documents (user, 2026-10-29): blood tests, scans, letters and other
-   health history Jane uploads to her Health Pass. pf-jane-docs holds the
+   health history Jane uploads to her Health Passport. pf-jane-docs holds the
    metadata plus a small JPEG preview for photos (PDFs keep name + size only).
    One clinic-added treatment record is seeded so the list is never bare. */
 const DOCS_KEY = "pf-jane-docs";
@@ -3034,7 +3320,7 @@ function AddDocSheet({
     tall: true
   }, /*#__PURE__*/React.createElement("p", {
     className: "jn-sheet-p"
-  }, "Blood tests, scans, GP letters, prescriptions or anything from your health history. It's kept with your Health Pass so ", KATY.first, " has the full picture."), /*#__PURE__*/React.createElement("input", {
+  }, "Blood tests, scans, GP letters, prescriptions or anything from your health history. It's kept with your Health Passport so ", KATY.first, " has the full picture."), /*#__PURE__*/React.createElement("input", {
     ref: fileRef,
     type: "file",
     accept: "application/pdf,image/*",
@@ -3161,7 +3447,7 @@ function AddDocSheet({
       by: "you",
       file: d.file
     })
-  }, "Save to my Health Pass"));
+  }, "Save to my Health Passport"));
 }
 function ViewDocSheet({
   doc,
@@ -3248,6 +3534,192 @@ function PMCardJN({
     color: "var(--gray-400)"
   })), children);
 }
+
+/* "Professional Information" on Jane's profile (user, 2026-10-29: same card as
+   the clinician ProfileMobile one — PMProfessionalInfoMenu in
+   profile-mobile.jsx; collapsed card with count chips, tap → slides to the
+   full Services / Experience / Education / Licenses / Language list). Uses
+   the pm-menu-* / pm-sec / pm-lrow styles from profile-mobile.css, which
+   JaneProfile.html already loads. Seeded for Jane's own career. */
+const JN_PRO = {
+  services: [{
+    ti: "Brand strategy",
+    su: "Positioning, messaging and launch plans"
+  }, {
+    ti: "Social media management",
+    su: "Instagram, TikTok and LinkedIn"
+  }, {
+    ti: "Content creation",
+    su: "Short-form video, photography and copy"
+  }, {
+    ti: "Email campaigns",
+    su: "Newsletters, automations and reporting"
+  }],
+  experience: [{
+    ti: "Marketing Manager",
+    yrs: "2021 – Present · 5 yrs",
+    org: "Glow Studio",
+    loc: "London, UK"
+  }, {
+    ti: "Marketing Executive",
+    yrs: "2017 – 2021 · 4 yrs",
+    org: "Boots UK",
+    loc: "Nottingham, UK"
+  }],
+  education: [{
+    logo: "UoM",
+    school: "University of Manchester",
+    program: "BA (Hons) Marketing",
+    years: "2014 – 2017"
+  }],
+  licenses: ["Google Ads Search Certification", "HubSpot Inbound Marketing", "Meta Blueprint · Media Buying", "Google Analytics 4", "CIM Level 4 Certificate in Professional Marketing"],
+  languages: [{
+    flag: "🇬🇧",
+    name: "English",
+    level: "Native"
+  }, {
+    flag: "🇪🇸",
+    name: "Spanish",
+    level: "Conversational"
+  }]
+};
+function JNSection({
+  title,
+  children
+}) {
+  return /*#__PURE__*/React.createElement("section", {
+    className: "pm-sec"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-sec-h"
+  }, /*#__PURE__*/React.createElement("h2", null, title)), children);
+}
+function JNProfessionalInfo() {
+  const d = JN_PRO;
+  const [expanded, setExpanded] = useStateJN(false);
+  const colRef = useRefJN(null);
+  const expRef = useRefJN(null);
+  const [h, setH] = useStateJN(null);
+  useEffectJN(() => {
+    const el = expanded ? expRef.current : colRef.current;
+    if (el) setH(el.offsetHeight);
+  }, [expanded]);
+  useEffectJN(() => {
+    const t = setTimeout(() => {
+      if (colRef.current) setH(colRef.current.offsetHeight);
+    }, 60);
+    return () => clearTimeout(t);
+  }, []);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "pm-menu-viewport jn-pro",
+    style: h != null ? {
+      height: h + "px"
+    } : undefined
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-menu-slider" + (expanded ? " expanded" : "")
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    ref: colRef,
+    className: "pm-menu-pane pm-menu-collapsed",
+    "aria-label": "Professional Information — tap to view",
+    onClick: () => setExpanded(true)
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-menu-collapsed-top"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "pm-steps-h"
+  }, "Professional Information"), /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-right",
+    size: 20,
+    color: "var(--gray-400)"
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "pm-steps-sub"
+  }, "Services, Experience, Education, Licenses & Languages"), /*#__PURE__*/React.createElement("div", {
+    className: "pm-menu-tags"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "pm-menu-tag"
+  }, d.services.length, " Services"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-menu-tag"
+  }, d.experience.length, " Experience"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-menu-tag"
+  }, d.licenses.length, " Certifications"), /*#__PURE__*/React.createElement("span", {
+    className: "pm-menu-tag"
+  }, d.languages.length, " Languages"))), /*#__PURE__*/React.createElement("div", {
+    ref: expRef,
+    className: "pm-menu-pane pm-menu-expanded"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "pm-menu-back",
+    onClick: () => setExpanded(false)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-left",
+    size: 20,
+    color: "var(--text-heading)"
+  }), "Professional Information"), /*#__PURE__*/React.createElement(JNSection, {
+    title: "Services"
+  }, d.services.map((x, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pm-lrow",
+    key: i
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, x.ti), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, x.su)))), /*#__PURE__*/React.createElement(JNSection, {
+    title: "Experience"
+  }, d.experience.map((x, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pm-lrow",
+    key: i
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, x.ti), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, x.yrs), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, x.org), /*#__PURE__*/React.createElement("div", {
+    className: "su flag"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "fl"
+  }, "🇬🇧"), x.loc)))), /*#__PURE__*/React.createElement(JNSection, {
+    title: "Education"
+  }, d.education.map((x, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pm-lrow media",
+    key: i
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-logo"
+  }, x.logo), /*#__PURE__*/React.createElement("div", {
+    className: "meta"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, x.school), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, x.program), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, x.years))))), /*#__PURE__*/React.createElement(JNSection, {
+    title: "Licenses & Certifications"
+  }, d.licenses.map((x, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pm-lrow media",
+    key: i
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-logo cert"
+  }, "P"), /*#__PURE__*/React.createElement("div", {
+    className: "meta"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, x), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, "Issued 2023"))))), /*#__PURE__*/React.createElement(JNSection, {
+    title: "Language"
+  }, d.languages.map((x, i) => /*#__PURE__*/React.createElement("div", {
+    className: "pm-lrow",
+    key: i
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "pm-lang"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "fl"
+  }, x.flag), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    className: "ti"
+  }, x.name), /*#__PURE__*/React.createElement("div", {
+    className: "su"
+  }, x.level)))))))));
+}
 function ProfileScreen() {
   const {
     top,
@@ -3268,27 +3740,23 @@ function ProfileScreen() {
   const [edit, setEdit] = useStateJN(qJN("edit") === "1");
   const [passOpen, setPassOpen] = useStateJN(qJN("pass") === "1");
   const [draft, setDraft] = useStateJN(prof);
-  const [docs, setDocs] = useStateJN(healthDocs);
-  const [docSheet, setDocSheet] = useStateJN(qJN("doc") === "1" ? "add" : null);
-  function setDocsSave(next) {
-    setDocs(next);
-    saveJN(DOCS_KEY, next);
-  }
-  const myDocs = docs.filter(x => x.by !== "clinic");
+  const myDocs = healthDocs().filter(x => x.by !== "clinic");
   const [toast, showToast] = useToastJN();
   const onb = onbState();
   const wear = connectedWearables();
   const hs = healthSetup();
-  const medical = onb.answers.medical || ["No known allergies"];
-  const goalsChosen = onb.answers.goals || [];
+  useEffectJN(() => {
+    if (qJN("doc") === "1") goJN("JaneHealthPass.html?doc=1&ret=JaneProfile.html");
+  }, []);
   const friends = readJN("pf-jane-friends", []);
   const myPosts = (readJN("pf-jane-posts", null) || []).filter(p => p.by === "jane");
   const going = Object.values(readJN("pf-jane-events", {
     ev1: true
   })).filter(Boolean).length;
   const steps = [{
-    label: "Add a profile photo",
-    done: true
+    label: "Add a photo to your Health Passport",
+    done: !!passPhoto(),
+    href: "JaneHealthPass.html?photo=1&ret=JaneProfile.html"
   }, {
     label: "Answer the onboarding questions",
     done: !!onb.done,
@@ -3300,13 +3768,13 @@ function ProfileScreen() {
   }, {
     label: "Upload a blood test or health record",
     done: myDocs.length > 0,
-    open: () => setDocSheet("add")
+    href: "JaneHealthPass.html?doc=1&ret=JaneProfile.html"
   }, {
     label: "Connect a wearable",
     done: wear.length > 0,
     href: "JaneWearables.html"
   }, {
-    label: "Share your Health Pass with Katy",
+    label: "Share your Health Passport with Katy",
     done: onb.consent !== false && !!onb.done,
     href: "JaneOnboarding.html"
   }, {
@@ -3445,14 +3913,14 @@ function ProfileScreen() {
     name: "settings",
     size: 20,
     color: "var(--text-heading)"
-  })))), /*#__PURE__*/React.createElement("button", {
+  })))), false && /*#__PURE__*/React.createElement("button", {
     className: "pm-steps jn-steps",
     onClick: () => next && (next.open ? next.open() : goJN(next.href || "JaneOnboarding.html"))
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-steps-collapsed-top"
   }, /*#__PURE__*/React.createElement("h3", {
     className: "pm-steps-h"
-  }, "Complete your Health Pass"), /*#__PURE__*/React.createElement(IcJN, {
+  }, "Complete your Health Passport"), /*#__PURE__*/React.createElement(IcJN, {
     name: "chevron-right",
     size: 20,
     color: "var(--gray-400)"
@@ -3489,11 +3957,18 @@ function ProfileScreen() {
     color: "var(--success)"
   }), /*#__PURE__*/React.createElement("span", {
     className: "pm-steps-next-ti"
-  }, "All set — your Health Pass is active"))), /*#__PURE__*/React.createElement("div", {
+  }, "All set — your Health Passport is active"))), /*#__PURE__*/React.createElement("div", {
     className: "jn-pass-wrap"
-  }, /*#__PURE__*/React.createElement(HealthPassCard, {
+  }, /*#__PURE__*/React.createElement(HealthPassFlip, {
     prof: prof,
-    onClick: () => setPassOpen(true)
+    hs: hs,
+    bmi: (() => {
+      const h = parseFloat(hs.height),
+        w = parseFloat(hs.weight);
+      return h > 0 && w > 0 ? (w / Math.pow(h / 100, 2)).toFixed(1) : null;
+    })(),
+    onQr: () => setPassOpen(true),
+    onOpen: () => goJN("JaneHealthPass.html?ret=JaneProfile.html")
   }), !onb.done && /*#__PURE__*/React.createElement("button", {
     className: "jn-link-row",
     onClick: () => goJN("JaneOnboarding.html")
@@ -3505,145 +3980,6 @@ function ProfileScreen() {
     name: "chevron-right",
     size: 16
   }))), /*#__PURE__*/React.createElement(PMCardJN, {
-    title: "Medical history",
-    sub: "Allergies, treatments & your next review",
-    onClick: () => goJN("JaneOnboarding.html")
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "jn-tags"
-  }, medical.map(m => /*#__PURE__*/React.createElement("span", {
-    key: m,
-    className: "jn-tag"
-  }, m))), hs.height && /*#__PURE__*/React.createElement("div", {
-    className: "jn-kv"
-  }, /*#__PURE__*/React.createElement("span", null, "Height · Weight"), /*#__PURE__*/React.createElement("b", null, hs.height, " cm · ", hs.weight, " kg")), /*#__PURE__*/React.createElement("div", {
-    className: "jn-kv"
-  }, /*#__PURE__*/React.createElement("span", null, "Previous treatments"), /*#__PURE__*/React.createElement("b", null, onb.answers.history || "Not answered")), /*#__PURE__*/React.createElement("div", {
-    className: "jn-kv"
-  }, /*#__PURE__*/React.createElement("span", null, "Last treatment"), /*#__PURE__*/React.createElement("b", null, "Lip filler · 1 Oct 2026")), /*#__PURE__*/React.createElement("div", {
-    className: "jn-kv"
-  }, /*#__PURE__*/React.createElement("span", null, "Next review"), /*#__PURE__*/React.createElement("b", null, "Tue 3 Nov · 2:30pm"))), /*#__PURE__*/React.createElement(PMCardJN, {
-    title: "Health documents",
-    sub: myDocs.length ? myDocs.length + " uploaded · " + docs.filter(x => x.share).length + " shared with " + KATY.first : "Blood tests, scans, letters & your health history",
-    onClick: () => setDocSheet("add")
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "jn-pmc-list jn-docs"
-  }, docs.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).map(x => {
-    const t = docType(x.type);
-    return /*#__PURE__*/React.createElement("button", {
-      key: x.id,
-      className: "jn-li",
-      onClick: () => setDocSheet(x.id)
-    }, /*#__PURE__*/React.createElement(DocIcon, {
-      type: x.type,
-      preview: x.file && x.file.preview
-    }), /*#__PURE__*/React.createElement("span", {
-      className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, x.title), /*#__PURE__*/React.createElement("small", null, t.t, " · ", fmtDocDate(x.date), x.by === "clinic" ? " · from clinic" : "")), x.share ? /*#__PURE__*/React.createElement("span", {
-      className: "jn-pill soft"
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: "shield-check",
-      size: 12
-    }), "Shared") : /*#__PURE__*/React.createElement("span", {
-      className: "jn-pill ghost"
-    }, "Private"));
-  }), !myDocs.length && /*#__PURE__*/React.createElement("p", {
-    className: "jn-docs-empty"
-  }, "Add blood tests, scans, GP letters, prescriptions or past treatment notes so ", KATY.first, " has the full picture before your next review.")), /*#__PURE__*/React.createElement("button", {
-    className: "jn-btn ghost block jn-docs-add",
-    onClick: () => setDocSheet("add")
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "upload",
-    size: 16
-  }), "Upload a document")), (() => {
-    const up = upcomingCall();
-    return /*#__PURE__*/React.createElement(PMCardJN, {
-      title: "Calls & appointments",
-      sub: up ? "Next call: " + callWhen(up) + " with " + callWho(up).first : "Your clinic visits and free 15-minute calls",
-      href: "JaneScheduleCall.html?ret=JaneProfile.html"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "jn-pmc-list"
-    }, up ? /*#__PURE__*/React.createElement("div", {
-      className: "jn-li"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "ic"
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: up.type === "phone" ? "phone" : "video",
-      size: 16,
-      color: "var(--brand-navy)"
-    })), /*#__PURE__*/React.createElement("span", {
-      className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, callTypeLabel(up), " with ", callWho(up).first), /*#__PURE__*/React.createElement("small", null, callWhen(up), " · ", up.reason)), /*#__PURE__*/React.createElement("span", {
-      className: "jn-pill"
-    }, "Booked")) : /*#__PURE__*/React.createElement("div", {
-      className: "jn-li"
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "ic"
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: "phone",
-      size: 16,
-      color: "var(--brand-navy)"
-    })), /*#__PURE__*/React.createElement("span", {
-      className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, "Schedule a call"), /*#__PURE__*/React.createElement("small", null, "Katy, Nurse Beth or Dr Priya · aftercare, swelling, anything you're unsure about")), /*#__PURE__*/React.createElement(IcJN, {
-      name: "chevron-right",
-      size: 18,
-      color: "var(--gray-400)"
-    }))));
-  })(), /*#__PURE__*/React.createElement(PMCardJN, {
-    title: "Supplements",
-    sub: SUPPLEMENTS.length + " in your plan",
-    onClick: () => showToast("Ask Katy to update your supplements")
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "jn-pmc-list"
-  }, SUPPLEMENTS.map(s => /*#__PURE__*/React.createElement("div", {
-    key: s.n,
-    className: "jn-li"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "ic"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "pill",
-    size: 16,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, s.n), /*#__PURE__*/React.createElement("small", null, s.d, " · ", s.f)))))), /*#__PURE__*/React.createElement(PMCardJN, {
-    title: "Goals",
-    sub: "What you're working on this quarter",
-    href: "JaneHealth.html"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "jn-pmc-list"
-  }, GOALS.map(g => /*#__PURE__*/React.createElement("div", {
-    key: g.t,
-    className: "jn-goal"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "top"
-  }, /*#__PURE__*/React.createElement("b", null, g.t), /*#__PURE__*/React.createElement("span", null, g.target)), /*#__PURE__*/React.createElement("div", {
-    className: "bar"
-  }, /*#__PURE__*/React.createElement("i", {
-    style: {
-      width: g.p * 100 + "%"
-    }
-  }))))), goalsChosen.length > 0 && /*#__PURE__*/React.createElement("div", {
-    className: "jn-tags",
-    style: {
-      marginTop: 10
-    }
-  }, goalsChosen.map(g => /*#__PURE__*/React.createElement("span", {
-    key: g,
-    className: "jn-tag gold"
-  }, g)))), /*#__PURE__*/React.createElement(PMCardJN, {
-    title: "Track your health",
-    sub: "Sleep · Movement · Nutrition · Skin check-in",
-    href: "JaneHealth.html"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "jn-pmc-chips"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "jn-tag"
-  }, wear.length ? wear.map(w => w.name).join(", ") : "No wearable yet"), /*#__PURE__*/React.createElement("span", {
-    className: "jn-tag"
-  }, "Skin score 78"), /*#__PURE__*/React.createElement("span", {
-    className: "jn-tag"
-  }, "Sleep 7h 18m"))), /*#__PURE__*/React.createElement(PMCardJN, {
     title: "Activity",
     sub: myPosts.length ? myPosts.length + " recent posts & updates" : "Nothing shared yet",
     href: "JaneNewsfeed.html"
@@ -3657,14 +3993,14 @@ function ProfileScreen() {
     title: "Connected apps & devices",
     sub: wear.length ? "Synced a few minutes ago" : "Connect Apple Health, Oura, Fitbit and more",
     href: "JaneWearables.html"
-  }), /*#__PURE__*/React.createElement("button", {
+  }), /*#__PURE__*/React.createElement(JNProfessionalInfo, null), /*#__PURE__*/React.createElement("button", {
     className: "pm-logout",
     onClick: () => showToast("Logged out (demo)")
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: "log-out",
     size: 20,
     color: "var(--error)"
-  }), "Logout"), /*#__PURE__*/React.createElement("div", {
+  }), "Logout"), /*#__PURE__*/React.createElement(JNDevPassRow, null), /*#__PURE__*/React.createElement("div", {
     className: "jn-end"
   }, "PROfinity · patient app")), /*#__PURE__*/React.createElement(JNTabs, {
     active: "profile",
@@ -3691,16 +4027,419 @@ function ProfileScreen() {
     onClose: () => setPassOpen(false)
   }, /*#__PURE__*/React.createElement("div", {
     className: "jn-passqr"
-  }, /*#__PURE__*/React.createElement(QRMark, null), /*#__PURE__*/React.createElement("b", null, prof.name), /*#__PURE__*/React.createElement("small", null, "Health Pass ", JANE.passId), /*#__PURE__*/React.createElement("p", null, "Show this at reception. It gives ", JANE.clinic, " your medical history, consent, treatment record and the documents you've shared."), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement(QRMark, null), /*#__PURE__*/React.createElement("b", null, prof.name), /*#__PURE__*/React.createElement("small", null, "Health Passport ", JANE.passId), /*#__PURE__*/React.createElement("p", null, "Show this at reception. It gives ", JANE.clinic, " your medical history, consent, treatment record and the documents you've shared."), /*#__PURE__*/React.createElement("button", {
     className: "jn-btn block",
     onClick: () => setPassOpen(false)
-  }, "Done"))), /*#__PURE__*/React.createElement(AddDocSheet, {
+  }, "Done"))), /*#__PURE__*/React.createElement(JNToast, {
+    toast: toast
+  }));
+}
+
+/* =======================================================================
+   HEALTH PASSPORT PAGE — JaneHealthPass.html (PF_JN_PAGE="pass")
+   Tapping the navy Health Passport card (Profile + drawer) lands here (user,
+   2026-10-29): the pass itself, who it's shared with, Jane's medical
+   history (onboarding answers + height/weight + treatment timeline) and her
+   health documents with upload. ?doc=1 opens the add sheet, ?pass=1 the QR
+   sheet, ?ret= is where Back goes. Same pf-jane-* stores as Profile.
+   ======================================================================= */
+const TREATMENTS_JN = [{
+  id: "tr-next",
+  date: "2026-11-03",
+  time: "2:30pm",
+  title: "Review appointment",
+  by: "katy",
+  note: "Check how the lips have settled and plan the next step.",
+  upcoming: true
+}, {
+  id: "tr-2",
+  date: "2026-10-01",
+  title: "Lip filler · 0.5 ml",
+  by: "katy",
+  note: "Hyaluronic acid filler, lidocaine-free. Aftercare: no pressure or heat for 48h, SPF daily.",
+  docId: "d-seed-1"
+}, {
+  id: "tr-1",
+  date: "2026-09-18",
+  title: "Consultation & consent",
+  by: "katy",
+  note: "Skin assessment, treatment plan agreed, consent form signed in clinic."
+}, {
+  id: "tr-0",
+  date: "2026-06-12",
+  title: "Joined Pearce Aesthetics",
+  by: "reception",
+  note: "Health Passport created · ID " + JANE.passId + "."
+}];
+function HealthPassScreen() {
+  const ret = qJN("ret") || "JaneProfile.html";
+  const prof = readJN(PROFILE_KEY, {
+    name: JANE.name,
+    dob: JANE.dob,
+    phone: "+44 7700 900123",
+    email: "jane.taylor@example.com",
+    location: "London, UK"
+  });
+  const [onb, setOnb] = useStateJN(onbState);
+  const hs = healthSetup();
+  const wear = connectedWearables();
+  const [docs, setDocs] = useStateJN(healthDocs);
+  const [docSheet, setDocSheet] = useStateJN(qJN("doc") === "1" ? "add" : null);
+  const flipRef = useRefJN(null);
+  const [photo, setPhoto] = useStateJN(passPhoto);
+  const [photoOpen, setPhotoOpen] = useStateJN(qJN("photo") === "1");
+  const [filt, setFilt] = useStateJN("all");
+  const [tlAll, setTlAll] = useStateJN(false);
+  const [toast, showToast] = useToastJN();
+  const scrollRef = useRefJN(null);
+  const docsRef = useRefJN(null);
+  useEffectJN(() => {
+    if (qJN("pass") === "1") setTimeout(() => flipRef.current && flipRef.current(true), 350);
+  }, []);
+  useEffectJN(() => {
+    if (qJN("docs") === "1" && docsRef.current && scrollRef.current) scrollRef.current.scrollTop = docsRef.current.offsetTop - 12;
+  }, []);
+  function setDocsSave(next) {
+    setDocs(next);
+    saveJN(DOCS_KEY, next);
+  }
+  const a = onb.answers || {};
+  const medical = a.medical || [];
+  const myDocs = docs.filter(x => x.by !== "clinic");
+  const sharedN = docs.filter(x => x.share).length;
+  const shared = onb.consent !== false;
+  const h = parseFloat(hs.height),
+    w = parseFloat(hs.weight);
+  const bmi = h > 0 && w > 0 ? (w / Math.pow(h / 100, 2)).toFixed(1) : null;
+  const shown = docs.filter(x => filt === "all" || (filt === "shared" ? x.share : filt === "private" ? !x.share : x.type === filt)).sort((x, y) => (y.date || "").localeCompare(x.date || ""));
+  const typesUsed = DOC_TYPES.filter(t => docs.some(x => x.type === t.k));
+  function toggleShare() {
+    const next = {
+      ...onb,
+      consent: !shared
+    };
+    setOnb(next);
+    saveJN(ONB_KEY, next);
+    showToast(!shared ? "Health Passport shared with " + KATY.first : "Health Passport is now private");
+  }
+  const fmtTr = iso => {
+    const d = new Date(iso + "T12:00:00");
+    return WD[d.getDay()] + " " + d.getDate() + " " + MONTHS[d.getMonth()] + " " + d.getFullYear();
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "jn-screen jn-hp"
+  }, /*#__PURE__*/React.createElement(JNBar, {
+    title: "Health Passport",
+    back: () => goJN(ret),
+    trailing: /*#__PURE__*/React.createElement("button", {
+      className: "jn-iconbtn sm",
+      "aria-label": "Show QR code",
+      onClick: () => {
+        flipRef.current && flipRef.current();
+        scrollRef.current && (scrollRef.current.scrollTop = 0);
+      }
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "qr-code",
+      size: 20,
+      color: "var(--brand-navy)"
+    }))
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "jn-scroll",
+    ref: scrollRef
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pass-wrap hp"
+  }, /*#__PURE__*/React.createElement(HealthPassFlip, {
+    prof: prof,
+    hs: hs,
+    qr: true,
+    flipRef: flipRef,
+    onQr: () => flipRef.current && flipRef.current(true),
+    photo: photo
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "jn-hp-photo-row"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn ghost sm",
+    onClick: () => setPhotoOpen(true)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "camera",
+    size: 15
+  }), photo ? "Update passport photo" : "Add a passport photo")), !onb.done && /*#__PURE__*/React.createElement("button", {
+    className: "jn-link-row",
+    onClick: () => goJN("JaneOnboarding.html")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "alert-circle",
+    size: 16,
+    color: "var(--warning)"
+  }), "Complete the onboarding questionnaire to activate your pass", /*#__PURE__*/React.createElement(IcJN, {
+    name: "chevron-right",
+    size: 16
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "jn-hp-stats"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jn-hp-stat",
+    onClick: () => docsRef.current && scrollRef.current && (scrollRef.current.scrollTop = docsRef.current.offsetTop - 12)
+  }, /*#__PURE__*/React.createElement("b", null, docs.length), /*#__PURE__*/React.createElement("span", null, "Documents")), /*#__PURE__*/React.createElement("button", {
+    className: "jn-hp-stat",
+    onClick: () => {
+      setFilt("shared");
+      docsRef.current && scrollRef.current && (scrollRef.current.scrollTop = docsRef.current.offsetTop - 12);
+    }
+  }, /*#__PURE__*/React.createElement("b", null, sharedN), /*#__PURE__*/React.createElement("span", null, "Shared")), /*#__PURE__*/React.createElement("button", {
+    className: "jn-hp-stat",
+    onClick: () => goJN("JaneScheduleCall.html?ret=" + encodeURIComponent("JaneHealthPass.html"))
+  }, /*#__PURE__*/React.createElement("b", null, TREATMENTS_JN.filter(t => !t.upcoming && t.by !== "reception").length), /*#__PURE__*/React.createElement("span", null, "Clinic visits"))), /*#__PURE__*/React.createElement("section", {
+    className: "jn-card jn-hp-share"
+  }, /*#__PURE__*/React.createElement(JNFace, {
+    p: KATY,
+    size: 44
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, shared ? "Shared with " + KATY.name : "Not shared with your clinic"), /*#__PURE__*/React.createElement("small", null, shared ? KATY.first + " sees your history, answers and the documents you've marked Shared." : "Turn on sharing so " + KATY.first + " has your history before your next visit.")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "jn-switch" + (shared ? " on" : ""),
+    role: "switch",
+    "aria-checked": shared,
+    "aria-label": "Share Health Passport",
+    onClick: toggleShare
+  }, /*#__PURE__*/React.createElement("i", null))), /*#__PURE__*/React.createElement(PMCardJN, {
+    title: "Medical history",
+    sub: onb.done ? "From your onboarding answers · shared only with " + KATY.first : "Answer the questionnaire to fill this in",
+    onClick: () => goJN("JaneOnboarding.html"),
+    className: "jn-mh"
+  }, (() => {
+    const flags = medical.filter(m => m !== "No known allergies");
+    const none = medical.includes("No known allergies");
+    const st = flags.length ? "warn" : none ? "ok" : "empty";
+    return /*#__PURE__*/React.createElement("div", {
+      className: "jn-mh-alert " + st
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "ic"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: st === "warn" ? "alert-circle" : st === "ok" ? "shield-check" : "clipboard-list",
+      size: 20,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, st === "warn" ? (flags.length === 1 ? "1 thing" : flags.length + " things") + " " + KATY.first + " should know" : st === "ok" ? "No known allergies" : "Allergies & conditions"), /*#__PURE__*/React.createElement("small", null, st === "warn" ? "Flagged before every treatment" : st === "ok" ? "Nothing flagged for your treatments" : "Tell us about allergies, conditions or medication"), flags.length > 0 && /*#__PURE__*/React.createElement("div", {
+      className: "jn-tags"
+    }, flags.map(m => /*#__PURE__*/React.createElement("span", {
+      key: m,
+      className: "jn-tag warn"
+    }, m)))));
+  })(), /*#__PURE__*/React.createElement("div", {
+    className: "jn-mh-grid"
+  }, [["syringe", "#ede9ff", "#6c63ff", "Previous treatments", a.history], ["target", "#fff4d6", "#b7791f", "Reason for visiting", (a.reason || []).join(", ")], ["moon", "#e0ecff", "#2457c5", "Sleep", a.sleep], ["scale", "#dcfce7", "#16a34a", "Height · Weight", hs.height ? hs.height + " cm · " + hs.weight + " kg" + (bmi ? " · BMI " + bmi : "") : ""]].map(([ic, tint, c, l, v]) => /*#__PURE__*/React.createElement("div", {
+    key: l,
+    className: "jn-mh-tile" + (v ? "" : " empty")
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic",
+    style: {
+      background: tint
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: ic,
+    size: 18,
+    color: c
+  })), /*#__PURE__*/React.createElement("small", null, l), /*#__PURE__*/React.createElement("b", null, v || "Not answered")))), (a.habits || []).length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "jn-mh-habits"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "sun",
+    size: 14
+  }), "Daily habits"), /*#__PURE__*/React.createElement("div", {
+    className: "jn-tags"
+  }, a.habits.map(m => /*#__PURE__*/React.createElement("span", {
+    key: m,
+    className: "jn-tag"
+  }, m)))), /*#__PURE__*/React.createElement("div", {
+    className: "jn-mh-foot"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "upd"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "clock",
+    size: 13
+  }), onb.done ? "Reviewed at every visit" : "Takes about 2 minutes"), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn sm",
+    onClick: () => goJN("JaneOnboarding.html")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "pencil",
+    size: 14
+  }), onb.done ? "Update answers" : "Start questionnaire"))), /*#__PURE__*/React.createElement(PMCardJN, {
+    title: "Treatment history",
+    sub: "At " + JANE.clinic
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-hp-tl"
+  }, (tlAll ? TREATMENTS_JN : TREATMENTS_JN.slice(0, 3)).map(t => {
+    const p = PEOPLE[t.by];
+    const doc = t.docId && docs.find(x => x.id === t.docId);
+    return /*#__PURE__*/React.createElement("div", {
+      key: t.id,
+      className: "jn-hp-tli" + (t.upcoming ? " next" : "")
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "dot"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: t.upcoming ? "calendar" : "check",
+      size: 12,
+      color: "#fff"
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "bx"
+    }, /*#__PURE__*/React.createElement("small", null, t.upcoming ? "Next · " : "", fmtTr(t.date), t.time ? " · " + t.time : ""), /*#__PURE__*/React.createElement("b", null, t.title), /*#__PURE__*/React.createElement("p", null, t.note), /*#__PURE__*/React.createElement("span", {
+      className: "who"
+    }, /*#__PURE__*/React.createElement(JNFace, {
+      p: p,
+      size: 20
+    }), p.name), doc && /*#__PURE__*/React.createElement("button", {
+      className: "jn-hp-doclink",
+      onClick: () => setDocSheet(doc.id)
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "file-text",
+      size: 14
+    }), doc.title), t.upcoming && /*#__PURE__*/React.createElement("button", {
+      className: "jn-hp-doclink",
+      onClick: () => goJN("JaneScheduleCall.html?ret=" + encodeURIComponent("JaneHealthPass.html"))
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "calendar-plus",
+      size: 14
+    }), "Calls & appointments")));
+  })), TREATMENTS_JN.length > 3 && /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn ghost block sm jn-hp-more",
+    onClick: () => setTlAll(!tlAll)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: tlAll ? "chevron-up" : "chevron-down",
+    size: 16
+  }), tlAll ? "Show less" : "Show " + (TREATMENTS_JN.length - 3) + " more")), /*#__PURE__*/React.createElement(PMCardJN, {
+    title: "Supplements",
+    sub: SUPPLEMENTS.length + " in your plan",
+    onClick: () => goJN("JaneMessages.html?to=katy")
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pmc-list"
+  }, SUPPLEMENTS.map(s => /*#__PURE__*/React.createElement("div", {
+    key: s.n,
+    className: "jn-li"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "pill",
+    size: 16,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, s.n), /*#__PURE__*/React.createElement("small", null, s.d, " · ", s.f))))), /*#__PURE__*/React.createElement("p", {
+    className: "jn-hp-note"
+  }, "Ask ", KATY.first, " to update your supplements.")), /*#__PURE__*/React.createElement(PMCardJN, {
+    title: "Goals",
+    sub: "What you're working on this quarter",
+    href: "JaneHealth.html"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pmc-list"
+  }, GOALS.map(g => /*#__PURE__*/React.createElement("div", {
+    key: g.t,
+    className: "jn-goal"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "top"
+  }, /*#__PURE__*/React.createElement("b", null, g.t), /*#__PURE__*/React.createElement("span", null, g.target)), /*#__PURE__*/React.createElement("div", {
+    className: "bar"
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      width: g.p * 100 + "%"
+    }
+  }))))), (a.goals || []).length > 0 && /*#__PURE__*/React.createElement("div", {
+    className: "jn-tags",
+    style: {
+      marginTop: 10
+    }
+  }, a.goals.map(g => /*#__PURE__*/React.createElement("span", {
+    key: g,
+    className: "jn-tag gold"
+  }, g)))), /*#__PURE__*/React.createElement(PMCardJN, {
+    title: "Track your health",
+    sub: "Sleep · Movement · Nutrition · Skin check-in",
+    href: "JaneHealth.html"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pmc-chips"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "jn-tag"
+  }, wear.length ? wear.map(x => x.name).join(", ") : "No wearable yet"), /*#__PURE__*/React.createElement("span", {
+    className: "jn-tag"
+  }, "Skin score 78"), /*#__PURE__*/React.createElement("span", {
+    className: "jn-tag"
+  }, "Sleep 7h 18m"))), /*#__PURE__*/React.createElement("div", {
+    ref: docsRef
+  }), /*#__PURE__*/React.createElement(PMCardJN, {
+    title: "Health documents",
+    sub: myDocs.length ? myDocs.length + " uploaded · " + sharedN + " shared with " + KATY.first : "Blood tests, scans, letters & your health history",
+    className: "jn-hp-docs"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn block jn-hp-upload",
+    onClick: () => setDocSheet("add")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "upload",
+    size: 18,
+    color: "#fff"
+  }), "Upload a document"), docs.length > 1 && /*#__PURE__*/React.createElement("div", {
+    className: "jn-hp-filt"
+  }, [["all", "All"], ["shared", "Shared"], ["private", "Private"], ...typesUsed.map(t => [t.k, t.t])].map(([k, l]) => /*#__PURE__*/React.createElement("button", {
+    key: k,
+    className: "jn-chip" + (filt === k ? " on" : ""),
+    onClick: () => setFilt(k)
+  }, l))), /*#__PURE__*/React.createElement("div", {
+    className: "jn-pmc-list jn-docs"
+  }, shown.map(x => {
+    const t = docType(x.type);
+    return /*#__PURE__*/React.createElement("button", {
+      key: x.id,
+      className: "jn-li",
+      onClick: () => setDocSheet(x.id)
+    }, /*#__PURE__*/React.createElement(DocIcon, {
+      type: x.type,
+      preview: x.file && x.file.preview
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, x.title), /*#__PURE__*/React.createElement("small", null, t.t, " · ", fmtDocDate(x.date), x.by === "clinic" ? " · from clinic" : "")), x.share ? /*#__PURE__*/React.createElement("span", {
+      className: "jn-pill soft"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "shield-check",
+      size: 12
+    }), "Shared") : /*#__PURE__*/React.createElement("span", {
+      className: "jn-pill ghost"
+    }, "Private"));
+  }), !shown.length && /*#__PURE__*/React.createElement("p", {
+    className: "jn-docs-empty"
+  }, docs.length ? "Nothing matches this filter." : "Add blood tests, scans, GP letters, prescriptions or past treatment notes so " + KATY.first + " has the full picture before your next review."))), /*#__PURE__*/React.createElement("div", {
+    className: "sc-info jn-hp-info"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "shield-check",
+    size: 15,
+    color: "var(--brand-navy)"
+  }), /*#__PURE__*/React.createElement("span", null, "Your Health Passport is encrypted and only visible to clinicians you share it with. Show the QR code at reception to check in.")), /*#__PURE__*/React.createElement(JNDevPassRow, null), /*#__PURE__*/React.createElement("div", {
+    className: "jn-end"
+  }, "PROfinity · Health Passport ", JANE.passId)), /*#__PURE__*/React.createElement(JNTabs, {
+    active: "pass"
+  }), /*#__PURE__*/React.createElement(PassPhotoSheet, {
+    open: photoOpen,
+    onClose: () => setPhotoOpen(false),
+    current: photo,
+    onSave: d => {
+      setPhoto(d);
+      saveJN(PASS_PHOTO_KEY, d);
+      setPhotoOpen(false);
+      showToast("Passport photo updated");
+    },
+    onRemove: () => {
+      setPhoto(null);
+      saveJN(PASS_PHOTO_KEY, null);
+      setPhotoOpen(false);
+      showToast("Using your profile picture");
+    }
+  }), /*#__PURE__*/React.createElement(AddDocSheet, {
     open: docSheet === "add",
     onClose: () => setDocSheet(null),
     onSave: doc => {
       setDocsSave([doc, ...docs]);
       setDocSheet(null);
-      showToast(doc.share ? "Added and shared with " + KATY.first : "Added to your Health Pass");
+      setFilt("all");
+      showToast(doc.share ? "Added and shared with " + KATY.first : "Added to your Health Passport");
     }
   }), /*#__PURE__*/React.createElement(ViewDocSheet, {
     doc: docSheet && docSheet !== "add" ? docs.find(x => x.id === docSheet) : null,
@@ -3785,10 +4524,10 @@ function OnboardingScreen() {
     name: "check",
     size: 40,
     color: "#fff"
-  })), /*#__PURE__*/React.createElement("h2", null, "Your Health Pass is ready"), /*#__PURE__*/React.createElement("p", null, "Thanks ", JANE.first, ". Katy can now see your history, goals and preferences before your next visit."), /*#__PURE__*/React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("h2", null, "Your Health Passport is ready"), /*#__PURE__*/React.createElement("p", null, "Thanks ", JANE.first, ". Katy can now see your history, goals and preferences before your next visit."), /*#__PURE__*/React.createElement("button", {
     className: "jn-btn block",
     onClick: () => goJN("JaneProfile.html")
-  }, "View my Health Pass"), /*#__PURE__*/React.createElement("button", {
+  }, "View my Health Passport"), /*#__PURE__*/React.createElement("button", {
     className: "jn-btn block ghost",
     onClick: () => goJN("JaneWearables.html")
   }, /*#__PURE__*/React.createElement(IcJN, {
@@ -3845,7 +4584,7 @@ function OnboardingScreen() {
     className: "jn-onb-q"
   }, "Share your answers with your clinician?"), /*#__PURE__*/React.createElement("p", {
     className: "jn-onb-sub"
-  }, "Your Health Pass is private. Sharing lets ", KATY.name, " prepare for your appointments and tailor aftercare."), /*#__PURE__*/React.createElement("button", {
+  }, "Your Health Passport is private. Sharing lets ", KATY.name, " prepare for your appointments and tailor aftercare."), /*#__PURE__*/React.createElement("button", {
     className: "jn-consent" + (consent ? " on" : ""),
     onClick: () => setConsent(!consent)
   }, /*#__PURE__*/React.createElement(JNFace, {
@@ -3938,33 +4677,10 @@ function WearablesScreen() {
     size: 18
   }), "Back"), /*#__PURE__*/React.createElement("section", {
     className: "jn-wear-hero"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "orbit"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "c1"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "moon",
-    size: 16,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "c2"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "footprints",
-    size: 16,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "c3"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "droplets",
-    size: 16,
-    color: "#fff"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "core"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "heart-pulse",
-    size: 26,
-    color: "#fff"
-  }))), /*#__PURE__*/React.createElement("h2", null, "Your body, in your Health Pass"), /*#__PURE__*/React.createElement("p", null, "We read sleep, movement and nutrition only. Nothing is shared beyond your clinic, and you can disconnect any time.")), connected.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h3", {
+  }, /*#__PURE__*/React.createElement(LottieJN, {
+    src: WEAR_LOTTIE_JN,
+    className: "jn-wear-lottie"
+  }), /*#__PURE__*/React.createElement("h2", null, "Your body, in your Health Passport"), /*#__PURE__*/React.createElement("p", null, "We read sleep, movement and nutrition only. Nothing is shared beyond your clinic, and you can disconnect any time.")), connected.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h3", {
     className: "jn-h"
   }, "Connected"), /*#__PURE__*/React.createElement("div", {
     className: "jn-card list"
@@ -4032,7 +4748,7 @@ function WearablesScreen() {
     color: "#0ea5e9"
   }), /*#__PURE__*/React.createElement("b", null, "Nutrition"), /*#__PURE__*/React.createElement("small", null, "Water, logged meals"))), /*#__PURE__*/React.createElement("div", {
     className: "jn-end"
-  }, "Data stays on your Health Pass · encrypted in transit")), /*#__PURE__*/React.createElement(JNTabs, {
+  }, "Data stays on your Health Passport · encrypted in transit")), /*#__PURE__*/React.createElement(JNTabs, {
     active: "health",
     compact: hidden
   }), layers, /*#__PURE__*/React.createElement(JNSheet, {
@@ -4069,7 +4785,7 @@ function WearablesScreen() {
     onClick: () => setSel(null)
   }, "Not now")), sel && state[sel.id] && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
     className: "jn-sheet-p"
-  }, /*#__PURE__*/React.createElement("b", null, sel.name), " is connected and syncing sleep, movement and nutrition to your Health Pass."), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("b", null, sel.name), " is connected and syncing sleep, movement and nutrition to your Health Passport."), /*#__PURE__*/React.createElement("button", {
     className: "jn-btn block ghost",
     onClick: () => {
       showToast("Syncing " + sel.name + "…");
@@ -5275,6 +5991,46 @@ function ensureLottieJN() {
   });
   return lottieLibJN;
 }
+/* Generic on-demand Lottie host (user 2026-10-29: Wearables hero orbit → lottie.host clinician animation,
+   saved as assets/lottie/wearables-hero.json). Renders nothing visible until the animation has loaded. */
+const WEAR_LOTTIE_JN = "assets/lottie/wearables-hero.json?v=20261029b";
+function LottieJN({
+  src,
+  className,
+  loop = true
+}) {
+  const host = useRefJN(null);
+  const [ok, setOk] = useStateJN(false);
+  useEffectJN(() => {
+    let anim,
+      dead = false;
+    ensureLottieJN().then(L => {
+      if (dead || !host.current) return;
+      anim = L.loadAnimation({
+        container: host.current,
+        renderer: "svg",
+        loop,
+        autoplay: true,
+        path: src,
+        rendererSettings: {
+          preserveAspectRatio: "xMidYMid meet"
+        }
+      });
+      anim.addEventListener("DOMLoaded", () => {
+        if (!dead) setOk(true);
+      });
+    }).catch(() => {});
+    return () => {
+      dead = true;
+      if (anim) anim.destroy();
+    };
+  }, [src]);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "jn-lottie" + (ok ? " on" : "") + (className ? " " + className : ""),
+    ref: host,
+    "aria-hidden": "true"
+  });
+}
 function DrTimJN({
   size = 48
 }) {
@@ -5337,13 +6093,13 @@ const COACH_PROMPTS = [{
 }];
 function coachReply(q) {
   const s = q.toLowerCase();
-  if (/appoint|review|monday|consult|prep/.test(s)) return "Your review with Katy is Tue 3 Nov at 2:30pm. Three things to bring:\n\n1. Any photos of the swelling from days 2–5\n2. The question you asked in the feed about lip hydration\n3. Your Health Pass QR (Profile → Show)\n\nWant me to add a reminder the night before?";
+  if (/appoint|review|monday|consult|prep/.test(s)) return "Your review with Katy is Tue 3 Nov at 2:30pm. Three things to bring:\n\n1. Any photos of the swelling from days 2–5\n2. The question you asked in the feed about lip hydration\n3. Your Health Passport QR (Profile → Show)\n\nWant me to add a reminder the night before?";
   if (/aftercare|filler|swell|bruis|lip/.test(s)) return "Lip filler aftercare, week 1 onwards:\n\n• Ice 10 minutes on, 10 off for the first 48h\n• No straws, hot drinks or intense exercise for 24h\n• A plain balm only — skip menthol or 'plumping' products\n• Sleep slightly propped up\n\nSwelling peaks at day 2–3 and settles by week 2. Anything hot, hard or very painful — message Katy straight away.";
   if (/routine|skin care|skincare|cleans|spf|serum/.test(s)) return "A routine you'll actually keep:\n\nAM — gentle cleanser → vitamin C or hyaluronic serum → moisturiser → SPF 50\nPM — cleanse (double if you wore SPF/makeup) → retinol 2–3 nights a week → moisturiser\n\nYou've logged SPF 5 of 7 days this week — that's the one that moves your skin score most.";
   if (/sleep|tired|energy|bed/.test(s)) return "You averaged 7h 12m this week — your best nights (Fri–Sat) had no screens after 10pm and a caffeine cut-off at 2pm. Let's make those the default:\n\n• Phone on charge outside the bedroom\n• Last coffee 2pm\n• Same wake time, even weekends\n\nI'll check your sleep trend again on Sunday.";
   if (/hydrat|water|drink/.test(s)) return "Your water intake drops on low-step days — 1.4 L on Wednesday vs 2.2 L on Thursday. Easiest fix: a 750 ml bottle finished by lunch and again by 5pm. I can nudge you at 11am and 3pm if you'd like.";
   if (/score|mean|78/.test(s)) return "Your skin score (78 today) comes from your daily selfie rating plus hydration, sleep and SPF habits. Anything over 70 means your routine is working. The biggest swing factors for you have been SPF days and sleep over 7 hours.";
-  return "Noted. Based on your Health Pass, the single most useful thing this week is consistency — SPF daily and 7+ hours of sleep. Would you like a short plan, or shall I pass this to Katy before your review?";
+  return "Noted. Based on your Health Passport, the single most useful thing this week is consistency — SPF daily and 7+ hours of sleep. Would you like a short plan, or shall I pass this to Katy before your review?";
 }
 function coachWelcome() {
   return {
@@ -5777,7 +6533,7 @@ function CoachScreen() {
       className: "jc-hist-h"
     }, /*#__PURE__*/React.createElement("div", {
       className: "tx"
-    }, /*#__PURE__*/React.createElement("h2", null, "Your chats"), /*#__PURE__*/React.createElement("span", null, active.length, " ", active.length === 1 ? "conversation" : "conversations", " · saved to your Health Pass")), /*#__PURE__*/React.createElement("button", {
+    }, /*#__PURE__*/React.createElement("h2", null, "Your chats"), /*#__PURE__*/React.createElement("span", null, active.length, " ", active.length === 1 ? "conversation" : "conversations", " · saved to your Health Passport")), /*#__PURE__*/React.createElement("button", {
       className: "jc-newbtn",
       "aria-label": "New chat",
       onClick: newChat
@@ -5836,7 +6592,7 @@ function CoachScreen() {
     color: "var(--ai-purple)"
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, "What Ava knows"), /*#__PURE__*/React.createElement("small", null, ctxOpen ? "From your Health Pass — only you and your clinic can see this." : "Lip filler · 1 Oct · Review Tue 3 Nov · Skin score 78"), ctxOpen && /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("b", null, "What Ava knows"), /*#__PURE__*/React.createElement("small", null, ctxOpen ? "From your Health Passport — only you and your clinic can see this." : "Lip filler · 1 Oct · Review Tue 3 Nov · Skin score 78"), ctxOpen && /*#__PURE__*/React.createElement("span", {
     className: "jc-ctx-list"
   }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
     name: "syringe",
@@ -5925,37 +6681,48 @@ function CoachScreen() {
   }, "Not medical advice. Talk to your clinician about any concerns."))) : /*#__PURE__*/React.createElement("div", {
     className: "jn-voice jc-voice"
   }, /*#__PURE__*/React.createElement("div", {
-    className: "jn-orb " + voice,
+    className: "jc-orb " + voice,
     onClick: talk,
     role: "button",
-    "aria-label": "Tap to talk"
+    "aria-label": voice === "idle" ? "Tap to talk" : "Stop"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "r r1"
+    className: "jc-orb-halo",
+    "aria-hidden": "true"
   }), /*#__PURE__*/React.createElement("span", {
-    className: "r r2"
+    className: "jc-orb-ripple r1",
+    "aria-hidden": "true"
   }), /*#__PURE__*/React.createElement("span", {
-    className: "r r3"
+    className: "jc-orb-ripple r2",
+    "aria-hidden": "true"
   }), /*#__PURE__*/React.createElement("span", {
-    className: "core"
-  }, voice === "listening" ? /*#__PURE__*/React.createElement(IcJN, {
+    className: "jc-orb-body",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "c1"
+  }), /*#__PURE__*/React.createElement("i", {
+    className: "c2"
+  }), /*#__PURE__*/React.createElement("i", {
+    className: "c3"
+  })), voice === "idle" && /*#__PURE__*/React.createElement("span", {
+    className: "jc-orb-ic",
+    "aria-hidden": "true"
+  }, /*#__PURE__*/React.createElement(IcJN, {
     name: "mic",
-    size: 38,
+    size: 30,
     color: "#fff"
-  }) : voice === "speaking" ? /*#__PURE__*/React.createElement(IcJN, {
-    name: "volume-2",
-    size: 38,
-    color: "#fff"
-  }) : voice === "thinking" ? /*#__PURE__*/React.createElement(IcJN, {
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "jc-orb-caption"
+  }, voice === "idle" ? /*#__PURE__*/React.createElement("span", null, "Tap to talk") : voice === "listening" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+    className: "jc-live"
+  }), /*#__PURE__*/React.createElement("span", null, "Listening · Ava is hearing you")) : voice === "thinking" ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IcJN, {
     name: "sparkles",
-    size: 38,
-    color: "#fff"
-  }) : /*#__PURE__*/React.createElement(IcJN, {
-    name: "mic",
-    size: 38,
-    color: "#fff"
-  }))), /*#__PURE__*/React.createElement("b", {
-    className: "jn-voice-state"
-  }, voice === "idle" ? "Tap to talk" : voice === "listening" ? "Listening…" : voice === "thinking" ? "Thinking…" : "Speaking"), /*#__PURE__*/React.createElement("div", {
+    size: 14,
+    color: "var(--ai-purple)"
+  }), /*#__PURE__*/React.createElement("span", null, "Thinking…")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IcJN, {
+    name: "volume-2",
+    size: 14,
+    color: "var(--ai-purple)"
+  }), /*#__PURE__*/React.createElement("span", null, "Ava is speaking"))), /*#__PURE__*/React.createElement("div", {
     className: "jn-voice-txt"
   }, heard && /*#__PURE__*/React.createElement("p", {
     className: "you"
@@ -5965,7 +6732,7 @@ function CoachScreen() {
     key: j
   }, l || " "))), !heard && !said && /*#__PURE__*/React.createElement("p", {
     className: "hint"
-  }, "Ask about aftercare, your routine, sleep or your next appointment. Ava has your Health Pass to hand, and the conversation is saved to your history.")), /*#__PURE__*/React.createElement("div", {
+  }, "Ask about aftercare, your routine, sleep or your next appointment. Ava has your Health Passport to hand, and the conversation is saved to your history.")), /*#__PURE__*/React.createElement("div", {
     className: "jn-voice-ctl"
   }, /*#__PURE__*/React.createElement("button", {
     className: "jn-iconbtn lg" + (muted ? " on" : ""),
@@ -7128,7 +7895,7 @@ function ScheduleCallScreen() {
       color: "var(--brand-navy)"
     })), /*#__PURE__*/React.createElement("span", {
       className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, "Your Health Pass is shared"), /*#__PURE__*/React.createElement("small", null, uw.first, " can see your history and aftercare notes during the call.")))), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("b", null, "Your Health Passport is shared"), /*#__PURE__*/React.createElement("small", null, uw.first, " can see your history and aftercare notes during the call.")))), /*#__PURE__*/React.createElement("div", {
       className: "jn-end"
     }, "Calls are free for ", JANE.clinic, " patients · for anything urgent call the clinic")), /*#__PURE__*/React.createElement(JNSheet, {
       open: cancelOpen,
@@ -7386,7 +8153,7 @@ function ScheduleCallScreen() {
     color: "var(--brand-navy)"
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, /*#__PURE__*/React.createElement("b", null, "Health Pass shared for the call"), /*#__PURE__*/React.createElement("small", null, "So ", who.first, " has your history and aftercare notes to hand.")))))), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("b", null, "Health Passport shared for the call"), /*#__PURE__*/React.createElement("small", null, "So ", who.first, " has your history and aftercare notes to hand.")))))), /*#__PURE__*/React.createElement("div", {
     className: "jn-onb-foot"
   }, /*#__PURE__*/React.createElement("button", {
     className: "jn-btn block",
@@ -8016,6 +8783,7 @@ function CreatePostScreen() {
    mount
    ======================================================================= */
 const JN_SCREENS = {
+  pass: HealthPassScreen,
   schedule: ScheduleCallScreen,
   create: CreatePostScreen,
   home: HomeScreen,
