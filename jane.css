@@ -202,7 +202,11 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 @keyframes jn-sheen { 0%, 62% { transform: skewX(-20deg) translateX(-160%); } 100% { transform: skewX(-20deg) translateX(360%); } }
 .jn-pass > * { position: relative; z-index: 1; }
 .jn-pass-top { display: flex; align-items: center; justify-content: space-between; }
-.jn-pass-top img { height: 30px; width: auto; filter: brightness(0) invert(1); }
+/* gold P mark + white wordmark (user, 2026-10-29: the inverted full logo
+   flattened the P into a blank box) */
+.jn-pass-logo { display: inline-flex; align-items: flex-end; gap: 1px; }
+.jn-pass-logo .p { height: 36px; width: auto; margin-bottom: -5px; }
+.jn-pass-logo .wm { height: 21px; width: auto; margin-bottom: 1px; }
 .jn-pass-top .st { padding: 5px 11px; border-radius: 100px; background: rgba(255,255,255,.2); font-size: 11px; font-weight: var(--fw-bold); letter-spacing: .06em; text-transform: uppercase; }
 .jn-pass-mid { display: flex; flex-direction: column; gap: 2px; }
 .jn-pass-mid .lbl { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; opacity: .8; }
@@ -788,6 +792,46 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .jn-steps-next .pm-steps-next-lb { font-size: 10px; font-weight: var(--fw-bold); letter-spacing: .08em; text-transform: uppercase; padding: 4px 7px; border-radius: 6px; background: var(--surface-sunken); color: var(--text-secondary); }
 .jn-steps-next .pm-steps-next-ti { flex: 1; font-size: 14px; font-weight: var(--fw-semibold); color: var(--text-heading); }
 .jn-pass-wrap { margin: 16px 20px 0; }
+/* drawer twin of the pass card (user, 2026-10-29): same design, tighter */
+.jn-pass-wrap.sm { margin: 4px 0 18px; }
+.jn-pass-wrap.sm .jn-pass { min-height: 0; gap: 12px; padding: 16px; border-radius: 20px; box-shadow: 0 10px 26px rgba(41,37,105,.22); }
+.jn-pass-wrap.sm .jn-pass-logo .p { height: 30px; margin-bottom: -4px; }
+.jn-pass-wrap.sm .jn-pass-logo .wm { height: 17px; }
+.jn-pass-wrap.sm .jn-pass-mid b { font-size: 20px; }
+.jn-pass-wrap.sm .jn-pass-bot { gap: 10px; }
+.jn-pass-wrap.sm .jn-pass-bot > span:first-child { min-width: 0; }
+/* Health documents (user, 2026-10-29) */
+.jn-docs button.jn-li { cursor: pointer; }
+.jn-docs .jn-li .tx b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jn-doc-ic { flex: none; border-radius: 12px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.jn-doc-ic.img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+[data-theme="dark"] .jn-doc-ic:not(.img) { background: rgba(255,255,255,.1) !important; }
+.jn-pill.soft { display: inline-flex; align-items: center; gap: 4px; background: var(--success-bg, #dcfce7); color: var(--success, #16a34a); }
+.jn-pill.ghost { background: var(--surface-sunken); color: var(--text-secondary); }
+[data-theme="dark"] .jn-pill.soft { background: rgba(22,163,74,.18); }
+.jn-docs-empty { margin: 4px 0 8px; font-size: 13px; line-height: 1.5; color: var(--text-secondary); }
+.jn-docs-add { margin-top: 6px; min-height: 44px; font-size: 14px; }
+.jn-doc-drop { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 2px 0 14px; }
+.jn-doc-dropbtn { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 10px 14px; border-radius: 18px; border: 1.5px dashed var(--border-default); background: var(--surface-sunken); font-family: inherit; color: inherit; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; }
+.jn-doc-dropbtn:active { background: var(--surface-card); }
+.jn-doc-dropbtn:disabled { opacity: .6; }
+.jn-doc-dropbtn .ic { width: 44px; height: 44px; border-radius: 50%; background: var(--surface-card); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(16,24,40,.08); }
+.jn-doc-dropbtn b { font-size: 14px; font-weight: var(--fw-semibold); color: var(--text-heading); }
+.jn-doc-dropbtn small { font-size: 11.5px; color: var(--text-secondary); line-height: 1.3; }
+.jn-doc-picked { display: flex; align-items: center; gap: 12px; padding: 10px 12px; margin: 2px 0 14px; border-radius: 16px; border: 1px solid var(--border-default); background: var(--surface-sunken); }
+.jn-doc-picked .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.jn-doc-picked .tx b { font-size: 14px; font-weight: var(--fw-semibold); color: var(--text-heading); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.jn-doc-picked .tx small { font-size: 12px; color: var(--text-secondary); }
+.jn-doc-x { flex: none; width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--surface-card); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.jn-doc-types { display: flex; flex-wrap: wrap; gap: 8px; }
+.jn-doc-types .jn-chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; }
+.jn-perm.jn-doc-share { border-top: 1px solid var(--border-default); border-bottom: 1px solid var(--border-default); padding: 12px 0; margin: 2px 0 4px; }
+.jn-perm.jn-doc-share span:nth-child(2) { display: flex; flex-direction: column; gap: 2px; font-weight: var(--fw-semibold); color: var(--text-heading); }
+.jn-perm.jn-doc-share span:nth-child(2) small { font-size: 12px; font-weight: var(--fw-regular); color: var(--text-secondary); }
+.jn-doc-preview { display: block; width: 100%; max-height: 240px; object-fit: contain; border-radius: 16px; background: var(--surface-sunken); margin: 0 0 12px; }
+.jn-doc-preview.tile { height: 140px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.jn-doc-preview.tile small { font-size: 12px; color: var(--text-secondary); max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-theme="dark"] .jn-doc-preview.tile { background: rgba(255,255,255,.08) !important; }
 .jn-pmc { margin: 16px 20px 0; }
 .jn-pmc-h { width: 100%; display: flex; align-items: center; gap: 12px; border: none; background: none; padding: 0; margin: 0 0 12px; text-align: left; font-family: inherit; cursor: default; }
 button.jn-pmc-h { cursor: pointer; }

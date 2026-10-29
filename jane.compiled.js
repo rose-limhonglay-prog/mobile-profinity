@@ -1043,25 +1043,10 @@ function JNDrawer({
     color: "var(--gray-800)"
   })), /*#__PURE__*/React.createElement("div", {
     className: "sm-body"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "sm-primary-card",
-    onClick: () => goJN("JaneProfile.html")
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-primary-icon"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "qr-code",
-    size: 22,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "sm-primary-main"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "sm-primary-title"
-  }, "Health Pass"), /*#__PURE__*/React.createElement("span", {
-    className: "sm-primary-sub"
-  }, JANE.passId, " · ", onb.done ? "Active" : "Incomplete", " · show at reception")), /*#__PURE__*/React.createElement(IcJN, {
-    name: "chevron-right",
-    size: 20,
-    color: "var(--gray-450)"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pass-wrap sm"
+  }, /*#__PURE__*/React.createElement(HealthPassCard, {
+    onClick: () => goJN("JaneProfile.html?pass=1")
   })), /*#__PURE__*/React.createElement("div", {
     className: "sm-sec-h"
   }, "Upcoming Events"), /*#__PURE__*/React.createElement("div", {
@@ -2808,6 +2793,430 @@ function QRMark() {
     className: on ? "on" : ""
   })));
 }
+/* The navy Health Pass card — same design on the Profile page and in the
+   side-menu drawer (user, 2026-10-29). Reads the saved profile name so both
+   places agree; `onClick` opens the QR sheet (Profile) or deep-links to it. */
+function HealthPassCard({
+  onClick,
+  prof
+}) {
+  const p = prof || readJN(PROFILE_KEY, {
+    name: JANE.name,
+    dob: JANE.dob
+  });
+  const onb = onbState();
+  return /*#__PURE__*/React.createElement("button", {
+    className: "jn-pass",
+    onClick: onClick
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pass-top"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "jn-pass-logo"
+  }, /*#__PURE__*/React.createElement("img", {
+    className: "p",
+    src: "assets/splash/p-gold.png",
+    alt: ""
+  }), /*#__PURE__*/React.createElement("img", {
+    className: "wm",
+    src: "assets/splash/wordmark.svg",
+    alt: "PROfinity"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "st"
+  }, onb.done ? "Active" : "Incomplete")), /*#__PURE__*/React.createElement("div", {
+    className: "jn-pass-mid"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lbl"
+  }, "Health Pass"), /*#__PURE__*/React.createElement("b", null, p.name), /*#__PURE__*/React.createElement("small", null, "ID ", JANE.passId, " · DOB ", p.dob)), /*#__PURE__*/React.createElement("div", {
+    className: "jn-pass-bot"
+  }, /*#__PURE__*/React.createElement("span", null, JANE.clinic, " · member since ", JANE.since), /*#__PURE__*/React.createElement("span", {
+    className: "qrbtn"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "qr-code",
+    size: 16,
+    color: "#fff"
+  }), "Show")));
+}
+
+/* Health documents (user, 2026-10-29): blood tests, scans, letters and other
+   health history Jane uploads to her Health Pass. pf-jane-docs holds the
+   metadata plus a small JPEG preview for photos (PDFs keep name + size only).
+   One clinic-added treatment record is seeded so the list is never bare. */
+const DOCS_KEY = "pf-jane-docs";
+const DOC_TYPES = [{
+  k: "blood",
+  t: "Blood test",
+  ic: "flask-conical",
+  tint: "#fde2e4",
+  c: "#c0334d"
+}, {
+  k: "scan",
+  t: "Scan or imaging",
+  ic: "scan-line",
+  tint: "#e0ecff",
+  c: "#2457c5"
+}, {
+  k: "letter",
+  t: "Clinic or GP letter",
+  ic: "file-text",
+  tint: "#ede9ff",
+  c: "#6c63ff"
+}, {
+  k: "prescription",
+  t: "Prescription",
+  ic: "pill",
+  tint: "#dcfce7",
+  c: "#16a34a"
+}, {
+  k: "vaccine",
+  t: "Vaccination",
+  ic: "syringe",
+  tint: "#fff4d6",
+  c: "#b7791f"
+}, {
+  k: "history",
+  t: "Health history",
+  ic: "clipboard-list",
+  tint: "#fde8d0",
+  c: "#c2410c"
+}, {
+  k: "other",
+  t: "Other",
+  ic: "paperclip",
+  tint: "#e9e7f2",
+  c: "#4a4573"
+}];
+const DOCS_SEED = [{
+  id: "d-seed-1",
+  type: "letter",
+  title: "Treatment record · Lip filler",
+  date: "2026-10-01",
+  by: "clinic",
+  file: {
+    name: "treatment-record-1-oct.pdf",
+    size: "PDF · 1 page",
+    kind: "pdf"
+  },
+  share: true
+}];
+function healthDocs() {
+  return readJN(DOCS_KEY, DOCS_SEED);
+}
+function docType(k) {
+  return DOC_TYPES.find(t => t.k === k) || DOC_TYPES[DOC_TYPES.length - 1];
+}
+function fmtDocDate(iso) {
+  if (!iso) return "";
+  const d = new Date(iso + "T12:00:00");
+  return isNaN(d) ? iso : d.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric"
+  });
+}
+function fmtBytes(n) {
+  return n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB";
+}
+/* Reads a picked file: photos are downscaled to a 720px JPEG preview so the
+   store stays small; PDFs and anything else keep just name, size and kind. */
+function readDocFile(file) {
+  const base = {
+    name: file.name,
+    kind: /pdf/i.test(file.type) || /\.pdf$/i.test(file.name) ? "pdf" : /^image\//.test(file.type) ? "image" : "file",
+    size: (/pdf/i.test(file.type) ? "PDF · " : "") + fmtBytes(file.size)
+  };
+  if (base.kind !== "image") return Promise.resolve(base);
+  return new Promise(res => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const k = Math.min(1, 720 / Math.max(img.width, img.height));
+        const c = document.createElement("canvas");
+        c.width = Math.round(img.width * k);
+        c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        res({
+          ...base,
+          preview: c.toDataURL("image/jpeg", 0.78)
+        });
+      } catch (e) {
+        res(base);
+      }
+      URL.revokeObjectURL(url);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      res(base);
+    };
+    img.src = url;
+  });
+}
+function DocIcon({
+  type,
+  size = 36,
+  preview
+}) {
+  const t = docType(type);
+  if (preview) return /*#__PURE__*/React.createElement("span", {
+    className: "ic jn-doc-ic img",
+    style: {
+      width: size,
+      height: size
+    }
+  }, /*#__PURE__*/React.createElement("img", {
+    src: preview,
+    alt: ""
+  }));
+  return /*#__PURE__*/React.createElement("span", {
+    className: "ic jn-doc-ic",
+    style: {
+      background: t.tint,
+      width: size,
+      height: size
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: t.ic,
+    size: Math.round(size * 0.5),
+    color: t.c
+  }));
+}
+/* Bottom sheet for adding a document: choose a file / take a photo, pick a
+   type, name and date it, optionally add a note, choose whether Katy sees it. */
+function AddDocSheet({
+  open,
+  onClose,
+  onSave
+}) {
+  const today = new Date().toISOString().slice(0, 10);
+  const blank = {
+    type: null,
+    title: "",
+    date: today,
+    note: "",
+    share: true,
+    file: null
+  };
+  const [d, setD] = useStateJN(blank);
+  const [busy, setBusy] = useStateJN(false);
+  const fileRef = useRefJN(null);
+  const camRef = useRefJN(null);
+  useEffectJN(() => {
+    if (open) setD(blank);
+  }, [open]);
+  function pick(e) {
+    const f = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!f) return;
+    setBusy(true);
+    readDocFile(f).then(file => {
+      setBusy(false);
+      setD(cur => ({
+        ...cur,
+        file,
+        title: cur.title || f.name.replace(/\.[a-z0-9]+$/i, "").replace(/[-_]+/g, " ")
+      }));
+    });
+  }
+  const t = d.type && docType(d.type);
+  return /*#__PURE__*/React.createElement(JNSheet, {
+    open: open,
+    onClose: onClose,
+    title: "Add a health document",
+    tall: true
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "jn-sheet-p"
+  }, "Blood tests, scans, GP letters, prescriptions or anything from your health history. It's kept with your Health Pass so ", KATY.first, " has the full picture."), /*#__PURE__*/React.createElement("input", {
+    ref: fileRef,
+    type: "file",
+    accept: "application/pdf,image/*",
+    hidden: true,
+    onChange: pick
+  }), /*#__PURE__*/React.createElement("input", {
+    ref: camRef,
+    type: "file",
+    accept: "image/*",
+    capture: "environment",
+    hidden: true,
+    onChange: pick
+  }), d.file ? /*#__PURE__*/React.createElement("div", {
+    className: "jn-doc-picked"
+  }, /*#__PURE__*/React.createElement(DocIcon, {
+    type: d.type || "other",
+    size: 44,
+    preview: d.file.preview
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "tx"
+  }, /*#__PURE__*/React.createElement("b", null, d.file.name), /*#__PURE__*/React.createElement("small", null, d.file.size)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "jn-doc-x",
+    "aria-label": "Remove file",
+    onClick: () => setD({
+      ...d,
+      file: null
+    })
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "x",
+    size: 16
+  }))) : /*#__PURE__*/React.createElement("div", {
+    className: "jn-doc-drop"
+  }, /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "jn-doc-dropbtn",
+    onClick: () => fileRef.current && fileRef.current.click(),
+    disabled: busy
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "upload",
+    size: 22,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("b", null, busy ? "Reading file…" : "Choose a file"), /*#__PURE__*/React.createElement("small", null, "PDF or photo · up to 20 MB")), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "jn-doc-dropbtn",
+    onClick: () => camRef.current && camRef.current.click(),
+    disabled: busy
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "ic"
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "camera",
+    size: 22,
+    color: "var(--brand-navy)"
+  })), /*#__PURE__*/React.createElement("b", null, "Take a photo"), /*#__PURE__*/React.createElement("small", null, "Snap a letter or results sheet"))), /*#__PURE__*/React.createElement("div", {
+    className: "jn-field"
+  }, /*#__PURE__*/React.createElement("span", null, "What is it?"), /*#__PURE__*/React.createElement("div", {
+    className: "jn-doc-types"
+  }, DOC_TYPES.map(x => /*#__PURE__*/React.createElement("button", {
+    key: x.k,
+    type: "button",
+    className: "jn-chip" + (d.type === x.k ? " on" : ""),
+    onClick: () => setD({
+      ...d,
+      type: x.k
+    })
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: x.ic,
+    size: 14
+  }), x.t)))), /*#__PURE__*/React.createElement("label", {
+    className: "jn-field"
+  }, /*#__PURE__*/React.createElement("span", null, "Name"), /*#__PURE__*/React.createElement("input", {
+    className: "jn-in",
+    placeholder: t ? t.t + " · e.g. Full blood count" : "e.g. Full blood count",
+    value: d.title,
+    onChange: e => setD({
+      ...d,
+      title: e.target.value
+    })
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "jn-field"
+  }, /*#__PURE__*/React.createElement("span", null, "Date of the test or letter"), /*#__PURE__*/React.createElement("input", {
+    className: "jn-in",
+    type: "date",
+    max: today,
+    value: d.date,
+    onChange: e => setD({
+      ...d,
+      date: e.target.value
+    })
+  })), /*#__PURE__*/React.createElement("label", {
+    className: "jn-field"
+  }, /*#__PURE__*/React.createElement("span", null, "Note for ", KATY.first, " (optional)"), /*#__PURE__*/React.createElement("input", {
+    className: "jn-in",
+    placeholder: "e.g. Iron was low — GP suggested a supplement",
+    value: d.note,
+    onChange: e => setD({
+      ...d,
+      note: e.target.value
+    })
+  })), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "jn-perm jn-doc-share",
+    onClick: () => setD({
+      ...d,
+      share: !d.share
+    })
+  }, /*#__PURE__*/React.createElement(JNFace, {
+    p: KATY,
+    size: 30
+  }), /*#__PURE__*/React.createElement("span", null, "Share with ", KATY.name, /*#__PURE__*/React.createElement("small", null, d.share ? "Visible to your clinic before your next review" : "Only you can see this document")), /*#__PURE__*/React.createElement("span", {
+    className: "jn-switch" + (d.share ? " on" : "")
+  }, /*#__PURE__*/React.createElement("i", null))), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn block",
+    disabled: !d.file || !d.type || busy,
+    onClick: () => onSave({
+      id: "d" + Date.now(),
+      type: d.type,
+      title: d.title.trim() || (t ? t.t : "Document"),
+      date: d.date || today,
+      note: d.note.trim(),
+      share: d.share,
+      by: "you",
+      file: d.file
+    })
+  }, "Save to my Health Pass"));
+}
+function ViewDocSheet({
+  doc,
+  onClose,
+  onChange,
+  onDelete
+}) {
+  if (!doc) return null;
+  const t = docType(doc.type);
+  return /*#__PURE__*/React.createElement(JNSheet, {
+    open: !!doc,
+    onClose: onClose,
+    title: doc.title
+  }, doc.file && doc.file.preview ? /*#__PURE__*/React.createElement("img", {
+    className: "jn-doc-preview",
+    src: doc.file.preview,
+    alt: doc.title
+  }) : /*#__PURE__*/React.createElement("div", {
+    className: "jn-doc-preview tile",
+    style: {
+      background: t.tint
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: doc.file && doc.file.kind === "pdf" ? "file-text" : t.ic,
+    size: 40,
+    color: t.c
+  }), /*#__PURE__*/React.createElement("small", null, doc.file ? doc.file.name : "No file")), /*#__PURE__*/React.createElement("div", {
+    className: "jn-kv"
+  }, /*#__PURE__*/React.createElement("span", null, "Type"), /*#__PURE__*/React.createElement("b", null, t.t)), /*#__PURE__*/React.createElement("div", {
+    className: "jn-kv"
+  }, /*#__PURE__*/React.createElement("span", null, "Date"), /*#__PURE__*/React.createElement("b", null, fmtDocDate(doc.date))), /*#__PURE__*/React.createElement("div", {
+    className: "jn-kv"
+  }, /*#__PURE__*/React.createElement("span", null, "File"), /*#__PURE__*/React.createElement("b", null, doc.file ? doc.file.size : "—")), /*#__PURE__*/React.createElement("div", {
+    className: "jn-kv"
+  }, /*#__PURE__*/React.createElement("span", null, "Added by"), /*#__PURE__*/React.createElement("b", null, doc.by === "clinic" ? JANE.clinic : "You")), doc.note && /*#__PURE__*/React.createElement("div", {
+    className: "jn-kv col"
+  }, /*#__PURE__*/React.createElement("span", null, "Note for ", KATY.first), /*#__PURE__*/React.createElement("b", null, doc.note)), /*#__PURE__*/React.createElement("button", {
+    type: "button",
+    className: "jn-perm jn-doc-share",
+    onClick: () => onChange({
+      ...doc,
+      share: !doc.share
+    })
+  }, /*#__PURE__*/React.createElement(JNFace, {
+    p: KATY,
+    size: 30
+  }), /*#__PURE__*/React.createElement("span", null, "Share with ", KATY.name, /*#__PURE__*/React.createElement("small", null, doc.share ? "Visible to your clinic" : "Only you can see this")), /*#__PURE__*/React.createElement("span", {
+    className: "jn-switch" + (doc.share ? " on" : "")
+  }, /*#__PURE__*/React.createElement("i", null))), /*#__PURE__*/React.createElement("div", {
+    className: "jn-row-btns",
+    style: {
+      marginTop: 12
+    }
+  }, doc.by !== "clinic" && /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn danger",
+    onClick: () => onDelete(doc)
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "trash-2",
+    size: 16
+  }), "Delete"), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn",
+    onClick: onClose
+  }, "Done")));
+}
 function PMCardJN({
   title,
   sub,
@@ -2848,8 +3257,15 @@ function ProfileScreen() {
     bio: ""
   }));
   const [edit, setEdit] = useStateJN(qJN("edit") === "1");
-  const [passOpen, setPassOpen] = useStateJN(false);
+  const [passOpen, setPassOpen] = useStateJN(qJN("pass") === "1");
   const [draft, setDraft] = useStateJN(prof);
+  const [docs, setDocs] = useStateJN(healthDocs);
+  const [docSheet, setDocSheet] = useStateJN(qJN("doc") === "1" ? "add" : null);
+  function setDocsSave(next) {
+    setDocs(next);
+    saveJN(DOCS_KEY, next);
+  }
+  const myDocs = docs.filter(x => x.by !== "clinic");
   const [toast, showToast] = useToastJN();
   const onb = onbState();
   const wear = connectedWearables();
@@ -2872,6 +3288,10 @@ function ProfileScreen() {
     label: "Tell us your height & weight",
     done: !!hs.height,
     href: "JaneHealth.html?setup=1"
+  }, {
+    label: "Upload a blood test or health record",
+    done: myDocs.length > 0,
+    open: () => setDocSheet("add")
   }, {
     label: "Connect a wearable",
     done: wear.length > 0,
@@ -3018,7 +3438,7 @@ function ProfileScreen() {
     color: "var(--text-heading)"
   })))), /*#__PURE__*/React.createElement("button", {
     className: "pm-steps jn-steps",
-    onClick: () => next && goJN(next.href || "JaneOnboarding.html")
+    onClick: () => next && (next.open ? next.open() : goJN(next.href || "JaneOnboarding.html"))
   }, /*#__PURE__*/React.createElement("div", {
     className: "pm-steps-collapsed-top"
   }, /*#__PURE__*/React.createElement("h3", {
@@ -3062,29 +3482,10 @@ function ProfileScreen() {
     className: "pm-steps-next-ti"
   }, "All set — your Health Pass is active"))), /*#__PURE__*/React.createElement("div", {
     className: "jn-pass-wrap"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "jn-pass",
+  }, /*#__PURE__*/React.createElement(HealthPassCard, {
+    prof: prof,
     onClick: () => setPassOpen(true)
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "jn-pass-top"
-  }, /*#__PURE__*/React.createElement("img", {
-    src: "assets/profinity-academy-logo-full.png",
-    alt: "PROfinity"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "st"
-  }, onb.done ? "Active" : "Incomplete")), /*#__PURE__*/React.createElement("div", {
-    className: "jn-pass-mid"
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "lbl"
-  }, "Health Pass"), /*#__PURE__*/React.createElement("b", null, prof.name), /*#__PURE__*/React.createElement("small", null, "ID ", JANE.passId, " · DOB ", prof.dob)), /*#__PURE__*/React.createElement("div", {
-    className: "jn-pass-bot"
-  }, /*#__PURE__*/React.createElement("span", null, JANE.clinic, " · member since ", JANE.since), /*#__PURE__*/React.createElement("span", {
-    className: "qrbtn"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "qr-code",
-    size: 16,
-    color: "#fff"
-  }), "Show"))), !onb.done && /*#__PURE__*/React.createElement("button", {
+  }), !onb.done && /*#__PURE__*/React.createElement("button", {
     className: "jn-link-row",
     onClick: () => goJN("JaneOnboarding.html")
   }, /*#__PURE__*/React.createElement(IcJN, {
@@ -3111,7 +3512,40 @@ function ProfileScreen() {
     className: "jn-kv"
   }, /*#__PURE__*/React.createElement("span", null, "Last treatment"), /*#__PURE__*/React.createElement("b", null, "Lip filler · 1 Oct 2026")), /*#__PURE__*/React.createElement("div", {
     className: "jn-kv"
-  }, /*#__PURE__*/React.createElement("span", null, "Next review"), /*#__PURE__*/React.createElement("b", null, "Tue 3 Nov · 2:30pm"))), (() => {
+  }, /*#__PURE__*/React.createElement("span", null, "Next review"), /*#__PURE__*/React.createElement("b", null, "Tue 3 Nov · 2:30pm"))), /*#__PURE__*/React.createElement(PMCardJN, {
+    title: "Health documents",
+    sub: myDocs.length ? myDocs.length + " uploaded · " + docs.filter(x => x.share).length + " shared with " + KATY.first : "Blood tests, scans, letters & your health history",
+    onClick: () => setDocSheet("add")
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-pmc-list jn-docs"
+  }, docs.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).map(x => {
+    const t = docType(x.type);
+    return /*#__PURE__*/React.createElement("button", {
+      key: x.id,
+      className: "jn-li",
+      onClick: () => setDocSheet(x.id)
+    }, /*#__PURE__*/React.createElement(DocIcon, {
+      type: x.type,
+      preview: x.file && x.file.preview
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("b", null, x.title), /*#__PURE__*/React.createElement("small", null, t.t, " · ", fmtDocDate(x.date), x.by === "clinic" ? " · from clinic" : "")), x.share ? /*#__PURE__*/React.createElement("span", {
+      className: "jn-pill soft"
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "shield-check",
+      size: 12
+    }), "Shared") : /*#__PURE__*/React.createElement("span", {
+      className: "jn-pill ghost"
+    }, "Private"));
+  }), !myDocs.length && /*#__PURE__*/React.createElement("p", {
+    className: "jn-docs-empty"
+  }, "Add blood tests, scans, GP letters, prescriptions or past treatment notes so ", KATY.first, " has the full picture before your next review.")), /*#__PURE__*/React.createElement("button", {
+    className: "jn-btn ghost block jn-docs-add",
+    onClick: () => setDocSheet("add")
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "upload",
+    size: 16
+  }), "Upload a document")), (() => {
     const up = upcomingCall();
     return /*#__PURE__*/React.createElement(PMCardJN, {
       title: "Calls & appointments",
@@ -3248,10 +3682,30 @@ function ProfileScreen() {
     onClose: () => setPassOpen(false)
   }, /*#__PURE__*/React.createElement("div", {
     className: "jn-passqr"
-  }, /*#__PURE__*/React.createElement(QRMark, null), /*#__PURE__*/React.createElement("b", null, prof.name), /*#__PURE__*/React.createElement("small", null, "Health Pass ", JANE.passId), /*#__PURE__*/React.createElement("p", null, "Show this at reception. It gives ", JANE.clinic, " your medical history, consent and treatment record."), /*#__PURE__*/React.createElement("button", {
+  }, /*#__PURE__*/React.createElement(QRMark, null), /*#__PURE__*/React.createElement("b", null, prof.name), /*#__PURE__*/React.createElement("small", null, "Health Pass ", JANE.passId), /*#__PURE__*/React.createElement("p", null, "Show this at reception. It gives ", JANE.clinic, " your medical history, consent, treatment record and the documents you've shared."), /*#__PURE__*/React.createElement("button", {
     className: "jn-btn block",
     onClick: () => setPassOpen(false)
-  }, "Done"))), /*#__PURE__*/React.createElement(JNToast, {
+  }, "Done"))), /*#__PURE__*/React.createElement(AddDocSheet, {
+    open: docSheet === "add",
+    onClose: () => setDocSheet(null),
+    onSave: doc => {
+      setDocsSave([doc, ...docs]);
+      setDocSheet(null);
+      showToast(doc.share ? "Added and shared with " + KATY.first : "Added to your Health Pass");
+    }
+  }), /*#__PURE__*/React.createElement(ViewDocSheet, {
+    doc: docSheet && docSheet !== "add" ? docs.find(x => x.id === docSheet) : null,
+    onClose: () => setDocSheet(null),
+    onChange: doc => {
+      setDocsSave(docs.map(x => x.id === doc.id ? doc : x));
+      showToast(doc.share ? "Shared with " + KATY.first : "Now private");
+    },
+    onDelete: doc => {
+      setDocsSave(docs.filter(x => x.id !== doc.id));
+      setDocSheet(null);
+      showToast("Document removed");
+    }
+  }), /*#__PURE__*/React.createElement(JNToast, {
     toast: toast
   }));
 }

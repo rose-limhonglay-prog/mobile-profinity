@@ -297,11 +297,9 @@ function JNDrawer({ open, onClose }) {
           <IcJN name="chevron-right" size={22} color="var(--gray-800)" />
         </button>
         <div className="sm-body">
-          <button className="sm-primary-card" onClick={() => goJN("JaneProfile.html")}>
-            <span className="sm-primary-icon"><IcJN name="qr-code" size={22} color="var(--brand-navy)" /></span>
-            <span className="sm-primary-main"><span className="sm-primary-title">Health Pass</span><span className="sm-primary-sub">{JANE.passId} · {onb.done ? "Active" : "Incomplete"} · show at reception</span></span>
-            <IcJN name="chevron-right" size={20} color="var(--gray-450)" />
-          </button>
+          <div className="jn-pass-wrap sm">
+            <HealthPassCard onClick={() => goJN("JaneProfile.html?pass=1")} />
+          </div>
 
           <div className="sm-sec-h">Upcoming Events</div>
           <div className="sm-events">
@@ -829,6 +827,110 @@ function QRMark() {
   const cells = useMemoJN(() => { let s = 7; const out = []; for (let i = 0; i < 121; i++) { s = (s * 9301 + 49297) % 233280; out.push(s / 233280 > 0.55); } return out; }, []);
   return <div className="jn-qr" aria-hidden="true">{cells.map((on, i) => <span key={i} className={on ? "on" : ""} />)}</div>;
 }
+/* The navy Health Pass card — same design on the Profile page and in the
+   side-menu drawer (user, 2026-10-29). Reads the saved profile name so both
+   places agree; `onClick` opens the QR sheet (Profile) or deep-links to it. */
+function HealthPassCard({ onClick, prof }) {
+  const p = prof || readJN(PROFILE_KEY, { name: JANE.name, dob: JANE.dob });
+  const onb = onbState();
+  return (
+    <button className="jn-pass" onClick={onClick}>
+      <div className="jn-pass-top"><span className="jn-pass-logo"><img className="p" src="assets/splash/p-gold.png" alt="" /><img className="wm" src="assets/splash/wordmark.svg" alt="PROfinity" /></span><span className="st">{onb.done ? "Active" : "Incomplete"}</span></div>
+      <div className="jn-pass-mid"><span className="lbl">Health Pass</span><b>{p.name}</b><small>ID {JANE.passId} · DOB {p.dob}</small></div>
+      <div className="jn-pass-bot"><span>{JANE.clinic} · member since {JANE.since}</span><span className="qrbtn"><IcJN name="qr-code" size={16} color="#fff" />Show</span></div>
+    </button>);
+}
+
+/* Health documents (user, 2026-10-29): blood tests, scans, letters and other
+   health history Jane uploads to her Health Pass. pf-jane-docs holds the
+   metadata plus a small JPEG preview for photos (PDFs keep name + size only).
+   One clinic-added treatment record is seeded so the list is never bare. */
+const DOCS_KEY = "pf-jane-docs";
+const DOC_TYPES = [
+  { k: "blood", t: "Blood test", ic: "flask-conical", tint: "#fde2e4", c: "#c0334d" },
+  { k: "scan", t: "Scan or imaging", ic: "scan-line", tint: "#e0ecff", c: "#2457c5" },
+  { k: "letter", t: "Clinic or GP letter", ic: "file-text", tint: "#ede9ff", c: "#6c63ff" },
+  { k: "prescription", t: "Prescription", ic: "pill", tint: "#dcfce7", c: "#16a34a" },
+  { k: "vaccine", t: "Vaccination", ic: "syringe", tint: "#fff4d6", c: "#b7791f" },
+  { k: "history", t: "Health history", ic: "clipboard-list", tint: "#fde8d0", c: "#c2410c" },
+  { k: "other", t: "Other", ic: "paperclip", tint: "#e9e7f2", c: "#4a4573" }];
+const DOCS_SEED = [{ id: "d-seed-1", type: "letter", title: "Treatment record · Lip filler", date: "2026-10-01", by: "clinic", file: { name: "treatment-record-1-oct.pdf", size: "PDF · 1 page", kind: "pdf" }, share: true }];
+function healthDocs() { return readJN(DOCS_KEY, DOCS_SEED); }
+function docType(k) { return DOC_TYPES.find((t) => t.k === k) || DOC_TYPES[DOC_TYPES.length - 1]; }
+function fmtDocDate(iso) { if (!iso) return ""; const d = new Date(iso + "T12:00:00"); return isNaN(d) ? iso : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }); }
+function fmtBytes(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(n / 1024)) + " KB"; }
+/* Reads a picked file: photos are downscaled to a 720px JPEG preview so the
+   store stays small; PDFs and anything else keep just name, size and kind. */
+function readDocFile(file) {
+  const base = { name: file.name, kind: /pdf/i.test(file.type) || /\.pdf$/i.test(file.name) ? "pdf" : /^image\//.test(file.type) ? "image" : "file", size: (/pdf/i.test(file.type) ? "PDF · " : "") + fmtBytes(file.size) };
+  if (base.kind !== "image") return Promise.resolve(base);
+  return new Promise((res) => {
+    const url = URL.createObjectURL(file); const img = new Image();
+    img.onload = () => { try { const k = Math.min(1, 720 / Math.max(img.width, img.height)); const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); res({ ...base, preview: c.toDataURL("image/jpeg", 0.78) }); } catch (e) { res(base); } URL.revokeObjectURL(url); };
+    img.onerror = () => { URL.revokeObjectURL(url); res(base); };
+    img.src = url;
+  });
+}
+function DocIcon({ type, size = 36, preview }) {
+  const t = docType(type);
+  if (preview) return <span className="ic jn-doc-ic img" style={{ width: size, height: size }}><img src={preview} alt="" /></span>;
+  return <span className="ic jn-doc-ic" style={{ background: t.tint, width: size, height: size }}><IcJN name={t.ic} size={Math.round(size * 0.5)} color={t.c} /></span>;
+}
+/* Bottom sheet for adding a document: choose a file / take a photo, pick a
+   type, name and date it, optionally add a note, choose whether Katy sees it. */
+function AddDocSheet({ open, onClose, onSave }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const blank = { type: null, title: "", date: today, note: "", share: true, file: null };
+  const [d, setD] = useStateJN(blank);
+  const [busy, setBusy] = useStateJN(false);
+  const fileRef = useRefJN(null); const camRef = useRefJN(null);
+  useEffectJN(() => { if (open) setD(blank); }, [open]);
+  function pick(e) {
+    const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
+    setBusy(true);
+    readDocFile(f).then((file) => { setBusy(false); setD((cur) => ({ ...cur, file, title: cur.title || f.name.replace(/\.[a-z0-9]+$/i, "").replace(/[-_]+/g, " ") })); });
+  }
+  const t = d.type && docType(d.type);
+  return (
+    <JNSheet open={open} onClose={onClose} title="Add a health document" tall>
+      <p className="jn-sheet-p">Blood tests, scans, GP letters, prescriptions or anything from your health history. It's kept with your Health Pass so {KATY.first} has the full picture.</p>
+      <input ref={fileRef} type="file" accept="application/pdf,image/*" hidden onChange={pick} />
+      <input ref={camRef} type="file" accept="image/*" capture="environment" hidden onChange={pick} />
+      {d.file
+        ? <div className="jn-doc-picked"><DocIcon type={d.type || "other"} size={44} preview={d.file.preview} /><span className="tx"><b>{d.file.name}</b><small>{d.file.size}</small></span><button type="button" className="jn-doc-x" aria-label="Remove file" onClick={() => setD({ ...d, file: null })}><IcJN name="x" size={16} /></button></div>
+        : <div className="jn-doc-drop">
+            <button type="button" className="jn-doc-dropbtn" onClick={() => fileRef.current && fileRef.current.click()} disabled={busy}><span className="ic"><IcJN name="upload" size={22} color="var(--brand-navy)" /></span><b>{busy ? "Reading file…" : "Choose a file"}</b><small>PDF or photo · up to 20 MB</small></button>
+            <button type="button" className="jn-doc-dropbtn" onClick={() => camRef.current && camRef.current.click()} disabled={busy}><span className="ic"><IcJN name="camera" size={22} color="var(--brand-navy)" /></span><b>Take a photo</b><small>Snap a letter or results sheet</small></button>
+          </div>}
+      <div className="jn-field"><span>What is it?</span>
+        <div className="jn-doc-types">{DOC_TYPES.map((x) => <button key={x.k} type="button" className={"jn-chip" + (d.type === x.k ? " on" : "")} onClick={() => setD({ ...d, type: x.k })}><IcJN name={x.ic} size={14} />{x.t}</button>)}</div>
+      </div>
+      <label className="jn-field"><span>Name</span><input className="jn-in" placeholder={t ? t.t + " · e.g. Full blood count" : "e.g. Full blood count"} value={d.title} onChange={(e) => setD({ ...d, title: e.target.value })} /></label>
+      <label className="jn-field"><span>Date of the test or letter</span><input className="jn-in" type="date" max={today} value={d.date} onChange={(e) => setD({ ...d, date: e.target.value })} /></label>
+      <label className="jn-field"><span>Note for {KATY.first} (optional)</span><input className="jn-in" placeholder="e.g. Iron was low — GP suggested a supplement" value={d.note} onChange={(e) => setD({ ...d, note: e.target.value })} /></label>
+      <button type="button" className="jn-perm jn-doc-share" onClick={() => setD({ ...d, share: !d.share })}><JNFace p={KATY} size={30} /><span>Share with {KATY.name}<small>{d.share ? "Visible to your clinic before your next review" : "Only you can see this document"}</small></span><span className={"jn-switch" + (d.share ? " on" : "")}><i /></span></button>
+      <button className="jn-btn block" disabled={!d.file || !d.type || busy} onClick={() => onSave({ id: "d" + Date.now(), type: d.type, title: d.title.trim() || (t ? t.t : "Document"), date: d.date || today, note: d.note.trim(), share: d.share, by: "you", file: d.file })}>Save to my Health Pass</button>
+    </JNSheet>);
+}
+function ViewDocSheet({ doc, onClose, onChange, onDelete }) {
+  if (!doc) return null;
+  const t = docType(doc.type);
+  return (
+    <JNSheet open={!!doc} onClose={onClose} title={doc.title}>
+      {doc.file && doc.file.preview ? <img className="jn-doc-preview" src={doc.file.preview} alt={doc.title} /> : <div className="jn-doc-preview tile" style={{ background: t.tint }}><IcJN name={doc.file && doc.file.kind === "pdf" ? "file-text" : t.ic} size={40} color={t.c} /><small>{doc.file ? doc.file.name : "No file"}</small></div>}
+      <div className="jn-kv"><span>Type</span><b>{t.t}</b></div>
+      <div className="jn-kv"><span>Date</span><b>{fmtDocDate(doc.date)}</b></div>
+      <div className="jn-kv"><span>File</span><b>{doc.file ? doc.file.size : "—"}</b></div>
+      <div className="jn-kv"><span>Added by</span><b>{doc.by === "clinic" ? JANE.clinic : "You"}</b></div>
+      {doc.note && <div className="jn-kv col"><span>Note for {KATY.first}</span><b>{doc.note}</b></div>}
+      <button type="button" className="jn-perm jn-doc-share" onClick={() => onChange({ ...doc, share: !doc.share })}><JNFace p={KATY} size={30} /><span>Share with {KATY.name}<small>{doc.share ? "Visible to your clinic" : "Only you can see this"}</small></span><span className={"jn-switch" + (doc.share ? " on" : "")}><i /></span></button>
+      <div className="jn-row-btns" style={{ marginTop: 12 }}>
+        {doc.by !== "clinic" && <button className="jn-btn danger" onClick={() => onDelete(doc)}><IcJN name="trash-2" size={16} />Delete</button>}
+        <button className="jn-btn" onClick={onClose}>Done</button>
+      </div>
+    </JNSheet>);
+}
+
 function PMCardJN({ title, sub, href, onClick, children, className }) {
   const Head = href || onClick ? "button" : "div";
   return (
@@ -845,8 +947,12 @@ function ProfileScreen() {
   const { top, layers, scrollRef, cls, padTop, hidden } = useKatyChromeJN();
   const [prof, setProf] = useStateJN(() => readJN(PROFILE_KEY, { name: JANE.name, phone: "+44 7700 900123", email: "jane.taylor@example.com", dob: JANE.dob, location: "London, UK", bio: "" }));
   const [edit, setEdit] = useStateJN(qJN("edit") === "1");
-  const [passOpen, setPassOpen] = useStateJN(false);
+  const [passOpen, setPassOpen] = useStateJN(qJN("pass") === "1");
   const [draft, setDraft] = useStateJN(prof);
+  const [docs, setDocs] = useStateJN(healthDocs);
+  const [docSheet, setDocSheet] = useStateJN(qJN("doc") === "1" ? "add" : null);
+  function setDocsSave(next) { setDocs(next); saveJN(DOCS_KEY, next); }
+  const myDocs = docs.filter((x) => x.by !== "clinic");
   const [toast, showToast] = useToastJN();
   const onb = onbState();
   const wear = connectedWearables();
@@ -860,6 +966,7 @@ function ProfileScreen() {
     { label: "Add a profile photo", done: true },
     { label: "Answer the onboarding questions", done: !!onb.done, href: "JaneOnboarding.html" },
     { label: "Tell us your height & weight", done: !!hs.height, href: "JaneHealth.html?setup=1" },
+    { label: "Upload a blood test or health record", done: myDocs.length > 0, open: () => setDocSheet("add") },
     { label: "Connect a wearable", done: wear.length > 0, href: "JaneWearables.html" },
     { label: "Share your Health Pass with Katy", done: onb.consent !== false && !!onb.done, href: "JaneOnboarding.html" },
     { label: "Add a friend", done: friends.length > 0, href: "JaneHealth.html" }];
@@ -902,7 +1009,7 @@ function ProfileScreen() {
           </div>
         </div>
 
-        <button className="pm-steps jn-steps" onClick={() => next && goJN(next.href || "JaneOnboarding.html")}>
+        <button className="pm-steps jn-steps" onClick={() => next && (next.open ? next.open() : goJN(next.href || "JaneOnboarding.html"))}>
           <div className="pm-steps-collapsed-top"><h3 className="pm-steps-h">Complete your Health Pass</h3><IcJN name="chevron-right" size={20} color="var(--gray-400)" /></div>
           <p className="pm-steps-sub">{doneN} of {steps.length} complete · so Katy can tailor your care</p>
           <div className="pm-steps-track" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}><span className="pm-steps-fill" style={{ width: pct + "%" }} /></div>
@@ -912,11 +1019,7 @@ function ProfileScreen() {
         </button>
 
         <div className="jn-pass-wrap">
-          <button className="jn-pass" onClick={() => setPassOpen(true)}>
-            <div className="jn-pass-top"><img src="assets/profinity-academy-logo-full.png" alt="PROfinity" /><span className="st">{onb.done ? "Active" : "Incomplete"}</span></div>
-            <div className="jn-pass-mid"><span className="lbl">Health Pass</span><b>{prof.name}</b><small>ID {JANE.passId} · DOB {prof.dob}</small></div>
-            <div className="jn-pass-bot"><span>{JANE.clinic} · member since {JANE.since}</span><span className="qrbtn"><IcJN name="qr-code" size={16} color="#fff" />Show</span></div>
-          </button>
+          <HealthPassCard prof={prof} onClick={() => setPassOpen(true)} />
           {!onb.done && <button className="jn-link-row" onClick={() => goJN("JaneOnboarding.html")}><IcJN name="alert-circle" size={16} color="var(--warning)" />Complete the onboarding questionnaire to activate your pass<IcJN name="chevron-right" size={16} /></button>}
         </div>
 
@@ -926,6 +1029,19 @@ function ProfileScreen() {
           <div className="jn-kv"><span>Previous treatments</span><b>{onb.answers.history || "Not answered"}</b></div>
           <div className="jn-kv"><span>Last treatment</span><b>Lip filler · 1 Oct 2026</b></div>
           <div className="jn-kv"><span>Next review</span><b>Tue 3 Nov · 2:30pm</b></div>
+        </PMCardJN>
+
+        <PMCardJN title="Health documents" sub={myDocs.length ? myDocs.length + " uploaded · " + docs.filter((x) => x.share).length + " shared with " + KATY.first : "Blood tests, scans, letters & your health history"} onClick={() => setDocSheet("add")}>
+          <div className="jn-pmc-list jn-docs">
+            {docs.slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).map((x) => { const t = docType(x.type); return (
+              <button key={x.id} className="jn-li" onClick={() => setDocSheet(x.id)}>
+                <DocIcon type={x.type} preview={x.file && x.file.preview} />
+                <span className="tx"><b>{x.title}</b><small>{t.t} · {fmtDocDate(x.date)}{x.by === "clinic" ? " · from clinic" : ""}</small></span>
+                {x.share ? <span className="jn-pill soft"><IcJN name="shield-check" size={12} />Shared</span> : <span className="jn-pill ghost">Private</span>}
+              </button>); })}
+            {!myDocs.length && <p className="jn-docs-empty">Add blood tests, scans, GP letters, prescriptions or past treatment notes so {KATY.first} has the full picture before your next review.</p>}
+          </div>
+          <button className="jn-btn ghost block jn-docs-add" onClick={() => setDocSheet("add")}><IcJN name="upload" size={16} />Upload a document</button>
         </PMCardJN>
 
         {(() => { const up = upcomingCall(); return (
@@ -976,10 +1092,14 @@ function ProfileScreen() {
           <QRMark />
           <b>{prof.name}</b>
           <small>Health Pass {JANE.passId}</small>
-          <p>Show this at reception. It gives {JANE.clinic} your medical history, consent and treatment record.</p>
+          <p>Show this at reception. It gives {JANE.clinic} your medical history, consent, treatment record and the documents you've shared.</p>
           <button className="jn-btn block" onClick={() => setPassOpen(false)}>Done</button>
         </div>
       </JNSheet>
+      <AddDocSheet open={docSheet === "add"} onClose={() => setDocSheet(null)} onSave={(doc) => { setDocsSave([doc, ...docs]); setDocSheet(null); showToast(doc.share ? "Added and shared with " + KATY.first : "Added to your Health Pass"); }} />
+      <ViewDocSheet doc={docSheet && docSheet !== "add" ? docs.find((x) => x.id === docSheet) : null} onClose={() => setDocSheet(null)}
+        onChange={(doc) => { setDocsSave(docs.map((x) => x.id === doc.id ? doc : x)); showToast(doc.share ? "Shared with " + KATY.first : "Now private"); }}
+        onDelete={(doc) => { setDocsSave(docs.filter((x) => x.id !== doc.id)); setDocSheet(null); showToast("Document removed"); }} />
       <JNToast toast={toast} />
     </div>);
 }
