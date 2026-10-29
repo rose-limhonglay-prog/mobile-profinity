@@ -1326,7 +1326,6 @@ function HealthDashboard() {
               <Ring value={ring.pct / 100} size={178} stroke={26} color="var(--brand-gold)">
                 <small className="arc">Weekly cardio</small><b>{ring.pct}<i>%</i></b><small className="sub">{ring.sub}</small>
               </Ring>
-              {tracking && <span className="plus"><IcJN name="trending-up" size={12} />{ring.plus} min today</span>}
             </button>
             <div className="jh-stack">{show(["steps", "readiness", "sleep"]).map((t) => <Tile key={t.k} t={t} wide />)}</div>
           </section>
@@ -1435,6 +1434,24 @@ function cyclePhase(c) { const d = cycleDay(c), len = c.len || 28; return d <= 5
    ======================================================================= */
 const COACH_KEY = "pf-jane-coach";
 const COACH = { name: "Ava", sub: "Reviewed by " + KATY.name };
+/* Dr Tim doctor Lottie (assets/lottie/drtim-doctor.json, same cut as DailyGoal/Katy celebrations) for the Your chats header
+   avatar (user 2026-10-29 "replace the icon to DRTIM animation in Katy version"). lottie-web is loaded on demand. */
+const DRTIM_LOTTIE_JN = "assets/lottie/drtim-doctor.json?v=20261014b";
+const LOTTIE_LIB_JN = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
+let lottieLibJN = null;
+function ensureLottieJN() {
+  if (window.lottie) return Promise.resolve(window.lottie);
+  if (lottieLibJN) return lottieLibJN;
+  lottieLibJN = new Promise((res, rej) => { const el = document.createElement("script"); el.src = LOTTIE_LIB_JN; el.async = true; el.onload = () => res(window.lottie); el.onerror = () => { lottieLibJN = null; rej(new Error("lottie failed")); }; document.head.appendChild(el); });
+  return lottieLibJN;
+}
+function DrTimJN({ size = 48 }) {
+  const host = useRefJN(null); const [ok, setOk] = useStateJN(false);
+  useEffectJN(() => { let anim, dead = false;
+    ensureLottieJN().then((L) => { if (dead || !host.current) return; anim = L.loadAnimation({ container: host.current, renderer: "svg", loop: true, autoplay: true, path: DRTIM_LOTTIE_JN }); anim.addEventListener("DOMLoaded", () => { if (!dead) setOk(true); }); }).catch(() => {});
+    return () => { dead = true; if (anim) anim.destroy(); }; }, []);
+  return <span className={"jn-drtim" + (ok ? " on" : "")} style={{ width: size, height: size }}><span className="lot" ref={host} /><IcJN name="sparkles" size={Math.round(size * 0.54)} color="var(--ai-purple)" /></span>;
+}
 const COACH_PROMPTS = [
   { t: "Prep me for my review on Monday", ic: "calendar-check" }, { t: "Aftercare for lip filler", ic: "heart-pulse" },
   { t: "Build me a simple skincare routine", ic: "sparkles" }, { t: "Help me sleep better", ic: "moon" },
@@ -1536,12 +1553,11 @@ function CoachScreen() {
         </span>
       </header>) : (
       <header className="jc-head">
-        <span className="jc-av"><IcJN name="sparkles" size={26} color="var(--ai-purple)" /><i /></span>
+        <span className="jc-av tim"><DrTimJN size={48} /><i /></span>
         <div className="jc-head-tx">
-          <b>{COACH.name} <em>AI COACH</em></b>
+          <b>Profinity AI Coach</b>
           <span><i className="jn-online" />Online · {COACH.sub}</span>
         </div>
-        <button className="jc-hbtn" aria-label="New chat" onClick={newChat}><IcJN name="square-pen" size={19} color="var(--brand-navy)" /></button>
       </header>)}
       {view === "history" ? (
         <div className="jn-scroll jc-histview" onClick={() => menuFor && setMenuFor(null)}>
@@ -1559,7 +1575,7 @@ function CoachScreen() {
                   </div>)}
               </div>); };
             return (<React.Fragment>
-          <div className="jc-hist-h"><h2>Your chats</h2><span>{active.length} {active.length === 1 ? "conversation" : "conversations"} · saved to your Health Pass</span></div>
+          <div className="jc-hist-h"><div className="tx"><h2>Your chats</h2><span>{active.length} {active.length === 1 ? "conversation" : "conversations"} · saved to your Health Pass</span></div><button className="jc-newbtn" aria-label="New chat" onClick={newChat}><IcJN name="square-pen" size={19} color="var(--brand-navy)" /></button></div>
           <div className="jc-hist">{active.map((c) => <Row key={c.id} c={c} />)}</div>
           {archived.length > 0 && (
             <div className="jc-arch">
@@ -1664,29 +1680,34 @@ function EventsScreen() {
   const [toast, showToast] = useToastJN();
   function toggle(e) { const r = { ...rsvp, [e.id]: !rsvp[e.id] }; setRsvp(r); saveJN(EV_KEY, r); showToast(r[e.id] ? "You're going to " + e.title : "RSVP removed"); }
   const list = view === "mine" ? EVENTS.filter((e) => rsvp[e.id]) : EVENTS;
-  const Card = ({ e }) => { const d = evDate(e); const h = PEOPLE[e.host]; return (
-    <article className="jn-ev">
-      <button className="jn-ev-img" onClick={() => setOpen(e)}><img src={e.img} alt="" /><span className="date"><b>{d.d}</b><small>{d.m}</small></span>{e.online && <span className="live"><IcJN name="video" size={12} color="#fff" />Online</span>}</button>
+  /* Editorial card (user 2026-10-29 "make the events nice"): soft-shadow white card on the Coach page's warm
+     off-white, gradient scrim under the date badge, meta as chips, host name + title, gold "spots left" pill. */
+  const Card = ({ e }) => { const d = evDate(e); const h = PEOPLE[e.host]; const going = !!rsvp[e.id]; return (
+    <article className={"jn-ev" + (going ? " is-going" : "")}>
+      <button className="jn-ev-img" onClick={() => setOpen(e)}><img src={e.img} alt="" /><span className="date"><b>{d.d}</b><small>{d.m}</small></span>{e.online ? <span className="live"><IcJN name="video" size={12} color="#fff" />Online</span> : <span className="live venue"><IcJN name="map-pin" size={12} color="#fff" />In clinic</span>}{going && <span className="going-tag"><IcJN name="check" size={12} />You're going</span>}</button>
       <div className="jn-ev-body">
         <button className="jn-ev-ttl" onClick={() => setOpen(e)}>{e.title}</button>
-        <div className="jn-ev-meta"><span><IcJN name="clock" size={14} />{d.wd} {d.d} {d.m} · {e.time}</span><span><IcJN name="map-pin" size={14} />{e.where}</span></div>
+        <div className="jn-ev-meta"><span><IcJN name="clock" size={13} color="var(--brand-navy)" />{d.wd} {d.d} {d.m} · {e.time}</span><span><IcJN name="map-pin" size={13} color="var(--brand-navy)" />{e.where}</span></div>
         <div className="jn-ev-foot">
-          <span className="host"><JNFace p={h} size={24} />{h.name}</span>
-          {e.spots != null && <span className="spots">{e.spots - (rsvp[e.id] ? 1 : 0)} spots left</span>}
-          <button className={"jn-btn sm" + (rsvp[e.id] ? " going" : "")} onClick={() => toggle(e)}>{rsvp[e.id] ? <React.Fragment><IcJN name="check" size={15} />Going</React.Fragment> : "RSVP"}</button>
+          <span className="host"><JNFace p={h} size={30} /><span className="tx"><b>{h.name}</b><small>{h.title}</small></span></span>
+          {e.spots != null && <span className="spots"><IcJN name="users" size={12} />{e.spots - (going ? 1 : 0)} left</span>}
+          <button className={"jn-btn sm" + (going ? " going" : "")} onClick={() => toggle(e)}>{going ? <React.Fragment><IcJN name="check" size={15} />Going</React.Fragment> : "RSVP"}</button>
         </div>
       </div>
     </article>); };
+  const MONTH_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  let lastMonth = "";
 
   const { top, layers, scrollRef, cls, padTop, hidden } = useKatyChromeJN();
   return (
-    <div className={"jn-screen m-screen" + cls}>
+    <div className={"jn-screen m-screen jn-evpage" + cls}>
       {top}
       <div className="jn-scroll" ref={scrollRef} style={{ paddingTop: padTop(12) }}>
-        <div className="jn-pagehead"><h2>Events</h2><p>From your clinic and the PROfinity community</p></div>
-        <div className="jn-seg">{[["upcoming", "Upcoming"], ["mine", "My events"]].map(([k, l]) => <button key={k} className={view === k ? "on" : ""} onClick={() => setView(k)}>{l}</button>)}</div>
-        {list.length === 0 && <div className="jn-emptybox"><IcJN name="calendar" size={28} color="var(--gray-400)" /><b>No events yet</b><small>RSVP to an event and it will show up here.</small></div>}
-        {list.map((e) => <Card key={e.id} e={e} />)}
+        <div className="jn-pagehead"><div><h2>Events</h2><p>From your clinic and the PROfinity community</p></div><span className="jn-ev-count"><IcJN name="calendar" size={13} />{EVENTS.filter((e) => rsvp[e.id]).length} going</span></div>
+        <div className="jn-seg">{[["upcoming", "Upcoming"], ["mine", "My events"]].map(([k, l]) => <button key={k} className={view === k ? "on" : ""} onClick={() => setView(k)}>{l}{k === "mine" && EVENTS.filter((e) => rsvp[e.id]).length > 0 && <i className="n">{EVENTS.filter((e) => rsvp[e.id]).length}</i>}</button>)}</div>
+        {list.length === 0 && <div className="jn-emptybox"><span className="ic"><IcJN name="calendar" size={26} color="var(--brand-navy)" /></span><b>No events yet</b><small>RSVP to an event and it will show up here.</small><button className="jn-btn sm" onClick={() => setView("upcoming")}>Browse upcoming</button></div>}
+        {list.map((e) => { const mo = MONTH_FULL[new Date(e.date + "T12:00:00").getMonth()]; const first = mo !== lastMonth; lastMonth = mo; return (
+          <React.Fragment key={e.id}>{first && <div className="jn-ev-month">{mo}</div>}<Card e={e} /></React.Fragment>); })}
         <div className="jn-end">All events are free for Pearce Aesthetics patients</div>
       </div>
       <JNTabs active="events" compact={hidden} />

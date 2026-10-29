@@ -512,7 +512,6 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .jh-ring .jn-ring .in small.arc { font-weight: var(--fw-semibold); color: var(--text-heading); margin-bottom: 2px; }
 .jh-ring .jn-ring .in small.sub { color: var(--brand-navy); font-weight: var(--fw-semibold); margin-top: 2px; }
 .jh-ring .jn-ring svg circle:first-child { stroke: var(--jh-grey); }
-.jh-ring .plus { position: absolute; left: 50%; bottom: 2px; transform: translateX(-50%); min-width: 40px; height: 40px; padding: 0 8px; border-radius: 50%; background: var(--jh-soft); color: var(--brand-navy); font-size: 13px; font-weight: var(--fw-semibold); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 3px var(--surface-page); }
 .jh-stack { flex: 1.05; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 .jh-tile { display: flex; align-items: center; gap: 12px; min-height: 68px; padding: 10px 12px; border: none; border-radius: 22px; text-align: left; font-family: inherit; cursor: pointer; background: var(--jh-grey); color: var(--text-heading); -webkit-tap-highlight-color: transparent; }
 .jh-tile.wide { flex: 1; }
@@ -609,8 +608,6 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .jh-ring .jn-ring svg circle:first-child { stroke: var(--gray-150); }
 .jh-ring .jn-ring .in b { font-weight: var(--fw-bold); color: var(--brand-navy); }
 .jh-ring .jn-ring .in small.sub { color: var(--text-secondary); }
-.jh-ring .plus { background: var(--brand-gold-100); color: #6b4a00; box-shadow: 0 0 0 3px var(--surface-page); }
-[data-theme="dark"] .jh-ring .plus { background: rgba(206,153,87,.2); color: var(--brand-gold); }
 .jh-dots button.on { background: var(--brand-navy); }
 .jh-act { background: var(--surface-sunken); color: var(--brand-navy); font-weight: var(--fw-semibold); min-height: 52px; font-size: 15px; }
 .jh-act.primary { background: var(--brand-navy); color: #fff; }
@@ -656,7 +653,6 @@ body { background: #d8dae2; -webkit-font-smoothing: antialiased; text-rendering:
 .jh-ring .jn-ring .in b { font-size: 36px; letter-spacing: -.02em; }
 .jh-ring .jn-ring .in small.arc { font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: var(--text-secondary); font-weight: var(--fw-semibold); max-width: 130px; white-space: nowrap; }
 .jh-ring .jn-ring .in small.sub { font-size: 11px; color: var(--text-heading); font-weight: var(--fw-medium); }
-.jh-ring .plus { bottom: 0; min-width: 0; height: 26px; padding: 0 10px; border-radius: 100px; gap: 4px; font-size: 11.5px; font-weight: var(--fw-bold); white-space: nowrap; background: var(--brand-gold-100); color: #6b4a00; border: 1px solid rgba(206,153,87,.35); box-shadow: 0 0 0 3px var(--surface-page); }
 .jh-tile, .jh-tile.mint, .jh-tile.lav, .jh-tile.rose, .jh-tile.gold, .jh-tile.grey { border-radius: 18px; box-shadow: var(--jh-shadow); transition: transform .12s ease; }
 .jh-tile:active { transform: scale(.985); }
 .jh-tile .ic, .jh-tile.mint .ic, .jh-tile.lav .ic, .jh-tile.rose .ic, .jh-tile.gold .ic, .jh-tile.navy .ic { width: 42px; height: 42px; border-radius: 13px; }
@@ -846,7 +842,10 @@ button.jn-pmc-h { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .jn-tabs, .jn-tab, .jn-tab .lbl, .jn-scroll, .jc-head { transition: none; } }
 /* coach: history-first landing */
 .jc-histview { padding: 16px 16px 130px; }
-.jc-hist-h { margin: 2px 0 14px; }
+.jc-hist-h { margin: 2px 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.jc-hist-h .tx { display: flex; flex-direction: column; min-width: 0; }
+.jc-newbtn { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--border-default); background: var(--surface-card); display: flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.jc-newbtn:active { background: var(--surface-sunken); }
 .jc-hist-h h2 { margin: 0; font-size: 22px; font-weight: var(--fw-bold); color: var(--text-heading); }
 .jc-hist-h span { font-size: 12.5px; color: var(--text-secondary); }
 .jc-histview .jc-hist { overflow: visible; }
@@ -1157,3 +1156,14 @@ button.jn-pmc-h { cursor: pointer; }
 .jc-foot .jc-starts .jn-chip { justify-self: start; min-height: 38px; padding: 8px 15px; border-color: transparent; background: #f1f0f8; color: var(--brand-navy); font-weight: var(--fw-semibold); }
 .jc-foot .jc-starts .jn-chip:active { background: var(--brand-gold-100); border-color: var(--brand-gold); }
 [data-theme="dark"] .jc-foot .jc-starts .jn-chip { background: rgba(206,153,87,.12); color: var(--text-heading); }
+
+/* ---- Your chats header: "Profinity AI Coach" + Dr Tim doctor Lottie avatar (user 2026-10-29) ---- */
+.jn-drtim { position: relative; display: block; border-radius: 50%; overflow: hidden; }
+.jn-drtim .lot { position: absolute; inset: 2% -8% -18%; opacity: 0; transition: opacity .3s ease; }
+.jn-drtim .lot svg { width: 100% !important; height: 100% !important; display: block; }
+.jn-drtim > :not(.lot) { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); transition: opacity .3s ease; }
+.jn-drtim.on .lot { opacity: 1; }
+.jn-drtim.on > :not(.lot) { opacity: 0; }
+.jc-av.tim { overflow: hidden; background: var(--brand-gold-100); }
+[data-theme="dark"] .jc-av.tim { background: rgba(206,153,87,.18); }
+.jc-av.tim i { z-index: 2; }

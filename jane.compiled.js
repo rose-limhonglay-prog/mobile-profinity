@@ -4230,12 +4230,7 @@ function HealthDashboard() {
     className: "arc"
   }, "Weekly cardio"), /*#__PURE__*/React.createElement("b", null, ring.pct, /*#__PURE__*/React.createElement("i", null, "%")), /*#__PURE__*/React.createElement("small", {
     className: "sub"
-  }, ring.sub)), tracking && /*#__PURE__*/React.createElement("span", {
-    className: "plus"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "trending-up",
-    size: 12
-  }), ring.plus, " min today")), /*#__PURE__*/React.createElement("div", {
+  }, ring.sub))), /*#__PURE__*/React.createElement("div", {
     className: "jh-stack"
   }, show(["steps", "readiness", "sleep"]).map(t => /*#__PURE__*/React.createElement(Tile, {
     key: t.k,
@@ -4655,6 +4650,68 @@ const COACH = {
   name: "Ava",
   sub: "Reviewed by " + KATY.name
 };
+/* Dr Tim doctor Lottie (assets/lottie/drtim-doctor.json, same cut as DailyGoal/Katy celebrations) for the Your chats header
+   avatar (user 2026-10-29 "replace the icon to DRTIM animation in Katy version"). lottie-web is loaded on demand. */
+const DRTIM_LOTTIE_JN = "assets/lottie/drtim-doctor.json?v=20261014b";
+const LOTTIE_LIB_JN = "https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js";
+let lottieLibJN = null;
+function ensureLottieJN() {
+  if (window.lottie) return Promise.resolve(window.lottie);
+  if (lottieLibJN) return lottieLibJN;
+  lottieLibJN = new Promise((res, rej) => {
+    const el = document.createElement("script");
+    el.src = LOTTIE_LIB_JN;
+    el.async = true;
+    el.onload = () => res(window.lottie);
+    el.onerror = () => {
+      lottieLibJN = null;
+      rej(new Error("lottie failed"));
+    };
+    document.head.appendChild(el);
+  });
+  return lottieLibJN;
+}
+function DrTimJN({
+  size = 48
+}) {
+  const host = useRefJN(null);
+  const [ok, setOk] = useStateJN(false);
+  useEffectJN(() => {
+    let anim,
+      dead = false;
+    ensureLottieJN().then(L => {
+      if (dead || !host.current) return;
+      anim = L.loadAnimation({
+        container: host.current,
+        renderer: "svg",
+        loop: true,
+        autoplay: true,
+        path: DRTIM_LOTTIE_JN
+      });
+      anim.addEventListener("DOMLoaded", () => {
+        if (!dead) setOk(true);
+      });
+    }).catch(() => {});
+    return () => {
+      dead = true;
+      if (anim) anim.destroy();
+    };
+  }, []);
+  return /*#__PURE__*/React.createElement("span", {
+    className: "jn-drtim" + (ok ? " on" : ""),
+    style: {
+      width: size,
+      height: size
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "lot",
+    ref: host
+  }), /*#__PURE__*/React.createElement(IcJN, {
+    name: "sparkles",
+    size: Math.round(size * 0.54),
+    color: "var(--ai-purple)"
+  }));
+}
 const COACH_PROMPTS = [{
   t: "Prep me for my review on Monday",
   ic: "calendar-check"
@@ -5058,24 +5115,14 @@ function CoachScreen() {
   }), "Delete")))) : /*#__PURE__*/React.createElement("header", {
     className: "jc-head"
   }, /*#__PURE__*/React.createElement("span", {
-    className: "jc-av"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "sparkles",
-    size: 26,
-    color: "var(--ai-purple)"
+    className: "jc-av tim"
+  }, /*#__PURE__*/React.createElement(DrTimJN, {
+    size: 48
   }), /*#__PURE__*/React.createElement("i", null)), /*#__PURE__*/React.createElement("div", {
     className: "jc-head-tx"
-  }, /*#__PURE__*/React.createElement("b", null, COACH.name, " ", /*#__PURE__*/React.createElement("em", null, "AI COACH")), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
+  }, /*#__PURE__*/React.createElement("b", null, "Profinity AI Coach"), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
     className: "jn-online"
-  }), "Online · ", COACH.sub)), /*#__PURE__*/React.createElement("button", {
-    className: "jc-hbtn",
-    "aria-label": "New chat",
-    onClick: newChat
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "square-pen",
-    size: 19,
-    color: "var(--brand-navy)"
-  }))), view === "history" ? /*#__PURE__*/React.createElement("div", {
+  }), "Online · ", COACH.sub))), view === "history" ? /*#__PURE__*/React.createElement("div", {
     className: "jn-scroll jc-histview",
     onClick: () => menuFor && setMenuFor(null)
   }, (() => {
@@ -5124,7 +5171,17 @@ function CoachScreen() {
     };
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "jc-hist-h"
-    }, /*#__PURE__*/React.createElement("h2", null, "Your chats"), /*#__PURE__*/React.createElement("span", null, active.length, " ", active.length === 1 ? "conversation" : "conversations", " · saved to your Health Pass")), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "tx"
+    }, /*#__PURE__*/React.createElement("h2", null, "Your chats"), /*#__PURE__*/React.createElement("span", null, active.length, " ", active.length === 1 ? "conversation" : "conversations", " · saved to your Health Pass")), /*#__PURE__*/React.createElement("button", {
+      className: "jc-newbtn",
+      "aria-label": "New chat",
+      onClick: newChat
+    }, /*#__PURE__*/React.createElement(IcJN, {
+      name: "square-pen",
+      size: 19,
+      color: "var(--brand-navy)"
+    }))), /*#__PURE__*/React.createElement("div", {
       className: "jc-hist"
     }, active.map(c => /*#__PURE__*/React.createElement(Row, {
       key: c.id,
