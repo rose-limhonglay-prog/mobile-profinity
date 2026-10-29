@@ -13,9 +13,12 @@
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/spacing.css" />
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/tokens/fig-tokens.css" />
   <link rel="stylesheet" href="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/styles.css" />
+  <!-- Jane chrome (drawer / notifications) + the clinician Messages app's own stylesheet -->
   <link rel="stylesheet" href="styles.css?v=20261022k" />
   <link rel="stylesheet" href="mobile.css?v=20261022k" />
-  <link rel="stylesheet" href="jane.css?v=20261029d" />
+  <link rel="stylesheet" href="jane.css?v=20261029e" />
+  <link rel="stylesheet" href="messages-mobile.css?v=20261029d" />
+  <link rel="stylesheet" href="voice-call.css" />
   <link rel="stylesheet" href="dark-mode.css" />
   <!-- real phone browser mode (mobile-web host / ?realdevice=1): no bezel, safe-area insets -->
   <script src="real-device.js?v=20261023a"></script>
@@ -27,7 +30,7 @@
   <script src="vendor/react.production.min.js"></script>
   <script src="vendor/react-dom.production.min.js"></script>
 
-  <script>window.PF_ICONS_EXTRA = { lucide: ["phone", "video", "more-vertical", "archive", "archive-restore", "trash-2", "play", "pause", "volume-x", "volume-2", "film", "bookmark", "heart", "share-2", "menu", "bell", "badge-check", "headphones", "moon", "sun", "bookmark", "settings", "building-2", "home", "heart-pulse", "sparkles", "calendar", "user", "message-circle", "chevron-left", "chevron-right", "send", "mic", "mic-off", "phone-off", "heart", "message-square", "share-2", "plus", "check", "x", "image", "moon", "footprints", "droplets", "activity", "watch", "zap", "smartphone", "scale", "link", "link-2", "search", "qr-code", "pencil", "clock", "map-pin", "video", "calendar-plus", "shield-check", "pill", "target", "trending-up", "refresh-cw", "sun", "paperclip", "camera", "arrow-right", "check-circle-2", "alert-circle", "users", "log-out", "volume-2", "clipboard-list", "apple", "glass-water", "flame", "dumbbell", "timer", "flower", "map-pin", "layout-grid", "bike", "waves", "chevron-up"] };</script>
+  <script>window.PF_ICONS_EXTRA = { lucide: ["phone", "video", "video-off", "more-vertical", "more-horizontal", "archive", "archive-restore", "trash-2", "play", "pause", "volume-x", "volume-2", "film", "bookmark", "heart", "share-2", "menu", "bell", "bell-off", "bell-ring", "badge-check", "headphones", "moon", "sun", "settings", "settings-2", "building-2", "home", "house", "heart-pulse", "sparkles", "calendar", "user", "user-plus", "user-round", "users", "message-circle", "message-circle-dashed", "message-square", "messages-square", "chevron-left", "chevron-right", "chevron-up", "chevron-down", "arrow-left", "arrow-up", "arrow-right", "send", "mic", "mic-off", "phone-off", "plus", "minus", "check", "x", "image", "image-plus", "camera", "search", "qr-code", "pencil", "square-pen", "clock", "map-pin", "calendar-plus", "shield-check", "paperclip", "check-circle-2", "alert-circle", "log-out", "audio-lines", "case-sensitive", "copy", "ellipsis", "globe", "hand", "inbox", "info", "keyboard", "link", "mail", "mail-check", "mail-plus", "maximize-2", "palette", "pin", "pin-off", "rss", "smile", "smile-plus", "sticker", "syringe", "thumbs-up", "watch", "activity", "footprints", "droplets", "flame", "refresh-cw", "target", "trending-up", "clipboard-list"], mdi: ["whatsapp", "facebook", "twitter", "linkedin", "instagram"] };</script>
   <script src="icons-preload.js" data-iconify></script>
 
   <script src="_ds/profinity-design-system-c2b5ccaf-a08f-495c-aff4-329aab9c9242/_ds_bundle.js?v=20261022p"></script>
@@ -35,7 +38,12 @@
   <script src="pagetrans.js"></script>
 
   <script src="ios-frame.compiled.js?v=20261022m"></script>
-  <script>window.PF_JN_PAGE = "messages";</script>
-  <script src="jane.compiled.js?v=20261029d"></script>
+  <!-- jane.jsx lends this page its chrome (window.JaneChromeC) + call hooks (window.PFJaneDM); it does not mount -->
+  <script>window.PF_JN_PAGE = "messages"; window.PF_JN_NO_MOUNT = true;</script>
+  <script src="jane.compiled.js?v=20261029e"></script>
+  <!-- the clinician Messages app (Messages.html), patient persona -->
+  <script>window.PF_DM_JANE = true;</script>
+  <script src="messages-mobile.compiled.js?v=20261029d"></script>
+  <script src="voice-call.js?v=2"></script>
 </body>
 </html>

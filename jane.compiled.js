@@ -4,7 +4,11 @@
    of PROfinity: "Jane" is the patient persona, "Katie/Katy" the clinician
    (same split as the Flutter app's user_type 'jane' | 'katy'). One bundle
    serves ten shells, picked by window.PF_JN_PAGE:
-     home · profile · onboarding · wearables · health · coach · events · messages
+     home · profile · onboarding · wearables · health · coach · events
+     (+ schedule · create). Messages is NOT a screen here any more: since
+     2026-10-29 JaneMessages.html runs messages-mobile.jsx (the clinician DM
+     app) with PF_DM_JANE, and loads this bundle first with PF_JN_NO_MOUNT
+     only for window.JaneChromeC (drawer + notifications) and window.PFJaneDM.
    Everything persists in localStorage under pf-jane-*. Suffixed -JN.
    =========================================================================== */
 const {
@@ -180,8 +184,13 @@ function useToastJN() {
     ref.current = setTimeout(() => setT(null), 2200);
   }];
 }
+/* Header / tab badge — the Messages store is messages-mobile.jsx's (PF_DM_JANE
+   → pf-jane-messages-v1) plus any call-booking notes still queued for it. */
 function unreadDMJN() {
-  return readJN("pf-jane-dm", null) ? readJN("pf-jane-dm", {}).convs.reduce((n, c) => n + (c.unread || 0), 0) : 2;
+  const pending = readJN("pf-jane-dm-pending", []).length;
+  const s = readJN("pf-jane-messages-v1", null);
+  if (s && Array.isArray(s.conversations)) return s.conversations.filter(c => !c.archived).reduce((n, c) => n + (c.unread || 0), 0) + pending;
+  return 4 + pending; /* seed: Katy 1 · reception 1 · aftercare club 2 */
 }
 function JNTabs({
   active,
@@ -4224,14 +4233,30 @@ function HealthSetup({
     saveJN(HSETUP_KEY, s);
     onDone(s);
   };
+  const h = parseFloat(prof.height),
+    w = parseFloat(prof.weight);
+  const bmi = h > 0 && w > 0 ? (w / Math.pow(h / 100, 2)).toFixed(1) : "—";
+  const STEPS = [{
+    ic: "watch",
+    eyebrow: "Tracking"
+  }, {
+    ic: "user",
+    eyebrow: "About you"
+  }, {
+    ic: "mail",
+    eyebrow: "Updates"
+  }];
   const Opt = ({
     k,
     icon,
     tint,
-    text
+    title,
+    sub,
+    chips
   }) => /*#__PURE__*/React.createElement("button", {
     className: "jn-setup-opt" + (method === k ? " on" : ""),
-    onClick: () => setMethod(k)
+    onClick: () => setMethod(k),
+    "aria-pressed": method === k
   }, /*#__PURE__*/React.createElement("span", {
     className: "art",
     style: {
@@ -4239,11 +4264,15 @@ function HealthSetup({
     }
   }, /*#__PURE__*/React.createElement(IcJN, {
     name: icon,
-    size: 30,
+    size: 28,
     color: "#fff"
   })), /*#__PURE__*/React.createElement("span", {
     className: "tx"
-  }, text), /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("b", null, title), /*#__PURE__*/React.createElement("small", null, sub), chips && /*#__PURE__*/React.createElement("span", {
+    className: "chips"
+  }, chips.map(c => /*#__PURE__*/React.createElement("i", {
+    key: c
+  }, c)))), /*#__PURE__*/React.createElement("span", {
     className: "tick"
   }, method === k && /*#__PURE__*/React.createElement(IcJN, {
     name: "check",
@@ -4253,40 +4282,104 @@ function HealthSetup({
   return /*#__PURE__*/React.createElement("div", {
     className: "jn-screen jn-setup"
   }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-setup-top"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "jn-setup-back",
+    "aria-label": "Back",
+    onClick: () => setStep(Math.max(0, step - 1)),
+    style: {
+      visibility: step ? "visible" : "hidden"
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "arrow-left",
+    size: 20,
+    color: "var(--text-heading)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "jn-setup-steps",
+    "aria-label": "Step " + (step + 1) + " of 3"
+  }, STEPS.map((x, i) => /*#__PURE__*/React.createElement("i", {
+    key: i,
+    className: i < step ? "done" : i === step ? "cur" : ""
+  }))), /*#__PURE__*/React.createElement("button", {
+    className: "jn-setup-skip",
+    onClick: () => step === 2 ? finish(false) : setStep(step + 1)
+  }, "Skip")), /*#__PURE__*/React.createElement("div", {
     className: "jn-scroll"
-  }, step === 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "jn-setup-hero"
+  }, /*#__PURE__*/React.createElement("span", {
     className: "jn-setup-ic"
   }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "watch",
-    size: 30,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("h2", null, "How would you like to track your health?"), /*#__PURE__*/React.createElement("div", {
+    name: STEPS[step].ic,
+    size: 26,
+    color: "var(--brand-gold)"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "jn-setup-eyebrow"
+  }, "Step ", step + 1, " of 3 · ", STEPS[step].eyebrow)), step === 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", null, "How would you like to track your health?"), /*#__PURE__*/React.createElement("p", {
+    className: "jn-setup-sub"
+  }, "Pick one to start. You can change it or add more devices any time."), /*#__PURE__*/React.createElement("div", {
     className: "jn-setup-opts"
   }, /*#__PURE__*/React.createElement(Opt, {
     k: "wearable",
     icon: "watch",
     tint: "linear-gradient(135deg,#292569,#4f47d6)",
-    text: "Connect a smartwatch, fitness tracker or smart scale"
+    title: "Connect a device",
+    sub: "Smartwatch, fitness tracker or smart scale",
+    chips: ["Apple Watch", "Oura", "Fitbit", "Garmin"]
   }), /*#__PURE__*/React.createElement(Opt, {
     k: "phone",
-    icon: "footprints",
+    icon: "smartphone",
     tint: "linear-gradient(135deg,#0f766e,#14b8a6)",
-    text: "Use your phone to track your steps and more with the app"
-  }))), step === 1 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
-    className: "jn-setup-ic"
+    title: "Just my phone",
+    sub: "Steps, sleep and daily check-ins with the app — no extra kit"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "jn-setup-preview"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ph"
+  }, /*#__PURE__*/React.createElement("b", null, "What you'll see"), /*#__PURE__*/React.createElement("span", null, "Your Health view")), /*#__PURE__*/React.createElement("div", {
+    className: "tiles"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "t"
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      background: "#ede9ff"
+    }
   }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "user",
-    size: 30,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("h2", null, "Tell us about yourself"), /*#__PURE__*/React.createElement("p", {
+    name: "moon",
+    size: 16,
+    color: "#6c63ff"
+  })), /*#__PURE__*/React.createElement("small", null, "Sleep"), /*#__PURE__*/React.createElement("b", null, "7h 18m")), /*#__PURE__*/React.createElement("span", {
+    className: "t"
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      background: "#dcfce7"
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "footprints",
+    size: 16,
+    color: "#16a34a"
+  })), /*#__PURE__*/React.createElement("small", null, "Steps"), /*#__PURE__*/React.createElement("b", null, "8,240")), /*#__PURE__*/React.createElement("span", {
+    className: "t"
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      background: "var(--brand-gold-100)"
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "sun",
+    size: 16,
+    color: "var(--brand-gold)"
+  })), /*#__PURE__*/React.createElement("small", null, "Skin score"), /*#__PURE__*/React.createElement("b", null, "78")))), /*#__PURE__*/React.createElement("p", {
+    className: "jn-setup-alt"
+  }, /*#__PURE__*/React.createElement("b", null, "Want to use another method?"), " You can connect medical records from your favourite apps later.")), step === 1 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", null, "Tell us about yourself"), /*#__PURE__*/React.createElement("p", {
     className: "jn-setup-sub"
-  }, "PROfinity uses this information to calculate some metrics."), /*#__PURE__*/React.createElement("h3", {
-    className: "jn-h"
-  }, "Your profile info"), /*#__PURE__*/React.createElement("div", {
+  }, "PROfinity uses this to work out calories burned, cardio load and your targets. Only you and your clinic can see it."), /*#__PURE__*/React.createElement("div", {
     className: "jn-setup-grid"
   }, /*#__PURE__*/React.createElement("label", {
     className: "jn-setup-field"
-  }, /*#__PURE__*/React.createElement("span", null, "Height"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+    name: "ruler",
+    size: 14
+  }), "Height"), /*#__PURE__*/React.createElement("div", {
     className: "in"
   }, /*#__PURE__*/React.createElement("input", {
     inputMode: "decimal",
@@ -4297,7 +4390,10 @@ function HealthSetup({
     })
   }), /*#__PURE__*/React.createElement("em", null, "cm"))), /*#__PURE__*/React.createElement("label", {
     className: "jn-setup-field"
-  }, /*#__PURE__*/React.createElement("span", null, "Weight"), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+    name: "scale",
+    size: 14
+  }), "Weight"), /*#__PURE__*/React.createElement("div", {
     className: "in"
   }, /*#__PURE__*/React.createElement("input", {
     inputMode: "decimal",
@@ -4306,56 +4402,110 @@ function HealthSetup({
       ...prof,
       weight: e.target.value
     })
-  }), /*#__PURE__*/React.createElement("em", null, "kg")))), /*#__PURE__*/React.createElement("label", {
-    className: "jn-setup-field focus"
-  }, /*#__PURE__*/React.createElement("span", null, "Sex"), /*#__PURE__*/React.createElement("div", {
-    className: "in"
-  }, /*#__PURE__*/React.createElement("select", {
-    value: prof.sex,
-    onChange: e => setProf({
+  }), /*#__PURE__*/React.createElement("em", null, "kg")))), /*#__PURE__*/React.createElement("div", {
+    className: "jn-setup-field"
+  }, /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement(IcJN, {
+    name: "user",
+    size: 14
+  }), "Sex"), /*#__PURE__*/React.createElement("div", {
+    className: "jn-setup-seg",
+    role: "radiogroup"
+  }, ["Female", "Male", "Prefer not to say"].map(x => /*#__PURE__*/React.createElement("button", {
+    key: x,
+    type: "button",
+    role: "radio",
+    "aria-checked": prof.sex === x,
+    className: prof.sex === x ? "on" : "",
+    onClick: () => setProf({
       ...prof,
-      sex: e.target.value
+      sex: x
     })
-  }, /*#__PURE__*/React.createElement("option", null, "Female"), /*#__PURE__*/React.createElement("option", null, "Male"), /*#__PURE__*/React.createElement("option", null, "Prefer not to say")), /*#__PURE__*/React.createElement(IcJN, {
-    name: "chevron-down",
-    size: 18,
-    color: "var(--text-secondary)"
-  }))), /*#__PURE__*/React.createElement("p", {
+  }, x)))), /*#__PURE__*/React.createElement("p", {
     className: "jn-setup-note"
-  }, "Sex is used to calculate metrics like calories burned and cardio load.")), step === 2 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("span", {
-    className: "jn-setup-ic"
+  }, "Sex is only used for metrics like calories burned and cardio load."), /*#__PURE__*/React.createElement("div", {
+    className: "jn-setup-preview"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "ph"
+  }, /*#__PURE__*/React.createElement("b", null, "We'll calculate"), /*#__PURE__*/React.createElement("span", null, "Updates as you type")), /*#__PURE__*/React.createElement("div", {
+    className: "tiles"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "t"
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      background: "#e0ecff"
+    }
   }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "bell",
-    size: 30,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("h2", null, "Stay updated with emails from PROfinity"), /*#__PURE__*/React.createElement("p", {
+    name: "activity",
+    size: 16,
+    color: "#2457c5"
+  })), /*#__PURE__*/React.createElement("small", null, "BMI"), /*#__PURE__*/React.createElement("b", null, bmi)), /*#__PURE__*/React.createElement("span", {
+    className: "t"
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      background: "#fde8d0"
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "flame",
+    size: 16,
+    color: "#c2410c"
+  })), /*#__PURE__*/React.createElement("small", null, "Calorie burn"), /*#__PURE__*/React.createElement("b", null, "Daily")), /*#__PURE__*/React.createElement("span", {
+    className: "t"
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      background: "#fde2e4"
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "heart-pulse",
+    size: 16,
+    color: "#c0334d"
+  })), /*#__PURE__*/React.createElement("small", null, "Cardio load"), /*#__PURE__*/React.createElement("b", null, "Weekly"))))), step === 2 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h2", null, "Stay in the loop with PROfinity"), /*#__PURE__*/React.createElement("p", {
     className: "jn-setup-sub"
-  }, "Stay up to date on new features, clinic events and offers. Plus, receive surveys and invitations to take part in skin health research."))), /*#__PURE__*/React.createElement("div", {
+  }, "A short email now and then — never more than one a week."), /*#__PURE__*/React.createElement("div", {
+    className: "jn-setup-list"
+  }, [["sparkles", "#ede9ff", "#6c63ff", "New features", "Be first to try what's new in the app"], ["calendar", "var(--brand-gold-100)", "var(--brand-gold)", "Clinic events & offers", "Open evenings, lives and member-only pricing"], ["flask-conical", "#dcfce7", "#16a34a", "Skin health research", "Invitations to surveys and studies you can opt into"], ["shield-check", "#e0ecff", "#2457c5", "Unsubscribe any time", "One tap in any email, no questions asked"]].map(([ic, bg, c, t, sub]) => /*#__PURE__*/React.createElement("div", {
+    key: t,
+    className: "row"
+  }, /*#__PURE__*/React.createElement("i", {
+    style: {
+      background: bg
+    }
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: ic,
+    size: 18,
+    color: c
+  })), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, t), /*#__PURE__*/React.createElement("small", null, sub))))), /*#__PURE__*/React.createElement("div", {
+    className: "jn-setup-mail"
+  }, /*#__PURE__*/React.createElement(JNFace, {
+    p: KATY,
+    size: 34
+  }), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "From ", KATY.first, " and the ", JANE.clinic, " team"), /*#__PURE__*/React.createElement("small", null, "Sent to jane.taylor@example.com"))))), /*#__PURE__*/React.createElement("div", {
     className: "jn-setup-foot"
-  }, step === 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("p", {
-    className: "jn-setup-alt"
-  }, /*#__PURE__*/React.createElement("b", null, "Want to use another method?"), " You can connect medical records on your favourite apps later."), method ? /*#__PURE__*/React.createElement("button", {
+  }, step === 0 && /*#__PURE__*/React.createElement("button", {
     className: "jn-btn block",
+    disabled: !method,
     onClick: () => setStep(1)
   }, "Continue", /*#__PURE__*/React.createElement(IcJN, {
     name: "arrow-right",
     size: 18
-  })) : /*#__PURE__*/React.createElement("button", {
-    className: "jn-btn block ghost outline",
-    onClick: () => setStep(1)
-  }, "Not now")), step === 1 && /*#__PURE__*/React.createElement("button", {
+  })), step === 1 && /*#__PURE__*/React.createElement("button", {
     className: "jn-btn block",
     disabled: !prof.height || !prof.weight,
     onClick: () => setStep(2)
-  }, "Save and continue"), step === 2 && /*#__PURE__*/React.createElement("div", {
+  }, "Save and continue", /*#__PURE__*/React.createElement(IcJN, {
+    name: "arrow-right",
+    size: 18
+  })), step === 2 && /*#__PURE__*/React.createElement("div", {
     className: "jn-row-btns"
   }, /*#__PURE__*/React.createElement("button", {
-    className: "jn-btn",
+    className: "jn-btn ghost",
     onClick: () => finish(false)
   }, "Not now"), /*#__PURE__*/React.createElement("button", {
     className: "jn-btn",
     onClick: () => finish(true)
-  }, "Stay updated"))));
+  }, /*#__PURE__*/React.createElement(IcJN, {
+    name: "mail",
+    size: 18
+  }), "Stay updated"))));
 }
 function HealthScreen() {
   const [setup, setSetup] = useStateJN(() => qJN("setup") === "1" || !healthSetup().done);
@@ -6178,335 +6328,40 @@ function EventsScreen() {
 }
 
 /* =======================================================================
-   MESSAGES (DM)
+   MESSAGES — JaneMessages.html runs messages-mobile.jsx with PF_DM_JANE
+   (user 2026-10-29: "copy all UI we have in Katy's DM to the Jane version").
+   This bundle is loaded on that page with PF_JN_NO_MOUNT and only lends it
+   the Jane chrome (top bar hidden by the DM CSS, drawer + notifications
+   live) and the call-booking hooks below.
    ======================================================================= */
-const DM_KEY = "pf-jane-dm";
-const DM_SEED = {
-  convs: [{
-    id: "katy",
-    unread: 1,
-    msgs: [{
-      by: "katy",
-      text: "Hi Jane, how are the lips settling? Any tenderness today?",
-      ts: Date.now() - 26 * 3600000
-    }, {
-      by: "jane",
-      text: "Much better! A bit of swelling on the left still.",
-      ts: Date.now() - 25 * 3600000
-    }, {
-      by: "katy",
-      text: "Totally normal at day 3. Keep icing 10 mins on / 10 off and no straws 🙂",
-      ts: Date.now() - 25 * 3600000 + 120000
-    }, {
-      by: "katy",
-      text: "Also — your 2-week review is booked for Tue 3 Nov, 2:30pm. See you then! 📅",
-      ts: Date.now() - 2 * 3600000
-    }]
-  }, {
-    id: "reception",
-    unread: 1,
-    msgs: [{
-      by: "reception",
-      text: "Reminder: your appointment with Katy Wilson is Tuesday 3 Nov at 2:30pm. Reply C to confirm or call us to reschedule.",
-      ts: Date.now() - 5 * 3600000
-    }]
-  }, {
-    id: "miranda",
-    unread: 0,
-    msgs: [{
-      by: "miranda",
-      text: "Saw your post! Want to go to the SPF workshop together? 🧴",
-      ts: Date.now() - 30 * 3600000
-    }, {
-      by: "jane",
-      text: "Yes! I'll RSVP now",
-      ts: Date.now() - 29 * 3600000
-    }]
-  }, {
-    id: "beth",
-    unread: 0,
-    msgs: [{
-      by: "beth",
-      text: "Your aftercare sheet from today's treatment 📎 Aftercare-Lips.pdf",
-      ts: Date.now() - 4 * 86400000,
-      file: "Aftercare-Lips.pdf"
-    }, {
-      by: "jane",
-      text: "Thank you Beth!",
-      ts: Date.now() - 4 * 86400000 + 900000
-    }]
-  }]
-};
-const DM_REPLIES = {
-  katy: ["Perfect, thanks for letting me know 🙂", "Noted — I'll add that to your file before Monday.", "Good question. Keep doing what you're doing and we'll check it at your review.", "Send me a photo if it changes, otherwise see you Monday!"],
-  reception: ["Thanks Jane, your appointment is confirmed ✅", "Noted — we'll see you then."],
-  miranda: ["Yay! Let's grab a coffee after 😄", "Perfect, see you there!"],
-  beth: ["You're welcome Jane! Shout if anything's unclear.", "Any time 🙂"],
-  priya: ["Thanks Jane — I'll have a look before our call.", "Good question, let's go through it on the call 🙂", "Noted. If anything changes before then, send a photo."]
-};
-function fmtListTimeJN(ts) {
-  const d = new Date(ts),
-    n = new Date();
-  return d.toDateString() === n.toDateString() ? fmtClockJN(ts) : n - d < 7 * 86400000 ? WD[d.getDay()] : d.getDate() + " " + MONTHS[d.getMonth()];
-}
-function MessagesScreen() {
-  const [store, setStore] = useStateJN(() => readJN(DM_KEY, DM_SEED));
-  const [openId, setOpenId] = useStateJN(qJN("to"));
-  const [draft, setDraft] = useStateJN("");
-  const [q, setQ] = useStateJN("");
-  const [typing, setTyping] = useStateJN(false);
-  const [toast, showToast] = useToastJN();
-  const scrollRef = useRefJN(null);
-  const chrome = useKatyChromeJN();
-  const conv = store.convs.find(c => c.id === openId);
-  function persist(s) {
-    setStore(s);
-    saveJN(DM_KEY, s);
-  }
-  function openConv(id) {
-    persist({
-      convs: store.convs.map(c => c.id === id ? {
-        ...c,
-        unread: 0
-      } : c)
-    });
-    setOpenId(id);
-  }
-  useEffectJN(() => {
-    if (openId) openConv(openId);
-  }, []);
-  useEffectJN(() => {
-    const el = scrollRef.current;
-    if (el) el.scrollTop = el.scrollHeight;
-  }, [openId, conv && conv.msgs.length, typing]);
-  function send(text) {
-    const t = (text || draft).trim();
-    if (!t || !conv) return;
-    const s = {
-      convs: store.convs.map(c => c.id === conv.id ? {
-        ...c,
-        msgs: [...c.msgs, {
-          by: "jane",
-          text: t,
-          ts: Date.now()
-        }]
-      } : c)
-    };
-    persist(s);
-    setDraft("");
-    const pool = DM_REPLIES[conv.id];
-    if (!pool) return;
-    setTyping(true);
-    setTimeout(() => {
-      setTyping(false);
-      persist({
-        convs: s.convs.map(c => c.id === conv.id ? {
-          ...c,
-          msgs: [...c.msgs, {
-            by: conv.id,
-            text: pool[Math.floor(Math.random() * pool.length)],
-            ts: Date.now()
-          }]
-        } : c)
-      });
-    }, 1400 + Math.random() * 800);
-  }
-  const sorted = store.convs.slice().sort((a, b) => b.msgs[b.msgs.length - 1].ts - a.msgs[a.msgs.length - 1].ts).filter(c => !q || PEOPLE[c.id].name.toLowerCase().includes(q.toLowerCase()));
-  if (conv) {
-    const p = PEOPLE[conv.id];
-    let lastDay = "";
-    return /*#__PURE__*/React.createElement("div", {
-      className: "jn-screen"
-    }, /*#__PURE__*/React.createElement(JNBar, {
-      title: p.name,
-      back: () => setOpenId(null),
-      trailing: /*#__PURE__*/React.createElement(React.Fragment, null, p.role === "Clinician" && /*#__PURE__*/React.createElement("button", {
-        className: "jn-iconbtn sm",
-        "aria-label": "Schedule a call",
-        onClick: () => goJN("JaneScheduleCall.html?new=1&with=" + conv.id + "&ret=" + encodeURIComponent("JaneMessages.html?to=" + conv.id))
-      }, /*#__PURE__*/React.createElement(IcJN, {
-        name: "phone",
-        size: 17,
-        color: "var(--brand-navy)"
-      })), /*#__PURE__*/React.createElement(JNFace, {
-        p: p,
-        size: 34
-      }))
-    }), /*#__PURE__*/React.createElement("div", {
-      className: "jn-dm-sub"
-    }, p.title, p.role === "Clinician" && /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("i", {
-      className: "jn-online"
-    }), "Usually replies within the hour")), /*#__PURE__*/React.createElement("div", {
-      className: "jn-scroll jn-thread",
-      ref: scrollRef
-    }, conv.msgs.map((m, i) => {
-      const day = new Date(m.ts).toDateString();
-      const showDay = day !== lastDay;
-      lastDay = day;
-      const me = m.by === "jane";
-      return /*#__PURE__*/React.createElement(React.Fragment, {
-        key: i
-      }, showDay && /*#__PURE__*/React.createElement("div", {
-        className: "jn-day"
-      }, day === new Date().toDateString() ? "Today" : fmtListTimeJN(m.ts)), /*#__PURE__*/React.createElement("div", {
-        className: "jn-msg " + (me ? "me" : "them")
-      }, !me && /*#__PURE__*/React.createElement(JNFace, {
-        p: PEOPLE[m.by],
-        size: 28
-      }), /*#__PURE__*/React.createElement("div", {
-        className: "bub"
-      }, m.file ? /*#__PURE__*/React.createElement("span", {
-        className: "file"
-      }, /*#__PURE__*/React.createElement(IcJN, {
-        name: "paperclip",
-        size: 14
-      }), m.file) : null, /*#__PURE__*/React.createElement("p", null, m.file ? m.text.replace(" 📎 " + m.file, "") : m.text), /*#__PURE__*/React.createElement("time", null, fmtClockJN(m.ts)))));
-    }), typing && /*#__PURE__*/React.createElement("div", {
-      className: "jn-msg them"
-    }, /*#__PURE__*/React.createElement(JNFace, {
-      p: p,
-      size: 28
-    }), /*#__PURE__*/React.createElement("div", {
-      className: "bub typing"
-    }, /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null), /*#__PURE__*/React.createElement("i", null))), conv.id === "reception" && /*#__PURE__*/React.createElement("div", {
-      className: "jn-prompts"
-    }, ["C — confirm", "Can I reschedule?", "What should I bring?"].map(x => /*#__PURE__*/React.createElement("button", {
-      key: x,
-      className: "jn-chip",
-      onClick: () => send(x === "C — confirm" ? "C" : x)
-    }, x))), conv.id === "katy" && /*#__PURE__*/React.createElement("div", {
-      className: "jn-prompts"
-    }, /*#__PURE__*/React.createElement("button", {
-      className: "jn-chip",
-      onClick: () => goJN("JaneScheduleCall.html?new=1&with=katy&ret=" + encodeURIComponent("JaneMessages.html?to=katy"))
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: "phone",
-      size: 13
-    }), " Schedule a call"), ["Thanks Katy!", "Is this swelling normal?", "Can I send a photo?"].map(x => /*#__PURE__*/React.createElement("button", {
-      key: x,
-      className: "jn-chip",
-      onClick: () => send(x)
-    }, x)))), /*#__PURE__*/React.createElement("div", {
-      className: "jn-input-row dock"
-    }, /*#__PURE__*/React.createElement("button", {
-      className: "jn-iconbtn sm",
-      "aria-label": "Attach",
-      onClick: () => showToast("Photo & file sharing coming soon")
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: "plus",
-      size: 20,
-      color: "var(--brand-navy)"
-    })), /*#__PURE__*/React.createElement("input", {
-      className: "jn-in",
-      placeholder: "Message " + (p.first || p.name.split(" ")[0]) + "…",
-      value: draft,
-      onChange: e => setDraft(e.target.value),
-      onKeyDown: e => e.key === "Enter" && send()
-    }), /*#__PURE__*/React.createElement("button", {
-      className: "jn-send",
-      "aria-label": "Send",
-      disabled: !draft.trim(),
-      onClick: () => send()
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: "send",
-      size: 18,
-      color: "#fff"
-    }))), /*#__PURE__*/React.createElement(JNToast, {
-      toast: toast
-    }));
-  }
-  return /*#__PURE__*/React.createElement("div", {
-    className: "jn-screen m-screen" + chrome.cls
-  }, chrome.top, /*#__PURE__*/React.createElement("div", {
-    className: "jn-scroll",
-    ref: chrome.scrollRef,
-    style: {
-      paddingTop: chrome.padTop(12)
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "jn-pagehead"
-  }, /*#__PURE__*/React.createElement("h2", null, "Messages"), /*#__PURE__*/React.createElement("button", {
-    className: "jn-iconbtn sm",
-    "aria-label": "New message",
-    onClick: () => showToast("Pick a contact below")
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "pencil",
-    size: 17,
-    color: "var(--brand-navy)"
-  }))), /*#__PURE__*/React.createElement("div", {
-    className: "jn-search"
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "search",
-    size: 17,
-    color: "var(--gray-450)"
-  }), /*#__PURE__*/React.createElement("input", {
-    placeholder: "Search",
-    value: q,
-    onChange: e => setQ(e.target.value)
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "jn-care"
-  }, /*#__PURE__*/React.createElement(JNFace, {
-    p: KATY,
-    size: 44
-  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("b", null, "Your care team"), /*#__PURE__*/React.createElement("small", null, KATY.name, " · Nurse Beth · Reception")), /*#__PURE__*/React.createElement("span", {
-    className: "jn-care-btns"
-  }, /*#__PURE__*/React.createElement("button", {
-    className: "jn-iconbtn sm",
-    "aria-label": "Schedule a call",
-    onClick: () => goJN("JaneScheduleCall.html?new=1&ret=JaneMessages.html")
-  }, /*#__PURE__*/React.createElement(IcJN, {
-    name: "phone",
-    size: 17,
-    color: "var(--brand-navy)"
-  })), /*#__PURE__*/React.createElement("button", {
-    className: "jn-btn sm",
-    onClick: () => openConv("katy")
-  }, "Message"))), (() => {
-    const up = upcomingCall();
-    return up ? /*#__PURE__*/React.createElement("button", {
-      className: "sc-banner",
-      onClick: () => goJN("JaneScheduleCall.html?ret=JaneMessages.html")
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "ic"
-    }, /*#__PURE__*/React.createElement(IcJN, {
-      name: up.type === "phone" ? "phone" : "video",
-      size: 18,
-      color: "#fff"
-    })), /*#__PURE__*/React.createElement("span", {
-      className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, callTypeLabel(up), " with ", callWho(up).first), /*#__PURE__*/React.createElement("small", null, callWhen(up), " · ", up.reason)), /*#__PURE__*/React.createElement(IcJN, {
-      name: "chevron-right",
-      size: 18,
-      color: "var(--gray-450)"
-    })) : null;
-  })(), /*#__PURE__*/React.createElement("div", {
-    className: "jn-card list"
-  }, sorted.map(c => {
-    const p = PEOPLE[c.id];
-    const last = c.msgs[c.msgs.length - 1];
-    return /*#__PURE__*/React.createElement("button", {
-      key: c.id,
-      className: "jn-conv" + (c.unread ? " unread" : ""),
-      onClick: () => openConv(c.id)
-    }, /*#__PURE__*/React.createElement(JNFace, {
-      p: p,
-      size: 50
-    }), /*#__PURE__*/React.createElement("span", {
-      className: "tx"
-    }, /*#__PURE__*/React.createElement("b", null, p.name, " ", p.role !== "Patient" && /*#__PURE__*/React.createElement(RoleChip, {
-      p: p
-    })), /*#__PURE__*/React.createElement("small", null, last.by === "jane" ? "You: " : "", last.text)), /*#__PURE__*/React.createElement("span", {
-      className: "meta"
-    }, /*#__PURE__*/React.createElement("time", null, fmtListTimeJN(last.ts)), c.unread > 0 && /*#__PURE__*/React.createElement("i", null, c.unread)));
-  })), /*#__PURE__*/React.createElement("div", {
-    className: "jn-end"
-  }, "Messages with your clinic are private and kept with your Health Pass")), /*#__PURE__*/React.createElement(JNTabs, {
-    active: "messages",
-    compact: chrome.hidden
-  }), chrome.layers, /*#__PURE__*/React.createElement(JNToast, {
-    toast: toast
+function JaneChromeC() {
+  const [menuOpen, setMenuOpen] = useStateJN(false);
+  const [notifOpen, setNotifOpen] = useStateJN(false);
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(JNTopBar, {
+    onMenu: () => setMenuOpen(true),
+    onBell: () => setNotifOpen(true)
+  }), /*#__PURE__*/React.createElement(JNDrawer, {
+    open: menuOpen,
+    onClose: () => setMenuOpen(false)
+  }), /*#__PURE__*/React.createElement(JNNotifPanel, {
+    open: notifOpen,
+    onClose: () => setNotifOpen(false)
   }));
 }
+window.JaneChromeC = JaneChromeC;
+window.PFJaneDM = {
+  /* next booked call → link row above the inbox */
+  upcoming() {
+    const up = upcomingCall();
+    if (!up) return null;
+    return {
+      icon: up.type === "phone" ? "lucide:phone" : "lucide:video",
+      label: callTypeLabel(up) + " with " + callWho(up).first,
+      sub: callWhen(up) + " · " + up.reason,
+      href: "JaneScheduleCall.html?ret=" + encodeURIComponent("JaneMessages.html")
+    };
+  }
+};
 
 /* =======================================================================
    SCHEDULE A CALL WITH KATY — JaneScheduleCall.html (PF_JN_PAGE="schedule")
@@ -6663,26 +6518,15 @@ function slotTaken(iso, time, withId) {
   const i = CALL_SLOTS[0][1].concat(CALL_SLOTS[1][1]).indexOf(time);
   return (n * 7 + i * 11) % 5 === 0 || (n + i) % 9 === 4;
 }
+/* Booking confirmation from the clinician lands in the Messages thread: queued
+   under pf-jane-dm-pending, folded into the DM store (messages-mobile.jsx
+   mergeJanePendingDM) the next time JaneMessages.html loads. */
 function dmCallNote(text, withId) {
-  const id = withId || "katy";
-  const s = readJN(DM_KEY, DM_SEED);
-  const has = s.convs.some(c => c.id === id);
-  const convs = has ? s.convs : [...s.convs, {
-    id,
-    unread: 0,
-    msgs: []
-  }];
-  saveJN(DM_KEY, {
-    convs: convs.map(c => c.id === id ? {
-      ...c,
-      unread: (c.unread || 0) + 1,
-      msgs: [...c.msgs, {
-        by: id,
-        text,
-        ts: Date.now()
-      }]
-    } : c)
-  });
+  saveJN("pf-jane-dm-pending", [...readJN("pf-jane-dm-pending", []), {
+    id: withId || "katy",
+    text,
+    ts: Date.now()
+  }]);
 }
 
 /* Slide-to-open control: drag the knob to the end (or just tap the track) to fire onDone. */
@@ -8180,8 +8024,7 @@ const JN_SCREENS = {
   wearables: WearablesScreen,
   health: HealthScreen,
   coach: CoachScreen,
-  events: EventsScreen,
-  messages: MessagesScreen
+  events: EventsScreen
 };
 function JaneApp() {
   const Screen = JN_SCREENS[JN_PAGE] || HomeScreen;
@@ -8214,4 +8057,4 @@ function JaneApp() {
     height: 956
   }, /*#__PURE__*/React.createElement(Screen, null))));
 }
-ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(JaneApp, null));
+if (!window.PF_JN_NO_MOUNT) ReactDOM.createRoot(document.getElementById("pf-root")).render(/*#__PURE__*/React.createElement(JaneApp, null));

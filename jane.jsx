@@ -4,7 +4,11 @@
    of PROfinity: "Jane" is the patient persona, "Katie/Katy" the clinician
    (same split as the Flutter app's user_type 'jane' | 'katy'). One bundle
    serves ten shells, picked by window.PF_JN_PAGE:
-     home · profile · onboarding · wearables · health · coach · events · messages
+     home · profile · onboarding · wearables · health · coach · events
+     (+ schedule · create). Messages is NOT a screen here any more: since
+     2026-10-29 JaneMessages.html runs messages-mobile.jsx (the clinician DM
+     app) with PF_DM_JANE, and loads this bundle first with PF_JN_NO_MOUNT
+     only for window.JaneChromeC (drawer + notifications) and window.PFJaneDM.
    Everything persists in localStorage under pf-jane-*. Suffixed -JN.
    =========================================================================== */
 const { useState: useStateJN, useEffect: useEffectJN, useRef: useRefJN, useMemo: useMemoJN } = React;
@@ -57,7 +61,14 @@ function useToastJN() {
   const ref = useRefJN(null);
   return [t, (msg) => { setT(msg); clearTimeout(ref.current); ref.current = setTimeout(() => setT(null), 2200); }];
 }
-function unreadDMJN() { return readJN("pf-jane-dm", null) ? readJN("pf-jane-dm", {}).convs.reduce((n, c) => n + (c.unread || 0), 0) : 2; }
+/* Header / tab badge — the Messages store is messages-mobile.jsx's (PF_DM_JANE
+   → pf-jane-messages-v1) plus any call-booking notes still queued for it. */
+function unreadDMJN() {
+  const pending = readJN("pf-jane-dm-pending", []).length;
+  const s = readJN("pf-jane-messages-v1", null);
+  if (s && Array.isArray(s.conversations)) return s.conversations.filter((c) => !c.archived).reduce((n, c) => n + (c.unread || 0), 0) + pending;
+  return 4 + pending; /* seed: Katy 1 · reception 1 · aftercare club 2 */
+}
 
 function JNTabs({ active, compact }) {
   return (
@@ -1307,52 +1318,84 @@ function HealthSetup({ onDone }) {
   const [method, setMethod] = useStateJN(null);
   const [prof, setProf] = useStateJN({ height: "172", weight: "54", sex: "Female" });
   const finish = (emails) => { const s = { done: true, method, ...prof, emails, at: Date.now() }; saveJN(HSETUP_KEY, s); onDone(s); };
-  const Opt = ({ k, icon, tint, text }) => (
-    <button className={"jn-setup-opt" + (method === k ? " on" : "")} onClick={() => setMethod(k)}>
-      <span className="art" style={{ background: tint }}><IcJN name={icon} size={30} color="#fff" /></span>
-      <span className="tx">{text}</span>
+  const h = parseFloat(prof.height), w = parseFloat(prof.weight);
+  const bmi = h > 0 && w > 0 ? (w / Math.pow(h / 100, 2)).toFixed(1) : "—";
+  const STEPS = [{ ic: "watch", eyebrow: "Tracking" }, { ic: "user", eyebrow: "About you" }, { ic: "mail", eyebrow: "Updates" }];
+  const Opt = ({ k, icon, tint, title, sub, chips }) => (
+    <button className={"jn-setup-opt" + (method === k ? " on" : "")} onClick={() => setMethod(k)} aria-pressed={method === k}>
+      <span className="art" style={{ background: tint }}><IcJN name={icon} size={28} color="#fff" /></span>
+      <span className="tx"><b>{title}</b><small>{sub}</small>{chips && <span className="chips">{chips.map((c) => <i key={c}>{c}</i>)}</span>}</span>
       <span className="tick">{method === k && <IcJN name="check" size={14} color="#fff" />}</span>
     </button>);
   return (
     <div className="jn-screen jn-setup">
+      <div className="jn-setup-top">
+        <button className="jn-setup-back" aria-label="Back" onClick={() => setStep(Math.max(0, step - 1))} style={{ visibility: step ? "visible" : "hidden" }}><IcJN name="arrow-left" size={20} color="var(--text-heading)" /></button>
+        <span className="jn-setup-steps" aria-label={"Step " + (step + 1) + " of 3"}>{STEPS.map((x, i) => <i key={i} className={i < step ? "done" : i === step ? "cur" : ""} />)}</span>
+        <button className="jn-setup-skip" onClick={() => step === 2 ? finish(false) : setStep(step + 1)}>Skip</button>
+      </div>
       <div className="jn-scroll">
+        <div className="jn-setup-hero">
+          <span className="jn-setup-ic"><IcJN name={STEPS[step].ic} size={26} color="var(--brand-gold)" /></span>
+          <span className="jn-setup-eyebrow">Step {step + 1} of 3 · {STEPS[step].eyebrow}</span>
+        </div>
         {step === 0 && (
           <React.Fragment>
-            <span className="jn-setup-ic"><IcJN name="watch" size={30} color="var(--brand-navy)" /></span>
             <h2>How would you like to track your health?</h2>
+            <p className="jn-setup-sub">Pick one to start. You can change it or add more devices any time.</p>
             <div className="jn-setup-opts">
-              <Opt k="wearable" icon="watch" tint="linear-gradient(135deg,#292569,#4f47d6)" text="Connect a smartwatch, fitness tracker or smart scale" />
-              <Opt k="phone" icon="footprints" tint="linear-gradient(135deg,#0f766e,#14b8a6)" text="Use your phone to track your steps and more with the app" />
+              <Opt k="wearable" icon="watch" tint="linear-gradient(135deg,#292569,#4f47d6)" title="Connect a device" sub="Smartwatch, fitness tracker or smart scale" chips={["Apple Watch", "Oura", "Fitbit", "Garmin"]} />
+              <Opt k="phone" icon="smartphone" tint="linear-gradient(135deg,#0f766e,#14b8a6)" title="Just my phone" sub="Steps, sleep and daily check-ins with the app — no extra kit" />
             </div>
+            <div className="jn-setup-preview">
+              <div className="ph"><b>What you'll see</b><span>Your Health view</span></div>
+              <div className="tiles">
+                <span className="t"><i style={{ background: "#ede9ff" }}><IcJN name="moon" size={16} color="#6c63ff" /></i><small>Sleep</small><b>7h 18m</b></span>
+                <span className="t"><i style={{ background: "#dcfce7" }}><IcJN name="footprints" size={16} color="#16a34a" /></i><small>Steps</small><b>8,240</b></span>
+                <span className="t"><i style={{ background: "var(--brand-gold-100)" }}><IcJN name="sun" size={16} color="var(--brand-gold)" /></i><small>Skin score</small><b>78</b></span>
+              </div>
+            </div>
+            <p className="jn-setup-alt"><b>Want to use another method?</b> You can connect medical records from your favourite apps later.</p>
           </React.Fragment>)}
         {step === 1 && (
           <React.Fragment>
-            <span className="jn-setup-ic"><IcJN name="user" size={30} color="var(--brand-navy)" /></span>
             <h2>Tell us about yourself</h2>
-            <p className="jn-setup-sub">PROfinity uses this information to calculate some metrics.</p>
-            <h3 className="jn-h">Your profile info</h3>
+            <p className="jn-setup-sub">PROfinity uses this to work out calories burned, cardio load and your targets. Only you and your clinic can see it.</p>
             <div className="jn-setup-grid">
-              <label className="jn-setup-field"><span>Height</span><div className="in"><input inputMode="decimal" value={prof.height} onChange={(e) => setProf({ ...prof, height: e.target.value })} /><em>cm</em></div></label>
-              <label className="jn-setup-field"><span>Weight</span><div className="in"><input inputMode="decimal" value={prof.weight} onChange={(e) => setProf({ ...prof, weight: e.target.value })} /><em>kg</em></div></label>
+              <label className="jn-setup-field"><span><IcJN name="ruler" size={14} />Height</span><div className="in"><input inputMode="decimal" value={prof.height} onChange={(e) => setProf({ ...prof, height: e.target.value })} /><em>cm</em></div></label>
+              <label className="jn-setup-field"><span><IcJN name="scale" size={14} />Weight</span><div className="in"><input inputMode="decimal" value={prof.weight} onChange={(e) => setProf({ ...prof, weight: e.target.value })} /><em>kg</em></div></label>
             </div>
-            <label className="jn-setup-field focus"><span>Sex</span><div className="in"><select value={prof.sex} onChange={(e) => setProf({ ...prof, sex: e.target.value })}><option>Female</option><option>Male</option><option>Prefer not to say</option></select><IcJN name="chevron-down" size={18} color="var(--text-secondary)" /></div></label>
-            <p className="jn-setup-note">Sex is used to calculate metrics like calories burned and cardio load.</p>
+            <div className="jn-setup-field"><span><IcJN name="user" size={14} />Sex</span>
+              <div className="jn-setup-seg" role="radiogroup">{["Female", "Male", "Prefer not to say"].map((x) => <button key={x} type="button" role="radio" aria-checked={prof.sex === x} className={prof.sex === x ? "on" : ""} onClick={() => setProf({ ...prof, sex: x })}>{x}</button>)}</div>
+            </div>
+            <p className="jn-setup-note">Sex is only used for metrics like calories burned and cardio load.</p>
+            <div className="jn-setup-preview">
+              <div className="ph"><b>We'll calculate</b><span>Updates as you type</span></div>
+              <div className="tiles">
+                <span className="t"><i style={{ background: "#e0ecff" }}><IcJN name="activity" size={16} color="#2457c5" /></i><small>BMI</small><b>{bmi}</b></span>
+                <span className="t"><i style={{ background: "#fde8d0" }}><IcJN name="flame" size={16} color="#c2410c" /></i><small>Calorie burn</small><b>Daily</b></span>
+                <span className="t"><i style={{ background: "#fde2e4" }}><IcJN name="heart-pulse" size={16} color="#c0334d" /></i><small>Cardio load</small><b>Weekly</b></span>
+              </div>
+            </div>
           </React.Fragment>)}
         {step === 2 && (
           <React.Fragment>
-            <span className="jn-setup-ic"><IcJN name="bell" size={30} color="var(--brand-navy)" /></span>
-            <h2>Stay updated with emails from PROfinity</h2>
-            <p className="jn-setup-sub">Stay up to date on new features, clinic events and offers. Plus, receive surveys and invitations to take part in skin health research.</p>
+            <h2>Stay in the loop with PROfinity</h2>
+            <p className="jn-setup-sub">A short email now and then — never more than one a week.</p>
+            <div className="jn-setup-list">
+              {[["sparkles", "#ede9ff", "#6c63ff", "New features", "Be first to try what's new in the app"],
+                ["calendar", "var(--brand-gold-100)", "var(--brand-gold)", "Clinic events & offers", "Open evenings, lives and member-only pricing"],
+                ["flask-conical", "#dcfce7", "#16a34a", "Skin health research", "Invitations to surveys and studies you can opt into"],
+                ["shield-check", "#e0ecff", "#2457c5", "Unsubscribe any time", "One tap in any email, no questions asked"]].map(([ic, bg, c, t, sub]) => (
+                <div key={t} className="row"><i style={{ background: bg }}><IcJN name={ic} size={18} color={c} /></i><span><b>{t}</b><small>{sub}</small></span></div>))}
+            </div>
+            <div className="jn-setup-mail"><JNFace p={KATY} size={34} /><span><b>From {KATY.first} and the {JANE.clinic} team</b><small>Sent to jane.taylor@example.com</small></span></div>
           </React.Fragment>)}
       </div>
       <div className="jn-setup-foot">
-        {step === 0 && <React.Fragment>
-          <p className="jn-setup-alt"><b>Want to use another method?</b> You can connect medical records on your favourite apps later.</p>
-          {method ? <button className="jn-btn block" onClick={() => setStep(1)}>Continue<IcJN name="arrow-right" size={18} /></button>
-                  : <button className="jn-btn block ghost outline" onClick={() => setStep(1)}>Not now</button>}
-        </React.Fragment>}
-        {step === 1 && <button className="jn-btn block" disabled={!prof.height || !prof.weight} onClick={() => setStep(2)}>Save and continue</button>}
-        {step === 2 && <div className="jn-row-btns"><button className="jn-btn" onClick={() => finish(false)}>Not now</button><button className="jn-btn" onClick={() => finish(true)}>Stay updated</button></div>}
+        {step === 0 && <button className="jn-btn block" disabled={!method} onClick={() => setStep(1)}>Continue<IcJN name="arrow-right" size={18} /></button>}
+        {step === 1 && <button className="jn-btn block" disabled={!prof.height || !prof.weight} onClick={() => setStep(2)}>Save and continue<IcJN name="arrow-right" size={18} /></button>}
+        {step === 2 && <div className="jn-row-btns"><button className="jn-btn ghost" onClick={() => finish(false)}>Not now</button><button className="jn-btn" onClick={() => finish(true)}><IcJN name="mail" size={18} />Stay updated</button></div>}
       </div>
     </div>);
 }
@@ -1854,98 +1897,30 @@ function EventsScreen() {
 }
 
 /* =======================================================================
-   MESSAGES (DM)
+   MESSAGES — JaneMessages.html runs messages-mobile.jsx with PF_DM_JANE
+   (user 2026-10-29: "copy all UI we have in Katy's DM to the Jane version").
+   This bundle is loaded on that page with PF_JN_NO_MOUNT and only lends it
+   the Jane chrome (top bar hidden by the DM CSS, drawer + notifications
+   live) and the call-booking hooks below.
    ======================================================================= */
-const DM_KEY = "pf-jane-dm";
-const DM_SEED = { convs: [
-  { id: "katy", unread: 1, msgs: [
-    { by: "katy", text: "Hi Jane, how are the lips settling? Any tenderness today?", ts: Date.now() - 26 * 3600000 },
-    { by: "jane", text: "Much better! A bit of swelling on the left still.", ts: Date.now() - 25 * 3600000 },
-    { by: "katy", text: "Totally normal at day 3. Keep icing 10 mins on / 10 off and no straws 🙂", ts: Date.now() - 25 * 3600000 + 120000 },
-    { by: "katy", text: "Also — your 2-week review is booked for Tue 3 Nov, 2:30pm. See you then! 📅", ts: Date.now() - 2 * 3600000 }] },
-  { id: "reception", unread: 1, msgs: [{ by: "reception", text: "Reminder: your appointment with Katy Wilson is Tuesday 3 Nov at 2:30pm. Reply C to confirm or call us to reschedule.", ts: Date.now() - 5 * 3600000 }] },
-  { id: "miranda", unread: 0, msgs: [{ by: "miranda", text: "Saw your post! Want to go to the SPF workshop together? 🧴", ts: Date.now() - 30 * 3600000 }, { by: "jane", text: "Yes! I'll RSVP now", ts: Date.now() - 29 * 3600000 }] },
-  { id: "beth", unread: 0, msgs: [{ by: "beth", text: "Your aftercare sheet from today's treatment 📎 Aftercare-Lips.pdf", ts: Date.now() - 4 * 86400000, file: "Aftercare-Lips.pdf" }, { by: "jane", text: "Thank you Beth!", ts: Date.now() - 4 * 86400000 + 900000 }] },
-] };
-const DM_REPLIES = { katy: ["Perfect, thanks for letting me know 🙂", "Noted — I'll add that to your file before Monday.", "Good question. Keep doing what you're doing and we'll check it at your review.", "Send me a photo if it changes, otherwise see you Monday!"], reception: ["Thanks Jane, your appointment is confirmed ✅", "Noted — we'll see you then."], miranda: ["Yay! Let's grab a coffee after 😄", "Perfect, see you there!"], beth: ["You're welcome Jane! Shout if anything's unclear.", "Any time 🙂"], priya: ["Thanks Jane — I'll have a look before our call.", "Good question, let's go through it on the call 🙂", "Noted. If anything changes before then, send a photo."] };
-function fmtListTimeJN(ts) { const d = new Date(ts), n = new Date(); return d.toDateString() === n.toDateString() ? fmtClockJN(ts) : (n - d < 7 * 86400000 ? WD[d.getDay()] : d.getDate() + " " + MONTHS[d.getMonth()]); }
-
-function MessagesScreen() {
-  const [store, setStore] = useStateJN(() => readJN(DM_KEY, DM_SEED));
-  const [openId, setOpenId] = useStateJN(qJN("to"));
-  const [draft, setDraft] = useStateJN("");
-  const [q, setQ] = useStateJN("");
-  const [typing, setTyping] = useStateJN(false);
-  const [toast, showToast] = useToastJN();
-  const scrollRef = useRefJN(null);
-  const chrome = useKatyChromeJN();
-  const conv = store.convs.find((c) => c.id === openId);
-  function persist(s) { setStore(s); saveJN(DM_KEY, s); }
-  function openConv(id) { persist({ convs: store.convs.map((c) => c.id === id ? { ...c, unread: 0 } : c) }); setOpenId(id); }
-  useEffectJN(() => { if (openId) openConv(openId); }, []);
-  useEffectJN(() => { const el = scrollRef.current; if (el) el.scrollTop = el.scrollHeight; }, [openId, conv && conv.msgs.length, typing]);
-  function send(text) {
-    const t = (text || draft).trim(); if (!t || !conv) return;
-    const s = { convs: store.convs.map((c) => c.id === conv.id ? { ...c, msgs: [...c.msgs, { by: "jane", text: t, ts: Date.now() }] } : c) }; persist(s); setDraft("");
-    const pool = DM_REPLIES[conv.id]; if (!pool) return;
-    setTyping(true);
-    setTimeout(() => { setTyping(false); persist({ convs: s.convs.map((c) => c.id === conv.id ? { ...c, msgs: [...c.msgs, { by: conv.id, text: pool[Math.floor(Math.random() * pool.length)], ts: Date.now() }] } : c) }); }, 1400 + Math.random() * 800);
-  }
-  const sorted = store.convs.slice().sort((a, b) => b.msgs[b.msgs.length - 1].ts - a.msgs[a.msgs.length - 1].ts).filter((c) => !q || PEOPLE[c.id].name.toLowerCase().includes(q.toLowerCase()));
-
-  if (conv) { const p = PEOPLE[conv.id]; let lastDay = ""; return (
-    <div className="jn-screen">
-      <JNBar title={p.name} back={() => setOpenId(null)} trailing={<React.Fragment>{p.role === "Clinician" && <button className="jn-iconbtn sm" aria-label="Schedule a call" onClick={() => goJN("JaneScheduleCall.html?new=1&with=" + conv.id + "&ret=" + encodeURIComponent("JaneMessages.html?to=" + conv.id))}><IcJN name="phone" size={17} color="var(--brand-navy)" /></button>}<JNFace p={p} size={34} /></React.Fragment>} />
-      <div className="jn-dm-sub">{p.title}{p.role === "Clinician" && <span><i className="jn-online" />Usually replies within the hour</span>}</div>
-      <div className="jn-scroll jn-thread" ref={scrollRef}>
-        {conv.msgs.map((m, i) => { const day = new Date(m.ts).toDateString(); const showDay = day !== lastDay; lastDay = day; const me = m.by === "jane"; return (
-          <React.Fragment key={i}>
-            {showDay && <div className="jn-day">{day === new Date().toDateString() ? "Today" : fmtListTimeJN(m.ts)}</div>}
-            <div className={"jn-msg " + (me ? "me" : "them")}>
-              {!me && <JNFace p={PEOPLE[m.by]} size={28} />}
-              <div className="bub">{m.file ? <span className="file"><IcJN name="paperclip" size={14} />{m.file}</span> : null}<p>{m.file ? m.text.replace(" 📎 " + m.file, "") : m.text}</p><time>{fmtClockJN(m.ts)}</time></div>
-            </div>
-          </React.Fragment>); })}
-        {typing && <div className="jn-msg them"><JNFace p={p} size={28} /><div className="bub typing"><i /><i /><i /></div></div>}
-        {conv.id === "reception" && <div className="jn-prompts">{["C — confirm", "Can I reschedule?", "What should I bring?"].map((x) => <button key={x} className="jn-chip" onClick={() => send(x === "C — confirm" ? "C" : x)}>{x}</button>)}</div>}
-        {conv.id === "katy" && <div className="jn-prompts"><button className="jn-chip" onClick={() => goJN("JaneScheduleCall.html?new=1&with=katy&ret=" + encodeURIComponent("JaneMessages.html?to=katy"))}><IcJN name="phone" size={13} /> Schedule a call</button>{["Thanks Katy!", "Is this swelling normal?", "Can I send a photo?"].map((x) => <button key={x} className="jn-chip" onClick={() => send(x)}>{x}</button>)}</div>}
-      </div>
-      <div className="jn-input-row dock">
-        <button className="jn-iconbtn sm" aria-label="Attach" onClick={() => showToast("Photo & file sharing coming soon")}><IcJN name="plus" size={20} color="var(--brand-navy)" /></button>
-        <input className="jn-in" placeholder={"Message " + (p.first || p.name.split(" ")[0]) + "…"} value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => e.key === "Enter" && send()} />
-        <button className="jn-send" aria-label="Send" disabled={!draft.trim()} onClick={() => send()}><IcJN name="send" size={18} color="#fff" /></button>
-      </div>
-      <JNToast toast={toast} />
-    </div>); }
-
+function JaneChromeC() {
+  const [menuOpen, setMenuOpen] = useStateJN(false);
+  const [notifOpen, setNotifOpen] = useStateJN(false);
   return (
-    <div className={"jn-screen m-screen" + chrome.cls}>
-      {chrome.top}
-      <div className="jn-scroll" ref={chrome.scrollRef} style={{ paddingTop: chrome.padTop(12) }}>
-        <div className="jn-pagehead"><h2>Messages</h2><button className="jn-iconbtn sm" aria-label="New message" onClick={() => showToast("Pick a contact below")}><IcJN name="pencil" size={17} color="var(--brand-navy)" /></button></div>
-        <div className="jn-search"><IcJN name="search" size={17} color="var(--gray-450)" /><input placeholder="Search" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-        <div className="jn-care"><JNFace p={KATY} size={44} /><div><b>Your care team</b><small>{KATY.name} · Nurse Beth · Reception</small></div><span className="jn-care-btns"><button className="jn-iconbtn sm" aria-label="Schedule a call" onClick={() => goJN("JaneScheduleCall.html?new=1&ret=JaneMessages.html")}><IcJN name="phone" size={17} color="var(--brand-navy)" /></button><button className="jn-btn sm" onClick={() => openConv("katy")}>Message</button></span></div>
-        {(() => { const up = upcomingCall(); return up ? (
-          <button className="sc-banner" onClick={() => goJN("JaneScheduleCall.html?ret=JaneMessages.html")}>
-            <span className="ic"><IcJN name={up.type === "phone" ? "phone" : "video"} size={18} color="#fff" /></span>
-            <span className="tx"><b>{callTypeLabel(up)} with {callWho(up).first}</b><small>{callWhen(up)} · {up.reason}</small></span>
-            <IcJN name="chevron-right" size={18} color="var(--gray-450)" />
-          </button>) : null; })()}
-        <div className="jn-card list">
-          {sorted.map((c) => { const p = PEOPLE[c.id]; const last = c.msgs[c.msgs.length - 1]; return (
-            <button key={c.id} className={"jn-conv" + (c.unread ? " unread" : "")} onClick={() => openConv(c.id)}>
-              <JNFace p={p} size={50} />
-              <span className="tx"><b>{p.name} {p.role !== "Patient" && <RoleChip p={p} />}</b><small>{last.by === "jane" ? "You: " : ""}{last.text}</small></span>
-              <span className="meta"><time>{fmtListTimeJN(last.ts)}</time>{c.unread > 0 && <i>{c.unread}</i>}</span>
-            </button>); })}
-        </div>
-        <div className="jn-end">Messages with your clinic are private and kept with your Health Pass</div>
-      </div>
-      <JNTabs active="messages" compact={chrome.hidden} />
-      {chrome.layers}
-      <JNToast toast={toast} />
-    </div>);
+    <React.Fragment>
+      <JNTopBar onMenu={() => setMenuOpen(true)} onBell={() => setNotifOpen(true)} />
+      <JNDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <JNNotifPanel open={notifOpen} onClose={() => setNotifOpen(false)} />
+    </React.Fragment>);
 }
+window.JaneChromeC = JaneChromeC;
+window.PFJaneDM = {
+  /* next booked call → link row above the inbox */
+  upcoming() {
+    const up = upcomingCall(); if (!up) return null;
+    return { icon: up.type === "phone" ? "lucide:phone" : "lucide:video", label: callTypeLabel(up) + " with " + callWho(up).first, sub: callWhen(up) + " · " + up.reason, href: "JaneScheduleCall.html?ret=" + encodeURIComponent("JaneMessages.html") };
+  }
+};
 
 /* =======================================================================
    SCHEDULE A CALL WITH KATY — JaneScheduleCall.html (PF_JN_PAGE="schedule")
@@ -2004,12 +1979,11 @@ function callDays(withId) {
   return out;
 }
 function slotTaken(iso, time, withId) { const n = +iso.slice(-2) + +iso.slice(5, 7) * 3 + clinOf(withId).seed; const i = CALL_SLOTS[0][1].concat(CALL_SLOTS[1][1]).indexOf(time); return (n * 7 + i * 11) % 5 === 0 || (n + i) % 9 === 4; }
+/* Booking confirmation from the clinician lands in the Messages thread: queued
+   under pf-jane-dm-pending, folded into the DM store (messages-mobile.jsx
+   mergeJanePendingDM) the next time JaneMessages.html loads. */
 function dmCallNote(text, withId) {
-  const id = withId || "katy";
-  const s = readJN(DM_KEY, DM_SEED);
-  const has = s.convs.some((c) => c.id === id);
-  const convs = has ? s.convs : [...s.convs, { id, unread: 0, msgs: [] }];
-  saveJN(DM_KEY, { convs: convs.map((c) => c.id === id ? { ...c, unread: (c.unread || 0) + 1, msgs: [...c.msgs, { by: id, text, ts: Date.now() }] } : c) });
+  saveJN("pf-jane-dm-pending", [...readJN("pf-jane-dm-pending", []), { id: withId || "katy", text, ts: Date.now() }]);
 }
 
 /* Slide-to-open control: drag the knob to the end (or just tap the track) to fire onDone. */
@@ -2521,7 +2495,7 @@ function CreatePostScreen() {
 /* =======================================================================
    mount
    ======================================================================= */
-const JN_SCREENS = { schedule: ScheduleCallScreen, create: CreatePostScreen, home: HomeScreen, profile: ProfileScreen, onboarding: OnboardingScreen, wearables: WearablesScreen, health: HealthScreen, coach: CoachScreen, events: EventsScreen, messages: MessagesScreen };
+const JN_SCREENS = { schedule: ScheduleCallScreen, create: CreatePostScreen, home: HomeScreen, profile: ProfileScreen, onboarding: OnboardingScreen, wearables: WearablesScreen, health: HealthScreen, coach: CoachScreen, events: EventsScreen };
 function JaneApp() {
   const Screen = JN_SCREENS[JN_PAGE] || HomeScreen;
   const mobile = useIsMobileJN();
@@ -2535,4 +2509,4 @@ function JaneApp() {
       </div>
     </div>);
 }
-ReactDOM.createRoot(document.getElementById("pf-root")).render(<JaneApp />);
+if (!window.PF_JN_NO_MOUNT) ReactDOM.createRoot(document.getElementById("pf-root")).render(<JaneApp />);
